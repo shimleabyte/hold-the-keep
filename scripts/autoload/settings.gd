@@ -6,6 +6,11 @@ const BINDABLE_ACTIONS := [
     "move_up", "move_down", "move_left", "move_right",
     "interact", "attack", "sprint"
 ]
+const RESERVED_KEYS := [
+    KEY_ESCAPE, KEY_P, KEY_Y, KEY_H, KEY_F1, KEY_F3, KEY_F5, KEY_F9,
+    KEY_T, KEY_M, KEY_K, KEY_R, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6,
+    KEY_TAB, KEY_ENTER, KEY_KP_ENTER
+]
 
 var fullscreen := false
 var vsync := true
@@ -77,7 +82,7 @@ func _key_is_used_by_other_action(action: String, code: int) -> bool:
 
 
 func set_key_binding(action: String, code: int) -> bool:
-    if not BINDABLE_ACTIONS.has(action) or code <= 0 or code == KEY_ESCAPE:
+    if not BINDABLE_ACTIONS.has(action) or code <= 0 or code in RESERVED_KEYS:
         return false
     if code in [KEY_SHIFT, KEY_CTRL, KEY_ALT, KEY_META]:
         return false

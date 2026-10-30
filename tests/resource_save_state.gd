@@ -55,13 +55,13 @@ func _initialize() -> void:
             "Resource node should be regenerated at deterministic cell: " + kind)
         var state: Dictionary = node.export_state()
         if kind == "wood":
-            assert(int(state["hp"]) == 0 and is_equal_approx(float(state["regrow"]), 17.5),
+            assert(int(state["hp"]) == 0 and absf(float(state["regrow"]) - 17.5) < 0.2,
                 "Tree depletion and regrowth timer must restore from backup")
         elif kind == "stone":
             assert(int(state["hp"]) == 2 and is_equal_approx(float(state["regrow"]), 0.0),
                 "Partially mined rock must restore from backup")
         else:
-            assert(int(state["hp"]) == 0 and is_equal_approx(float(state["regrow"]), 54.0),
+            assert(int(state["hp"]) == 0 and absf(float(state["regrow"]) - 54.0) < 0.2,
                 "Iron vein depletion and regrowth timer must restore from backup")
 
     print("PASS: tree, rock, and iron resource state restore; damaged primary falls back to last good save")

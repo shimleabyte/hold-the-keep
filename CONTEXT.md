@@ -24,6 +24,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 | Ekonomi | kayu, batu, makanan; kapasitas rumah; upkeep 2 makanan/penduduk/hari |
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
 | Save/load | versi 2, autosave tiap fajar, F5/F9, file sementara + rollback backup, status resource node ikut tersimpan |
+| Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
 | HUD | panel atas, vitals, kuota job (klik), bar bangunan (klik), bar boss, bantuan (H) |
 | Animasi | 22 frame x 3 arah per karakter; serang/panen jatuh di frame benturan |
 | Efek | partikel, busur tebasan, guncangan layar (bisa dimatikan) |
@@ -117,13 +118,13 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `village`, `buildings`, `dep
 - Save versi 2 memulihkan HP dan sisa timer tumbuh ulang resource node; save versi 1 tetap dapat dibaca tanpa data resource.
 - Satu arah samping digambar; kiri/kanan identik (cermin). Animasi dari pose prosedural, bukan gambar tangan.
 - Tidak ada musik; SFX prosedural sederhana.
-- Rebind kontrol belum ada (aksi didaftarkan di `input_setup.gd`).
+- Rebind empat kelompok kontrol inti sudah ada melalui menu jeda; shortcut UI/job/build masih tetap.
 - Teks HUD hanya huruf kapital; resolusi non-16:9 belum diuji.
 
 ## 9. Rencana berikut (belum dikerjakan)
 1. Mainkan dan catat bagian yang janggal; sesuaikan balancing hari 2-14 (teknologi mengubah kurva kekuatan).
 2. **Kampanye wilayah**: klaim lokal dan frontier outpost sudah ada; wilayah musuh, basis lawan, pasukan ekspedisi, AI pertahanan, dan fog of war masih perlu dibangun.
-3. Rebind kontrol di menu + simpan ke settings.
+3. Rebind shortcut UI/job/build dan navigasi menu; kontrol gerak/interaksi/serang/lari sudah dapat diubah.
 4. Musik (komposisi/aset) dan SFX untuk partikel.
 5. Tooltip pada slot bangunan dan ikon job; ikon .ico Windows; integrasi Steam (opsional).
 
@@ -162,3 +163,11 @@ Disarankan memutuskan dulu: apakah dunia menjadi peta lebih besar yang terbuka b
 - Penulisan memakai temporary file, rollback copy, dan validasi struktur dasar sebelum reload.
 - Jika save utama tidak dapat diparse atau tidak valid, loader mencoba `user://save.bak`.
 - Tes baru: `tests/resource_save_state.gd` memeriksa round-trip status node dan fallback dari save utama yang rusak.
+
+
+## 13. Update input (2026-10-30)
+- `Settings` memuat dan menyimpan keybind utama pada section `[input]` di `user://settings.cfg`.
+- Menu jeda memiliki panel "Atur kontrol" untuk gerak, interaksi, serang, dan lari.
+- Konflik antar-keybind inti dan tombol reserved untuk menu, riset, bantuan, save/load, job, serta slot bangunan ditolak.
+- Binding gamepad dan mouse untuk attack tetap dipertahankan saat keyboard binding diganti.
+- Hotkey UI/job/build di luar tujuh aksi inti belum dapat di-rebind.

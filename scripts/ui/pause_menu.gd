@@ -131,7 +131,7 @@ func _build_controls_panel() -> void:
     }
     for action in Settings.BINDABLE_ACTIONS:
         var row := HBoxContainer.new()
-        row.custom_minimum_size.y = 20
+        row.custom_minimum_size = Vector2(0, 20)
         rows.add_child(row)
 
         var label := Label.new()
@@ -240,19 +240,18 @@ func _toggle() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-    if not (event is InputEventKey) or not event.pressed or event.echo:
-        return
-    if _rebinding_action != "":
-        _capture_binding(event)
-        get_viewport().set_input_as_handled()
-        return
-    if event.keycode == KEY_ESCAPE and _root.visible:
-        if _controls_center.visible:
-            _close_controls()
-        else:
+    if event is InputEventKey and event.pressed and not event.echo:
+        if _rebinding_action != "":
+            _capture_binding(event)
+            get_viewport().set_input_as_handled()
+            return
+        if event.keycode == KEY_ESCAPE and _root.visible:
+            if _controls_center.visible:
+                _close_controls()
+            else:
+                _toggle()
+            get_viewport().set_input_as_handled()
+            return
+        if event.keycode == KEY_P:
             _toggle()
-        get_viewport().set_input_as_handled()
-        return
-    if event.keycode == KEY_P:
-        _toggle()
-        get_viewport().set_input_as_handled()
+            get_viewport().set_input_as_handled()

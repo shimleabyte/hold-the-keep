@@ -22,6 +22,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - F / klik kiri (di luar mode bangun) / tombol X: serang sekitar pemain
 - T / M / K / R: tambah penebang / penambang / petani (kebun) / prajurit (Shift = kurangi); atau klik tombol + / - di panel job
 - P / Esc (saat tidak membangun): menu jeda (simpan, muat, layar penuh, vsync, volume)
+- Menu jeda > Atur kontrol: rebind gerak, interaksi, serang, dan lari; gamepad tetap didukung
 - F5: simpan | F9: muat | H: bantuan kontrol | F3: tampilkan FPS
 - R: mulai ulang setelah game over | L: muat save terakhir dari layar game over
 
@@ -106,5 +107,5 @@ diam (2), jalan (4), lari (4), serang (4), kerja (4), kena pukul (1), mati (3).
 Font HUD: Silkscreen (c) The Silkscreen Project Authors, SIL Open Font License 1.1
 (lihat `assets/fonts/OFL-Silkscreen.txt`). Font hanya punya huruf kapital.
 
-Belum ada: musik, rebind kontrol, wilayah musuh, AI basis lawan, pasukan ekspedisi, invasi, fog of war, ikon .ico untuk Windows, integrasi Steam.
+Belum ada: musik, rebind shortcut UI/job/build, wilayah musuh, AI basis lawan, pasukan ekspedisi, invasi, fog of war, ikon .ico untuk Windows, integrasi Steam.
 Visual masih placeholder prosedural.

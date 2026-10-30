@@ -1,6 +1,5 @@
 extends Node
-## Mendaftarkan input action lewat kode (keyboard + gamepad).
-## Nanti dipindah ke sistem rebind + settings file.
+## Register input actions (keyboard + gamepad). Settings can replace the primary keyboard binding.
 
 
 func _ready() -> void:
