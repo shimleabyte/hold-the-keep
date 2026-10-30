@@ -1,7 +1,7 @@
 # Skrip tes
 
 Skrip `SceneTree` (bukan GUT): dijalankan langsung dengan Godot, mencetak hasil ke stdout.
-Tidak ada assertion otomatis; baca keluarannya dan bandingkan dengan teks "(expect ...)" di tiap baris.
+Sebagian skrip lama mencetak hasil untuk inspeksi manual; tes regresi baru memakai `assert` dan akan menghentikan tes saat kondisi gagal.
 Folder ini ada di dalam proyek, jadi Godot akan mengimpornya sebagai skrip biasa (tidak mengganggu game).
 
 ## Menjalankan

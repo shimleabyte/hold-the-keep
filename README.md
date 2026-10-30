@@ -25,45 +25,29 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - F5: simpan | F9: muat | H: bantuan kontrol | F3: tampilkan FPS
 - R: mulai ulang setelah game over | L: muat save terakhir dari layar game over
 
-## Status Saat Ini
-Minggu 1-2: peta, pemain, kamera, sumber daya (kayu, batu), sistem bangunan data-driven.
+## Sistem permainan
 
-Minggu 4-5 (bagian 1): pertahanan
-- Keep di tengah peta (500 HP). Hancur = game over, R untuk mulai ulang
-- Gelombang musuh tiap malam (data/waves.json): bandit, serigala, prajurit
-- Pathfinding flow-field: satu field untuk semua musuh; tembok boleh ditembus
-  dengan biaya tinggi, jadi musuh memilih memutar atau menghancurkan tembok
-- Menara menembak anak panah (jangkauan 96px, 7 damage, 0.9 detik)
-- Pemain: 100 HP, serangan area, regen setelah 4 detik tanpa terkena, respawn di keep
-- Siang 180 detik per hari, malam sekitar 54 detik; musuh mundur saat fajar
+### Siklus pertahanan
+- Bertahan selama 15 hari; pada malam terakhir, kalahkan Raja Lawan.
+- Keep memiliki 1000 HP. Jika hancur, permainan berakhir.
+- Siang berlangsung 180 detik; malam berlangsung sekitar 54 detik.
+- Gelombang dimulai dari 6 musuh dan bertambah 3 per hari, hingga batas 120.
+- Bandit muncul sejak awal, serigala mulai hari 2, dan prajurit mulai hari 4.
+- Raja Lawan memiliki 1400 HP dan tidak mundur saat fajar.
 
-Minggu 6-7 (bagian 1): villager dan ekonomi
-- Penduduk awal 2. Kapasitas: keep +2, tiap rumah +2. Penduduk baru muncul tiap 12 detik
-  siang hari jika ada kapasitas dan makanan cukup (8 makanan + cadangan upkeep)
-- Job: penebang, penambang, petani, prajurit. Kuota diatur dengan T/M/K/R atau tombol + / - di HUD
-- Villager mengumpulkan sampai 6 unit, lalu menyetor ke gudang atau keep terdekat (A*)
-- Ladang: maksimal 2 petani, 3 makanan per 12 detik per petani
-- Upkeep: 2 makanan per penduduk per hari. Kurang makanan = satu penduduk pergi
-- Malam: non-prajurit lari ke keep dan bersembunyi; prajurit menyerbu musuh
-- Rumah menambah kapasitas, gudang jadi tempat setor
+### Desa dan ekonomi
+- Penduduk awal: 2. Keep memberi kapasitas 2; setiap rumah menambah 2 kapasitas.
+- Penduduk baru membutuhkan 8 makanan dan hanya muncul pada siang hari ketika kapasitas cukup.
+- Atur penebang, penambang, petani, dan prajurit melalui T/M/K/R atau tombol kuota di HUD.
+- Setiap penduduk mengonsumsi 2 makanan per hari. Kekurangan makanan membuat satu penduduk pergi.
+- Bangunan: rumah, tembok, menara, gudang, ladang, tembok batu, tempa, dan Pos Terdepan.
+- Teknologi 17-node dalam 3 era memperkuat ekonomi, pertahanan, dan pasukan.
 
-Minggu 8 (bagian 1): event, boss, kemenangan
-- Tujuan: bertahan sampai hari 15, lalu kalahkan Raja Lawan (600 HP, 25 damage) di malam terakhir
-- Raja tidak mundur saat fajar; permainan berakhir (menang) hanya jika dia tumbang
-- Event acak tiap awal hari mulai hari 2 (60% peluang), dari data/events.json:
-  pedagang, panen, tambang baru, pengungsi, paceklik, wabah. Tidak ada event di hari terakhir
-- Balancing awal: keep 1000 HP, menara 12 damage, gelombang 6 + 2 per hari.
-  Simulasi malam terakhir: 4 prajurit + 2 menara kalah; 8 prajurit + 4 menara menang tipis.
-  Tembok sebaiknya dipasang dalam jangkauan menara (cincin jauh justru menahan musuh di luar jangkauan)
-
-Minggu 9-10 (bagian 1): rilis
-- Save/load: satu slot di user://save.json. Autosave tiap fajar, manual dengan F5, muat dengan F9.
-  Tersimpan: inventori, jam/hari, bangunan + HP, penduduk (job, HP, bawaan), musuh, pemain, kuota job.
-  Tidak tersimpan: status pohon/batu (tumbuh lagi saat dimuat)
-- Pengaturan di user://settings.cfg: layar penuh, vsync, volume
-- SFX prosedural (tanpa file aset), dibuat saat startup; ganti dengan sample asli lewat scripts/autoload/audio.gd
-- Log sesi di user://logs/godot.log (5 file terakhir disimpan)
-- Export preset Windows dan Linux (export_presets.cfg), file *.json ikut terkemas
+### Simpanan dan pengaturan
+- Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
+- Save versi 2 menyimpan inventori, jam, bangunan, penduduk, musuh, riset, pemain, serta HP dan sisa waktu tumbuh ulang pohon, batu, dan bijih besi.
+- Penulisan save memakai file sementara dan salinan pemulihan; loader mencoba salinan tersebut bila file utama rusak.
+- Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
 ## Membuat build rilis
 1. Di Godot: Editor > Manage Export Templates > Download and Install (versi 4.3)
@@ -90,7 +74,7 @@ jumlah musuh, penduduk. Kiri: bar HP pemain dan keep. Kanan: kuota job (klik + /
 Bawah: bar bangunan berikon dan biaya (redup = bahan kurang). Bar Raja Lawan muncul di malam terakhir.
 
 ## Aset
-Semua visual berupa SVG pixel-art di `assets/sprites/` (28 file: karakter, musuh, pohon, batu,
+Semua visual berupa SVG pixel-art di `assets/sprites/` (karakter, musuh, pohon, batu,
 bangunan, tile, ikon HUD). Karakter dan musuh berupa sprite sheet 4 frame (diam, jalan 1, jalan 2,
 aksi) yang dipilih otomatis oleh kode: berjalan, menebang/menambang/bertani, menyerang. Dibuat oleh `tools/gen_assets.py` (tanpa dependensi):
 ubah palet/bentuk di skrip itu lalu `python3 tools/gen_assets.py` untuk membuat ulang.
@@ -122,5 +106,5 @@ diam (2), jalan (4), lari (4), serang (4), kerja (4), kena pukul (1), mati (3).
 Font HUD: Silkscreen (c) The Silkscreen Project Authors, SIL Open Font License 1.1
 (lihat `assets/fonts/OFL-Silkscreen.txt`). Font hanya punya huruf kapital.
 
-Belum ada: musik, rebind kontrol, basis musuh, pasukan ekspedisi, invasi lintas wilayah, fog of war, ikon .ico untuk Windows, integrasi Steam.
+Belum ada: musik, rebind kontrol, wilayah musuh, AI basis lawan, pasukan ekspedisi, invasi, fog of war, ikon .ico untuk Windows, integrasi Steam.
 Visual masih placeholder prosedural.

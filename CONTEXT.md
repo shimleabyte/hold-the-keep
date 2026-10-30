@@ -16,13 +16,14 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 | Area | Isi |
 |---|---|
 | Dunia | peta 64x64 prosedural (seed 1337): rumput, kolam (collision), pohon, batu |
+| Wilayah | Keep dan Pos Terdepan mengklaim radius grid; bangunan biasa dibatasi wilayah, outpost memperluas frontier |
 | Pemain | gerak 8 arah, lari (Shift), serang radial, panen, HP 100 + regen, respawn di keep |
 | Bangunan | keep, rumah, tembok, menara, gudang, ladang; data di `data/buildings.json`; bongkar refund 50% |
 | Musuh | bandit, serigala, prajurit, Raja Lawan; flow field; menyerang bangunan/pemain/prajurit |
 | Villager | job penebang/penambang/petani/prajurit, kuota diatur pemain, A*, setor ke gudang/keep |
 | Ekonomi | kayu, batu, makanan; kapasitas rumah; upkeep 2 makanan/penduduk/hari |
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
-| Save/load | 1 slot `user://save.json`, autosave tiap fajar, F5/F9 |
+| Save/load | versi 2, autosave tiap fajar, F5/F9, file sementara + rollback backup, status resource node ikut tersimpan |
 | HUD | panel atas, vitals, kuota job (klik), bar bangunan (klik), bar boss, bantuan (H) |
 | Animasi | 22 frame x 3 arah per karakter; serang/panen jatuh di frame benturan |
 | Efek | partikel, busur tebasan, guncangan layar (bisa dimatikan) |
@@ -38,7 +39,7 @@ scripts/main.gd        merakit dunia, pemain, flow, nav, village, event, spawner
 scripts/autoload/      InputSetup, Events (signal bus), DataDB (JSON), Settings, Inventory, Tech,
                        GameClock, SaveSystem, Audio
 scripts/world/         world_map.gd (tileset dari tiles.svg, noise, pohon/batu, occupied dict)
-scripts/systems/       flow_field (Dijkstra musuh), nav_grid (AStarGrid2D villager), build_system,
+scripts/systems/       flow_field (Dijkstra musuh), nav_grid (AStarGrid2D villager), build_system, territory,
                        village (kapasitas, spawn, kuota, upkeep), wave_spawner, event_manager
 scripts/entities/      player, enemy, villager, building, resource_tree, rock, iron_ore, arrow, corpse,
                        fx_layer, sprite_anim
@@ -60,6 +61,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `village`, `buildings`, `dep
 - **Semua visual dari SVG** + `_draw()`; sprite karakter = sheet 22 frame x 3 baris (depan, belakang,
   samping menghadap kanan, kiri = flip). `SpriteAnim` memilih frame; klip: idle, walk, run, attack,
   work, hurt, death. Titik tumpu = tengah-bawah kanvas, Y-sort di `world.entities`.
+- **Territory**: `territory.gd` menghitung klaim dari Keep/Pos Terdepan. Pos harus menyentuh frontier; bangunan lain harus berada sepenuhnya dalam wilayah.
 - **Occupancy**: `world.occupied` (Vector2i -> Node) berisi pohon, batu, bangunan; dipakai build_system,
   flow field, nav grid. Flow field: bangunan dilewati dengan biaya (musuh menghancurkannya), pohon/batu/air tidak.
 - **Grid**: tile 16 px, peta 64x64, tepi peta = air.
@@ -112,7 +114,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `village`, `buildings`, `dep
 ## 8. Batasan dan masalah yang diketahui
 - Visual belum pernah dilihat di mesin pemilik (semua render lewat software di server).
 - Build executable sungguhan belum pernah dibuat (butuh export template Godot; PCK sudah teruji).
-- Status pohon/batu tidak ikut disimpan (tumbuh lagi saat load).
+- Save versi 2 memulihkan HP dan sisa timer tumbuh ulang resource node; save versi 1 tetap dapat dibaca tanpa data resource.
 - Satu arah samping digambar; kiri/kanan identik (cermin). Animasi dari pose prosedural, bukan gambar tangan.
 - Tidak ada musik; SFX prosedural sederhana.
 - Rebind kontrol belum ada (aksi didaftarkan di `input_setup.gd`).
@@ -120,13 +122,13 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `village`, `buildings`, `dep
 
 ## 9. Rencana berikut (belum dikerjakan)
 1. Mainkan dan catat bagian yang janggal; sesuaikan balancing hari 2-14 (teknologi mengubah kurva kekuatan).
-2. **Visi pemilik: wilayah membesar + sistem invasi ke wilayah musuh** (belum dimulai; lihat 9b).
+2. **Kampanye wilayah**: klaim lokal dan frontier outpost sudah ada; wilayah musuh, basis lawan, pasukan ekspedisi, AI pertahanan, dan fog of war masih perlu dibangun.
 3. Rebind kontrol di menu + simpan ke settings.
 4. Musik (komposisi/aset) dan SFX untuk partikel.
 5. Tooltip pada slot bangunan dan ikon job; ikon .ico Windows; integrasi Steam (opsional).
 
-## 9b. Catatan persiapan untuk wilayah dan invasi (gagasan pemilik, belum dikerjakan)
-Yang sudah mendukung: efek teknologi generik (`unlock_building`, `flags`, `mult`/`add`) bisa dipakai untuk teknologi
+## 9b. Tahap berikut kampanye wilayah
+Fondasi klaim lokal sudah diimplementasikan pada branch ini: Keep dan Pos Terdepan menghasilkan wilayah pemain pada peta tunggal. Yang belum tersedia adalah wilayah musuh dan operasi ofensif. Efek teknologi generik (`unlock_building`, `flags`, `mult`/`add`) bisa dipakai untuk teknologi
 wilayah/militer; bijih besi sengaja jauh dari keep sehingga memberi alasan untuk memperluas wilayah; `Events` dan
 data JSON memudahkan menambah jenis unit/bangunan musuh.
 Yang perlu dibangun lebih dulu: (1) abstraksi wilayah/region (kepemilikan tile, batas yang membesar; sekarang satu
@@ -152,3 +154,11 @@ Disarankan memutuskan dulu: apakah dunia menjadi peta lebih besar yang terbuka b
 - Klaim dihitung ulang dari bangunan aktif dan dilepas saat outpost dibongkar atau dihancurkan; save tidak perlu menyimpan bitmap klaim.
 - Batas klaim digambar sebagai garis tipis di atas peta.
 - Tahap ini belum menambah wilayah musuh, basis musuh, pasukan ekspedisi, fog of war, atau invasi. Itu tetap pekerjaan fase kampanye berikutnya.
+
+
+## 12. Update save system (2026-10-30)
+- Save format naik ke versi 2; versi 1 tetap diterima sebagai data lama tanpa status resource.
+- Pohon, batu, dan bijih besi menyimpan HP serta sisa waktu tumbuh ulang. Restore dilakukan dengan cell koordinat pada peta yang dihasilkan deterministik.
+- Penulisan memakai temporary file, rollback copy, dan validasi struktur dasar sebelum reload.
+- Jika save utama tidak dapat diparse atau tidak valid, loader mencoba `user://save.bak`.
+- Tes baru: `tests/resource_save_state.gd` memeriksa round-trip status node dan fallback dari save utama yang rusak.
