@@ -7,6 +7,9 @@ func ticks(count: int) -> void:
 
 
 func _initialize() -> void:
+    DirAccess.remove_absolute("user://save.json")
+    DirAccess.remove_absolute("user://save.tmp")
+    DirAccess.remove_absolute("user://save.bak")
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main

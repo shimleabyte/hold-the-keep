@@ -61,15 +61,18 @@ func save_current(silent := false) -> bool:
             Events.build_feedback.emit("Gagal menulis save")
         return false
 
-    # Preserve the last good save until the new file has been installed.
+    # Only replace the rollback copy with a verified primary save.
     if FileAccess.file_exists(PATH):
-        DirAccess.remove_absolute(BACKUP)
-        var backup_error := DirAccess.rename_absolute(PATH, BACKUP)
-        if backup_error != OK:
-            DirAccess.remove_absolute(TMP)
-            if not silent:
-                Events.build_feedback.emit("Gagal mengamankan save lama")
-            return false
+        if _read_valid_save(PATH) != null:
+            DirAccess.remove_absolute(BACKUP)
+            var backup_error := DirAccess.rename_absolute(PATH, BACKUP)
+            if backup_error != OK:
+                DirAccess.remove_absolute(TMP)
+                if not silent:
+                    Events.build_feedback.emit("Gagal mengamankan save lama")
+                return false
+        else:
+            DirAccess.remove_absolute(PATH)
 
     var install_error := DirAccess.rename_absolute(TMP, PATH)
     if install_error != OK:
@@ -172,20 +175,26 @@ func _valid_save(data: Variant) -> bool:
     return true
 
 
+func _read_valid_save(path: String) -> Variant:
+    if not FileAccess.file_exists(path):
+        return null
+    var file := FileAccess.open(path, FileAccess.READ)
+    if file == null:
+        return null
+    var json := JSON.new()
+    var parse_result := json.parse(file.get_as_text())
+    file.close()
+    if parse_result != OK or not _valid_save(json.data):
+        return null
+    return json.data
+
+
 ## Load the primary save, falling back to the last known-good copy when necessary.
 func request_load() -> bool:
     var parsed: Variant = null
     for candidate in [PATH, BACKUP]:
-        if not FileAccess.file_exists(candidate):
-            continue
-        var file := FileAccess.open(candidate, FileAccess.READ)
-        if file == null:
-            continue
-        var json := JSON.new()
-        var parse_result := json.parse(file.get_as_text())
-        file.close()
-        if parse_result == OK and _valid_save(json.data):
-            parsed = json.data
+        parsed = _read_valid_save(candidate)
+        if parsed != null:
             break
 
     if parsed == null:
