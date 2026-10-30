@@ -29,6 +29,8 @@ func _initialize() -> void:
         "Keep should claim a meaningful starting area")
     assert(main.territory.is_claimed(Vector2i(31, 29)),
         "Keep footprint must be claimed")
+    assert(not main.territory.can_place("outpost", Vector2i(35, 29), Vector2i(2, 2)),
+        "Outposts must not be placed wholly inside already-owned territory")
 
     var outside := Vector2i(-1, -1)
     for y in range(4, 60):

@@ -16,6 +16,29 @@ func _initialize() -> void:
     await ticks(4)
     GameClock.set_process(false)
 
+    var valid_shape := {
+        "version": 2,
+        "inventory": {"wood": 25},
+        "clock": {"t": 0.0, "day": 1, "night": false},
+        "player": {"x": 0.0, "y": 0.0, "hp": 100},
+        "buildings": [{"id": "keep", "cx": 31, "cy": 29, "hp": 1000}],
+        "villagers": [{"x": 0.0, "y": 0.0, "job": "woodcutter", "hp": 100, "carry": 0, "kind": "wood"}],
+        "enemies": [],
+        "quota": {"woodcutter": 1},
+        "spawner": {},
+        "tech": {},
+        "resources": []
+    }
+    assert(SaveSystem._valid_save(valid_shape), "A complete save structure should validate")
+    var missing_carry := valid_shape.duplicate(true)
+    missing_carry["villagers"][0].erase("carry")
+    assert(not SaveSystem._valid_save(missing_carry),
+        "Save validation must reject villagers missing fields consumed by the loader")
+    var invalid_resources := valid_shape.duplicate(true)
+    invalid_resources["resources"] = [{"cx": 4, "cy": 5, "kind": "wood", "state": "not a dictionary"}]
+    assert(not SaveSystem._valid_save(invalid_resources),
+        "Save validation must reject malformed resource state")
+
     var nodes := {}
     var cells := {}
     for cell in main.world.occupied:

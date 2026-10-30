@@ -150,9 +150,17 @@ func _valid_save(data: Variant) -> bool:
     var buildings = data.get("buildings")
     var villagers = data.get("villagers")
     var enemies = data.get("enemies")
+    var quota = data.get("quota", {})
+    var spawner = data.get("spawner", {})
+    var tech = data.get("tech", {})
+    var resources = data.get("resources", [])
     if not (inventory is Dictionary) or not (clock is Dictionary) or not (player is Dictionary):
         return false
     if not (buildings is Array) or not (villagers is Array) or not (enemies is Array):
+        return false
+    if not (quota is Dictionary) or not (spawner is Dictionary) or not (tech is Dictionary):
+        return false
+    if not (resources is Array):
         return false
     if not clock.has("t") or not clock.has("day") or not clock.has("night"):
         return false
@@ -165,12 +173,30 @@ func _valid_save(data: Variant) -> bool:
         if not DataDB.buildings.has(String(building["id"])):
             return false
     for villager in villagers:
-        if not (villager is Dictionary) or not villager.has("x") or not villager.has("y") or not villager.has("job"):
+        if not (villager is Dictionary):
             return false
+        for key in ["x", "y", "job", "hp", "carry", "kind"]:
+            if not villager.has(key):
+                return false
     for enemy in enemies:
         if not (enemy is Dictionary) or not enemy.has("id") or not enemy.has("x") or not enemy.has("y") or not enemy.has("hp"):
             return false
         if not DataDB.enemies.has(String(enemy["id"])):
+            return false
+    for job in quota:
+        if not ["woodcutter", "miner", "farmer", "soldier"].has(String(job)):
+            return false
+    for resource in resources:
+        if not (resource is Dictionary):
+            return false
+        for key in ["cx", "cy", "kind", "state"]:
+            if not resource.has(key):
+                return false
+        if not ["wood", "stone", "iron"].has(String(resource["kind"])):
+            return false
+        if not (resource["state"] is Dictionary):
+            return false
+        if not resource["state"].has("hp") or not resource["state"].has("regrow"):
             return false
     return true
 

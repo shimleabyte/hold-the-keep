@@ -67,7 +67,7 @@ func can_place(id: String, anchor: Vector2i, size: Vector2i) -> bool:
     if id == "outpost":
         for y in range(size.y):
             for x in range(size.x):
-                if _touches_claim(anchor + Vector2i(x, y)):
+                if _is_frontier_cell(anchor + Vector2i(x, y)):
                     return true
         return false
     for y in range(size.y):
@@ -75,6 +75,10 @@ func can_place(id: String, anchor: Vector2i, size: Vector2i) -> bool:
             if not claimed_cells.has(anchor + Vector2i(x, y)):
                 return false
     return true
+
+
+func _is_frontier_cell(cell: Vector2i) -> bool:
+    return not claimed_cells.has(cell) and _touches_claim(cell)
 
 
 func _touches_claim(cell: Vector2i) -> bool:
