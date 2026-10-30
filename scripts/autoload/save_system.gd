@@ -62,8 +62,8 @@ func save_current(silent := false) -> bool:
         return false
 
     # Preserve the last good save until the new file has been installed.
-    DirAccess.remove_absolute(BACKUP)
     if FileAccess.file_exists(PATH):
+        DirAccess.remove_absolute(BACKUP)
         var backup_error := DirAccess.rename_absolute(PATH, BACKUP)
         if backup_error != OK:
             DirAccess.remove_absolute(TMP)

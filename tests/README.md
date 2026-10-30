@@ -19,6 +19,7 @@ Semua dari akar proyek (setelah `godot --headless --path . --import` sekali):
 | villagers_economy.gd | job, setor ke gudang, ladang, populasi, malam, upkeep, performa |
 | events_boss_final_night.gd | event acak, boss, kemenangan, malam terakhir vs tingkat pertahanan |
 | save_load_audio_menu.gd | round-trip save/load, autosave, save rusak, audio, menu, pengaturan |
+| resource_save_state.gd | status pohon/batu/bijih besi dan timer tumbuh ulang, rollback ke backup save |
 | restart_gameover.gd | layar game over dan restart (R) |
 | fx_shake_settings.gd | batas partikel, guncangan layar, tombol menu, performa dengan efek |
 | perf.gd | biaya per frame: 150 musuh + 42 villager |
