@@ -144,3 +144,11 @@ Disarankan memutuskan dulu: apakah dunia menjadi peta lebih besar yang terbuka b
 11. Desain ulang HUD (panel, ikon, klik). 12. Animasi lengkap (22 frame x 3 arah) + hit di frame benturan.
 13. Efek partikel, busur tebasan, guncangan layar. 14. Dokumen konteks ini + folder tests/.
 15. Pohon teknologi (17 teknologi, 3 era), bijih besi, Tempa, tembok batu, panel Y, balancing diselaraskan.
+
+
+## 11. Update wilayah (2026-10-30)
+- `scripts/systems/territory.gd` membangun klaim radial dari Keep dan Pos Terdepan.
+- Pos Terdepan harus menyentuh frontier saat ini; bangunan lain harus seluruh footprint-nya berada di wilayah yang diklaim.
+- Klaim dihitung ulang dari bangunan aktif dan dilepas saat outpost dibongkar atau dihancurkan; save tidak perlu menyimpan bitmap klaim.
+- Batas klaim digambar sebagai garis tipis di atas peta.
+- Tahap ini belum menambah wilayah musuh, basis musuh, pasukan ekspedisi, fog of war, atau invasi. Itu tetap pekerjaan fase kampanye berikutnya.

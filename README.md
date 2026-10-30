@@ -14,8 +14,9 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - Tahan Shift / bumper kiri (gamepad): lari
 - Y atau tombol RISET di HUD: panel teknologi
 - E / Spasi / tombol A (gamepad): tebang pohon, tambang batu
-- 1-5 atau klik slot di bar bawah: pilih bangunan (rumah, tembok, menara, gudang, ladang)
+- 1-6 atau klik slot di bar bawah: pilih bangunan (termasuk Pos Terdepan)
 - Klik kiri: pasang (tahan untuk melukis tembok)
+- Pos Terdepan memperluas wilayah; bangunan lain hanya dapat dipasang di area yang sudah diklaim
 - Klik kanan: batal / bongkar bangunan (refund 50%)
 - Esc: batal mode bangun
 - F / klik kiri (di luar mode bangun) / tombol X: serang sekitar pemain
@@ -24,14 +25,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - F5: simpan | F9: muat | H: bantuan kontrol | F3: tampilkan FPS
 - R: mulai ulang setelah game over | L: muat save terakhir dari layar game over
 
-## Status: Minggu 1
-- Peta 64x64 prosedural (rumput, kolam dengan collision, pohon)
-- Pemain 8 arah, kamera smoothing + limit peta, Y-sort
-- Pohon: 3 pukulan, bonus kayu, tumbuh lagi 45 detik
-- Inventori (autoload), HUD (kayu, hari, FPS), siklus siang-malam dasar
-- Semua visual placeholder prosedural, belum ada aset
-
-## Status
+## Status Saat Ini
 Minggu 1-2: peta, pemain, kamera, sumber daya (kayu, batu), sistem bangunan data-driven.
 
 Minggu 4-5 (bagian 1): pertahanan
@@ -87,6 +81,9 @@ membuka Tempa dan membuat bijih besi (urat oranye, jauh dari keep) bisa ditamban
 memilih besi bila stoknya kurang dari separuh batu. Game di-pause saat panel terbuka.
 Efek berupa data (pengali, penambah, buka bangunan, bendera) lewat `Tech.stat(kunci, dasar)`.
 
+## Wilayah
+Keep mengklaim area awal. Pos Terdepan (hotkey 6) dapat dibangun pada atau tepat di frontier wilayah sendiri dan memperluas klaim dalam radius 9 tile. Bangunan lain harus sepenuhnya berada di area yang diklaim. Garis emas tipis menandai batas wilayah. Wilayah masih berupa klaim pada satu peta; basis musuh dan sistem invasi belum tersedia.
+
 ## HUD
 Panel atas: kayu, batu, makanan, hari + lintasan siang/malam (kuning = siang, biru = malam, oranye = fajar),
 jumlah musuh, penduduk. Kiri: bar HP pemain dan keep. Kanan: kuota job (klik + / -; oranye = belum terisi).
@@ -125,5 +122,5 @@ diam (2), jalan (4), lari (4), serang (4), kerja (4), kena pukul (1), mati (3).
 Font HUD: Silkscreen (c) The Silkscreen Project Authors, SIL Open Font License 1.1
 (lihat `assets/fonts/OFL-Silkscreen.txt`). Font hanya punya huruf kapital.
 
-Belum ada: musik, rebind kontrol, tech tree, ikon .ico untuk Windows, integrasi Steam.
+Belum ada: musik, rebind kontrol, basis musuh, pasukan ekspedisi, invasi lintas wilayah, fog of war, ikon .ico untuk Windows, integrasi Steam.
 Visual masih placeholder prosedural.

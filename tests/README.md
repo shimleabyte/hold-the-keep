@@ -14,6 +14,7 @@ Semua dari akar proyek (setelah `godot --headless --path . --import` sekali):
 | Skrip | Menguji |
 |---|---|
 | tech_tree.gd | syarat riset, efek ke entitas yang ada, bangunan terkunci, bijih besi, HUD, panel, save/load |
+| territory_claims.gd | klaim Keep, larangan bangunan di luar klaim, penempatan Outpost di frontier, ekspansi, pembongkaran |
 | combat_tower_walls.gd | menara menembak, cincin tembok, 150 musuh, game over |
 | villagers_economy.gd | job, setor ke gudang, ladang, populasi, malam, upkeep, performa |
 | events_boss_final_night.gd | event acak, boss, kemenangan, malam terakhir vs tingkat pertahanan |
