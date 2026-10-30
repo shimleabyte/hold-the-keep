@@ -1,11 +1,10 @@
 extends Node
-## Save/load ke user://save.json. Satu slot: autosave tiap fajar + manual (F5), muat dengan F9.
-## Disimpan: inventori, jam, bangunan (HP), penduduk (job, HP, bawaan), musuh, pemain, kuota job.
-## Tidak disimpan: status pohon/batu (semua tumbuh lagi saat dimuat).
+## Versioned save/load with rollback backup and resource-node state.
 
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
-const VERSION := 1
+const BACKUP := "user://save.bak"
+const VERSION := 2
 
 var pending: Dictionary = {}
 
@@ -16,7 +15,7 @@ func _ready() -> void:
 
 
 func has_save() -> bool:
-    return FileAccess.file_exists(PATH)
+    return FileAccess.file_exists(PATH) or FileAccess.file_exists(BACKUP)
 
 
 func _on_day_changed(_day: int) -> void:
@@ -36,79 +35,163 @@ func _main() -> Node:
     return get_tree().get_first_node_in_group("main")
 
 
-## Kembali true jika berhasil. `silent` = tanpa pesan (autosave).
+## Write a complete temporary file before moving the current save to its rollback copy.
 func save_current(silent := false) -> bool:
     var main := _main()
     if main == null or not _has_keep():
         if not silent:
             Events.build_feedback.emit("Tidak bisa menyimpan sekarang")
         return false
+
     var data := collect(main)
     DirAccess.remove_absolute(TMP)
-    var f := FileAccess.open(TMP, FileAccess.WRITE)
-    if f == null:
+    var file := FileAccess.open(TMP, FileAccess.WRITE)
+    if file == null:
         if not silent:
             Events.build_feedback.emit("Gagal menulis save")
         return false
-    f.store_string(JSON.stringify(data))
-    f.close()
+
+    file.store_string(JSON.stringify(data))
+    file.flush()
+    var write_error := file.get_error()
+    file.close()
+    if write_error != OK:
+        DirAccess.remove_absolute(TMP)
+        if not silent:
+            Events.build_feedback.emit("Gagal menulis save")
+        return false
+
+    # Preserve the last good save until the new file has been installed.
+    DirAccess.remove_absolute(BACKUP)
     if FileAccess.file_exists(PATH):
-        DirAccess.remove_absolute(PATH)
-    if DirAccess.rename_absolute(TMP, PATH) != OK:
+        var backup_error := DirAccess.rename_absolute(PATH, BACKUP)
+        if backup_error != OK:
+            DirAccess.remove_absolute(TMP)
+            if not silent:
+                Events.build_feedback.emit("Gagal mengamankan save lama")
+            return false
+
+    var install_error := DirAccess.rename_absolute(TMP, PATH)
+    if install_error != OK:
+        if FileAccess.file_exists(BACKUP):
+            var restore_error := DirAccess.rename_absolute(BACKUP, PATH)
+            if restore_error != OK:
+                push_error("Save rollback failed; backup remains at " + BACKUP)
+        DirAccess.remove_absolute(TMP)
         if not silent:
-            Events.build_feedback.emit("Gagal menulis save")
+            Events.build_feedback.emit("Gagal memasang save baru")
         return false
+
     if not silent:
         Events.build_feedback.emit("Game disimpan")
     return true
 
 
 func _has_keep() -> bool:
-    for b in get_tree().get_nodes_in_group("buildings"):
-        if b.id == "keep":
+    for building in get_tree().get_nodes_in_group("buildings"):
+        if building.id == "keep":
             return true
     return false
 
 
 func collect(main: Node) -> Dictionary:
-    var blds: Array = []
-    for b in get_tree().get_nodes_in_group("buildings"):
-        blds.append({"id": b.id, "cx": b.cell.x, "cy": b.cell.y, "hp": b.hp})
-    var vils: Array = []
-    for v in get_tree().get_nodes_in_group("villagers"):
-        vils.append({"x": v.position.x, "y": v.position.y, "job": v.job, "hp": v.hp,
-            "carry": v.carry, "kind": v.carry_kind})
-    var foes: Array = []
-    for e in get_tree().get_nodes_in_group("enemies"):
-        foes.append({"id": e.id, "x": e.position.x, "y": e.position.y, "hp": e.hp})
+    var buildings: Array = []
+    for building in get_tree().get_nodes_in_group("buildings"):
+        buildings.append({"id": building.id, "cx": building.cell.x, "cy": building.cell.y, "hp": building.hp})
+
+    var villagers: Array = []
+    for villager in get_tree().get_nodes_in_group("villagers"):
+        villagers.append({"x": villager.position.x, "y": villager.position.y, "job": villager.job, "hp": villager.hp,
+            "carry": villager.carry, "kind": villager.carry_kind})
+
+    var enemies: Array = []
+    for enemy in get_tree().get_nodes_in_group("enemies"):
+        enemies.append({"id": enemy.id, "x": enemy.position.x, "y": enemy.position.y, "hp": enemy.hp})
+
+    var resources: Array = []
+    for cell in main.world.occupied:
+        var node = main.world.occupied[cell]
+        if is_instance_valid(node) and node.has_method("export_state"):
+            resources.append({
+                "cx": cell.x,
+                "cy": cell.y,
+                "kind": node.yield_kind,
+                "state": node.export_state()
+            })
+
     return {
         "version": VERSION,
         "inventory": Inventory.items,
         "clock": {"t": GameClock.time_of_day, "day": GameClock.day, "night": GameClock.is_night},
         "player": {"x": main.player.position.x, "y": main.player.position.y, "hp": main.player.hp},
-        "buildings": blds,
-        "villagers": vils,
-        "enemies": foes,
+        "buildings": buildings,
+        "villagers": villagers,
+        "enemies": enemies,
+        "resources": resources,
         "quota": main.village.quota,
         "spawner": main.spawner.export_state(),
         "tech": Tech.export_state(),
     }
 
 
-## Muat ulang scene dengan data dari disk. Kembali false jika tidak ada/rusak.
-func request_load() -> bool:
-    if not has_save():
-        Events.build_feedback.emit("Belum ada save")
+func _valid_save(data: Variant) -> bool:
+    if not (data is Dictionary):
         return false
-    var f := FileAccess.open(PATH, FileAccess.READ)
-    var parsed = null
-    if f != null:
+    var version := int(data.get("version", 0))
+    if version < 1 or version > VERSION:
+        return false
+
+    var inventory = data.get("inventory")
+    var clock = data.get("clock")
+    var player = data.get("player")
+    var buildings = data.get("buildings")
+    var villagers = data.get("villagers")
+    var enemies = data.get("enemies")
+    if not (inventory is Dictionary) or not (clock is Dictionary) or not (player is Dictionary):
+        return false
+    if not (buildings is Array) or not (villagers is Array) or not (enemies is Array):
+        return false
+    if not clock.has("t") or not clock.has("day") or not clock.has("night"):
+        return false
+    if not player.has("x") or not player.has("y") or not player.has("hp"):
+        return false
+
+    for building in buildings:
+        if not (building is Dictionary) or not building.has("id") or not building.has("cx") or not building.has("cy") or not building.has("hp"):
+            return false
+        if not DataDB.buildings.has(String(building["id"])):
+            return false
+    for villager in villagers:
+        if not (villager is Dictionary) or not villager.has("x") or not villager.has("y") or not villager.has("job"):
+            return false
+    for enemy in enemies:
+        if not (enemy is Dictionary) or not enemy.has("id") or not enemy.has("x") or not enemy.has("y") or not enemy.has("hp"):
+            return false
+        if not DataDB.enemies.has(String(enemy["id"])):
+            return false
+    return true
+
+
+## Load the primary save, falling back to the last known-good copy when necessary.
+func request_load() -> bool:
+    var parsed: Variant = null
+    for candidate in [PATH, BACKUP]:
+        if not FileAccess.file_exists(candidate):
+            continue
+        var file := FileAccess.open(candidate, FileAccess.READ)
+        if file == null:
+            continue
         var json := JSON.new()
-        if json.parse(f.get_as_text()) == OK:
+        var parse_result := json.parse(file.get_as_text())
+        file.close()
+        if parse_result == OK and _valid_save(json.data):
             parsed = json.data
-    if not (parsed is Dictionary) or int(parsed.get("version", 0)) != VERSION or not parsed.has("buildings"):
+            break
+
+    if parsed == null:
         Events.build_feedback.emit("Save rusak atau versi tidak cocok")
         return false
+
     pending = parsed
     get_tree().paused = false
     get_tree().reload_current_scene()
@@ -116,6 +199,6 @@ func request_load() -> bool:
 
 
 func take_pending() -> Dictionary:
-    var d := pending
+    var data := pending
     pending = {}
-    return d
+    return data
