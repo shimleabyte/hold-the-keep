@@ -1,0 +1,44 @@
+[
+ {
+  "id": "bandit",
+  "name": "Bandit",
+  "hp": 20,
+  "speed": 32.0,
+  "damage": 6,
+  "attack_interval": 1.0,
+  "color": "#a33b3b",
+  "scale": 1.0
+ },
+ {
+  "id": "wolf",
+  "name": "Serigala",
+  "hp": 12,
+  "speed": 58.0,
+  "damage": 4,
+  "attack_interval": 0.8,
+  "color": "#7d7d85",
+  "scale": 0.9,
+  "run": true
+ },
+ {
+  "id": "soldier",
+  "name": "Prajurit",
+  "hp": 60,
+  "speed": 24.0,
+  "damage": 12,
+  "attack_interval": 1.4,
+  "color": "#3b4f8a",
+  "scale": 1.2
+ },
+ {
+  "id": "king",
+  "name": "Raja Lawan",
+  "hp": 1400,
+  "speed": 20.0,
+  "damage": 30,
+  "attack_interval": 1.5,
+  "color": "#6b1f2a",
+  "scale": 1.8,
+  "boss": true
+ }
+]

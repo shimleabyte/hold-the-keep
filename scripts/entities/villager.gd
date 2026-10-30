@@ -1,0 +1,584 @@
+extends Node2D
+## Villager dengan job. Mesin state sederhana:
+## IDLE -> TO_WORK -> WORKING -> TO_DEPOT -> (kembali TO_WORK)
+## Malam: non-prajurit lari ke keep dan bersembunyi; prajurit bertarung.
+## Origin node = kaki (untuk Y-sort).
+
+const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
+const Corpse := preload("res://scripts/entities/corpse.gd")
+
+enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT }
+
+const TEXTURES := {
+    "": preload("res://assets/sprites/villager_idle.svg"),
+    "woodcutter": preload("res://assets/sprites/villager_woodcutter.svg"),
+    "miner": preload("res://assets/sprites/villager_miner.svg"),
+    "farmer": preload("res://assets/sprites/villager_farmer.svg"),
+    "soldier": preload("res://assets/sprites/villager_soldier.svg"),
+}
+
+const FW := 20
+const FH := 20
+const SPEED := 42.0
+const RUN_SPEED := 66.0
+const RUN_DISTANCE := 70.0  # prajurit berlari jika musuh lebih jauh dari ini
+const ATTACK_HIT_DELAY := 0.14
+const HURT_TIME := 0.2
+const CARRY_CAP := 6
+const HIT_INTERVAL := 1.2
+const FARM_CYCLE := 12.0
+const FARM_YIELD := 3
+const SOLDIER_HP := 60
+const WORKER_HP := 20
+const SOLDIER_DAMAGE := 8
+const SOLDIER_INTERVAL := 0.8
+const SOLDIER_SEARCH := 300.0
+const REACH := 11.0
+
+var job := ""
+var state := State.IDLE
+var carry_kind := ""
+var carry := 0
+var hp := WORKER_HP
+var max_hp := WORKER_HP
+var nav
+var world
+var target = null
+
+var _depot = null
+var _path := PackedVector2Array()
+var _pi := 0
+var _path_ver := -1
+var _goal_cells: Array[Vector2i] = []
+var _bad: Array = []
+var _decide_t := 0.0
+var _work_t := 0.0
+var _wander_t := 2.0
+var _atk_cd := 0.0
+var _scan_t := 0.0
+var _repath_t := 0.0
+var _foe = null
+var anim := SpriteAnim.new()
+var _hurt_t := 0.0
+var _pending_foe = null
+var _pending_t := 0.0
+var _hit_done := false
+var _running := false
+
+
+func _ready() -> void:
+    add_to_group("villagers")
+    Events.tech_researched.connect(_on_tech)
+    _decide_t = randf_range(0.0, 1.0)
+
+
+## Stat dinamis dari teknologi.
+func _carry_cap() -> int:
+    return roundi(Tech.stat("villager.carry", float(CARRY_CAP)))
+
+
+func _hit_interval() -> float:
+    return HIT_INTERVAL / Tech.stat("villager.gather_speed", 1.0)
+
+
+func _soldier_damage() -> int:
+    return roundi(Tech.stat("soldier.damage", float(SOLDIER_DAMAGE)))
+
+
+func _hp_cap_for(j: String) -> int:
+    return roundi(Tech.stat("soldier.hp", float(SOLDIER_HP))) if j == "soldier" else WORKER_HP
+
+
+func _on_tech(_tech_id: String) -> void:
+    var old := max_hp
+    max_hp = _hp_cap_for(job)
+    if max_hp != old:
+        hp = clampi(roundi(float(hp) * max_hp / old), 1, max_hp)
+        queue_redraw()
+
+
+## Penambang memilih besi bila stoknya kurang dari separuh batu (dan ada bijih yang bisa ditambang).
+func _mine_kind() -> String:
+    if Tech.has_flag("iron_mining") and Inventory.get_amount("iron") <= Inventory.get_amount("stone") * 0.5:
+        for n in get_tree().get_nodes_in_group("harvestable"):
+            if n.yield_kind == "iron":
+                return "iron"
+    return "stone"
+
+
+func set_job(j: String) -> void:
+    if j == job:
+        return
+    _release()
+    var old_max := max_hp
+    job = j
+    if job == "soldier":
+        add_to_group("defenders")
+        max_hp = _hp_cap_for(job)
+    else:
+        remove_from_group("defenders")
+        max_hp = _hp_cap_for(job)
+    # Pertahankan proporsi HP (penuh tetap penuh) saat max HP berubah.
+    hp = clampi(int(round(float(hp) * max_hp / old_max)), 1, max_hp)
+    if state != State.HIDDEN and state != State.FLEEING:
+        state = State.IDLE
+        _path = PackedVector2Array()
+        _pi = 0
+    queue_redraw()
+
+
+## Dipanggil pohon/batu saat dipukul oleh villager ini.
+func receive(kind: String, amount: int) -> void:
+    if carry_kind != kind:
+        carry = 0
+    carry_kind = kind
+    carry += amount
+    queue_redraw()
+
+
+func take_damage(amount: int) -> void:
+    if hp <= 0:
+        return
+    hp -= amount
+    Events.fx_burst.emit("hurt", position + Vector2(0, -8), Vector2.ZERO, 1.0)
+    modulate = Color(1.7, 0.6, 0.6)
+    create_tween().tween_property(self, "modulate", Color.WHITE, 0.2)
+    queue_redraw()
+    if hp <= 0:
+        Events.villager_died.emit()
+        Corpse.spawn(get_parent(), TEXTURES.get(job, TEXTURES[""]), FW, FH, anim.view, anim.flip, position)
+        leave()
+    elif not (anim.clip == "attack" and not anim.finished):
+        _hurt_t = HURT_TIME
+
+
+func leave() -> void:
+    _release()
+    remove_from_group("villagers")
+    remove_from_group("defenders")
+    queue_free()
+
+
+# ---------------------------------------------------------------- loop
+
+func _physics_process(delta: float) -> void:
+    _atk_cd = maxf(0.0, _atk_cd - delta)
+    _hurt_t = maxf(0.0, _hurt_t - delta)
+    _resolve_pending(delta)
+
+    if state == State.HIDDEN:
+        if not GameClock.is_night:
+            visible = true
+            state = State.IDLE
+        return
+
+    if GameClock.is_night and job != "soldier" and state != State.FLEEING:
+        _begin_flee()
+
+    if nav.version != _path_ver and (state == State.TO_WORK or state == State.TO_DEPOT or state == State.FLEEING):
+        _repath()
+
+    match state:
+        State.IDLE:
+            _tick_idle(delta)
+        State.TO_WORK:
+            if target == null or not is_instance_valid(target):
+                target = null
+                state = State.IDLE
+            elif _move_along(delta):
+                state = State.WORKING
+                _work_t = 0.0
+                _hit_done = false
+        State.WORKING:
+            _tick_working(delta)
+        State.TO_DEPOT:
+            if _depot == null or not is_instance_valid(_depot):
+                _go_depot()
+            elif _move_along(delta):
+                _deposit()
+                _return_to_work()
+        State.FLEEING:
+            if _move_along(delta):
+                _hide()
+        State.FIGHT:
+            _tick_fight(delta)
+    _update_anim(delta)
+
+
+## Pilih klip animasi dari state. Kerja penebang/penambang disinkronkan dengan timer pukulan.
+func _update_anim(delta: float) -> void:
+    var moving := false
+    _running = false
+    match state:
+        State.TO_WORK, State.TO_DEPOT:
+            moving = true
+        State.FLEEING:
+            moving = true
+            _running = true
+        State.IDLE:
+            moving = _pi < _path.size()
+        State.FIGHT:
+            if _foe != null and is_instance_valid(_foe):
+                var dist := position.distance_to(_foe.position)
+                moving = dist >= REACH
+                _running = dist > RUN_DISTANCE
+    anim.manual_progress = -1.0
+    if anim.clip == "attack" and not anim.finished:
+        pass  # biarkan tebasan selesai
+    elif _hurt_t > 0.0:
+        anim.play("hurt")
+    elif state == State.WORKING:
+        anim.play("work")
+        if job == "farmer":
+            anim.speed_scale = 0.5
+        else:
+            anim.manual_progress = _work_t / _hit_interval()
+    elif moving:
+        anim.play("run" if _running else "walk")
+        anim.speed_scale = 1.0
+    else:
+        anim.play("idle")
+        anim.speed_scale = 1.0
+    if anim.update(delta):
+        queue_redraw()
+
+
+func _resolve_pending(delta: float) -> void:
+    if _pending_foe == null:
+        return
+    _pending_t -= delta
+    if _pending_t > 0.0:
+        return
+    var f = _pending_foe
+    _pending_foe = null
+    if is_instance_valid(f):
+        f.take_damage(_soldier_damage())
+
+
+func _tick_idle(delta: float) -> void:
+    if _pi < _path.size():
+        _move_along(delta)
+    if job == "soldier":
+        _scan_t -= delta
+        if _scan_t <= 0.0:
+            _scan_t = 0.3
+            _foe = _nearest_enemy()
+            if _foe != null:
+                state = State.FIGHT
+                _path = PackedVector2Array()
+                _pi = 0
+                return
+    elif job != "":
+        _decide_t -= delta
+        if _decide_t <= 0.0:
+            _decide_t = 1.5
+            _find_work()
+            return
+    if _pi >= _path.size():
+        _wander_t -= delta
+        if _wander_t <= 0.0:
+            _wander()
+
+
+func _tick_working(delta: float) -> void:
+    if target == null or not is_instance_valid(target):
+        target = null
+        state = State.IDLE
+        return
+    if job == "farmer":
+        anim.face(target.position - position)
+        _work_t += delta
+        if _work_t >= FARM_CYCLE:
+            _work_t = 0.0
+            receive("food", roundi(Tech.stat("farm.yield", float(FARM_YIELD))))
+            if carry >= _carry_cap():
+                _go_depot()
+        return
+    if not target.is_available(self):
+        if carry > 0:
+            _go_depot()
+        else:
+            _release()
+            state = State.IDLE
+        return
+    anim.face(target.position - position)
+    _work_t += delta
+    if not _hit_done and _work_t >= _hit_interval() * 0.5:
+        _hit_done = true  # frame benturan: alat mengenai sasaran
+        target.hit(self)
+        if carry >= _carry_cap() or not target.is_available(self):
+            _hit_done = false
+            _work_t = 0.0
+            if carry > 0:
+                _go_depot()
+            else:
+                _release()
+                state = State.IDLE
+            return
+    if _work_t >= _hit_interval():
+        _work_t = 0.0
+        _hit_done = false
+
+
+func _tick_fight(delta: float) -> void:
+    _scan_t -= delta
+    if _scan_t <= 0.0:
+        _scan_t = 0.3
+        _foe = _nearest_enemy()
+    if _foe == null or not is_instance_valid(_foe):
+        _foe = null
+        state = State.IDLE
+        return
+    var dist := position.distance_to(_foe.position)
+    if dist < REACH:
+        if anim.face(_foe.position - position):
+            queue_redraw()
+        if _atk_cd <= 0.0:
+            _atk_cd = SOLDIER_INTERVAL
+            _pending_foe = _foe
+            _pending_t = ATTACK_HIT_DELAY
+            anim.play("attack", true)
+        return
+    _repath_t -= delta
+    if _repath_t <= 0.0:
+        _repath_t = 0.5
+        var p: PackedVector2Array = nav.path_to(position, nav.cell_of(_foe.position))
+        if not p.is_empty():
+            _set_path(p)
+    if _pi < _path.size():
+        _move_along(delta)
+    else:
+        position += (_foe.position - position).normalized() * (RUN_SPEED if dist > RUN_DISTANCE else SPEED) * delta
+
+
+# ---------------------------------------------------------------- jobs
+
+func _find_work() -> void:
+    if carry > 0:
+        _go_depot()
+        return
+    var cands: Array = []
+    match job:
+        "woodcutter", "miner":
+            var kind := "wood" if job == "woodcutter" else _mine_kind()
+            for n in get_tree().get_nodes_in_group("harvestable"):
+                if n.yield_kind == kind and n.is_available(self) and not _bad.has(n):
+                    cands.append(n)
+        "farmer":
+            for f in get_tree().get_nodes_in_group("farms"):
+                if f.free_slots() > 0 and not _bad.has(f):
+                    cands.append(f)
+    cands.sort_custom(func(a, b) -> bool: return a.position.distance_squared_to(position) < b.position.distance_squared_to(position))
+    for i in mini(4, cands.size()):
+        var n = cands[i]
+        var cells := _cells_of(n)
+        var p: PackedVector2Array = nav.path_adjacent(position, cells)
+        if p.is_empty():
+            _bad.append(n)
+            continue
+        if not _claim(n):
+            continue
+        target = n
+        _goal_cells = cells
+        _set_path(p)
+        state = State.TO_WORK
+        return
+    _bad.clear()
+
+
+func _cells_of(n) -> Array[Vector2i]:
+    if n.has_method("cells"):
+        return n.cells()
+    var out: Array[Vector2i] = [nav.cell_of(n.position + Vector2(0, -1))]
+    return out
+
+
+func _claim(n) -> bool:
+    if n.has_method("claim"):
+        return n.claim(self)
+    n.worker = self
+    return true
+
+
+func _release() -> void:
+    if target != null and is_instance_valid(target):
+        if target.has_method("release"):
+            target.release(self)
+        elif target.get("worker") == self:
+            target.worker = null
+    target = null
+
+
+func _go_depot() -> void:
+    _depot = null
+    var best := INF
+    for d in get_tree().get_nodes_in_group("depots"):
+        var dist: float = d.position.distance_squared_to(position)
+        if dist < best:
+            best = dist
+            _depot = d
+    if _depot == null:
+        state = State.IDLE
+        return
+    _goal_cells = _depot.cells()
+    var p: PackedVector2Array = nav.path_adjacent(position, _goal_cells)
+    if p.is_empty():
+        state = State.IDLE
+        return
+    _set_path(p)
+    state = State.TO_DEPOT
+
+
+func _deposit() -> void:
+    if carry > 0 and carry_kind != "":
+        Inventory.add(carry_kind, carry)
+    carry = 0
+    carry_kind = ""
+    queue_redraw()
+
+
+func _return_to_work() -> void:
+    if target == null or not is_instance_valid(target):
+        target = null
+        state = State.IDLE
+        return
+    if target.has_method("is_available") and not target.is_available(self):
+        _release()
+        state = State.IDLE
+        return
+    _goal_cells = _cells_of(target)
+    var p: PackedVector2Array = nav.path_adjacent(position, _goal_cells)
+    if p.is_empty():
+        _release()
+        state = State.IDLE
+        return
+    _set_path(p)
+    state = State.TO_WORK
+
+
+# ---------------------------------------------------------------- malam
+
+func _find_keep():
+    for d in get_tree().get_nodes_in_group("depots"):
+        if d.id == "keep":
+            return d
+    return null
+
+
+func _begin_flee() -> void:
+    _release()
+    var keep = _find_keep()
+    state = State.FLEEING
+    if keep == null:
+        _hide()
+        return
+    _goal_cells = keep.cells()
+    var p: PackedVector2Array = nav.path_adjacent(position, _goal_cells)
+    if p.is_empty():
+        _hide()
+    else:
+        _set_path(p)
+
+
+func _hide() -> void:
+    _deposit()
+    visible = false
+    state = State.HIDDEN
+
+
+func _nearest_enemy():
+    var best = null
+    var best_d := SOLDIER_SEARCH
+    for e in get_tree().get_nodes_in_group("enemies"):
+        var d := position.distance_to((e as Node2D).position)
+        if d < best_d:
+            best_d = d
+            best = e
+    return best
+
+
+# ---------------------------------------------------------------- gerak
+
+func _wander() -> void:
+    _wander_t = randf_range(3.0, 8.0)
+    var keep = _find_keep()
+    if keep == null:
+        return
+    var c: Vector2i = keep.cell + Vector2i(1, 3) + Vector2i(randi_range(-3, 3), randi_range(-1, 2))
+    if not nav.is_walkable(c):
+        return
+    var p: PackedVector2Array = nav.path_to(position, c)
+    if not p.is_empty():
+        _set_path(p)
+
+
+func _set_path(p: PackedVector2Array) -> void:
+    _path = p
+    _pi = 1 if p.size() > 1 else 0
+    _path_ver = nav.version
+
+
+func _repath() -> void:
+    var p: PackedVector2Array = nav.path_adjacent(position, _goal_cells)
+    if p.is_empty():
+        match state:
+            State.FLEEING:
+                _hide()
+            State.TO_WORK:
+                _release()
+                state = State.IDLE
+            _:
+                state = State.IDLE
+        return
+    _set_path(p)
+
+
+## true jika sudah sampai di ujung jalur.
+func _move_along(delta: float) -> bool:
+    if _pi >= _path.size():
+        return true
+    var tgt := _path[_pi]
+    var to := tgt - position
+    var d := to.length()
+    var fast := state == State.FLEEING or (state == State.FIGHT and _foe != null and is_instance_valid(_foe) and position.distance_to(_foe.position) > RUN_DISTANCE)
+    var step := (RUN_SPEED if fast else SPEED) * delta
+    if not anim.is_busy() and anim.face(to):
+        queue_redraw()
+    if d <= step:
+        position = tgt
+        _pi += 1
+        return _pi >= _path.size()
+    position += to / d * step
+    return false
+
+
+# ---------------------------------------------------------------- gambar
+
+func _job_color() -> Color:
+    match job:
+        "woodcutter":
+            return Color("#4e9a4a")
+        "miner":
+            return Color("#8a8f98")
+        "farmer":
+            return Color("#d6b13c")
+        "soldier":
+            return Color("#3f6fb5")
+    return Color("#d9d2c3")
+
+
+func _draw() -> void:
+    anim.draw(self, TEXTURES.get(job, TEXTURES[""]), FW, FH)
+    if carry > 0:
+        var cc := Color("#a8743a")
+        if carry_kind == "stone":
+            cc = Color("#aeb3b9")
+        elif carry_kind == "iron":
+            cc = Color("#c97b3a")
+        elif carry_kind == "food":
+            cc = Color("#e8c23a")
+        draw_rect(Rect2(-7, -8, 3, 3), cc)
+        draw_rect(Rect2(-7, -8, 3, 1), cc.lightened(0.3))
+    if hp < max_hp:
+        draw_rect(Rect2(-5, -20, 10, 2), Color(0, 0, 0, 0.7))
+        draw_rect(Rect2(-5, -20, 10.0 * float(maxi(hp, 0)) / max_hp, 2), Color("#6fcf5a"))
