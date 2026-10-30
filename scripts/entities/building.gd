@@ -11,6 +11,7 @@ const TEXTURES := {
     "farm": preload("res://assets/sprites/farm.svg"),
     "stone_wall": preload("res://assets/sprites/stone_wall.svg"),
     "forge": preload("res://assets/sprites/forge.svg"),
+    "outpost": preload("res://assets/sprites/outpost.svg"),
 }
 const ARROW_SCRIPT := preload("res://scripts/entities/arrow.gd")
 

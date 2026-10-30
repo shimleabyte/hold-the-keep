@@ -8,6 +8,7 @@ signal build_selected(id: String)  # "" = mode bangun mati
 signal building_placed(id: String, cell: Vector2i)
 signal building_removed(id: String, cell: Vector2i)
 signal building_destroyed(id: String, cell: Vector2i)
+signal territory_changed(claimed_tiles: int)
 signal build_feedback(text: String)
 signal player_hp_changed(hp: int, max_hp: int)
 signal keep_hp_changed(hp: int, max_hp: int)

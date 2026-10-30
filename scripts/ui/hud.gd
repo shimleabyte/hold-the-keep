@@ -26,6 +26,7 @@ const ICONS := {
     "tech": preload("res://assets/sprites/icon_tech.svg"),
     "stone_wall": preload("res://assets/sprites/icon_stone_wall.svg"),
     "forge": preload("res://assets/sprites/icon_forge.svg"),
+    "outpost": preload("res://assets/sprites/icon_outpost.svg"),
 }
 const JOBS := ["woodcutter", "miner", "farmer", "soldier"]
 const JOB_ICONS := {"woodcutter": "axe", "miner": "pick", "farmer": "wheat", "soldier": "sword"}
@@ -41,7 +42,7 @@ const HELP_ROWS := [
     ["Y", "TEKNOLOGI (RISET)"],
     ["E / SPASI", "TEBANG, TAMBANG"],
     ["F / KLIK", "SERANG"],
-    ["1-5", "PILIH BANGUNAN"],
+    ["1-6", "PILIH BANGUNAN"],
     ["KLIK KIRI", "PASANG BANGUNAN"],
     ["KLIK KANAN", "BATAL / BONGKAR"],
     ["T M K R", "TAMBAH JOB"],

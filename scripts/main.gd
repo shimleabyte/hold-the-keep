@@ -1,6 +1,7 @@
 extends Node2D
 
 const WORLD_SCRIPT := preload("res://scripts/world/world_map.gd")
+const TERRITORY_SCRIPT := preload("res://scripts/systems/territory.gd")
 const PLAYER_SCRIPT := preload("res://scripts/entities/player.gd")
 const BUILD_SCRIPT := preload("res://scripts/systems/build_system.gd")
 const FLOW_SCRIPT := preload("res://scripts/systems/flow_field.gd")
@@ -17,6 +18,7 @@ const NIGHT_TINT := Color(0.45, 0.5, 0.75)
 const KEEP_CELL := Vector2i(31, 29)
 
 var world
+var territory
 var player
 var build
 var flow
@@ -36,6 +38,10 @@ func _ready() -> void:
 
     world = WORLD_SCRIPT.new()
     add_child(world)
+
+    territory = TERRITORY_SCRIPT.new()
+    territory.world = world
+    world.add_child(territory)
 
     add_child_to_world_fx()
     player = PLAYER_SCRIPT.new()
@@ -70,6 +76,7 @@ func _ready() -> void:
     build = BUILD_SCRIPT.new()
     build.world = world
     build.player = player
+    build.territory = territory
     add_child(build)
 
     add_child(HUD_SCRIPT.new())
