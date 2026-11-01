@@ -282,7 +282,7 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 
 
 ## 24. Phase 09 — Balance, performance and release hardening (2026-11-01)
-- Work branch: `feat/phase-09-balance-performance-release`, based on the Phase 07 campaign head so the 20-day Frontier objectives and save v11 schema are present without modifying `main` or the other active phase branches.
+- Work branch: `feat/phase-09-balance-performance-release-v2`, based on the Phase 07 campaign head so the 20-day Frontier objectives and save v11 schema are present without modifying `main` or the other active phase branches.
 - Added `docs/plans/phase-09-plan.md` with measured-performance, deterministic stress, save-recovery, export and manual-playtest gates.
 - `tests/perf.gd` now supports Classic/Frontier profiles and configurable population/workload; it reports p50/p95/p99 process, physics and wall-frame timing, static memory, world node count, projectile peak and particle peak. It is diagnostic and deliberately has no machine-independent timing assertion.
 - `tests/frontier_stress.gd` exercises a 128×128 Frontier world, four faction identities and rosters, 48 villagers, ranged projectile creation, the 500-particle ceiling and current save validation.
