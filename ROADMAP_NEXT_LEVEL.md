@@ -2,7 +2,7 @@
 
 **Status (2026-11-01):** Phase 00, 01, 03 and the initial slices of 02, 04, 05, 06, 07, 09 and 10 are merged into `main`. Phase 02, 04, 05 and 06 remain partially implemented; Phase 08 has not been implemented as a distinct delivery. All remaining manual acceptance gates are still open.  
 **Current main:** `f540faebb83402030ea4a360161eacd737e28856`. Latest mainline CI: [workflow #294](https://github.com/shimleabyte/hold-the-keep/actions/runs/41309837812), 44/44 jobs successful on Godot 4.3 and 4.7 plus export/performance diagnostics.  
-**Baseline:** Godot 4.3+ / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, save format v11.
+**Baseline:** Godot 4.3+ / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, save format v12.
 
 ## 1. Product direction
 
@@ -96,7 +96,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate — passed:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable stronghold approach, valid map bounds, viewport fit and 128×128 fog/index round-trip.
 
 ### Phase 02 — Territory, roads and supply
-**Status:** Initial implementation slice merged into `main`; Godot 4.3 / 4.7 CI passed. Broader logistics phase remains in progress.
+**Status:** Regional control/road/connected-depot foundation merged into `main`. The current implementation branch adds bounded local stockpiles for Storage/Outposts, Frontier worker deposits into local depot balances, and save v12 persistence. Explicit inter-depot shipments, player-facing stock inspection, Outpost garrisons and local visibility remain open.
 
 - [x] Aggregate land claims into neutral/player/enemy/contested regional control records.
 - [x] Emit regional control changes independently from fog-of-war exploration.
@@ -106,11 +106,13 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Build a cardinal road graph rooted at the Keep and expose connected road/depot state.
 - [x] Treat Keep, Storage and Outposts as depots; Outposts are forward depots.
 - [x] Restrict worker deposits to Keep-connected depots and retain cargo when a route disconnects.
+- [x] Add Storage (180 units) and Outpost (120 units) local stockpile capacities; Frontier workers credit the chosen depot rather than silently increasing central Keep inventory.
+- [x] Persist local depot balances in save v12 with resource-kind, non-negative quantity and capacity validation; preserve v1–v11 migration defaults.
 - [x] Show explored roads and regional control state on the strategic map.
 - [x] Cover ownership states, road/bridge traversal, depot connectivity/disconnection, isolated Outposts and road save persistence.
 - [x] Pass the Godot 4.3/4.7 CI matrix, including the regional integration test (run `41289421611`, 24/24 jobs).
 - [ ] Add Outpost guard assignment, garrison support and local visibility.
-- [ ] Add local stockpile accounting and actual inter-depot transfers. Current delivery still credits shared inventory at a connected depot.
+- [ ] Add explicit inter-depot shipment orders, in-transit cargo/recovery and stock inspection UI. Local outpost stock is not yet spendable by global construction/research until a transfer completes.
 - [ ] Add supply attrition and raid vulnerability after local logistics are reliable.
 
 **Initial slice acceptance gate — passed:** regional ownership is independent of fog and supply; road/bridge routes remain navigable; depot connectivity updates when roads are built or removed; disconnected depots cannot receive inventory deposits; infrastructure persists in saves.
@@ -148,7 +150,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add a Lumber Camp with two woodcutter workplace slots and an 18-tile resource work radius.
 - [x] Add a Quarry with two miner workplace slots and a 16-tile resource work radius.
 - [x] Bind woodcutters/miners to matching worksites; retain connected-depot fallback only when no matching specialty site exists.
-- [x] Release worksite claims when workers leave or a worksite is removed; worksite buildings use the generic save payload and remain compatible with save v11.
+- [x] Release worksite claims when workers leave or a worksite is removed; worksite buildings use the generic save payload and remain compatible with save v12.
 - [x] Add separate pixel-art buildings/icons, hotbar entries, numeric hotkeys, controls documentation and headless regression coverage.
 - [ ] Add construction work queues and staged building completion with Builder labor.
 - [ ] Add remaining facilities according to dependency: Watchtower, Granary, Barracks, Archery Range, Hunting Lodge, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress and Signal Beacon.
@@ -208,7 +210,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add bounded Frontier stress coverage for four factions, mixed rosters, villagers, ranged projectiles and the 500-particle ceiling.
 - [x] Add deterministic Classic/Frontier campaign balance matrix for stage/act transitions, wave budgets and final-boss gates.
 - [x] Add Frontier campaign reload coverage for completed objectives, unlocked acts, escort path progress and damaged strongholds.
-- [x] Add save migration/recovery tests for Classic v1–v11 and Frontier v7–v11, interrupted temporary writes, backup rotation and profile isolation.
+- [x] Add save migration/recovery tests for Classic v1–v12 and Frontier v7–v12, interrupted temporary writes, backup rotation and profile isolation.
 - [x] Run the Godot 4.3/4.7 import, parse and regression matrix on the original stacked branch.
 - [x] Export Windows/Linux in CI using Godot 4.3 templates; validate Windows PE output and smoke-test Linux.
 - [ ] Measure the reference workload on actual target desktop hardware before making performance optimization claims.
