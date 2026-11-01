@@ -7,6 +7,7 @@ const SPAWN_WINDOW := 0.6  # bagian malam di mana musuh muncul
 var world
 var flow
 var player
+var nav
 
 var _to_spawn := 0
 var _interval := 1.0
@@ -129,6 +130,10 @@ func restore_enemy(d: Dictionary) -> void:
     e.position = Vector2(float(d["x"]), float(d["y"]))
     e.hp = int(d["hp"])
     e.campaign_site_id = String(d.get("site_id", ""))
+    var raid_target: Variant = d.get("raid_target", null)
+    if bool(d.get("supply_raid", false)) and raid_target is Dictionary:
+        e.setup_supply_raid(Vector2i(int(raid_target.get("cx", -1)), int(raid_target.get("cy", -1))), nav)
+        e.supply_raid_hits = int(d.get("raid_hits", 0))
     world.entities.add_child(e)
 
 

@@ -100,7 +100,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate — passed:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable stronghold approach, valid map bounds, viewport fit and 128×128 fog/index round-trip.
 
 ### Phase 02 — Territory, roads and supply
-**Status:** Regional control/road/connected-depot foundation merged into `main`. PR #31 adds bounded local stockpiles and automatic Keep-bound shipments under save v12. PR #32 is merged and adds read-only Storage/Outpost stock inspection and local Outpost garrisons (two slots, assignment UI, 128-pixel defense leash, lifecycle/save integration); its 48/48 Godot CI gate passed. Local Outpost vision and observed-only enemy markers already exist on `main`. PR #33 merged player-directed physical orders, escrowed cargo, route recovery and save v13; Godot 4.3/4.7 CI passed 50/50. PR #34 merged direct source-depot spending for construction/research/repair. Payments are isolated to one selected connected depot, never pooled, and the optional source preference is persisted additively in save v13. Workflow #41325205416 passed 52/52 jobs.
+**Status:** Regional control/road/connected-depot foundation merged into `main`. PR #31 adds bounded local stockpiles and automatic Keep-bound shipments under save v12. PR #32 is merged and adds read-only Storage/Outpost stock inspection and local Outpost garrisons (two slots, assignment UI, 128-pixel defense leash, lifecycle/save integration); its 48/48 Godot CI gate passed. Local Outpost vision and observed-only enemy markers already exist on `main`. PR #33 merged player-directed physical orders, escrowed cargo, route recovery and save v13; Godot 4.3/4.7 CI passed 50/50. PR #34 merged direct source-depot spending for construction/research/repair. Payments are isolated to one selected connected depot, never pooled, and the optional source preference is persisted additively in save v13. Workflow #41325205416 passed 52/52 jobs. Phase 02.5 supply pressure is implemented on `feat/phase-02-supply-pressure`; warning/raid/attrition and persistence regression is added, PR/CI pending.
 
 - [x] Aggregate land claims into neutral/player/enemy/contested regional control records.
 - [x] Emit regional control changes independently from fog-of-war exploration.
@@ -120,7 +120,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add read-only local stock inspection for Storage/Outposts through `JOBS → POS` (PR #32 merged; CI passed).
 - [x] Implement player-directed shipment orders between Keep/Storage/Outposts with visible carriers, immediate cargo reservation, Keep-bound withdrawals, cancellation/refund and interruption recovery (PR #33 merged; Godot 4.3/4.7 CI passed 50/50).
 - [x] Add explicit Keep/Storage/Outpost cost-source selection for construction, research and repairs; debit only the selected depot, reject disconnected sources, and do not pool partial balances across depots. Persist the preference as an optional additive field in save v13 (PR #34 merged; Godot 4.3/4.7 workflow #41325205416 passed 52/52).
-- [ ] Add supply attrition and raid vulnerability after local logistics are reliable.
+- [ ] Phase 02.5 implementation: remote Storage/Outpost depots that are disconnected and lie in enemy/contested control receive a 30s warning; targeted saboteurs dispatch after 60s and at most one repeat wave 150s later (max 2 per isolation). Saboteurs attack depot integrity and steal one unit every second successful depot hit in deterministic resource priority. Reconnect roads or reclaim territory to recall raiders. Branch `feat/phase-02-supply-pressure`; CI pending.
 
 **Initial slice acceptance gate — passed:** regional ownership is independent of fog and supply; road/bridge routes remain navigable; depot connectivity updates when roads are built or removed; disconnected depots cannot receive inventory deposits; infrastructure persists in saves.
 
@@ -176,7 +176,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add faction registry validation and regression coverage for region mapping, rosters, garrisons, support and save validation.
 - [ ] Extract movement, attack-pattern and ability policies into composable modules; give each archetype its own counterable behavior.
 - [ ] Add deterministic faction camps, bounded patrol routes and camp reinforcement budgets.
-- [ ] Add raids/counterattacks against exposed Outposts, roads and depots with strict caps and reachability checks.
+- [ ] Expand raids/counterattacks against exposed Outposts, roads and depots only after Phase 02.5 acceptance; current slice targets remote depots, uses nav reachability, and caps at two saboteurs per isolation.
 - [ ] Persist camps, patrol assignments and raid state; validate v1–v11 migration and v12 round-trip.
 - [x] Merged through PR #21; Godot 4.3 / 4.7 CI passed (30/30 jobs).
 - [ ] Manual Frontier gameplay review.
