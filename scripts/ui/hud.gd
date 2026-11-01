@@ -63,6 +63,8 @@ const HELP_ROWS := [
 var _font: Font
 var _viewport_size := Vector2(480, 270)
 var _top_bar: Panel
+var _clock_widget: ClockWidget
+var _people_icon: TextureRect
 var _vitals_panel: Panel
 var _stage_panel: Panel
 var _build_left_hint: Label
@@ -215,20 +217,20 @@ func _build_top_bar() -> void:
     _iron_icon = _icon(bar, "iron", Vector2(111, 3))
     _iron = _label(bar, "0", Vector2(124, 1))
 
-    var clock := ClockWidget.new()
-    clock.font = _font
-    clock.sun = ICONS["sun"]
-    clock.moon = ICONS["moon"]
-    clock.position = Vector2(151, 2)
-    clock.size = Vector2(142, 11)
-    bar.add_child(clock)
+    _clock_widget = ClockWidget.new()
+    _clock_widget.font = _font
+    _clock_widget.sun = ICONS["sun"]
+    _clock_widget.moon = ICONS["moon"]
+    _clock_widget.position = Vector2(151, 2)
+    _clock_widget.size = Vector2(142, 11)
+    bar.add_child(_clock_widget)
 
     _foes_icon = _icon(bar, "skull", Vector2(300, 3))
     _foes = _label(bar, "0", Vector2(313, 1), Color("#ff8a7a"))
     _foes_icon.visible = false
     _foes.visible = false
 
-    _icon(bar, "people", Vector2(336, 3))
+    _people_icon = _icon(bar, "people", Vector2(336, 3))
     _pop = _label(bar, "0/0", Vector2(349, 1))
 
     _map_button = HudChip.new()
@@ -477,19 +479,13 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _top_bar.size.x = _viewport_size.x
     _foes_icon.position.x = _viewport_size.x - 180.0
     _foes.position.x = _viewport_size.x - 167.0
-    _top_bar.get_child(0) # Keep the bar's own coordinates independent from other panels.
-    var clock = _top_bar.get_child(5)
-    if clock is ClockWidget:
-        clock.position.x = 151.0
-    _top_bar.get_child(0)
+    _clock_widget.position.x = 151.0
+    _people_icon.position.x = _viewport_size.x - 144.0
+    _pop.position.x = _viewport_size.x - 131.0
 
     _map_button.position.x = _viewport_size.x - 110.0
     _jobs_button.position.x = _viewport_size.x - 71.0
     _tech_btn.position.x = _viewport_size.x - 32.0
-    var people_icon = _top_bar.get_child(6)
-    if people_icon is TextureRect:
-        people_icon.position.x = _viewport_size.x - 144.0
-    _pop.position.x = _viewport_size.x - 131.0
 
     _vitals_panel.position = Vector2(4, 22)
     _stage_panel.position = Vector2((_viewport_size.x - _stage_panel.size.x) * 0.5, 22)
