@@ -37,8 +37,9 @@ func rebuild() -> void:
         for x in WorldConfig.map_size:
             var c := Vector2i(x, y)
             var occupant = world.occupied.get(c)
+            var is_bridge: bool = occupant != null and is_instance_valid(occupant) and String(occupant.id) == "bridge"
             var blocks_path: bool = occupant != null and not (is_instance_valid(occupant) and occupant.is_in_group("roads"))
-            astar.set_point_solid(c, not world.is_buildable(c) or blocks_path)
+            astar.set_point_solid(c, (not world.is_buildable(c) and not is_bridge) or blocks_path)
     version += 1
 
 
