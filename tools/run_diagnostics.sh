@@ -17,6 +17,7 @@ diagnostics=(
     save_load_audio_menu
     tech_tree
     villagers_economy
+    perf
 )
 
 for diagnostic in "${diagnostics[@]}"; do
