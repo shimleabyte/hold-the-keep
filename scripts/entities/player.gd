@@ -266,7 +266,11 @@ func _apply_attack() -> void:
     for e in get_tree().get_nodes_in_group("enemies"):
         var n := e as Node2D
         if origin.distance_to(n.global_position + Vector2(0, -4)) <= ATTACK_RANGE:
-            n.take_damage(_player_damage(ATTACK_DAMAGE))
+            var hit_damage := _player_damage(ATTACK_DAMAGE)
+            if n.has_method("take_damage_from"):
+                n.take_damage_from(hit_damage, global_position)
+            else:
+                n.take_damage(hit_damage)
     for target in get_tree().get_nodes_in_group("campaign_targets"):
         if is_instance_valid(target) and origin.distance_to(target.global_position) <= ATTACK_RANGE:
             var site_damage := roundi(float(_player_damage(ATTACK_DAMAGE)) * Tech.stat("campaign.site_damage", 1.0))
@@ -317,7 +321,11 @@ func _finish_dash() -> void:
     for e in get_tree().get_nodes_in_group("enemies"):
         var foe := e as Node2D
         if origin.distance_to(foe.global_position + Vector2(0, -4)) <= 22.0:
-            foe.take_damage(_player_damage(14 + level * 2))
+            var hit_damage := _player_damage(14 + level * 2)
+            if foe.has_method("take_damage_from"):
+                foe.take_damage_from(hit_damage, global_position)
+            else:
+                foe.take_damage(hit_damage)
             if foe.has_method("apply_stagger"):
                 foe.apply_stagger(0.38)
     Events.fx_burst.emit("dust", global_position + Vector2(0, -2), _dash_dir, 2.0)
@@ -351,7 +359,11 @@ func _apply_cleave() -> void:
             continue
         if to_foe.length_squared() > 0.01 and to_foe.normalized().dot(facing) < 0.34:
             continue
-        foe.take_damage(_player_damage(20 + level * 3))
+        var hit_damage := _player_damage(20 + level * 3)
+        if foe.has_method("take_damage_from"):
+            foe.take_damage_from(hit_damage, global_position)
+        else:
+            foe.take_damage(hit_damage)
         if foe.has_method("apply_stagger"):
             foe.apply_stagger(0.55)
     Events.screen_shake.emit(0.8, 0.1)
