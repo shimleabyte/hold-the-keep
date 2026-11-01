@@ -3,7 +3,6 @@ extends Node2D
 ## Semua visual masih placeholder prosedural; ganti dengan tileset asli nanti.
 
 const TREE_CHANCE := 0.07
-const SAFE_RADIUS := 8.0  # area aman di sekitar titik spawn
 
 const TREE_SCRIPT := preload("res://scripts/entities/resource_tree.gd")
 const ROCK_SCRIPT := preload("res://scripts/entities/rock.gd")
@@ -22,6 +21,7 @@ const T_MARSH := 5
 var map_seed := 1337
 var map_size := 64
 var tile_size := 16
+var safe_radius := 8.0
 var pixel_size := Vector2i.ZERO
 var entities: Node2D
 var occupied: Dictionary = {}  # Vector2i -> Node (pohon, batu, bangunan)
@@ -32,6 +32,7 @@ var _layer: TileMapLayer
 func _ready() -> void:
     map_size = WorldConfig.map_size
     tile_size = WorldConfig.tile_size
+    safe_radius = WorldConfig.safe_radius
     map_seed = WorldConfig.world_seed
     pixel_size = WorldConfig.world_pixel_size()
 
@@ -123,7 +124,7 @@ func _generate() -> void:
     for y in map_size:
         for x in map_size:
             var edge := x == 0 or y == 0 or x == map_size - 1 or y == map_size - 1
-            var safe := Vector2(x, y).distance_to(center) < SAFE_RADIUS
+            var safe := Vector2(x, y).distance_to(center) < safe_radius
             var water := edge or (not safe and noise.get_noise_2d(x, y) > 0.3)
             var tile := T_WATER
             var region := region_id(Vector2i(x, y))
