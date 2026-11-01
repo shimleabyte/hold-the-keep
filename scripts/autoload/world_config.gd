@@ -8,11 +8,13 @@ const PROFILES: Dictionary = {
     "classic": {
         "map_size": 64,
         "starting_claim_radius": 10.0,
+        "safe_radius": 8.0,
         "iron_veins": 8
     },
     "frontier": {
         "map_size": 128,
         "starting_claim_radius": 15.0,
+        "safe_radius": 12.0,
         "iron_veins": 32
     }
 }
@@ -22,6 +24,7 @@ var map_size := 64
 var tile_size := TILE_SIZE
 var map_cells := 64 * 64
 var starting_claim_radius := 10.0
+var safe_radius := 8.0
 var iron_veins := 8
 var world_seed := DEFAULT_SEED
 
@@ -38,6 +41,7 @@ func _ready() -> void:
     tile_size = TILE_SIZE
     map_cells = map_size * map_size
     starting_claim_radius = float(profile["starting_claim_radius"])
+    safe_radius = float(profile["safe_radius"])
     iron_veins = int(profile["iron_veins"])
     world_seed = int(ProjectSettings.get_setting("world/seed", DEFAULT_SEED))
 
