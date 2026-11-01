@@ -45,7 +45,7 @@ func _run() -> void:
     assert(main.spawner.stage_info(20)["to_day"] == 20, "Act IV must include day 20")
     assert(main.spawner.wave_size(1) == 8, "Frontier should use its own opening wave size")
 
-    var reachable := main.nav.reachable_cells(main.nav.cell_of(main.player.global_position))
+    var reachable: Dictionary = main.nav.reachable_cells(main.nav.cell_of(main.player.global_position))
     var greenwood_cell := Vector2i(-1, -1)
     for cell in reachable:
         if String(main.world.region_id(cell)) == "GREENWOOD":
