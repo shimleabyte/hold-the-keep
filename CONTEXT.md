@@ -192,7 +192,7 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 
 
 ## 16. Strategic map, campaign acts, and compact HUD (2026-11-01)
-- `scripts/ui/world_map_panel.gd` adds a TAB/MAP exploration-aware map with terrain, territory tint, resource/building/unit/player markers. Permanently explored fog is used for terrain memory; live enemy markers are restricted to current observation ranges.
+- `scripts/ui/world_map_panel.gd` adds a TAB/MAP exploration-aware map with terrain, territory tint, resource/building/unit/player markers, and current camera viewport. Permanently explored fog is used for terrain memory; live enemy markers are restricted to current observation ranges.
 - `scripts/world/world_map.gd` defines four named regions: Hearthland, Greenwood, Highlands, and Fenlands. Their ground tiles differ while retaining the same 64x64 grid and water collision. Original tree/rock spawn probabilities and RNG draw order are preserved to keep saved resource cells compatible.
 - `data/waves.json` defines three campaign acts: Frontier (days 1–5), Black March (6–10), Last Siege (11–15). `wave_spawner.gd` applies archer pressure in Act II and archer/brute pressure in Act III; stage changes update the HUD banner and progress indicator.
 - HUD keeps core status and build hotbar visible. Job quotas move behind JOBS; map is opened by TAB/MAP and closes with its X, backdrop click, TAB, or Escape; job drawer closes with JOBS or Escape. Combat strip and tech button occupy less screen space.
