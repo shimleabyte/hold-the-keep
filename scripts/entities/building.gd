@@ -24,7 +24,8 @@ var hp := 100
 var max_hp := 100
 var world
 var data: Dictionary = {}
-var workers: Array = []  # slot petani (khusus ladang)
+var workers: Array = []
+var repairers: Array = []
 
 var _range := 0.0
 var _damage := 0
@@ -135,29 +136,83 @@ func _leave_groups() -> void:
     remove_from_group("roads")
 
 
-func free_slots() -> int:
+func free_slots(job: String = "farmer") -> int:
     workers = workers.filter(func(w): return is_instance_valid(w))
-    var slots := int(data.get("workers", 0))
-    if id == "farm":
+    var workplace_data: Dictionary = data.get("workplaces", {})
+    var default_slots := int(data.get("workers", 0)) if job == "farmer" else 0
+    var slots := int(workplace_data.get(job, default_slots))
+    if id == "farm" and job == "farmer":
         slots = roundi(Tech.stat("farm.workers", float(slots)))
-    return slots - workers.size()
+    var occupied_slots := 0
+    for worker in workers:
+        if String(worker.workplace_job) == job:
+            occupied_slots += 1
+    return maxi(0, slots - occupied_slots)
 
 
-func claim(v) -> bool:
-    if free_slots() <= 0:
+func claim(v, job: String = "farmer") -> bool:
+    if free_slots(job) <= 0:
         return false
-    workers.append(v)
+    if not workers.has(v):
+        workers.append(v)
+    v.workplace = self
+    v.workplace_job = job
     return true
 
 
 func release(v) -> void:
     workers.erase(v)
+    if is_instance_valid(v) and v.workplace == self:
+        v.workplace = null
+        v.workplace_job = ""
+
+
+func can_assign_repairer(v) -> bool:
+    repairers = repairers.filter(func(worker): return is_instance_valid(worker))
+    return hp > 0 and hp < max_hp and (repairers.is_empty() or repairers.has(v))
+
+
+func claim_repairer(v) -> bool:
+    if not can_assign_repairer(v):
+        return false
+    if not repairers.has(v):
+        repairers.append(v)
+    return true
+
+
+func release_repairer(v) -> void:
+    repairers.erase(v)
+
+
+func repair(amount: int) -> bool:
+    if amount <= 0 or hp <= 0 or hp >= max_hp:
+        return false
+    var cost: Dictionary = data.get("repair_cost", {})
+    if cost.is_empty() or not Inventory.spend_all(cost):
+        return false
+    hp = mini(max_hp, hp + amount)
+    queue_redraw()
+    if id == "keep":
+        Events.keep_hp_changed.emit(hp, max_hp)
+    return true
+
+
+func _release_workers() -> void:
+    for worker in workers.duplicate():
+        if is_instance_valid(worker):
+            worker.on_workplace_lost(self)
+    workers.clear()
+    for worker in repairers.duplicate():
+        if is_instance_valid(worker):
+            worker.on_repair_target_lost(self)
+    repairers.clear()
 
 
 func _die() -> void:
     for c in cells():
         if world.occupied.get(c) == self:
             world.occupied.erase(c)
+    _release_workers()
     _leave_groups()
     Events.fx_burst.emit("puff", global_position + Vector2(0, -size.y * 8.0), Vector2.ZERO, 1.0 + size.x * 0.5)
     Events.fx_burst.emit("debris", global_position + Vector2(0, -size.y * 8.0), Vector2.ZERO, 2.0 + size.x * 0.5)
@@ -170,6 +225,7 @@ func _die() -> void:
 
 ## Dibongkar pemain (tanpa memicu event kehancuran).
 func demolish() -> void:
+    _release_workers()
     _leave_groups()
     queue_free()
 

@@ -324,10 +324,16 @@ func _apply_save(d: Dictionary) -> void:
 
     var q: Dictionary = d.get("quota", {})
     for j in q:
-        village.quota[j] = int(q[j])
+        if village.quota.has(j):
+            village.quota[j] = int(q[j])
+    village.restore_job_priority(d.get("job_priority", []))
     for v in d["villagers"]:
         var n = village.spawn_villager(Vector2(float(v["x"]), float(v["y"])))
-        n.set_job(String(v["job"]))
+        var restored_job := String(v["job"])
+        if save_version >= 9:
+            var saved_specialization := String(v.get("military_specialization", ""))
+            restored_job = saved_specialization if not saved_specialization.is_empty() else String(v.get("occupation", ""))
+        n.set_job(restored_job)
         n.hp = int(v["hp"])
         if int(v["carry"]) > 0:
             n.receive(String(v["kind"]), int(v["carry"]))
