@@ -52,6 +52,7 @@ var _stagger_t := 0.0
 var _pending = null
 var _pending_t := 0.0
 var _pending_is_projectile := false
+var _pounce_windup_t := 0.0
 var _pounce_t := 0.0
 var _pounce_dir := Vector2.ZERO
 var _tex: Texture2D
@@ -111,6 +112,11 @@ func _physics_process(delta: float) -> void:
         _update_anim(delta)
         return
 
+    if _pounce_windup_t > 0.0:
+        _pounce_windup_t = maxf(0.0, _pounce_windup_t - delta)
+        _update_anim(delta)
+        return
+
     if _pounce_t > 0.0:
         _pounce_t = maxf(0.0, _pounce_t - delta)
         position += _pounce_dir * speed * 2.4 * delta
@@ -161,7 +167,10 @@ func _tick_flow(delta: float) -> void:
         return
     var occupied = world.occupied.get(next)
     if occupied != null and is_instance_valid(occupied) and occupied.is_in_group("buildings"):
-        _begin_attack(occupied, occupied.position - position)
+        if role == "ranged":
+            _begin_ranged_attack(occupied as Node2D)
+        else:
+            _begin_attack(occupied, occupied.position - position)
         return
     _move_toward(Vector2(next) * TILE + Vector2(TILE / 2.0, TILE / 2.0) + _offset, delta)
 
@@ -256,6 +265,7 @@ func _begin_attack(target, direction: Vector2) -> void:
     if role == "pouncer":
         _pending_t = 0.28
         _pounce_dir = direction.normalized()
+        _pounce_windup_t = 0.12
         _pounce_t = 0.16
         Events.fx_burst.emit("dust", position + Vector2(0, -2), -_pounce_dir, 1.3)
     else:
@@ -306,6 +316,7 @@ func apply_stagger(duration: float) -> void:
     _pending = null
     _pending_is_projectile = false
     _pending_t = 0.0
+    _pounce_windup_t = 0.0
     _pounce_t = 0.0
     _hurt_t = maxf(_hurt_t, duration * 0.5)
 
@@ -384,6 +395,9 @@ func retreat() -> void:
 
 func _draw() -> void:
     anim.draw(self, _tex, _fw, _fh)
+    if _pounce_windup_t > 0.0:
+        draw_line(Vector2(0, -6), Vector2(0, -6) + _pounce_dir * 14.0,
+            Color("#ffb347"), 2.0)
     if role == "ranged":
         draw_arc(Vector2(7, -11), 4.0, -PI * 0.55, PI * 0.55, 7, Color("#91c99a"), 1.0)
         draw_line(Vector2(7, -15), Vector2(7, -7), Color("#d9e7c8"), 1.0)
