@@ -1,5 +1,15 @@
 extends SceneTree
-## Responsive viewport and HUD layout regression checks across common desktop aspect ratios.
+## Resolution-derived viewport and HUD safe-area regression coverage.
+
+const RESOLUTION_CASES := [
+    {"window": Vector2i(960, 540), "viewport": Vector2i(480, 270)},
+    {"window": Vector2i(1280, 720), "viewport": Vector2i(640, 360)},
+    {"window": Vector2i(1280, 800), "viewport": Vector2i(640, 400)},
+    {"window": Vector2i(1366, 768), "viewport": Vector2i(683, 384)},
+    {"window": Vector2i(1600, 900), "viewport": Vector2i(800, 450)},
+    {"window": Vector2i(1920, 1080), "viewport": Vector2i(960, 540)}
+]
+
 
 func _initialize() -> void:
     var game_clock = root.get_node("GameClock")
@@ -21,31 +31,41 @@ func _initialize() -> void:
         "Pixel-art world rendering must remain viewport-based")
     assert(String(ProjectSettings.get_setting("display/window/stretch/scale_mode")) == "integer",
         "Pixel-art scaling must remain integer-based")
+    assert(int(ProjectSettings.get_setting("display/window/size/viewport_width")) == 640
+        and int(ProjectSettings.get_setting("display/window/size/viewport_height")) == 360,
+        "The design viewport must match the default 1280x720 window at 2x scale")
     assert(root.min_size.x >= 960 and root.min_size.y >= 540,
         "Runtime window minimum size must remain laptop-friendly")
     assert(int(ProjectSettings.get_setting("display/window/size/initial_position_type")) == 1,
         "The initial window must be centered on the primary screen")
     assert(settings.windowed_size.x >= 960 and settings.windowed_size.y >= 540,
         "Saved windowed size must satisfy the minimum display dimensions")
-    var screen_size := DisplayServer.screen_get_size()
-    assert(settings.windowed_size.x <= maxi(960, screen_size.x)
-        and settings.windowed_size.y <= maxi(540, screen_size.y),
-        "Default and saved windowed sizes must not exceed the active display")
+
+    for size_case in RESOLUTION_CASES:
+        var expected: Vector2i = size_case["viewport"]
+        assert(settings.viewport_size_for_window(size_case["window"]) == expected,
+            "Viewport must be derived from the matching physical window resolution")
+
+    settings._sync_content_viewport()
+    await process_frame
+    var live_window_size := DisplayServer.window_get_size()
+    assert(root.content_scale_size == settings.viewport_size_for_window(live_window_size),
+        "The live content viewport must match half the actual client-window size")
 
     var hud = get_first_node_in_group("hud")
     assert(hud != null, "The main scene must create the HUD")
-    var layouts := [
-        Vector2(480, 270),
-        Vector2(640, 360),
-        Vector2(640, 400),
-        Vector2(683, 384),
-        Vector2(960, 540)
-    ]
+    var player = get_first_node_in_group("player")
+    assert(player != null and player.camera.zoom == Vector2.ONE,
+        "The wider field of view must come from viewport dimensions, not gameplay camera zoom")
 
-    for viewport_size in layouts:
-        hud._layout_viewport(viewport_size)
+    for size_case in RESOLUTION_CASES:
+        var viewport_size: Vector2i = size_case["viewport"]
+        root.content_scale_size = viewport_size
+        settings.content_viewport_resized.emit(viewport_size)
         await process_frame
 
+        assert(hud._viewport_size == Vector2(viewport_size),
+            "HUD must reflow when the logical viewport changes")
         assert(is_equal_approx(hud._top_bar.size.x, viewport_size.x),
             "The top bar must span the viewport width")
         assert(hud._stage_panel.position.x >= 0.0
@@ -56,6 +76,16 @@ func _initialize() -> void:
             "The job drawer must stay within the viewport")
         assert(hud._combat_bar.position.y + hud._combat_bar.size.y < viewport_size.y,
             "The combat strip must stay above the bottom edge")
+
+        # Static HUD belongs to the top/bottom bands, leaving a clear central playfield.
+        var top_hud_edge := maxf(
+            hud._jobs_panel.position.y + hud._jobs_panel.size.y,
+            hud._boss_panel.position.y + hud._boss_panel.size.y
+        )
+        var bottom_hud_edge := hud._combat_bar.position.y
+        var clear_playfield_height := bottom_hud_edge - top_hud_edge
+        assert(clear_playfield_height >= viewport_size.y * 0.30,
+            "At least 30% of the viewport height must remain clear between HUD bands")
 
         var map_panel = hud._map_panel
         assert(map_panel.position.x >= 0.0 and map_panel.position.y >= 0.0,
@@ -83,5 +113,5 @@ func _initialize() -> void:
     assert(pause._resolution_values.has(settings.windowed_size),
         "The currently saved window size must remain selectable")
 
-    print("PASS: expanded integer-scaled viewport and responsive HUD/map layout at five resolutions")
+    print("PASS: resolution-matched 2x viewport and HUD safe playfield at six desktop resolutions")
     quit()

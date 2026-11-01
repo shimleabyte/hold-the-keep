@@ -220,6 +220,24 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Provisional desktop target (not measured):** 60 FPS at 1280×720 under Frontier 128×128 with 96 requested faction enemies, 80 additional villagers and up to 500 live particles; p95 frame time ≤16.67 ms and p99 ≤33.3 ms. CI headless timings are diagnostic only and are not evidence of target-machine performance.
 
 **Acceptance gate:** fresh CI green, a measured target-hardware performance budget, no known blocker bugs, multi-act human playtest completed, migration/reload tested, and Windows/Linux release binaries verified on their target platforms.
+### Phase 10 — Resolution-matched viewport and HUD safe area
+**Status:** Implemented on `feat/phase-10-adaptive-viewport`, stacked on the Phase 09 head; CI and visual review pending.
+
+**Goal:** Give the player a viewport that grows with the selected desktop resolution. Keep pixel-art scale stable and move HUD elements into predictable edge bands so the central gameplay area is not proportionally covered by UI.
+
+- [x] Derive the root Window's logical content viewport from the actual client-window size at an exact 2× pixel scale.
+- [x] Keep a 480×270 logical minimum, matching the 960×540 minimum window; use 640×360 at the default 1280×720 window.
+- [x] Cover common 16:9 and 16:10 mappings, including 1366×768, 1600×900 and 1920×1080.
+- [x] Detect native window resizing without depending only on `Window.size_changed` in viewport stretch mode; update viewport only when the actual window dimensions change.
+- [x] Notify the HUD and technology panel explicitly so their anchors/centering follow the logical viewport.
+- [x] Preserve 16×16 tiles, camera zoom, movement/combat ranges, world profiles, save format and campaign balance.
+- [x] Expand responsive regression coverage to six window/viewport pairs, HUD safe-playfield height, camera zoom, map and hotbar bounds.
+- [ ] Run the Godot 4.3 / 4.7 import, parse and complete assertion matrix on this branch.
+- [ ] Inspect rendered screenshots and manually play at 960×540, 1280×720, 1366×768, 1600×900, 1920×1080 and fullscreen on target desktop hardware.
+
+**Acceptance gate:** every resolution maps to the expected logical viewport at 2×, pixel art is not distorted, HUD panels remain in the top/bottom bands, the central playfield grows with the window, all automated tests pass on Godot 4.3 and 4.7, and rendered/manual review finds no viewport or HUD clipping. Automated CI does not replace pending target-machine visual review.
+
+
 ## 5. First implementation priorities
 
 1. **Phase 00 is mandatory.** Do not add content on top of duplicated spatial constants and unverified scripts.

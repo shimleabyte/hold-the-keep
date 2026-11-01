@@ -8,7 +8,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
-- Resolusi dasar 480x270 (stretch `viewport`, scale `integer`), jendela default 1440x810, pixel art.
+- Jendela default 1280×720, minimum 960×540. Viewport logis dihitung dari ukuran jendela / 2 (minimum 480×270), dengan pixel-art integer scaling tepat 2×.
 - Tujuan pemain: bertahan 15 hari, di malam ke-15 kalahkan Raja Lawan. Keep hancur = kalah.
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
@@ -26,7 +26,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
 | Save/load | versi 11, autosave tiap fajar, F5/F9, temp + rollback backup, world identity, resource/fog/multi-stronghold HP/garrison/ekspedisi/recall/combat/campaign progression, objective/site state, dan faction identity tersimpan; v1–v10 tetap kompatibel |
 | Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
-| Tampilan | windowed 1280×720 default, minimum 960×540 (enforced through `Window.min_size`), preset 16:9/16:10/4:3, integer-scaled viewport dengan aspect expand |
+| Tampilan | windowed 1280×720 default, minimum 960×540, preset 16:9/16:10/4:3, viewport logis dinamis = ukuran jendela / 2 (minimum 480×270), integer pixel scale 2×, aspect expand |
 | HUD | top bar ringkas, vitals, indikator bab, combat strip kompak, drawer JOBS, peta strategis TAB/MAP, hotbar bangunan, bar boss, bantuan (H) |
 | Animasi | 22 frame x 3 arah per karakter; serang/panen jatuh di frame benturan |
 | Efek | partikel, busur tebasan, guncangan layar (bisa dimatikan) |
@@ -201,12 +201,12 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 
 
 ## 17. Responsive resolution and UI visual pass (2026-11-01)
-- Project base remains 480×270 with viewport rendering and integer scaling; stretch aspect is `expand` so wider/taller desktop windows reveal more world instead of distorting pixel art. Integer scaling can still leave unused margins where the window dimensions do not align to an integer multiple of the logical viewport.
-- Default window is 1280×720; minimum is 960×540. Pause settings expose monitor-filtered 16:9, 16:10, and 4:3 window-size presets, remember the selected windowed size, and keep fullscreen as a separate mode.
-- HUD listens to viewport size changes. Resource/time strip spans the top; vitals and job drawer anchor to opposite sides; stage and boss panels center; map centers and scales; combat strip and building hotbar stay above the bottom edge.
-- Strategic map scales its tile grid and legend to the available viewport. Technology and pause overlays use full-viewport roots and centered panels.
-- Updated panel surfaces, borders, shadows, focus/hover/pressed button states, and resource color hierarchy.
-- `tests/responsive_layout.gd` checks viewport settings and panel/hotbar bounds across 480×270, 640×360, 640×400, 683×384, and 960×540 logical viewports. Godot compile/render execution remains pending.
+- The original responsive pass added 1280×720 default windowing, a 960×540 minimum, monitor-filtered resolution presets, integer pixel scaling and viewport-aware HUD/map positioning.
+- The original 480×270 fixed logical viewport was superseded by Phase 10. The active logical viewport now follows half the actual client-window size, with a 480×270 minimum and an exact 2× physical pixel scale for common desktop resolutions.
+- HUD elements retain their established logical size and remain anchored to the top/bottom bands; the optional JOBS drawer stays at the right edge, while stage/boss panels remain in the top band. The central playfield grows with resolution instead of being proportionally covered by UI.
+- Strategic map, HUD and technology panel receive an explicit viewport-resolution event. This avoids relying only on the root Window size_changed signal, which is not reliable with viewport stretch mode.
+- Camera zoom and all world/gameplay units remain unchanged; increased field of view comes from the larger logical viewport.
+- See `docs/plans/phase-10-plan.md` and `tests/responsive_layout.gd` for the resolution matrix and safe-area regression.
 
 ## 18. Character animation and impact feedback pass (2026-11-01)
 - `scripts/entities/sprite_anim.gd` adds pixel-snapped secondary motion: desynchronized idle breathing, walk/run lift, directional attack anticipation/lunge, work lean at the strike point, and hurt recoil. Translation is separated from horizontal mirroring so left-facing attacks move in the correct direction.
@@ -296,3 +296,14 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - CI now runs the Frontier reference benchmark (96 requested faction enemies, 80 villagers, 500-particle cap) on Godot 4.7 and uploads a percentile report. A separate Godot 4.3 job installs matching templates, exports Windows/Linux, checks the Windows PE format and smoke-tests the Linux executable.
 - Workflow run #278 passed all 30 jobs: Godot 4.3/4.7 parse, configured regression matrix, Frontier campaign balance/reload/stress, save/release hardening, performance diagnostic and template-backed exports. Godot 4.3 template-backed Windows/Linux exports passed PE verification and Linux headless smoke. Godot 4.7 performance report uploaded; revised diagnostic reached 500 particles and recorded wall p50/p95/p99 of 4.27/10.45/13.55 ms on the headless CI runner. This is not target-hardware evidence; process monitor p95 also recorded a 102.24 ms spike.
 - Still open: target desktop hardware profiling, later-act/day-20 combat outcome cases, human playtests across the campaign, Windows runtime smoke test and clean-machine save/settings migration. No hardware performance result is claimed.
+
+
+## 25. Phase 10 — Resolution-matched viewport and HUD safe area (2026-11-01)
+- Branch: `feat/phase-10-adaptive-viewport`, stacked directly on `feat/phase-09-balance-performance-release-v5` (PR #26). It does not merge Phase 09 or alter the separate Phase 06–08 work branches.
+- The root Window's `content_scale_size` is derived from actual client-window dimensions divided by two, clamped to a minimum logical viewport of 480×270. The default 1280×720 window now renders 640×360 logical pixels.
+- Reference mappings: 960×540 → 480×270; 1280×720 → 640×360; 1280×800 → 640×400; 1366×768 → 683×384; 1600×900 → 800×450; 1920×1080 → 960×540.
+- `Settings` checks native window dimensions and updates content scaling only when dimensions change. The dedicated `content_viewport_resized` signal updates HUD and technology UI despite the viewport-stretch root-window resize-signal limitation.
+- HUD dimensions remain constant in logical pixels. Its top/bottom bands reserve space for vitals, the stage/boss strip, the optional JOBS drawer, combat strip and build hotbar. The central playfield therefore grows as resolution increases.
+- Camera zoom, 16×16 tile size, movement/combat ranges, world dimensions, save schema and campaign balance are unchanged. No save migration is required.
+- `tests/responsive_layout.gd` covers six resolution mappings, live window synchronization, unchanged camera zoom, HUD reflow, 30% minimum central playfield, and map/hotbar/overlay bounds.
+- Automated Godot 4.3/4.7 CI and actual desktop visual/playtesting remain pending.
