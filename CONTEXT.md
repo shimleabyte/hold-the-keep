@@ -323,9 +323,9 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 
 
 ## 27. Phase 02.4 — Outpost garrisons and local depot inspection (2026-11-01)
-- Active implementation branch: `feat/phase-02-outpost-garrisons`; verification and merge are pending.
+- Merged to `main` via PR #32 at `2f94959b497677eae49d4303f72322650fb591c2`; CI workflow #41318897606 passed 48/48 jobs.
 - Outposts now define two guard slots. The HUD exposes `JOBS → POS`, with read-only local stock balances for Storage/Outposts and per-Outpost assign/release controls.
 - The nearest reachable unassigned soldier can be assigned. Guards stay attached to their post, ignore enemies outside a 128-pixel radius around it, return after combat, and are excluded from global conquest expeditions. Death, job reassignment, demolition and destruction release slots.
 - Save v12 remains unchanged: an optional `guard_outpost` cell reference is written for assigned soldiers. Validation checks that the referenced Outpost exists, the soldier is not simultaneously expeditioning/recalling, and the post capacity is not exceeded. Older v12 files without this optional field remain valid.
 - Outpost local vision and observed-only strategic-map enemy markers were already implemented in `main`; the roadmap now reflects that instead of listing them as missing.
-- New assertion suite: `tests/outpost_garrisons.gd` covers slot limits, death/reassignment, local combat radius, vision, panel presence, demolition release, and save compatibility/round-trip. It is added to the blocking test runner; CI still has to confirm Godot 4.3 and 4.7.
+- Regression suite: `tests/outpost_garrisons.gd` covers slot limits, death/reassignment, local combat radius, vision, panel presence, demolition release, and save compatibility/round-trip. It runs in the blocking test runner and passed on Godot 4.3 and 4.7.
