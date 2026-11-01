@@ -7,6 +7,7 @@ const KEEP_RADIUS := 10.0
 
 var world
 var claimed_cells: Dictionary = {}
+var enemy_claimed_cells: Dictionary = {}
 var _dirty := true
 
 
@@ -15,9 +16,15 @@ func _ready() -> void:
     Events.building_placed.connect(_mark_dirty)
     Events.building_removed.connect(_mark_dirty)
     Events.building_destroyed.connect(_mark_dirty)
+    Events.enemy_stronghold_placed.connect(_mark_enemy_dirty)
+    Events.enemy_stronghold_destroyed.connect(_mark_enemy_dirty)
 
 
 func _mark_dirty(_id: String, _cell: Vector2i) -> void:
+    _dirty = true
+
+
+func _mark_enemy_dirty(_cell: Vector2i) -> void:
     _dirty = true
 
 
@@ -29,6 +36,7 @@ func _physics_process(_delta: float) -> void:
 func rebuild() -> void:
     _dirty = false
     var next: Dictionary = {}
+    var enemy_next: Dictionary = {}
     for building in get_tree().get_nodes_in_group("buildings"):
         if not is_instance_valid(building):
             continue
@@ -46,7 +54,22 @@ func rebuild() -> void:
                 var tile_center := Vector2(x + 0.5, y + 0.5)
                 if tile_center.distance_squared_to(center) <= radius * radius:
                     next[Vector2i(x, y)] = true
+    for stronghold in get_tree().get_nodes_in_group("enemy_strongholds"):
+        if not is_instance_valid(stronghold):
+            continue
+        var center := Vector2(stronghold.cell) + Vector2(stronghold.size) / 2.0
+        var radius := float(stronghold.claim_radius)
+        var min_x := maxi(0, floori(center.x - radius))
+        var max_x := mini(MAP_SIZE - 1, ceili(center.x + radius))
+        var min_y := maxi(0, floori(center.y - radius))
+        var max_y := mini(MAP_SIZE - 1, ceili(center.y + radius))
+        for y in range(min_y, max_y + 1):
+            for x in range(min_x, max_x + 1):
+                var tile_center := Vector2(x + 0.5, y + 0.5)
+                if tile_center.distance_squared_to(center) <= radius * radius:
+                    enemy_next[Vector2i(x, y)] = true
     claimed_cells = next
+    enemy_claimed_cells = enemy_next
     Events.territory_changed.emit(claimed_cells.size())
     queue_redraw()
 
@@ -67,18 +90,33 @@ func can_place(id: String, anchor: Vector2i, size: Vector2i) -> bool:
     if id == "outpost":
         for y in range(size.y):
             for x in range(size.x):
-                if _is_frontier_cell(anchor + Vector2i(x, y)):
+                var cell := anchor + Vector2i(x, y)
+                if _is_frontier_cell(cell) and not enemy_claimed_cells.has(cell):
                     return true
         return false
     for y in range(size.y):
         for x in range(size.x):
-            if not claimed_cells.has(anchor + Vector2i(x, y)):
+            var cell := anchor + Vector2i(x, y)
+            if not claimed_cells.has(cell) or enemy_claimed_cells.has(cell):
                 return false
     return true
 
 
 func _is_frontier_cell(cell: Vector2i) -> bool:
-    return not claimed_cells.has(cell) and _touches_claim(cell)
+    return not claimed_cells.has(cell) and not enemy_claimed_cells.has(cell) and _touches_claim(cell)
+
+
+func owner_at(cell: Vector2i) -> String:
+    _ensure_current()
+    var player_owns := claimed_cells.has(cell)
+    var enemy_owns := enemy_claimed_cells.has(cell)
+    if player_owns and enemy_owns:
+        return "contested"
+    if player_owns:
+        return "player"
+    if enemy_owns:
+        return "enemy"
+    return "neutral"
 
 
 func _touches_claim(cell: Vector2i) -> bool:
@@ -107,3 +145,17 @@ func _draw() -> void:
             draw_line(Vector2(left, top), Vector2(left, bottom), border, 1.0)
         if not claimed_cells.has(cell + Vector2i(1, 0)):
             draw_line(Vector2(right, top), Vector2(right, bottom), border, 1.0)
+    var enemy_border := Color("#b84b43", 0.48)
+    for cell in enemy_claimed_cells:
+        var left := float(cell.x * TILE_SIZE)
+        var top := float(cell.y * TILE_SIZE)
+        var right := left + TILE_SIZE
+        var bottom := top + TILE_SIZE
+        if not enemy_claimed_cells.has(cell + Vector2i(0, -1)):
+            draw_line(Vector2(left, top), Vector2(right, top), enemy_border, 1.0)
+        if not enemy_claimed_cells.has(cell + Vector2i(0, 1)):
+            draw_line(Vector2(left, bottom), Vector2(right, bottom), enemy_border, 1.0)
+        if not enemy_claimed_cells.has(cell + Vector2i(-1, 0)):
+            draw_line(Vector2(left, top), Vector2(left, bottom), enemy_border, 1.0)
+        if not enemy_claimed_cells.has(cell + Vector2i(1, 0)):
+            draw_line(Vector2(right, top), Vector2(right, bottom), enemy_border, 1.0)
