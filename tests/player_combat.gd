@@ -29,14 +29,16 @@ func _initialize() -> void:
     assert(not player.combat_status()["rally_unlocked"], "Rally must remain locked before level 3")
 
     var enemy_script = load("res://scripts/entities/enemy.gd")
+    var sturdy_bandit: Dictionary = DataDB.enemies["bandit"].duplicate()
+    sturdy_bandit["hp"] = 80
     var forward_enemy = enemy_script.new()
-    forward_enemy.setup(DataDB.enemies["bandit"], main.world, main.flow, player)
+    forward_enemy.setup(sturdy_bandit, main.world, main.flow, player)
     forward_enemy.position = player.global_position + Vector2(28, 0)
     main.world.entities.add_child(forward_enemy)
     forward_enemy.set_physics_process(false)
 
     var rear_enemy = enemy_script.new()
-    rear_enemy.setup(DataDB.enemies["bandit"], main.world, main.flow, player)
+    rear_enemy.setup(sturdy_bandit, main.world, main.flow, player)
     rear_enemy.position = player.global_position + Vector2(-44, 0)
     main.world.entities.add_child(rear_enemy)
     rear_enemy.set_physics_process(false)
