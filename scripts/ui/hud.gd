@@ -267,7 +267,7 @@ func _build_top_bar() -> void:
     _tech_btn.pressed.connect(func() -> void: Events.tech_panel_requested.emit())
     bar.add_child(_tech_btn)
 
-    _research_panel = _panel(Vector2(4, 39), Vector2(126, 12))
+    _research_panel = _panel(Vector2(4, 45), Vector2(126, 12))
     _research_name = _label(_research_panel, "", Vector2(3, 1), Color("#ffd23f"))
     _research_bar = StatBar.new()
     _research_bar.position = Vector2(77, 3)
@@ -519,12 +519,12 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _build_right_hint.size = Vector2(127.0, 10)
     _build_right_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
-    _combat_bar.position = Vector2((_viewport_size.x - _combat_bar.size.x) * 0.5, build_y - _combat_bar.size.y - 16.0)
-    _msg.position = Vector2(0, build_y - _combat_bar.size.y - 24.0)
+    _combat_bar.position = Vector2((_viewport_size.x - _combat_bar.size.x) * 0.5, build_y - _combat_bar.size.y - 19.0)
+    _msg.position = Vector2(0, _combat_bar.position.y - _msg.size.y - 6.0)
     _msg.size.x = _viewport_size.x
     _banner.position = Vector2(0, maxf(44.0, _viewport_size.y * 0.16))
     _banner.size.x = _viewport_size.x
-    _fps.position = Vector2(72, _viewport_size.y - 11.0)
+    _fps.position = Vector2(_viewport_size.x - 58.0, 82.0)
 
     _over.size = _viewport_size
     _over_label.position = Vector2(0, (_viewport_size.y - _over_label.size.y) * 0.5)
