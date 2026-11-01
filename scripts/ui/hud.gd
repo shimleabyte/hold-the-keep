@@ -522,9 +522,9 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _combat_bar.position = Vector2((_viewport_size.x - _combat_bar.size.x) * 0.5, build_y - _combat_bar.size.y - 19.0)
     _msg.position = Vector2(0, _combat_bar.position.y - _msg.size.y - 6.0)
     _msg.size.x = _viewport_size.x
-    _banner.position = Vector2(0, maxf(44.0, _viewport_size.y * 0.16))
+    _banner.position = Vector2(0, maxf(82.0, _viewport_size.y * 0.16))
     _banner.size.x = _viewport_size.x
-    _fps.position = Vector2(_viewport_size.x - 58.0, 82.0)
+    _fps.position = Vector2(_viewport_size.x - 58.0, 96.0)
 
     _over.size = _viewport_size
     _over_label.position = Vector2(0, (_viewport_size.y - _over_label.size.y) * 0.5)
