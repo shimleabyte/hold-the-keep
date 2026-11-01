@@ -81,7 +81,7 @@ memilih besi bila stoknya kurang dari separuh batu. Game di-pause saat panel ter
 Efek berupa data (pengali, penambah, buka bangunan, bendera) lewat `Tech.stat(kunci, dasar)`.
 
 ## Peta dan wilayah
-Peta strategis dibuka dengan TAB atau tombol MAP di HUD. Peta menampilkan hanya area yang sudah ditemukan; lokasi musuh bergerak hanya muncul saat berada dalam jangkauan pengamatan unit atau bangunan, bukan sekadar karena pernah dijelajahi. Warna terrain membedakan Hearthland, Greenwood (hutan lebih rapat), Highlands (batu lebih banyak), dan Fenlands (rawa). Klaim pemain dan musuh diberi tint berbeda, sedangkan Keep, Outpost, resource, villager, dan pemain punya marker masing-masing.
+Peta strategis dibuka dengan TAB atau tombol MAP di HUD. Peta menampilkan hanya area yang sudah ditemukan; lokasi musuh bergerak hanya muncul saat berada dalam jangkauan pengamatan unit atau bangunan, bukan sekadar karena pernah dijelajahi. Warna terrain membedakan Hearthland, Greenwood (lantai hutan), Highlands (dataran berbatu), dan Fenlands (rawa). Klaim pemain dan musuh diberi tint berbeda, sedangkan Keep, Outpost, resource, villager, dan pemain punya marker masing-masing.
 
 ## Wilayah dan kampanye
 Keep mengklaim area awal dalam radius 10 tile. Pos Terdepan (hotkey 6) memperluas klaim dalam radius 9 tile dan hanya boleh dibangun di frontier sendiri. Benteng lawan ditempatkan pada lokasi yang dapat dicapai di peta yang sama, mengklaim radius 9 tile, dan dijaga oleh prajurit yang berpatroli serta menerima penguatan berkala. Garis emas menunjukkan wilayah pemain; garis merah menunjukkan wilayah lawan.
