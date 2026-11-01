@@ -1,7 +1,7 @@
 # Skrip tes
 
 Skrip `SceneTree` (bukan GUT): dijalankan langsung dengan Godot, mencetak hasil ke stdout.
-Tidak ada assertion otomatis; baca keluarannya dan bandingkan dengan teks "(expect ...)" di tiap baris.
+Sebagian skrip lama mencetak hasil untuk inspeksi manual; tes regresi baru memakai `assert` dan akan menghentikan tes saat kondisi gagal.
 Folder ini ada di dalam proyek, jadi Godot akan mengimpornya sebagai skrip biasa (tidak mengganggu game).
 
 ## Menjalankan
@@ -14,10 +14,15 @@ Semua dari akar proyek (setelah `godot --headless --path . --import` sekali):
 | Skrip | Menguji |
 |---|---|
 | tech_tree.gd | syarat riset, efek ke entitas yang ada, bangunan terkunci, bijih besi, HUD, panel, save/load |
+| territory_claims.gd | klaim Keep, larangan bangunan di luar klaim, penempatan Outpost di frontier, ekspansi, pembongkaran |
 | combat_tower_walls.gd | menara menembak, cincin tembok, 150 musuh, game over |
 | villagers_economy.gd | job, setor ke gudang, ladang, populasi, malam, upkeep, performa |
 | events_boss_final_night.gd | event acak, boss, kemenangan, malam terakhir vs tingkat pertahanan |
 | save_load_audio_menu.gd | round-trip save/load, autosave, save rusak, audio, menu, pengaturan |
+| resource_save_state.gd | status pohon/batu/bijih besi dan timer tumbuh ulang, rollback ke backup save |
+| campaign_assault.gd | klaim musuh, fog reveal/save, G assault/recall, garrison saat fajar, conquest victory |
+| player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, archer projectile, brute armor, combat save |
+| input_rebinding.gd | perubahan keybind, penolakan konflik/reserved key, persistensi settings |
 | restart_gameover.gd | layar game over dan restart (R) |
 | fx_shake_settings.gd | batas partikel, guncangan layar, tombol menu, performa dengan efek |
 | perf.gd | biaya per frame: 150 musuh + 42 villager |

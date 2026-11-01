@@ -7,7 +7,7 @@ extends Node2D
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
 
-enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT }
+enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING }
 
 const TEXTURES := {
     "": preload("res://assets/sprites/villager_idle.svg"),
@@ -44,6 +44,8 @@ var max_hp := WORKER_HP
 var nav
 var world
 var target = null
+var _expedition_target = null
+var _expeditioning := false
 
 var _depot = null
 var _path := PackedVector2Array()
@@ -64,6 +66,9 @@ var _pending_foe = null
 var _pending_t := 0.0
 var _hit_done := false
 var _running := false
+var _rally_t := 0.0
+var _rally_damage_mult := 1.0
+var _rally_interval_mult := 1.0
 
 
 func _ready() -> void:
@@ -82,7 +87,23 @@ func _hit_interval() -> float:
 
 
 func _soldier_damage() -> int:
-    return roundi(Tech.stat("soldier.damage", float(SOLDIER_DAMAGE)))
+    var value := Tech.stat("soldier.damage", float(SOLDIER_DAMAGE))
+    if _rally_t > 0.0:
+        value *= _rally_damage_mult
+    return roundi(value)
+
+
+func _soldier_attack_interval() -> float:
+    return SOLDIER_INTERVAL * (_rally_interval_mult if _rally_t > 0.0 else 1.0)
+
+
+func apply_rally(duration: float, damage_multiplier: float, interval_multiplier: float) -> void:
+    if job != "soldier":
+        return
+    _rally_t = maxf(_rally_t, duration)
+    _rally_damage_mult = maxf(_rally_damage_mult, damage_multiplier)
+    _rally_interval_mult = minf(_rally_interval_mult, interval_multiplier)
+    Events.fx_burst.emit("rally", position + Vector2(0, -8), Vector2.ZERO, 0.7)
 
 
 func _hp_cap_for(j: String) -> int:
@@ -110,6 +131,8 @@ func set_job(j: String) -> void:
     if j == job:
         return
     _release()
+    _expeditioning = false
+    _expedition_target = null
     var old_max := max_hp
     job = j
     if job == "soldier":
@@ -164,6 +187,10 @@ func leave() -> void:
 func _physics_process(delta: float) -> void:
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _hurt_t = maxf(0.0, _hurt_t - delta)
+    _rally_t = maxf(0.0, _rally_t - delta)
+    if _rally_t <= 0.0:
+        _rally_damage_mult = 1.0
+        _rally_interval_mult = 1.0
     _resolve_pending(delta)
 
     if state == State.HIDDEN:
@@ -175,7 +202,7 @@ func _physics_process(delta: float) -> void:
     if GameClock.is_night and job != "soldier" and state != State.FLEEING:
         _begin_flee()
 
-    if nav.version != _path_ver and (state == State.TO_WORK or state == State.TO_DEPOT or state == State.FLEEING):
+    if nav.version != _path_ver and (state == State.TO_WORK or state == State.TO_DEPOT or state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING):
         _repath()
 
     match state:
@@ -202,6 +229,13 @@ func _physics_process(delta: float) -> void:
                 _hide()
         State.FIGHT:
             _tick_fight(delta)
+        State.EXPEDITION:
+            _tick_expedition(delta)
+        State.RECALLING:
+            if _move_along(delta):
+                state = State.IDLE
+                _scan_t = 0.0
+                _wander_t = 2.0
     _update_anim(delta)
 
 
@@ -212,6 +246,12 @@ func _update_anim(delta: float) -> void:
     match state:
         State.TO_WORK, State.TO_DEPOT:
             moving = true
+        State.EXPEDITION:
+            moving = _pi < _path.size()
+            _running = _expedition_target != null and is_instance_valid(_expedition_target) and position.distance_to(_expedition_target.position) > RUN_DISTANCE
+        State.RECALLING:
+            moving = _pi < _path.size()
+            _running = true
         State.FLEEING:
             moving = true
             _running = true
@@ -320,6 +360,97 @@ func _tick_working(delta: float) -> void:
         _hit_done = false
 
 
+func is_expeditioning() -> bool:
+    return _expeditioning
+
+
+func is_recalling_expedition() -> bool:
+    return state == State.RECALLING
+
+
+func start_expedition(stronghold) -> bool:
+    if job != "soldier" or not is_instance_valid(stronghold):
+        return false
+    _release()
+    _foe = null
+    _pending_foe = null
+    _expedition_target = stronghold
+    _expeditioning = true
+    state = State.EXPEDITION
+    _goal_cells = stronghold.cells()
+    _repath_t = 0.0
+    if not _plan_expedition_path():
+        recall_expedition()
+        return false
+    return true
+
+
+func recall_expedition() -> void:
+    _expeditioning = false
+    _expedition_target = null
+    _foe = null
+    _pending_foe = null
+    var keep = _find_keep()
+    if keep == null:
+        _path = PackedVector2Array()
+        _pi = 0
+        state = State.IDLE
+        return
+    _goal_cells = keep.cells()
+    var path: PackedVector2Array = nav.path_adjacent(position, _goal_cells)
+    if path.is_empty():
+        _path = PackedVector2Array()
+        _pi = 0
+        state = State.IDLE
+        return
+    _set_path(path)
+    state = State.RECALLING
+
+
+func _plan_expedition_path() -> bool:
+    if not _expeditioning or not is_instance_valid(_expedition_target):
+        return false
+    _goal_cells = _expedition_target.cells()
+    var path: PackedVector2Array = nav.path_adjacent(position, _goal_cells)
+    if path.is_empty():
+        return false
+    _set_path(path)
+    return true
+
+
+func _tick_expedition(delta: float) -> void:
+    if not _expeditioning or not is_instance_valid(_expedition_target):
+        recall_expedition()
+        return
+    _scan_t -= delta
+    if _scan_t <= 0.0:
+        _scan_t = 0.3
+        _foe = _nearest_enemy()
+    if _foe != null and is_instance_valid(_foe):
+        state = State.FIGHT
+        _tick_fight(delta)
+        return
+
+    var distance := position.distance_to(_expedition_target.position)
+    if distance <= 42.0:
+        if anim.face(_expedition_target.position - position):
+            queue_redraw()
+        if _atk_cd <= 0.0:
+            _atk_cd = _soldier_attack_interval()
+            _pending_foe = _expedition_target
+            _pending_t = ATTACK_HIT_DELAY
+            anim.play("attack", true)
+        return
+
+    _repath_t -= delta
+    if _repath_t <= 0.0:
+        _repath_t = 1.0
+        if _pi >= _path.size():
+            _plan_expedition_path()
+    if _pi < _path.size():
+        _move_along(delta)
+
+
 func _tick_fight(delta: float) -> void:
     _scan_t -= delta
     if _scan_t <= 0.0:
@@ -327,14 +458,14 @@ func _tick_fight(delta: float) -> void:
         _foe = _nearest_enemy()
     if _foe == null or not is_instance_valid(_foe):
         _foe = null
-        state = State.IDLE
+        state = State.EXPEDITION if _expeditioning and is_instance_valid(_expedition_target) else State.IDLE
         return
     var dist := position.distance_to(_foe.position)
     if dist < REACH:
         if anim.face(_foe.position - position):
             queue_redraw()
         if _atk_cd <= 0.0:
-            _atk_cd = SOLDIER_INTERVAL
+            _atk_cd = _soldier_attack_interval()
             _pending_foe = _foe
             _pending_t = ATTACK_HIT_DELAY
             anim.play("attack", true)
@@ -489,7 +620,8 @@ func _hide() -> void:
 func _nearest_enemy():
     var best = null
     var best_d := SOLDIER_SEARCH
-    for e in get_tree().get_nodes_in_group("enemies"):
+    var candidates := get_tree().get_nodes_in_group("enemy_garrison") if _expeditioning else get_tree().get_nodes_in_group("enemies")
+    for e in candidates:
         var d := position.distance_to((e as Node2D).position)
         if d < best_d:
             best_d = d
@@ -527,6 +659,11 @@ func _repath() -> void:
             State.TO_WORK:
                 _release()
                 state = State.IDLE
+            State.EXPEDITION, State.RECALLING:
+                _expeditioning = false
+                _expedition_target = null
+                state = State.IDLE
+                Events.build_feedback.emit("Prajurit tidak menemukan jalur pulang")
             _:
                 state = State.IDLE
         return
@@ -540,7 +677,7 @@ func _move_along(delta: float) -> bool:
     var tgt := _path[_pi]
     var to := tgt - position
     var d := to.length()
-    var fast := state == State.FLEEING or (state == State.FIGHT and _foe != null and is_instance_valid(_foe) and position.distance_to(_foe.position) > RUN_DISTANCE)
+    var fast := state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or (state == State.FIGHT and _foe != null and is_instance_valid(_foe) and position.distance_to(_foe.position) > RUN_DISTANCE)
     var step := (RUN_SPEED if fast else SPEED) * delta
     if not anim.is_busy() and anim.face(to):
         queue_redraw()

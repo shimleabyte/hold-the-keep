@@ -14,6 +14,7 @@ var yield_kind := "wood"
 var worker = null  # villager yang sedang mengklaim pohon ini
 
 var _hp := MAX_HP
+var _regrow_in := 0.0
 
 
 func _ready() -> void:
@@ -23,7 +24,30 @@ func _ready() -> void:
     col.shape = shape
     col.position = Vector2(0, -2)
     add_child(col)
+    add_to_group("resource_nodes")
     add_to_group("harvestable")
+
+
+func _process(delta: float) -> void:
+    if _hp <= 0:
+        _regrow_in = maxf(0.0, _regrow_in - delta)
+        if _regrow_in <= 0.0:
+            _regrow()
+
+
+func export_state() -> Dictionary:
+    return {"hp": _hp, "regrow": _regrow_in}
+
+
+func import_state(data: Dictionary) -> void:
+    _hp = clampi(int(data.get("hp", MAX_HP)), 0, MAX_HP)
+    _regrow_in = maxf(0.0, float(data.get("regrow", 0.0))) if _hp <= 0 else 0.0
+    worker = null
+    if _hp > 0:
+        add_to_group("harvestable")
+    else:
+        remove_from_group("harvestable")
+    queue_redraw()
 
 
 func is_available(by = null) -> bool:
@@ -43,7 +67,7 @@ func hit(by = null) -> void:
         worker = null
         remove_from_group("harvestable")
         queue_redraw()
-        get_tree().create_timer(REGROW_SECONDS).timeout.connect(_regrow)
+        _regrow_in = REGROW_SECONDS
 
 
 func _give(amount: int, by) -> void:
@@ -55,7 +79,11 @@ func _give(amount: int, by) -> void:
 
 func _regrow() -> void:
     _hp = MAX_HP
-    add_to_group("harvestable")
+    _regrow_in = 0.0
+    if _hp > 0:
+        add_to_group("harvestable")
+    else:
+        remove_from_group("harvestable")
     queue_redraw()
 
 

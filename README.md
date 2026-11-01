@@ -14,62 +14,52 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - Tahan Shift / bumper kiri (gamepad): lari
 - Y atau tombol RISET di HUD: panel teknologi
 - E / Spasi / tombol A (gamepad): tebang pohon, tambang batu
-- 1-5 atau klik slot di bar bawah: pilih bangunan (rumah, tembok, menara, gudang, ladang)
+- 1-6 atau klik slot di bar bawah: pilih bangunan (termasuk Pos Terdepan)
 - Klik kiri: pasang (tahan untuk melukis tembok)
+- Pos Terdepan memperluas wilayah; bangunan lain hanya dapat dipasang di area yang sudah diklaim
 - Klik kanan: batal / bongkar bangunan (refund 50%)
 - Esc: batal mode bangun
 - F / klik kiri (di luar mode bangun) / tombol X: serang sekitar pemain
+- Q / tombol B: Dash — burst cepat dengan jendela kebal singkat
+- C / tombol Y: Cleave — tebasan depan yang melukai dan membuat musuh limbung (level 2)
+- V / bumper kanan: Rally — memperkuat serangan pemain dan prajurit sekitar (level 3)
+- Kalahkan musuh untuk mendapat XP; level up memulihkan sebagian HP dan membuka skill
 - T / M / K / R: tambah penebang / penambang / petani (kebun) / prajurit (Shift = kurangi); atau klik tombol + / - di panel job
+- G: kirim seluruh prajurit untuk menyerbu benteng lawan yang sudah ditemukan; tekan lagi untuk menarik mereka kembali ke Keep
 - P / Esc (saat tidak membangun): menu jeda (simpan, muat, layar penuh, vsync, volume)
+- Menu jeda > Atur kontrol: rebind gerak, interaksi, serang, dan lari; gamepad tetap didukung
 - F5: simpan | F9: muat | H: bantuan kontrol | F3: tampilkan FPS
 - R: mulai ulang setelah game over | L: muat save terakhir dari layar game over
 
-## Status: Minggu 1
-- Peta 64x64 prosedural (rumput, kolam dengan collision, pohon)
-- Pemain 8 arah, kamera smoothing + limit peta, Y-sort
-- Pohon: 3 pukulan, bonus kayu, tumbuh lagi 45 detik
-- Inventori (autoload), HUD (kayu, hari, FPS), siklus siang-malam dasar
-- Semua visual placeholder prosedural, belum ada aset
+## Sistem permainan
 
-## Status
-Minggu 1-2: peta, pemain, kamera, sumber daya (kayu, batu), sistem bangunan data-driven.
+### Siklus pertahanan
+- Bertahan selama 15 hari; pada malam terakhir, kalahkan Raja Lawan.
+- Keep memiliki 1000 HP. Jika hancur, permainan berakhir.
+- Siang berlangsung 180 detik; malam berlangsung sekitar 54 detik.
+- Gelombang dimulai dari 6 musuh dan bertambah 3 per hari, hingga batas 120.
+- Bandit muncul sejak awal, serigala hari 2, prajurit hari 4, pemanah hari 6, dan penghancur lapis baja hari 9.
+- Serigala menerjang setelah jeda serangan; pemanah menjaga jarak dan menembakkan proyektil; penghancur lebih tahan tetapi menghantam bangunan lebih keras.
+- Raja Lawan memiliki 1400 HP, armor, damage pengepungan, dan tidak mundur saat fajar.
 
-Minggu 4-5 (bagian 1): pertahanan
-- Keep di tengah peta (500 HP). Hancur = game over, R untuk mulai ulang
-- Gelombang musuh tiap malam (data/waves.json): bandit, serigala, prajurit
-- Pathfinding flow-field: satu field untuk semua musuh; tembok boleh ditembus
-  dengan biaya tinggi, jadi musuh memilih memutar atau menghancurkan tembok
-- Menara menembak anak panah (jangkauan 96px, 7 damage, 0.9 detik)
-- Pemain: 100 HP, serangan area, regen setelah 4 detik tanpa terkena, respawn di keep
-- Siang 180 detik per hari, malam sekitar 54 detik; musuh mundur saat fajar
+### Combat dan progression
+Pemain memperoleh XP saat musuh mati. Level 1 membuka Dash (Q), level 2 membuka Cleave (C), dan level 3 membuka Rally (V). Dash memberi perpindahan cepat serta invulnerability singkat; Cleave menyerang area depan dan memberi stagger; Rally memperkuat damage pemain dan prajurit dalam radius selama delapan detik. Level up memulihkan sebagian HP. Progress level/XP tersimpan.
 
-Minggu 6-7 (bagian 1): villager dan ekonomi
-- Penduduk awal 2. Kapasitas: keep +2, tiap rumah +2. Penduduk baru muncul tiap 12 detik
-  siang hari jika ada kapasitas dan makanan cukup (8 makanan + cadangan upkeep)
-- Job: penebang, penambang, petani, prajurit. Kuota diatur dengan T/M/K/R atau tombol + / - di HUD
-- Villager mengumpulkan sampai 6 unit, lalu menyetor ke gudang atau keep terdekat (A*)
-- Ladang: maksimal 2 petani, 3 makanan per 12 detik per petani
-- Upkeep: 2 makanan per penduduk per hari. Kurang makanan = satu penduduk pergi
-- Malam: non-prajurit lari ke keep dan bersembunyi; prajurit menyerbu musuh
-- Rumah menambah kapasitas, gudang jadi tempat setor
+Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis pertahanan, serigala menerjang, pemanah menjaga jarak dan menembakkan proyektil, sedangkan penghancur berzirah bergerak lambat tetapi memberi damage pengepungan tinggi pada bangunan.
 
-Minggu 8 (bagian 1): event, boss, kemenangan
-- Tujuan: bertahan sampai hari 15, lalu kalahkan Raja Lawan (600 HP, 25 damage) di malam terakhir
-- Raja tidak mundur saat fajar; permainan berakhir (menang) hanya jika dia tumbang
-- Event acak tiap awal hari mulai hari 2 (60% peluang), dari data/events.json:
-  pedagang, panen, tambang baru, pengungsi, paceklik, wabah. Tidak ada event di hari terakhir
-- Balancing awal: keep 1000 HP, menara 12 damage, gelombang 6 + 2 per hari.
-  Simulasi malam terakhir: 4 prajurit + 2 menara kalah; 8 prajurit + 4 menara menang tipis.
-  Tembok sebaiknya dipasang dalam jangkauan menara (cincin jauh justru menahan musuh di luar jangkauan)
+### Desa dan ekonomi
+- Penduduk awal: 2. Keep memberi kapasitas 2; setiap rumah menambah 2 kapasitas.
+- Penduduk baru membutuhkan 8 makanan dan hanya muncul pada siang hari ketika kapasitas cukup.
+- Atur penebang, penambang, petani, dan prajurit melalui T/M/K/R atau tombol kuota di HUD.
+- Setiap penduduk mengonsumsi 2 makanan per hari. Kekurangan makanan membuat satu penduduk pergi.
+- Bangunan: rumah, tembok, menara, gudang, ladang, tembok batu, tempa, dan Pos Terdepan.
+- Teknologi 17-node dalam 3 era memperkuat ekonomi, pertahanan, dan pasukan.
 
-Minggu 9-10 (bagian 1): rilis
-- Save/load: satu slot di user://save.json. Autosave tiap fajar, manual dengan F5, muat dengan F9.
-  Tersimpan: inventori, jam/hari, bangunan + HP, penduduk (job, HP, bawaan), musuh, pemain, kuota job.
-  Tidak tersimpan: status pohon/batu (tumbuh lagi saat dimuat)
-- Pengaturan di user://settings.cfg: layar penuh, vsync, volume
-- SFX prosedural (tanpa file aset), dibuat saat startup; ganti dengan sample asli lewat scripts/autoload/audio.gd
-- Log sesi di user://logs/godot.log (5 file terakhir disimpan)
-- Export preset Windows dan Linux (export_presets.cfg), file *.json ikut terkemas
+### Simpanan dan pengaturan
+- Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
+- Save versi 6 menyimpan semua status versi sebelumnya plus level dan XP tempur pemain; save versi 1–5 dimigrasikan ke level awal.
+- Penulisan save memakai file sementara dan salinan pemulihan; loader mencoba salinan tersebut bila file utama rusak.
+- Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
 ## Membuat build rilis
 1. Di Godot: Editor > Manage Export Templates > Download and Install (versi 4.3)
@@ -87,13 +77,18 @@ membuka Tempa dan membuat bijih besi (urat oranye, jauh dari keep) bisa ditamban
 memilih besi bila stoknya kurang dari separuh batu. Game di-pause saat panel terbuka.
 Efek berupa data (pengali, penambah, buka bangunan, bendera) lewat `Tech.stat(kunci, dasar)`.
 
+## Wilayah dan kampanye
+Keep mengklaim area awal dalam radius 10 tile. Pos Terdepan (hotkey 6) memperluas klaim dalam radius 9 tile dan hanya boleh dibangun di frontier sendiri. Benteng lawan ditempatkan pada lokasi yang dapat dicapai di peta yang sama, mengklaim radius 9 tile, dan dijaga oleh prajurit yang berpatroli serta menerima penguatan berkala. Garis emas menunjukkan wilayah pemain; garis merah menunjukkan wilayah lawan.
+
+Fog of war menutup peta yang belum dijelajahi. Player, Keep, Pos Terdepan, dan villager membuka area; wilayah yang sudah ditemukan tetap terlihat setelah disimpan dan dimuat. Setelah benteng lawan ditemukan, tekan G untuk mengirim semua villager dengan job prajurit. Prajurit menyerang penjaga dahulu, lalu menghancurkan benteng (900 HP). Tekan G lagi untuk menarik pasukan kembali ke Keep. Benteng hancur = kemenangan kampanye; kemenangan bertahan hari ke-15 melawan Raja Lawan tetap menjadi jalur kemenangan lain.
+
 ## HUD
 Panel atas: kayu, batu, makanan, hari + lintasan siang/malam (kuning = siang, biru = malam, oranye = fajar),
 jumlah musuh, penduduk. Kiri: bar HP pemain dan keep. Kanan: kuota job (klik + / -; oranye = belum terisi).
-Bawah: bar bangunan berikon dan biaya (redup = bahan kurang). Bar Raja Lawan muncul di malam terakhir.
+Bawah: bar bangunan berikon dan biaya (redup = bahan kurang). Bar Raja Lawan muncul di malam terakhir; bar Benteng Lawan muncul setelah ditemukan.
 
 ## Aset
-Semua visual berupa SVG pixel-art di `assets/sprites/` (28 file: karakter, musuh, pohon, batu,
+Semua visual berupa SVG pixel-art di `assets/sprites/` (karakter, musuh, pohon, batu,
 bangunan, tile, ikon HUD). Karakter dan musuh berupa sprite sheet 4 frame (diam, jalan 1, jalan 2,
 aksi) yang dipilih otomatis oleh kode: berjalan, menebang/menambang/bertani, menyerang. Dibuat oleh `tools/gen_assets.py` (tanpa dependensi):
 ubah palet/bentuk di skrip itu lalu `python3 tools/gen_assets.py` untuk membuat ulang.
@@ -125,5 +120,5 @@ diam (2), jalan (4), lari (4), serang (4), kerja (4), kena pukul (1), mati (3).
 Font HUD: Silkscreen (c) The Silkscreen Project Authors, SIL Open Font License 1.1
 (lihat `assets/fonts/OFL-Silkscreen.txt`). Font hanya punya huruf kapital.
 
-Belum ada: musik, rebind kontrol, tech tree, ikon .ico untuk Windows, integrasi Steam.
+Belum ada: musik, rebind shortcut UI/job/build, multi-basis dan multi-region campaign, upgrade khusus invasi, ikon .ico untuk Windows, integrasi Steam.
 Visual masih placeholder prosedural.

@@ -15,6 +15,7 @@ var yield_kind := "iron"
 var worker = null
 
 var _hp := MAX_HP
+var _regrow_in := 0.0
 
 
 func _ready() -> void:
@@ -24,8 +25,28 @@ func _ready() -> void:
     col.shape = shape
     col.position = Vector2(0, -3.5)
     add_child(col)
+    add_to_group("resource_nodes")
     Events.tech_researched.connect(_on_tech)
     _update_group()
+
+
+func _process(delta: float) -> void:
+    if _hp <= 0:
+        _regrow_in = maxf(0.0, _regrow_in - delta)
+        if _regrow_in <= 0.0:
+            _regrow()
+
+
+func export_state() -> Dictionary:
+    return {"hp": _hp, "regrow": _regrow_in}
+
+
+func import_state(data: Dictionary) -> void:
+    _hp = clampi(int(data.get("hp", MAX_HP)), 0, MAX_HP)
+    _regrow_in = maxf(0.0, float(data.get("regrow", 0.0))) if _hp <= 0 else 0.0
+    worker = null
+    _update_group()
+    queue_redraw()
 
 
 func _on_tech(_id: String) -> void:
@@ -57,7 +78,7 @@ func hit(by = null) -> void:
         worker = null
         _update_group()
         queue_redraw()
-        get_tree().create_timer(REGROW_SECONDS).timeout.connect(_regrow)
+        _regrow_in = REGROW_SECONDS
 
 
 func _give(amount: int, by) -> void:
@@ -69,6 +90,7 @@ func _give(amount: int, by) -> void:
 
 func _regrow() -> void:
     _hp = MAX_HP
+    _regrow_in = 0.0
     _update_group()
     queue_redraw()
 

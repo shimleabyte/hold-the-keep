@@ -1,6 +1,9 @@
 extends Node2D
 
 const WORLD_SCRIPT := preload("res://scripts/world/world_map.gd")
+const TERRITORY_SCRIPT := preload("res://scripts/systems/territory.gd")
+const ENEMY_KEEP_SCRIPT := preload("res://scripts/entities/enemy_keep.gd")
+const FOG_SCRIPT := preload("res://scripts/systems/fog_of_war.gd")
 const PLAYER_SCRIPT := preload("res://scripts/entities/player.gd")
 const BUILD_SCRIPT := preload("res://scripts/systems/build_system.gd")
 const FLOW_SCRIPT := preload("res://scripts/systems/flow_field.gd")
@@ -17,6 +20,10 @@ const NIGHT_TINT := Color(0.45, 0.5, 0.75)
 const KEEP_CELL := Vector2i(31, 29)
 
 var world
+var territory
+var enemy_keep
+var fog
+var campaign_conquered := false
 var player
 var build
 var flow
@@ -36,6 +43,10 @@ func _ready() -> void:
 
     world = WORLD_SCRIPT.new()
     add_child(world)
+
+    territory = TERRITORY_SCRIPT.new()
+    territory.world = world
+    world.add_child(territory)
 
     add_child_to_world_fx()
     player = PLAYER_SCRIPT.new()
@@ -70,22 +81,97 @@ func _ready() -> void:
     build = BUILD_SCRIPT.new()
     build.world = world
     build.player = player
+    build.territory = territory
     add_child(build)
 
     add_child(HUD_SCRIPT.new())
     add_child(TECH_PANEL_SCRIPT.new())
     add_child(MENU_SCRIPT.new())
+    Events.campaign_won.connect(_on_campaign_won)
 
     # Keep paling akhir, supaya HUD sudah mendengarkan event HP-nya.
     var save := SaveSystem.take_pending()
     if save.is_empty():
         Tech.reset()
         build.place_raw("keep", KEEP_CELL)
+        _spawn_enemy_keep()
         # Dua penduduk awal
         for i in 2:
             village.spawn_villager(Vector2(520.0 + (i * 2 - 1) * 8.0, 522.0))
     else:
         _apply_save(save)
+
+    fog = FOG_SCRIPT.new()
+    fog.world = world
+    fog.player = player
+    world.add_child(fog)
+    if not save.is_empty():
+        fog.import_state(save.get("fog", {}))
+
+
+func _on_campaign_won(_day: int) -> void:
+    campaign_conquered = true
+
+
+func _enemy_keep_cells(anchor: Vector2i) -> Array[Vector2i]:
+    var cells: Array[Vector2i] = []
+    for y in 3:
+        for x in 3:
+            cells.append(anchor + Vector2i(x, y))
+    return cells
+
+
+func _find_enemy_keep_cell() -> Vector2i:
+    nav.rebuild()
+    var candidates: Array[Dictionary] = []
+    var keep_center := Vector2(32.5, 30.5)
+    for y in range(5, 56):
+        for x in range(5, 56):
+            var anchor := Vector2i(x, y)
+            var center := Vector2(anchor) + Vector2(1.5, 1.5)
+            var distance := center.distance_to(keep_center)
+            if distance < 22.0:
+                continue
+            var clear := true
+            for cell in _enemy_keep_cells(anchor):
+                if not world.is_buildable(cell) or world.occupied.has(cell):
+                    clear = false
+                    break
+            if clear:
+                candidates.append({"cell": anchor, "distance": distance})
+    candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+        return float(a["distance"]) > float(b["distance"]))
+    for i in mini(candidates.size(), 160):
+        var anchor: Vector2i = candidates[i]["cell"]
+        if not nav.path_adjacent(player.position, _enemy_keep_cells(anchor)).is_empty():
+            return anchor
+    return Vector2i(-1, -1)
+
+
+func _spawn_enemy_keep(saved: Dictionary = {}, create_garrison := true) -> void:
+    if bool(saved.get("destroyed", false)):
+        campaign_conquered = true
+        Events.campaign_won.emit(GameClock.day)
+        return
+    var anchor := Vector2i(int(saved.get("cx", -1)), int(saved.get("cy", -1)))
+    if anchor.x < 0 or anchor.y < 0:
+        anchor = _find_enemy_keep_cell()
+    if anchor.x < 0:
+        push_error("Campaign: no reachable site for enemy stronghold")
+        return
+
+    enemy_keep = ENEMY_KEEP_SCRIPT.new()
+    enemy_keep.setup(world, flow, player, anchor, int(saved.get("hp", 900)))
+    enemy_keep.import_state(saved)
+    world.entities.add_child(enemy_keep)
+    for cell in enemy_keep.cells():
+        world.occupied[cell] = enemy_keep
+    Events.enemy_stronghold_placed.emit(anchor)
+    nav.rebuild()
+    flow.rebuild()
+    territory.rebuild()
+    if create_garrison:
+        enemy_keep.spawn_initial_garrison()
 
 
 func add_child_to_world_fx() -> void:
@@ -98,6 +184,16 @@ func _apply_save(d: Dictionary) -> void:
         inv[k] = int(d["inventory"][k])
     Inventory.items = inv
     Tech.import_state(d.get("tech", {}))
+    for saved_resource in d.get("resources", []):
+        if not (saved_resource is Dictionary):
+            continue
+        if not saved_resource.has("cx") or not saved_resource.has("cy"):
+            continue
+        var resource_cell := Vector2i(int(saved_resource["cx"]), int(saved_resource["cy"]))
+        var resource_node = world.occupied.get(resource_cell)
+        if resource_node != null and is_instance_valid(resource_node) and resource_node.has_method("import_state"):
+            if String(saved_resource.get("kind", "")) == String(resource_node.yield_kind):
+                resource_node.import_state(saved_resource.get("state", {}))
     var c: Dictionary = d["clock"]
     GameClock.time_of_day = float(c["t"])
     GameClock.day = int(c["day"])
@@ -110,6 +206,12 @@ func _apply_save(d: Dictionary) -> void:
         if node.id == "keep":
             Events.keep_hp_changed.emit(node.hp, node.max_hp)
 
+    var stronghold_state: Dictionary = d.get("stronghold", {})
+    if stronghold_state.is_empty():
+        _spawn_enemy_keep()
+    else:
+        _spawn_enemy_keep(stronghold_state, false)
+
     var q: Dictionary = d.get("quota", {})
     for j in q:
         village.quota[j] = int(q[j])
@@ -119,10 +221,15 @@ func _apply_save(d: Dictionary) -> void:
         n.hp = int(v["hp"])
         if int(v["carry"]) > 0:
             n.receive(String(v["kind"]), int(v["carry"]))
+        if bool(v.get("expedition", false)) and is_instance_valid(enemy_keep):
+            n.start_expedition(enemy_keep)
+        elif bool(v.get("recalling", false)):
+            n.recall_expedition()
 
     var pl: Dictionary = d["player"]
     player.position = Vector2(float(pl["x"]), float(pl["y"]))
     player.hp = int(pl["hp"])
+    player.import_combat_state(pl.get("combat", {}))
     Events.player_hp_changed.emit(player.hp, player.MAX_HP)
 
     spawner.import_state(d.get("spawner", {}))

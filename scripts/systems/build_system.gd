@@ -9,6 +9,7 @@ const BUILDING_SCRIPT := preload("res://scripts/entities/building.gd")
 
 var world  # world_map.gd
 var player: Node2D
+var territory
 
 var active := ""
 
@@ -93,6 +94,10 @@ func check(id: String, c: Vector2i) -> String:
                 return "Tidak bisa dibangun di sini"
             if world.occupied.has(cell):
                 return "Terhalang"
+    if territory != null and not territory.can_place(id, c, size):
+        if id == "outpost":
+            return "Pos Terdepan harus terhubung ke wilayah sendiri"
+        return "Di luar wilayah. Bangun Pos Terdepan di perbatasan"
     var rect := Rect2(Vector2(c) * TILE, Vector2(size) * TILE)
     if player != null:
         if rect.grow(6).has_point(player.global_position + Vector2(0, -4)):

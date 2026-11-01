@@ -31,6 +31,8 @@ func _initialize() -> void:
     var ev = root.get_node("Events")
     var ss = root.get_node("SaveSystem")
     DirAccess.remove_absolute("user://save.json")
+    DirAccess.remove_absolute("user://save.bak")
+    DirAccess.remove_absolute("user://save.tmp")
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main
@@ -91,12 +93,14 @@ func _initialize() -> void:
 
     # ---- autosave ----
     DirAccess.remove_absolute("user://save.json")
+    DirAccess.remove_absolute("user://save.bak")
     print("S4 has_save after delete: ", ss.has_save())
     ev.day_changed.emit(6)
     await ticks(2)
     print("S4 autosave on day change -> has_save=", ss.has_save())
 
-    # ---- save rusak ----
+    # ---- save rusak tanpa rollback copy ----
+    DirAccess.remove_absolute("user://save.bak")
     var f = FileAccess.open("user://save.json", FileAccess.WRITE)
     f.store_string("{ini bukan json"); f.close()
     print("S5 corrupt save -> request_load=", ss.request_load(), " (expect false), scene intact=", is_instance_valid(current_scene))
