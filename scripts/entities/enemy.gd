@@ -5,6 +5,8 @@ extends Node2D
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
 const ENEMY_BOLT := preload("res://scripts/entities/enemy_bolt.gd")
+const ENEMY_TARGETING := preload("res://scripts/systems/enemy_targeting.gd")
+const ENEMY_SUPPORT := preload("res://scripts/systems/enemy_support.gd")
 const TEXTURES := {
     "bandit": preload("res://assets/sprites/enemy_bandit.svg"),
     "wolf": preload("res://assets/sprites/enemy_wolf.svg"),
@@ -31,6 +33,13 @@ var runs := false
 var is_garrison := false
 var guard_origin := Vector2.ZERO
 var role := "melee"
+var archetype := "raider"
+var faction_id := ""
+var _faction_tint := Color.WHITE
+var support_radius := 0.0
+var support_amount := 0
+var support_interval := 0.0
+var _support_cd := 0.0
 var attack_range := PLAYER_REACH
 var preferred_range := 0.0
 var projectile_speed := 120.0
@@ -60,7 +69,7 @@ var _fw := 20
 var _fh := 20
 
 
-func setup(data: Dictionary, world_ref, flow_ref, player_ref) -> void:
+func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override := "") -> void:
     id = data["id"]
     max_hp = int(data["hp"])
     hp = max_hp
@@ -72,6 +81,17 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref) -> void:
     is_boss = bool(data.get("boss", false))
     runs = bool(data.get("run", false))
     role = String(data.get("role", "pouncer" if id == "wolf" else "melee"))
+    archetype = String(data.get("archetype", role))
+    faction_id = faction_override
+    _faction_tint = Color.WHITE
+    if not faction_id.is_empty():
+        var faction_data: Dictionary = FactionRegistry.faction_for_stronghold(faction_id)
+        if not faction_data.is_empty():
+            _faction_tint = Color(String(faction_data.get("color", "#ffffff")))
+    support_radius = maxf(0.0, float(data.get("support_radius", 0.0)))
+    support_amount = maxi(0, int(data.get("support_amount", 0)))
+    support_interval = maxf(0.0, float(data.get("support_interval", 0.0)))
+    _support_cd = 0.0
     attack_range = float(data.get("range", 30.0 if role == "pouncer" else PLAYER_REACH))
     preferred_range = float(data.get("preferred_range", 0.0))
     projectile_speed = float(data.get("projectile_speed", 120.0))
@@ -87,8 +107,8 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref) -> void:
     _fh = int(_tex.get_height() / 3.0)
 
 
-func setup_guard(data: Dictionary, world_ref, flow_ref, player_ref, origin: Vector2) -> void:
-    setup(data, world_ref, flow_ref, player_ref)
+func setup_guard(data: Dictionary, world_ref, flow_ref, player_ref, origin: Vector2, faction_override := "") -> void:
+    setup(data, world_ref, flow_ref, player_ref, faction_override)
     is_garrison = true
     guard_origin = origin
 
@@ -100,11 +120,13 @@ func _ready() -> void:
     if role == "ranged":
         add_to_group("ranged_enemies")
     anim.view = SpriteAnim.SIDE
+    modulate = _faction_tint
 
 
 func _physics_process(delta: float) -> void:
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _hurt_t = maxf(0.0, _hurt_t - delta)
+    _support_cd = maxf(0.0, _support_cd - delta)
     _resolve_pending(delta)
     _moving = false
 
@@ -122,6 +144,11 @@ func _physics_process(delta: float) -> void:
         _pounce_t = maxf(0.0, _pounce_t - delta)
         position += _pounce_dir * speed * 2.4 * delta
         _moving = true
+        _update_anim(delta)
+        _footsteps(delta)
+        return
+
+    if archetype == "war_shaman" and _tick_shaman_support():
         _update_anim(delta)
         _footsteps(delta)
         return
@@ -176,6 +203,15 @@ func _tick_flow(delta: float) -> void:
     _move_toward(Vector2(next) * WorldConfig.tile_size + Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0) + _offset, delta)
 
 
+func _tick_shaman_support() -> bool:
+    if support_amount <= 0 or support_radius <= 0.0 or _support_cd > 0.0:
+        return false
+    if not ENEMY_SUPPORT.heal_nearest_ally(self, support_radius, support_amount):
+        return false
+    _support_cd = maxf(0.5, support_interval)
+    return true
+
+
 func _tick_ranged(delta: float) -> void:
     if is_garrison and position.distance_to(guard_origin) > 155.0:
         _move_toward(guard_origin, delta)
@@ -202,22 +238,10 @@ func _tick_ranged(delta: float) -> void:
 
 
 func _nearest_ranged_target() -> Node2D:
-    var best: Node2D = null
-    var best_distance := 165.0
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
         candidates.append(player)
-    for candidate in candidates:
-        var target := candidate as Node2D
-        if not is_instance_valid(target) or not target.visible:
-            continue
-        if is_garrison and target.global_position.distance_to(guard_origin) > 175.0:
-            continue
-        var distance := position.distance_to(target.global_position)
-        if distance < best_distance:
-            best_distance = distance
-            best = target
-    return best
+    return ENEMY_TARGETING.nearest(self, candidates, 165.0, guard_origin if is_garrison else Vector2.ZERO, 175.0 if is_garrison else 0.0)
 
 
 func _tick_garrison(delta: float) -> void:
@@ -236,22 +260,10 @@ func _tick_garrison(delta: float) -> void:
 
 
 func _nearest_guard_target() -> Node2D:
-    var best: Node2D = null
-    var best_distance := 150.0
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
         candidates.append(player)
-    for candidate in candidates:
-        var target := candidate as Node2D
-        if not is_instance_valid(target) or not target.visible:
-            continue
-        if target.global_position.distance_to(guard_origin) > 175.0:
-            continue
-        var distance := position.distance_to(target.global_position)
-        if distance < best_distance:
-            best_distance = distance
-            best = target
-    return best
+    return ENEMY_TARGETING.nearest(self, candidates, 150.0, guard_origin, 175.0)
 
 
 func _begin_attack(target, direction: Vector2) -> void:
@@ -360,6 +372,15 @@ func _move_toward(target: Vector2, delta: float) -> void:
         position += to / distance * minf(speed * delta, distance)
 
 
+func receive_healing(amount: int) -> void:
+    if hp <= 0 or amount <= 0:
+        return
+    var previous_hp := hp
+    hp = mini(max_hp, hp + amount)
+    if hp != previous_hp:
+        queue_redraw()
+
+
 func take_damage(amount: int) -> void:
     if hp <= 0:
         return
@@ -367,7 +388,7 @@ func take_damage(amount: int) -> void:
     hp -= applied
     Events.fx_burst.emit("impact", position + Vector2(0, -_fh * 0.4), Vector2.ZERO, 2.0 if is_boss else 1.0)
     modulate = Color(1.8, 1.8, 1.8)
-    create_tween().tween_property(self, "modulate", Color.WHITE, 0.12)
+    create_tween().tween_property(self, "modulate", _faction_tint, 0.12)
     queue_redraw()
     if hp <= 0:
         remove_from_group("enemies")
@@ -400,6 +421,24 @@ func _draw() -> void:
     if _pounce_windup_t > 0.0:
         draw_line(Vector2(0, -6), Vector2(0, -6) + _pounce_dir * 14.0,
             Color("#ffb347"), 2.0)
+    match archetype:
+        "scout":
+            draw_line(Vector2(-4, -15), Vector2(0, -19), color, 1.5)
+            draw_line(Vector2(0, -19), Vector2(4, -15), color, 1.5)
+        "shieldbearer":
+            draw_rect(Rect2(-11, -14, 5, 10), color, false, 1.5)
+            draw_line(Vector2(-11, -10), Vector2(-6, -10), color, 1.0)
+        "saboteur":
+            draw_circle(Vector2(7, -12), 2.5, color)
+            draw_line(Vector2(7, -15), Vector2(10, -18), color, 1.0)
+        "war_shaman":
+            draw_arc(Vector2(0, -_fh * 0.55), 7.0, 0.0, TAU, 12, color, 1.0)
+        "siege_engine":
+            draw_rect(Rect2(-9, -14, 5, 5), color)
+            draw_rect(Rect2(4, -14, 5, 5), color)
+        "beast_rider":
+            draw_line(Vector2(-5, -12), Vector2(-10, -17), color, 1.5)
+            draw_line(Vector2(5, -12), Vector2(10, -17), color, 1.5)
     if role == "ranged":
         draw_arc(Vector2(7, -11), 4.0, -PI * 0.55, PI * 0.55, 7, Color("#91c99a"), 1.0)
         draw_line(Vector2(7, -15), Vector2(7, -7), Color("#d9e7c8"), 1.0)
