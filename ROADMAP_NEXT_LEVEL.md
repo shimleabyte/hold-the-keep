@@ -175,6 +175,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add faction tint, War Shaman ally healing, shared target-selection/support modules and enemy faction save persistence; current save schema is v13.
 - [x] Add faction registry validation and regression coverage for region mapping, rosters, garrisons, support and save validation.
 - [ ] Extract movement, attack-pattern and ability policies into composable modules; give each archetype its own counterable behavior.
+- [ ] Siege Engine siege cycle: implementation on `feat/phase-06-siege-engine-cycle`; bounded reachable structural priorities, long telegraph, heavy structure-only impact, recovery and stagger counterplay. CI pending.
 - [x] Saboteur building disruption merged via PR #40 (`8f1a914`); workflow #41355982522 passed 60/60 jobs on Godot 4.3/4.7.
 - [x] Scout scouting/marking merged via PR #39 (`11f3f13`); workflow #41354720293 passed 58/58 jobs on Godot 4.3/4.7.
 - [x] Shieldbearer directional brace merged via PR #36 (`b02aa60`); the available first results page for workflow #41329202804 showed 30/30 successful jobs; full matrix not independently verified.
