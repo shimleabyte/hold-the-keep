@@ -107,6 +107,20 @@ func _initialize() -> void:
     assert(main.territory.claimed_cells.size() >= 650,
         "The Frontier Keep must claim the larger 15-tile starting territory")
 
+    var clearing_center := Vector2(WorldConfig.map_size, WorldConfig.map_size) * 0.5
+    var clearing_radius := maxf(WorldConfig.safe_radius + 7.0, float(WorldConfig.map_size) * 0.15)
+    for cell in world.occupied:
+        var occupant = world.occupied[cell]
+        if is_instance_valid(occupant) and occupant.is_in_group("resource_nodes"):
+            assert(Vector2(cell).distance_to(clearing_center) >= clearing_radius,
+                "Resource nodes must not clutter the protected starting clearing")
+
+    var campaign_menu := get_first_node_in_group("pause_menu")
+    assert(campaign_menu != null and campaign_menu._campaign_profile.get_item_count() == 2,
+        "The pause menu must expose Classic and Frontier as separate new-campaign choices")
+    assert(campaign_menu._campaign_profile.selected == 1,
+        "New-campaign selector must reflect the currently active Frontier profile")
+
     var resource_counts := {
         "wood": 0,
         "stone": 0,
