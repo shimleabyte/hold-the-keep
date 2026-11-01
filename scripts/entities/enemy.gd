@@ -404,7 +404,7 @@ func _saboteur_target_valid(target: Node2D) -> bool:
         return false
     if int(target.get("hp")) <= 0 or not target.has_method("apply_sabotage"):
         return false
-    return not target.is_sabotaged()
+    return not bool(target.call("is_sabotaged"))
 
 
 func _select_saboteur_target() -> Node2D:
@@ -429,7 +429,7 @@ func _select_saboteur_target() -> Node2D:
             continue
         if is_garrison and building.position.distance_to(guard_origin) > 175.0:
             continue
-        var cells: Array[Vector2i] = building.cells()
+        var cells: Array[Vector2i] = building.call("cells")
         var candidate_path: PackedVector2Array = saboteur_nav.path_adjacent(position, cells)
         if candidate_path.is_empty():
             continue
@@ -474,9 +474,9 @@ func _tick_saboteur(delta: float) -> void:
         _saboteur_windup_t = maxf(0.0, _saboteur_windup_t - delta)
         if _saboteur_windup_t <= 0.0:
             var target := _saboteur_target
-            if target.apply_sabotage(saboteur_disruption_duration):
+            if bool(target.call("apply_sabotage", saboteur_disruption_duration)):
                 var sabotage_damage := maxi(1, roundi(float(damage) * saboteur_damage_multiplier))
-                target.take_damage(sabotage_damage)
+                target.call("take_damage", sabotage_damage)
                 Events.fx_burst.emit("debris", target.global_position + Vector2(0, -8), Vector2.ZERO, 1.2)
                 _saboteur_cd = saboteur_cooldown_duration
             else:
@@ -524,7 +524,7 @@ func _tick_saboteur(delta: float) -> void:
         _tick_flow(delta)
         return
     if _saboteur_path_version != saboteur_nav.version or _saboteur_path.is_empty() or _saboteur_repath_t <= 0.0:
-        var target_cells: Array[Vector2i] = _saboteur_target.cells()
+        var target_cells: Array[Vector2i] = _saboteur_target.call("cells")
         _saboteur_path = saboteur_nav.path_adjacent(position, target_cells)
         _saboteur_path_index = 1 if _saboteur_path.size() > 1 else 0
         _saboteur_path_version = saboteur_nav.version
