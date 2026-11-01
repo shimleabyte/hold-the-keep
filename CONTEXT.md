@@ -202,7 +202,7 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 
 ## 17. Responsive resolution and UI visual pass (2026-11-01)
 - Project base remains 480×270 with viewport rendering and integer scaling; stretch aspect is `expand` so wider/taller desktop windows reveal more world instead of distorting pixel art or forcing fixed letterboxing.
-- Default window is 1280×720; minimum is 960×540. Pause settings expose monitor-filtered 16:9 and 16:10 window-size presets, remember the selected windowed size, and keep fullscreen as a separate mode.
+- Default window is 1280×720; minimum is 960×540. Pause settings expose monitor-filtered 16:9, 16:10, and 4:3 window-size presets, remember the selected windowed size, and keep fullscreen as a separate mode.
 - HUD listens to viewport size changes. Resource/time strip spans the top; vitals and job drawer anchor to opposite sides; stage and boss panels center; map centers and scales; combat strip and building hotbar stay above the bottom edge.
 - Strategic map scales its tile grid and legend to the available viewport. Technology and pause overlays use full-viewport roots and centered panels.
 - Updated panel surfaces, borders, shadows, focus/hover/pressed button states, and resource color hierarchy.
