@@ -53,9 +53,9 @@ func _run() -> void:
     var next_stronghold = main.campaign.current_target_node()
     assert(next_stronghold != null, "Act II must expose the next stronghold")
     next_stronghold.take_damage(211)
-    var expected_stronghold_hp := next_stronghold.hp
-    var expected_escort_path_index := escort._path_index
-    var expected_escort_position := escort.position
+    var expected_stronghold_hp: int = int(next_stronghold.hp)
+    var expected_escort_path_index: int = int(escort._path_index)
+    var expected_escort_position: Vector2 = escort.position
 
     assert(SaveSystem.save_current(true),
         "Frontier save must succeed with a partially damaged stronghold and active escort")
