@@ -226,3 +226,13 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Frontier stronghold placement uses cardinal reachable-cell traversal; the stronghold is placed adjacent to walkable terrain. The strategic map renders Ashen March, profile-aware labels and viewport-aware scaling.
 - The Frontier regression covers five biome shares, terrain indices, resource distribution, iron veins, Keep footprint/claim, fog/save index bounds, selector visibility/persistence, stronghold approach, deterministic layout and compact viewport bounds.
 - PR #9 (`feat/regional-control-roads`) contains the next territory/roads/supply slice but is still stacked on the superseded pre-mainline Frontier branch. Rebase it onto the verified Phase 01 line before treating it as the Phase 02 continuation. Do not merge PR #10 or PR #9 without explicit approval.
+
+## 20. Regional control and road-connected supply (2026-11-01)
+- Phase 02 branch: `feat/regional-control-roads-mainline`, stacked on the verified Phase 01 branch; draft PR #11.
+- Regional ownership is aggregated from buildable land coverage into neutral/player/enemy/contested states. State changes use a dedicated signal and do not depend on exploration fog.
+- Roads and bridges are one-cell construction infrastructure. They have no physical collision and remain walkable in villager A* and enemy flow-field routing. Bridges are restricted to valid water cells.
+- `supply_network.gd` flood-fills cardinal road connections from the Keep footprint and exposes connected road/depot state. Keep, Storage and Outposts are depots; workers ignore disconnected depots and retain their carried resources if a route breaks before deposit.
+- Strategic map draws revealed road links and colors region labels by ownership state. HUD now exposes road and bridge build choices.
+- `tests/regional_control_roads.gd` covers Classic's four region states, road walkability, bridge traversal, connected depots, disconnected Outposts, rerouting on broken routes and infrastructure save persistence. Godot 4.3/4.7 CI is pending.
+- Current supply scope is deliberately limited: resources still enter the shared inventory after workers reach a connected depot. Local stockpile accounting, actual inter-depot transfers, Outpost guards/garrisons and supply attrition/raids are not implemented yet.
+- Earlier draft PR #9 was based on the superseded pre-mainline Frontier branch. PR #11 is the clean transplant rooted on the verified Phase 01 branch; close PR #9 after confirming PR #11 contains the complete changes.
