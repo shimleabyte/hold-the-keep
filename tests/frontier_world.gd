@@ -113,7 +113,7 @@ func _initialize() -> void:
         "The Frontier Keep must claim the larger 15-tile starting territory")
 
     var far_cell := Vector2i(127, 127)
-    var far_index := world_config.cell_index(far_cell)
+    var far_index: int = world_config.cell_index(far_cell)
     main.fog.import_state({"cells": [far_index]})
     assert(main.fog.is_revealed_cell(far_cell),
         "Frontier fog data must accept the final valid row-major map index")
@@ -147,7 +147,7 @@ func _initialize() -> void:
     assert(not campaign_menu._campaign_center.visible,
         "The new-campaign panel must provide a working return path")
 
-    var previous_profile := settings.world_profile
+    var previous_profile: String = settings.world_profile
     assert(settings.set_world_profile("frontier"),
         "Frontier profile preference must be persistable")
     var preference_file := ConfigFile.new()
