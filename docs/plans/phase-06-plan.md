@@ -1,7 +1,7 @@
 # Phase 06 — Factions, Enemy Archetypes and Territorial AI
 
-**Status:** Partially implemented. Faction foundations are merged; Shieldbearer directional brace is implemented on `feat/phase-06-shieldbearer-brace` and pending Godot 4.3/4.7 CI. Other archetype policies, camps, patrols, raid extensions and manual playtesting remain open.
-**Mainline:** `main`; current implementation branch: `feat/phase-06-shieldbearer-brace`.
+**Status:** Partially implemented. Faction foundations and Shieldbearer directional brace are merged into `main` through PR #36 (`b02aa60`). Workflow #41329202804 completed successfully; import/parse and all regression jobs passed on Godot 4.3/4.7. Scout, Saboteur, Siege Engine and Beast Rider behavior policies, camps, patrols, raid extensions and manual playtesting remain open.
+**Mainline:** `main`; next Phase 06 slice: distinct Scout scouting/marking behavior.
 **Current save schema:** v13. Preserve Classic compatibility and validate legacy migrations through v13 plus v13 round-trip.
 **Engine target:** Godot 4.3 and 4.7.
 
@@ -22,10 +22,10 @@ Replace the single generic enemy identity with four regional powers whose units 
 
 ## Remaining implementation sequence
 
-### 06.2 — Composable combat behaviors (partial; Shieldbearer slice pending CI)
+### 06.2 — Composable combat behaviors (partial; Shieldbearer delivered)
 - Extract movement, attack-pattern and ability policies from the enemy controller.
 - Give Scout a scouting/marking behavior instead of treating it as a faster melee unit.
-- [x] Shieldbearer directional brace: data-defined wind-up, locked facing, finite active window and frontal damage mitigation; side/rear hits bypass the block. Player attacks, Cleave, Dash and tower arrows pass their impact origin. Stagger interrupts the brace; disengaging during wind-up cancels it. Implemented on `feat/phase-06-shieldbearer-brace`; CI pending.
+- [x] Shieldbearer directional brace merged through PR #36 (`b02aa60`): data-defined wind-up, locked facing, finite active window and frontal damage mitigation; side/rear hits bypass the block. Player attacks, Cleave, Dash and tower arrows pass their impact origin. Stagger interrupts the brace; disengaging during wind-up cancels it. `tests/shieldbearer_behavior.gd` passed in the Godot 4.3/4.7 CI workflow.
 - Keep the Shieldbearer behavior test isolated from save state; no save-schema bump is required.
 - Give Saboteur an explicit building-priority target policy and disruption effect.
 - Give Siege Engine a distinct siege wind-up/impact cycle and building-only preference.
