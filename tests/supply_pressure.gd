@@ -95,6 +95,7 @@ func _initialize() -> void:
     var config = root.get_node("WorldConfig")
     var clock = root.get_node("GameClock")
     var save_system = root.get_node("SaveSystem")
+    var events = root.get_node("Events")
     var tech = root.get_node("Tech")
     config.apply_profile("frontier")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
@@ -146,7 +147,7 @@ func _initialize() -> void:
     var warnings: Array[String] = []
     var warning_hook := func(title: String, _detail: String) -> void:
         warnings.append(title)
-    Events.event_triggered.connect(warning_hook)
+    events.event_triggered.connect(warning_hook)
 
     main.supply.advance_supply_pressure(30.0)
     var warning_state: Dictionary = main.supply.depot_pressure_state(outpost)
@@ -285,6 +286,6 @@ func _initialize() -> void:
         or not restored_raiders[0].is_in_group("supply_raiders"),
         "Restoring the road connection must recall the active saboteur")
 
-    Events.event_triggered.disconnect(warning_hook)
+    events.event_triggered.disconnect(warning_hook)
     print("PASS: contested isolation warning, targeted saboteur path/attack, deterministic depot stock attrition, HUD status, v13 persistence, legacy compatibility and recovery by reconnecting roads")
     quit(0)
