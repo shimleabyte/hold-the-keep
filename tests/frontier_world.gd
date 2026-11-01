@@ -107,6 +107,21 @@ func _initialize() -> void:
     assert(main.territory.claimed_cells.size() >= 650,
         "The Frontier Keep must claim the larger 15-tile starting territory")
 
+    var far_cell := Vector2i(127, 127)
+    var far_index := WorldConfig.cell_index(far_cell)
+    main.fog.import_state({"cells": [far_index]})
+    assert(main.fog.is_revealed_cell(far_cell),
+        "Frontier fog data must accept the final valid row-major map index")
+    var frontier_save: Dictionary = SaveSystem.collect(main)
+    assert(frontier_save["world"]["profile"] == "frontier"
+        and int(frontier_save["world"]["map_size"]) == 128
+        and SaveSystem._valid_save(frontier_save),
+        "A 128x128 Frontier save must retain valid world and fog metadata")
+    var invalid_frontier_save := frontier_save.duplicate(true)
+    invalid_frontier_save["fog"]["cells"].append(WorldConfig.map_cells)
+    assert(not SaveSystem._valid_save(invalid_frontier_save),
+        "Frontier save validation must reject fog indices outside the 128x128 map")
+
     var clearing_center := Vector2(WorldConfig.map_size, WorldConfig.map_size) * 0.5
     var clearing_radius := maxf(WorldConfig.safe_radius + 7.0, float(WorldConfig.map_size) * 0.15)
     for cell in world.occupied:
