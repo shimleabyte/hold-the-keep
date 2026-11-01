@@ -147,14 +147,18 @@ func _initialize() -> void:
             if world.is_buildable(neighbor) and main.flow.is_reachable(neighbor):
                 touches_reachable_bank = true
                 break
-        if touches_reachable_bank:
+        if not touches_reachable_bank:
+            continue
+        var original_tile: int = int(world.tile_type_at(candidate))
+        world._layer.set_cell(candidate, 0, Vector2i(2, 0))
+        if main.build.check("bridge", candidate) == "":
             bridge_cell = candidate
             break
+        # This tile fails the real placement rules (for example, it overlaps the
+        # player's footprint); restore it and continue to the next bank candidate.
+        world._layer.set_cell(candidate, 0, Vector2i(original_tile, 0))
     require(bridge_cell.x >= 0,
-        "The Keep claim must provide a free cell next to reachable land for a bridge test")
-    # Deterministic fixture: turn the chosen claimed bank cell into water. The bridge
-    # assertions below still exercise the actual water validation, construction and path grids.
-    world._layer.set_cell(bridge_cell, 0, Vector2i(2, 0))
+        "The Keep claim must provide a water-bridge candidate accepted by the real build validator")
     require(world.is_bridgeable(bridge_cell),
         "Bridge fixtures must be water cells inside the map bounds")
     main.nav.rebuild()
