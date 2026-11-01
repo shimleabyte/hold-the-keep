@@ -19,6 +19,8 @@ const GOLD := Color("#ffd23f")
 
 var _font: Font
 var _root: Control
+var _dim: ColorRect
+var _panel: Panel
 var _nodes: Dictionary = {}
 var _era_labels: Array = []
 var _head_bar: StatBar
@@ -36,35 +38,37 @@ func _ready() -> void:
     _font = PIXEL_FONT.get_font()
 
     _root = Control.new()
-    _root.size = Vector2(480, 270)
+    _root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _root.visible = false
     add_child(_root)
 
-    var dim := ColorRect.new()
-    dim.color = Color(0, 0, 0, 0.7)
-    dim.size = Vector2(480, 270)
-    _root.add_child(dim)
+    _dim = ColorRect.new()
+    _dim.color = Color(0.015, 0.02, 0.028, 0.82)
+    _dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _root.add_child(_dim)
 
-    var panel := Panel.new()
-    panel.position = Vector2(4, 4)
-    panel.size = Vector2(472, 262)
+    _panel = Panel.new()
+    _panel.size = Vector2(472, 262)
     var sb := StyleBoxFlat.new()
-    sb.bg_color = Color(0.09, 0.08, 0.11, 0.96)
-    sb.border_color = Color("#6b5a40")
+    sb.bg_color = Color("#171d20")
+    sb.border_color = Color("#a17b4d")
     sb.set_border_width_all(1)
-    panel.add_theme_stylebox_override("panel", sb)
-    _root.add_child(panel)
+    sb.shadow_color = Color(0, 0, 0, 0.58)
+    sb.shadow_size = 5
+    sb.shadow_offset = Vector2(0, 3)
+    _panel.add_theme_stylebox_override("panel", sb)
+    _root.add_child(_panel)
 
-    _label(panel, "TEKNOLOGI", Vector2(6, 4), GOLD)
-    _head_text = _label(panel, "", Vector2(250, 4), Color.WHITE)
+    _label(_panel, "TECHNOLOGY", Vector2(8, 5), GOLD)
+    _head_text = _label(_panel, "", Vector2(250, 5), Color.WHITE)
     _head_bar = StatBar.new()
-    _head_bar.position = Vector2(372, 6)
+    _head_bar.position = Vector2(372, 7)
     _head_bar.size = Vector2(90, 6)
     _head_bar.fill = Color("#6fcf5a")
-    panel.add_child(_head_bar)
+    _panel.add_child(_head_bar)
 
     for e in 3:
-        var l := _label(panel, "ERA " + Tech.ERA_NAMES[e + 1], Vector2(COL_X[e] - 4 + 2, 18))
+        var l := _label(_panel, "ERA " + Tech.ERA_NAMES[e + 1], Vector2(COL_X[e] - 4 + 2, 20))
         _era_labels.append(l)
 
     var per_era := [0, 0, 0]
@@ -87,17 +91,20 @@ func _ready() -> void:
         node.size = Vector2(NODE_W, NODE_H)
         node.pressed.connect(_on_node_pressed)
         node.hovered.connect(_on_node_hover)
-        panel.add_child(node)
+        _panel.add_child(node)
         _nodes[id] = node
         per_era[era] += 1
 
     for i in 3:
-        _foot.append(_label(panel, "", Vector2(8, 220 + i * 11), Color.WHITE))
+        _foot.append(_label(_panel, "", Vector2(8, 220 + i * 11), Color.WHITE))
 
     Events.tech_panel_requested.connect(_open)
     Events.tech_researched.connect(func(_id: String) -> void: _refresh())
     Events.game_over.connect(func(_d: int) -> void: _force_close())
     Events.game_won.connect(func(_d: int) -> void: _force_close())
+    Events.campaign_won.connect(func(_d: int) -> void: _force_close())
+    get_viewport().size_changed.connect(_layout_viewport)
+    _layout_viewport()
 
 
 func _label(parent: Node, text: String, pos: Vector2, color := Color.WHITE) -> Label:
@@ -110,6 +117,12 @@ func _label(parent: Node, text: String, pos: Vector2, color := Color.WHITE) -> L
     l.add_theme_color_override("font_color", color)
     parent.add_child(l)
     return l
+
+
+func _layout_viewport() -> void:
+    var viewport_size := get_viewport().get_visible_rect().size
+    _panel.position = (viewport_size - _panel.size) * 0.5
+    _root.queue_redraw()
 
 
 func is_open() -> bool:
