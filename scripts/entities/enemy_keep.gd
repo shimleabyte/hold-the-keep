@@ -64,7 +64,7 @@ func export_state() -> Dictionary:
 
 func import_state(data: Dictionary) -> void:
     _reinforce_timer = clampf(float(data.get("reinforce_timer", REINFORCE_INTERVAL)), 0.0, REINFORCE_INTERVAL)
-    _spawn_index = int(data.get("spawn_index", 0)) % (GUARD_DIRECTIONS.size() * GUARD_RINGS.size())
+    _spawn_index = posmod(int(data.get("spawn_index", 0)), GUARD_DIRECTIONS.size() * GUARD_RINGS.size())
 
 
 func spawn_initial_garrison() -> void:
@@ -96,6 +96,13 @@ func _spawn_guard() -> bool:
         if not world.is_buildable(spawn_cell) or world.occupied.has(spawn_cell):
             continue
         if not flow.is_reachable(spawn_cell):
+            continue
+        var too_close := false
+        for existing_guard in get_tree().get_nodes_in_group("enemy_garrison"):
+            if existing_guard.position.distance_to(spawn_position) < TILE * 1.5:
+                too_close = true
+                break
+        if too_close:
             continue
         _spawn_index = (slot + 1) % attempts
         var guard = ENEMY_SCRIPT.new()
