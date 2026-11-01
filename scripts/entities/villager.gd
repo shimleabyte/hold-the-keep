@@ -543,7 +543,10 @@ func _release() -> void:
 func _go_depot() -> void:
     _depot = null
     var best := INF
+    var supply = get_tree().get_first_node_in_group("supply_network")
     for d in get_tree().get_nodes_in_group("depots"):
+        if supply != null and not supply.is_depot_connected(d):
+            continue
         var dist: float = d.position.distance_squared_to(position)
         if dist < best:
             best = dist
@@ -562,6 +565,11 @@ func _go_depot() -> void:
 
 func _deposit() -> void:
     if carry > 0 and carry_kind != "":
+        var supply = get_tree().get_first_node_in_group("supply_network")
+        if supply != null and _depot != null and is_instance_valid(_depot) and not supply.is_depot_connected(_depot):
+            _depot = null
+            _go_depot()
+            return
         Inventory.add(carry_kind, carry)
     carry = 0
     carry_kind = ""
