@@ -222,4 +222,13 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Frontier world generation uses a deterministic warped five-biome region map, an Ashen March terrain tile, biome-specific tree/rock density with patch noise, and 32 profile-scaled iron veins. The 15-tile Keep claim is paired with a clear resource-free starting radius. Classic generation remains a separate path to preserve its existing seeded layout and placement behavior.
 - Save validation now separates load compatibility from structural validity: a save from another profile cannot be loaded into the active world, but a structurally valid cross-profile save can be retained as the temporary rollback backup when the next profile writes its first save.
 - `tests/frontier_world.gd` covers five biome regions, Ashen terrain, resources, iron veins, Keep footprint/claims, path reachability, new-campaign selector state and deterministic terrain/resource placement. Godot execution remains pending; tests must pass on 4.3 and 4.7 before this phase is accepted.
-- Main remains untouched. Keep PR #7 and the stacked Phase 01 changes in review branches; do not merge either until their respective gates pass.
+- Main remains untouched. PR #7, PR #8 and PR #9 are draft review branches; do not merge past a dependency whose required CI gate has not passed.
+
+## 20. Regional control and road-connected supply (2026-11-01)
+- Phase 02 implementation branch: `feat/regional-control-roads`, draft PR #9 stacked on `feat/frontier-world-generation`.
+- `territory.gd` now aggregates claims over buildable land into per-region neutral/player/enemy/contested control records, with claim ratios and a state-change signal. This is independent of fog exploration and supply connectivity.
+- Roads are a new one-tile build option with their own pixel tile and HUD icon. They occupy a construction cell but have no collision; villager navigation and enemy flow routing treat them as open terrain. The strategic map renders explored road segments.
+- `supply_network.gd` flood-fills cardinal road components from the Keep footprint and reports connected roads/depots. Outposts are depots. Villager deposit selection ignores depots disconnected from the Keep, avoiding global inventory transfer through isolated Outposts.
+- `tests/regional_control_roads.gd` covers the four regional control states, road placement and walkability, connected and disconnected depots, a broken road segment, isolated Outpost depot filtering and save persistence. Godot 4.3/4.7 verification is pending.
+- Remaining Phase 02 work: bridge/water routes, Outpost guards, and actual local stockpile/transfer semantics. Current inventory remains shared once workers reach a connected depot.
+
