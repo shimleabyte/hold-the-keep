@@ -229,6 +229,7 @@ func _apply_save(d: Dictionary) -> void:
     var pl: Dictionary = d["player"]
     player.position = Vector2(float(pl["x"]), float(pl["y"]))
     player.hp = int(pl["hp"])
+    player.import_combat_state(pl.get("combat", {}))
     Events.player_hp_changed.emit(player.hp, player.MAX_HP)
 
     spawner.import_state(d.get("spawner", {}))
