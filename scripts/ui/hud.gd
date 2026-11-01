@@ -97,6 +97,12 @@ var _outpost_button: HudChip
 var _outpost_backdrop: ColorRect
 var _outpost_panel: Panel
 var _outpost_list: VBoxContainer
+var _shipment_source: OptionButton
+var _shipment_destination: OptionButton
+var _shipment_kind: OptionButton
+var _shipment_amount: SpinBox
+var _shipment_orders_list: VBoxContainer
+var _shipment_refreshing := false
 var _outpost_refresh_t := 0.0
 var _map_backdrop: ColorRect
 var _map_panel
@@ -482,7 +488,7 @@ func _build_outpost_panel() -> void:
     add_child(_outpost_backdrop)
     _blockers.append(_outpost_backdrop)
 
-    _outpost_panel = _panel(Vector2.ZERO, Vector2(310, 206))
+    _outpost_panel = _panel(Vector2.ZERO, Vector2(356, 238))
     _outpost_panel.visible = false
     var title := _label(_outpost_panel, "LOGISTIK & PERTAHANAN POS", Vector2(10, 7), GOLD)
     title.add_theme_font_size_override("font_size", 9)
@@ -490,28 +496,89 @@ func _build_outpost_panel() -> void:
     var close := HudChip.new()
     close.label = "X"
     close.font = _font
-    close.position = Vector2(285, 4)
+    close.position = Vector2(330, 4)
     close.size = Vector2(19, 15)
     close.pressed.connect(_toggle_outposts)
     _outpost_panel.add_child(close)
 
-    var hint := _label(_outpost_panel, "Stok remote dikirim otomatis ke Keep saat jaringan tersambung.", Vector2(10, 22), Color("#c9b99d"))
+    var hint := _label(_outpost_panel, "Stok lokal tidak otomatis menjadi inventori Keep.", Vector2(10, 22), Color("#c9b99d"))
     hint.add_theme_font_size_override("font_size", 6)
-    hint.size = Vector2(286, 10)
+    hint.size = Vector2(336, 10)
 
-    var scroll := ScrollContainer.new()
-    scroll.position = Vector2(8, 37)
-    scroll.size = Vector2(294, 160)
-    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    scroll.mouse_filter = Control.MOUSE_FILTER_STOP
-    _outpost_panel.add_child(scroll)
+    var depot_scroll := ScrollContainer.new()
+    depot_scroll.position = Vector2(8, 35)
+    depot_scroll.size = Vector2(340, 66)
+    depot_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    depot_scroll.mouse_filter = Control.MOUSE_FILTER_STOP
+    _outpost_panel.add_child(depot_scroll)
 
     _outpost_list = VBoxContainer.new()
     _outpost_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _outpost_list.add_theme_constant_override("separation", 4)
-    scroll.add_child(_outpost_list)
-    _refresh_outpost_panel()
+    _outpost_list.add_theme_constant_override("separation", 3)
+    depot_scroll.add_child(_outpost_list)
 
+    var shipment_title := _label(_outpost_panel, "PERINTAH ANGKUT FISIK", Vector2(10, 105), GOLD)
+    shipment_title.add_theme_font_size_override("font_size", 7)
+    _label(_outpost_panel, "ASAL", Vector2(10, 116), Color("#c9b99d")).add_theme_font_size_override("font_size", 6)
+    _label(_outpost_panel, "TUJUAN", Vector2(183, 116), Color("#c9b99d")).add_theme_font_size_override("font_size", 6)
+
+    _shipment_source = OptionButton.new()
+    _shipment_source.position = Vector2(8, 126)
+    _shipment_source.size = Vector2(166, 18)
+    _shipment_source.add_theme_font_override("font", _font)
+    _shipment_source.add_theme_font_size_override("font_size", 7)
+    _outpost_panel.add_child(_shipment_source)
+
+    _shipment_destination = OptionButton.new()
+    _shipment_destination.position = Vector2(180, 126)
+    _shipment_destination.size = Vector2(168, 18)
+    _shipment_destination.add_theme_font_override("font", _font)
+    _shipment_destination.add_theme_font_size_override("font_size", 7)
+    _outpost_panel.add_child(_shipment_destination)
+
+    _shipment_kind = OptionButton.new()
+    _shipment_kind.position = Vector2(8, 150)
+    _shipment_kind.size = Vector2(116, 19)
+    _shipment_kind.add_theme_font_override("font", _font)
+    _shipment_kind.add_theme_font_size_override("font_size", 7)
+    for kind in ["wood", "stone", "food", "iron"]:
+        _shipment_kind.add_item(kind.to_upper())
+        _shipment_kind.set_item_metadata(_shipment_kind.item_count - 1, kind)
+    _outpost_panel.add_child(_shipment_kind)
+
+    _shipment_amount = SpinBox.new()
+    _shipment_amount.position = Vector2(130, 150)
+    _shipment_amount.size = Vector2(76, 19)
+    _shipment_amount.min_value = 1
+    _shipment_amount.max_value = 60
+    _shipment_amount.step = 1
+    _shipment_amount.value = 6
+    _shipment_amount.add_theme_font_override("font", _font)
+    _shipment_amount.add_theme_font_size_override("font_size", 7)
+    _outpost_panel.add_child(_shipment_amount)
+
+    var send := Button.new()
+    send.text = "BUAT ORDER"
+    send.position = Vector2(212, 150)
+    send.size = Vector2(136, 19)
+    send.add_theme_font_override("font", _font)
+    send.add_theme_font_size_override("font_size", 7)
+    send.pressed.connect(_create_shipment_order)
+    _outpost_panel.add_child(send)
+
+    _label(_outpost_panel, "STATUS PENGIRIMAN", Vector2(10, 174), Color("#c9b99d")).add_theme_font_size_override("font_size", 6)
+    var order_scroll := ScrollContainer.new()
+    order_scroll.position = Vector2(8, 184)
+    order_scroll.size = Vector2(340, 46)
+    order_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    order_scroll.mouse_filter = Control.MOUSE_FILTER_STOP
+    _outpost_panel.add_child(order_scroll)
+
+    _shipment_orders_list = VBoxContainer.new()
+    _shipment_orders_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _shipment_orders_list.add_theme_constant_override("separation", 2)
+    order_scroll.add_child(_shipment_orders_list)
+    _refresh_outpost_panel()
 
 func _on_outpost_backdrop_input(event: InputEvent) -> void:
     if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -539,60 +606,192 @@ func _refresh_outpost_panel() -> void:
     if depots.is_empty():
         var empty := _label(_outpost_list, "Belum ada Outpost atau Storage.", Vector2.ZERO, Color("#c9b99d"))
         empty.add_theme_font_size_override("font_size", 8)
-        return
+    else:
+        for depot in depots:
+            var row := HBoxContainer.new()
+            row.custom_minimum_size = Vector2(276, 38)
+            row.add_theme_constant_override("separation", 5)
+            _outpost_list.add_child(row)
+    
+            var details := VBoxContainer.new()
+            details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+            details.add_theme_constant_override("separation", 1)
+            row.add_child(details)
+    
+            var heading := Label.new()
+            heading.add_theme_font_override("font", _font)
+            heading.add_theme_font_size_override("font_size", 7)
+            heading.add_theme_color_override("font_color", Color("#f0d39a"))
+            if String(depot.id) == "outpost":
+                heading.text = "POS %d,%d  ·  PENJAGA %d/%d" % [depot.cell.x, depot.cell.y, depot.guard_count(), depot.guard_capacity]
+            else:
+                heading.text = "GUDANG %d,%d" % [depot.cell.x, depot.cell.y]
+            details.add_child(heading)
+    
+            var stock := Label.new()
+            stock.add_theme_font_override("font", _font)
+            stock.add_theme_font_size_override("font_size", 6)
+            stock.add_theme_color_override("font_color", Color("#c4c0b5"))
+            stock.text = "KAYU %d  BATU %d  PANGAN %d  BESI %d  / %d" % [
+                depot.stockpile_amount("wood"), depot.stockpile_amount("stone"),
+                depot.stockpile_amount("food"), depot.stockpile_amount("iron"),
+                depot.stockpile_capacity
+            ]
+            details.add_child(stock)
+    
+            if String(depot.id) == "outpost":
+                var release := Button.new()
+                release.text = "-"
+                release.custom_minimum_size = Vector2(25, 22)
+                release.disabled = depot.guard_count() <= 0
+                release.tooltip_text = "Tarik satu penjaga dari Outpost"
+                release.add_theme_font_override("font", _font)
+                release.add_theme_font_size_override("font_size", 8)
+                release.pressed.connect(_release_outpost_guard.bind(depot))
+                row.add_child(release)
+    
+                var assign := Button.new()
+                assign.text = "+"
+                assign.custom_minimum_size = Vector2(25, 22)
+                assign.disabled = depot.free_guard_slots() <= 0
+                assign.tooltip_text = "Tugaskan prajurit terdekat yang belum menjaga Outpost"
+                assign.add_theme_font_override("font", _font)
+                assign.add_theme_font_size_override("font_size", 8)
+                assign.pressed.connect(_assign_outpost_guard.bind(depot))
+                row.add_child(assign)
 
+    _refresh_shipment_controls()
+
+
+func _depot_option_cell(option: OptionButton) -> Vector2i:
+    if option == null or option.get_selected() < 0:
+        return Vector2i(-1, -1)
+    var metadata: Variant = option.get_item_metadata(option.get_selected())
+    if not (metadata is Dictionary):
+        return Vector2i(-1, -1)
+    return Vector2i(int(metadata.get("cx", -1)), int(metadata.get("cy", -1)))
+
+
+func _refresh_depot_option(option: OptionButton, depots: Array, preferred: Vector2i, default_index: int) -> void:
+    option.clear()
+    var selected_index := -1
     for depot in depots:
+        var cell: Vector2i = depot.cell
+        var label := "KEEP" if String(depot.id) == "keep" else ("POS" if String(depot.id) == "outpost" else "GUDANG")
+        option.add_item("%s %d,%d" % [label, cell.x, cell.y])
+        var index := option.item_count - 1
+        option.set_item_metadata(index, {"cx": cell.x, "cy": cell.y})
+        if cell == preferred:
+            selected_index = index
+    if selected_index < 0 and option.item_count > 0:
+        selected_index = clampi(default_index, 0, option.item_count - 1)
+    if selected_index >= 0:
+        option.select(selected_index)
+    option.disabled = option.item_count < 2
+
+
+func _refresh_shipment_controls() -> void:
+    if _shipment_source == null or _shipment_destination == null or _shipment_orders_list == null:
+        return
+    var previous_source := _depot_option_cell(_shipment_source)
+    var previous_destination := _depot_option_cell(_shipment_destination)
+    var endpoints: Array = []
+    for depot in get_tree().get_nodes_in_group("depots"):
+        if is_instance_valid(depot) and ["keep", "storage", "outpost"].has(String(depot.id)):
+            endpoints.append(depot)
+    endpoints.sort_custom(func(a, b) -> bool:
+        if String(a.id) == "keep" or String(b.id) == "keep":
+            return String(a.id) == "keep"
+        if a.cell.y != b.cell.y:
+            return a.cell.y < b.cell.y
+        return a.cell.x < b.cell.x
+    )
+    _shipment_refreshing = true
+    _refresh_depot_option(_shipment_source, endpoints, previous_source, 0)
+    _refresh_depot_option(_shipment_destination, endpoints, previous_destination, 1)
+    _shipment_refreshing = false
+
+    for child in _shipment_orders_list.get_children():
+        child.free()
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node == null:
+        return
+    var orders: Array[Dictionary] = main_node.supply.get_shipment_orders()
+    if orders.is_empty():
+        var empty := _label(_shipment_orders_list, "Belum ada perintah pengiriman.", Vector2.ZERO, Color("#c9b99d"))
+        empty.add_theme_font_size_override("font_size", 7)
+        return
+    var shown := 0
+    for order_index in range(orders.size() - 1, -1, -1):
+        var order: Dictionary = orders[order_index]
         var row := HBoxContainer.new()
-        row.custom_minimum_size = Vector2(276, 38)
-        row.add_theme_constant_override("separation", 5)
-        _outpost_list.add_child(row)
+        row.custom_minimum_size = Vector2(328, 17)
+        row.add_theme_constant_override("separation", 4)
+        _shipment_orders_list.add_child(row)
 
-        var details := VBoxContainer.new()
-        details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-        details.add_theme_constant_override("separation", 1)
-        row.add_child(details)
-
-        var heading := Label.new()
-        heading.add_theme_font_override("font", _font)
-        heading.add_theme_font_size_override("font_size", 7)
-        heading.add_theme_color_override("font_color", Color("#f0d39a"))
-        if String(depot.id) == "outpost":
-            heading.text = "POS %d,%d  ·  PENJAGA %d/%d" % [depot.cell.x, depot.cell.y, depot.guard_count(), depot.guard_capacity]
-        else:
-            heading.text = "GUDANG %d,%d" % [depot.cell.x, depot.cell.y]
-        details.add_child(heading)
-
-        var stock := Label.new()
-        stock.add_theme_font_override("font", _font)
-        stock.add_theme_font_size_override("font_size", 6)
-        stock.add_theme_color_override("font_color", Color("#c4c0b5"))
-        stock.text = "KAYU %d  BATU %d  PANGAN %d  BESI %d  / %d" % [
-            depot.stockpile_amount("wood"), depot.stockpile_amount("stone"),
-            depot.stockpile_amount("food"), depot.stockpile_amount("iron"),
-            depot.stockpile_capacity
+        var source_name := _shipment_name(Vector2i(int(order["source_x"]), int(order["source_y"])))
+        var destination_name := _shipment_name(Vector2i(int(order["destination_x"]), int(order["destination_y"])))
+        var state_name := main_node.supply.get_shipment_status_label(String(order["status"]))
+        var detail := Label.new()
+        detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        detail.add_theme_font_override("font", _font)
+        detail.add_theme_font_size_override("font_size", 6)
+        detail.add_theme_color_override("font_color", Color("#d5c8ae"))
+        detail.text = "#%d %d %s  %s → %s  [%s]" % [
+            int(order["id"]), int(order["amount"]), String(order["kind"]).to_upper(),
+            source_name, destination_name, state_name
         ]
-        details.add_child(stock)
+        detail.clip_text = true
+        row.add_child(detail)
 
-        if String(depot.id) == "outpost":
-            var release := Button.new()
-            release.text = "-"
-            release.custom_minimum_size = Vector2(25, 22)
-            release.disabled = depot.guard_count() <= 0
-            release.tooltip_text = "Tarik satu penjaga dari Outpost"
-            release.add_theme_font_override("font", _font)
-            release.add_theme_font_size_override("font_size", 8)
-            release.pressed.connect(_release_outpost_guard.bind(depot))
-            row.add_child(release)
+        var cancel := Button.new()
+        cancel.text = "X"
+        cancel.custom_minimum_size = Vector2(18, 16)
+        cancel.add_theme_font_override("font", _font)
+        cancel.add_theme_font_size_override("font_size", 6)
+        cancel.disabled = not ["queued", "in_transit", "blocked"].has(String(order["status"]))
+        cancel.tooltip_text = "Batalkan dan pulihkan cargo"
+        cancel.pressed.connect(_cancel_shipment_order.bind(int(order["id"])))
+        row.add_child(cancel)
+        shown += 1
+        if shown >= 8:
+            break
 
-            var assign := Button.new()
-            assign.text = "+"
-            assign.custom_minimum_size = Vector2(25, 22)
-            assign.disabled = depot.free_guard_slots() <= 0
-            assign.tooltip_text = "Tugaskan prajurit terdekat yang belum menjaga Outpost"
-            assign.add_theme_font_override("font", _font)
-            assign.add_theme_font_size_override("font_size", 8)
-            assign.pressed.connect(_assign_outpost_guard.bind(depot))
-            row.add_child(assign)
+
+func _shipment_name(cell: Vector2i) -> String:
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node != null:
+        for depot in get_tree().get_nodes_in_group("depots"):
+            if is_instance_valid(depot) and depot.cell == cell:
+                return "KEEP" if depot.id == "keep" else ("POS" if depot.id == "outpost" else "GDG")
+    return "HILANG"
+
+
+func _create_shipment_order() -> void:
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node == null or _shipment_source.get_selected() < 0 or _shipment_destination.get_selected() < 0:
+        _show_message("Pilih depot asal dan tujuan")
+        return
+    var source_cell := _depot_option_cell(_shipment_source)
+    var destination_cell := _depot_option_cell(_shipment_destination)
+    var kind: String = String(_shipment_kind.get_item_metadata(_shipment_kind.get_selected()))
+    var amount := int(_shipment_amount.value)
+    var order_id: int = main_node.supply.create_shipment(source_cell, destination_cell, kind, amount)
+    if order_id < 0:
+        _show_message("Order ditolak: stok, kapasitas atau jalur tidak cukup")
+    else:
+        _show_message("Order #%d dibuat; cargo telah dicadangkan" % order_id)
+    _refresh_outpost_panel()
+
+
+func _cancel_shipment_order(order_id: int) -> void:
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node == null or not main_node.supply.cancel_shipment(order_id):
+        _show_message("Order tidak dapat dibatalkan")
+    else:
+        _show_message("Order dibatalkan; cargo dipulihkan")
+    _refresh_outpost_panel()
+
 
 
 func _assign_outpost_guard(outpost) -> void:
