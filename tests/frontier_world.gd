@@ -79,11 +79,11 @@ func _initialize() -> void:
     for y in WorldConfig.map_size:
         for x in WorldConfig.map_size:
             var cell := Vector2i(x, y)
-            var region := world.region_id(cell)
+            var region: String = world.region_id(cell)
             assert(region_cells.has(region),
                 "Frontier generator must not emit an unknown region: " + region)
             region_cells[region] += 1
-            var tile_type := world.tile_type_at(cell)
+            var tile_type: int = world.tile_type_at(cell)
             assert(tile_type >= 0 and tile_type <= 6,
                 "Every map cell must reference a registered terrain tile")
             tile_types[tile_type] = int(tile_types.get(tile_type, 0)) + 1
