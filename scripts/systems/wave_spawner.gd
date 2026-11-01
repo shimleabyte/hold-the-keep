@@ -16,10 +16,43 @@ var _timer := 0.0
 var _pool: Array = []
 var _boss_pending := false
 var _boss_t := 0.0
+var _active_stage_id := ""
 
 
 func _ready() -> void:
     Events.phase_changed.connect(_on_phase_changed)
+    Events.day_changed.connect(_on_day_changed)
+    _sync_stage(GameClock.day)
+
+
+func _on_day_changed(day: int) -> void:
+    _sync_stage(day)
+
+
+func stage_info(day: int) -> Dictionary:
+    var stages: Array = DataDB.waves.get("stages", [])
+    for stage_value in stages:
+        if not (stage_value is Dictionary):
+            continue
+        if day >= int(stage_value.get("from_day", 1)) and day <= int(stage_value.get("to_day", 15)):
+            return stage_value.duplicate(true)
+    return {
+        "id": "frontier",
+        "label": "BAB I",
+        "name": "PERBATASAN",
+        "from_day": 1,
+        "to_day": 15,
+        "summary": "Bertahan dan perluas wilayah."
+    }
+
+
+func _sync_stage(day: int) -> void:
+    var info := stage_info(day)
+    var stage_id := String(info.get("id", "frontier"))
+    if stage_id == _active_stage_id:
+        return
+    _active_stage_id = stage_id
+    Events.stage_changed.emit(stage_id, String(info.get("name", "PERBATASAN")), day)
 
 
 func _on_phase_changed(is_night: bool) -> void:
@@ -36,9 +69,21 @@ func wave_size(day: int) -> int:
 
 func _pool_for(day: int) -> Array:
     var out: Array = []
-    for t in DataDB.waves["types"]:
-        if int(t["from_day"]) <= day:
-            out.append(t)
+    var stage := stage_info(day)
+    var stage_id := String(stage.get("id", "frontier"))
+    for value in DataDB.waves["types"]:
+        if int(value["from_day"]) > day:
+            continue
+        var entry: Dictionary = value.duplicate(true)
+        var enemy_id := String(entry.get("id", ""))
+        if stage_id == "black_march" and enemy_id == "archer":
+            entry["weight"] = int(entry["weight"]) + 1
+        elif stage_id == "last_siege":
+            if enemy_id == "archer":
+                entry["weight"] = int(entry["weight"]) + 1
+            elif enemy_id == "brute":
+                entry["weight"] = int(entry["weight"]) + 2
+        out.append(entry)
     return out
 
 
@@ -70,6 +115,7 @@ func restore_enemy(d: Dictionary) -> void:
 
 
 func start_wave(day: int) -> void:
+    _sync_stage(day)
     _pool = _pool_for(day)
     var count := wave_size(day)
     _to_spawn = count
