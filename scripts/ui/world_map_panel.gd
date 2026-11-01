@@ -117,6 +117,7 @@ func _draw() -> void:
     _draw_building_markers()
     _draw_campaign_markers()
     _draw_unit_markers()
+    _draw_camera_window()
     _draw_player_marker()
 
     draw_rect(Rect2(MAP_ORIGIN, Vector2(MAP_PIXELS, MAP_PIXELS)), Color("#d4c09a"), false, 1.0)
@@ -214,6 +215,19 @@ func _draw_unit_markers() -> void:
     for enemy in get_tree().get_nodes_in_group("enemies"):
         if is_instance_valid(enemy) and _is_currently_observed(enemy.global_position):
             _marker(enemy.global_position, ENEMY_MARKER, 1.0)
+
+
+func _draw_camera_window() -> void:
+    var player_node = get_tree().get_first_node_in_group("player")
+    if player_node == null or player_node.camera == null:
+        return
+    var camera: Camera2D = player_node.camera
+    var zoom := Vector2(maxf(0.01, camera.zoom.x), maxf(0.01, camera.zoom.y))
+    var half_view := get_viewport_rect().size / zoom * 0.5
+    var center := camera.get_screen_center_position()
+    var top_left := _world_to_map(center - half_view)
+    var bottom_right := _world_to_map(center + half_view)
+    draw_rect(Rect2(top_left, bottom_right - top_left), Color("#e6d7b7"), false, 1.0)
 
 
 func _draw_player_marker() -> void:
