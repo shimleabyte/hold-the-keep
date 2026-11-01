@@ -1,6 +1,6 @@
 # Hold the Keep
 
-> Konteks proyek: [CONTEXT.md](CONTEXT.md). Roadmap ekspansi kerajaan: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Rencana Phase 06: [docs/plans/phase-06-plan.md](docs/plans/phase-06-plan.md). Skrip tes: [tests/README.md](tests/README.md).
+> Konteks proyek: [CONTEXT.md](CONTEXT.md). Roadmap ekspansi kerajaan: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Rencana Phase 06: [docs/plans/phase-06-plan.md](docs/plans/phase-06-plan.md). Rencana Phase 09: [docs/plans/phase-09-plan.md](docs/plans/phase-09-plan.md). Skrip tes: [tests/README.md](tests/README.md).
 
 Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (GDScript).
 
@@ -64,7 +64,7 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 
 ### Simpanan dan pengaturan
 - Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
-- Save versi 10 menyimpan world/campaign state, pekerjaan, prioritas kerja, state bangunan/resource, dan identitas faksi musuh; save versi 1–9 tetap diterima melalui jalur kompatibilitas.
+- Save versi 11 menyimpan world/campaign state, pekerjaan, prioritas kerja, state bangunan/resource, identitas faksi musuh, serta objective dan progres Conquest Frontier; save versi 1–10 tetap diterima melalui jalur kompatibilitas.
 - Penulisan save memakai file sementara dan salinan pemulihan; loader mencoba salinan tersebut bila file utama rusak.
 - Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
