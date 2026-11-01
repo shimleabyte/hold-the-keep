@@ -364,8 +364,7 @@ func _nearest_scout_target() -> Node2D:
 func _tick_scout(delta: float) -> void:
     if _scout_windup_t > 0.0:
         var target := _scout_windup_target
-        if target == null or not is_instance_valid(target) or not target.visible \
-                or position.distance_to(target.position) > scout_mark_range + 24.0:
+        if target == null or not is_instance_valid(target) or not target.visible or position.distance_to(target.position) > scout_mark_range + 24.0:
             _scout_windup_t = 0.0
             _scout_windup_target = null
             _scout_mark_cd = minf(_scout_mark_cd, 0.8)
