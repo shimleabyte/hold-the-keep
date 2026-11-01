@@ -24,6 +24,15 @@ const REGEN_PER_SEC := 3.0
 const RESPAWN_INVULN := 2.0
 const HURT_TIME := 0.2
 const SWING_TIME := 0.28  # busur tebasan: dari aba-aba, melewati benturan, sampai pulih
+const DASH_SPEED := 280.0
+const DASH_DURATION := 0.22
+const DASH_COOLDOWN := 5.5
+const CLEAVE_COOLDOWN := 8.0
+const RALLY_COOLDOWN := 18.0
+const CLEAVE_RANGE := 56.0
+const RALLY_RADIUS := 144.0
+const MAX_LEVEL := 10
+const XP_REWARDS := {"bandit": 10, "wolf": 9, "soldier": 20, "archer": 18, "brute": 32, "king": 150}
 
 var camera: Camera2D
 var facing := Vector2.DOWN
@@ -47,9 +56,20 @@ var _step_t := 0.0
 var _shake_t := 0.0
 var _shake_dur := 0.1
 var _shake_s := 0.0
+var level := 1
+var experience := 0
+var _dash_t := 0.0
+var _dash_cd := 0.0
+var _dash_dir := Vector2.DOWN
+var _cleave_pending := -1.0
+var _cleave_t := 0.0
+var _cleave_cd := 0.0
+var _rally_cd := 0.0
+var _rally_t := 0.0
 
 
 func _ready() -> void:
+    add_to_group("player")
     motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 
     var shape := CircleShape2D.new()
@@ -67,6 +87,7 @@ func _ready() -> void:
 
     Events.build_selected.connect(_on_build_selected)
     Events.screen_shake.connect(_on_shake)
+    Events.enemy_killed.connect(_on_enemy_killed)
     Events.player_hp_changed.emit(hp, MAX_HP)
 
 
@@ -103,6 +124,10 @@ func set_camera_limits(rect: Rect2i) -> void:
 func _physics_process(delta: float) -> void:
     _cooldown = maxf(0.0, _cooldown - delta)
     _atk_cd = maxf(0.0, _atk_cd - delta)
+    _dash_cd = maxf(0.0, _dash_cd - delta)
+    _cleave_cd = maxf(0.0, _cleave_cd - delta)
+    _rally_cd = maxf(0.0, _rally_cd - delta)
+    _rally_t = maxf(0.0, _rally_t - delta)
     _invuln = maxf(0.0, _invuln - delta)
     _hurt_t = maxf(0.0, _hurt_t - delta)
     _since_hit += delta
@@ -110,20 +135,38 @@ func _physics_process(delta: float) -> void:
     if _swing > 0.0:
         _swing = maxf(0.0, _swing - delta)
         queue_redraw()
+    if _cleave_t > 0.0:
+        _cleave_t = maxf(0.0, _cleave_t - delta)
+        queue_redraw()
 
     var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-    _running = dir != Vector2.ZERO and Input.is_action_pressed("sprint")
-    velocity = dir * (RUN_SPEED if _running else SPEED)
-    if dir != Vector2.ZERO:
-        facing = dir.normalized()
-        if not anim.is_busy() and anim.face(dir):
-            queue_redraw()
-    move_and_slide()
+    if _dash_t > 0.0:
+        var dash_step := minf(delta, _dash_t)
+        _dash_t = maxf(0.0, _dash_t - delta)
+        velocity = _dash_dir * DASH_SPEED * (dash_step / maxf(delta, 0.001))
+        move_and_slide()
+        if _dash_t <= 0.0:
+            _finish_dash()
+    else:
+        _running = dir != Vector2.ZERO and Input.is_action_pressed("sprint")
+        velocity = dir * (RUN_SPEED if _running else SPEED)
+        if dir != Vector2.ZERO:
+            facing = dir.normalized()
+            if not anim.is_busy() and anim.face(dir):
+                queue_redraw()
+        move_and_slide()
 
     if Input.is_action_pressed("interact") and _cooldown <= 0.0:
         _try_interact()
     if Input.is_action_pressed("attack") and _atk_cd <= 0.0 and not _build_mode and not _click_on_hud():
         _attack()
+    if not _build_mode:
+        if Input.is_action_just_pressed("ability_dash"):
+            activate_ability("dash")
+        elif Input.is_action_just_pressed("ability_cleave"):
+            activate_ability("cleave")
+        elif Input.is_action_just_pressed("ability_rally"):
+            activate_ability("rally")
     _tick_pending(delta)
     _update_anim(delta)
     _tick_shake(delta)
@@ -165,6 +208,10 @@ func _tick_pending(delta: float) -> void:
             if is_instance_valid(n) and n.is_in_group("harvestable"):
                 Events.player_harvested.emit(n.yield_kind)
                 n.hit()
+    if _cleave_pending >= 0.0:
+        _cleave_pending -= delta
+        if _cleave_pending < 0.0:
+            _apply_cleave()
 
 
 ## Klik kiri di atas panel HUD tidak boleh jadi serangan (tombol F / gamepad tetap bisa).
@@ -218,8 +265,157 @@ func _apply_attack() -> void:
     for e in get_tree().get_nodes_in_group("enemies"):
         var n := e as Node2D
         if origin.distance_to(n.global_position + Vector2(0, -4)) <= ATTACK_RANGE:
-            n.take_damage(roundi(Tech.stat("player.damage", float(ATTACK_DAMAGE))))
+            n.take_damage(_player_damage(ATTACK_DAMAGE))
     queue_redraw()
+
+
+func activate_ability(id: String) -> bool:
+    match id:
+        "dash":
+            return _use_dash()
+        "cleave":
+            return _use_cleave()
+        "rally":
+            return _use_rally()
+    return false
+
+
+func _use_dash() -> bool:
+    if _dash_cd > 0.0:
+        return false
+    var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+    _dash_dir = input_dir.normalized() if input_dir != Vector2.ZERO else facing.normalized()
+    if _dash_dir == Vector2.ZERO:
+        _dash_dir = Vector2.DOWN
+    _dash_cd = DASH_COOLDOWN
+    _dash_t = DASH_DURATION
+    _invuln = maxf(_invuln, DASH_DURATION + 0.12)
+    _pending_attack = -1.0
+    _pending_harvest = null
+    facing = _dash_dir
+    anim.face(_dash_dir)
+    Events.fx_burst.emit("dust", global_position + Vector2(0, -2), -_dash_dir, 2.0)
+    queue_redraw()
+    return true
+
+
+func _finish_dash() -> void:
+    var origin := global_position + Vector2(0, -5)
+    for e in get_tree().get_nodes_in_group("enemies"):
+        var foe := e as Node2D
+        if origin.distance_to(foe.global_position + Vector2(0, -4)) <= 22.0:
+            foe.take_damage(_player_damage(14 + level * 2))
+            if foe.has_method("apply_stagger"):
+                foe.apply_stagger(0.38)
+    Events.fx_burst.emit("dust", global_position + Vector2(0, -2), _dash_dir, 2.0)
+    queue_redraw()
+
+
+func _use_cleave() -> bool:
+    if level < 2 or _cleave_cd > 0.0:
+        return false
+    var foe := _nearest_enemy(100.0)
+    if foe != null:
+        facing = (foe.global_position - global_position).normalized()
+        anim.face(facing)
+    _cleave_cd = CLEAVE_COOLDOWN
+    _cleave_pending = 0.22
+    _cleave_t = 0.42
+    _pending_attack = -1.0
+    anim.play("attack", true)
+    Events.player_attacked.emit()
+    Events.fx_burst.emit("spark", global_position + Vector2(0, -7), facing, 1.5)
+    queue_redraw()
+    return true
+
+
+func _apply_cleave() -> void:
+    var origin := global_position + Vector2(0, -6)
+    for e in get_tree().get_nodes_in_group("enemies"):
+        var foe := e as Node2D
+        var to_foe := foe.global_position + Vector2(0, -4) - origin
+        if to_foe.length() > CLEAVE_RANGE:
+            continue
+        if to_foe.length_squared() > 0.01 and to_foe.normalized().dot(facing) < 0.12:
+            continue
+        foe.take_damage(_player_damage(20 + level * 3))
+        if foe.has_method("apply_stagger"):
+            foe.apply_stagger(0.55)
+    Events.screen_shake.emit(0.8, 0.1)
+    queue_redraw()
+
+
+func _use_rally() -> bool:
+    if level < 3 or _rally_cd > 0.0:
+        return false
+    _rally_cd = RALLY_COOLDOWN
+    _rally_t = 8.0
+    var affected := 0
+    for defender in get_tree().get_nodes_in_group("defenders"):
+        if not is_instance_valid(defender):
+            continue
+        if global_position.distance_to(defender.global_position) <= RALLY_RADIUS:
+            defender.apply_rally(8.0, 1.5, 0.78)
+            affected += 1
+    Events.fx_burst.emit("rally", global_position + Vector2(0, -8), Vector2.ZERO, 2.0)
+    Events.build_feedback.emit("SERUAN PERANG: %d prajurit diperkuat" % affected)
+    return true
+
+
+func _player_damage(base_damage: int) -> int:
+    var base := float(base_damage + maxi(0, level - 1) * 2)
+    var damage_value := Tech.stat("player.damage", base)
+    if _rally_t > 0.0:
+        damage_value *= 1.25
+    return maxi(1, roundi(damage_value))
+
+
+func _on_enemy_killed(enemy_id: String) -> void:
+    gain_experience(int(XP_REWARDS.get(enemy_id, 8)))
+
+
+func _xp_to_next() -> int:
+    return 50 + maxi(0, level - 1) * 25
+
+
+func gain_experience(amount: int) -> void:
+    if amount <= 0 or level >= MAX_LEVEL:
+        return
+    experience += amount
+    while level < MAX_LEVEL and experience >= _xp_to_next():
+        experience -= _xp_to_next()
+        level += 1
+        hp = mini(MAX_HP, hp + 18)
+        Events.player_hp_changed.emit(hp, MAX_HP)
+        Events.event_triggered.emit("NAIK LEVEL", "Level %d — kemampuan tempur meningkat" % level)
+    if level >= MAX_LEVEL:
+        experience = 0
+
+
+func combat_status() -> Dictionary:
+    return {
+        "level": level,
+        "xp": experience,
+        "next_xp": _xp_to_next() if level < MAX_LEVEL else 0,
+        "dash_cd": _dash_cd,
+        "cleave_cd": _cleave_cd,
+        "rally_cd": _rally_cd,
+        "cleave_unlocked": level >= 2,
+        "rally_unlocked": level >= 3
+    }
+
+
+func export_combat_state() -> Dictionary:
+    return {"level": level, "xp": experience}
+
+
+func import_combat_state(data: Dictionary) -> void:
+    level = clampi(int(data.get("level", 1)), 1, MAX_LEVEL)
+    experience = maxi(0, int(data.get("xp", 0)))
+    if level >= MAX_LEVEL:
+        experience = 0
+    else:
+        experience = mini(experience, _xp_to_next() - 1)
 
 
 func take_damage(amount: int) -> void:
@@ -244,6 +440,9 @@ func _die() -> void:
     _invuln = RESPAWN_INVULN
     _pending_attack = -1.0
     _pending_harvest = null
+    _cleave_pending = -1.0
+    _dash_t = 0.0
+    _rally_t = 0.0
     anim.play("idle", true)
     Events.build_feedback.emit("Kamu tumbang! Kembali ke keep")
     Events.player_hp_changed.emit(hp, MAX_HP)
@@ -279,6 +478,20 @@ func _draw() -> void:
     anim.draw(self, SPRITE, FW, FH)
     if _swing > 0.0:
         _draw_slash()
+    if _cleave_t > 0.0:
+        _draw_cleave()
+
+
+func _draw_cleave() -> void:
+    var progress := 1.0 - _cleave_t / 0.42
+    var radius := CLEAVE_RANGE * (0.72 + progress * 0.28)
+    var base := facing.angle()
+    var fade := 1.0 - maxf(0.0, progress - 0.72) / 0.28
+    for i in 9:
+        var angle := lerpf(-1.2, 1.2, progress) - i * 0.18
+        var alpha := (1.0 - i / 9.0) * fade
+        draw_arc(Vector2(0, -6), radius, base + angle - 0.16, base + angle,
+            6, Color(1.0, 0.78, 0.32, alpha), 2.0 if i < 3 else 1.0)
 
 
 ## Busur tebasan: menyapu dari belakang ke depan lalu ke sisi lain, dengan ekor memudar.
