@@ -174,11 +174,17 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** each archetype creates a distinct tactical response; AI remains bounded under stress tests; factions obey territory and campaign state; save/load and both engine CI versions pass.
 
 ### Phase 07 — Technology and campaign objectives
-- Expand the 17-node technology tree without invalidating existing unlocks.
-- Add regional discovery rewards, rescue, escort, ruin-clearing, camp-clearing and defense objectives.
-- Introduce the 20-day / 4-act Conquest Campaign while preserving 15-day Classic Mode.
+**Status:** Implementation is on `feat/phase-07-conquest-objectives`, stacked on Phase 06; Godot 4.3 / 4.7 verification pending.
 
-**Acceptance gate:** all objectives resolve, rewards persist, act transitions are tested and campaign completion cannot occur before the required objectives are met.
+- [x] Expand the technology tree from 17 to 20 nodes without changing existing technology IDs or prerequisites.
+- [x] Add a Frontier 20-day / 4-act ruleset while preserving Classic's 15-day / 3-stage rules.
+- [x] Add regional discovery rewards, rescue, escort, ruin-clearing, camp-clearing and defense objectives.
+- [x] Persist objective state, site health/location, escort progress and final-boss state in save v11; retain v1-v10 compatibility.
+- [x] Gate Frontier victory behind all required regional objectives, all four strongholds and the day-20 King.
+- [x] Add an in-game objective panel (O) and campaign regression coverage.
+- [ ] Complete Godot 4.3 / 4.7 parse/import and regression checks; perform rendered gameplay review and balance pass.
+
+**Acceptance gate:** every objective type resolves, rewards/state survive save/load, act transitions follow the Frontier schedule, Classic remains unchanged, and Frontier victory cannot occur before required objectives and the final encounter.
 
 ### Phase 08 — Visual and audio identity
 - Create distinct biome tiles, environmental props, landmarks and faction assets.
