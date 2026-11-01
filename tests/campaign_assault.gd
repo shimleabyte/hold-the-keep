@@ -46,7 +46,15 @@ func _initialize() -> void:
         "G command must assign soldier job villagers to the expedition")
 
     var guard_count := get_nodes_in_group("enemy_garrison").size()
-    assert(guard_count >= 1, "Stronghold must have a defensive garrison")
+    assert(guard_count >= 3, "Stronghold must create its initial defensive garrison")
+    assert(stronghold._spawn_guard(), "Stronghold should find a free tile for a reinforcement")
+    guard_count = get_nodes_in_group("enemy_garrison").size()
+    assert(guard_count == 4, "Stronghold garrison must stay within its four-guard cap")
+    var guards := get_nodes_in_group("enemy_garrison")
+    for i in guards.size():
+        for j in range(i + 1, guards.size()):
+            assert(guards[i].position.distance_to(guards[j].position) >= 24.0,
+                "Reinforcement guards must not stack on an occupied spawn point")
     main.spawner.end_wave()
     assert(get_nodes_in_group("enemy_garrison").size() == guard_count,
         "Regular dawn cleanup must not despawn stronghold guards")
