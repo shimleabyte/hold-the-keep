@@ -169,7 +169,8 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [ ] Add deterministic faction camps, bounded patrol routes and camp reinforcement budgets.
 - [ ] Add raids/counterattacks against exposed Outposts, roads and depots with strict caps and reachability checks.
 - [ ] Persist camps, patrol assignments and raid state; validate v1–v9 migration and v10 round-trip.
-- [ ] Complete Godot 4.3 / 4.7 CI and manual Frontier gameplay review.
+- [x] Godot 4.3 / 4.7 CI passed (30/30 jobs).
+- [ ] Manual Frontier gameplay review.
 
 **Acceptance gate:** each archetype creates a distinct tactical response; AI remains bounded under stress tests; factions obey territory and campaign state; save/load and both engine CI versions pass.
 
