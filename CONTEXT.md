@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main`; Phase 02 local logistics merged by PR #31 (merge commit `6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`); save schema v12; latest successful full main CI [workflow #41314731305](https://github.com/shimleabyte/hold-the-keep/actions/runs/41314731305) passed 46/46 jobs. See `ROADMAP_NEXT_LEVEL.md` for current phase status and `docs/plans/` for phase execution plans.
+**Current source of truth:** default branch `main`; Phase 02 local logistics, Outpost garrisons and physical shipments merged by PRs #31–#33; save schema v13; PR #33 CI [workflow #41323062111](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323062111) passed 50/50 jobs on Godot 4.3/4.7. See `ROADMAP_NEXT_LEVEL.md` for current phase status and `docs/plans/` for phase execution plans.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -332,10 +332,10 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 
 
 ## 28. Phase 02.3 — Player-directed physical shipments (2026-11-01)
-- Active implementation branch: `feat/phase-02-physical-shipments`; PR and Godot 4.3/4.7 CI are pending.
+- Merged to `main` via PR #33 at `5d7db56b3a51a25541f541bb46c19b26996d22be`; CI workflow #41323062111 passed 50/50 jobs on Godot 4.3 and 4.7.
 - The `JOBS → POS` panel now includes source/destination selectors for Keep, Storage and Outposts, a resource/amount selector, order history/status and cancel controls.
 - Creating an order immediately reserves the exact cargo at the source (Keep Inventory or local depot stock) and reserves capacity at remote destinations. Each active order owns its escrowed cargo; it is not counted twice in either inventory.
 - Visible courier entities walk along the navigation grid. On route disconnection, an order becomes blocked with its cargo and last carrier position preserved; it resumes when the route returns. Delivery credits local depot stock or Keep Inventory. Keep-bound deliveries support explicit local-stock withdrawals.
 - Active orders can be cancelled/refunded. If a depot disappears or cannot accept recovered stock, cargo is returned to Keep Inventory. Direct build/research spending from remote depots remains separate and is not implemented.
 - Save schema moves from v12 to v13: pending/history shipment records, reserved cargo and carrier position persist. Save v1–v12 remain compatible and load with an empty shipment ledger. Validator checks unique order IDs, resource kinds, amounts, statuses, cargo escrow, map cells and remote destination capacity reservations.
-- New regression: `tests/physical_shipments.gd` covers physical delivery, Keep withdrawal, cancellation/refund, capacity rejection, route interruption, save/load resume and invalid-cargo rejection. It is included in the blocking runner and both Godot CI matrices; result pending.
+- New regression: `tests/physical_shipments.gd` covers physical delivery, Keep withdrawal, cancellation/refund, capacity rejection, route interruption, save/load resume and invalid-cargo rejection. It runs in both Godot matrices and passed on Godot 4.3 and 4.7.
