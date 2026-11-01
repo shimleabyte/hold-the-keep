@@ -175,6 +175,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add faction tint, War Shaman ally healing, shared target-selection/support modules and enemy faction save persistence (initially v10; now compatible with v12).
 - [x] Add faction registry validation and regression coverage for region mapping, rosters, garrisons, support and save validation.
 - [ ] Extract movement, attack-pattern and ability policies into composable modules; give each archetype its own counterable behavior.
+- [ ] Scout scouting/marking slice: implemented on `feat/phase-06-scout-marking`; pending CI and merge.
 - [x] Shieldbearer directional brace merged via PR #36 (`b02aa60`); workflow #41329202804 completed successfully on Godot 4.3/4.7.
 - [ ] Add deterministic faction camps, bounded patrol routes and camp reinforcement budgets.
 - [ ] Expand raids/counterattacks against exposed Outposts, roads and depots only after Phase 02.5 acceptance; current slice targets remote depots, uses nav reachability, and caps at two saboteurs per isolation.
