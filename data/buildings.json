@@ -145,5 +145,20 @@
     },
     "hp": 35,
     "color": "#9c815d"
+  },
+  {
+    "id": "bridge",
+    "name": "Jembatan",
+    "short": "JMB",
+    "size": [
+      1,
+      1
+    ],
+    "cost": {
+      "wood": 3,
+      "stone": 1
+    },
+    "hp": 140,
+    "color": "#98734d"
   }
 ]
