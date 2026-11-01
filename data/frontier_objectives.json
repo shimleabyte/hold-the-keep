@@ -1,0 +1,10 @@
+[
+  {"id":"discover_greenwood","type":"discovery","region":"GREENWOOD","act":1,"required":true,"name":"Jelajahi Greenwood","description":"Masuki wilayah hutan dan petakan jalur perbatasan.","reward":{"wood":35,"food":15}},
+  {"id":"greenwood_raider_camp","type":"clear_camp","region":"GREENWOOD","act":1,"required":true,"name":"Kamp Perampok","description":"Hancurkan kamp dan bubarkan penjaga Greenwood.","hp":115,"guards":3,"reward":{"wood":65,"stone":10}},
+  {"id":"highland_survivors","type":"rescue","region":"HIGHLANDS","act":2,"required":true,"name":"Penyintas Highlands","description":"Temukan penyintas dan kawal mereka kembali ke Keep.","hp":70,"reward":{"food":30},"recruits":1},
+  {"id":"highland_caravan","type":"escort","region":"HIGHLANDS","act":2,"required":true,"name":"Karavan Perbekalan","description":"Kawal karavan yang tersesat hingga kembali ke Keep.","hp":90,"reward":{"wood":30,"stone":35}},
+  {"id":"fenland_ruins","type":"clear_ruins","region":"FENLANDS","act":3,"required":true,"name":"Reruntuhan Fenlands","description":"Bersihkan reruntuhan kuno dari penjaga Fen Cult.","hp":145,"guards":4,"reward":{"stone":55,"iron":8}},
+  {"id":"fenland_watch","type":"defend","region":"FENLANDS","act":3,"required":true,"name":"Pertahanan Menara Sinyal","description":"Aktifkan sinyal dan pertahankan titik ini sampai fajar.","hp":125,"reward":{"food":35,"iron":5}},
+  {"id":"ashen_refugees","type":"rescue","region":"ASHEN_MARCH","act":4,"required":true,"name":"Pengungsi Ashen","description":"Kawal pengungsi dari Ashen March kembali ke Keep.","hp":100,"reward":{"food":45},"recruits":1},
+  {"id":"ashen_siege_camp","type":"clear_camp","region":"ASHEN_MARCH","act":4,"required":true,"name":"Kamp Pengepungan Ashen","description":"Hancurkan basis mesin pengepung sebelum malam terakhir.","hp":190,"guards":4,"reward":{"stone":55,"iron":20}}
+]
