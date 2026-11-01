@@ -1,8 +1,8 @@
 # Phase 06 — Factions, Enemy Archetypes and Territorial AI
 
-**Status:** Partially implemented and merged into `main` through PR #21. Faction data, rosters, identity, Shaman support and faction persistence are present; distinct archetype policies, camps, patrols, raids, raid persistence and manual playtesting remain open.
-**Mainline:** `main` (merged); use a fresh `feat/phase-06-completion-*` branch for the next implementation slice.
-**Current save schema:** v12. Preserve Classic compatibility and validate migration from v1–v11 plus v12 round-trip.
+**Status:** Partially implemented. Faction foundations are merged; Shieldbearer directional brace is implemented on `feat/phase-06-shieldbearer-brace` and pending Godot 4.3/4.7 CI. Other archetype policies, camps, patrols, raid extensions and manual playtesting remain open.
+**Mainline:** `main`; current implementation branch: `feat/phase-06-shieldbearer-brace`.
+**Current save schema:** v13. Preserve Classic compatibility and validate legacy migrations through v13 plus v13 round-trip.
 **Engine target:** Godot 4.3 and 4.7.
 
 ## Goal
@@ -17,15 +17,16 @@ Replace the single generic enemy identity with four regional powers whose units 
 - Stronghold garrisons spawn from their faction roster; units carry faction identity and faction tint.
 - War Shaman can heal nearby damaged allies with a bounded radius and cooldown.
 - Shared enemy target selection and ally-support behavior extracted into reusable modules.
-- Save format v11 persists enemy faction identity alongside campaign/objective state; migration coverage must preserve Classic v1–v10 and Frontier v7–v10, with v12 round-trip.
+- Save format v13 persisted enemy faction identity; save v13 now also contains physical shipment, cost-source and supply-pressure state. Preserve Classic v1–v13 and Frontier v7–v13 migration/round-trip coverage.
 - Regression test covers faction/region mapping, roster membership, garrison identity, tint, Shaman healing and save validation.
 
 ## Remaining implementation sequence
 
-### 06.2 — Composable combat behaviors
+### 06.2 — Composable combat behaviors (partial; Shieldbearer slice pending CI)
 - Extract movement, attack-pattern and ability policies from the enemy controller.
 - Give Scout a scouting/marking behavior instead of treating it as a faster melee unit.
-- Give Shieldbearer a directional guard/brace window with readable counterplay.
+- [x] Shieldbearer directional brace: data-defined wind-up, locked facing, finite active window and frontal damage mitigation; side/rear hits bypass the block. Player attacks, Cleave, Dash and tower arrows pass their impact origin. Stagger interrupts the brace; disengaging during wind-up cancels it. Implemented on `feat/phase-06-shieldbearer-brace`; CI pending.
+- Keep the Shieldbearer behavior test isolated from save state; no save-schema bump is required.
 - Give Saboteur an explicit building-priority target policy and disruption effect.
 - Give Siege Engine a distinct siege wind-up/impact cycle and building-only preference.
 - Give Beast Rider a telegraphed charge that can be interrupted or baited.
@@ -45,7 +46,7 @@ Replace the single generic enemy identity with four regional powers whose units 
 
 ### 06.5 — Persistence, balance and verification
 - Persist camp state, raid cooldowns, patrol assignments and enemy faction identity.
-- Validate save migration from v1–v11 and round-trip v12 in Classic and Frontier.
+- Validate save migration through v1–v13 and round-trip v13 in Classic and Frontier.
 - Add stress tests for large simultaneous garrisons, patrols and raids.
 - Run all tests and parse checks on Godot 4.3 and 4.7.
 - Review screenshots and play the Frontier campaign manually before calling Phase 06 complete.
