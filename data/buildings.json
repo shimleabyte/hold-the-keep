@@ -169,6 +169,50 @@
     }
   },
   {
+    "id": "lumber_camp",
+    "name": "Kamp Penebang",
+    "short": "KAMP KAYU",
+    "size": [
+      3,
+      2
+    ],
+    "cost": {
+      "wood": 28,
+      "stone": 6
+    },
+    "hp": 180,
+    "color": "#8b6842",
+    "workplaces": {
+      "woodcutter": 2
+    },
+    "work_radius": 18,
+    "repair_cost": {
+      "wood": 1
+    }
+  },
+  {
+    "id": "quarry",
+    "name": "Kuari Batu",
+    "short": "KUARI",
+    "size": [
+      3,
+      2
+    ],
+    "cost": {
+      "wood": 24,
+      "stone": 18
+    },
+    "hp": 200,
+    "color": "#858b91",
+    "workplaces": {
+      "miner": 2
+    },
+    "work_radius": 16,
+    "repair_cost": {
+      "stone": 1
+    }
+  },
+  {
     "id": "road",
     "name": "Jalan",
     "short": "JLN",
