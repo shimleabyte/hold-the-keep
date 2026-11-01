@@ -1,6 +1,6 @@
 # Hold the Keep
 
-> Konteks proyek: [CONTEXT.md](CONTEXT.md). Roadmap ekspansi kerajaan: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Rencana Phase 06: [docs/plans/phase-06-plan.md](docs/plans/phase-06-plan.md). Rencana Phase 09: [docs/plans/phase-09-plan.md](docs/plans/phase-09-plan.md). Rencana Phase 10: [docs/plans/phase-10-plan.md](docs/plans/phase-10-plan.md). Skrip tes: [tests/README.md](tests/README.md).
+> Status proyek: [CONTEXT.md](CONTEXT.md). Roadmap: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Implementation plans: [Phase 02](docs/plans/phase-02-plan.md), [Phase 04](docs/plans/phase-04-plan.md), [Phase 05](docs/plans/phase-05-plan.md), [Phase 06](docs/plans/phase-06-plan.md), [Phase 08](docs/plans/phase-08-plan.md), [Phase 09](docs/plans/phase-09-plan.md), [Phase 10](docs/plans/phase-10-plan.md). Test guide: [tests/README.md](tests/README.md).
 
 Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (GDScript).
 
@@ -37,6 +37,8 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 16:9, 16:10, dan 4:3; resolusi jendela tersimpan, sedangkan fullscreen tetap terpisah. Viewport logis mengikuti setengah ukuran jendela pada skala pixel tepat 2×: 640×360 pada 1280×720, 800×450 pada 1600×900, dan 960×540 pada 1920×1080; minimum viewport 480×270. Resolusi lebih tinggi memperlihatkan lebih banyak dunia tanpa mengubah zoom kamera, ukuran tile, kecepatan gerak, jangkauan serangan atau aturan gameplay. HUD tetap pada ukuran logis yang sama di pita atas/bawah sehingga area tengah permainan bertambah. HUD, hotbar, peta, panel teknologi dan menu jeda mengikuti perubahan resolusi/fullscreen.
 
 ## Sistem permainan
+
+**Mode:** Classic mempertahankan dunia 64×64 dan kampanye 15 hari. Frontier memakai dunia 128×128, lima biome, empat stronghold, 11 objective regional, dan kampanye Conquest 20 hari/4 act. Status fitur dan backlog terbaru tercatat di roadmap.
 
 ### Siklus pertahanan
 - Bertahan selama 15 hari; pada malam terakhir, kalahkan Raja Lawan.
@@ -85,7 +87,7 @@ memilih besi bila stoknya kurang dari separuh batu. Game di-pause saat panel ter
 Efek berupa data (pengali, penambah, buka bangunan, bendera) lewat `Tech.stat(kunci, dasar)`.
 
 ## Peta dan wilayah
-Peta strategis dibuka dengan TAB atau tombol MAP di HUD. Peta menampilkan hanya area yang sudah ditemukan, marker posisi pemain dan batas viewport kamera, serta region dan klaim wilayah. Lokasi musuh bergerak hanya muncul saat berada dalam jangkauan pengamatan unit atau bangunan, bukan sekadar karena pernah dijelajahi. Tutup dengan X, klik area gelap di luar peta, TAB, atau Esc. Warna terrain membedakan Hearthland, Greenwood (lantai hutan), Highlands (dataran berbatu), dan Fenlands (rawa). Klaim pemain dan musuh diberi tint berbeda, sedangkan Keep, Outpost, resource, villager, dan pemain punya marker masing-masing.
+Peta strategis dibuka dengan TAB atau tombol MAP di HUD. Peta menampilkan hanya area yang sudah ditemukan, marker posisi pemain dan batas viewport kamera, serta region dan klaim wilayah. Lokasi musuh bergerak hanya muncul saat berada dalam jangkauan pengamatan unit atau bangunan, bukan sekadar karena pernah dijelajahi. Tutup dengan X, klik area gelap di luar peta, TAB, atau Esc. Warna terrain membedakan Hearthland, Greenwood (lantai hutan), Highlands (dataran berbatu), Fenlands (rawa), dan Ashen March (khusus Frontier). Klaim pemain dan musuh diberi tint berbeda, sedangkan Keep, Outpost, resource, villager, dan pemain punya marker masing-masing.
 
 ## Wilayah dan kampanye
 Keep mengklaim area awal dalam radius 10 tile. Pos Terdepan (hotkey 6) memperluas klaim dalam radius 9 tile dan hanya boleh dibangun di frontier sendiri. Benteng lawan ditempatkan pada lokasi yang dapat dicapai di peta yang sama, mengklaim radius 9 tile, dan dijaga oleh prajurit yang berpatroli serta menerima penguatan berkala. Garis emas menunjukkan wilayah pemain; garis merah menunjukkan wilayah lawan.
@@ -130,7 +132,7 @@ Font HUD: Silkscreen (c) The Silkscreen Project Authors, SIL Open Font License 1
 (lihat `assets/fonts/OFL-Silkscreen.txt`). Font hanya punya huruf kapital.
 
 Belum ada: musik, rebind shortcut UI/job/build, upgrade khusus invasi, ikon .ico untuk Windows, integrasi Steam.
-Visual masih placeholder prosedural.
+Banyak aset karakter/lingkungan masih dihasilkan secara prosedural dan belum memiliki identitas seni final per faksi/biome. Phase 08 visual/audio identity belum selesai.
 
 
 ## Frontier Conquest
