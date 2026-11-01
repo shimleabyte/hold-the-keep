@@ -148,6 +148,20 @@ func _initialize() -> void:
     require(outpost.hp < hp_after_first_hit,
         "Each successful saboteur strike must also damage depot structure integrity")
 
+    raider.take_damage(999)
+    await ticks(1)
+    require(get_nodes_in_group("supply_raiders").is_empty(),
+        "Killing the first saboteur must clear the active raid slot")
+    main.supply.advance_supply_pressure(149.0)
+    require(get_nodes_in_group("supply_raiders").is_empty(),
+        "A second saboteur must not spawn before the full 150-second repeat interval")
+    main.supply.advance_supply_pressure(1.0)
+    var second_wave := get_nodes_in_group("supply_raiders")
+    require(second_wave.size() == 1 and second_wave[0].raid_target_cell == outpost_cell,
+        "A second targeted saboteur may spawn at 210 seconds, with no unbounded escalation")
+    require(main.supply.depot_pressure_state(outpost)["status"] == "raiding",
+        "The depot panel state must remain accurate for the repeat wave")
+
     var snapshot: Dictionary = save_system.collect(main)
     require(snapshot["version"] == 13,
         "Supply pressure must remain an additive save-v13 extension")
