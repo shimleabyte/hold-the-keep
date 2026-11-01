@@ -73,6 +73,7 @@ jobs:
           - world_config
           - frontier_world
           - regional_control_roads
+          - local_depot_stockpiles
     steps:
       - name: Checkout
         uses: actions/checkout@v7
