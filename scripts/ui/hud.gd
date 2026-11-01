@@ -28,6 +28,8 @@ const ICONS := {
     "stone_wall": preload("res://assets/sprites/icon_stone_wall.svg"),
     "forge": preload("res://assets/sprites/icon_forge.svg"),
     "outpost": preload("res://assets/sprites/icon_outpost.svg"),
+    "road": preload("res://assets/sprites/icon_road.svg"),
+    "bridge": preload("res://assets/sprites/icon_bridge.svg"),
 }
 const JOBS := ["woodcutter", "miner", "farmer", "soldier"]
 const JOB_ICONS := {"woodcutter": "axe", "miner": "pick", "farmer": "wheat", "soldier": "sword"}
@@ -46,7 +48,7 @@ const HELP_ROWS := [
     ["Q", "DASH (LEVEL 1)"],
     ["C", "TEBAS (LEVEL 2)"],
     ["V", "SERUAN (LEVEL 3)"],
-    ["1-6", "PILIH BANGUNAN"],
+    ["1-8", "PILIH BANGUNAN"],
     ["KLIK KIRI", "PASANG BANGUNAN"],
     ["KLIK KANAN", "BATAL / BONGKAR"],
     ["T M K R", "TAMBAH JOB"],
@@ -345,7 +347,7 @@ func _build_boss_bar() -> void:
 
 
 func _build_build_bar() -> void:
-    _build_left_hint = _label(self, "BANGUNAN 1-6", Vector2(4, 225), Color(1, 1, 1, 0.78))
+    _build_left_hint = _label(self, "BANGUNAN 1-8", Vector2(4, 225), Color(1, 1, 1, 0.78))
     _build_right_hint = _label(self, "TAB PETA  ·  H BANTUAN", Vector2(360, 225), Color(1, 1, 1, 0.78))
     _build_right_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     _rebuild_build_bar()
