@@ -172,13 +172,14 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add four data-driven factions mapped to Frontier regions, with stable IDs, faction colors, rosters and signature garrison units.
 - [x] Add six archetype definitions: scout, shieldbearer, saboteur, war shaman, siege engine and beast rider.
 - [x] Spawn stronghold garrisons from faction rosters and tag regional wave enemies with faction identity.
-- [x] Add faction tint, War Shaman ally healing, shared target-selection/support modules and enemy faction save persistence (initially v10; now compatible with v12).
+- [x] Add faction tint, War Shaman ally healing, shared target-selection/support modules and enemy faction save persistence; current save schema is v13.
 - [x] Add faction registry validation and regression coverage for region mapping, rosters, garrisons, support and save validation.
 - [ ] Extract movement, attack-pattern and ability policies into composable modules; give each archetype its own counterable behavior.
+- [ ] Scout scouting/marking slice: implemented on `feat/phase-06-scout-marking`; pending CI and merge.
 - [x] Shieldbearer directional brace merged via PR #36 (`b02aa60`); the available first results page for workflow #41329202804 showed 30/30 successful jobs; full matrix not independently verified.
 - [ ] Add deterministic faction camps, bounded patrol routes and camp reinforcement budgets.
 - [ ] Expand raids/counterattacks against exposed Outposts, roads and depots only after Phase 02.5 acceptance; current slice targets remote depots, uses nav reachability, and caps at two saboteurs per isolation.
-- [ ] Persist camps, patrol assignments and raid state; validate v1–v11 migration and v12 round-trip.
+- [ ] Persist camps, patrol assignments and raid state; validate Classic v1–v13 and Frontier v7–v13 migration/round-trip.
 - [x] Merged through PR #21; Godot 4.3 / 4.7 CI passed (30/30 jobs).
 - [ ] Manual Frontier gameplay review.
 
