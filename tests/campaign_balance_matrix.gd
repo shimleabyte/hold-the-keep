@@ -1,4 +1,9 @@
 extends SceneTree
+
+var world_config
+var game_clock
+var data_db
+
 ## Deterministic campaign difficulty matrix: schedule, wave growth and act rosters.
 
 
@@ -22,14 +27,14 @@ func pool_weight(pool: Array, enemy_id: String) -> int:
 
 
 func run_profile(profile: String, expected: Dictionary) -> void:
-    WorldConfig.apply_profile(profile)
+    world_config.apply_profile(profile)
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main
     await ticks(8)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
 
-    var rules: Dictionary = DataDB.campaign_modes[profile]
+    var rules: Dictionary = data_db.campaign_modes[profile]
     assert(int(rules["final_day"]) == int(expected["final_day"]),
         profile + " final day must remain stable")
 
@@ -105,4 +110,7 @@ func _run() -> void:
 
 
 func _initialize() -> void:
+    world_config = root.get_node("WorldConfig")
+    game_clock = root.get_node("GameClock")
+    data_db = root.get_node("DataDb")
     call_deferred("_run")
