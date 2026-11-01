@@ -519,8 +519,8 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _build_right_hint.size = Vector2(127.0, 10)
     _build_right_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
-    _combat_bar.position = Vector2((_viewport_size.x - _combat_bar.size.x) * 0.5, build_y - _combat_bar.size.y - 3.0)
-    _msg.position = Vector2(0, _viewport_size.y - 76.0)
+    _combat_bar.position = Vector2((_viewport_size.x - _combat_bar.size.x) * 0.5, build_y - _combat_bar.size.y - 16.0)
+    _msg.position = Vector2(0, build_y - _combat_bar.size.y - 24.0)
     _msg.size.x = _viewport_size.x
     _banner.position = Vector2(0, maxf(44.0, _viewport_size.y * 0.16))
     _banner.size.x = _viewport_size.x
