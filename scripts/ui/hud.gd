@@ -735,10 +735,11 @@ func _refresh_cost_source_controls(depots: Array) -> void:
         if cell == selected_cell:
             selected_index = index
     if selected_index < 0 and keep_index >= 0:
-        var keep = depots[0] if String(depots[0].id) == "keep" else null
-        if keep != null:
-            main_node.supply.set_cost_source(keep.cell)
-            selected_index = keep_index
+        for depot in depots:
+            if String(depot.id) == "keep":
+                main_node.supply.set_cost_source(depot.cell)
+                selected_index = keep_index
+                break
     if selected_index >= 0:
         _cost_source_option.select(selected_index)
     _cost_source_option.disabled = WorldConfig.profile_id != "frontier" or depots.size() < 2
