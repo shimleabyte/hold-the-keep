@@ -339,6 +339,7 @@ func _apply_save(d: Dictionary) -> void:
         if village.quota.has(j):
             village.quota[j] = int(q[j])
     village.restore_job_priority(d.get("job_priority", []))
+    var pending_outpost_guards: Array[Dictionary] = []
     for v in d["villagers"]:
         var n = village.spawn_villager(Vector2(float(v["x"]), float(v["y"])))
         var restored_job := String(v["job"])
@@ -353,6 +354,21 @@ func _apply_save(d: Dictionary) -> void:
             n.start_expedition(enemy_keep)
         elif bool(v.get("recalling", false)):
             n.recall_expedition()
+        var guard_data: Variant = v.get("guard_outpost", null)
+        if guard_data is Dictionary:
+            pending_outpost_guards.append({
+                "villager": n,
+                "cell": Vector2i(int(guard_data.get("cx", -1)), int(guard_data.get("cy", -1)))
+            })
+
+    for guard_record in pending_outpost_guards:
+        var target_outpost = null
+        for building in get_tree().get_nodes_in_group("buildings"):
+            if building.id == "outpost" and building.cell == guard_record["cell"]:
+                target_outpost = building
+                break
+        if target_outpost == null or not guard_record["villager"].assign_outpost_guard(target_outpost):
+            push_warning("Save: failed to restore an Outpost guard assignment")
 
     var pl: Dictionary = d["player"]
     player.position = Vector2(float(pl["x"]), float(pl["y"]))
