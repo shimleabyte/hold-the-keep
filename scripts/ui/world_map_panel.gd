@@ -87,7 +87,7 @@ func _draw() -> void:
                 draw_rect(rect, UNKNOWN)
                 continue
 
-            var terrain := world.tile_type_at(cell)
+            var terrain: int = int(world.tile_type_at(cell))
             var tint := GRASS
             match terrain:
                 2:
