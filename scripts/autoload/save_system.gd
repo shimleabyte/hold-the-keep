@@ -121,7 +121,11 @@ func collect(main: Node) -> Dictionary:
             "guard_x": enemy.guard_origin.x,
             "guard_y": enemy.guard_origin.y,
             "faction": enemy.faction_id,
-            "site_id": enemy.campaign_site_id
+            "site_id": enemy.campaign_site_id,
+            "supply_raid": enemy.is_supply_raider,
+            "raid_target": {"cx": enemy.raid_target_cell.x, "cy": enemy.raid_target_cell.y}
+                if enemy.is_supply_raider else null,
+            "raid_hits": enemy.supply_raid_hits
         })
 
     var resources: Array = []
@@ -269,6 +273,40 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                     break
             if not cost_source_exists:
                 return false
+        if supply_state.has("pressure"):
+            var pressure_states: Variant = supply_state["pressure"]
+            if not (pressure_states is Array) or pressure_states.size() > 64:
+                return false
+            var seen_pressure_cells: Dictionary = {}
+            for pressure_record in pressure_states:
+                if not (pressure_record is Dictionary):
+                    return false
+                for key in ["cx", "cy", "contested_seconds", "warning_sent", "raid_count", "spawn_retry", "status"]:
+                    if not pressure_record.has(key):
+                        return false
+                var pressure_cell := Vector2i(int(pressure_record["cx"]), int(pressure_record["cy"]))
+                if not WorldConfig.is_valid_cell(pressure_cell):
+                    return false
+                var pressure_key := "%d:%d" % [pressure_cell.x, pressure_cell.y]
+                if seen_pressure_cells.has(pressure_key):
+                    return false
+                seen_pressure_cells[pressure_key] = true
+                var pressure_depot_exists := false
+                for saved_building in buildings:
+                    var saved_cell := Vector2i(int(saved_building.get("cx", -1)), int(saved_building.get("cy", -1)))
+                    if saved_cell == pressure_cell and ["storage", "outpost"].has(String(saved_building.get("id", ""))):
+                        pressure_depot_exists = true
+                        break
+                var contested_seconds := float(pressure_record["contested_seconds"])
+                var spawn_retry := float(pressure_record["spawn_retry"])
+                if not pressure_depot_exists or not is_finite(contested_seconds) or contested_seconds < 0.0 or contested_seconds > 360.0:
+                    return false
+                if not is_finite(spawn_retry) or spawn_retry < 0.0 or spawn_retry > 30.0:
+                    return false
+                if int(pressure_record["raid_count"]) < 0 or int(pressure_record["raid_count"]) > 2:
+                    return false
+                if not ["isolated", "exposed", "vulnerable", "raiding"].has(String(pressure_record["status"])):
+                    return false
         var seen_shipment_ids: Dictionary = {}
         var reserved_capacity: Dictionary = {}
         var max_shipment_id := 0
@@ -412,6 +450,23 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 return false
         if bool(enemy.get("garrison", false)) and (not enemy.has("guard_x") or not enemy.has("guard_y")):
             return false
+        if bool(enemy.get("supply_raid", false)):
+            if String(enemy["id"]) != "enemy_saboteur" or not (enemy.get("raid_target", null) is Dictionary):
+                return false
+            var raid_target: Dictionary = enemy["raid_target"]
+            if not raid_target.has("cx") or not raid_target.has("cy"):
+                return false
+            var raid_cell := Vector2i(int(raid_target["cx"]), int(raid_target["cy"]))
+            if not WorldConfig.is_valid_cell(raid_cell) or int(enemy.get("raid_hits", 0)) < 0:
+                return false
+            var raid_target_exists := false
+            for saved_building in buildings:
+                var saved_cell := Vector2i(int(saved_building.get("cx", -1)), int(saved_building.get("cy", -1)))
+                if saved_cell == raid_cell and ["storage", "outpost"].has(String(saved_building.get("id", ""))):
+                    raid_target_exists = true
+                    break
+            if not raid_target_exists:
+                return false
     for job in quota:
         var allowed_jobs := ["woodcutter", "miner", "farmer", "soldier"]
         if version >= 9:
