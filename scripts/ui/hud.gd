@@ -523,13 +523,20 @@ func blocks_mouse(pos: Vector2) -> bool:
 
 # ---------------------------------------------------------------- handler event
 
-func _on_stage_changed(_stage_id: String, stage_name: String, day: int) -> void:
-    _banner.text = "%s\nHARI %d" % [stage_name, day]
+func _on_stage_changed(stage_id: String, stage_name: String, day: int) -> void:
+    var main_node = get_tree().get_first_node_in_group("main")
+    var stage_summary := ""
+    if main_node != null:
+        var stage: Dictionary = main_node.spawner.stage_info(day)
+        stage_summary = String(stage.get("summary", ""))
+    _banner.text = "%s  %s  ·  HARI %d\n%s" % [
+        String(stage_id).to_upper(), stage_name, day, stage_summary
+    ]
     _banner.modulate.a = 1.0
     if _banner_tween != null:
         _banner_tween.kill()
     _banner_tween = create_tween()
-    _banner_tween.tween_interval(2.8)
+    _banner_tween.tween_interval(3.6)
     _banner_tween.tween_property(_banner, "modulate:a", 0.0, 0.6)
 
 
@@ -607,19 +614,33 @@ func _on_event(title: String, text: String) -> void:
     _banner_tween.tween_property(_banner, "modulate:a", 0.0, 0.6)
 
 
+func _close_secondary_panels() -> void:
+    _map_panel.visible = false
+    _map_backdrop.visible = false
+    _map_button.active = false
+    _map_button.queue_redraw()
+    _jobs_panel.visible = false
+    _jobs_button.active = false
+    _jobs_button.queue_redraw()
+    _help.visible = false
+
+
 func _on_game_won(day: int) -> void:
+    _close_secondary_panels()
     _over_label.text = "KAMU MENANG!\nRaja lawan tumbang di hari %d\nTekan R untuk main lagi" % day + _load_hint()
     _over.visible = true
     get_tree().paused = true
 
 
 func _on_game_over(day: int) -> void:
+    _close_secondary_panels()
     _over_label.text = "KEEP HANCUR\nBertahan sampai hari %d\nTekan R untuk mulai ulang" % day + _load_hint()
     _over.visible = true
     get_tree().paused = true
 
 
 func _on_campaign_won(day: int) -> void:
+    _close_secondary_panels()
     _over_label.text = "BENTENG LAWAN TAKLUK\\nWilayah musuh jatuh pada hari %d\\nTekan R untuk main lagi" % day + _load_hint()
     _over.visible = true
     get_tree().paused = true
