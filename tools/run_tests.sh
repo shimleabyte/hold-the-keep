@@ -5,24 +5,19 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 GODOT_BIN="${GODOT:-godot}"
 
+# Only assert-based checks belong in the blocking CI suite. Long print-only
+# simulations are kept in tools/run_diagnostics.sh for deliberate manual runs.
 tests=(
-    anim_sync
     animation_motion
     campaign_assault
-    combat_tower_walls
-    events_boss_final_night
-    fx_shake_settings
     input_rebinding
     map_stages
     player_combat
     resource_save_state
     responsive_layout
-    restart_gameover
-    save_load_audio_menu
-    tech_tree
     territory_claims
-    villagers_economy
     world_config
+    frontier_world
 )
 
 for test_name in "${tests[@]}"; do

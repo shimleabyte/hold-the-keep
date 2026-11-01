@@ -54,10 +54,11 @@ func _initialize() -> void:
         "A current v7 save must validate against its matching world configuration")
 
     var legacy_save := current_save.duplicate(true)
-    legacy_save["version"] = 6
     legacy_save.erase("world")
-    assert(save_system._valid_save(legacy_save),
-        "A v6 save must remain compatible with Classic Mode")
+    for legacy_version in range(1, 7):
+        legacy_save["version"] = legacy_version
+        assert(save_system._valid_save(legacy_save),
+            "A v%d legacy save must remain compatible with Classic Mode" % legacy_version)
 
     var incompatible_save := current_save.duplicate(true)
     incompatible_save["world"]["profile"] = "frontier"
@@ -69,6 +70,12 @@ func _initialize() -> void:
     world_config.profile_id = "frontier"
     assert(not save_system._valid_save(legacy_save),
         "Legacy 64x64 saves must not load into the Frontier profile")
+    assert(save_system._valid_save(legacy_save, false),
+        "A structurally valid legacy save must remain retainable as a profile-switch backup")
+    assert(not save_system._valid_save(current_save),
+        "A Classic v7 save must not load into Frontier")
+    assert(save_system._valid_save(current_save, false),
+        "A valid Classic v7 save must remain eligible for a cross-profile backup")
     world_config.profile_id = legacy_profile
 
     print("PASS: world profiles, tile indexing, and save profile compatibility")
