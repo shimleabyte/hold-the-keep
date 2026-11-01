@@ -2,6 +2,7 @@ extends SceneTree
 ## Checks persisted keyboard rebinding, duplicate rejection, and protected shortcuts.
 
 func _initialize() -> void:
+    await process_frame
     var settings = root.get_node("Settings")
     var previous_bindings: Dictionary = settings.custom_bindings.duplicate()
     var previous_events: Dictionary = {}
