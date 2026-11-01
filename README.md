@@ -62,12 +62,12 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 - Setiap penduduk mengonsumsi 2 makanan per hari. Kekurangan makanan membuat satu penduduk pergi.
 - Bangunan: rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Pos Terdepan, Kamp Penebang, Kuari, jalan, dan jembatan.
 - Kamp Penebang menyediakan dua workplace woodcutter dengan radius kerja 18 tile; Kuari menyediakan dua workplace miner dengan radius 16 tile. Jika belum ada fasilitas khusus, pekerja tetap memakai radius depot seperti pada Classic lama. Jika semua slot fasilitas penuh, pekerja tambahan tidak mengambil alih area kerja fasilitas tersebut.
-- Pada Frontier, Gudang menampung 180 unit dan Outpost 120 unit resource lokal. Worker menyetor ke depot terhubung; tiap 3 detik depot terhubung mengirim maksimal 6 unit ke Keep. Depot yang terputus menyimpan stok sampai jalurnya tersambung. Stok lokal belum bisa langsung dipakai untuk build/riset sebelum sampai ke Keep.
+- Pada Frontier, Gudang menampung 180 unit dan Outpost 120 unit resource lokal. Worker menyetor ke depot terhubung; tiap 3 detik depot terhubung mengirim maksimal 6 unit ke Keep secara otomatis. Depot yang terputus menyimpan stok sampai jalurnya tersambung. Buka `JOBS → POS` untuk melihat stok dan membuat perintah angkut manual antar-Keep, Gudang, dan Outpost. Carrier terlihat berjalan di peta; cargo dicadangkan saat order dibuat, status order terlihat di panel, dan order aktif bisa dibatalkan untuk mengembalikan cargo. Pengiriman menuju Keep memasukkan stok ke inventori pusat. Build/riset masih memakai inventori Keep; stok lokal tidak otomatis dibagikan.
 - Teknologi 20-node dalam 3 era memperkuat ekonomi, pertahanan, eksplorasi, dan pengepungan.
 
 ### Simpanan dan pengaturan
 - Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
-- Save versi 12 menyimpan world/campaign state, objektif regional, situs dan progres pengawalan, pekerjaan, state bangunan/resource, serta identitas faksi musuh; save versi 1–11 tetap diterima melalui jalur kompatibilitas.
+- Save versi 13 menyimpan world/campaign state, objektif regional, pekerjaan, stok depot, penugasan penjaga, order angkut dan cargo yang masih dalam perjalanan; save versi 1–12 tetap diterima melalui jalur kompatibilitas.
 - Penulisan save memakai file sementara dan salinan pemulihan; loader mencoba salinan tersebut bila file utama rusak.
 - Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
