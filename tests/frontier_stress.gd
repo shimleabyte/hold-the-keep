@@ -1,4 +1,12 @@
 extends SceneTree
+
+var world_config
+var data_db
+var faction_registry
+var game_clock
+var events
+var save_system
+
 ## Bounded Frontier workload: four factions, mixed rosters, ranged projectile,
 ## 48 villagers, and the shared particle ceiling.
 
@@ -37,8 +45,8 @@ func _reachable_region_cells(main: Node, region_id: String, limit: int) -> Array
 
 func _spawn_faction_enemy(main: Node, faction_id: String, enemy_id: String, cell: Vector2i) -> Node:
     var enemy = ENEMY_SCRIPT.new()
-    enemy.setup(DataDB.enemies[enemy_id], main.world, main.flow, main.player, faction_id)
-    enemy.position = Vector2(cell) * WorldConfig.tile_size + Vector2(8.0, 8.0)
+    enemy.setup(data_db.enemies[enemy_id], main.world, main.flow, main.player, faction_id)
+    enemy.position = Vector2(cell) * world_config.tile_size + Vector2(8.0, 8.0)
     main.world.entities.add_child(enemy)
     return enemy
 
@@ -51,7 +59,7 @@ func _find_fx_layer(main: Node) -> Node:
 
 
 func _run() -> void:
-    WorldConfig.apply_profile("frontier")
+    world_config.apply_profile("frontier")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
 
@@ -59,21 +67,21 @@ func _run() -> void:
     root.add_child(main)
     current_scene = main
     await ticks(8)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
     main.nav.rebuild()
 
-    assert(WorldConfig.profile_id == "frontier" and main.world.map_size == 128,
+    assert(world_config.profile_id == "frontier" and main.world.map_size == 128,
         "Stress workload must execute on the 128x128 Frontier profile")
-    assert(FactionRegistry.factions.size() == 4,
+    assert(faction_registry.factions.size() == 4,
         "All four regional factions must be loaded")
 
     var seen_factions: Dictionary = {}
     for faction_id in FACTION_IDS:
-        assert(FactionRegistry.factions.has(faction_id),
+        assert(faction_registry.factions.has(faction_id),
             "Missing Frontier faction: " + faction_id)
-        var faction: Dictionary = FactionRegistry.factions[faction_id]
+        var faction: Dictionary = faction_registry.factions[faction_id]
         var region_id := String(faction.get("region", ""))
-        var roster: Array[String] = FactionRegistry.roster_for(faction_id)
+        var roster: Array[String] = faction_registry.roster_for(faction_id)
         assert(not roster.is_empty(), "Faction roster must not be empty: " + faction_id)
         var cells := _reachable_region_cells(main, region_id, ENEMIES_PER_FACTION)
         assert(cells.size() == ENEMIES_PER_FACTION,
@@ -81,7 +89,7 @@ func _run() -> void:
 
         for i in range(ENEMIES_PER_FACTION):
             var enemy_id := roster[i % roster.size()]
-            assert(DataDB.enemies.has(enemy_id),
+            assert(data_db.enemies.has(enemy_id),
                 "Faction roster references an unregistered enemy: " + enemy_id)
             _spawn_faction_enemy(main, faction_id, enemy_id, cells[i])
             seen_factions[faction_id] = true
@@ -106,9 +114,9 @@ func _run() -> void:
     main.village.assign_jobs()
 
     # Trigger a real ranged attack so the projectile node and physics path are exercised.
-    assert(DataDB.enemies.has("archer"), "The ranged archer definition must exist")
+    assert(data_db.enemies.has("archer"), "The ranged archer definition must exist")
     var archer = ENEMY_SCRIPT.new()
-    archer.setup(DataDB.enemies["archer"], main.world, main.flow, main.player, "iron_legion")
+    archer.setup(data_db.enemies["archer"], main.world, main.flow, main.player, "iron_legion")
     archer.position = main.player.position + Vector2(128.0, 0.0)
     main.world.entities.add_child(archer)
     archer._begin_ranged_attack(main.player)
@@ -121,9 +129,9 @@ func _run() -> void:
     var fx = _find_fx_layer(main)
     assert(fx != null, "The shared FX layer must be present")
     for i in range(70):
-        Events.fx_burst.emit("impact", main.player.position, Vector2.RIGHT, 2.0)
+        events.fx_burst.emit("impact", main.player.position, Vector2.RIGHT, 2.0)
     for i in range(10):
-        Events.fx_burst.emit("debris", main.player.position, Vector2.LEFT, 1.0)
+        events.fx_burst.emit("debris", main.player.position, Vector2.LEFT, 1.0)
     assert(fx.count() == MAX_PARTICLES,
         "The shared particle store must clamp to its configured 500-particle ceiling")
 
@@ -134,13 +142,13 @@ func _run() -> void:
     assert(villagers.size() >= VILLAGERS,
         "The stress population must remain registered")
 
-    var snapshot: Dictionary = SaveSystem.collect(main)
+    var snapshot: Dictionary = save_system.collect(main)
     assert(snapshot["world"]["map_size"] == 128
         and snapshot["world"]["profile"] == "frontier",
         "Stress snapshot must retain Frontier world identity")
     assert(snapshot["enemies"].size() >= ENEMIES_PER_FACTION * FACTION_IDS.size(),
         "Stress snapshot must retain the loaded faction population")
-    assert(SaveSystem._valid_save(snapshot),
+    assert(save_system._valid_save(snapshot),
         "The high-population Frontier snapshot must pass current save validation")
 
     print("PASS: Frontier stress: 128x128, four factions, %d enemies, %d villagers, %d projectiles, %d particles" % [
@@ -150,4 +158,10 @@ func _run() -> void:
 
 
 func _initialize() -> void:
+    world_config = root.get_node("WorldConfig")
+    data_db = root.get_node("DataDb")
+    faction_registry = root.get_node("FactionRegistry")
+    game_clock = root.get_node("GameClock")
+    events = root.get_node("Events")
+    save_system = root.get_node("SaveSystem")
     call_deferred("_run")
