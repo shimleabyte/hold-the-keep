@@ -1,7 +1,6 @@
 extends SceneTree
 ## Frontier profile integration: deterministic regions, traversal, resources and Keep footprint.
 
-const WORLD_SCRIPT := preload("res://scripts/world/world_map.gd")
 const DIRS4: Array[Vector2i] = [
     Vector2i(1, 0), Vector2i(-1, 0),
     Vector2i(0, 1), Vector2i(0, -1)
@@ -43,6 +42,11 @@ func reachable_cells(nav: Node, start: Vector2i) -> Dictionary:
 
 
 func _initialize() -> void:
+    # Load after SceneTree startup so this script resolves project autoloads on Godot 4.7.
+    await process_frame
+    var world_script := load("res://scripts/world/world_map.gd") as GDScript
+    assert(world_script != null and world_script.can_instantiate(),
+        "World map script must compile after project autoload initialization")
     var world_config = root.get_node("WorldConfig")
     var settings = root.get_node("Settings")
     var save_system = root.get_node("SaveSystem")
@@ -225,7 +229,7 @@ func _initialize() -> void:
         "The Frontier stronghold must border the starting settlement's reachable terrain")
 
     # Generate the same profile again and compare every terrain cell and resource placement.
-    var mirror = WORLD_SCRIPT.new()
+    var mirror = world_script.new()
     mirror.generate_resource_nodes = false
     root.add_child(mirror)
     await process_frame
