@@ -158,6 +158,14 @@ func _run() -> void:
         quit(1)
         return
 
+    # Prime the shared store to its hard ceiling before the measurement begins.
+    for burst_index in range(70):
+        events.fx_burst.emit("impact", main.player.position, Vector2.RIGHT, 2.0)
+    for burst_index in range(10):
+        events.fx_burst.emit("debris", main.player.position, Vector2.LEFT, 1.0)
+    assert(fx.count() == MAX_PARTICLES,
+        "The profiling workload must begin with the configured 500-particle ceiling")
+
     await ticks(warmup_frames)
     var process_ms: Array[float] = []
     var physics_ms: Array[float] = []
@@ -168,10 +176,12 @@ func _run() -> void:
     var memory_bytes := 0
 
     for frame_index in sample_frames:
-        if frame_index % 24 == 0:
-            # Refill transient FX so the benchmark includes sustained effect churn.
-            events.fx_burst.emit("impact", main.player.position, Vector2.RIGHT, 2.0)
-            events.fx_burst.emit("debris", main.player.position, Vector2.LEFT, 1.0)
+        if frame_index % 8 == 0:
+            # Sustain the 500-particle ceiling while exercising bounded replacement.
+            for burst_index in range(24):
+                events.fx_burst.emit("impact", main.player.position, Vector2.RIGHT, 2.5)
+        assert(fx.count() <= MAX_PARTICLES,
+            "Transient FX storage must remain within its configured ceiling")
 
         var started := Time.get_ticks_usec()
         await process_frame
@@ -213,6 +223,8 @@ func _run() -> void:
             "p99": percentile(physics_ms, 0.99)
         }
     }
+    assert(peak_particles == MAX_PARTICLES,
+        "The reference workload must reach the 500-particle ceiling during sampling")
     print("PERF_REPORT " + JSON.stringify(result))
     quit(0)
 
