@@ -72,6 +72,13 @@ func _initialize() -> void:
     main.village.command_expedition()
     assert(soldier.is_recalling_expedition(),
         "Second G command must order the expedition soldier back to the Keep")
+    var recall_snapshot: Dictionary = SaveSystem.collect(main)
+    var saved_recall := false
+    for villager_state in recall_snapshot["villagers"]:
+        if bool(villager_state.get("recalling", false)):
+            saved_recall = true
+    assert(saved_recall and SaveSystem._valid_save(recall_snapshot),
+        "Save must preserve a soldier who is travelling back to the Keep")
 
     var enemy_cell := stronghold.cell
     stronghold.take_damage(9999)

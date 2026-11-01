@@ -47,7 +47,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 
 ### Simpanan dan pengaturan
 - Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
-- Save versi 4 menyimpan inventori, jam, bangunan, penduduk, musuh, riset, pemain, status resource node, eksplorasi fog of war, benteng lawan, timer penguatan, dan status ekspedisi.
+- Save versi 5 menyimpan inventori, jam, bangunan, penduduk, musuh, riset, pemain, status resource node, eksplorasi fog of war, benteng lawan, timer penguatan, serta status ekspedisi dan perjalanan pulang.
 - Penulisan save memakai file sementara dan salinan pemulihan; loader mencoba salinan tersebut bila file utama rusak.
 - Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 

@@ -24,7 +24,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 | Villager | job penebang/penambang/petani/prajurit, kuota diatur pemain, A*, setor ke gudang/keep |
 | Ekonomi | kayu, batu, makanan; kapasitas rumah; upkeep 2 makanan/penduduk/hari |
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
-| Save/load | versi 4, autosave tiap fajar, F5/F9, file sementara + rollback backup, resource/fog/stronghold/garrison/ekspedisi tersimpan |
+| Save/load | versi 5, autosave tiap fajar, F5/F9, file sementara + rollback backup, resource/fog/stronghold/garrison/ekspedisi/recall tersimpan |
 | Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
 | HUD | panel atas, vitals, kuota job (klik), bar bangunan (klik), bar boss, bantuan (H) |
 | Animasi | 22 frame x 3 arah per karakter; serang/panen jatuh di frame benturan |
@@ -118,7 +118,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `village`, `buildings`, `dep
 ## 8. Batasan dan masalah yang diketahui
 - Visual belum pernah dilihat di mesin pemilik (semua render lewat software di server).
 - Build executable sungguhan belum pernah dibuat (butuh export template Godot; PCK sudah teruji).
-- Save versi 4 memulihkan HP/timer resource, fog eksplorasi, posisi/HP benteng, timer reinforcement, garrison, dan status ekspedisi; save versi 1–3 tetap diterima dengan default untuk field baru.
+- Save versi 5 memulihkan HP/timer resource, fog eksplorasi, posisi/HP benteng, timer reinforcement, garrison, serta status ekspedisi dan perjalanan pulang; save versi 1–4 tetap diterima dengan default untuk field baru.
 - Satu arah samping digambar; kiri/kanan identik (cermin). Animasi dari pose prosedural, bukan gambar tangan.
 - Tidak ada musik; SFX prosedural sederhana.
 - Rebind empat kelompok kontrol inti sudah ada melalui menu jeda; shortcut UI/job/build masih tetap.
@@ -177,5 +177,5 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Fog of war permanen membuka area dari player, Keep, Outpost, dan villager; peta eksplorasi ikut save versi 4.
 - G mengirim semua villager dengan job soldier ke ekspedisi setelah benteng ditemukan; G kedua mengarahkan mereka pulang ke Keep.
 - Prajurit ekspedisi memprioritaskan garrison, lalu menyerang stronghold. Benteng hancur membersihkan garrison dan memicu campaign victory.
-- Save versi 4 menyimpan stronghold, status reinforcement, identitas/origin garrison, status ekspedisi, dan fog discovery. Versi 1–3 masih diterima lewat default.
+- Save versi 5 menyimpan stronghold, status reinforcement, identitas/origin garrison, status ekspedisi/recall, dan fog discovery. Versi 1–4 masih diterima lewat default.
 - Tes regresi baru: `tests/campaign_assault.gd`.

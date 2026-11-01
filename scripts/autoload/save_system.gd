@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 4
+const VERSION := 5
 
 var pending: Dictionary = {}
 
@@ -105,7 +105,8 @@ func collect(main: Node) -> Dictionary:
     var villagers: Array = []
     for villager in get_tree().get_nodes_in_group("villagers"):
         villagers.append({"x": villager.position.x, "y": villager.position.y, "job": villager.job, "hp": villager.hp,
-            "carry": villager.carry, "kind": villager.carry_kind, "expedition": villager.is_expeditioning()})
+            "carry": villager.carry, "kind": villager.carry_kind,
+            "expedition": villager.is_expeditioning(), "recalling": villager.is_recalling_expedition()})
 
     var enemies: Array = []
     for enemy in get_tree().get_nodes_in_group("enemies"):
@@ -206,6 +207,8 @@ func _valid_save(data: Variant) -> bool:
         for key in ["x", "y", "job", "hp", "carry", "kind"]:
             if not villager.has(key):
                 return false
+        if version >= 5 and (not villager.has("expedition") or not villager.has("recalling")):
+            return false
     for enemy in enemies:
         if not (enemy is Dictionary) or not enemy.has("id") or not enemy.has("x") or not enemy.has("y") or not enemy.has("hp"):
             return false

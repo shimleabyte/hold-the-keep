@@ -223,6 +223,8 @@ func _apply_save(d: Dictionary) -> void:
             n.receive(String(v["kind"]), int(v["carry"]))
         if bool(v.get("expedition", false)) and is_instance_valid(enemy_keep):
             n.start_expedition(enemy_keep)
+        elif bool(v.get("recalling", false)):
+            n.recall_expedition()
 
     var pl: Dictionary = d["player"]
     player.position = Vector2(float(pl["x"]), float(pl["y"]))
