@@ -11,6 +11,8 @@ const TEXTURES := {
     "stone_wall": preload("res://assets/sprites/stone_wall.svg"),
     "forge": preload("res://assets/sprites/forge.svg"),
     "outpost": preload("res://assets/sprites/outpost.svg"),
+    "road": preload("res://assets/sprites/road.svg"),
+    "bridge": preload("res://assets/sprites/bridge.svg"),
 }
 const ARROW_SCRIPT := preload("res://scripts/entities/arrow.gd")
 
@@ -53,14 +55,17 @@ func cells() -> Array[Vector2i]:
 
 
 func _ready() -> void:
-    var w := size.x * WorldConfig.tile_size
-    var h := size.y * WorldConfig.tile_size
-    var shape := RectangleShape2D.new()
-    shape.size = Vector2(w, h)
-    var col := CollisionShape2D.new()
-    col.shape = shape
-    col.position = Vector2(0, -h / 2.0)
-    add_child(col)
+    if id != "road" and id != "bridge":
+        var w := size.x * WorldConfig.tile_size
+        var h := size.y * WorldConfig.tile_size
+        var shape := RectangleShape2D.new()
+        shape.size = Vector2(w, h)
+        var col := CollisionShape2D.new()
+        col.shape = shape
+        col.position = Vector2(0, -h / 2.0)
+        add_child(col)
+    else:
+        add_to_group("roads")
     add_to_group("buildings")
     Events.tech_researched.connect(_on_tech)
     if data.get("depot", false):
@@ -127,6 +132,7 @@ func _leave_groups() -> void:
     remove_from_group("buildings")
     remove_from_group("depots")
     remove_from_group("farms")
+    remove_from_group("roads")
 
 
 func free_slots() -> int:
