@@ -64,7 +64,7 @@ func export_state() -> Dictionary:
 
 func import_state(data: Dictionary) -> void:
     _reinforce_timer = clampf(float(data.get("reinforce_timer", REINFORCE_INTERVAL)), 0.0, REINFORCE_INTERVAL)
-    _spawn_index = int(data.get("spawn_index", 0)) % GUARD_DIRECTIONS.size() * GUARD_RINGS.size()
+    _spawn_index = int(data.get("spawn_index", 0)) % (GUARD_DIRECTIONS.size() * GUARD_RINGS.size())
 
 
 func spawn_initial_garrison() -> void:
