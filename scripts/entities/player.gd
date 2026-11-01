@@ -271,6 +271,10 @@ func _apply_attack() -> void:
         if is_instance_valid(target) and origin.distance_to(target.global_position) <= ATTACK_RANGE:
             var site_damage := roundi(float(_player_damage(ATTACK_DAMAGE)) * Tech.stat("campaign.site_damage", 1.0))
             target.take_damage(maxi(1, site_damage))
+    for stronghold in get_tree().get_nodes_in_group("enemy_strongholds"):
+        if is_instance_valid(stronghold) and origin.distance_to(stronghold.global_position) <= ATTACK_RANGE:
+            var stronghold_damage := roundi(float(_player_damage(ATTACK_DAMAGE)) * Tech.stat("campaign.site_damage", 1.0))
+            stronghold.take_damage(maxi(1, stronghold_damage))
     queue_redraw()
 
 
