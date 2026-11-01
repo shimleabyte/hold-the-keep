@@ -77,7 +77,7 @@ var _map_button: HudChip
 var _jobs_button: HudChip
 var _jobs_panel: Panel
 var _map_backdrop: ColorRect
-var _map_panel: Control
+var _map_panel
 var _stage_label: Label
 var _stage_bar: StatBar
 var _research_panel: Panel
@@ -499,6 +499,9 @@ func _unhandled_input(event: InputEvent) -> void:
         return
     if event.keycode == KEY_ESCAPE and _map_panel.visible:
         _toggle_map()
+        get_viewport().set_input_as_handled()
+    elif event.keycode == KEY_ESCAPE and _jobs_panel.visible:
+        _toggle_jobs()
         get_viewport().set_input_as_handled()
     elif event.keycode == KEY_TAB:
         _toggle_map()
