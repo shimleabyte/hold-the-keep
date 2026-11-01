@@ -14,6 +14,7 @@ const TEXTURES := {
     "woodcutter": preload("res://assets/sprites/villager_woodcutter.svg"),
     "miner": preload("res://assets/sprites/villager_miner.svg"),
     "farmer": preload("res://assets/sprites/villager_farmer.svg"),
+    "builder": preload("res://assets/sprites/villager_miner.svg"),
     "soldier": preload("res://assets/sprites/villager_soldier.svg"),
 }
 
@@ -34,8 +35,24 @@ const SOLDIER_DAMAGE := 8
 const SOLDIER_INTERVAL := 0.8
 const SOLDIER_SEARCH := 300.0
 const REACH := 11.0
+const DEFAULT_WORK_RADIUS := 12.0
+const BUILDER_REPAIR_INTERVAL := 1.6
+const BUILDER_REPAIR_AMOUNT := 12
 
-var job := ""
+var occupation := ""
+var military_specialization := ""
+var job: String:
+    get:
+        return military_specialization if not military_specialization.is_empty() else occupation
+    set(value):
+        if value == "soldier":
+            military_specialization = "soldier"
+            occupation = ""
+        else:
+            occupation = value
+            military_specialization = ""
+var workplace = null
+var workplace_job := ""
 var state := State.IDLE
 var carry_kind := ""
 var carry := 0
@@ -127,27 +144,80 @@ func _mine_kind() -> String:
     return "stone"
 
 
-func set_job(j: String) -> void:
+func set_job(j: String) -> bool:
     if j == job:
-        return
+        return true
     _release()
+    _release_workplace()
     _expeditioning = false
     _expedition_target = null
     var old_max := max_hp
     job = j
+    if job == "builder" and not _claim_workplace("builder"):
+        job = ""
+        state = State.IDLE
+        return false
     if job == "soldier":
         add_to_group("defenders")
         max_hp = _hp_cap_for(job)
     else:
         remove_from_group("defenders")
         max_hp = _hp_cap_for(job)
-    # Pertahankan proporsi HP (penuh tetap penuh) saat max HP berubah.
-    hp = clampi(int(round(float(hp) * max_hp / old_max)), 1, max_hp)
+    hp = clampi(int(round(float(hp) * max_hp / maxi(1, old_max))), 1, max_hp)
+    _work_t = 0.0
+    _bad.clear()
     if state != State.HIDDEN and state != State.FLEEING:
         state = State.IDLE
         _path = PackedVector2Array()
         _pi = 0
     queue_redraw()
+    return true
+
+
+func has_valid_workplace() -> bool:
+    return workplace != null and is_instance_valid(workplace) and workplace_job == job
+
+
+func _claim_workplace(work_job: String) -> bool:
+    var best = null
+    var best_path_length := INF
+    for candidate in get_tree().get_nodes_in_group("buildings"):
+        if not candidate.has_method("free_slots") or candidate.free_slots(work_job) <= 0:
+            continue
+        var cells: Array[Vector2i] = candidate.cells()
+        var path: PackedVector2Array = nav.path_adjacent(position, cells)
+        if path.is_empty():
+            continue
+        if float(path.size()) < best_path_length:
+            best_path_length = float(path.size())
+            best = candidate
+    if best == null or not best.claim(self, work_job):
+        return false
+    workplace = best
+    workplace_job = work_job
+    return true
+
+
+func _release_workplace() -> void:
+    if workplace != null and is_instance_valid(workplace):
+        workplace.release(self)
+    workplace = null
+    workplace_job = ""
+
+
+func on_workplace_lost(building) -> void:
+    if workplace != building:
+        return
+    workplace = null
+    workplace_job = ""
+    _release()
+    state = State.IDLE
+
+
+func on_repair_target_lost(building) -> void:
+    if target == building:
+        _release()
+        state = State.IDLE
 
 
 ## Dipanggil pohon/batu saat dipukul oleh villager ini.
@@ -325,6 +395,23 @@ func _tick_working(delta: float) -> void:
         target = null
         state = State.IDLE
         return
+    if job == "builder":
+        if int(target.hp) <= 0 or int(target.hp) >= int(target.max_hp):
+            _release()
+            state = State.IDLE
+            return
+        anim.face(target.position - position)
+        _work_t += delta
+        if _work_t >= BUILDER_REPAIR_INTERVAL:
+            _work_t = 0.0
+            if not target.repair(BUILDER_REPAIR_AMOUNT):
+                _release()
+                state = State.IDLE
+                return
+            if int(target.hp) >= int(target.max_hp):
+                _release()
+                state = State.IDLE
+        return
     if job == "farmer":
         anim.face(target.position - position)
         _work_t += delta
@@ -493,21 +580,37 @@ func _find_work() -> void:
         "woodcutter", "miner":
             var kind := "wood" if job == "woodcutter" else _mine_kind()
             for n in get_tree().get_nodes_in_group("harvestable"):
-                if n.yield_kind == kind and n.is_available(self) and not _bad.has(n):
+                if n.yield_kind == kind and n.is_available(self) and _is_in_work_radius(n) and not _bad.has(n):
                     cands.append(n)
         "farmer":
             for f in get_tree().get_nodes_in_group("farms"):
-                if f.free_slots() > 0 and not _bad.has(f):
+                if f.free_slots("farmer") > 0 and _is_in_work_radius(f) and not _bad.has(f):
                     cands.append(f)
+        "builder":
+            if not has_valid_workplace():
+                _release_workplace()
+                if not _claim_workplace("builder"):
+                    return
+            var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
+            for building in get_tree().get_nodes_in_group("buildings"):
+                if building.hp <= 0 or building.hp >= building.max_hp or _bad.has(building):
+                    continue
+                if workplace.position.distance_squared_to(building.position) > radius * radius:
+                    continue
+                if building.can_assign_repairer(self):
+                    cands.append(building)
     cands.sort_custom(func(a, b) -> bool: return a.position.distance_squared_to(position) < b.position.distance_squared_to(position))
-    for i in mini(4, cands.size()):
+    for i in mini(8, cands.size()):
         var n = cands[i]
         var cells := _cells_of(n)
         var p: PackedVector2Array = nav.path_adjacent(position, cells)
         if p.is_empty():
             _bad.append(n)
             continue
-        if not _claim(n):
+        if job == "builder":
+            if not n.claim_repairer(self):
+                continue
+        elif not _claim(n):
             continue
         target = n
         _goal_cells = cells
@@ -526,40 +629,55 @@ func _cells_of(n) -> Array[Vector2i]:
 
 func _claim(n) -> bool:
     if n.has_method("claim"):
-        return n.claim(self)
+        return n.claim(self, "farmer") if job == "farmer" else n.claim(self)
     n.worker = self
     return true
 
 
 func _release() -> void:
     if target != null and is_instance_valid(target):
-        if target.has_method("release"):
+        if target.has_method("release_repairer") and job == "builder":
+            target.release_repairer(self)
+        elif target.has_method("release"):
             target.release(self)
         elif target.get("worker") == self:
             target.worker = null
     target = null
+    _work_t = 0.0
+    _hit_done = false
+
+
+func _is_in_work_radius(candidate) -> bool:
+    var supply = get_tree().get_first_node_in_group("supply_network")
+    for depot in get_tree().get_nodes_in_group("depots"):
+        if supply != null and not supply.is_depot_connected(depot):
+            continue
+        var radius := float(depot.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
+        if depot.position.distance_squared_to(candidate.position) <= radius * radius:
+            return true
+    return false
 
 
 func _go_depot() -> void:
     _depot = null
-    var best := INF
+    var best_path_length := INF
+    var best_path := PackedVector2Array()
     var supply = get_tree().get_first_node_in_group("supply_network")
-    for d in get_tree().get_nodes_in_group("depots"):
-        if supply != null and not supply.is_depot_connected(d):
+    for depot in get_tree().get_nodes_in_group("depots"):
+        if supply != null and not supply.is_depot_connected(depot):
             continue
-        var dist: float = d.position.distance_squared_to(position)
-        if dist < best:
-            best = dist
-            _depot = d
+        var path: PackedVector2Array = nav.path_adjacent(position, depot.cells())
+        if path.is_empty():
+            continue
+        if float(path.size()) < best_path_length:
+            best_path_length = float(path.size())
+            _depot = depot
+            best_path = path
     if _depot == null:
         state = State.IDLE
         return
     _goal_cells = _depot.cells()
-    var p: PackedVector2Array = nav.path_adjacent(position, _goal_cells)
-    if p.is_empty():
-        state = State.IDLE
-        return
-    _set_path(p)
+    _set_path(best_path)
     state = State.TO_DEPOT
 
 
@@ -714,6 +832,10 @@ func _job_color() -> Color:
 
 func _draw() -> void:
     anim.draw(self, TEXTURES.get(job, TEXTURES[""]), FW, FH)
+    if job == "builder":
+        draw_rect(Rect2(8, -13, 2, 6), Color("#704b2a"))
+        draw_rect(Rect2(7, -15, 5, 2), Color("#aeb5bf"))
+        draw_rect(Rect2(9, -16, 3, 2), Color("#d5dbe3"))
     if carry > 0:
         var cc := Color("#a8743a")
         if carry_kind == "stone":

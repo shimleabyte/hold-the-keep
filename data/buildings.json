@@ -11,7 +11,14 @@
     "color": "#9a9fa8",
     "buildable": false,
     "depot": true,
-    "capacity": 2
+    "capacity": 2,
+    "workplaces": {
+      "builder": 2
+    },
+    "work_radius": 14,
+    "repair_cost": {
+      "wood": 1
+    }
   },
   {
     "id": "house",
@@ -25,7 +32,10 @@
     },
     "hp": 150,
     "color": "#b08a5a",
-    "capacity": 2
+    "capacity": 2,
+    "repair_cost": {
+      "wood": 1
+    }
   },
   {
     "id": "wall",
@@ -38,7 +48,10 @@
       "wood": 2
     },
     "hp": 80,
-    "color": "#8b6b43"
+    "color": "#8b6b43",
+    "repair_cost": {
+      "wood": 1
+    }
   },
   {
     "id": "tower",
@@ -55,7 +68,10 @@
     "color": "#8a8f98",
     "range": 96,
     "damage": 12,
-    "fire_interval": 0.9
+    "fire_interval": 0.9,
+    "repair_cost": {
+      "stone": 1
+    }
   },
   {
     "id": "storage",
@@ -69,7 +85,11 @@
     },
     "hp": 120,
     "color": "#9c7a4a",
-    "depot": true
+    "depot": true,
+    "work_radius": 8,
+    "repair_cost": {
+      "wood": 1
+    }
   },
   {
     "id": "farm",
@@ -83,7 +103,10 @@
     },
     "hp": 100,
     "color": "#6a8f3a",
-    "workers": 2
+    "workers": 2,
+    "repair_cost": {
+      "wood": 1
+    }
   },
   {
     "id": "outpost",
@@ -100,7 +123,14 @@
     "hp": 240,
     "color": "#a27a4d",
     "claim_radius": 9,
-    "depot": true
+    "depot": true,
+    "workplaces": {
+      "builder": 1
+    },
+    "work_radius": 10,
+    "repair_cost": {
+      "wood": 1
+    }
   },
   {
     "id": "stone_wall",
@@ -115,7 +145,10 @@
     },
     "hp": 300,
     "color": "#8a8f98",
-    "locked": true
+    "locked": true,
+    "repair_cost": {
+      "stone": 1
+    }
   },
   {
     "id": "forge",
@@ -130,7 +163,10 @@
     },
     "hp": 200,
     "color": "#6e737b",
-    "locked": true
+    "locked": true,
+    "repair_cost": {
+      "stone": 1
+    }
   },
   {
     "id": "road",
@@ -144,7 +180,10 @@
       "wood": 1
     },
     "hp": 35,
-    "color": "#9c815d"
+    "color": "#9c815d",
+    "repair_cost": {
+      "wood": 1
+    }
   },
   {
     "id": "bridge",
@@ -159,6 +198,9 @@
       "stone": 1
     },
     "hp": 140,
-    "color": "#98734d"
+    "color": "#98734d",
+    "repair_cost": {
+      "wood": 1
+    }
   }
 ]

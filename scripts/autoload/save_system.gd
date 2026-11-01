@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 8
+const VERSION := 9
 
 var pending: Dictionary = {}
 
@@ -104,8 +104,9 @@ func collect(main: Node) -> Dictionary:
 
     var villagers: Array = []
     for villager in get_tree().get_nodes_in_group("villagers"):
-        villagers.append({"x": villager.position.x, "y": villager.position.y, "job": villager.job, "hp": villager.hp,
-            "carry": villager.carry, "kind": villager.carry_kind,
+        villagers.append({"x": villager.position.x, "y": villager.position.y, "job": villager.job,
+            "occupation": villager.occupation, "military_specialization": villager.military_specialization,
+            "hp": villager.hp, "carry": villager.carry, "kind": villager.carry_kind,
             "expedition": villager.is_expeditioning(), "recalling": villager.is_recalling_expedition()})
 
     var enemies: Array = []
@@ -155,6 +156,7 @@ func collect(main: Node) -> Dictionary:
         "enemies": enemies,
         "resources": resources,
         "quota": main.village.quota,
+        "job_priority": main.village.job_priority.duplicate(),
         "spawner": main.spawner.export_state(),
         "tech": Tech.export_state(),
     }
@@ -257,6 +259,18 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 return false
         if version >= 5 and (not villager.has("expedition") or not villager.has("recalling")):
             return false
+        if version >= 9:
+            if not villager.has("occupation") or not villager.has("military_specialization"):
+                return false
+            var occupation := String(villager["occupation"])
+            var specialization := String(villager["military_specialization"])
+            if not ["", "woodcutter", "miner", "farmer", "builder"].has(occupation):
+                return false
+            if not ["", "soldier"].has(specialization):
+                return false
+            var legacy_job := specialization if not specialization.is_empty() else occupation
+            if String(villager["job"]) != legacy_job or (not occupation.is_empty() and not specialization.is_empty()):
+                return false
     for enemy in enemies:
         if not (enemy is Dictionary) or not enemy.has("id") or not enemy.has("x") or not enemy.has("y") or not enemy.has("hp"):
             return false
@@ -265,8 +279,21 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         if bool(enemy.get("garrison", false)) and (not enemy.has("guard_x") or not enemy.has("guard_y")):
             return false
     for job in quota:
-        if not ["woodcutter", "miner", "farmer", "soldier"].has(String(job)):
+        var allowed_jobs := ["woodcutter", "miner", "farmer", "soldier"]
+        if version >= 9:
+            allowed_jobs.append("builder")
+        if not allowed_jobs.has(String(job)):
             return false
+    if version >= 9:
+        var priority = data.get("job_priority", null)
+        if not (priority is Array) or priority.size() != 5:
+            return false
+        var unique_priority: Dictionary = {}
+        for value in priority:
+            var job_name := String(value)
+            if not ["woodcutter", "miner", "farmer", "builder", "soldier"].has(job_name) or unique_priority.has(job_name):
+                return false
+            unique_priority[job_name] = true
     for resource in resources:
         if not (resource is Dictionary):
             return false

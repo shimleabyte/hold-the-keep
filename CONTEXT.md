@@ -249,3 +249,13 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Regional conquest grants resources; the campaign only ends after the fourth stronghold falls.
 - Save format v8 persists the full objective order, region/faction identity, health, garrison timers and completion state. Existing v1–v7 saves retain their one-stronghold flow; Classic remains one stronghold.
 - Regression status: dedicated multi-stronghold test added to CI; Godot 4.3 and 4.7 execution pending.
+
+
+## 22. Jobs and workplaces — first Phase 04 slice (2026-11-01)
+
+- Branch: `feat/workplaces-and-specialist-jobs`, stacked on the Phase 03 campaign branch.
+- Builder is a labor occupation with Keep/Outpost workplace slots and a workplace-bounded repair radius. It consumes repair material and cannot share a repair target with another Builder.
+- Woodcutters, miners and farmers are constrained to connected-depot work radii. Resource carriers select a reachable connected depot rather than failing on the nearest but inaccessible depot.
+- Job allocation order is configurable; Alt + job key promotes, Alt + Shift + job key demotes. The job panel also supports right-click priority changes.
+- Soldier identity is stored in `military_specialization`; labor tasks are stored in `occupation`. The legacy `job` property remains a compatibility alias.
+- Save format v9 persists role fields and ordered priority. Hunter, Scout, Healer and Blacksmith remain later Phase 04 increments.

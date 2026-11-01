@@ -51,10 +51,15 @@ func _initialize() -> void:
     assert(current_save["world"]["map_size"] == 64,
         "New Classic saves must record the original map dimensions")
     assert(save_system._valid_save(current_save),
-        "A current v7 save must validate against its matching world configuration")
+        "A current v9 save must validate against its matching world configuration")
 
     var legacy_save := current_save.duplicate(true)
     legacy_save.erase("world")
+    legacy_save["quota"].erase("builder")
+    legacy_save.erase("job_priority")
+    for villager in legacy_save["villagers"]:
+        villager.erase("occupation")
+        villager.erase("military_specialization")
     for legacy_version in range(1, 7):
         legacy_save["version"] = legacy_version
         assert(save_system._valid_save(legacy_save),

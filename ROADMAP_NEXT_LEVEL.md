@@ -128,10 +128,17 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** multiple strongholds can be found, attacked, destroyed, restored from saves and completed in a deterministic objective sequence.
 
 ### Phase 04 — Jobs and workplaces
-- Introduce Builder, Hunter, Scout, Healer and Blacksmith incrementally.
-- Add workplace capacity, work radius, local storage selection, job priorities and reassignment.
-- Separate labor occupations from military unit specializations.
-- Add worker behavior and workplace tests before exposing new jobs in HUD.
+**Status:** First implementation slice is on `feat/workplaces-and-specialist-jobs`; regression matrix pending.
+
+- [x] Introduce Builder as a real labor occupation; soldier is stored separately as a military specialization, with a compatibility `job` alias.
+- [x] Add Builder workplace capacity on Keeps and Outposts, plus data-driven work radii.
+- [x] Add resource-backed repairs for damaged player buildings; one Builder claims a repair target at a time.
+- [x] Limit resource/farm task selection to the work radius of a connected depot.
+- [x] Select the nearest reachable connected depot rather than stopping at an unreachable nearest depot.
+- [x] Add configurable job priority order, reassignment, Alt+job hotkeys and right-click controls in the job panel.
+- [x] Persist occupation, military specialization and priority order in save format v9; older saves still load through the compatibility job field.
+- [ ] Add Hunter, Scout, Healer and Blacksmith in subsequent incremental slices.
+- [ ] Complete Godot 4.3 / 4.7 regression matrix and real gameplay pathing checks.
 
 **Acceptance gate:** workers select valid tasks, avoid cross-map wandering, recover from blocked paths, deposit at reachable storage and retain their state through saves.
 

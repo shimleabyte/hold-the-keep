@@ -28,11 +28,12 @@ const ICONS := {
     "stone_wall": preload("res://assets/sprites/icon_stone_wall.svg"),
     "forge": preload("res://assets/sprites/icon_forge.svg"),
     "outpost": preload("res://assets/sprites/icon_outpost.svg"),
+    "hammer": preload("res://assets/sprites/icon_hammer.svg"),
     "road": preload("res://assets/sprites/icon_road.svg"),
     "bridge": preload("res://assets/sprites/icon_bridge.svg"),
 }
-const JOBS := ["woodcutter", "miner", "farmer", "soldier"]
-const JOB_ICONS := {"woodcutter": "axe", "miner": "pick", "farmer": "wheat", "soldier": "sword"}
+const JOBS := ["woodcutter", "miner", "farmer", "builder", "soldier"]
+const JOB_ICONS := {"woodcutter": "axe", "miner": "pick", "farmer": "wheat", "builder": "hammer", "soldier": "sword"}
 const PANEL_BG := Color(0.09, 0.08, 0.11, 0.82)
 const PANEL_BORDER := Color("#6b5a40")
 const GOLD := Color("#ffd23f")
@@ -51,9 +52,11 @@ const HELP_ROWS := [
     ["1-8", "PILIH BANGUNAN"],
     ["KLIK KIRI", "PASANG BANGUNAN"],
     ["KLIK KANAN", "BATAL / BONGKAR"],
-    ["T M K R", "TAMBAH JOB"],
+    ["T M K R B", "TAMBAH JOB"],
     ["G", "SERBU / TARIK PRAJURIT"],
-    ["SHIFT + T M K R", "KURANGI JOB"],
+    ["SHIFT + T M K R B", "KURANGI JOB"],
+    ["ALT + T/M/K/R/B", "NAIKKAN PRIORITAS"],
+    ["ALT + SHIFT + KEY", "TURUNKAN PRIORITAS"],
     ["KLIK + / -", "UBAH KUOTA JOB"],
     ["P / ESC", "MENU"],
     ["F5 / F9", "SIMPAN / MUAT"],
@@ -320,7 +323,7 @@ func _build_combat_bar() -> void:
     add_child(_combat_bar)
 
 func _build_jobs() -> void:
-    _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 54))
+    _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 66))
     for i in JOBS.size():
         var row := JobRow.new()
         row.job = JOBS[i]
@@ -329,6 +332,7 @@ func _build_jobs() -> void:
         row.position = Vector2(2, 3 + i * 12)
         row.size = Vector2(72, 12)
         row.adjust.connect(_on_job_adjust)
+        row.priority_adjust.connect(_on_job_priority_adjust)
         _jobs_panel.add_child(row)
         _jobs[JOBS[i]] = row
     _jobs_panel.visible = false
@@ -692,6 +696,10 @@ func _on_job_adjust(job: String, delta: int) -> void:
     Events.job_quota_request.emit(job, delta)
 
 
+func _on_job_priority_adjust(job: String, delta: int) -> void:
+    Events.job_priority_request.emit(job, delta)
+
+
 func _on_player_hp(hp: int, max_hp: int) -> void:
     _hp_bar.set_value(float(hp) / max_hp)
     _hp_text.text = str(hp)
@@ -707,8 +715,10 @@ func _on_keep_hp(hp: int, max_hp: int) -> void:
 func _on_village_changed(pop: int, cap: int, quota: Dictionary, assigned: Dictionary) -> void:
     _pop.text = "%d/%d" % [pop, cap]
     _pop.add_theme_color_override("font_color", Color("#ff8a7a") if pop > cap else Color.WHITE)
+    var village = get_tree().get_first_node_in_group("village")
     for j in JOBS:
-        _jobs[j].set_counts(int(assigned[j]), int(quota[j]))
+        var rank: int = (int(village.job_priority.find(j)) + 1) if village != null else JOBS.find(j) + 1
+        _jobs[j].set_counts(int(assigned[j]), int(quota[j]), rank)
 
 
 func _refresh_resources() -> void:
@@ -839,18 +849,21 @@ class ClockWidget extends Control:
 ## Satu baris job: ikon, tombol -, "terisi/kuota", tombol +. Bisa diklik.
 class JobRow extends Control:
     signal adjust(job: String, delta: int)
+    signal priority_adjust(job: String, delta: int)
     var job := ""
     var icon: Texture2D
     var font: Font
     var assigned := 0
     var quota := 0
+    var priority_rank := 1
 
     func _ready() -> void:
         mouse_filter = Control.MOUSE_FILTER_STOP
 
-    func set_counts(a: int, q: int) -> void:
+    func set_counts(a: int, q: int, rank: int = 1) -> void:
         assigned = a
         quota = q
+        priority_rank = rank
         queue_redraw()
 
     func _gui_input(event: InputEvent) -> void:
@@ -859,6 +872,9 @@ class JobRow extends Control:
                 adjust.emit(job, -1)
             elif Rect2(58, 1, 10, 10).has_point(event.position):
                 adjust.emit(job, 1)
+            accept_event()
+        elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+            priority_adjust.emit(job, 1 if event.shift_pressed else -1)
             accept_event()
 
     func _draw() -> void:
@@ -872,7 +888,8 @@ class JobRow extends Control:
         var col := Color.WHITE
         if assigned < quota:
             col = Color("#ffb347")  # kuota belum terisi
-        draw_string(font, Vector2(26, 9), "%d/%d" % [assigned, quota], HORIZONTAL_ALIGNMENT_CENTER, 31, 8, col)
+        draw_string(font, Vector2(27, 9), "%d/%d" % [assigned, quota], HORIZONTAL_ALIGNMENT_CENTER, 19, 7, col)
+        draw_string(font, Vector2(48, 9), "P%d" % priority_rank, HORIZONTAL_ALIGNMENT_CENTER, 9, 6, Color("#d7ba7a"))
 
 
 
