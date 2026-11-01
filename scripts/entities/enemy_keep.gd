@@ -8,14 +8,12 @@ const SIZE := Vector2i(3, 3)
 const MAX_HP := 900
 const CLAIM_RADIUS := 9.0
 const REINFORCE_INTERVAL := 105.0
-const GUARD_OFFSETS := [
-    Vector2(-48, -24), Vector2(-48, 24),
-    Vector2(48, -24), Vector2(48, 24),
-    Vector2(-40, -40), Vector2(40, -40),
-    Vector2(-40, 40), Vector2(40, 40),
-    Vector2(0, -56), Vector2(0, 56),
-    Vector2(-64, 0), Vector2(64, 0)
+const GUARD_DIRECTIONS: Array[Vector2i] = [
+    Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1),
+    Vector2i(-1, -1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(1, 1),
+    Vector2i(-2, 0), Vector2i(2, 0), Vector2i(0, -2), Vector2i(0, 2)
 ]
+const GUARD_RINGS := [3, 4, 5]
 
 var world
 var flow
@@ -86,16 +84,20 @@ func _process(delta: float) -> void:
 
 
 func _spawn_guard() -> bool:
-    var attempts := GUARD_OFFSETS.size()
+    var directions := GUARD_DIRECTIONS.size()
+    var attempts := directions * GUARD_RINGS.size()
+    var fortress_center := position + Vector2(0, -size.y * TILE / 2.0)
     for i in attempts:
-        var offset: Vector2 = GUARD_OFFSETS[(_spawn_index + i) % attempts]
-        var spawn_position := position + offset
+        var slot := (_spawn_index + i) % attempts
+        var ring_index := floori(float(slot) / directions)
+        var direction: Vector2 = Vector2(GUARD_DIRECTIONS[slot % directions])
+        var spawn_position := fortress_center + direction * float(GUARD_RINGS[ring_index] * TILE)
         var spawn_cell := Vector2i((spawn_position / TILE).floor())
         if not world.is_buildable(spawn_cell) or world.occupied.has(spawn_cell):
             continue
         if not flow.is_reachable(spawn_cell):
             continue
-        _spawn_index = (_spawn_index + i + 1) % attempts
+        _spawn_index = (slot + 1) % attempts
         var guard = ENEMY_SCRIPT.new()
         guard.setup_guard(DataDB.enemies["soldier"], world, flow, player, position)
         guard.position = spawn_position
