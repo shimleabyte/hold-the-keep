@@ -1,7 +1,7 @@
 # Phase 09 — Balance, Performance and Release Hardening
 
 **Status:** First hardening slice in progress. The automated Frontier stress and save/export-configuration gates are being added; measured hardware baselines, full campaign playtests and actual release exports remain open.
-**Branch:** `feat/phase-09-balance-performance-release`
+**Branch:** `feat/phase-09-balance-performance-release-v2`
 **Base:** `feat/phase-07-conquest-objectives` (stacked so the test line includes the Frontier campaign and v11 save schema).
 **Engine targets:** Godot 4.3 and 4.7.
 
