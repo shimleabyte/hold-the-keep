@@ -7,7 +7,7 @@ extends Node2D
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
 
-enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION }
+enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING }
 
 const TEXTURES := {
     "": preload("res://assets/sprites/villager_idle.svg"),
@@ -179,7 +179,7 @@ func _physics_process(delta: float) -> void:
     if GameClock.is_night and job != "soldier" and state != State.FLEEING:
         _begin_flee()
 
-    if nav.version != _path_ver and (state == State.TO_WORK or state == State.TO_DEPOT or state == State.FLEEING or state == State.EXPEDITION):
+    if nav.version != _path_ver and (state == State.TO_WORK or state == State.TO_DEPOT or state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING):
         _repath()
 
     match state:
@@ -208,6 +208,11 @@ func _physics_process(delta: float) -> void:
             _tick_fight(delta)
         State.EXPEDITION:
             _tick_expedition(delta)
+        State.RECALLING:
+            if _move_along(delta):
+                state = State.IDLE
+                _scan_t = 0.0
+                _wander_t = 2.0
     _update_anim(delta)
 
 
@@ -221,6 +226,9 @@ func _update_anim(delta: float) -> void:
         State.EXPEDITION:
             moving = _pi < _path.size()
             _running = _expedition_target != null and is_instance_valid(_expedition_target) and position.distance_to(_expedition_target.position) > RUN_DISTANCE
+        State.RECALLING:
+            moving = _pi < _path.size()
+            _running = true
         State.FLEEING:
             moving = true
             _running = true
@@ -355,9 +363,21 @@ func recall_expedition() -> void:
     _expedition_target = null
     _foe = null
     _pending_foe = null
-    _path = PackedVector2Array()
-    _pi = 0
-    state = State.IDLE
+    var keep = _find_keep()
+    if keep == null:
+        _path = PackedVector2Array()
+        _pi = 0
+        state = State.IDLE
+        return
+    _goal_cells = keep.cells()
+    var path: PackedVector2Array = nav.path_adjacent(position, _goal_cells)
+    if path.is_empty():
+        _path = PackedVector2Array()
+        _pi = 0
+        state = State.IDLE
+        return
+    _set_path(path)
+    state = State.RECALLING
 
 
 func _plan_expedition_path() -> bool:
@@ -612,11 +632,11 @@ func _repath() -> void:
             State.TO_WORK:
                 _release()
                 state = State.IDLE
-            State.EXPEDITION:
+            State.EXPEDITION, State.RECALLING:
                 _expeditioning = false
                 _expedition_target = null
                 state = State.IDLE
-                Events.build_feedback.emit("Ekspedisi tidak menemukan jalur")
+                Events.build_feedback.emit("Prajurit tidak menemukan jalur pulang")
             _:
                 state = State.IDLE
         return
@@ -630,7 +650,7 @@ func _move_along(delta: float) -> bool:
     var tgt := _path[_pi]
     var to := tgt - position
     var d := to.length()
-    var fast := state == State.FLEEING or state == State.EXPEDITION or (state == State.FIGHT and _foe != null and is_instance_valid(_foe) and position.distance_to(_foe.position) > RUN_DISTANCE)
+    var fast := state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or (state == State.FIGHT and _foe != null and is_instance_valid(_foe) and position.distance_to(_foe.position) > RUN_DISTANCE)
     var step := (RUN_SPEED if fast else SPEED) * delta
     if not anim.is_busy() and anim.face(to):
         queue_redraw()
