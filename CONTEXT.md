@@ -15,18 +15,18 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 ## 2. Status fitur (implementasi aktif; status verifikasi per suite dicatat di bagian 6)
 | Area | Isi |
 |---|---|
-| Dunia | peta 64x64 prosedural (seed 1337): rumput, kolam (collision), pohon, batu |
+| Dunia | peta 64x64 prosedural (seed 1337): Hearthland, Greenwood, Highlands, Fenlands; enam atlas terrain termasuk air; resource generation tetap deterministik |
 | Wilayah | klaim pemain dari Keep/Outpost, klaim musuh dari benteng, ownership check, frontier expansion |
-| Kampanye | benteng lawan 900 HP, garrison dan reinforcement, fog of war permanen, ekspedisi prajurit (G), conquest victory |
+| Kampanye | tiga bab (hari 1–5, 6–10, 11–15), bobot musuh berubah per bab, benteng lawan 900 HP, garrison, fog permanen, ekspedisi (G), conquest victory |
 | Pemain | gerak 8 arah, lari (Shift), serang radial, panen, HP 100 + regen, respawn di keep |
 | Bangunan | keep, rumah, tembok, menara, gudang, ladang; data di `data/buildings.json`; bongkar refund 50% |
-| Musuh | bandit, serigala, prajurit, Raja Lawan; flow field; menyerang bangunan/pemain/prajurit |
+| Musuh | bandit, serigala pouncer, soldier melee, archer ranged, brute siege, Raja Lawan; flow field; role-specific AI dan structure damage |
 | Villager | job penebang/penambang/petani/prajurit, kuota diatur pemain, A*, setor ke gudang/keep |
 | Ekonomi | kayu, batu, makanan; kapasitas rumah; upkeep 2 makanan/penduduk/hari |
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
-| Save/load | versi 5, autosave tiap fajar, F5/F9, file sementara + rollback backup, resource/fog/stronghold/garrison/ekspedisi/recall tersimpan |
+| Save/load | versi 6, autosave tiap fajar, F5/F9, file sementara + rollback backup, resource/fog/stronghold/garrison/ekspedisi/recall/combat progression tersimpan |
 | Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
-| HUD | panel atas, vitals, kuota job (klik), bar bangunan (klik), bar boss, bantuan (H) |
+| HUD | top bar ringkas, vitals, indikator bab, combat strip kompak, drawer JOBS, peta strategis TAB/MAP, hotbar bangunan, bar boss, bantuan (H) |
 | Animasi | 22 frame x 3 arah per karakter; serang/panen jatuh di frame benturan |
 | Efek | partikel, busur tebasan, guncangan layar (bisa dimatikan) |
 | Audio | SFX prosedural (12 suara); **belum ada musik** |
@@ -40,12 +40,12 @@ scenes/main.tscn       satu node dengan script main.gd (semua dirakit lewat kode
 scripts/main.gd        merakit dunia, pemain, flow, nav, village, event, spawner, build, territory, fog, enemy keep, HUD, menu
 scripts/autoload/      InputSetup, Events (signal bus), DataDB (JSON), Settings, Inventory, Tech,
                        GameClock, SaveSystem, Audio
-scripts/world/         world_map.gd (tileset dari tiles.svg, noise, pohon/batu, occupied dict)
+scripts/world/         world_map.gd (tileset biome dari tiles.svg, noise, pohon/batu, occupied dict)
 scripts/systems/       flow_field (Dijkstra musuh), nav_grid (AStarGrid2D villager), build_system, territory,
                        fog_of_war (peta permanen), village/expedition, wave_spawner, event_manager
 scripts/entities/      player, enemy, enemy_keep (stronghold/garrison source), villager (expedition/recall), building, resource_tree, rock, iron_ore, arrow, corpse,
                        fx_layer, sprite_anim
-scripts/ui/            hud.gd, tech_panel.gd, pause_menu.gd, pixel_font.gd
+scripts/ui/            hud.gd, world_map_panel.gd (peta eksplorasi), tech_panel.gd, pause_menu.gd, pixel_font.gd
 data/                  buildings.json, enemies.json, waves.json, events.json, techs.json
 assets/sprites/        40 SVG pixel-art (dibuat oleh tools/gen_assets.py)
 assets/fonts/          Silkscreen (OFL) + lisensinya
@@ -118,15 +118,16 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 ## 8. Batasan dan masalah yang diketahui
 - Visual belum pernah dilihat di mesin pemilik (semua render lewat software di server).
 - Build executable sungguhan belum pernah dibuat (butuh export template Godot; PCK sudah teruji).
-- Save versi 5 memulihkan HP/timer resource, fog eksplorasi, posisi/HP benteng, timer reinforcement, garrison, serta status ekspedisi dan perjalanan pulang; save versi 1–4 tetap diterima dengan default untuk field baru.
+- Save versi 6 memulihkan HP/timer resource, fog eksplorasi, posisi/HP benteng, timer reinforcement, garrison, status ekspedisi/perjalanan pulang, serta level/XP tempur; save versi 1–5 tetap diterima dengan default untuk field baru.
 - Satu arah samping digambar; kiri/kanan identik (cermin). Animasi dari pose prosedural, bukan gambar tangan.
 - Tidak ada musik; SFX prosedural sederhana.
 - Rebind empat kelompok kontrol inti sudah ada melalui menu jeda; shortcut UI/job/build masih tetap.
 - Teks HUD hanya huruf kapital; resolusi non-16:9 belum diuji.
+- Map overlay dibangun untuk layout dasar 480x270; penyesuaian resolusi non-16:9 tetap perlu uji manual.
 
 ## 9. Rencana berikut (belum dikerjakan)
 1. Mainkan dan catat bagian yang janggal; sesuaikan balancing hari 2-14 (teknologi mengubah kurva kekuatan).
-2. **Kampanye wilayah**: satu benteng lawan, garrison, klaim musuh, fog of war, ekspedisi G, dan kemenangan conquest sudah tersedia. Tahap lanjut: multi-region, beberapa stronghold, AI logistik/serangan musuh lintas wilayah, dan upgrade ekspedisi.
+2. **Kampanye wilayah**: peta awal kini memiliki empat biome dan tiga bab progression. Tahap lanjut: beberapa map region yang dapat ditransisikan, beberapa stronghold berurutan, AI logistik/serangan musuh lintas wilayah, dan upgrade ekspedisi.
 3. Rebind shortcut UI/job/build dan navigasi menu; kontrol gerak/interaksi/serang/lari sudah dapat diubah.
 4. Musik (komposisi/aset) dan SFX untuk partikel.
 5. Tooltip pada slot bangunan dan ikon job; ikon .ico Windows; integrasi Steam (opsional).
@@ -177,7 +178,7 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Fog of war permanen membuka area dari player, Keep, Outpost, dan villager; peta eksplorasi ikut save versi 4.
 - G mengirim semua villager dengan job soldier ke ekspedisi setelah benteng ditemukan; G kedua mengarahkan mereka pulang ke Keep.
 - Prajurit ekspedisi memprioritaskan garrison, lalu menyerang stronghold. Benteng hancur membersihkan garrison dan memicu campaign victory.
-- Save versi 5 menyimpan stronghold, status reinforcement, identitas/origin garrison, status ekspedisi/recall, dan fog discovery. Versi 1–4 masih diterima lewat default.
+- Save versi 5 menambahkan stronghold, reinforcement, garrison, ekspedisi/recall, dan fog discovery; save versi 6 menambahkan level/XP pemain. Versi 1–5 tetap diterima dengan default field baru.
 - Tes regresi baru: `tests/campaign_assault.gd`.
 
 
@@ -188,3 +189,11 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Enemy roles: bandit melee raider; wolf pouncer with wind-up and lunge; archer keeps preferred distance and fires homing hostile bolts; brute has armor and deals multiplied damage to structures; final king gains armor and siege damage.
 - Wave roster adds archers on day 6 and brutes on day 9. New roles reuse existing humanoid sprite sheets with role-specific markers; bespoke enemy art remains a future visual pass.
 - Regression coverage: `tests/player_combat.gd` checks XP unlocks, dash movement/invulnerability, directional Cleave, Rally buffs, archer projectile launch, brute armor and save data. The test is committed but unexecuted because Godot is not installed in the current environment.
+
+
+## 16. Strategic map, campaign acts, and compact HUD (2026-11-01)
+- `scripts/ui/world_map_panel.gd` adds a TAB/MAP exploration-aware map with terrain, territory tint, resource/building/unit/player markers, and current camera viewport. Permanently explored fog is used for terrain memory; live enemy markers are restricted to current observation ranges.
+- `scripts/world/world_map.gd` defines four named regions: Hearthland, Greenwood, Highlands, and Fenlands. Their ground tiles differ while retaining the same 64x64 grid and water collision. Original tree/rock spawn probabilities and RNG draw order are preserved to keep saved resource cells compatible.
+- `data/waves.json` defines three campaign acts: Frontier (days 1–5), Black March (6–10), Last Siege (11–15). `wave_spawner.gd` applies archer pressure in Act II and archer/brute pressure in Act III; stage changes update the HUD banner and progress indicator.
+- HUD keeps core status and build hotbar visible. Job quotas move behind JOBS; map is opened by TAB/MAP and closes with its X, backdrop click, TAB, or Escape; job drawer closes with JOBS or Escape. Combat strip and tech button occupy less screen space.
+- `tests/map_stages.gd` covers regional labels, map visibility, act boundaries, and act-specific enemy weights. Godot execution remains pending in an environment with the engine installed.

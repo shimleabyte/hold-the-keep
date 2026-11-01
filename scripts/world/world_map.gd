@@ -18,6 +18,9 @@ const TILES_TEX := preload("res://assets/sprites/tiles.svg")
 const T_GRASS := 0
 const T_GRASS_ALT := 1
 const T_WATER := 2
+const T_FOREST := 3
+const T_HIGHLAND := 4
+const T_MARSH := 5
 
 var map_seed := 1337
 var pixel_size := Vector2i(MAP_SIZE * TILE, MAP_SIZE * TILE)
@@ -50,6 +53,28 @@ func spawn_point() -> Vector2:
     # Tepat di bawah keep (keep menempati tile 31-33 x 29-31)
     return Vector2(pixel_size.x / 2.0 + 8.0, pixel_size.y / 2.0 + 48.0)
 
+## Stable regional labels used by terrain generation and the strategic map.
+func region_id(cell: Vector2i) -> String:
+    var offset := Vector2(cell) - Vector2(MAP_SIZE, MAP_SIZE) / 2.0
+    if offset.length() < 13.0:
+        return "HEARTHLAND"
+    if offset.y < -absf(offset.x) * 0.55:
+        return "GREENWOOD"
+    if offset.x > absf(offset.y) * 0.55:
+        return "HIGHLANDS"
+    return "FENLANDS"
+
+
+func region_name_at(cell: Vector2i) -> String:
+    return region_id(cell)
+
+
+## Atlas tile index, exposed read-only for the strategic map.
+func tile_type_at(cell: Vector2i) -> int:
+    if cell.x < 0 or cell.y < 0 or cell.x >= MAP_SIZE or cell.y >= MAP_SIZE:
+        return T_WATER
+    return _layer.get_cell_atlas_coords(cell).x
+
 
 func _build_tileset() -> TileSet:
     var ts := TileSet.new()
@@ -61,7 +86,7 @@ func _build_tileset() -> TileSet:
     src.texture = TILES_TEX
     src.texture_region_size = Vector2i(TILE, TILE)
     ts.add_source(src, 0)
-    for i in 3:
+    for i in 6:
         src.create_tile(Vector2i(i, 0))
 
     # Air = penghalang
@@ -89,8 +114,18 @@ func _generate() -> void:
             var safe := Vector2(x, y).distance_to(center) < SAFE_RADIUS
             var water := edge or (not safe and noise.get_noise_2d(x, y) > 0.3)
             var tile := T_WATER
+            var region := region_id(Vector2i(x, y))
             if not water:
-                tile = T_GRASS_ALT if rng.randf() < 0.2 else T_GRASS
+                var variation := rng.randf()
+                match region:
+                    "GREENWOOD":
+                        tile = T_FOREST
+                    "HIGHLANDS":
+                        tile = T_HIGHLAND
+                    "FENLANDS":
+                        tile = T_MARSH
+                    _:
+                        tile = T_GRASS_ALT if variation < 0.2 else T_GRASS
             _layer.set_cell(Vector2i(x, y), 0, Vector2i(tile, 0))
 
             var cell := Vector2i(x, y)

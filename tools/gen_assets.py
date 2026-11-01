@@ -535,8 +535,15 @@ def make_nature():
 
 def make_tiles():
     rnd = random.Random(5)
-    s = Svg(48, 16)
-    specs = [("#5c9a45", ["#4f8a3b", "#6aa84f"], 10), ("#5b9845", ["#5fa049", "#559040"], 12), ("#2f5d8a", ["#3a70a3"], 0)]
+    s = Svg(96, 16)
+    specs = [
+        ("#5c9a45", ["#4f8a3b", "#6aa84f"], 10),
+        ("#5b9845", ["#5fa049", "#559040"], 12),
+        ("#2f5d8a", ["#3a70a3"], 0),
+        ("#416f3b", ["#335c32", "#527d43"], 14),
+        ("#74796e", ["#62675f", "#8a8e82"], 13),
+        ("#6b7547", ["#58633e", "#829052"], 14),
+    ]
     for i, (base, specks, n) in enumerate(specs):
         ox = i * 16
         s.rect(ox, 0, 16, 16, base)
@@ -546,11 +553,19 @@ def make_tiles():
             for _ in range(3):
                 x, y = ox + rnd.randint(1, 14), rnd.randint(2, 13)
                 s.rect(x, y, 1, 2, "#6fae52")
+        elif i == 3:  # lantai hutan: lumut kecil
+            for x, y in [(2, 4), (10, 12), (13, 6)]:
+                s.rect(ox + x, y, 2, 1, "#659050")
+        elif i == 4:  # dataran tinggi: serpihan batu
+            for x, y in [(3, 5), (10, 10), (13, 3)]:
+                s.rect(ox + x, y, 2, 1, "#a3a8a0")
+        elif i == 5:  # rawa: rumpun alang-alang
+            for x, y in [(4, 7), (11, 12), (13, 4)]:
+                s.rect(ox + x, y, 1, 3, "#a0a36b")
     for x, y, w in [(35, 3, 5), (42, 7, 4), (34, 11, 5), (40, 14, 4), (37, 6, 3)]:  # ombak air
         s.rect(x, y, w, 1, "#3f7bb0")
     s.rect(44, 2, 1, 1, "#9cc7e8").rect(36, 9, 1, 1, "#9cc7e8")
     s.save("tiles")
-
 
 # ---------------------------------------------------------------- bangunan
 

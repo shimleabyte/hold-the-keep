@@ -3,6 +3,7 @@ extends CanvasLayer
 ## bar boss, bar bangunan (bisa diklik), bantuan (H), dan layar game over / menang.
 
 const PIXEL_FONT := preload("res://scripts/ui/pixel_font.gd")
+const MAP_PANEL_SCRIPT := preload("res://scripts/ui/world_map_panel.gd")
 const ICONS := {
     "wood": preload("res://assets/sprites/icon_wood.svg"),
     "stone": preload("res://assets/sprites/icon_stone.svg"),
@@ -55,6 +56,8 @@ const HELP_ROWS := [
     ["P / ESC", "MENU"],
     ["F5 / F9", "SIMPAN / MUAT"],
     ["F3", "TAMPILKAN FPS"],
+    ["TAB", "PETA WILAYAH"],
+    ["JOBS", "PANEL KUOTA"],
 ]
 
 var _font: Font
@@ -70,6 +73,13 @@ var _fps: Label
 var _iron: Label
 var _iron_icon: TextureRect
 var _tech_btn: TechButton
+var _map_button: HudChip
+var _jobs_button: HudChip
+var _jobs_panel: Panel
+var _map_backdrop: ColorRect
+var _map_panel
+var _stage_label: Label
+var _stage_bar: StatBar
 var _research_panel: Panel
 var _research_name: Label
 var _research_bar: StatBar
@@ -103,6 +113,7 @@ func _ready() -> void:
 
     _build_top_bar()
     _build_vitals()
+    _build_stage_bar()
     _build_combat_bar()
     _build_jobs()
     _build_boss_bar()
@@ -110,6 +121,7 @@ func _ready() -> void:
     _build_help()
     _build_messages()
     _build_overlay()
+    _build_map()
 
     Events.resource_changed.connect(_on_resource_changed)
     Events.build_selected.connect(_on_build_selected)
@@ -122,6 +134,11 @@ func _ready() -> void:
     Events.event_triggered.connect(_on_event)
     Events.village_changed.connect(_on_village_changed)
     Events.tech_researched.connect(_on_tech_changed)
+    Events.stage_changed.connect(_on_stage_changed)
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node != null:
+        var initial_stage: Dictionary = main_node.spawner.stage_info(GameClock.day)
+        _on_stage_changed(String(initial_stage.get("id", "frontier")), String(initial_stage.get("name", "PERBATASAN")), GameClock.day)
     _refresh_resources()
     _refresh_slots()
 
@@ -175,43 +192,58 @@ func _stat(parent: Node, icon_name: String, pos: Vector2) -> Label:
 
 
 func _build_top_bar() -> void:
-    var bar := _panel(Vector2(0, 0), Vector2(480, 15))
+    var bar := _panel(Vector2.ZERO, Vector2(480, 16))
     _wood = _stat(bar, "wood", Vector2(3, 1))
-    _stone = _stat(bar, "stone", Vector2(46, 1))
-    _food = _stat(bar, "food", Vector2(89, 1))
-    _iron_icon = _icon(bar, "iron", Vector2(132, 3))
-    _iron = _label(bar, "0", Vector2(145, 1))
+    _stone = _stat(bar, "stone", Vector2(39, 1))
+    _food = _stat(bar, "food", Vector2(75, 1))
+    _iron_icon = _icon(bar, "iron", Vector2(111, 3))
+    _iron = _label(bar, "0", Vector2(124, 1))
 
     var clock := ClockWidget.new()
     clock.font = _font
     clock.sun = ICONS["sun"]
     clock.moon = ICONS["moon"]
-    clock.position = Vector2(176, 2)
+    clock.position = Vector2(151, 2)
     clock.size = Vector2(142, 11)
     bar.add_child(clock)
 
-    _foes_icon = _icon(bar, "skull", Vector2(322, 3))
-    _foes = _label(bar, "0", Vector2(335, 1), Color("#ff8a7a"))
+    _foes_icon = _icon(bar, "skull", Vector2(300, 3))
+    _foes = _label(bar, "0", Vector2(313, 1), Color("#ff8a7a"))
     _foes_icon.visible = false
     _foes.visible = false
 
-    _icon(bar, "people", Vector2(362, 3))
-    _pop = _label(bar, "0/0", Vector2(375, 1))
+    _icon(bar, "people", Vector2(336, 3))
+    _pop = _label(bar, "0/0", Vector2(349, 1))
+
+    _map_button = HudChip.new()
+    _map_button.label = "MAP"
+    _map_button.font = _font
+    _map_button.position = Vector2(370, 1)
+    _map_button.size = Vector2(35, 13)
+    _map_button.pressed.connect(_toggle_map)
+    bar.add_child(_map_button)
+
+    _jobs_button = HudChip.new()
+    _jobs_button.label = "JOBS"
+    _jobs_button.font = _font
+    _jobs_button.position = Vector2(409, 1)
+    _jobs_button.size = Vector2(35, 13)
+    _jobs_button.pressed.connect(_toggle_jobs)
+    bar.add_child(_jobs_button)
 
     _tech_btn = TechButton.new()
     _tech_btn.icon = ICONS["tech"]
     _tech_btn.font = _font
-    _tech_btn.position = Vector2(420, 1)
-    _tech_btn.size = Vector2(58, 13)
+    _tech_btn.position = Vector2(448, 1)
+    _tech_btn.size = Vector2(30, 13)
     _tech_btn.pressed.connect(func() -> void: Events.tech_panel_requested.emit())
     bar.add_child(_tech_btn)
 
-    # Progres riset: muncul di bawah jam saat ada riset berjalan.
-    _research_panel = _panel(Vector2(176, 16), Vector2(146, 12))
+    _research_panel = _panel(Vector2(4, 39), Vector2(126, 12))
     _research_name = _label(_research_panel, "", Vector2(3, 1), Color("#ffd23f"))
     _research_bar = StatBar.new()
-    _research_bar.position = Vector2(80, 3)
-    _research_bar.size = Vector2(62, 6)
+    _research_bar.position = Vector2(77, 3)
+    _research_bar.size = Vector2(45, 6)
     _research_bar.fill = Color("#6fcf5a")
     _research_panel.add_child(_research_bar)
     _research_panel.visible = false
@@ -219,50 +251,57 @@ func _build_top_bar() -> void:
     _fps = _label(self, "", Vector2(72, 259), Color("#9ad0ff"))
     _fps.visible = false
 
-
 func _build_vitals() -> void:
-    var p := _panel(Vector2(3, 18), Vector2(94, 27))
-    _icon(p, "heart", Vector2(4, 3))
+    var p := _panel(Vector2(4, 19), Vector2(122, 18))
+    _icon(p, "heart", Vector2(3, 2))
     _hp_bar = StatBar.new()
-    _hp_bar.position = Vector2(17, 4)
-    _hp_bar.size = Vector2(42, 7)
+    _hp_bar.position = Vector2(17, 3)
+    _hp_bar.size = Vector2(45, 5)
     _hp_bar.fill = Color("#d63a3a")
     p.add_child(_hp_bar)
-    _hp_text = _label(p, "100", Vector2(62, 2))
-    _icon(p, "keep", Vector2(4, 15))
+    _hp_text = _label(p, "100", Vector2(66, 1))
+    _icon(p, "keep", Vector2(3, 10))
     _keep_bar = StatBar.new()
-    _keep_bar.position = Vector2(17, 16)
-    _keep_bar.size = Vector2(42, 7)
+    _keep_bar.position = Vector2(17, 11)
+    _keep_bar.size = Vector2(45, 5)
     _keep_bar.fill = GOLD
     p.add_child(_keep_bar)
-    _keep_text = _label(p, "-", Vector2(62, 14))
+    _keep_text = _label(p, "-", Vector2(66, 9))
+
+func _build_stage_bar() -> void:
+    var p := _panel(Vector2(136, 19), Vector2(205, 18))
+    _stage_label = _label(p, "BAB I  PERBATASAN", Vector2(3, 1), Color("#e7c783"))
+    _stage_bar = StatBar.new()
+    _stage_bar.position = Vector2(3, 11)
+    _stage_bar.size = Vector2(199, 4)
+    _stage_bar.fill = Color("#b98c4a")
+    p.add_child(_stage_bar)
 
 
 func _build_combat_bar() -> void:
     _combat_bar = CombatBar.new()
     _combat_bar.font = _font
-    _combat_bar.position = Vector2(100, 207)
-    _combat_bar.size = Vector2(280, 28)
+    _combat_bar.position = Vector2(151, 219)
+    _combat_bar.size = Vector2(178, 16)
     _combat_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(_combat_bar)
 
-
 func _build_jobs() -> void:
-    var p := _panel(Vector2(402, 18), Vector2(74, 54))
+    _jobs_panel = _panel(Vector2(400, 19), Vector2(76, 54))
     for i in JOBS.size():
         var row := JobRow.new()
         row.job = JOBS[i]
         row.icon = ICONS[JOB_ICONS[JOBS[i]]]
         row.font = _font
         row.position = Vector2(2, 3 + i * 12)
-        row.size = Vector2(70, 12)
+        row.size = Vector2(72, 12)
         row.adjust.connect(_on_job_adjust)
-        p.add_child(row)
+        _jobs_panel.add_child(row)
         _jobs[JOBS[i]] = row
-
+    _jobs_panel.visible = false
 
 func _build_boss_bar() -> void:
-    _boss_panel = _panel(Vector2(140, 18), Vector2(200, 18))
+    _boss_panel = _panel(Vector2(140, 40), Vector2(200, 18))
     _boss_title = _label(_boss_panel, "RAJA LAWAN", Vector2(0, 0), Color("#ff8a7a"))
     _boss_title.size = Vector2(200, 9)
     _boss_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -275,12 +314,10 @@ func _build_boss_bar() -> void:
 
 
 func _build_build_bar() -> void:
-    _label(self, "H BANTUAN", Vector2(4, 270 - SLOT_H - 14), Color(1, 1, 1, 0.7))
+    _label(self, "BANGUNAN 1-6", Vector2(4, 225), Color(1, 1, 1, 0.7))
+    _label(self, "TAB PETA  ·  H BANTUAN", Vector2(360, 225), Color(1, 1, 1, 0.7))
     _rebuild_build_bar()
 
-
-## Bar hanya menampilkan bangunan yang sudah terbuka; dibangun ulang saat riset selesai.
-## Bangunan baru selalu di ujung kanan, jadi nomor hotkey yang sudah dikenal tidak bergeser.
 func _rebuild_build_bar() -> void:
     for s in _slot_nodes:
         _blockers.erase(s)
@@ -317,20 +354,67 @@ func _rebuild_build_bar() -> void:
     _refresh_slots()
 
 
+func _build_map() -> void:
+    _map_backdrop = ColorRect.new()
+    _map_backdrop.color = Color(0.015, 0.02, 0.028, 0.78)
+    _map_backdrop.size = Vector2(480, 270)
+    _map_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+    _map_backdrop.gui_input.connect(_on_map_backdrop_input)
+    _map_backdrop.visible = false
+    add_child(_map_backdrop)
+    _blockers.append(_map_backdrop)
+
+    _map_panel = MAP_PANEL_SCRIPT.new()
+    _map_panel.position = Vector2(80, 14)
+    _map_panel.size = Vector2(320, 242)
+    _map_panel.visible = false
+    _map_panel.close_requested.connect(_toggle_map)
+    add_child(_map_panel)
+    _blockers.append(_map_panel)
+
+
+func _on_map_backdrop_input(event: InputEvent) -> void:
+    if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+        _toggle_map()
+
+
+func _toggle_map() -> void:
+    var opening := not _map_panel.visible
+    _map_panel.visible = opening
+    _map_backdrop.visible = opening
+    if opening:
+        _jobs_panel.visible = false
+        _jobs_button.active = false
+        _jobs_button.queue_redraw()
+    _map_button.active = opening
+    _map_button.queue_redraw()
+
+
+func _toggle_jobs() -> void:
+    var opening := not _jobs_panel.visible
+    _jobs_panel.visible = opening
+    _jobs_button.active = opening
+    if opening and _map_panel.visible:
+        _map_panel.visible = false
+        _map_backdrop.visible = false
+        _map_button.active = false
+        _map_button.queue_redraw()
+    _jobs_button.queue_redraw()
+
+
 func _build_help() -> void:
-    var h := HELP_ROWS.size() * 11 + 36
+    var h := HELP_ROWS.size() * 10 + 30
     _help = _panel(Vector2(96, (270 - h) / 2), Vector2(288, h))
-    var title := _label(_help, "KONTROL", Vector2(0, 6), GOLD)
+    var title := _label(_help, "KONTROL", Vector2(0, 5), GOLD)
     title.size = Vector2(288, 9)
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     for i in HELP_ROWS.size():
-        _label(_help, HELP_ROWS[i][0], Vector2(14, 22 + i * 11), Color("#ffd9a0"))
-        _label(_help, HELP_ROWS[i][1], Vector2(124, 22 + i * 11))
-    var foot := _label(_help, "H  TUTUP BANTUAN", Vector2(0, h - 13), Color(1, 1, 1, 0.7))
+        _label(_help, HELP_ROWS[i][0], Vector2(14, 18 + i * 10), Color("#ffd9a0"))
+        _label(_help, HELP_ROWS[i][1], Vector2(124, 18 + i * 10))
+    var foot := _label(_help, "H  TUTUP BANTUAN", Vector2(0, h - 12), Color(1, 1, 1, 0.7))
     foot.size = Vector2(288, 9)
     foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _help.visible = false
-
 
 func _build_messages() -> void:
     _msg = _label(self, "", Vector2(0, 194))
@@ -376,6 +460,17 @@ func _process(delta: float) -> void:
         _research_bar.set_value(Tech.progress_ratio())
     _tech_btn.busy = Tech.current != ""
     _tech_btn.queue_redraw()
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node != null:
+        var stage: Dictionary = main_node.spawner.stage_info(GameClock.day)
+        var from_day := int(stage.get("from_day", 1))
+        var to_day := int(stage.get("to_day", 15))
+        _stage_label.text = "%s  %s" % [String(stage.get("label", "BAB I")), String(stage.get("name", "PERBATASAN"))]
+        var stage_progress := float(GameClock.day - from_day + 1) / float(maxi(1, to_day - from_day + 1))
+        _stage_bar.set_value(clampf(stage_progress, 0.0, 1.0))
+        if _map_panel.world != main_node.world or _map_panel.fog != main_node.fog or _map_panel.territory != main_node.territory:
+            _map_panel.configure(main_node.world, main_node.fog, main_node.territory, _font)
+
     var foes := get_tree().get_nodes_in_group("enemies")
     _foes.text = str(foes.size())
     _foes.visible = foes.size() > 0
@@ -414,7 +509,16 @@ func _unhandled_input(event: InputEvent) -> void:
             get_tree().paused = false
             get_tree().reload_current_scene()
         return
-    if event.keycode == KEY_H or event.keycode == KEY_F1:
+    if event.keycode == KEY_ESCAPE and _map_panel.visible:
+        _toggle_map()
+        get_viewport().set_input_as_handled()
+    elif event.keycode == KEY_ESCAPE and _jobs_panel.visible:
+        _toggle_jobs()
+        get_viewport().set_input_as_handled()
+    elif event.keycode == KEY_TAB:
+        _toggle_map()
+        get_viewport().set_input_as_handled()
+    elif event.keycode == KEY_H or event.keycode == KEY_F1:
         _help.visible = not _help.visible
     elif event.keycode == KEY_F3:
         _fps.visible = not _fps.visible
@@ -430,6 +534,23 @@ func blocks_mouse(pos: Vector2) -> bool:
 
 
 # ---------------------------------------------------------------- handler event
+
+func _on_stage_changed(stage_id: String, stage_name: String, day: int) -> void:
+    var main_node = get_tree().get_first_node_in_group("main")
+    var stage_summary := ""
+    if main_node != null:
+        var stage: Dictionary = main_node.spawner.stage_info(day)
+        stage_summary = String(stage.get("summary", ""))
+    _banner.text = "%s  %s  ·  HARI %d\n%s" % [
+        String(stage_id).to_upper(), stage_name, day, stage_summary
+    ]
+    _banner.modulate.a = 1.0
+    if _banner_tween != null:
+        _banner_tween.kill()
+    _banner_tween = create_tween()
+    _banner_tween.tween_interval(3.6)
+    _banner_tween.tween_property(_banner, "modulate:a", 0.0, 0.6)
+
 
 func _on_resource_changed(_kind: String, _amount: int) -> void:
     _refresh_resources()
@@ -505,19 +626,33 @@ func _on_event(title: String, text: String) -> void:
     _banner_tween.tween_property(_banner, "modulate:a", 0.0, 0.6)
 
 
+func _close_secondary_panels() -> void:
+    _map_panel.visible = false
+    _map_backdrop.visible = false
+    _map_button.active = false
+    _map_button.queue_redraw()
+    _jobs_panel.visible = false
+    _jobs_button.active = false
+    _jobs_button.queue_redraw()
+    _help.visible = false
+
+
 func _on_game_won(day: int) -> void:
+    _close_secondary_panels()
     _over_label.text = "KAMU MENANG!\nRaja lawan tumbang di hari %d\nTekan R untuk main lagi" % day + _load_hint()
     _over.visible = true
     get_tree().paused = true
 
 
 func _on_game_over(day: int) -> void:
+    _close_secondary_panels()
     _over_label.text = "KEEP HANCUR\nBertahan sampai hari %d\nTekan R untuk mulai ulang" % day + _load_hint()
     _over.visible = true
     get_tree().paused = true
 
 
 func _on_campaign_won(day: int) -> void:
+    _close_secondary_panels()
     _over_label.text = "BENTENG LAWAN TAKLUK\\nWilayah musuh jatuh pada hari %d\\nTekan R untuk main lagi" % day + _load_hint()
     _over.visible = true
     get_tree().paused = true
@@ -631,19 +766,15 @@ class CombatBar extends Control:
         queue_redraw()
 
     func _draw() -> void:
-        draw_rect(Rect2(Vector2.ZERO, size), Color(0.07, 0.065, 0.075, 0.9))
+        draw_rect(Rect2(Vector2.ZERO, size), Color("#111319", 0.88))
         draw_rect(Rect2(Vector2.ZERO, size), Color("#6b5a40"), false, 1.0)
         var level := int(state.get("level", 1))
         var xp := int(state.get("xp", 0))
         var next_xp := int(state.get("next_xp", 0))
-        draw_string(font, Vector2(4, 9), "LV %02d" % level,
-            HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#ffd23f"))
+        draw_string(font, Vector2(4, 10), "LV%d" % level, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("#ffd23f"))
         var ratio := float(xp) / float(maxi(1, next_xp)) if next_xp > 0 else 1.0
-        draw_rect(Rect2(45, 3, 228, 5), Color("#211b19"))
-        draw_rect(Rect2(46, 4, 226.0 * clampf(ratio, 0.0, 1.0), 3), Color("#d39b42"))
-        var xp_text := "MAX" if next_xp <= 0 else "%d/%d XP" % [xp, next_xp]
-        draw_string(font, Vector2(45, 15), xp_text,
-            HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color("#bcae99"))
+        draw_rect(Rect2(25, 4, 25, 7), Color("#29231d"))
+        draw_rect(Rect2(26, 5, 23.0 * clampf(ratio, 0.0, 1.0), 5), Color("#d39b42"))
         var abilities := [
             ["Q", "DASH", true, float(state.get("dash_cd", 0.0))],
             ["C", "TEBAS", bool(state.get("cleave_unlocked", false)), float(state.get("cleave_cd", 0.0))],
@@ -651,18 +782,16 @@ class CombatBar extends Control:
         ]
         for i in abilities.size():
             var item: Array = abilities[i]
-            var x := 4.0 + i * 91.0
+            var x := 54.0 + i * 40.0
             var unlocked := bool(item[2])
             var cooldown := float(item[3])
             var ready := unlocked and cooldown <= 0.05
             var tint := Color("#ffd23f") if ready else (Color("#a99a83") if unlocked else Color("#665d52"))
-            draw_rect(Rect2(x, 17, 88, 9), Color("#211b19"))
-            draw_rect(Rect2(x, 17, 88, 9), Color("#6b5a40"), false, 1.0)
-            draw_string(font, Vector2(x + 3, 24), "%s %s" % [item[0], item[1]],
+            draw_rect(Rect2(x, 2, 38, 12), Color("#211b19"))
+            draw_rect(Rect2(x, 2, 38, 12), Color("#6b5a40"), false, 1.0)
+            var status := "OK" if ready else ("--" if not unlocked else "%.0f" % cooldown)
+            draw_string(font, Vector2(x + 3, 10), String(item[0]) + " " + status,
                 HORIZONTAL_ALIGNMENT_LEFT, -1, 7, tint)
-            var status := "READY" if ready else ("LOCK" if not unlocked else "%.1f" % cooldown)
-            draw_string(font, Vector2(x + 53, 24), status,
-                HORIZONTAL_ALIGNMENT_LEFT, -1, 6, tint)
 
 
 ## Slot bar bangunan: ikon, nomor + nama, biaya. Bisa diklik.
@@ -713,6 +842,37 @@ class BuildSlot extends Control:
             draw_string(font, Vector2(x, 27), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 1, 1, a))
             x += font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 4.0
 
+## Compact top-bar button for secondary panels.
+class HudChip extends Control:
+    signal pressed
+    var label := ""
+    var font: Font
+    var active := false
+    var hover := false
+
+    func _ready() -> void:
+        mouse_filter = Control.MOUSE_FILTER_STOP
+        mouse_entered.connect(func() -> void:
+            hover = true
+            queue_redraw())
+        mouse_exited.connect(func() -> void:
+            hover = false
+            queue_redraw())
+
+    func _gui_input(event: InputEvent) -> void:
+        if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+            pressed.emit()
+            accept_event()
+
+    func _draw() -> void:
+        var bg := Color("#51432f") if active else Color("#201d1a")
+        if hover:
+            bg = bg.lightened(0.18)
+        draw_rect(Rect2(Vector2.ZERO, size), bg)
+        draw_rect(Rect2(Vector2.ZERO, size), Color("#e0b969") if active else Color("#6b5a40"), false, 1.0)
+        draw_string(font, Vector2(size.x / 2.0, 9), label, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color("#f0e2c7"))
+
+
 ## Tombol "RISET [Y]" di panel atas.
 class TechButton extends Control:
     signal pressed
@@ -740,4 +900,4 @@ class TechButton extends Control:
         draw_rect(Rect2(Vector2.ZERO, size), bg)
         draw_rect(Rect2(Vector2.ZERO, size), Color("#ffd23f") if busy else Color("#6b5a40"), false, 1.0)
         draw_texture(icon, Vector2(2, 1))
-        draw_string(font, Vector2(14, 10), "RISET Y", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE)
+        draw_string(font, Vector2(14, 10), "Y", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE)
