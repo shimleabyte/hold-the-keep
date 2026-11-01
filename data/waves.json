@@ -1,14 +1,60 @@
 {
- "base": 6,
- "per_day": 3,
- "max": 120,
- "types": [
-  {"id": "bandit", "from_day": 1, "weight": 6},
-  {"id": "wolf", "from_day": 2, "weight": 3},
-  {"id": "soldier", "from_day": 4, "weight": 2},
-  {"id": "archer", "from_day": 6, "weight": 2},
-  {"id": "brute", "from_day": 9, "weight": 1}
- ],
- "final_day": 15,
- "boss": "king"
+  "base": 6,
+  "per_day": 3,
+  "max": 120,
+  "types": [
+    {
+      "id": "bandit",
+      "from_day": 1,
+      "weight": 6
+    },
+    {
+      "id": "wolf",
+      "from_day": 2,
+      "weight": 3
+    },
+    {
+      "id": "soldier",
+      "from_day": 4,
+      "weight": 2
+    },
+    {
+      "id": "archer",
+      "from_day": 6,
+      "weight": 2
+    },
+    {
+      "id": "brute",
+      "from_day": 9,
+      "weight": 1
+    }
+  ],
+  "final_day": 15,
+  "boss": "king",
+  "stages": [
+    {
+      "id": "frontier",
+      "label": "BAB I",
+      "name": "PERBATASAN",
+      "from_day": 1,
+      "to_day": 5,
+      "summary": "Bangun ekonomi dan siapkan pertahanan pertama."
+    },
+    {
+      "id": "black_march",
+      "label": "BAB II",
+      "name": "PAWAI HITAM",
+      "from_day": 6,
+      "to_day": 10,
+      "summary": "Pemanah dan penghancur mulai menekan garis pertahanan."
+    },
+    {
+      "id": "last_siege",
+      "label": "BAB III",
+      "name": "PENGEPUNGAN AKHIR",
+      "from_day": 11,
+      "to_day": 15,
+      "summary": "Gelombang berat. Raja lawan datang pada malam terakhir."
+    }
+  ]
 }
