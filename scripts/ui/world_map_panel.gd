@@ -12,6 +12,7 @@ const GRASS := Color("#668b4a")
 const FOREST := Color("#385f38")
 const HIGHLAND := Color("#74796e")
 const MARSH := Color("#727a4a")
+const ROAD_COLOR := Color("#cfad7a")
 const ASHEN := Color("#706052")
 const PLAYER_TERRITORY := Color("#d2aa59")
 const ENEMY_TERRITORY := Color("#ae5148")
@@ -129,6 +130,7 @@ func _draw() -> void:
                     tint = tint.lerp(ENEMY_TERRITORY, 0.32)
             draw_rect(rect, tint)
 
+    _draw_road_markers()
     _draw_region_labels()
     _draw_resource_markers()
     _draw_building_markers()
@@ -191,7 +193,30 @@ func _draw_region_labels() -> void:
         if fog.is_revealed_cell(cell):
             var label_position := _map_origin + (Vector2(cell) + Vector2(0.5, 0.5)) * _map_scale
             var font_size := maxi(6, roundi(6.0 * _map_scale / 3.0))
-            draw_string(font, label_position, String(item[1]), HORIZONTAL_ALIGNMENT_CENTER, 60.0 * _map_scale / 3.0, font_size, Color(1, 1, 1, 0.84))
+            var label_color := Color(1, 1, 1, 0.84)
+            var control := "neutral"
+            if territory != null and world != null:
+                var region_id: String = world.region_id(cell)
+                var state: Dictionary = territory.get_region_state(region_id)
+                control = String(state.get("control", "neutral"))
+            match control:
+                "player":
+                    label_color = Color("#f0d39a")
+                "enemy":
+                    label_color = Color("#ef8a7c")
+                "contested":
+                    label_color = Color("#d49caa")
+            draw_circle(label_position + Vector2(-4.0, -3.0), maxf(1.2, _map_scale * 0.32), label_color)
+            draw_string(font, label_position, String(item[1]), HORIZONTAL_ALIGNMENT_CENTER, 60.0 * _map_scale / 3.0, font_size, label_color)
+
+
+func _draw_road_markers() -> void:
+    for road in get_tree().get_nodes_in_group("roads"):
+        if not is_instance_valid(road) or not fog.is_revealed_cell(road.cell):
+            continue
+        var center := _map_origin + (Vector2(road.cell) + Vector2(0.5, 0.5)) * _map_scale
+        var half := _map_scale * 0.32
+        draw_line(center - Vector2(half, 0.0), center + Vector2(half, 0.0), ROAD_COLOR, maxf(1.0, _map_scale * 0.22))
 
 
 func _draw_resource_markers() -> void:
@@ -207,7 +232,7 @@ func _draw_resource_markers() -> void:
 
 func _draw_building_markers() -> void:
     for building in get_tree().get_nodes_in_group("buildings"):
-        if not is_instance_valid(building) or not _position_is_known(building.global_position):
+        if not is_instance_valid(building) or String(building.id) == "road" or not _position_is_known(building.global_position):
             continue
         var color := Color("#c6b49a")
         var radius := 1.5
