@@ -25,6 +25,10 @@ func _initialize() -> void:
         "The initial window must be centered on the primary screen")
     assert(Settings.windowed_size.x >= 960 and Settings.windowed_size.y >= 540,
         "Saved windowed size must satisfy the minimum display dimensions")
+    var screen_size := DisplayServer.screen_get_size()
+    assert(Settings.windowed_size.x <= maxi(960, screen_size.x)
+        and Settings.windowed_size.y <= maxi(540, screen_size.y),
+        "Default and saved windowed sizes must not exceed the active display")
 
     var hud = get_first_node_in_group("hud")
     assert(hud != null, "The main scene must create the HUD")
