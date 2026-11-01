@@ -15,13 +15,13 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #34 (save schema v13; status per 1 November 2026).
+Ringkasan implementasi aktual pada `main` setelah PR #34 (save schema v13; status per 1 November 2026). Phase 02.5 work is on `feat/phase-02-supply-pressure` and is not merged.
 
 | Area | Kondisi saat ini |
 |---|---|
 | Dunia | Classic 64×64 / 15 hari tetap tersedia; Frontier 128×128 / 20 hari / 4 act dengan lima biome deterministik, 32 urat besi, dan starting Keep claim radius 15 |
 | Wilayah | Regional ownership neutral/player/enemy/contested; roads/bridges walkable; supply graph dari Keep; depot terputus tidak menerima deposit |
-| Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit Keep/Storage/Outpost cost source for construction/research/repair is merged; raid vulnerability/attrition remains deferred |
+| Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit Keep/Storage/Outpost cost source for construction/research/repair is merged; deterministic contested-depot warning and targeted saboteur raids are implemented on a pending branch |
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
@@ -35,7 +35,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #34 (save schema v13; statu
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 12 procedural SFX; musik belum ada |
 | Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | PR #34 workflow #41325205416: 52/52 jobs successful, including 24 assertion suites on each of Godot 4.3 and 4.7 |
+| CI | PR #34 workflow #41325205416: 52/52 jobs successful, including 24 assertion suites on each of Godot 4.3 and 4.7. Phase 02.5 adds a 25th suite per engine; branch CI pending |
 
 ## 3. Struktur
 ```
@@ -351,3 +351,13 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - The selected depot cell is an optional field inside save-v13 `supply` state. Older v13 saves without this field remain valid; no save version bump is required.
 - `tests/depot_cost_sources.gd` covers source selection, construction, research, no cross-depot pooling, atomic payment failure, disconnection rejection, UI selector presence and save/reload compatibility. It is added to both the blocking runner and Godot 4.3/4.7 CI matrix.
 - Validation is complete: 24 assertion suites passed on each Godot 4.3 and 4.7, both import/parse jobs passed, and Frontier performance plus Windows/Linux export passed (52/52 total).
+
+
+## 30. Phase 02.5 — Contested depot supply pressure (2026-11-01, implementation pending CI)
+- Branch: `feat/phase-02-supply-pressure`, based on main `185d75167992664ff3dd922084cc55a8be7db046`.
+- Only disconnected remote Storage/Outpost depots under enemy/contested territorial control accrue pressure. An isolated depot under neutral/player control remains stock-safe.
+- Warning is emitted at 30 seconds. The first targeted Saboteur dispatches at 60 seconds; a second can spawn at 210 seconds. Maximum two raids per continuous isolation.
+- Saboteurs path to the selected depot with nav-grid paths, engage the player/local defenders before attacking the depot, damage its structure, and steal one resource every second successful depot hit in fixed priority (food, iron, wood, stone).
+- Reconnecting to the Keep or reclaiming territory resets pressure and recalls active saboteurs. UI exposes TERPUTUS / TERPENCIL / ANCAMAN RAID / DIGEMPUR states on JOBS → POS.
+- Save v13 gains optional pressure records and active saboteur target/hit-progress fields. Validator checks bounded pressure records, unique depot coordinates, valid cells, raid counts, and valid Storage/Outpost targets. Older v13 saves without these fields remain supported.
+- `tests/supply_pressure.gd` is added to the blocking runner and both Godot CI matrices. Coverage: warning lead time, targeted spawn, fixed theft order, bounded repeat raid timing, UI state, save validation/load and recovery. CI has not completed; manual render/gameplay review is still required.
