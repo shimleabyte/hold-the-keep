@@ -2,7 +2,7 @@
 
 **Status:** Partially implemented and merged into `main` through PR #21. Faction data, rosters, identity, Shaman support and faction persistence are present; distinct archetype policies, camps, patrols, raids, raid persistence and manual playtesting remain open.
 **Mainline:** `main` (merged); use a fresh `feat/phase-06-completion-*` branch for the next implementation slice.
-**Current save schema:** v11. Preserve Classic compatibility and validate migration from v1–v10 plus v11 round-trip.
+**Current save schema:** v12. Preserve Classic compatibility and validate migration from v1–v11 plus v12 round-trip.
 **Engine target:** Godot 4.3 and 4.7.
 
 ## Goal
@@ -17,7 +17,7 @@ Replace the single generic enemy identity with four regional powers whose units 
 - Stronghold garrisons spawn from their faction roster; units carry faction identity and faction tint.
 - War Shaman can heal nearby damaged allies with a bounded radius and cooldown.
 - Shared enemy target selection and ally-support behavior extracted into reusable modules.
-- Save format v11 persists enemy faction identity alongside campaign/objective state; migration coverage must preserve Classic v1–v10 and Frontier v7–v10, with v11 round-trip.
+- Save format v11 persists enemy faction identity alongside campaign/objective state; migration coverage must preserve Classic v1–v10 and Frontier v7–v10, with v12 round-trip.
 - Regression test covers faction/region mapping, roster membership, garrison identity, tint, Shaman healing and save validation.
 
 ## Remaining implementation sequence
@@ -45,7 +45,7 @@ Replace the single generic enemy identity with four regional powers whose units 
 
 ### 06.5 — Persistence, balance and verification
 - Persist camp state, raid cooldowns, patrol assignments and enemy faction identity.
-- Validate save migration from v1–v10 and round-trip v11 in Classic and Frontier.
+- Validate save migration from v1–v11 and round-trip v12 in Classic and Frontier.
 - Add stress tests for large simultaneous garrisons, patrols and raids.
 - Run all tests and parse checks on Godot 4.3 and 4.7.
 - Review screenshots and play the Frontier campaign manually before calling Phase 06 complete.
