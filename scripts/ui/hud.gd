@@ -67,6 +67,7 @@ const HELP_ROWS := [
     ["O", "OBJEKTIF CONQUEST"],
     ["E (DI SITUS)", "INTERAKSI OBJEKTIF"],
     ["JOBS", "PANEL KUOTA"],
+    ["JOBS > POS", "STOK LOKAL & PENJAGA OUTPOST"],
 ]
 
 var _font: Font
@@ -93,6 +94,11 @@ var _tech_btn: TechButton
 var _map_button: HudChip
 var _jobs_button: HudChip
 var _jobs_panel: Panel
+var _outpost_button: HudChip
+var _outpost_backdrop: ColorRect
+var _outpost_panel: Panel
+var _outpost_list: VBoxContainer
+var _outpost_refresh_t := 0.0
 var _map_backdrop: ColorRect
 var _map_panel
 var _stage_label: Label
@@ -139,6 +145,7 @@ func _ready() -> void:
     _build_messages()
     _build_overlay()
     _build_map()
+    _build_outpost_panel()
 
     Events.resource_changed.connect(_on_resource_changed)
     Events.build_selected.connect(_on_build_selected)
@@ -329,7 +336,7 @@ func _build_combat_bar() -> void:
     add_child(_combat_bar)
 
 func _build_jobs() -> void:
-    _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 66))
+    _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 84))
     for i in JOBS.size():
         var row := JobRow.new()
         row.job = JOBS[i]
@@ -341,6 +348,13 @@ func _build_jobs() -> void:
         row.priority_adjust.connect(_on_job_priority_adjust)
         _jobs_panel.add_child(row)
         _jobs[JOBS[i]] = row
+    _outpost_button = HudChip.new()
+    _outpost_button.label = "POS"
+    _outpost_button.font = _font
+    _outpost_button.position = Vector2(2, 67)
+    _outpost_button.size = Vector2(72, 13)
+    _outpost_button.pressed.connect(_toggle_outposts)
+    _jobs_panel.add_child(_outpost_button)
     _jobs_panel.visible = false
 
 func _build_boss_bar() -> void:
@@ -427,6 +441,11 @@ func _on_map_backdrop_input(event: InputEvent) -> void:
 
 func _toggle_map() -> void:
     var opening: bool = not _map_panel.visible
+    if opening and _outpost_panel.visible:
+        _outpost_panel.visible = false
+        _outpost_backdrop.visible = false
+        _outpost_button.active = false
+        _outpost_button.queue_redraw()
     _map_panel.visible = opening
     _map_backdrop.visible = opening
     if opening:
@@ -439,6 +458,11 @@ func _toggle_map() -> void:
 
 func _toggle_jobs() -> void:
     var opening := not _jobs_panel.visible
+    if opening and _outpost_panel.visible:
+        _outpost_panel.visible = false
+        _outpost_backdrop.visible = false
+        _outpost_button.active = false
+        _outpost_button.queue_redraw()
     _jobs_panel.visible = opening
     _jobs_button.active = opening
     if opening and _map_panel.visible:
@@ -447,6 +471,162 @@ func _toggle_jobs() -> void:
         _map_button.active = false
         _map_button.queue_redraw()
     _jobs_button.queue_redraw()
+
+
+func _build_outpost_panel() -> void:
+    _outpost_backdrop = ColorRect.new()
+    _outpost_backdrop.color = Color(0.015, 0.02, 0.028, 0.84)
+    _outpost_backdrop.size = _viewport_size
+    _outpost_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+    _outpost_backdrop.gui_input.connect(_on_outpost_backdrop_input)
+    _outpost_backdrop.visible = false
+    add_child(_outpost_backdrop)
+    _blockers.append(_outpost_backdrop)
+
+    _outpost_panel = _panel(Vector2.ZERO, Vector2(310, 206))
+    _outpost_panel.visible = false
+    var title := _label(_outpost_panel, "LOGISTIK & PERTAHANAN POS", Vector2(10, 7), GOLD)
+    title.add_theme_font_size_override("font_size", 9)
+
+    var close := HudChip.new()
+    close.label = "X"
+    close.font = _font
+    close.position = Vector2(285, 4)
+    close.size = Vector2(19, 15)
+    close.pressed.connect(_toggle_outposts)
+    _outpost_panel.add_child(close)
+
+    var hint := _label(_outpost_panel, "Stok remote dikirim otomatis ke Keep saat jaringan tersambung.", Vector2(10, 22), Color("#c9b99d"))
+    hint.add_theme_font_size_override("font_size", 6)
+    hint.size = Vector2(286, 10)
+
+    var scroll := ScrollContainer.new()
+    scroll.position = Vector2(8, 37)
+    scroll.size = Vector2(294, 160)
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    scroll.mouse_filter = Control.MOUSE_FILTER_STOP
+    _outpost_panel.add_child(scroll)
+
+    _outpost_list = VBoxContainer.new()
+    _outpost_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _outpost_list.add_theme_constant_override("separation", 4)
+    scroll.add_child(_outpost_list)
+    _refresh_outpost_panel()
+
+
+func _on_outpost_backdrop_input(event: InputEvent) -> void:
+    if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+        _toggle_outposts()
+
+
+func _refresh_outpost_panel() -> void:
+    if _outpost_list == null:
+        return
+    for child in _outpost_list.get_children():
+        child.free()
+
+    var depots: Array = []
+    for depot in get_tree().get_nodes_in_group("depots"):
+        if is_instance_valid(depot) and ["outpost", "storage"].has(String(depot.id)):
+            depots.append(depot)
+    depots.sort_custom(func(a, b) -> bool:
+        if String(a.id) != String(b.id):
+            return String(a.id) == "outpost"
+        if a.cell.y != b.cell.y:
+            return a.cell.y < b.cell.y
+        return a.cell.x < b.cell.x
+    )
+
+    if depots.is_empty():
+        var empty := _label(_outpost_list, "Belum ada Outpost atau Storage.", Vector2.ZERO, Color("#c9b99d"))
+        empty.add_theme_font_size_override("font_size", 8)
+        return
+
+    for depot in depots:
+        var row := HBoxContainer.new()
+        row.custom_minimum_size = Vector2(276, 38)
+        row.add_theme_constant_override("separation", 5)
+        _outpost_list.add_child(row)
+
+        var details := VBoxContainer.new()
+        details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        details.add_theme_constant_override("separation", 1)
+        row.add_child(details)
+
+        var heading := Label.new()
+        heading.add_theme_font_override("font", _font)
+        heading.add_theme_font_size_override("font_size", 7)
+        heading.add_theme_color_override("font_color", Color("#f0d39a"))
+        if String(depot.id) == "outpost":
+            heading.text = "POS %d,%d  ·  PENJAGA %d/%d" % [depot.cell.x, depot.cell.y, depot.guard_count(), depot.guard_capacity]
+        else:
+            heading.text = "GUDANG %d,%d" % [depot.cell.x, depot.cell.y]
+        details.add_child(heading)
+
+        var stock := Label.new()
+        stock.add_theme_font_override("font", _font)
+        stock.add_theme_font_size_override("font_size", 6)
+        stock.add_theme_color_override("font_color", Color("#c4c0b5"))
+        stock.text = "KAYU %d  BATU %d  PANGAN %d  BESI %d  / %d" % [
+            depot.stockpile_amount("wood"), depot.stockpile_amount("stone"),
+            depot.stockpile_amount("food"), depot.stockpile_amount("iron"),
+            depot.stockpile_capacity
+        ]
+        details.add_child(stock)
+
+        if String(depot.id) == "outpost":
+            var release := Button.new()
+            release.text = "-"
+            release.custom_minimum_size = Vector2(25, 22)
+            release.disabled = depot.guard_count() <= 0
+            release.tooltip_text = "Tarik satu penjaga dari Outpost"
+            release.pressed.connect(_release_outpost_guard.bind(depot))
+            row.add_child(release)
+
+            var assign := Button.new()
+            assign.text = "+"
+            assign.custom_minimum_size = Vector2(25, 22)
+            assign.disabled = depot.free_guard_slots() <= 0
+            assign.tooltip_text = "Tugaskan prajurit terdekat yang belum menjaga Outpost"
+            assign.pressed.connect(_assign_outpost_guard.bind(depot))
+            row.add_child(assign)
+
+
+func _assign_outpost_guard(outpost) -> void:
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node == null or not main_node.village.assign_nearest_outpost_guard(outpost):
+        _show_message("Tidak ada prajurit yang tersedia atau slot penjaga penuh")
+    else:
+        _show_message("Prajurit ditugaskan menjaga Outpost")
+    _refresh_outpost_panel()
+
+
+func _release_outpost_guard(outpost) -> void:
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node == null or not main_node.village.release_outpost_guard(outpost):
+        _show_message("Tidak ada penjaga untuk ditarik")
+    else:
+        _show_message("Penjaga kembali ke pertahanan umum")
+    _refresh_outpost_panel()
+
+
+func _toggle_outposts() -> void:
+    var opening: bool = not _outpost_panel.visible
+    _outpost_panel.visible = opening
+    _outpost_backdrop.visible = opening
+    _outpost_button.active = opening
+    _outpost_button.queue_redraw()
+    if opening:
+        _jobs_panel.visible = false
+        _jobs_button.active = false
+        _jobs_button.queue_redraw()
+        if _map_panel.visible:
+            _map_panel.visible = false
+            _map_backdrop.visible = false
+            _map_button.active = false
+            _map_button.queue_redraw()
+        _outpost_refresh_t = 0.0
+        _refresh_outpost_panel()
 
 
 func _build_help() -> void:
@@ -523,6 +703,8 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
 
     _map_backdrop.size = _viewport_size
     _map_panel.configure_layout(_viewport_size)
+    _outpost_backdrop.size = _viewport_size
+    _outpost_panel.position = (_viewport_size - _outpost_panel.size) * 0.5
     _map_panel.position = (_viewport_size - _map_panel.size) * 0.5
 
     var help_height := _help.size.y
@@ -561,6 +743,11 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
 # ---------------------------------------------------------------- loop & input
 
 func _process(delta: float) -> void:
+    if _outpost_panel.visible:
+        _outpost_refresh_t -= delta
+        if _outpost_refresh_t <= 0.0:
+            _outpost_refresh_t = 1.0
+            _refresh_outpost_panel()
     if _fps.visible:
         _fps.text = "%d FPS" % Engine.get_frames_per_second()
     _scan_t -= delta
@@ -645,6 +832,9 @@ func _unhandled_input(event: InputEvent) -> void:
         get_viewport().set_input_as_handled()
     elif event.keycode == KEY_ESCAPE and _jobs_panel.visible:
         _toggle_jobs()
+        get_viewport().set_input_as_handled()
+    elif event.keycode == KEY_ESCAPE and _outpost_panel.visible:
+        _toggle_outposts()
         get_viewport().set_input_as_handled()
     elif event.keycode == KEY_TAB:
         _toggle_map()
@@ -771,6 +961,10 @@ func _close_secondary_panels() -> void:
     _jobs_panel.visible = false
     _jobs_button.active = false
     _jobs_button.queue_redraw()
+    _outpost_panel.visible = false
+    _outpost_backdrop.visible = false
+    _outpost_button.active = false
+    _outpost_button.queue_redraw()
     _help.visible = false
 
 
