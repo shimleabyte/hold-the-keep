@@ -29,7 +29,7 @@ jobs:
         godot-version: ["4.3.0", "4.7.0"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Godot
         uses: chickensoft-games/setup-godot@v2
