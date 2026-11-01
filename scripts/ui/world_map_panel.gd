@@ -204,7 +204,7 @@ func _draw_building_markers() -> void:
         elif String(building.id) == "outpost":
             color = ALLY_MARKER
             radius = 2.2
-        draw_circle(_world_to_map(building.global_position), radius, color)
+        draw_circle(_world_to_map(building.global_position), radius * (_map_scale / 3.0), color)
 
 
 func _draw_campaign_markers() -> void:
