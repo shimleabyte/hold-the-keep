@@ -251,6 +251,24 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             return false
         if supply_state["orders"].size() > 24 or int(supply_state["next_id"]) <= 0:
             return false
+        if supply_state.has("cost_source") and supply_state["cost_source"] != null:
+            var saved_source: Variant = supply_state["cost_source"]
+            if not (saved_source is Dictionary) or not saved_source.has("cx") or not saved_source.has("cy"):
+                return false
+            var cost_source_cell := Vector2i(int(saved_source["cx"]), int(saved_source["cy"]))
+            if not WorldConfig.is_valid_cell(cost_source_cell):
+                return false
+            var cost_source_exists := false
+            for saved_building in buildings:
+                if not (saved_building is Dictionary):
+                    continue
+                var saved_cell := Vector2i(int(saved_building.get("cx", -1)), int(saved_building.get("cy", -1)))
+                var saved_id := String(saved_building.get("id", ""))
+                if saved_cell == cost_source_cell and ["keep", "storage", "outpost"].has(saved_id):
+                    cost_source_exists = true
+                    break
+            if not cost_source_exists:
+                return false
         var seen_shipment_ids: Dictionary = {}
         var reserved_capacity: Dictionary = {}
         var max_shipment_id := 0

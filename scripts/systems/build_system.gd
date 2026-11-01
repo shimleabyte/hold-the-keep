@@ -107,8 +107,13 @@ func check(id: String, c: Vector2i) -> String:
             return "Ada pemain di situ"
         if player.global_position.distance_to(rect.get_center()) > BUILD_RANGE:
             return "Terlalu jauh"
-    if not Inventory.can_afford(DataDB.cost_of(id)):
-        return "Bahan kurang"
+    var cost: Dictionary = DataDB.cost_of(id)
+    var supply = get_tree().get_first_node_in_group("supply_network")
+    var cost_error: String = supply.cost_reason(cost) if supply != null else (
+        "" if Inventory.can_afford(cost) else "Bahan kurang di KEEP"
+    )
+    if cost_error != "":
+        return cost_error
     return ""
 
 
@@ -117,7 +122,12 @@ func place(id: String, c: Vector2i) -> String:
     var err := check(id, c)
     if err != "":
         return err
-    Inventory.spend_all(DataDB.cost_of(id))
+    var cost: Dictionary = DataDB.cost_of(id)
+    var supply = get_tree().get_first_node_in_group("supply_network")
+    var paid: bool = supply.pay_cost(cost) if supply != null else Inventory.spend_all(cost)
+    if not paid:
+        var cost_error: String = supply.cost_reason(cost) if supply != null else "Bahan kurang di KEEP"
+        return cost_error if cost_error != "" else "Stok sumber biaya berubah"
     place_raw(id, c)
     return ""
 

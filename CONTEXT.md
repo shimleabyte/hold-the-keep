@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main`; Phase 02 local logistics, Outpost garrisons and physical shipments merged by PRs #31–#33; save schema v13; PR #33 CI [workflow #41323062111](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323062111) passed 50/50 jobs on Godot 4.3/4.7. See `ROADMAP_NEXT_LEVEL.md` for current phase status and `docs/plans/` for phase execution plans.
+**Current source of truth:** default branch `main` at `6cde7b9`; Phase 02 local logistics, Outpost garrisons and physical shipments merged by PRs #31–#33; save schema v13. Mainline workflow [#41323473817](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323473817) passed 50/50 jobs. Branch `feat/phase-02-depot-cost-sources` implements a shared explicit Keep/Storage/Outpost cost source for construction, research and repair; its PR/CI are pending. See `ROADMAP_NEXT_LEVEL.md` and `docs/plans/` for current phase status.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -15,13 +15,13 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah merge Phase 02 local logistics (save schema v12; status acceptance per 1 November 2026).
+Ringkasan implementasi aktual pada `main` setelah PR #33 (save schema v13; status per 1 November 2026). Implementasi direct depot-funded costs masih berada pada branch yang disebutkan di atas, belum merged.
 
 | Area | Kondisi saat ini |
 |---|---|
 | Dunia | Classic 64×64 / 15 hari tetap tersedia; Frontier 128×128 / 20 hari / 4 act dengan lima biome deterministik, 32 urat besi, dan starting Keep claim radius 15 |
 | Wilayah | Regional ownership neutral/player/enemy/contested; roads/bridges walkable; supply graph dari Keep; depot terputus tidak menerima deposit |
-| Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; Frontier workers deposit secara lokal; connected depots mengirim maksimal 6 unit tiap 3 detik ke Keep. Player-directed shipment dan local-stock spending/UI belum ada |
+| Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit cost source untuk build/research/repair sedang diimplementasikan di branch; raid vulnerability/attrition masih deferred |
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
@@ -29,13 +29,13 @@ Ringkasan implementasi aktual pada `main` setelah merge Phase 02 local logistics
 | Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman support berjalan; perilaku khusus seluruh archetype, camps, patrol, raids dan counterattacks belum lengkap |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
-| Save/load | v12 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory; Classic v1–v11 dan Frontier v7–v11 tetap dimigrasikan dengan stockpile kosong |
+| Save/load | v13 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo; Classic v1–v13 dan Frontier v7–v13 migration matrix dijaga. Branch biaya menambahkan preferensi sumber secara optional tanpa bump versi; belum merged |
 | Kontrol | Rebind gerak, interaksi, serang, lari; shortcut UI/job/build belum dapat di-rebind |
 | Tampilan | Adaptive logical viewport = setengah ukuran client window, minimum 480×270, pixel scale tepat 2×; physical-display/fullscreen review belum dilakukan |
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 12 procedural SFX; musik belum ada |
 | Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | Mainline workflow #41314731305: 46/46 jobs sukses pada Godot 4.3/4.7, export dan diagnostic jobs ikut berjalan |
+| CI | Mainline workflow #41323473817: 50/50 jobs sukses setelah PR #33. Branch cost-source menargetkan 52 jobs setelah penambahan 1 assertion suite per engine; belum selesai |
 
 ## 3. Struktur
 ```
@@ -339,3 +339,14 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Active orders can be cancelled/refunded. If a depot disappears or cannot accept recovered stock, cargo is returned to Keep Inventory. Direct build/research spending from remote depots remains separate and is not implemented.
 - Save schema moves from v12 to v13: pending/history shipment records, reserved cargo and carrier position persist. Save v1–v12 remain compatible and load with an empty shipment ledger. Validator checks unique order IDs, resource kinds, amounts, statuses, cargo escrow, map cells and remote destination capacity reservations.
 - New regression: `tests/physical_shipments.gd` covers physical delivery, Keep withdrawal, cancellation/refund, capacity rejection, route interruption, save/load resume and invalid-cargo rejection. It runs in both Godot matrices and passed on Godot 4.3 and 4.7.
+
+
+## 29. Phase 02.2 — Explicit depot-funded costs (2026-11-01, implementation pending CI)
+- Branch: `feat/phase-02-depot-cost-sources`, based on main `6cde7b9020e98f267a0bfbe0499f1d1954e02c5c`.
+- A single source selector in `JOBS → POS` controls construction, technology research and building repair. It lists Keep, Storage and Outposts.
+- Frontier costs are paid entirely from the selected depot. Remote depots must be connected to the Keep. Partial balances from different depots are never combined; no source switching or implicit transfer occurs during payment. Classic continues using central Keep Inventory.
+- Remote multi-resource payment preflights the full cost before debiting and rolls back if a source withdrawal unexpectedly fails.
+- Destroying/removing the selected remote depot resets the selected source to Keep. A disconnected depot remains selected but cannot fund costs until its route returns.
+- The selected depot cell is an optional field inside save-v13 `supply` state. Older v13 saves without this field remain valid; no save version bump is required.
+- `tests/depot_cost_sources.gd` covers source selection, construction, research, no cross-depot pooling, atomic payment failure, disconnection rejection, UI selector presence and save/reload compatibility. It is added to both the blocking runner and Godot 4.3/4.7 CI matrix.
+- PR and CI validation have not yet completed. The CI target is 24 assertion suites per engine / 52 total jobs; do not treat the feature as merged until every check passes.

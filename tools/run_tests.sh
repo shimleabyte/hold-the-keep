@@ -44,6 +44,7 @@ tests=(
     local_depot_stockpiles
     outpost_garrisons
     physical_shipments
+    depot_cost_sources
 )
 
 for test_name in "${tests[@]}"; do

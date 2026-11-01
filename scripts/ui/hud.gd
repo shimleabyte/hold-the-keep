@@ -97,6 +97,7 @@ var _outpost_button: HudChip
 var _outpost_backdrop: ColorRect
 var _outpost_panel: Panel
 var _outpost_list: VBoxContainer
+var _cost_source_option: OptionButton
 var _shipment_source: OptionButton
 var _shipment_destination: OptionButton
 var _shipment_kind: OptionButton
@@ -154,6 +155,8 @@ func _ready() -> void:
     _build_outpost_panel()
 
     Events.resource_changed.connect(_on_resource_changed)
+    Events.supply_cost_source_changed.connect(_on_supply_state_changed)
+    Events.supply_stock_changed.connect(_on_supply_state_changed)
     Events.build_selected.connect(_on_build_selected)
     Events.build_feedback.connect(_show_message)
     Events.player_hp_changed.connect(_on_player_hp)
@@ -502,12 +505,21 @@ func _build_outpost_panel() -> void:
     close.pressed.connect(_toggle_outposts)
     _outpost_panel.add_child(close)
 
-    var hint := _label(_outpost_panel, "Stok lokal tidak otomatis menjadi inventori Keep.", Vector2(10, 22), Color("#c9b99d"))
-    hint.add_theme_font_size_override("font_size", 6)
-    hint.size = Vector2(336, 10)
+    var source_hint := _label(_outpost_panel, "SUMBER BIAYA", Vector2(10, 22), Color("#c9b99d"))
+    source_hint.add_theme_font_size_override("font_size", 6)
+    source_hint.size = Vector2(88, 12)
+
+    _cost_source_option = OptionButton.new()
+    _cost_source_option.position = Vector2(96, 19)
+    _cost_source_option.size = Vector2(252, 18)
+    _cost_source_option.add_theme_font_override("font", _font)
+    _cost_source_option.add_theme_font_size_override("font_size", 7)
+    _cost_source_option.tooltip_text = "Konstruksi dan riset membayar seluruh biaya dari depot ini saja."
+    _cost_source_option.item_selected.connect(_on_cost_source_selected)
+    _outpost_panel.add_child(_cost_source_option)
 
     var depot_scroll := ScrollContainer.new()
-    depot_scroll.position = Vector2(8, 35)
+    depot_scroll.position = Vector2(8, 39)
     depot_scroll.size = Vector2(340, 66)
     depot_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
     depot_scroll.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -692,6 +704,67 @@ func _refresh_depot_option(option: OptionButton, depots: Array, preferred: Vecto
     option.disabled = option.item_count < 2
 
 
+
+func _refresh_cost_source_controls(depots: Array) -> void:
+    if _cost_source_option == null:
+        return
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node == null or main_node.supply == null:
+        _cost_source_option.disabled = true
+        return
+    var selected_cell: Vector2i = main_node.supply.get_cost_source_cell()
+    var selected_index := -1
+    var keep_index := -1
+    _cost_source_option.clear()
+    for depot in depots:
+        var cell: Vector2i = depot.cell
+        var connected: bool = main_node.supply.is_depot_connected(depot)
+        var label := "KEEP" if String(depot.id) == "keep" else (
+            "POS %d,%d" % [cell.x, cell.y] if String(depot.id) == "outpost"
+            else "GUDANG %d,%d" % [cell.x, cell.y]
+        )
+        if not connected:
+            label += " · PUTUS"
+        _cost_source_option.add_item(label)
+        var index := _cost_source_option.item_count - 1
+        _cost_source_option.set_item_metadata(index, {"cx": cell.x, "cy": cell.y})
+        if not connected and cell != selected_cell:
+            _cost_source_option.set_item_disabled(index, true)
+        if String(depot.id) == "keep":
+            keep_index = index
+        if cell == selected_cell:
+            selected_index = index
+    if selected_index < 0 and keep_index >= 0:
+        for depot in depots:
+            if String(depot.id) == "keep":
+                main_node.supply.set_cost_source(depot.cell)
+                selected_index = keep_index
+                break
+    if selected_index >= 0:
+        _cost_source_option.select(selected_index)
+    _cost_source_option.disabled = WorldConfig.profile_id != "frontier" or depots.size() < 2
+
+
+func _on_cost_source_selected(index: int) -> void:
+    if _cost_source_option == null or index < 0:
+        return
+    var metadata: Variant = _cost_source_option.get_item_metadata(index)
+    if not (metadata is Dictionary):
+        return
+    var cell := Vector2i(int(metadata.get("cx", -1)), int(metadata.get("cy", -1)))
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node == null or not main_node.supply.set_cost_source(cell):
+        _show_message("Depot sumber biaya tidak terhubung")
+        _refresh_outpost_panel()
+        return
+    _show_message("Biaya konstruksi dan riset: " + main_node.supply.cost_source_label())
+    _refresh_slots()
+
+
+func _on_supply_state_changed() -> void:
+    _refresh_slots()
+
+
 func _refresh_shipment_controls() -> void:
     if _shipment_source == null or _shipment_destination == null or _shipment_orders_list == null:
         return
@@ -708,6 +781,7 @@ func _refresh_shipment_controls() -> void:
             return a.cell.y < b.cell.y
         return a.cell.x < b.cell.x
     )
+    _refresh_cost_source_controls(endpoints)
     _shipment_refreshing = true
     _refresh_depot_option(_shipment_source, endpoints, previous_source, 0)
     _refresh_depot_option(_shipment_destination, endpoints, previous_destination, 1)
@@ -1145,7 +1219,9 @@ func _refresh_slots() -> void:
     for id in _slots:
         var slot: BuildSlot = _slots[id]
         slot.selected = id == _selected
-        slot.affordable = Inventory.can_afford(DataDB.cost_of(id))
+        var cost: Dictionary = DataDB.cost_of(id)
+        var supply = get_tree().get_first_node_in_group("supply_network")
+        slot.affordable = supply.can_pay_cost(cost) if supply != null else Inventory.can_afford(cost)
         slot.queue_redraw()
 
 
