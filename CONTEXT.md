@@ -12,7 +12,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Tujuan pemain: bertahan 15 hari, di malam ke-15 kalahkan Raja Lawan. Keep hancur = kalah.
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
-## 2. Status fitur (semua ada dan teruji headless)
+## 2. Status fitur (implementasi aktif; status verifikasi per suite dicatat di bagian 6)
 | Area | Isi |
 |---|---|
 | Dunia | peta 64x64 prosedural (seed 1337): rumput, kolam (collision), pohon, batu |
@@ -43,7 +43,7 @@ scripts/autoload/      InputSetup, Events (signal bus), DataDB (JSON), Settings,
 scripts/world/         world_map.gd (tileset dari tiles.svg, noise, pohon/batu, occupied dict)
 scripts/systems/       flow_field (Dijkstra musuh), nav_grid (AStarGrid2D villager), build_system, territory,
                        fog_of_war (peta permanen), village/expedition, wave_spawner, event_manager
-scripts/entities/      player, enemy, enemy_keep (stronghold/garrison source), villager (expedition), building, resource_tree, rock, iron_ore, arrow, corpse,
+scripts/entities/      player, enemy, enemy_keep (stronghold/garrison source), villager (expedition/recall), building, resource_tree, rock, iron_ore, arrow, corpse,
                        fx_layer, sprite_anim
 scripts/ui/            hud.gd, tech_panel.gd, pause_menu.gd, pixel_font.gd
 data/                  buildings.json, enemies.json, waves.json, events.json, techs.json
@@ -53,7 +53,7 @@ tools/                 gen_assets.py (generator SVG), build.sh, build.ps1
 tests/                 skrip tes headless dan screenshot (lihat tests/README.md)
 ```
 Grup node yang dipakai lintas skrip: `main`, `hud`, `village`, `buildings`, `depots`, `farms`,
-`harvestable`, `enemies`, `villagers`, `defenders`.
+`harvestable`, `enemies`, `enemy_garrison`, `enemy_strongholds`, `villagers`, `defenders`, `fog_of_war`.
 
 ## 4. Konvensi arsitektur
 - **Signal bus**: sistem berkomunikasi lewat `Events` (resource_changed, building_*, village_changed,
@@ -98,8 +98,8 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `village`, `buildings`, `dep
 ## 6. Cara memverifikasi
 - Jalankan: `godot --headless --path . --import` sekali, lalu `godot --headless --fixed-fps 60 --path . --script tests/<x>.gd`.
 - Render nyata lewat Xvfb + OpenGL software untuk screenshot (lihat tests/README.md).
-- Semua suite terakhir lolos di 4.3 dan (yang relevan) di 4.7. Perf: ~2 ms/frame untuk 150 musuh +
-  42 villager + 300 partikel (headless, tanpa render).
+- Base suite sebelumnya tercatat lolos di Godot 4.3 dan (yang relevan) 4.7; perubahan campaign menambah `tests/campaign_assault.gd`. Tes baru ini belum dijalankan pada sesi implementasi ini karena executable Godot tidak tersedia di environment kerja. Jalankan seluruh suite setelah pull branch.
+- Angka perf historis: ~2 ms/frame untuk 150 musuh + 42 villager + 300 partikel (headless, tanpa render); belum mengukur biaya fog/campaign.
 - Setelah mengubah `tools/gen_assets.py`: `python3 tools/gen_assets.py`, lalu import ulang.
 
 ## 7. Keputusan penting dan alasannya
