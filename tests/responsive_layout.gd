@@ -19,10 +19,8 @@ func _initialize() -> void:
         "Pixel-art world rendering must remain viewport-based")
     assert(String(ProjectSettings.get_setting("display/window/stretch/scale_mode")) == "integer",
         "Pixel-art scaling must remain integer-based")
-    assert(int(ProjectSettings.get_setting("display/window/size/min_width")) >= 960,
-        "Window minimum width must remain laptop-friendly")
-    assert(int(ProjectSettings.get_setting("display/window/size/min_height")) >= 540,
-        "Window minimum height must remain laptop-friendly")
+    assert(root.min_size.x >= 960 and root.min_size.y >= 540,
+        "Runtime window minimum size must remain laptop-friendly")
     assert(int(ProjectSettings.get_setting("display/window/size/initial_position_type")) == 1,
         "The initial window must be centered on the primary screen")
     assert(Settings.windowed_size.x >= 960 and Settings.windowed_size.y >= 540,
