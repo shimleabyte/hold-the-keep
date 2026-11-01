@@ -28,9 +28,10 @@ Make the expanded 128×128 Frontier campaign predictable under load and safe to 
 ### 09.3 — Save and recovery hardening
 - [x] Validate the current save structure and legacy schemas v1–v11 in Classic, plus v7–v11 in Frontier.
 - [x] Exercise the interrupted-write window: valid primary save plus an incomplete `save.tmp`.
+- [x] Add an end-to-end Frontier reload pass preserving completed objectives, unlocked act, an active escort/path index and damaged stronghold HP.
 - [x] Verify the next save removes stale temporary data, rotates a valid backup and leaves a valid primary.
 - [x] Verify corrupt-primary detection and backup eligibility.
-- [ ] Add an end-to-end reload pass at multiple points in a Frontier campaign, including active escort/site state, conquered strongholds and the final-boss gate.
+- [ ] Extend reload coverage to later acts, conquered strongholds and the final-boss gate.
 - [ ] Run the migration matrix on both supported Godot versions.
 
 ### 09.4 — Release export hardening
