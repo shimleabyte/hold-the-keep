@@ -67,7 +67,7 @@ func spawn_enemy(main: Node, enemy_id: String, faction_id: String, cell: Vector2
 
 
 func spawn_workload(main: Node, profile: String, enemy_count: int, villager_count: int) -> void:
-    var per_faction := maxi(0, enemy_count / FACTION_IDS.size())
+    var per_faction := maxi(0, floori(float(enemy_count) / float(FACTION_IDS.size())))
     if profile == "frontier":
         for faction_id in FACTION_IDS:
             var faction: Dictionary = FactionRegistry.factions.get(faction_id, {})
@@ -88,12 +88,13 @@ func spawn_workload(main: Node, profile: String, enemy_count: int, villager_coun
         main.village.spawn_villager(
             keep_position + Vector2(float(column * 5), float(row * 5))
         )
+    var labor_quota := mini(20, floori(float(villager_count) / 4.0))
     main.village.quota = {
-        "woodcutter": mini(20, villager_count / 4),
-        "miner": mini(20, villager_count / 4),
-        "farmer": mini(20, villager_count / 4),
+        "woodcutter": labor_quota,
+        "miner": labor_quota,
+        "farmer": labor_quota,
         "builder": 0,
-        "soldier": mini(20, villager_count - 3 * (villager_count / 4))
+        "soldier": mini(20, villager_count - 3 * labor_quota)
     }
     main.village.assign_jobs()
 
