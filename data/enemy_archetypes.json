@@ -29,9 +29,15 @@
     "scale": 1.35,
     "role": "melee",
     "range": 14.0,
-    "armor": 0.42,
+    "armor": 0.18,
     "stagger_resistance": 0.72,
-    "structure_damage_mult": 1.0
+    "structure_damage_mult": 1.0,
+    "brace_trigger_range": 64.0,
+    "brace_windup": 0.55,
+    "brace_duration": 1.05,
+    "brace_cooldown": 4.2,
+    "brace_damage_multiplier": 0.45,
+    "brace_front_dot": 0.5
   },
   {
     "id": "enemy_saboteur",

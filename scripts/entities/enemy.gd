@@ -17,6 +17,7 @@ const TEXTURES := {
 }
 const PLAYER_REACH := 12.0
 const ATTACK_HIT_DELAY := 0.14
+const SHIELD_TARGET_RANGE := 96.0
 const WALK_BASE_SPEED := 32.0
 const RUN_BASE_SPEED := 58.0
 
@@ -55,6 +56,12 @@ var projectile_speed := 120.0
 var armor := 0.0
 var stagger_resistance := 0.0
 var structure_damage_mult := 1.0
+var shield_brace_trigger_range := 64.0
+var shield_brace_windup_duration := 0.55
+var shield_brace_duration := 1.05
+var shield_brace_cooldown_duration := 4.2
+var shield_brace_damage_multiplier := 0.45
+var shield_brace_front_dot := 0.5
 
 var world
 var flow
@@ -73,6 +80,10 @@ var _pending_is_projectile := false
 var _pounce_windup_t := 0.0
 var _pounce_t := 0.0
 var _pounce_dir := Vector2.ZERO
+var _brace_windup_t := 0.0
+var _brace_t := 0.0
+var _brace_cd := 0.0
+var _brace_dir := Vector2.ZERO
 var _tex: Texture2D
 var _fw := 20
 var _fh := 20
@@ -107,6 +118,16 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     armor = clampf(float(data.get("armor", 0.0)), 0.0, 0.8)
     stagger_resistance = clampf(float(data.get("stagger_resistance", 0.0)), 0.0, 0.9)
     structure_damage_mult = maxf(1.0, float(data.get("structure_damage_mult", 1.0)))
+    shield_brace_trigger_range = clampf(float(data.get("brace_trigger_range", 64.0)), 24.0, 110.0)
+    shield_brace_windup_duration = clampf(float(data.get("brace_windup", 0.55)), 0.2, 1.5)
+    shield_brace_duration = clampf(float(data.get("brace_duration", 1.05)), 0.3, 2.0)
+    shield_brace_cooldown_duration = clampf(float(data.get("brace_cooldown", 4.2)), 1.0, 12.0)
+    shield_brace_damage_multiplier = clampf(float(data.get("brace_damage_multiplier", 0.45)), 0.1, 1.0)
+    shield_brace_front_dot = clampf(float(data.get("brace_front_dot", 0.5)), 0.1, 0.95)
+    _brace_windup_t = 0.0
+    _brace_t = 0.0
+    _brace_cd = 0.0
+    _brace_dir = Vector2.ZERO
     world = world_ref
     flow = flow_ref
     player = player_ref
@@ -138,6 +159,7 @@ func _physics_process(delta: float) -> void:
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _hurt_t = maxf(0.0, _hurt_t - delta)
     _support_cd = maxf(0.0, _support_cd - delta)
+    _brace_cd = maxf(0.0, _brace_cd - delta)
     _resolve_pending(delta)
     _moving = false
 
@@ -161,6 +183,12 @@ func _physics_process(delta: float) -> void:
 
     if is_supply_raider:
         _tick_supply_raid(delta)
+        _update_anim(delta)
+        _footsteps(delta)
+        return
+
+    if archetype == "shieldbearer":
+        _tick_shieldbearer(delta)
         _update_anim(delta)
         _footsteps(delta)
         return
@@ -274,6 +302,76 @@ func _tick_flow(delta: float) -> void:
             _begin_attack(occupied, occupied.position - position)
         return
     _move_toward(Vector2(next) * WorldConfig.tile_size + Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0) + _offset, delta)
+
+
+func _nearest_shield_target() -> Node2D:
+    if is_garrison:
+        return _nearest_guard_target()
+    var candidates := get_tree().get_nodes_in_group("defenders")
+    if player != null and is_instance_valid(player):
+        candidates.append(player)
+    return ENEMY_TARGETING.nearest(self, candidates, SHIELD_TARGET_RANGE)
+
+
+func _tick_shieldbearer(delta: float) -> void:
+    if _brace_t > 0.0:
+        _brace_t = maxf(0.0, _brace_t - delta)
+        _moving = false
+        if _brace_t <= 0.0:
+            _brace_dir = Vector2.ZERO
+        queue_redraw()
+        return
+
+    var target := _nearest_shield_target()
+    if _brace_windup_t > 0.0:
+        if target == null or position.distance_to(target.position) > shield_brace_trigger_range + 24.0:
+            _brace_windup_t = 0.0
+            _brace_cd = minf(_brace_cd, 0.8)
+            _brace_dir = Vector2.ZERO
+        else:
+            var windup_direction := target.position - position
+            if windup_direction.length_squared() > 0.01:
+                _brace_dir = windup_direction.normalized()
+                anim.face(_brace_dir)
+            _brace_windup_t = maxf(0.0, _brace_windup_t - delta)
+            if _brace_windup_t <= 0.0:
+                _brace_t = shield_brace_duration
+                Events.fx_burst.emit("stone", position + Vector2(0, -6), -_brace_dir, 0.55)
+            queue_redraw()
+            return
+
+    if target == null:
+        if is_garrison:
+            if position.distance_to(guard_origin) > 16.0:
+                _move_toward(guard_origin, delta)
+        else:
+            _tick_flow(delta)
+        return
+
+    var to_target := target.position - position
+    var distance := to_target.length()
+    if distance <= _attack_reach():
+        _begin_attack(target, to_target)
+        return
+
+    if distance <= shield_brace_trigger_range and _brace_cd <= 0.0:
+        _brace_dir = to_target.normalized() if distance > 0.01 else Vector2.DOWN
+        anim.face(_brace_dir)
+        _brace_windup_t = shield_brace_windup_duration
+        _brace_cd = shield_brace_cooldown_duration
+        Events.fx_burst.emit("dust", position + Vector2(0, -3), -_brace_dir, 0.55)
+        queue_redraw()
+        return
+
+    if is_garrison:
+        if position.distance_to(guard_origin) <= 150.0:
+            _move_toward(target.position, delta)
+        else:
+            _move_toward(guard_origin, delta)
+    elif distance <= SHIELD_TARGET_RANGE:
+        _move_toward(target.position, delta)
+    else:
+        _tick_flow(delta)
 
 
 func _tick_shaman_support() -> bool:
@@ -410,6 +508,11 @@ func apply_stagger(duration: float) -> void:
     _pending_t = 0.0
     _pounce_windup_t = 0.0
     _pounce_t = 0.0
+    if archetype == "shieldbearer":
+        _brace_windup_t = 0.0
+        _brace_t = 0.0
+        _brace_cd = maxf(_brace_cd, 1.1)
+        _brace_dir = Vector2.ZERO
     _hurt_t = maxf(_hurt_t, duration * 0.5)
     anim.play("hurt", true)
 
@@ -461,11 +564,29 @@ func receive_healing(amount: int) -> void:
 
 
 func take_damage(amount: int) -> void:
+    _take_damage_from(amount, Vector2.ZERO)
+
+
+func take_damage_from(amount: int, source_position: Vector2) -> void:
+    _take_damage_from(amount, source_position)
+
+
+func _take_damage_from(amount: int, source_position: Vector2) -> void:
     if hp <= 0:
         return
-    var applied := maxi(1, roundi(float(amount) * (1.0 - armor)))
+    var damage_multiplier := 1.0 - armor
+    var blocked_by_shield := false
+    if archetype == "shieldbearer" and _brace_t > 0.0 and source_position != Vector2.ZERO:
+        var incoming_direction := (source_position - global_position).normalized()
+        blocked_by_shield = incoming_direction.dot(_brace_dir) >= shield_brace_front_dot
+    if blocked_by_shield:
+        damage_multiplier *= shield_brace_damage_multiplier
+    var applied := maxi(1, roundi(float(amount) * damage_multiplier))
     hp -= applied
-    Events.fx_burst.emit("impact", position + Vector2(0, -_fh * 0.4), Vector2.ZERO, 2.0 if is_boss else 1.0)
+    if blocked_by_shield:
+        Events.fx_burst.emit("stone", position + Vector2(0, -_fh * 0.4), -_brace_dir, 0.8)
+    else:
+        Events.fx_burst.emit("impact", position + Vector2(0, -_fh * 0.4), Vector2.ZERO, 2.0 if is_boss else 1.0)
     modulate = Color(1.8, 1.8, 1.8)
     create_tween().tween_property(self, "modulate", _faction_tint, 0.12)
     queue_redraw()
@@ -526,6 +647,18 @@ func _draw() -> void:
         "beast_rider":
             draw_line(Vector2(-5, -12), Vector2(-10, -17), color, 1.5)
             draw_line(Vector2(5, -12), Vector2(10, -17), color, 1.5)
+    if archetype == "shieldbearer" and (_brace_windup_t > 0.0 or _brace_t > 0.0):
+        var brace_center := Vector2(0, -_fh * 0.55)
+        var brace_angle := _brace_dir.angle()
+        if _brace_windup_t > 0.0:
+            draw_arc(brace_center, 17.0, brace_angle - 0.82, brace_angle + 0.82,
+                12, Color("#d8bd87"), 1.5)
+            draw_line(brace_center, brace_center + _brace_dir * 20.0, Color("#f0d7a5"), 2.0)
+        else:
+            draw_arc(brace_center, 18.0, brace_angle - 0.92, brace_angle + 0.92,
+                12, Color("#d8bd87"), 2.0)
+            draw_arc(brace_center, 22.0, brace_angle - 0.72, brace_angle + 0.72,
+                12, Color("#8795a5"), 1.0)
     if role == "ranged":
         draw_arc(Vector2(7, -11), 4.0, -PI * 0.55, PI * 0.55, 7, Color("#91c99a"), 1.0)
         draw_line(Vector2(7, -15), Vector2(7, -7), Color("#d9e7c8"), 1.0)

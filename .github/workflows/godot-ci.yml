@@ -78,6 +78,7 @@ jobs:
           - physical_shipments
           - depot_cost_sources
           - supply_pressure
+          - shieldbearer_behavior
     steps:
       - name: Checkout
         uses: actions/checkout@v7

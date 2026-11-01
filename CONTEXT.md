@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` after PR #34 merge at `67be2de`; Phase 02 local logistics, Outpost garrisons, physical shipments and explicit depot-funded costs are merged through PRs #31–#34; save schema v13. PR #34 workflow [#41325205416](https://github.com/shimleabyte/hold-the-keep/actions/runs/41325205416) passed 52/52 jobs on Godot 4.3/4.7. See `ROADMAP_NEXT_LEVEL.md` and `docs/plans/` for current phase status.
+**Current source of truth:** default branch `main` after PR #35 merge at `2ba5628`; Phase 02 local logistics, Outpost garrisons, physical shipments, depot-funded costs and contested-depot supply pressure are merged; save schema v13. PR #35 workflow [#41328005585](https://github.com/shimleabyte/hold-the-keep/actions/runs/41328005585) passed 54/54 jobs on Godot 4.3/4.7. Current development branch: `feat/phase-06-shieldbearer-brace` (pending CI). See `ROADMAP_NEXT_LEVEL.md` and `docs/plans/` for current phase status.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -15,18 +15,18 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #34 (save schema v13; status per 1 November 2026). Phase 02.5 work is on `feat/phase-02-supply-pressure` and is not merged.
+Ringkasan implementasi aktual pada `main` setelah PR #35 (save schema v13; status per 1 November 2026). Shieldbearer brace sedang dikembangkan pada `feat/phase-06-shieldbearer-brace` dan belum masuk `main`.
 
 | Area | Kondisi saat ini |
 |---|---|
 | Dunia | Classic 64×64 / 15 hari tetap tersedia; Frontier 128×128 / 20 hari / 4 act dengan lima biome deterministik, 32 urat besi, dan starting Keep claim radius 15 |
 | Wilayah | Regional ownership neutral/player/enemy/contested; roads/bridges walkable; supply graph dari Keep; depot terputus tidak menerima deposit |
-| Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit Keep/Storage/Outpost cost source for construction/research/repair is merged; deterministic contested-depot warning and targeted saboteur raids are implemented on a pending branch |
+| Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit Keep/Storage/Outpost cost source for construction/research/repair is merged; deterministic contested-depot warning and targeted Saboteur raids merged through PR #35 |
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
-| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman support berjalan; perilaku khusus seluruh archetype, camps, patrol, raids dan counterattacks belum lengkap |
+| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman support berjalan; Shieldbearer directional brace sedang menunggu CI pada branch pengembangan; Scout/Siege Engine/Beast Rider policies, camps, patrols and broader counterattacks remain incomplete |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
 | Save/load | v13 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo; Classic v1–v13 dan Frontier v7–v13 migration matrix dijaga. PR #34 adds optional cost-source preference without a save-version bump; earlier v13 snapshots without it remain valid |
@@ -35,7 +35,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #34 (save schema v13; statu
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 12 procedural SFX; musik belum ada |
 | Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | PR #34 workflow #41325205416: 52/52 jobs successful, including 24 assertion suites on each of Godot 4.3 and 4.7. Phase 02.5 adds a 25th suite per engine; branch CI pending |
+| CI | PR #35 workflow #41328005585: 54/54 jobs successful, including 25 assertion suites on each of Godot 4.3 and 4.7. Shieldbearer branch adds suite #26 per engine; CI pending |
 
 ## 3. Struktur
 ```
@@ -361,3 +361,15 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Reconnecting to the Keep or reclaiming territory resets pressure and recalls active saboteurs. UI exposes TERPUTUS / TERPENCIL / ANCAMAN RAID / DIGEMPUR states on JOBS → POS.
 - Save v13 gains optional pressure records and active saboteur target/hit-progress fields. Validator checks bounded pressure records, unique depot coordinates, valid cells, raid counts, and valid Storage/Outpost targets. Older v13 saves without these fields remain supported.
 - `tests/supply_pressure.gd` is added to the blocking runner and both Godot CI matrices. Coverage: warning lead time, targeted spawn, fixed theft order, bounded repeat raid timing, UI state, save validation/load and recovery. CI has not completed; manual render/gameplay review is still required.
+
+
+## 31. Phase 02.5 — Contested depot supply pressure (2026-11-01)
+- Merged into `main` via PR #35 at `2ba5628`; workflow #41328005585 passed 54/54 jobs, including 25 assertion suites per Godot version, import/parse, Frontier performance diagnostic and Windows/Linux export.
+- Frontier-only pressure targets disconnected Storage/Outposts under enemy/contested control; warnings precede targeted Saboteur dispatch, raids are capped at two per isolation, and reconnection/reclaim recalls attackers.
+- Save v13 optionally preserves pressure timers and active Saboteur raid state. Manual rendered gameplay review remains open.
+
+## 32. Phase 06.2 — Shieldbearer directional brace (2026-11-01, branch pending CI)
+- Branch: `feat/phase-06-shieldbearer-brace`, based on main after PR #35.
+- Shieldbearer now uses a data-defined telegraphed brace, locks a facing direction during its active window, and mitigates frontal damage while leaving side/rear attacks more effective.
+- Player attacks, Dash, Cleave and tower arrows pass their source position. Stagger interrupts the brace; target disengagement cancels an unfinished wind-up.
+- New regression `tests/shieldbearer_behavior.gd` covers telegraph, facing, frontal mitigation, flank/rear damage, stagger interruption and disengage recovery. CI and merge remain pending.

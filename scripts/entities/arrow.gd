@@ -22,7 +22,10 @@ func _physics_process(delta: float) -> void:
     var to := aim - global_position
     var dist := to.length()
     if dist < 4.0:
-        target.take_damage(damage)
+        if target.has_method("take_damage_from"):
+            target.take_damage_from(damage, global_position)
+        else:
+            target.take_damage(damage)
         queue_free()
         return
     rotation = to.angle()
