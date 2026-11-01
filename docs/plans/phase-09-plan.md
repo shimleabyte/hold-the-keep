@@ -1,8 +1,8 @@
 # Phase 09 — Balance, Performance and Release Hardening
 
-**Status:** Automated regression, save recovery, CI profiling and template-backed desktop exports are implemented and have passed workflow run #271. Target-hardware profiling, full act-by-act combat outcome review and manual release acceptance remain open.
-**Branch:** `feat/phase-09-balance-performance-release-v5`
-**Base:** `feat/phase-07-conquest-objectives` (stacked so the test line includes the Frontier campaign and v11 save schema).
+**Status:** Automated regression, save recovery, CI profiling and template-backed desktop exports are merged through PR #29. Current `main` baseline workflow #294 passed 44/44 jobs. Target-hardware profiling, full act-by-act combat outcome review, native Windows runtime and manual release acceptance remain open.
+**Mainline:** `main` (merged); run a focused release-acceptance branch for remaining gates.
+**Save schema:** v12 after the Phase 02 local-depot-stockpile slice in the current implementation PR.
 **Engine targets:** Godot 4.3 and 4.7.
 
 ## Goal
@@ -28,7 +28,7 @@ Make the expanded 128×128 Frontier campaign predictable under load and safe to 
 - [ ] Perform human playtests across all four acts; automated simulations are not a substitute for pathing, readability and pacing review.
 
 ### 09.3 — Save and recovery hardening
-- [x] Validate the current save structure and legacy schemas v1–v11 in Classic, plus v7–v11 in Frontier.
+- [x] Validate the current save structure and legacy schemas v1–v12 in Classic, plus v7–v12 in Frontier.
 - [x] Exercise the interrupted-write window: valid primary save plus an incomplete `save.tmp`.
 - [x] Add an end-to-end Frontier reload pass preserving completed objectives, unlocked act, an active escort/path index and damaged stronghold HP.
 - [x] Verify the next save removes stale temporary data, rotates a valid backup and leaves a valid primary.
@@ -72,7 +72,7 @@ The benchmark is diagnostic by design. CI must validate bounded counts and funct
 
 ## Current blockers / honesty of verification
 
-The connected GitHub Actions runner executed the Godot 4.3/4.7 import/parse and configured regression matrix, produced Windows/Linux exports using matching Godot 4.3 templates, verified the PE format, and smoke-tested Linux. The updated workflow run #278 sustained the full 500-particle ceiling. No target-hardware frame-time result, Windows runtime test or manual playtest is claimed.
+The latest completed mainline baseline workflow #294 executed 44 successful jobs, including Godot 4.3/4.7 import/parse and regression coverage, Frontier performance diagnostics, and Windows/Linux export checks. The Phase 02 stockpile PR adds one regression test per engine and updates the save schema to v12; its own CI results must be used for acceptance. No target-hardware frame-time result, native Windows runtime test or full manual playtest is claimed.
 
 
 ## CI evidence

@@ -304,6 +304,8 @@ func _apply_save(d: Dictionary) -> void:
     for b in d["buildings"]:
         var node = build.place_raw(b["id"], Vector2i(int(b["cx"]), int(b["cy"])))
         node.hp = int(b["hp"])
+        if int(d.get("version", 0)) >= 12:
+            node.import_stockpile(b.get("stockpile", {}))
         node.queue_redraw()
         if node.id == "keep":
             Events.keep_hp_changed.emit(node.hp, node.max_hp)

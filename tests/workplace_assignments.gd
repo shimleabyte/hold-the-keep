@@ -102,7 +102,7 @@ func _initialize() -> void:
         "Soldier must be stored as a military specialization")
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 11, "Phase 07 campaign state must increment saves to version 11")
+    assert(snapshot["version"] == 12, "Current campaign and depot state must increment saves to version 12")
     assert(snapshot["job_priority"][2] == "builder", "Save must persist job priority")
     var has_saved_builder := false
     var has_saved_soldier := false
@@ -111,7 +111,7 @@ func _initialize() -> void:
         has_saved_soldier = has_saved_soldier or String(saved_villager.get("military_specialization", "")) == "soldier"
     assert(has_saved_builder and has_saved_soldier,
         "Save must persist both labor occupation and military specialization")
-    assert(save_system._valid_save(snapshot), "Builder/soldier role save must pass v11 validation")
+    assert(save_system._valid_save(snapshot), "Builder/soldier role save must pass v12 validation")
 
     print("PASS: Builder workplaces, repair material, work radius, reachable depot, role split and priority persistence")
     quit()

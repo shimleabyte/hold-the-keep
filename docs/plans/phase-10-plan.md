@@ -1,7 +1,7 @@
 # Phase 10 — Resolution-Matched Viewport and HUD Safe Area
 
-**Branch:** `feat/phase-10-adaptive-viewport-mainline`  
-**Base:** `feat/phase-09-balance-performance-release-mainline`  
+**Status:** Implementation merged through PR #30 into `main`; mainline workflow #294 passed 44/44 jobs. Manual physical-display screenshots and fullscreen playtest remain open.  
+**Mainline:** `main`  
 **Engine targets:** Godot 4.3 and 4.7
 
 ## Problem

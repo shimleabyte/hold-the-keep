@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 11
+const VERSION := 12
 
 var pending: Dictionary = {}
 
@@ -100,7 +100,7 @@ func _has_keep() -> bool:
 func collect(main: Node) -> Dictionary:
     var buildings: Array = []
     for building in get_tree().get_nodes_in_group("buildings"):
-        buildings.append({"id": building.id, "cx": building.cell.x, "cy": building.cell.y, "hp": building.hp})
+        buildings.append({"id": building.id, "cx": building.cell.x, "cy": building.cell.y, "hp": building.hp, "stockpile": building.export_stockpile()})
 
     var villagers: Array = []
     for villager in get_tree().get_nodes_in_group("villagers"):
@@ -256,6 +256,19 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             return false
         if not DataDB.buildings.has(String(building["id"])):
             return false
+        if version >= 12:
+            var stockpile = building.get("stockpile", null)
+            if not (stockpile is Dictionary):
+                return false
+            var stockpile_total := 0
+            var stockpile_limit := int(DataDB.buildings[String(building["id"])].get("stockpile_capacity", 0))
+            for kind in stockpile:
+                var amount := int(stockpile[kind])
+                if not ["wood", "stone", "food", "iron"].has(String(kind)) or amount < 0:
+                    return false
+                stockpile_total += amount
+            if stockpile_total > stockpile_limit or (stockpile_total > 0 and stockpile_limit <= 0):
+                return false
     for villager in villagers:
         if not (villager is Dictionary):
             return false

@@ -89,7 +89,8 @@
     "work_radius": 8,
     "repair_cost": {
       "wood": 1
-    }
+    },
+    "stockpile_capacity": 180
   },
   {
     "id": "farm",
@@ -130,7 +131,8 @@
     "work_radius": 10,
     "repair_cost": {
       "wood": 1
-    }
+    },
+    "stockpile_capacity": 120
   },
   {
     "id": "stone_wall",

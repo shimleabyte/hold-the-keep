@@ -41,6 +41,7 @@ tests=(
     world_config
     frontier_world
     regional_control_roads
+    local_depot_stockpiles
 )
 
 for test_name in "${tests[@]}"; do
