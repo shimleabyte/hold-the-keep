@@ -10,6 +10,9 @@ func _ready() -> void:
     _add("interact", [KEY_E, KEY_SPACE], [JOY_BUTTON_A], [])
     _add("attack", [KEY_F], [JOY_BUTTON_X], [])
     _add("sprint", [KEY_SHIFT], [JOY_BUTTON_LEFT_SHOULDER], [])
+    _add("ability_dash", [KEY_Q], [JOY_BUTTON_B], [])
+    _add("ability_cleave", [KEY_C], [JOY_BUTTON_Y], [])
+    _add("ability_rally", [KEY_V], [JOY_BUTTON_RIGHT_SHOULDER], [])
     var click := InputEventMouseButton.new()
     click.button_index = MOUSE_BUTTON_LEFT
     InputMap.action_add_event("attack", click)
