@@ -34,7 +34,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - R: mulai ulang setelah game over | L: muat save terakhir dari layar game over
 
 ## Tampilan dan resolusi
-Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 16:9 dan 16:10; resolusi jendela tersimpan, sedangkan fullscreen tetap terpisah. Rendering pixel-art tetap memakai viewport 480×270 dan integer scaling. Aspect `expand` memperluas area dunia pada rasio layar yang lebih lebar/tinggi tanpa meregangkan sprite. HUD, hotbar, indikator bab, peta, menu teknologi, dan menu jeda mengikuti viewport yang terlihat.
+Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 16:9, 16:10, dan 4:3; resolusi jendela tersimpan, sedangkan fullscreen tetap terpisah. Rendering pixel-art tetap memakai viewport 480×270 dan integer scaling. Aspect `expand` memperluas area dunia pada rasio layar yang lebih lebar/tinggi tanpa meregangkan sprite. HUD, hotbar, indikator bab, peta, menu teknologi, dan menu jeda mengikuti viewport yang terlihat.
 
 ## Sistem permainan
 
