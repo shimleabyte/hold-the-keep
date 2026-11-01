@@ -126,12 +126,14 @@ func _initialize() -> void:
     local_enemy.queue_free()
     await ticks(2)
     guard._tick_fight(0.31)
-    assert(guard.state == guard.State.IDLE,
-        "A guard must return to its local idle state when no in-radius enemies remain")
+    assert(guard.state == guard.State.IDLE and guard._path.is_empty(),
+        "A guard must clear its chase path and return to its local idle state when no in-radius enemies remain")
     distant_enemy.queue_free()
     await ticks(2)
 
     var fog = get_first_node_in_group("fog_of_war")
+    if fog != null:
+        fog._scan_sources()
     assert(fog != null and fog.is_revealed_cell(outpost.cell + Vector2i(3, 0)),
         "An Outpost must reveal its bounded local visibility radius")
     var hud = get_first_node_in_group("hud")
