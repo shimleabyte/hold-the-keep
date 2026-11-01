@@ -64,7 +64,7 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 
 ### Simpanan dan pengaturan
 - Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
-- Save versi 10 menyimpan world/campaign state, pekerjaan, prioritas kerja, state bangunan/resource, dan identitas faksi musuh; save versi 1–9 tetap diterima melalui jalur kompatibilitas.
+- Save versi 11 menyimpan world/campaign state, objektif regional, situs dan progres pengawalan, pekerjaan, state bangunan/resource, serta identitas faksi musuh; save versi 1–10 tetap diterima melalui jalur kompatibilitas.
 - Penulisan save memakai file sementara dan salinan pemulihan; loader mencoba salinan tersebut bila file utama rusak.
 - Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
@@ -75,7 +75,7 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 3. Hasil: `build/windows/HoldTheKeep.exe` dan `build/linux/HoldTheKeep.x86_64` (PCK tertanam)
 
 ## Teknologi
-Pohon riset 17 teknologi dalam 3 era (data/techs.json), dibuka dengan Y:
+Pohon riset 20 teknologi dalam 3 era (data/techs.json), dibuka dengan Y:
 - **Era Kayu** (awal): perkakas, bajak, palisade, rumah panjang, panah berbulu, dan **Ilmu Batu** (naik era)
 - **Era Batu**: perkakas batu, lumbung, menara batu, zirah kulit, latihan prajurit, dan **Tambang Besi** (naik era)
 - **Era Besi**: perkakas, senjata, zirah, menara, dan benteng besi (sebagian butuh bangunan Tempa)
