@@ -105,9 +105,9 @@ func restore_enemy(d: Dictionary) -> void:
     var e := ENEMY_SCRIPT.new()
     if bool(d.get("garrison", false)):
         var origin := Vector2(float(d.get("guard_x", d["x"])), float(d.get("guard_y", d["y"])))
-        e.setup_guard(DataDB.enemies[d["id"]], world, flow, player, origin)
+        e.setup_guard(DataDB.enemies[d["id"]], world, flow, player, origin, String(d.get("faction", "")))
     else:
-        e.setup(DataDB.enemies[d["id"]], world, flow, player)
+        e.setup(DataDB.enemies[d["id"]], world, flow, player, String(d.get("faction", "")))
     e.position = Vector2(float(d["x"]), float(d["y"]))
     e.hp = int(d["hp"])
     world.entities.add_child(e)
