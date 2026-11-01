@@ -66,6 +66,19 @@ func _initialize() -> void:
     require(storage.stockpile_amount("wood") == 5,
         "A partial withdrawal must preserve the remaining local balance")
 
+    var central_wood_before: int = inventory.get_amount("wood")
+    var central_stone_before: int = inventory.get_amount("stone")
+    var transferred := main.supply.transfer_local_stockpiles()
+    require(transferred == 6,
+        "A connected remote depot must transfer no more than its six-unit interval budget")
+    require(inventory.get_amount("wood") == central_wood_before + 5
+        and inventory.get_amount("stone") == central_stone_before + 1,
+        "The bounded transfer must credit exact quantities to central inventory")
+    require(storage.stockpile_amount("wood") == 0 and storage.stockpile_amount("stone") == 172,
+        "The transfer must remove the same quantities from the source depot")
+    require(storage.store_resource("wood", 5),
+        "The remaining depot must still accept new local deposits after a shipment")
+
     var snapshot: Dictionary = save_system.collect(main)
     require(snapshot["version"] == 12, "Local depot state must use save schema v12")
     var saved_storage: Dictionary = {}
@@ -110,8 +123,8 @@ func _initialize() -> void:
             restored_storage = building
             break
     require(restored_storage != null, "The saved storage building must be recreated")
-    require(restored_storage.stockpile_amount("wood") == 5 and restored_storage.stockpile_amount("stone") == 173,
+    require(restored_storage.stockpile_amount("wood") == 5 and restored_storage.stockpile_amount("stone") == 172,
         "Save/load must preserve local depot balances without duplication or loss")
 
-    print("PASS: Frontier local depot storage, capacity bounds, cargo deposit and v12 save migration/round-trip")
+    print("PASS: Frontier local depot storage, bounded shipments, cargo deposits and v12 save migration/round-trip")
     quit(0)
