@@ -1,5 +1,5 @@
 extends Node2D
-## Peta 64x64: rumput, kolam (collision), dan pohon yang bisa ditebang.
+## Profile-scaled world terrain, collision water and harvestable resource nodes.
 ## Semua visual masih placeholder prosedural; ganti dengan tileset asli nanti.
 
 const TREE_CHANCE := 0.07
@@ -207,7 +207,7 @@ func _generate_frontier() -> void:
                         tile = T_GRASS_ALT if resource_rng.randf() < 0.22 else T_GRASS
 
             _layer.set_cell(cell, 0, Vector2i(tile, 0))
-            if water or safe:
+            if water or home_clearing:
                 continue
 
             var patch := clampf(0.5 + resource_patch_noise.get_noise_2d(x, y) * 0.42, 0.08, 0.95)
