@@ -1,6 +1,6 @@
 # Hold the Keep
 
-> Konteks proyek: [CONTEXT.md](CONTEXT.md). Roadmap ekspansi kerajaan: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Rencana Phase 06: [docs/plans/phase-06-plan.md](docs/plans/phase-06-plan.md). Skrip tes: [tests/README.md](tests/README.md).
+> Konteks proyek: [CONTEXT.md](CONTEXT.md). Roadmap ekspansi kerajaan: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Rencana Phase 06: [docs/plans/phase-06-plan.md](docs/plans/phase-06-plan.md). Rencana Phase 09: [docs/plans/phase-09-plan.md](docs/plans/phase-09-plan.md). Skrip tes: [tests/README.md](tests/README.md).
 
 Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (GDScript).
 
