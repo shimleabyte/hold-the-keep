@@ -363,20 +363,20 @@ func _nearest_scout_target() -> Node2D:
 
 func _tick_scout(delta: float) -> void:
     if _scout_windup_t > 0.0:
-        var target := _scout_windup_target
-        if target == null or not is_instance_valid(target) or not target.visible or position.distance_to(target.position) > scout_mark_range + 24.0:
+        var windup_target := _scout_windup_target
+        if windup_target == null or not is_instance_valid(windup_target) or not windup_target.visible or position.distance_to(windup_target.position) > scout_mark_range + 24.0:
             _scout_windup_t = 0.0
             _scout_windup_target = null
             _scout_mark_cd = minf(_scout_mark_cd, 0.8)
             queue_redraw()
         else:
-            var direction := target.position - position
-            if direction.length_squared() > 0.01:
-                anim.face(direction)
+            var windup_direction := windup_target.position - position
+            if windup_direction.length_squared() > 0.01:
+                anim.face(windup_direction)
             _moving = false
             _scout_windup_t = maxf(0.0, _scout_windup_t - delta)
             if _scout_windup_t <= 0.0:
-                _release_scout_mark(target)
+                _release_scout_mark(windup_target)
             queue_redraw()
             return
 
