@@ -262,7 +262,7 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 
 
 ## 23. Phase 06 — Factions and enemy archetypes (2026-11-01)
-- Branch `feat/phase-06-factions-territorial-ai` is stacked on `feat/phase-05-resource-worksites`; Phase 05 Godot verification is still pending.
+- Branch `feat/phase-06-factions-territorial-ai-rebased` is stacked on `feat/phase-05-resource-worksites`; Phase 05 Godot 4.3/4.7 CI passed (30/30 jobs), with manual gameplay review remaining.
 - `data/factions.json` defines Greenwood Raiders, Iron Legion, Fen Cult and Ashen Host, mapped to their Frontier regions with faction colors, rosters and signature garrisons.
 - `data/enemy_archetypes.json` defines Scout, Shieldbearer, Saboteur, War Shaman, Siege Engine and Beast Rider. Archetypes are loaded into `DataDB.enemies` while legacy enemy definitions remain unchanged.
 - Stronghold garrisons are selected from faction rosters; regional wave spawns receive faction identity. Enemy units use faction tint.
