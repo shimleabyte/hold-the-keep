@@ -66,7 +66,7 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 
 ### Simpanan dan pengaturan
 - Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
-- Save versi 11 menyimpan world/campaign state, objektif regional, situs dan progres pengawalan, pekerjaan, state bangunan/resource, serta identitas faksi musuh; save versi 1–10 tetap diterima melalui jalur kompatibilitas.
+- Save versi 12 menyimpan world/campaign state, objektif regional, situs dan progres pengawalan, pekerjaan, state bangunan/resource, serta identitas faksi musuh; save versi 1–11 tetap diterima melalui jalur kompatibilitas.
 - Penulisan save memakai file sementara dan salinan pemulihan; loader mencoba salinan tersebut bila file utama rusak.
 - Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
