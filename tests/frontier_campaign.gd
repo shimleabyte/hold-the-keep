@@ -70,7 +70,7 @@ func _run() -> void:
         "Destroying the Greenwood camp must complete its objective")
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 11, "Phase 07 must write save version 11")
+    assert(snapshot["version"] == 12, "Frontier campaign and depot state must write save version 12")
     assert(snapshot["frontier_campaign"]["objectives"].size() == 11, "Save must retain every objective")
     assert(save_system._valid_save(snapshot), "Fresh Frontier objective state must validate")
     var legacy_snapshot: Dictionary = snapshot.duplicate(true)
