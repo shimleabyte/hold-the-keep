@@ -414,7 +414,7 @@ func _on_map_backdrop_input(event: InputEvent) -> void:
 
 
 func _toggle_map() -> void:
-    var opening := not _map_panel.visible
+    var opening: bool = not _map_panel.visible
     _map_panel.visible = opening
     _map_backdrop.visible = opening
     if opening:
