@@ -48,6 +48,14 @@ func _ready() -> void:
     theme.set_color("font_color", "Button", Color("#eadcc1"))
     theme.set_color("font_hover_color", "Button", Color("#fff1d2"))
     theme.set_color("font_pressed_color", "Button", Color("#ffd38d"))
+    var panel_style := StyleBoxFlat.new()
+    panel_style.bg_color = Color("#171d20")
+    panel_style.border_color = Color("#a17b4d")
+    panel_style.set_border_width_all(1)
+    panel_style.shadow_color = Color(0, 0, 0, 0.58)
+    panel_style.shadow_size = 5
+    panel_style.shadow_offset = Vector2(0, 3)
+    theme.set_stylebox("panel", "PanelContainer", panel_style)
     _root.theme = theme
     add_child(_root)
 
