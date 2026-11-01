@@ -4,6 +4,7 @@ extends Node
 signal resource_changed(kind: String, amount: int)
 signal supply_cost_source_changed()
 signal supply_stock_changed()
+signal supply_pressure_changed()
 signal phase_changed(is_night: bool)
 signal day_changed(day: int)
 signal build_selected(id: String)  # "" = mode bangun mati
