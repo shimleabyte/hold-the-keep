@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` includes PR #36 (`b02aa60`), adding Shieldbearer directional brace without a save-schema change. The available first results page for workflow #41329202804 showed 30/30 jobs successful; the connector did not expose the remainder of the matrix in that snapshot. Phase 02.5 supply pressure remains merged via PR #35; save schema v13. Current development branch `feat/phase-06-scout-marking` implements Scout scouting/marking; CI and merge pending. See `ROADMAP_NEXT_LEVEL.md` and `docs/plans/` for phase status.
+**Current source of truth:** default branch `main` includes PR #36 (`b02aa60`), adding Shieldbearer directional brace without a save-schema change. The available first results page for workflow #41329202804 showed 30/30 jobs successful; the connector did not expose the remainder of the matrix in that snapshot. Phase 02.5 supply pressure remains merged via PR #35; save schema v13. Current development branch `feat/phase-06-scout-marking-mainline` implements Scout scouting/marking; CI and merge pending. See `ROADMAP_NEXT_LEVEL.md` and `docs/plans/` for phase status.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -376,7 +376,7 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 
 
 ## 33. Phase 06.2 — Scout scouting and faction focus (2026-11-02, branch pending CI)
-- Branch: `feat/phase-06-scout-marking`, based on main after PR #36.
+- Branch: `feat/phase-06-scout-marking-mainline`, based on main after PR #36.
 - Scout is no longer a fast pouncing melee unit. It maintains a data-defined safe range, telegraphs a target callout, then marks one visible player/soldier target for a finite duration.
 - The mark is shared only with same-faction enemies within a bounded radius. Nearby allies prioritize the marked target; normal nearest-target behavior resumes at expiry.
 - Stagger or target disengagement cancels an unfinished callout. Mark state is transient and does not alter save v13.
