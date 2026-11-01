@@ -30,6 +30,18 @@ const SABOTEUR_TARGET_PRIORITIES := {
     "house": 2
 }
 const SABOTEUR_TARGET_SCAN_LIMIT := 32
+const SIEGE_TARGET_PRIORITIES := {
+    "stone_wall": 9,
+    "wall": 8,
+    "tower": 6,
+    "outpost": 5,
+    "keep": 4,
+    "storage": 3,
+    "forge": 3,
+    "lumber_camp": 2,
+    "quarry": 2
+}
+const SIEGE_TARGET_SCAN_LIMIT := 32
 const WALK_BASE_SPEED := 32.0
 const RUN_BASE_SPEED := 58.0
 
@@ -86,6 +98,11 @@ var saboteur_windup_duration := 0.85
 var saboteur_disruption_duration := 5.0
 var saboteur_cooldown_duration := 8.5
 var saboteur_damage_multiplier := 1.5
+var siege_scan_range := 400.0
+var siege_scan_interval := 1.35
+var siege_windup_duration := 1.1
+var siege_cooldown_duration := 2.6
+var siege_damage_multiplier := 2.4
 
 var world
 var flow
@@ -123,6 +140,16 @@ var _saboteur_path := PackedVector2Array()
 var _saboteur_path_index := 0
 var _saboteur_path_version := -1
 var _saboteur_repath_t := 0.0
+var siege_nav
+var _siege_target: Node2D
+var _siege_scan_t := 0.0
+var _siege_scan_cursor := 0
+var _siege_windup_t := 0.0
+var _siege_cd := 0.0
+var _siege_path := PackedVector2Array()
+var _siege_path_index := 0
+var _siege_path_version := -1
+var _siege_repath_t := 0.0
 var _tex: Texture2D
 var _fw := 20
 var _fh := 20
@@ -175,6 +202,20 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     saboteur_disruption_duration = clampf(float(data.get("saboteur_disruption_duration", 5.0)), 2.0, 10.0)
     saboteur_cooldown_duration = clampf(float(data.get("saboteur_cooldown", 8.5)), 4.0, 18.0)
     saboteur_damage_multiplier = clampf(float(data.get("saboteur_damage_multiplier", 1.5)), 1.0, 2.5)
+    siege_scan_range = clampf(float(data.get("siege_scan_range", 400.0)), 180.0, 650.0)
+    siege_scan_interval = clampf(float(data.get("siege_scan_interval", 1.35)), 0.4, 4.0)
+    siege_windup_duration = clampf(float(data.get("siege_windup", 1.1)), 0.45, 2.0)
+    siege_cooldown_duration = clampf(float(data.get("siege_cooldown", 2.6)), 1.2, 8.0)
+    siege_damage_multiplier = clampf(float(data.get("siege_structure_damage_mult", 2.4)), 1.2, 4.0)
+    _siege_target = null
+    _siege_scan_t = 0.0
+    _siege_scan_cursor = 0
+    _siege_windup_t = 0.0
+    _siege_cd = 0.0
+    _siege_path = PackedVector2Array()
+    _siege_path_index = 0
+    _siege_path_version = -1
+    _siege_repath_t = 0.0
     _saboteur_target = null
     _saboteur_scan_t = 0.0
     _saboteur_scan_cursor = 0
@@ -210,8 +251,12 @@ func setup_guard(data: Dictionary, world_ref, flow_ref, player_ref, origin: Vect
 
 func _ready() -> void:
     add_to_group("enemies")
-    if archetype == "saboteur":
-        saboteur_nav = get_tree().get_first_node_in_group("navigation_grid")
+    if archetype in ["saboteur", "siege_engine"]:
+        var nav_grid := get_tree().get_first_node_in_group("navigation_grid")
+        if archetype == "saboteur":
+            saboteur_nav = nav_grid
+        else:
+            siege_nav = nav_grid
     if is_supply_raider:
         add_to_group("supply_raiders")
     if is_garrison:
@@ -230,6 +275,9 @@ func _physics_process(delta: float) -> void:
     _saboteur_cd = maxf(0.0, _saboteur_cd - delta)
     _saboteur_scan_t = maxf(0.0, _saboteur_scan_t - delta)
     _saboteur_repath_t = maxf(0.0, _saboteur_repath_t - delta)
+    _siege_scan_t = maxf(0.0, _siege_scan_t - delta)
+    _siege_cd = maxf(0.0, _siege_cd - delta)
+    _siege_repath_t = maxf(0.0, _siege_repath_t - delta)
     _scout_mark_t = maxf(0.0, _scout_mark_t - delta)
     _scout_mark_cd = maxf(0.0, _scout_mark_cd - delta)
     if _scout_mark_t <= 0.0 or not is_instance_valid(_scout_mark_target):
@@ -263,6 +311,12 @@ func _physics_process(delta: float) -> void:
 
     if is_supply_raider:
         _tick_supply_raid(delta)
+        _update_anim(delta)
+        _footsteps(delta)
+        return
+
+    if archetype == "siege_engine":
+        _tick_siege_engine(delta)
         _update_anim(delta)
         _footsteps(delta)
         return
@@ -399,6 +453,161 @@ func _tick_flow(delta: float) -> void:
             _begin_attack(occupied, occupied.position - position)
         return
     _move_toward(Vector2(next) * WorldConfig.tile_size + Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0) + _offset, delta)
+
+
+func _siege_target_valid(target: Node2D) -> bool:
+    if target == null or not is_instance_valid(target) or not target.is_in_group("buildings"):
+        return false
+    if int(target.get("hp")) <= 0 or not target.has_method("take_damage") or not target.has_method("cells"):
+        return false
+    return SIEGE_TARGET_PRIORITIES.has(String(target.get("id")))
+
+
+func _select_siege_target() -> Node2D:
+    if siege_nav == null:
+        return null
+
+    var buildings: Array = get_tree().get_nodes_in_group("buildings")
+    var building_count := buildings.size()
+    if building_count <= 0:
+        return null
+    var scan_count := mini(SIEGE_TARGET_SCAN_LIMIT, building_count)
+    var best_target: Node2D
+    var best_path := PackedVector2Array()
+    var best_score := -INF
+
+    for offset in scan_count:
+        var candidate = buildings[(_siege_scan_cursor + offset) % building_count]
+        if not (candidate is Node2D):
+            continue
+        var building := candidate as Node2D
+        var priority := int(SIEGE_TARGET_PRIORITIES.get(String(building.get("id")), 0))
+        if priority <= 0 or not _siege_target_valid(building):
+            continue
+        if position.distance_to(building.position) > siege_scan_range:
+            continue
+        if is_garrison and building.position.distance_to(guard_origin) > 175.0:
+            continue
+
+        var cells: Array[Vector2i] = building.call("cells")
+        var candidate_path: PackedVector2Array = siege_nav.path_adjacent(position, cells)
+        if candidate_path.is_empty():
+            continue
+        var score := float(priority * 160) - float(maxi(0, candidate_path.size() - 1)) * 6.0
+        if score > best_score:
+            best_score = score
+            best_target = building
+            best_path = candidate_path
+
+    _siege_scan_cursor = (_siege_scan_cursor + scan_count) % building_count
+    _siege_target = best_target
+    _siege_path = best_path
+    _siege_path_index = 1 if best_path.size() > 1 else 0
+    _siege_path_version = siege_nav.version
+    _siege_repath_t = 0.9
+    return best_target
+
+
+func _nearest_siege_disruptor() -> Node2D:
+    var nearest: Node2D
+    var nearest_distance := 36.0
+    if player != null and is_instance_valid(player):
+        var player_distance := position.distance_to(player.position)
+        if player_distance <= nearest_distance:
+            nearest = player
+            nearest_distance = player_distance
+    for defender in get_tree().get_nodes_in_group("defenders"):
+        if not is_instance_valid(defender) or not defender.visible:
+            continue
+        var candidate := defender as Node2D
+        var distance := position.distance_to(candidate.position)
+        if distance <= nearest_distance:
+            nearest = candidate
+            nearest_distance = distance
+    return nearest
+
+
+func _tick_siege_engine(delta: float) -> void:
+    var disruptor := _nearest_siege_disruptor()
+    if disruptor != null:
+        if _siege_windup_t > 0.0:
+            _siege_windup_t = 0.0
+            _siege_cd = maxf(_siege_cd, 1.1)
+            Events.fx_burst.emit("dust", position + Vector2(0, -3), Vector2.ZERO, 0.7)
+            queue_redraw()
+        _moving = false
+        var retreat_direction := position - disruptor.position
+        if retreat_direction.length_squared() > 0.01:
+            _move_toward(position + retreat_direction.normalized() * 26.0, delta)
+        return
+
+    if _siege_windup_t > 0.0:
+        if not _siege_target_valid(_siege_target) or position.distance_to(_siege_target.position) > 52.0:
+            _siege_windup_t = 0.0
+            _siege_cd = maxf(_siege_cd, 1.0)
+            queue_redraw()
+            return
+        var aim := _siege_target.position - position
+        if aim.length_squared() > 0.01:
+            anim.face(aim)
+        _moving = false
+        _siege_windup_t = maxf(0.0, _siege_windup_t - delta)
+        if _siege_windup_t <= 0.0:
+            var target := _siege_target
+            var impact_damage := maxi(1, roundi(float(damage) * siege_damage_multiplier))
+            target.call("take_damage", impact_damage)
+            Events.fx_burst.emit("debris", target.global_position + Vector2(0, -8), -aim.normalized(), 1.5)
+            Events.screen_shake.emit(1.0, 0.16)
+            _siege_cd = siege_cooldown_duration
+            queue_redraw()
+        return
+
+    if not _siege_target_valid(_siege_target):
+        _siege_target = null
+        _siege_path = PackedVector2Array()
+        _siege_path_index = 0
+        _siege_path_version = -1
+        _siege_scan_t = 0.0
+
+    if _siege_target == null and _siege_scan_t <= 0.0:
+        _select_siege_target()
+        _siege_scan_t = siege_scan_interval
+
+    if _siege_target == null:
+        if is_garrison:
+            if position.distance_to(guard_origin) > 16.0:
+                _move_toward(guard_origin, delta)
+        elif flow != null:
+            _move_toward(flow.target_pos, delta)
+        return
+
+    var distance := position.distance_to(_siege_target.position)
+    if distance <= maxf(24.0, _attack_reach() + 10.0):
+        _moving = false
+        if _siege_cd <= 0.0:
+            _siege_windup_t = siege_windup_duration
+            anim.face(_siege_target.position - position)
+            Events.fx_burst.emit("dust", position + Vector2(0, -4), Vector2.ZERO, 0.9)
+            queue_redraw()
+        return
+
+    if siege_nav == null:
+        if not is_garrison:
+            _tick_flow(delta)
+        return
+    if _siege_path_version != siege_nav.version or _siege_path.is_empty() or _siege_repath_t <= 0.0:
+        var target_cells: Array[Vector2i] = _siege_target.call("cells")
+        _siege_path = siege_nav.path_adjacent(position, target_cells)
+        _siege_path_index = 1 if _siege_path.size() > 1 else 0
+        _siege_path_version = siege_nav.version
+        _siege_repath_t = 0.9
+    while _siege_path_index < _siege_path.size() and position.distance_to(_siege_path[_siege_path_index]) <= 3.0:
+        _siege_path_index += 1
+    if _siege_path_index < _siege_path.size():
+        _move_toward(_siege_path[_siege_path_index], delta)
+    else:
+        _siege_target = null
+        _siege_scan_t = 0.0
 
 
 func _saboteur_target_valid(target: Node2D) -> bool:
@@ -896,6 +1105,9 @@ func apply_stagger(duration: float) -> void:
         _saboteur_target = null
         _saboteur_cd = maxf(_saboteur_cd, 1.2)
         _saboteur_path = PackedVector2Array()
+    if archetype == "siege_engine" and _siege_windup_t > 0.0:
+        _siege_windup_t = 0.0
+        _siege_cd = maxf(_siege_cd, 1.1)
     _hurt_t = maxf(_hurt_t, duration * 0.5)
     anim.play("hurt", true)
 
@@ -1042,6 +1254,13 @@ func _draw() -> void:
         "siege_engine":
             draw_rect(Rect2(-9, -14, 5, 5), color)
             draw_rect(Rect2(4, -14, 5, 5), color)
+            if _siege_target != null and is_instance_valid(_siege_target):
+                var siege_center := _siege_target.global_position - global_position + Vector2(0, -8)
+                var siege_color := Color("#e1a45d") if _siege_windup_t > 0.0 else Color("#9a6b4c")
+                draw_line(Vector2(0, -_fh - 5), siege_center, siege_color, 1.5)
+                draw_arc(siege_center, 13.0, 0.0, TAU, 12, siege_color, 1.5)
+            if _siege_windup_t > 0.0:
+                draw_arc(Vector2(0, -_fh - 8), 8.0, 0.0, TAU, 12, Color("#f1c67b"), 2.0)
         "beast_rider":
             draw_line(Vector2(-5, -12), Vector2(-10, -17), color, 1.5)
             draw_line(Vector2(5, -12), Vector2(10, -17), color, 1.5)
