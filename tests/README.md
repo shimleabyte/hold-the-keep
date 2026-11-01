@@ -60,9 +60,9 @@ Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan k
 
 Suite assertion yang dijalankan pada Godot 4.3 dan 4.7 masing-masing mencakup 22 skrip:
 
-`animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `production_worksites`, `faction_registry`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, dan `regional_control_roads`, `local_depot_stockpiles`, dan `outpost_garrisons`.
+`animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `production_worksites`, `faction_registry`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, `regional_control_roads`, `local_depot_stockpiles`, dan `outpost_garrisons`.
 
-CI juga menjalankan import/parse pada kedua versi Godot, performance diagnostic Frontier pada Godot 4.7, serta template-backed Windows/Linux release export pada Godot 4.3. Pada 1 November 2026, mainline workflow #41314731305 lulus 46/46 jobs setelah Phase 02 local stockpile merge.
+CI juga menjalankan import/parse pada kedua versi Godot, performance diagnostic Frontier pada Godot 4.7, serta template-backed Windows/Linux release export pada Godot 4.3. Pada 1 November 2026, workflow validasi PR #32 (#41318897606) lulus 48/48 jobs setelah Outpost garrison coverage masuk ke matrix; kedua versi engine menjalankan seluruh 22 skrip.
 
 Skrip observasi/manual yang tidak termasuk assertion CI: `anim_sync`, `combat_tower_walls`, `events_boss_final_night`, `fx_shake_settings`, `restart_gameover`, `save_load_audio_menu`, `tech_tree`, dan `villagers_economy`. Jalankan skrip tersebut ketika memeriksa perilaku runtime yang belum dikonversi menjadi assertion.
 
