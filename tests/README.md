@@ -29,6 +29,7 @@ Semua dari akar proyek (setelah `godot --headless --path . --import` sekali):
 | fx_shake_settings.gd | batas partikel, guncangan layar, tombol menu, performa dengan efek |
 | perf.gd | biaya per frame: 150 musuh + 42 villager |
 | anim_sync.gd | pukulan penebang jatuh di frame benturan; pelarian memakai klip lari |
+| animation_motion.gd | idle breathing, walk/run lift, directional attack/work lean, hurt recoil, stable death pose |
 | balance_final_night.gd | `CASES="4,2;6,3"` = daftar "prajurit,menara"; `TECH=era2` atau `TECH=all` memberi teknologi; hasil MENANG/KALAH |
 
 Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; nilai sebenarnya 12).
