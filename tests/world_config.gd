@@ -54,10 +54,11 @@ func _initialize() -> void:
         "A current v7 save must validate against its matching world configuration")
 
     var legacy_save := current_save.duplicate(true)
-    legacy_save["version"] = 6
     legacy_save.erase("world")
-    assert(save_system._valid_save(legacy_save),
-        "A v6 save must remain compatible with Classic Mode")
+    for legacy_version in range(1, 7):
+        legacy_save["version"] = legacy_version
+        assert(save_system._valid_save(legacy_save),
+            "A v%d legacy save must remain compatible with Classic Mode" % legacy_version)
 
     var incompatible_save := current_save.duplicate(true)
     incompatible_save["world"]["profile"] = "frontier"
