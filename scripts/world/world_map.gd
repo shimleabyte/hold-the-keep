@@ -187,7 +187,6 @@ func _generate_frontier() -> void:
             var cell := Vector2i(x, y)
             var position := Vector2(x, y)
             var edge := x == 0 or y == 0 or x == map_size - 1 or y == map_size - 1
-            var safe := position.distance_to(center) < safe_radius
             var home_clearing := position.distance_to(center) < clearing_radius
             var water := edge or (not home_clearing and water_noise.get_noise_2d(x, y) > 0.58)
             var region := int(_frontier_regions[y * map_size + x])
