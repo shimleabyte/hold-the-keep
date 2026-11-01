@@ -1,6 +1,6 @@
 # Phase 02 — Local Logistics and Outpost Support
 
-**Status:** Partial implementation. Regional ownership, roads/bridges, Keep-rooted connectivity, local Storage/Outpost stockpiles, Frontier deposits and bounded automatic shipments to Keep are merged into `main` through PR #31 with save v12. PR #32 is merged into `main` and adds read-only depot inspection, Outpost guard slots/assignment, local defense leash, lifecycle handling and save/load persistence. Its Godot 4.3/4.7 CI passed 48/48 jobs. Outpost-local visibility and currently-observed enemy map markers already exist in `main` and are not new work. PR #33 is merged into `main` and delivers manual Keep/Storage/Outpost shipments with physical carriers, escrowed cargo and interruption recovery. Godot 4.3/4.7 CI passed 50/50 jobs. PR #34 merged explicit Keep/Storage/Outpost cost-source spending for build/research/repair; Godot 4.3/4.7 workflow #41325205416 passed 52/52 jobs. Phase 02.5 is implemented on `feat/phase-02-supply-pressure`; PR and CI pending.
+**Status:** Partial implementation. Regional ownership, roads/bridges, Keep-rooted connectivity, local Storage/Outpost stockpiles, Frontier deposits and bounded automatic shipments to Keep are merged into `main` through PR #31 with save v12. PR #32 is merged into `main` and adds read-only depot inspection, Outpost guard slots/assignment, local defense leash, lifecycle handling and save/load persistence. Its Godot 4.3/4.7 CI passed 48/48 jobs. Outpost-local visibility and currently-observed enemy map markers already exist in `main` and are not new work. PR #33 is merged into `main` and delivers manual Keep/Storage/Outpost shipments with physical carriers, escrowed cargo and interruption recovery. Godot 4.3/4.7 CI passed 50/50 jobs. PR #34 merged explicit Keep/Storage/Outpost cost-source spending for build/research/repair; Godot 4.3/4.7 workflow #41325205416 passed 52/52 jobs. Phase 02.5 merged through PR #35 into `main` at `2ba5628`; workflow #41328005585 passed 54/54 jobs, including 25 regression suites on each Godot version.
 **Dependency:** Keep-connected supply graph and local stockpiles in save v12; mainline now uses save v13 for physical shipment records, with v1–v12 migration compatibility.
 **Engine targets:** Godot 4.3 and 4.7.
 
@@ -46,7 +46,7 @@ Turn road connectivity into an actual logistics system without changing Classic 
 - Saboteurs path to their exact depot target using the navigation grid, fight the player/local defenders first, then damage depot integrity. Every second successful hit against the depot steals exactly one unit, in deterministic priority `food → iron → wood → stone`.
 - Restoring Keep connectivity or reclaiming the territory immediately ends pressure and recalls active saboteurs. Outpost guards and regular soldiers can intercept; Builder repair uses the active cost source. Keep/Classic economy remains unchanged.
 - Pressure timers and active saboteur target/hit progress are optional additive fields in save v13; earlier v13 snapshots without them remain valid.
-- The implementation is on `feat/phase-02-supply-pressure`; CI pending. Manual render/gameplay acceptance remains required.
+- Merged through PR #35 at `2ba5628`; workflow #41328005585 passed 54/54 jobs on Godot 4.3/4.7. Manual rendered UI/gameplay acceptance remains required.
 
 ## Persistence and compatibility
 - [x] Save v12 persists local stockpiles; save v13 additionally persists shipment order history, escrowed in-transit cargo and now optional cost-source selection. v1–v12 remain loadable; previous v13 saves without the optional source field remain valid.
@@ -64,11 +64,11 @@ Turn road connectivity into an actual logistics system without changing Classic 
 - [x] Physical carrier order history and pending cargo survive v13 save/load; v12 saves migrate with no active shipment orders (PR #33 merged; Godot 4.3/4.7 CI passed 50/50).
 - [x] Outpost guard assignment, death/reassignment, removal, local combat radius, local visibility and v12 save compatibility (PR #32; regression passed on Godot 4.3/4.7).
 - Classic economy remains unchanged.
-- [ ] Contested disconnected-depot warning precedes attrition; no raid can spawn before the warning threshold.
-- [ ] Targeted saboteurs must have a reachable path and never target Keep or a connected depot.
-- [ ] Every raid strike is deterministic, visibly reported and bounded to two waves per continuous isolation.
-- [ ] A road reconnection or territory recovery clears the pressure state and recalls the raider.
-- [ ] Pressure state and active raider targets survive save/load; pre-pressure save v13 files remain valid.
+- [x] Contested disconnected-depot warning precedes the first raid; no raid spawns before its warning threshold.
+- [x] Targeted saboteurs use reachable paths and never target Keep or a connected depot.
+- [x] Every raid strike is deterministic, visibly reported and bounded to two waves per continuous isolation.
+- [x] A road reconnection or territory recovery clears the pressure state and recalls the raider.
+- [x] Pressure state and active raider targets survive save/load; pre-pressure save v13 files remain valid.
 
 ## Acceptance gate
 - Local stockpiles are authoritative for remote Frontier deposits. Build/research/repair charges must be paid fully by the explicitly selected source depot; do not pool balances across depots. Classic continues using the Keep Inventory.
@@ -76,4 +76,4 @@ Turn road connectivity into an actual logistics system without changing Classic 
 - [x] Player-directed physical shipments, cancellation/refund, destination-capacity reservation and recoverable route interruption are merged through PR #33 (Godot 4.3/4.7 CI passed 50/50).
 - [x] Outposts provide working guard assignment and local visibility (PR #32 merged; Godot CI passed 48/48).
 - Godot 4.3/4.7 import, parse and regression matrices pass.
-- Phase 02.5 branch regression: `tests/supply_pressure.gd` (warning lead time, targeted reachability, damage/theft order, repeat cap/cooldown, HUD exposure, save compatibility and route recovery); CI pending.
+- [x] Phase 02.5 regression: `tests/supply_pressure.gd` covers warning lead time, targeted reachability, damage/theft order, repeat cap/cooldown, HUD exposure, save compatibility and route recovery; PR #35 CI passed 54/54. Manual rendered review remains open.
