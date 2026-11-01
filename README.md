@@ -28,10 +28,13 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - Kalahkan musuh untuk mendapat XP; level up memulihkan sebagian HP dan membuka skill
 - T / M / K / R: tambah penebang / penambang / petani (kebun) / prajurit (Shift = kurangi); atau klik tombol + / - di panel job
 - G: kirim seluruh prajurit untuk menyerbu benteng lawan yang sudah ditemukan; tekan lagi untuk menarik mereka kembali ke Keep
-- P / Esc (saat tidak membangun): menu jeda (simpan, muat, layar penuh, vsync, volume)
+- P / Esc (saat tidak membangun): menu jeda (simpan, muat, resolusi jendela, layar penuh, VSync, volume)
 - Menu jeda > Atur kontrol: rebind gerak, interaksi, serang, dan lari; gamepad tetap didukung
 - F5: simpan | F9: muat | H: bantuan kontrol | F3: tampilkan FPS
 - R: mulai ulang setelah game over | L: muat save terakhir dari layar game over
+
+## Tampilan dan resolusi
+Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 16:9 dan 16:10; resolusi jendela tersimpan, sedangkan fullscreen tetap terpisah. Rendering pixel-art tetap memakai viewport 480×270 dan integer scaling. Aspect `expand` memperluas area dunia pada rasio layar yang lebih lebar/tinggi tanpa meregangkan sprite. HUD, hotbar, indikator bab, peta, menu teknologi, dan menu jeda mengikuti viewport yang terlihat.
 
 ## Sistem permainan
 
