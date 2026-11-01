@@ -3,8 +3,9 @@ extends Control
 
 const MAP_SIZE := 64
 const TILE_SIZE := 16
-const MAP_PIXELS := 192.0
-const MAP_ORIGIN := Vector2(64.0, 20.0)
+var _map_scale := 3.0
+var _map_pixels := 192.0
+var _map_origin := Vector2(64.0, 20.0)
 const PIXEL_FONT := preload("res://scripts/ui/pixel_font.gd")
 
 const UNKNOWN := Color("#101820")
@@ -42,6 +43,16 @@ func configure(world_ref, fog_ref, territory_ref, font_ref: Font = null) -> void
     queue_redraw()
 
 
+func configure_layout(viewport_size: Vector2) -> void:
+    var available_width := maxf(192.0, viewport_size.x - 150.0)
+    var available_height := maxf(192.0, viewport_size.y - 70.0)
+    _map_scale = clampf(minf(available_width, available_height) / float(MAP_SIZE), 3.0, 4.5)
+    _map_pixels = MAP_SIZE * _map_scale
+    size = Vector2(_map_pixels + 128.0, _map_pixels + 50.0)
+    _map_origin = Vector2((size.x - _map_pixels) * 0.5, 20.0)
+    queue_redraw()
+
+
 func _process(delta: float) -> void:
     if not visible:
         return
@@ -60,17 +71,21 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _draw() -> void:
-    draw_rect(Rect2(Vector2.ZERO, size), Color("#111319"))
-    draw_rect(Rect2(Vector2.ZERO, size), Color("#a88a5e"), false, 1.0)
+    draw_rect(Rect2(Vector2.ZERO, size), Color("#111820"))
+    draw_rect(Rect2(Vector2.ZERO, size), Color("#b18a55"), false, 2.0)
+    draw_rect(Rect2(1, 1, size.x - 2, 17), Color("#202a2e"))
+    draw_rect(Rect2(1, 1, 3, 17), Color("#c99b53"))
+    draw_line(Vector2(8, 17), Vector2(size.x - 8, 17), Color("#66553d"), 1.0)
     if font == null:
         return
 
-    draw_string(font, Vector2(8, 11), "PETA WILAYAH", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#e7c783"))
-    draw_string(font, Vector2(size.x - 52.0, 11), "HARI %02d" % GameClock.day, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("#c5bba8"))
+    draw_string(font, Vector2(10, 12), "PETA WILAYAH", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#f0d39a"))
+    draw_string(font, Vector2(size.x - 120.0, 12), "HARI %02d" % GameClock.day, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("#c5bba8"))
+    draw_string(font, Vector2(size.x - 68.0, 12), "TAB / ESC", HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color("#b4a58c"))
     draw_rect(Rect2(size.x - 22.0, 2.0, 18.0, 13.0), Color("#302820"))
-    draw_rect(Rect2(size.x - 22.0, 2.0, 18.0, 13.0), Color("#9f7652"), false, 1.0)
-    draw_line(Vector2(size.x - 17.0, 5.0), Vector2(size.x - 9.0, 12.0), Color("#e8d8bc"), 1.0)
-    draw_line(Vector2(size.x - 9.0, 5.0), Vector2(size.x - 17.0, 12.0), Color("#e8d8bc"), 1.0)
+    draw_rect(Rect2(size.x - 22.0, 2.0, 18.0, 13.0), Color("#d2a660"), false, 1.0)
+    draw_line(Vector2(size.x - 17.0, 5.0), Vector2(size.x - 9.0, 12.0), Color("#f1dfc2"), 1.0)
+    draw_line(Vector2(size.x - 9.0, 5.0), Vector2(size.x - 17.0, 12.0), Color("#f1dfc2"), 1.0)
 
     if world == null or fog == null:
         draw_string(font, Vector2(8, 124), "MEMUAT PETA...", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE)
@@ -82,7 +97,7 @@ func _draw() -> void:
     for y in MAP_SIZE:
         for x in MAP_SIZE:
             var cell := Vector2i(x, y)
-            var rect := Rect2(MAP_ORIGIN + Vector2(x, y) * 3.0, Vector2(3.0, 3.0))
+            var rect := Rect2(_map_origin + Vector2(x, y) * _map_scale, Vector2(_map_scale, _map_scale))
             if not fog.is_revealed_cell(cell):
                 draw_rect(rect, UNKNOWN)
                 continue
@@ -120,17 +135,22 @@ func _draw() -> void:
     _draw_camera_window()
     _draw_player_marker()
 
-    draw_rect(Rect2(MAP_ORIGIN, Vector2(MAP_PIXELS, MAP_PIXELS)), Color("#d4c09a"), false, 1.0)
+    for grid in range(8, MAP_SIZE, 8):
+        var line_color := Color(0.82, 0.76, 0.62, 0.2)
+        var offset := float(grid) * _map_scale
+        draw_line(_map_origin + Vector2(offset, 0), _map_origin + Vector2(offset, _map_pixels), line_color, 1.0)
+        draw_line(_map_origin + Vector2(0, offset), _map_origin + Vector2(_map_pixels, offset), line_color, 1.0)
+    draw_rect(Rect2(_map_origin, Vector2(_map_pixels, _map_pixels)), Color("#e1c99a"), false, 1.0)
     _draw_legend()
 
 func _world_to_map(world_position: Vector2) -> Vector2:
     if world == null:
-        return MAP_ORIGIN
+        return _map_origin
     var world_size := Vector2(world.pixel_size)
-    return MAP_ORIGIN + Vector2(
+    return _map_origin + Vector2(
         world_position.x / maxf(1.0, world_size.x),
         world_position.y / maxf(1.0, world_size.y)
-    ) * MAP_PIXELS
+    ) * _map_pixels
 
 
 func _position_is_known(world_position: Vector2) -> bool:
@@ -143,7 +163,7 @@ func _position_is_known(world_position: Vector2) -> bool:
 func _marker(world_position: Vector2, color: Color, radius := 1.5) -> void:
     if not _position_is_known(world_position):
         return
-    draw_circle(_world_to_map(world_position), radius, color)
+    draw_circle(_world_to_map(world_position), radius * (_map_scale / 3.0), color)
 
 
 func _draw_region_labels() -> void:
@@ -156,8 +176,9 @@ func _draw_region_labels() -> void:
     for item in regions:
         var cell: Vector2i = item[0]
         if fog.is_revealed_cell(cell):
-            var label_position := MAP_ORIGIN + (Vector2(cell) + Vector2(0.5, 0.5)) * 3.0
-            draw_string(font, label_position, String(item[1]), HORIZONTAL_ALIGNMENT_CENTER, 52, 6, Color(1, 1, 1, 0.78))
+            var label_position := _map_origin + (Vector2(cell) + Vector2(0.5, 0.5)) * _map_scale
+            var font_size := maxi(6, roundi(6.0 * _map_scale / 3.0))
+            draw_string(font, label_position, String(item[1]), HORIZONTAL_ALIGNMENT_CENTER, 52.0 * _map_scale / 3.0, font_size, Color(1, 1, 1, 0.84))
 
 
 func _draw_resource_markers() -> void:
@@ -189,7 +210,8 @@ func _draw_building_markers() -> void:
 func _draw_campaign_markers() -> void:
     for stronghold in get_tree().get_nodes_in_group("enemy_strongholds"):
         if is_instance_valid(stronghold) and _position_is_known(stronghold.global_position):
-            draw_rect(Rect2(_world_to_map(stronghold.global_position) - Vector2(2.5, 2.5), Vector2(5.0, 5.0)), ENEMY_MARKER)
+            var marker_size := 5.0 * _map_scale / 3.0
+            draw_rect(Rect2(_world_to_map(stronghold.global_position) - Vector2.ONE * marker_size * 0.5, Vector2.ONE * marker_size), ENEMY_MARKER)
 
 
 func _is_currently_observed(world_position: Vector2) -> bool:
@@ -235,23 +257,25 @@ func _draw_player_marker() -> void:
     if player == null:
         return
     var point := _world_to_map(player.global_position)
-    draw_circle(point, 3.0, Color("#151515"))
-    draw_circle(point, 2.0, PLAYER_MARKER)
-    draw_line(point - Vector2(4.0, 0.0), point + Vector2(4.0, 0.0), Color.WHITE, 1.0)
-    draw_line(point - Vector2(0.0, 4.0), point + Vector2(0.0, 4.0), Color.WHITE, 1.0)
+    var radius := _map_scale
+    draw_circle(point, radius * 1.05, Color("#151515"))
+    draw_circle(point, radius * 0.68, PLAYER_MARKER)
+    var arm := _map_scale * 1.5
+    draw_line(point - Vector2(arm, 0.0), point + Vector2(arm, 0.0), Color.WHITE, 1.0)
+    draw_line(point - Vector2(0.0, arm), point + Vector2(0.0, arm), Color.WHITE, 1.0)
 
 
 func _draw_legend() -> void:
-    var y := size.y - 14.0
+    var y := size.y - 11.0
+    draw_line(Vector2(8, y - 11.0), Vector2(size.x - 8, y - 11.0), Color("#66553d"), 1.0)
     var items := [
         [PLAYER_TERRITORY, "KITA"],
         [ENEMY_TERRITORY, "MUSUH"],
         [PLAYER_MARKER, "KEEP"],
         [ALLY_MARKER, "PASUKAN"]
     ]
-    var x := 8.0
+    var x := 9.0
     for item in items:
-        draw_rect(Rect2(x, y - 5.0, 5.0, 5.0), item[0])
-        draw_string(font, Vector2(x + 8.0, y), String(item[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color("#d4c8b5"))
-        x += 76.0
-    draw_string(font, Vector2(size.x - 50.0, size.y - 3.0), "TAB / ESC", HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color("#9f988d"))
+        draw_rect(Rect2(x, y - 7.0, 6.0, 6.0), item[0])
+        draw_string(font, Vector2(x + 9.0, y), String(item[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("#e1d4bd"))
+        x += 75.0
