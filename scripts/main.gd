@@ -17,6 +17,10 @@ const TECH_PANEL_SCRIPT := preload("res://scripts/ui/tech_panel.gd")
 const MENU_SCRIPT := preload("res://scripts/ui/pause_menu.gd")
 
 const NIGHT_TINT := Color(0.45, 0.5, 0.75)
+const DIRS4: Array[Vector2i] = [
+    Vector2i(1, 0), Vector2i(-1, 0),
+    Vector2i(0, 1), Vector2i(0, -1)
+]
 var world
 var territory
 var enemy_keep
@@ -179,7 +183,7 @@ func _find_frontier_enemy_keep_cell() -> Vector2i:
                 if not world.is_buildable(cell) or world.occupied.has(cell):
                     clear = false
                     break
-                for direction in nav.DIRS4:
+                for direction in DIRS4:
                     if reachable.has(cell + direction):
                         accessible = true
 
