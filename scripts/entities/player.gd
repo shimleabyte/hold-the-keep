@@ -144,6 +144,7 @@ func _physics_process(delta: float) -> void:
         var dash_step := minf(delta, _dash_t)
         _dash_t = maxf(0.0, _dash_t - delta)
         velocity = _dash_dir * DASH_SPEED * (dash_step / maxf(delta, 0.001))
+        _running = true
         move_and_slide()
         if _dash_t <= 0.0:
             _finish_dash()
@@ -158,7 +159,7 @@ func _physics_process(delta: float) -> void:
 
     if Input.is_action_pressed("interact") and _cooldown <= 0.0:
         _try_interact()
-    if Input.is_action_pressed("attack") and _atk_cd <= 0.0 and not _build_mode and not _click_on_hud():
+    if Input.is_action_pressed("attack") and _atk_cd <= 0.0 and _dash_t <= 0.0 and not _build_mode and not _click_on_hud():
         _attack()
     if not _build_mode:
         if Input.is_action_just_pressed("ability_dash"):
@@ -336,7 +337,7 @@ func _apply_cleave() -> void:
         var to_foe := foe.global_position + Vector2(0, -4) - origin
         if to_foe.length() > CLEAVE_RANGE:
             continue
-        if to_foe.length_squared() > 0.01 and to_foe.normalized().dot(facing) < 0.12:
+        if to_foe.length_squared() > 0.01 and to_foe.normalized().dot(facing) < 0.34:
             continue
         foe.take_damage(_player_damage(20 + level * 3))
         if foe.has_method("apply_stagger"):
