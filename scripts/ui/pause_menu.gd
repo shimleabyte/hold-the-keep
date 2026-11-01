@@ -31,6 +31,10 @@ var _menu_center: CenterContainer
 var _controls_center: CenterContainer
 var _controls_buttons: Dictionary = {}
 var _controls_status: Label
+var _campaign_center: CenterContainer
+var _campaign_profile: OptionButton
+var _campaign_info: Label
+var _campaign_dialog: ConfirmationDialog
 var _rebinding_action := ""
 var _blocked := false
 
@@ -106,6 +110,7 @@ func _ready() -> void:
     _add_button(box, "Atur kontrol", _open_controls)
     _add_button(box, "Simpan (F5)", func() -> void: SaveSystem.save_current())
     _load_btn = _add_button(box, "Muat (F9)", func() -> void: SaveSystem.request_load())
+    _add_button(box, "Kampanye baru", _open_campaign_panel)
     _fs_btn = _add_button(box, "", func() -> void:
         Settings.set_fullscreen(not Settings.fullscreen)
         _refresh())
@@ -148,6 +153,7 @@ func _ready() -> void:
 
     _add_button(box, "Keluar ke desktop", func() -> void: get_tree().quit())
     _build_controls_panel()
+    _build_campaign_panel()
 
     Events.menu_requested.connect(_on_menu_requested)
     Events.game_over.connect(func(_d: int) -> void: _blocked = true)
@@ -226,6 +232,106 @@ func _build_controls_panel() -> void:
     back.text = "KEMBALI"
     back.pressed.connect(_close_controls)
     box.add_child(back)
+
+
+func _build_campaign_panel() -> void:
+    _campaign_center = CenterContainer.new()
+    _campaign_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _campaign_center.visible = false
+    _root.add_child(_campaign_center)
+
+    var panel := PanelContainer.new()
+    panel.custom_minimum_size = Vector2(250, 150)
+    _campaign_center.add_child(panel)
+
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", 5)
+    panel.add_child(box)
+
+    var title := Label.new()
+    title.text = "KAMPANYE BARU"
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    box.add_child(title)
+
+    _campaign_info = Label.new()
+    _campaign_info.custom_minimum_size = Vector2(220, 44)
+    _campaign_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _campaign_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    box.add_child(_campaign_info)
+
+    var profile_label := Label.new()
+    profile_label.text = "PROFIL DUNIA"
+    profile_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    box.add_child(profile_label)
+
+    _campaign_profile = OptionButton.new()
+    _campaign_profile.custom_minimum_size = Vector2(220, 20)
+    _campaign_profile.add_item("CLASSIC · 64 × 64")
+    _campaign_profile.add_item("FRONTIER · 128 × 128")
+    _campaign_profile.item_selected.connect(_on_campaign_profile_selected)
+    box.add_child(_campaign_profile)
+
+    var start := Button.new()
+    start.text = "MULAI KAMPANYE"
+    start.custom_minimum_size = Vector2(220, 20)
+    start.pressed.connect(_confirm_new_campaign)
+    box.add_child(start)
+
+    var back := Button.new()
+    back.text = "KEMBALI"
+    back.custom_minimum_size = Vector2(220, 20)
+    back.pressed.connect(_close_campaign_panel)
+    box.add_child(back)
+
+    _campaign_dialog = ConfirmationDialog.new()
+    _campaign_dialog.title = "KAMPANYE BARU"
+    _campaign_dialog.dialog_text = "Mulai dunia baru? Save lama akan menjadi backup sementara dan dapat diganti oleh penyimpanan berikutnya."
+    _campaign_dialog.ok_button_text = "MULAI"
+    _campaign_dialog.cancel_button_text = "BATAL"
+    _campaign_dialog.confirmed.connect(_start_new_campaign)
+    _root.add_child(_campaign_dialog)
+
+    _campaign_profile.select(0 if WorldConfig.profile_id == "classic" else 1)
+    _on_campaign_profile_selected(_campaign_profile.selected)
+
+
+func _on_campaign_profile_selected(index: int) -> void:
+    if _campaign_info == null:
+        return
+    if index == 1:
+        _campaign_info.text = "128 × 128 tiles · lima region · lebih banyak ruang untuk ekspansi."
+    else:
+        _campaign_info.text = "64 × 64 tiles · campaign 15 hari · map Classic tetap seperti semula."
+
+
+func _open_campaign_panel() -> void:
+    _menu_center.visible = false
+    _controls_center.visible = false
+    _campaign_profile.select(0 if WorldConfig.profile_id == "classic" else 1)
+    _on_campaign_profile_selected(_campaign_profile.selected)
+    _campaign_center.visible = true
+
+
+func _close_campaign_panel() -> void:
+    _campaign_center.visible = false
+    _menu_center.visible = true
+
+
+func _confirm_new_campaign() -> void:
+    _campaign_dialog.popup_centered()
+
+
+func _start_new_campaign() -> void:
+    var selected_profile := "classic" if _campaign_profile.selected == 0 else "frontier"
+    if not WorldConfig.apply_profile(selected_profile):
+        return
+    Settings.set_world_profile(selected_profile)
+    Inventory.reset()
+    GameClock.reset()
+    Tech.reset()
+    SaveSystem.pending.clear()
+    get_tree().paused = false
+    get_tree().reload_current_scene()
 
 
 func _open_controls() -> void:
@@ -307,6 +413,8 @@ func _on_menu_requested() -> void:
 
 
 func _toggle() -> void:
+    if _campaign_center != null and _campaign_center.visible:
+        _close_campaign_panel()
     if _controls_center != null and _controls_center.visible:
         _close_controls()
     if _blocked and not _root.visible:
@@ -328,7 +436,9 @@ func _unhandled_input(event: InputEvent) -> void:
             get_viewport().set_input_as_handled()
             return
         if event.keycode == KEY_ESCAPE and _root.visible:
-            if _controls_center.visible:
+            if _campaign_center.visible:
+                _close_campaign_panel()
+            elif _controls_center.visible:
                 _close_controls()
             else:
                 _toggle()
