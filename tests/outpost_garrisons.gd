@@ -88,6 +88,17 @@ func _initialize() -> void:
     assert(not main.village.assign_nearest_outpost_guard(outpost),
         "A full Outpost must reject additional assignments")
 
+    var deceased_guard = outpost.guards.back()
+    deceased_guard.take_damage(deceased_guard.hp + 1)
+    await ticks(2)
+    assert(outpost.guard_count() == 1,
+        "A soldier death must release its Outpost guard slot")
+
+    var soldier_c = main.village.spawn_villager(keep.position + Vector2(-10, 18))
+    assert(soldier_c.set_job("soldier"), "A replacement soldier must be assignable")
+    assert(main.village.assign_nearest_outpost_guard(outpost) and outpost.guard_count() == 2,
+        "A freed slot must accept a replacement guard")
+
     var guards: Array = outpost.guards.duplicate()
     assert(guards.size() == 2, "The Outpost must own both guard references")
     var guard = guards[0]
@@ -120,6 +131,17 @@ func _initialize() -> void:
     distant_enemy.queue_free()
     await ticks(2)
 
+    var fog = get_first_node_in_group("fog_of_war")
+    assert(fog != null and fog.is_revealed_cell(outpost.cell + Vector2i(3, 0)),
+        "An Outpost must reveal its bounded local visibility radius")
+    var hud = get_first_node_in_group("hud")
+    assert(hud != null and hud._outpost_panel != null and hud._outpost_button != null,
+        "HUD must expose the Outpost inspection and assignment panel")
+    hud._toggle_outposts()
+    assert(hud._outpost_panel.visible and hud._outpost_list.get_child_count() > 0,
+        "Outpost panel must render local depot information")
+    hud._toggle_outposts()
+
     var snapshot: Dictionary = save_system.collect(main)
     assert(snapshot["version"] == 12, "Guard links must remain backward-compatible optional fields in save v12")
     var saved_guard_count := 0
@@ -128,6 +150,11 @@ func _initialize() -> void:
             saved_guard_count += 1
     assert(saved_guard_count == 2, "Save snapshot must persist both Outpost guard assignments")
     assert(save_system._valid_save(snapshot), "Save v12 with valid guard links must pass validation")
+    var legacy_snapshot := snapshot.duplicate(true)
+    for saved_villager in legacy_snapshot["villagers"]:
+        saved_villager.erase("guard_outpost")
+    assert(save_system._valid_save(legacy_snapshot),
+        "Existing v12 saves without the optional guard field must remain valid")
     var invalid_snapshot := snapshot.duplicate(true)
     for saved_villager in invalid_snapshot["villagers"]:
         if saved_villager.get("guard_outpost", null) is Dictionary:
