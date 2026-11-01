@@ -33,6 +33,7 @@ var guard_origin := Vector2.ZERO
 var role := "melee"
 var archetype := "raider"
 var faction_id := ""
+var _faction_tint := Color.WHITE
 var support_radius := 0.0
 var support_amount := 0
 var support_interval := 0.0
@@ -80,6 +81,11 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     role = String(data.get("role", "pouncer" if id == "wolf" else "melee"))
     archetype = String(data.get("archetype", role))
     faction_id = faction_override
+    _faction_tint = Color.WHITE
+    if not faction_id.is_empty():
+        var faction_data: Dictionary = FactionRegistry.faction_for_stronghold(faction_id)
+        if not faction_data.is_empty():
+            _faction_tint = Color(String(faction_data.get("color", "#ffffff")))
     support_radius = maxf(0.0, float(data.get("support_radius", 0.0)))
     support_amount = maxi(0, int(data.get("support_amount", 0)))
     support_interval = maxf(0.0, float(data.get("support_interval", 0.0)))
@@ -112,6 +118,7 @@ func _ready() -> void:
     if role == "ranged":
         add_to_group("ranged_enemies")
     anim.view = SpriteAnim.SIDE
+    modulate = _faction_tint
 
 
 func _physics_process(delta: float) -> void:
@@ -416,7 +423,7 @@ func take_damage(amount: int) -> void:
     hp -= applied
     Events.fx_burst.emit("impact", position + Vector2(0, -_fh * 0.4), Vector2.ZERO, 2.0 if is_boss else 1.0)
     modulate = Color(1.8, 1.8, 1.8)
-    create_tween().tween_property(self, "modulate", Color.WHITE, 0.12)
+    create_tween().tween_property(self, "modulate", _faction_tint, 0.12)
     queue_redraw()
     if hp <= 0:
         remove_from_group("enemies")
