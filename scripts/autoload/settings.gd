@@ -14,6 +14,7 @@ const RESERVED_KEYS := [
 ]
 
 var fullscreen := false
+var windowed_size := Vector2i(1280, 720)
 var vsync := true
 var volume := 0.8
 var screen_shake := true
@@ -34,6 +35,9 @@ func load_settings() -> void:
     if config.load(PATH) != OK:
         return
     fullscreen = bool(config.get_value("display", "fullscreen", fullscreen))
+    var saved_width := int(config.get_value("display", "window_width", windowed_size.x))
+    var saved_height := int(config.get_value("display", "window_height", windowed_size.y))
+    windowed_size = Vector2i(maxi(960, saved_width), maxi(540, saved_height))
     vsync = bool(config.get_value("display", "vsync", vsync))
     volume = clampf(float(config.get_value("audio", "volume", volume)), 0.0, 1.0)
     screen_shake = bool(config.get_value("display", "screen_shake", screen_shake))
@@ -47,6 +51,8 @@ func load_settings() -> void:
 func save_settings() -> void:
     var config := ConfigFile.new()
     config.set_value("display", "fullscreen", fullscreen)
+    config.set_value("display", "window_width", windowed_size.x)
+    config.set_value("display", "window_height", windowed_size.y)
     config.set_value("display", "vsync", vsync)
     config.set_value("audio", "volume", volume)
     config.set_value("display", "screen_shake", screen_shake)
@@ -116,6 +122,8 @@ func apply() -> void:
     DisplayServer.window_set_mode(
         DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
     )
+    if not fullscreen:
+        DisplayServer.window_set_size(windowed_size)
     DisplayServer.window_set_vsync_mode(
         DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED
     )
@@ -124,6 +132,16 @@ func apply() -> void:
 
 func set_fullscreen(value: bool) -> void:
     fullscreen = value
+    apply()
+    save_settings()
+
+
+func set_window_size(value: Vector2i) -> void:
+    var screen_size := DisplayServer.screen_get_size()
+    var safe_width := clampi(value.x, 960, maxi(960, screen_size.x))
+    var safe_height := clampi(value.y, 540, maxi(540, screen_size.y))
+    windowed_size = Vector2i(safe_width, safe_height)
+    fullscreen = false
     apply()
     save_settings()
 
