@@ -1,5 +1,7 @@
 extends SceneTree
 
+const MAX_PARTICLES := 500
+
 var world_config
 var data_db
 var faction_registry
