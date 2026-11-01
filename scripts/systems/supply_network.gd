@@ -249,7 +249,7 @@ func _pressure_key(cell: Vector2i) -> String:
 func _depot_under_threat(depot: Node) -> bool:
     if territory == null or not is_instance_valid(territory):
         return false
-    var owner := territory.owner_at(depot.cell)
+    var owner: String = territory.owner_at(depot.cell)
     if owner == "enemy" or owner == "contested":
         return true
     var region_id: String = world.region_id(depot.cell)
@@ -324,7 +324,7 @@ func advance_supply_pressure(delta: float) -> void:
         var retry_in := maxf(0.0, float(record.get("spawn_retry", 0.0)) - delta)
         record["spawn_retry"] = retry_in
         var raid_count := int(record.get("raid_count", 0))
-        var next_raid_at := PRESSURE_RAID_SECONDS + float(maxi(0, raid_count - 1)) * PRESSURE_REPEAT_SECONDS
+        var next_raid_at := PRESSURE_RAID_SECONDS + float(raid_count) * PRESSURE_REPEAT_SECONDS
         if raid_count < MAX_RAIDS_PER_ISOLATION and contested_seconds >= next_raid_at and retry_in <= 0.0 and _active_supply_raiders(depot.cell) == 0:
             if _spawn_supply_raid(depot):
                 raid_count += 1
@@ -391,7 +391,7 @@ func _find_supply_raid_spawn(depot: Node) -> Vector2i:
                 var candidate := depot.cell + Vector2i(x, y)
                 if not world.is_buildable(candidate) or not nav.is_walkable(candidate):
                     continue
-                var owner := territory.owner_at(candidate)
+                var owner: String = territory.owner_at(candidate)
                 if owner != "enemy" and owner != "contested":
                     continue
                 var path: PackedVector2Array = nav.path_adjacent(nav.center_of(candidate), target_cells)
