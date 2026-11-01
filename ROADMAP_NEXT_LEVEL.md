@@ -1,8 +1,8 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
-**Status:** Phase 00–04 foundations are merged into `main`; the latest `main` CI is green on Godot 4.3 and 4.7. Phase 05 starts with specialized resource workplaces on `feat/phase-05-resource-worksites`.  
-**Implementation branches:** merged expansion foundations on `main` → `feat/phase-05-resource-worksites` (Phase 05 resource-worksite slice).  
-**Baseline:** Godot 4.3+ / GDScript, Classic world 64×64, Frontier world 128×128, save format v9
+**Status (2026-11-01):** Phase 00, 01, 03 and the initial slices of 02, 04, 05, 06, 07, 09 and 10 are merged into `main`. Phase 02, 04, 05 and 06 remain partially implemented; Phase 08 has not been implemented as a distinct delivery. All remaining manual acceptance gates are still open.  
+**Current main:** `f540faebb83402030ea4a360161eacd737e28856`. Latest mainline CI: [workflow #294](https://github.com/shimleabyte/hold-the-keep/actions/runs/41309837812), 44/44 jobs successful on Godot 4.3 and 4.7 plus export/performance diagnostics.  
+**Baseline:** Godot 4.3+ / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, save format v11.
 
 ## 1. Product direction
 
@@ -64,7 +64,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 ## 4. Phased implementation
 
 ### Phase 00 — Foundation and verification
-**Status:** Merged into `main`; verified on Godot 4.3 and 4.7 (CI run `41287974528`)
+**Status:** Complete and merged into `main`; legacy profile migration covered by `world_config` and `release_hardening` on Godot 4.3/4.7.
 
 - [x] Add this roadmap and link it from project documentation.
 - [x] Add Godot CI on Godot 4.3 and 4.7.
@@ -73,7 +73,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Centralize world profiles, dimensions, tile size, seed, starting Keep position and profile-level resource density.
 - [x] Migrate all spatial systems away from duplicated 64×64 constants while keeping Classic active.
 - [x] Bump save format to v7 and persist world identity.
-- [ ] Prove v1–v6 saves remain valid in Classic and are rejected for non-Classic profiles on both engine versions.
+- [x] Prove v1–v6 saves remain valid in Classic and are rejected for non-Classic profiles on both engine versions.
 
 **Acceptance gate — passed**
 - Both CI engine versions import the project, parse every script and complete all assertion-based regression jobs.
@@ -82,7 +82,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - Frontier remains an explicit new-campaign choice; Classic stays the shipped default.
 
 ### Phase 01 — Expanded deterministic world
-**Status:** Merged into `main`; Godot 4.3 / 4.7 CI passed.
+**Status:** Complete and merged into `main`; five deterministic Frontier biomes and Classic preservation are covered by CI.
 
 - [x] Add explicit Classic/Frontier selection to the new-campaign panel and persist the selected profile.
 - [x] Generate five warped regions: Hearthland, Greenwood, Highlands, Fenlands and Ashen March.
@@ -143,7 +143,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** workers select valid tasks, avoid cross-map wandering, recover from blocked paths, deposit at reachable storage and retain their state through saves.
 
 ### Phase 05 — Buildings and production chains
-**Status:** Merged into `main` through PR #19. Godot 4.3/4.7 CI passed (30/30 jobs); manual in-game balance/pathing review remains.
+**Status:** Initial resource-worksite slice merged through PR #19; the full buildings/production phase remains in progress. Latest main CI passes; construction queue and manual economy/pathing review remain.
 
 - [x] Add a Lumber Camp with two woodcutter workplace slots and an 18-tile resource work radius.
 - [x] Add a Quarry with two miner workplace slots and a 16-tile resource work radius.
@@ -175,7 +175,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** each archetype creates a distinct tactical response; AI remains bounded under stress tests; factions obey territory and campaign state; save/load and both engine CI versions pass.
 
 ### Phase 07 — Technology and campaign objectives
-**Status:** Merged into `main` through mainline PR #28. Fresh Godot 4.3/4.7 workflow #288 passed 30/30 jobs; rendered/manual difficulty review remains open.
+**Status:** Implementation merged through PR #28. Current mainline workflow #294 passed 44/44 jobs; rendered/manual difficulty and campaign review remain open.
 
 - [x] Expand the technology tree from 17 to 20 nodes without changing existing technology IDs or prerequisites.
 - [x] Add a Frontier 20-day / 4-act ruleset while preserving Classic's 15-day / 3-stage rules.
@@ -202,7 +202,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** screenshot passes at target desktop resolutions; visual readability under day/night, fog and combat load; no placeholder-only faction identity in release content.
 
 ### Phase 09 — Balance, performance and release hardening
-**Status:** Merged into `main` through PR #29. Mainline Godot 4.3/4.7 workflow #290 passed 30/30 jobs, including Windows/Linux export checks. Target-machine profiling and human campaign review remain open.
+**Status:** Automated hardening and Godot 4.3/4.7 export CI merged through PR #29. Current mainline workflow #294 passed 44/44 jobs. Target-hardware profiling, complete campaign playtest, Windows runtime and clean-machine verification remain open.
 
 - [x] Add configurable Classic/Frontier profiling for p50/p95/p99 process, physics and wall-frame timing, static memory, node count, projectiles and particles.
 - [x] Add bounded Frontier stress coverage for four factions, mixed rosters, villagers, ranged projectiles and the 500-particle ceiling.
@@ -221,7 +221,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 
 **Remaining acceptance work:** measured target-hardware performance, later-act/day-20 combat outcome simulations, full multi-act human playtest, Windows runtime on a real Windows machine, and clean-machine save/settings migration.
 ### Phase 10 — Resolution-matched viewport and HUD safe area
-**Status:** Merged into `main` through PR #30. Mainline Godot 4.3/4.7 workflow #292 passed 30/30 jobs, including `responsive_layout` and `map_stages`. Physical-display screenshot and manual fullscreen review remain open.
+**Status:** Adaptive viewport implementation merged through PR #30. Current mainline workflow #294 passed 44/44 jobs, including responsive layout tests. Physical-display screenshots and manual fullscreen review remain open.
 
 - [x] Derive logical viewport dimensions from actual client-window size at exact 2× pixel scale, with a 480×270 minimum.
 - [x] Use 640×360 at 1280×720 and cover 960×540, 1280×800, 1366×768, 1600×900 and 1920×1080.
