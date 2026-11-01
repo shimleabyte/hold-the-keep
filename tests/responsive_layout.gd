@@ -19,6 +19,14 @@ func _initialize() -> void:
         "Pixel-art world rendering must remain viewport-based")
     assert(String(ProjectSettings.get_setting("display/window/stretch/scale_mode")) == "integer",
         "Pixel-art scaling must remain integer-based")
+    assert(int(ProjectSettings.get_setting("display/window/size/min_width")) >= 960,
+        "Window minimum width must remain laptop-friendly")
+    assert(int(ProjectSettings.get_setting("display/window/size/min_height")) >= 540,
+        "Window minimum height must remain laptop-friendly")
+    assert(int(ProjectSettings.get_setting("display/window/size/initial_position_type")) == 1,
+        "The initial window must be centered on the primary screen")
+    assert(Settings.windowed_size.x >= 960 and Settings.windowed_size.y >= 540,
+        "Saved windowed size must satisfy the minimum display dimensions")
 
     var hud = get_first_node_in_group("hud")
     assert(hud != null, "The main scene must create the HUD")
@@ -66,6 +74,10 @@ func _initialize() -> void:
         "Technology overlay root must fill the viewport")
     assert(pause != null and pause._root.anchor_right == 1.0 and pause._root.anchor_bottom == 1.0,
         "Pause overlay root must fill the viewport")
+    assert(pause._resolution_values.size() > 0,
+        "The pause menu must expose at least one monitor-compatible window preset")
+    assert(pause._resolution_values.has(Settings.windowed_size),
+        "The currently saved window size must remain selectable")
 
     print("PASS: expanded integer-scaled viewport and responsive HUD/map layout at five resolutions")
     quit()
