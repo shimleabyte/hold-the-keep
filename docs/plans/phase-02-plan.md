@@ -1,6 +1,6 @@
 # Phase 02 — Local Logistics and Outpost Support
 
-**Status:** Partial implementation. Regional ownership, roads/bridges, Keep-rooted connectivity, local Storage/Outpost stockpiles, Frontier deposits and bounded automatic shipments to Keep are merged into `main` through PR #31 with save v12. PR #32 is merged into `main` and adds read-only depot inspection, Outpost guard slots/assignment, local defense leash, lifecycle handling and save/load persistence. Its Godot 4.3/4.7 CI passed 48/48 jobs. Outpost-local visibility and currently-observed enemy map markers already exist in `main` and are not new work. PR #33 is merged into `main` and delivers manual Keep/Storage/Outpost shipments with physical carriers, escrowed cargo and interruption recovery. Godot 4.3/4.7 CI passed 50/50 jobs. Direct source-depot spending for build/research remains open.
+**Status:** Partial implementation. Regional ownership, roads/bridges, Keep-rooted connectivity, local Storage/Outpost stockpiles, Frontier deposits and bounded automatic shipments to Keep are merged into `main` through PR #31 with save v12. PR #32 is merged into `main` and adds read-only depot inspection, Outpost guard slots/assignment, local defense leash, lifecycle handling and save/load persistence. Its Godot 4.3/4.7 CI passed 48/48 jobs. Outpost-local visibility and currently-observed enemy map markers already exist in `main` and are not new work. PR #33 is merged into `main` and delivers manual Keep/Storage/Outpost shipments with physical carriers, escrowed cargo and interruption recovery. Godot 4.3/4.7 CI passed 50/50 jobs. Explicit Keep/Storage/Outpost cost-source spending for build/research/repair is implemented on `feat/phase-02-depot-cost-sources`; CI pending.
 **Dependency:** Keep-connected supply graph and local stockpiles in save v12; mainline now uses save v13 for physical shipment records, with v1–v12 migration compatibility.
 **Engine targets:** Godot 4.3 and 4.7.
 
@@ -14,12 +14,12 @@ Turn road connectivity into an actual logistics system without changing Classic 
 
 **Delivered logistics slice (PR #31, merged):** Storage and Outposts have bounded local stockpile capacity (180 and 120 units). Frontier workers deposit carried resources into connected remote depots; full/unsupported stockpiles reject deposits and workers retain cargo while rerouting. Every 3 seconds, each connected remote depot transfers at most 6 units to Keep Inventory, rotating resource-kind priority. Disconnected depots retain their local goods. These transfers are atomic on a bounded tick rather than physical carrier trips, so there is no in-flight cargo state. Save v12 persists per-building balances and validates resource kinds, non-negative quantities and capacity. Classic deposits remain on central Inventory.
 
-**Still open in 02.2:** direct source-depot spending/reservation for construction and research. Read-only stock inspection is delivered in PR #32; players can now move local stock explicitly through the physical shipment order flow (branch CI pending).
+**Cost-source implementation (branch `feat/phase-02-depot-cost-sources`; CI pending):** `JOBS → POS` selects one source depot for construction, research and repairs. Payments debit only that source, reject disconnected remote depots, and never pool balances. The selected cell is stored as an optional field in save v13 so previous v13 saves remain valid.
 - [x] Give Storage and Outposts a persisted resource ledger with explicit capacity and accepted resource types.
 - Keep the Keep as the initial central depot. Storage and Outposts hold local stock rather than silently crediting a global shared balance.
 - [x] Frontier worker deposits atomically remove carried cargo and add exactly that amount to one connected depot. Disconnected depots are ineligible.
 - Define overflow behavior: workers retain unaccepted cargo or select another eligible depot; never silently destroy or duplicate resources.
-- Keep existing build/research spending compatible by introducing an explicit source-depot selection/reservation rule. Local Outpost/Storage stock is not globally spendable until an actual transfer or documented local-consumption rule exists.
+- [x] Expose a shared Keep/Storage/Outpost source selector for build, research and repair costs; debit only the selected depot and reject disconnected sources (implementation branch; CI pending).
 - [x] Render read-only local stock inspection for Storage and Outposts in the `JOBS → POS` panel; withdrawal and spending controls remain deferred.
 
 ### 02.3 — Inter-depot transfers
@@ -46,7 +46,7 @@ Turn road connectivity into an actual logistics system without changing Classic 
 - Do not implement attrition in the local-stockpile slice.
 
 ## Persistence and compatibility
-- [x] Save v12 persists local stockpiles; save v13 additionally persists shipment order history and escrowed in-transit cargo. v1–v12 remain loadable; pre-v13 saves import with an empty shipment ledger.
+- [x] Save v12 persists local stockpiles; save v13 additionally persists shipment order history, escrowed in-transit cargo and now optional cost-source selection. v1–v12 remain loadable; previous v13 saves without the optional source field remain valid.
 - Preserve Classic's current shared-resource behavior unless a separate Classic design decision explicitly changes it.
 - [x] Test Classic v1–v13 and Frontier v7–v13 migrations plus v12 local-stockpile and v13 physical-shipment save/restore, capacity reservation, backup recovery and interrupted writes.
 - Removing a depot must deterministically resolve its stock and in-transit cargo; no silent resource duplication.
@@ -63,7 +63,7 @@ Turn road connectivity into an actual logistics system without changing Classic 
 - Classic economy remains unchanged.
 
 ## Acceptance gate
-- Local stockpiles are authoritative for remote Frontier depot deposits; central construction/research spending must not consume remote stock before explicit transfer or source-depot rules exist.
+- Local stockpiles are authoritative for remote Frontier deposits. Build/research/repair charges must be paid fully by the explicitly selected source depot; do not pool balances across depots. Classic continues using the Keep Inventory.
 - [x] Automatic Keep-bound transfers are bounded, deterministic and atomic; local balances persist through save/load.
 - [x] Player-directed physical shipments, cancellation/refund, destination-capacity reservation and recoverable route interruption are merged through PR #33 (Godot 4.3/4.7 CI passed 50/50).
 - [x] Outposts provide working guard assignment and local visibility (PR #32 merged; Godot CI passed 48/48).
