@@ -67,7 +67,6 @@ const HELP_ROWS := [
     ["O", "OBJEKTIF CONQUEST"],
     ["E (DI SITUS)", "INTERAKSI OBJEKTIF"],
     ["JOBS", "PANEL KUOTA"],
-    ["JOBS > POS", "STOK LOKAL & PENJAGA OUTPOST"],
 ]
 
 var _font: Font
@@ -580,6 +579,8 @@ func _refresh_outpost_panel() -> void:
             release.custom_minimum_size = Vector2(25, 22)
             release.disabled = depot.guard_count() <= 0
             release.tooltip_text = "Tarik satu penjaga dari Outpost"
+            release.add_theme_font_override("font", _font)
+            release.add_theme_font_size_override("font_size", 8)
             release.pressed.connect(_release_outpost_guard.bind(depot))
             row.add_child(release)
 
@@ -588,6 +589,8 @@ func _refresh_outpost_panel() -> void:
             assign.custom_minimum_size = Vector2(25, 22)
             assign.disabled = depot.free_guard_slots() <= 0
             assign.tooltip_text = "Tugaskan prajurit terdekat yang belum menjaga Outpost"
+            assign.add_theme_font_override("font", _font)
+            assign.add_theme_font_size_override("font_size", 8)
             assign.pressed.connect(_assign_outpost_guard.bind(depot))
             row.add_child(assign)
 
