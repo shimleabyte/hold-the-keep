@@ -174,6 +174,40 @@ func adjust_quota(job: String, delta: int) -> void:
     assign_jobs()
 
 
+func assign_nearest_outpost_guard(outpost) -> bool:
+    if not is_instance_valid(outpost) or String(outpost.id) != "outpost":
+        return false
+    if outpost.free_guard_slots() <= 0:
+        return false
+
+    var best = null
+    var best_path_length := INF
+    for soldier in villagers():
+        if soldier.job != "soldier" or soldier.is_outpost_guard() or soldier.is_expeditioning() or soldier.is_recalling_expedition():
+            continue
+        var path: PackedVector2Array = nav.path_adjacent(soldier.position, outpost.cells())
+        if path.is_empty():
+            continue
+        if float(path.size()) < best_path_length:
+            best_path_length = float(path.size())
+            best = soldier
+
+    if best == null or not best.assign_outpost_guard(outpost):
+        return false
+    return true
+
+
+func release_outpost_guard(outpost) -> bool:
+    if not is_instance_valid(outpost) or String(outpost.id) != "outpost":
+        return false
+    outpost.guards = outpost.guards.filter(func(guard): return is_instance_valid(guard))
+    if outpost.guards.is_empty():
+        return false
+    var soldier = outpost.guards.back()
+    soldier.release_outpost_guard()
+    return true
+
+
 func command_expedition() -> void:
     var main = get_tree().get_first_node_in_group("main")
     var stronghold = main.campaign.current_target_node() if main != null and main.campaign != null else null
@@ -187,12 +221,17 @@ func command_expedition() -> void:
 
     var soldiers: Array = []
     var should_recall := false
+    var assigned_guards := 0
     for villager in villagers():
-        if villager.job == "soldier":
-            soldiers.append(villager)
-            should_recall = should_recall or villager.is_expeditioning()
+        if villager.job != "soldier":
+            continue
+        if villager.is_outpost_guard():
+            assigned_guards += 1
+            continue
+        soldiers.append(villager)
+        should_recall = should_recall or villager.is_expeditioning()
     if soldiers.is_empty():
-        Events.build_feedback.emit("Tetapkan kuota prajurit terlebih dahulu")
+        Events.build_feedback.emit("Semua prajurit sedang menjaga Outpost" if assigned_guards > 0 else "Tetapkan kuota prajurit terlebih dahulu")
         return
     if should_recall:
         for soldier in soldiers:
