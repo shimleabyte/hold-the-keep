@@ -186,10 +186,11 @@ func assign_nearest_outpost_guard(outpost) -> bool:
         if soldier.job != "soldier" or soldier.is_outpost_guard() or soldier.is_expeditioning() or soldier.is_recalling_expedition():
             continue
         var path: PackedVector2Array = nav.path_adjacent(soldier.position, outpost.cells())
-        if path.is_empty():
+        if path.is_empty() and soldier.position.distance_to(outpost.position) > 45.0:
             continue
-        if float(path.size()) < best_path_length:
-            best_path_length = float(path.size())
+        var route_length := float(path.size()) if not path.is_empty() else 0.0
+        if route_length < best_path_length:
+            best_path_length = route_length
             best = soldier
 
     if best == null or not best.assign_outpost_guard(outpost):
