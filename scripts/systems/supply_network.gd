@@ -7,11 +7,16 @@ const DIRS4: Array[Vector2i] = [
     Vector2i(1, 0), Vector2i(-1, 0),
     Vector2i(0, 1), Vector2i(0, -1)
 ]
+const TRANSFER_INTERVAL := 3.0
+const TRANSFER_BUDGET_PER_DEPOT := 6
+const TRANSFER_KINDS: Array[String] = ["wood", "stone", "food", "iron"]
 
 var world
 var connected_road_cells: Dictionary = {}
 var _depot_connections: Dictionary = {}
 var _dirty := true
+var _transfer_timer := 0.0
+var _transfer_cursor := 0
 
 
 func _ready() -> void:
@@ -28,6 +33,58 @@ func _on_building_event(_id: String, _cell: Vector2i) -> void:
 func _physics_process(_delta: float) -> void:
     if _dirty:
         rebuild()
+
+
+func _process(delta: float) -> void:
+    if WorldConfig.profile_id != "frontier":
+        return
+    _transfer_timer += delta
+    if _transfer_timer < TRANSFER_INTERVAL:
+        return
+    _transfer_timer = 0.0
+    transfer_local_stockpiles()
+
+
+## Move a bounded amount from each connected remote depot into the Keep inventory.
+## This is an automatic road-network shipment; disconnected stock remains at its source.
+func transfer_local_stockpiles() -> int:
+    if WorldConfig.profile_id != "frontier":
+        return 0
+    _ensure_current()
+    var depots: Array = get_tree().get_nodes_in_group("depots")
+    depots.sort_custom(func(a, b) -> bool:
+        if a.cell.y == b.cell.y:
+            return a.cell.x < b.cell.x
+        return a.cell.y < b.cell.y
+    )
+    var keep = null
+    for depot in depots:
+        if is_instance_valid(depot) and String(depot.id) == "keep":
+            keep = depot
+            break
+    if keep == null:
+        return 0
+
+    var moved := 0
+    for depot in depots:
+        if not is_instance_valid(depot) or depot == keep:
+            continue
+        if not is_depot_connected(depot):
+            continue
+        var budget := TRANSFER_BUDGET_PER_DEPOT
+        for offset in TRANSFER_KINDS.size():
+            var index := (_transfer_cursor + offset) % TRANSFER_KINDS.size()
+            var kind := TRANSFER_KINDS[index]
+            var amount := mini(budget, depot.stockpile_amount(kind))
+            if amount <= 0 or not depot.take_resource(kind, amount):
+                continue
+            Inventory.add(kind, amount)
+            moved += amount
+            budget -= amount
+            if budget <= 0:
+                break
+    _transfer_cursor = (_transfer_cursor + 1) % TRANSFER_KINDS.size()
+    return moved
 
 
 func rebuild() -> void:
