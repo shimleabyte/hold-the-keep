@@ -94,7 +94,7 @@ func _ready() -> void:
         build.place_raw("keep", world.starting_keep_cell())
         _spawn_enemy_keep()
         # Dua penduduk awal, relative to the configured Keep position.
-        var keep_position := world.keep_center_position()
+        var keep_position: Vector2 = world.keep_center_position()
         for i in 2:
             village.spawn_villager(keep_position + Vector2((i * 2 - 1) * 8.0, 10.0))
     else:
@@ -123,7 +123,7 @@ func _enemy_keep_cells(anchor: Vector2i) -> Array[Vector2i]:
 func _find_enemy_keep_cell() -> Vector2i:
     nav.rebuild()
     var candidates: Array[Dictionary] = []
-    var keep_cell := world.starting_keep_cell()
+    var keep_cell: Vector2i = world.starting_keep_cell()
     var keep_center := Vector2(keep_cell) + Vector2(1.5, 1.5)
     var map_size := WorldConfig.map_size
     var min_stronghold_distance := float(map_size) * 0.34375
