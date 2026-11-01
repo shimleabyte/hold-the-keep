@@ -102,7 +102,7 @@ func _scan_discovery() -> void:
     for objective_id in objectives:
         var record: Dictionary = objectives[objective_id]
         var definition: Dictionary = record["definition"]
-        if String(definition["type"]) == "discovery" and String(definition["region"]) == region and not bool(record["completed"]):
+        if String(definition["type"]) == "discovery" and int(definition.get("act", 1)) <= unlocked_act and String(definition["region"]) == region and not bool(record["completed"]):
             complete_objective(String(objective_id))
 
 
