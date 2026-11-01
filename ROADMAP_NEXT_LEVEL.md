@@ -199,7 +199,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** screenshot passes at target desktop resolutions; visual readability under day/night, fog and combat load; no placeholder-only faction identity in release content.
 
 ### Phase 09 — Balance, performance and release hardening
-**Status:** Automated hardening slice implemented on `feat/phase-09-balance-performance-release-v5`, stacked on the latest Phase 07 base. PR #26 is open as draft. Previous workflow run #271 passed; benchmark script has since been tightened to sustain all 500 particles and awaits a fresh run.
+**Status:** Automated hardening slice implemented on `feat/phase-09-balance-performance-release-v5`, stacked on the latest Phase 07 base. PR #26 is open as draft. Previous workflow run #278 passed; benchmark script has since been tightened to sustain all 500 particles and awaits a fresh run.
 
 - [x] Replace the Classic-only micro-benchmark with configurable Classic/Frontier profiling for frame timing, static memory, node count, projectiles and particles.
 - [x] Add a bounded Frontier stress regression with all four factions, mixed rosters, 48 additional villagers, a live ranged projectile and the 500-particle ceiling.
@@ -208,12 +208,14 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add a Frontier campaign reload test preserving completed objectives, unlocked Act II, active escort/path progress and damaged stronghold HP.
 - [x] Run the configured Godot 4.3/4.7 import, parse and regression matrix (previous workflow run #271).
 - [x] Install Godot 4.3-matching export templates in CI, export Windows/Linux binaries, validate the Windows PE format and smoke-test Linux headlessly.
-- [x] Publish a Godot 4.7 Frontier benchmark artifact; latest script revision now sustains the 500-particle ceiling and requires a fresh workflow run.
+- [x] Publish a Godot 4.7 Frontier benchmark artifact; revised script sustained the 500-particle ceiling and passed workflow run #278.
 - [ ] Measure the reference workload on actual target desktop hardware and compare p50/p95/p99 before making performance optimizations.
 - [ ] Add combat outcome simulations at the end of all four Frontier acts and on day 20; record Keep HP, survivors, enemy remainder and simulated time.
 - [ ] Extend reload coverage to later acts, conquered strongholds and the final-boss gate.
 - [ ] Human-playtest all acts, objective readability, navigation, combat pacing and failure recovery.
 - [ ] Verify Windows runtime on a Windows runner and test both exports on clean target machines, including first launch and save/settings migration.
+
+**CI diagnostic (not target hardware):** 128×128 Frontier, 119 active enemies, 82 villagers, six peak projectiles, 500 peak particles; wall-frame p50 4.27 ms / p95 10.45 ms / p99 13.55 ms. The Godot process monitor recorded a p95 outlier of 102.24 ms, so inspect raw artifact and do not treat CI timing as an accepted budget.
 
 **Provisional desktop target (not measured):** 60 FPS at 1280×720 under Frontier 128×128 with 96 requested faction enemies, 80 additional villagers and up to 500 live particles; p95 frame time ≤16.67 ms and p99 ≤33.3 ms. CI headless timings are diagnostic only and are not evidence of target-machine performance.
 
