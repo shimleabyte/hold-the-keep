@@ -123,8 +123,8 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 - Satu arah samping digambar; kiri/kanan identik (cermin). Animasi dari pose prosedural, bukan gambar tangan.
 - Tidak ada musik; SFX prosedural sederhana.
 - Rebind empat kelompok kontrol inti sudah ada melalui menu jeda; shortcut UI/job/build masih tetap.
-- Teks HUD hanya huruf kapital; resolusi non-16:9 belum diuji.
-- Map overlay dibangun untuk layout dasar 480x270; penyesuaian resolusi non-16:9 tetap perlu uji manual.
+- Teks HUD hanya huruf kapital; automated bounds coverage for common non-16:9 logical sizes has been added. Visual rendering still needs manual confirmation in Godot.
+- Map overlay is responsive to expanded logical viewport dimensions; the new automated layout test is committed, but actual rendered screenshots still need manual confirmation.
 
 ## 9. Rencana berikut (belum dikerjakan)
 1. Mainkan dan catat bagian yang janggal; sesuaikan balancing hari 2-14 (teknologi mengubah kurva kekuatan).
