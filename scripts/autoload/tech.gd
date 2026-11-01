@@ -99,8 +99,13 @@ func reason(id: String) -> String:
     var need_b: String = String(t.get("building", ""))
     if need_b != "" and not has_building(need_b):
         return "Butuh bangunan: " + String(DataDB.buildings[need_b]["name"])
-    if not Inventory.can_afford(cost_of(id)):
-        return "Bahan kurang"
+    var cost: Dictionary = cost_of(id)
+    var supply = get_tree().get_first_node_in_group("supply_network")
+    var cost_error := supply.cost_reason(cost) if supply != null else (
+        "" if Inventory.can_afford(cost) else "Bahan kurang di KEEP"
+    )
+    if cost_error != "":
+        return cost_error
     return ""
 
 
@@ -120,7 +125,13 @@ func start(id: String) -> bool:
     if why != "":
         Events.build_feedback.emit(why)
         return false
-    Inventory.spend_all(cost_of(id))
+    var cost: Dictionary = cost_of(id)
+    var supply = get_tree().get_first_node_in_group("supply_network")
+    var paid: bool = supply.pay_cost(cost) if supply != null else Inventory.spend_all(cost)
+    if not paid:
+        var cost_error := supply.cost_reason(cost) if supply != null else "Bahan kurang di KEEP"
+        Events.build_feedback.emit(cost_error if cost_error != "" else "Stok sumber biaya berubah")
+        return false
     current = id
     progress = 0.0
     Events.tech_started.emit(id)
