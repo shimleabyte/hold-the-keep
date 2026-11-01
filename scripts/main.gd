@@ -122,6 +122,8 @@ func _enemy_keep_cells(anchor: Vector2i) -> Array[Vector2i]:
 
 func _find_enemy_keep_cell() -> Vector2i:
     nav.rebuild()
+    if WorldConfig.profile_id == "frontier":
+        return _find_frontier_enemy_keep_cell()
     var candidates: Array[Dictionary] = []
     var keep_cell: Vector2i = world.starting_keep_cell()
     var keep_center := Vector2(keep_cell) + Vector2(1.5, 1.5)
@@ -149,6 +151,43 @@ func _find_enemy_keep_cell() -> Vector2i:
         if not nav.path_adjacent(player.position, _enemy_keep_cells(anchor)).is_empty():
             return anchor
     return Vector2i(-1, -1)
+
+
+func _find_frontier_enemy_keep_cell() -> Vector2i:
+    var start := nav.cell_of(player.global_position)
+    var reachable := nav.reachable_cells(start)
+    if reachable.is_empty():
+        return Vector2i(-1, -1)
+
+    var keep_cell: Vector2i = world.starting_keep_cell()
+    var keep_center := Vector2(keep_cell) + Vector2(1.5, 1.5)
+    var best_cell := Vector2i(-1, -1)
+    var best_distance := -1.0
+    var map_size := WorldConfig.map_size
+
+    for y in range(5, map_size - 5):
+        for x in range(5, map_size - 5):
+            var anchor := Vector2i(x, y)
+            var center := Vector2(anchor) + Vector2(1.5, 1.5)
+            var distance := center.distance_to(keep_center)
+            if distance < float(map_size) * 0.34375 or distance <= best_distance:
+                continue
+
+            var accessible := false
+            var clear := true
+            for cell in _enemy_keep_cells(anchor):
+                if not world.is_buildable(cell) or world.occupied.has(cell):
+                    clear = false
+                    break
+                for direction in nav.DIRS4:
+                    if reachable.has(cell + direction):
+                        accessible = true
+
+            if clear and accessible:
+                best_cell = anchor
+                best_distance = distance
+
+    return best_cell
 
 
 func _spawn_enemy_keep(saved: Dictionary = {}, create_garrison := true) -> void:
