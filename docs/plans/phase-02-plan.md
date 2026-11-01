@@ -1,6 +1,6 @@
 # Phase 02 — Local Logistics and Outpost Support
 
-**Status:** Partial implementation. Regional ownership, roads/bridges, Keep-rooted connectivity, local Storage/Outpost stockpiles, Frontier deposits and bounded automatic shipments to Keep are implemented merged into `main` through PR #31 with save v12. Stock inspection/withdrawal UI, player-directed shipment orders, Outpost garrisons and Outpost-local visibility remain open.
+**Status:** Partial implementation. Regional ownership, roads/bridges, Keep-rooted connectivity, local Storage/Outpost stockpiles, Frontier deposits and bounded automatic shipments to Keep are merged into `main` through PR #31 with save v12. Follow-up branch `feat/phase-02-outpost-garrisons` adds read-only depot inspection, Outpost guard slots/assignment, local defense leash, lifecycle handling and save/load persistence; its CI gate is pending. Outpost-local visibility and currently-observed enemy map markers already exist in `main` and are not new work. Withdrawal, explicit local spending and player-directed shipments remain open.
 **Dependency:** The existing Keep-connected supply graph and save v12.
 **Engine targets:** Godot 4.3 and 4.7.
 
@@ -14,13 +14,13 @@ Turn road connectivity into an actual logistics system without changing Classic 
 
 **Delivered logistics slice (PR #31, merged):** Storage and Outposts have bounded local stockpile capacity (180 and 120 units). Frontier workers deposit carried resources into connected remote depots; full/unsupported stockpiles reject deposits and workers retain cargo while rerouting. Every 3 seconds, each connected remote depot transfers at most 6 units to Keep Inventory, rotating resource-kind priority. Disconnected depots retain their local goods. These transfers are atomic on a bounded tick rather than physical carrier trips, so there is no in-flight cargo state. Save v12 persists per-building balances and validates resource kinds, non-negative quantities and capacity. Classic deposits remain on central Inventory.
 
-**Still open in 02.2:** player-facing local stock inspection/withdrawal, explicit source-depot spending/reservation, and player-directed shipment orders.
+**Still open in 02.2:** local stock withdrawal, explicit source-depot spending/reservation, and player-directed shipment orders. The follow-up branch provides read-only inspection; automated validation is pending.
 - [x] Give Storage and Outposts a persisted resource ledger with explicit capacity and accepted resource types.
 - Keep the Keep as the initial central depot. Storage and Outposts hold local stock rather than silently crediting a global shared balance.
 - [x] Frontier worker deposits atomically remove carried cargo and add exactly that amount to one connected depot. Disconnected depots are ineligible.
 - Define overflow behavior: workers retain unaccepted cargo or select another eligible depot; never silently destroy or duplicate resources.
 - Keep existing build/research spending compatible by introducing an explicit source-depot selection/reservation rule. Local Outpost/Storage stock is not globally spendable until an actual transfer or documented local-consumption rule exists.
-- Render local stock in a depot inspection UI before adding management complexity to the global HUD.
+- [x] Render read-only local stock inspection for Storage and Outposts in the `JOBS → POS` panel; withdrawal and spending controls remain deferred.
 
 ### 02.3 — Inter-depot transfers
 - [x] Add a bounded automatic shipment service that moves local stock from connected Storage/Outposts into Keep Inventory on a periodic tick.
@@ -30,11 +30,11 @@ Turn road connectivity into an actual logistics system without changing Classic 
 - Add player-directed transfer orders, physical carrier trips, route interruption/recovery and an in-transit cargo state as a later increment. Do not imply those features exist in the automatic atomic-transfer slice.
 
 ### 02.4 — Outpost defense and visibility
-- Add configurable guard slots to Outposts and an assignment UI using existing soldier specialization.
-- Assigned guards remain attached to their Outpost, defend a local radius, and return after enemies leave or are defeated.
-- Outposts reveal a bounded local radius independent of ownership and road supply.
-- Strategic map markers must reveal enemy locations only while observed; unseen hostile units must not leak through stored territory data.
-- Persist assigned guards and validate release/reassignment when an Outpost is removed or captured.
+- [x] Add two configurable guard slots to Outposts and assignment/release controls using existing soldier specialization (follow-up branch; CI pending).
+- [x] Assigned guards remain attached to their Outpost, engage enemies only inside a 128-pixel local defense radius, and return to the post after combat (follow-up branch; CI pending).
+- [x] Outposts reveal a bounded local radius independent of ownership and road supply; this was already implemented in `scripts/systems/fog_of_war.gd` on `main`.
+- [x] Strategic map enemy markers are restricted to currently observed positions; this was already implemented in the existing fog/map visibility path.
+- [x] Persist guard-to-Outpost cell links in optional save-v12 fields; validate references/capacity and release guards on death or Outpost removal (follow-up branch; CI pending).
 
 ### 02.5 — Supply pressure (deferred)
 - Only after local stock and transfers are reliable, introduce raid vulnerability and optional supply attrition.
@@ -55,12 +55,12 @@ Turn road connectivity into an actual logistics system without changing Classic 
 - Physical carrier transfers (future): interrupted route preserves recoverable in-transit cargo.
 - [x] Save/load preserves each depot local balance after automatic transfer.
 - Physical carrier transfer state is not applicable until carrier trips are implemented.
-- Outpost guard assignment, death/reassignment, removal and local visibility bounds.
+- [x] Outpost guard assignment, death/reassignment, removal, local combat radius, local visibility and v12 save compatibility (new assertion suite; CI pending).
 - Classic economy remains unchanged.
 
 ## Acceptance gate
 - Local stockpiles are authoritative for remote Frontier depot deposits; central construction/research spending must not consume remote stock before explicit transfer or source-depot rules exist.
 - [x] Automatic Keep-bound transfers are bounded, deterministic and atomic; local balances persist through save/load.
 - Player-directed physical shipments remain a future feature.
-- Outposts provide working guard assignment and local visibility.
+- [x] Outposts provide working guard assignment and local visibility (pending branch CI/merge).
 - Godot 4.3/4.7 import, parse and regression matrices pass.
