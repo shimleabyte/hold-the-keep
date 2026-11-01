@@ -57,14 +57,25 @@ func _initialize() -> void:
     assert(int(enemy_entry(act_three, "brute").get("weight", 0)) == 3,
         "Act III must increase brute pressure")
 
-    var map_panel = load("res://scripts/ui/world_map_panel.gd").new()
-    map_panel.configure(main.world, main.fog, main.territory)
-    root.add_child(map_panel)
-    map_panel.size = Vector2(320, 242)
+    var hud = get_first_node_in_group("hud")
+    assert(hud != null, "The main scene must create the HUD")
+    var map_panel = hud.get("_map_panel")
+    assert(map_panel is Control, "The HUD must own a strategic map panel")
+    assert(not map_panel.visible, "The strategic map must stay closed during normal play")
     assert(map_panel._position_is_known(main.world.spawn_point()),
         "The strategic map must know the player spawn area")
     assert(not map_panel._position_is_known(Vector2(32, 32)),
         "The strategic map must not reveal distant unexplored ground")
+
+    hud._toggle_map()
+    assert(map_panel.visible and hud.get("_map_backdrop").visible,
+        "The map control must open the map overlay and backdrop")
+    hud._toggle_jobs()
+    assert(not map_panel.visible and hud.get("_jobs_panel").visible,
+        "Opening the job drawer must close the map")
+    hud._toggle_jobs()
+    assert(not hud.get("_jobs_panel").visible,
+        "The job drawer must close when toggled again")
 
     print("PASS: regional terrain, exploration-aware map visibility, three campaign acts and enemy weighting")
     quit()
