@@ -102,7 +102,12 @@
     "range": 18.0,
     "armor": 0.28,
     "stagger_resistance": 0.8,
-    "structure_damage_mult": 2.4
+    "structure_damage_mult": 2.4,
+    "siege_scan_range": 400.0,
+    "siege_scan_interval": 1.35,
+    "siege_windup": 1.1,
+    "siege_cooldown": 2.6,
+    "siege_structure_damage_mult": 2.4
   },
   {
     "id": "enemy_beast_rider",

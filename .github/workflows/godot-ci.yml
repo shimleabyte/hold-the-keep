@@ -81,6 +81,7 @@ jobs:
           - shieldbearer_behavior
           - scout_marking
           - saboteur_disruption
+          - siege_engine_behavior
     steps:
       - name: Checkout
         uses: actions/checkout@v7

@@ -49,6 +49,7 @@ tests=(
     shieldbearer_behavior
     scout_marking
     saboteur_disruption
+    siege_engine_behavior
 )
 
 for test_name in "${tests[@]}"; do
