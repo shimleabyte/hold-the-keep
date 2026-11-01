@@ -74,7 +74,7 @@ func _initialize() -> void:
     var close_click := InputEventMouseButton.new()
     close_click.button_index = MOUSE_BUTTON_LEFT
     close_click.pressed = true
-    close_click.position = Vector2(306, 8)
+    close_click.position = Vector2(map_panel.size.x - 13.0, 8.0)
     map_panel._gui_input(close_click)
     assert(not map_panel.visible,
         "The map close control must dismiss the overlay by mouse")

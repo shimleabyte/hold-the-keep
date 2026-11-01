@@ -47,11 +47,11 @@ func _initialize() -> void:
         assert(settings.viewport_size_for_window(window_size) == expected,
             "Viewport must be derived from the matching physical window resolution")
 
-    settings._sync_content_viewport()
-    await process_frame
     var live_window_size: Vector2i = DisplayServer.window_get_size()
     if live_window_size.x <= 0 or live_window_size.y <= 0:
         live_window_size = settings.windowed_size
+    settings._sync_content_viewport(live_window_size)
+    await process_frame
     assert(root.content_scale_size == settings.viewport_size_for_window(live_window_size),
         "The live content viewport must match half the actual client-window size")
 
