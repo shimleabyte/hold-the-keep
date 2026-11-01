@@ -21,8 +21,8 @@ func _initialize() -> void:
     assert(anim.motion_offset().y < 0.0, "Walk cycle must lift the body between steps")
 
     anim.play("run", true)
-    anim.update(0.04)
-    assert(anim.motion_offset().y <= -1.0, "Run cycle must have a stronger lift than walking")
+    anim.update(0.083)
+    assert(anim.motion_offset().y <= -2.0, "Run cycle must have a stronger lift than walking")
 
     anim.face(Vector2.RIGHT)
     anim.play("attack", true)
