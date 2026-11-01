@@ -157,6 +157,7 @@ func _ready() -> void:
     Events.resource_changed.connect(_on_resource_changed)
     Events.supply_cost_source_changed.connect(_on_supply_state_changed)
     Events.supply_stock_changed.connect(_on_supply_state_changed)
+    Events.supply_pressure_changed.connect(_on_supply_state_changed)
     Events.build_selected.connect(_on_build_selected)
     Events.build_feedback.connect(_show_message)
     Events.player_hp_changed.connect(_on_player_hp)
@@ -640,6 +641,15 @@ func _refresh_outpost_panel() -> void:
                 heading.text = "POS %d,%d  ·  PENJAGA %d/%d" % [depot.cell.x, depot.cell.y, depot.guard_count(), depot.guard_capacity]
             else:
                 heading.text = "GUDANG %d,%d" % [depot.cell.x, depot.cell.y]
+            var main_node = get_tree().get_first_node_in_group("main")
+            if main_node != null and main_node.supply != null:
+                var pressure: Dictionary = main_node.supply.depot_pressure_state(depot)
+                var pressure_status := String(pressure.get("status", "connected"))
+                var pressure_label := String(pressure.get("label", ""))
+                if pressure_status != "connected":
+                    heading.text += " · " + pressure_label
+                    heading.add_theme_color_override("font_color", Color("#ef8e73") if pressure_status in ["vulnerable", "raiding"] else Color("#d6b36d"))
+                heading.tooltip_text = "Pemulihan: sambungkan jalan ke Keep atau amankan wilayah. Penjaga Outpost dapat menahan saboteur; Builder dapat memperbaiki depot menggunakan sumber biaya aktif."
             details.add_child(heading)
     
             var stock := Label.new()
@@ -763,6 +773,7 @@ func _on_cost_source_selected(index: int) -> void:
 
 func _on_supply_state_changed() -> void:
     _refresh_slots()
+    _refresh_outpost_panel()
 
 
 func _refresh_shipment_controls() -> void:
