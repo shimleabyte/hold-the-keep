@@ -110,7 +110,7 @@ func _initialize() -> void:
             var cell := Vector2i(x, y)
             var touches_reachable_land := false
             for direction in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-                var neighbor := cell + direction
+                var neighbor: Vector2i = cell + direction
                 if world.is_buildable(neighbor) and main.flow.is_reachable(neighbor):
                     touches_reachable_land = true
                     break
