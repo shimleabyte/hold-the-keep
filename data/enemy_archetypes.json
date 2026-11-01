@@ -59,7 +59,13 @@
     "range": 14.0,
     "armor": 0.05,
     "stagger_resistance": 0.1,
-    "structure_damage_mult": 3.0
+    "structure_damage_mult": 3.0,
+    "saboteur_scan_range": 460.0,
+    "saboteur_scan_interval": 1.25,
+    "saboteur_windup": 0.85,
+    "saboteur_disruption_duration": 5.0,
+    "saboteur_cooldown": 8.5,
+    "saboteur_damage_multiplier": 1.5
   },
   {
     "id": "enemy_war_shaman",
