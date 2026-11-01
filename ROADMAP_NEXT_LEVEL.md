@@ -1,6 +1,6 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
-**Status (2026-11-01):** Phase 00, 01, 03 and the initial slices of 02, 04, 05, 06, 07, 09 and 10 are merged into `main`. Phase 02, 04, 05 and 06 remain partially implemented; Phase 08 has not been implemented as a distinct delivery. PR #35 merged Phase 02.5 contested-depot supply pressure at `2ba5628`; workflow #41328005585 passed 54/54 jobs on Godot 4.3/4.7, including 25 regression suites per engine. Shieldbearer directional brace is implemented on `feat/phase-06-shieldbearer-brace` and awaits its 26-suite CI run. Manual rendered gameplay gates remain open.  
+**Status (2026-11-01):** Phase 00, 01, 03 and the initial slices of 02, 04, 05, 06, 07, 09 and 10 are merged into `main`. Phase 02, 04, 05 and 06 remain partially implemented; Phase 08 has not been implemented as a distinct delivery. PR #35 merged Phase 02.5 contested-depot supply pressure at `2ba5628`; workflow #41328005585 passed 54/54 jobs on Godot 4.3/4.7, including 25 regression suites per engine. PR #36 merged Shieldbearer directional brace (`b02aa60`); workflow #41329202804 completed successfully on Godot 4.3/4.7, including the Shieldbearer regression. Manual rendered gameplay gates remain open.  
 **Phase 02 merge commits:** PR #31 (`6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`) delivered local depot storage/transfers; PR #32 (`2f94959b497677eae49d4303f72322650fb591c2`) delivered garrisons/inspection; PR #33 (`5d7db56b3a51a25541f541bb46c19b26996d22be`) delivered player-directed physical shipments and save v13. PR #33 validation: [workflow #41323062111](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323062111), 50/50 jobs successful on Godot 4.3/4.7, including 23 regressions per engine, Frontier diagnostic and Windows/Linux export.  
 **Baseline:** Godot 4.3+ / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, mainline save format v13 with backward compatibility for save versions v1–v12.
 
@@ -175,7 +175,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add faction tint, War Shaman ally healing, shared target-selection/support modules and enemy faction save persistence (initially v10; now compatible with v12).
 - [x] Add faction registry validation and regression coverage for region mapping, rosters, garrisons, support and save validation.
 - [ ] Extract movement, attack-pattern and ability policies into composable modules; give each archetype its own counterable behavior.
-- [ ] Shieldbearer directional brace slice: implemented on `feat/phase-06-shieldbearer-brace`; pending CI and merge.
+- [x] Shieldbearer directional brace merged via PR #36 (`b02aa60`); workflow #41329202804 completed successfully on Godot 4.3/4.7.
 - [ ] Add deterministic faction camps, bounded patrol routes and camp reinforcement budgets.
 - [ ] Expand raids/counterattacks against exposed Outposts, roads and depots only after Phase 02.5 acceptance; current slice targets remote depots, uses nav reachability, and caps at two saboteurs per isolation.
 - [ ] Persist camps, patrol assignments and raid state; validate v1–v11 migration and v12 round-trip.
