@@ -10,10 +10,12 @@ Dari akar proyek:
     godot --headless --path . --import
     bash tools/check_gdscript.sh
     bash tools/run_tests.sh
+    bash tools/run_diagnostics.sh
 
-`check_gdscript.sh` menjalankan parse-only terhadap seluruh skrip di `scripts/` dan `tests/`.
-`run_tests.sh` menjalankan suite regresi headless dengan fixed 60 FPS. `--fixed-fps 60` penting:
-tanpa itu simulasi tes panjang berjalan mengikuti waktu nyata.
+`check_gdscript.sh` memuat dan memeriksa apakah semua GDScript di `scripts/` dan `tests/` bisa dikompilasi.
+`run_tests.sh` menjalankan suite regresi berbasis assertion dengan fixed 60 FPS.
+Skrip observasi lama yang hanya mencetak hasil tanpa assertion dipisahkan ke `run_diagnostics.sh`
+agar tidak memperlambat dan tidak memberi kesan keliru sebagai tes pass/fail.
 
 GitHub Actions menjalankan kedua langkah tersebut pada Godot 4.3 dan 4.7 untuk setiap pull request
 ke `main`, push ke `main` atau branch `feat/**` / `fix/**`, serta workflow manual.
