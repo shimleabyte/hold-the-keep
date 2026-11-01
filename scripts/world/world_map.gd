@@ -114,16 +114,24 @@ func _generate() -> void:
             var safe := Vector2(x, y).distance_to(center) < SAFE_RADIUS
             var water := edge or (not safe and noise.get_noise_2d(x, y) > 0.3)
             var tile := T_WATER
+            var region := region_id(Vector2i(x, y))
+            var tree_chance := TREE_CHANCE
+            var rock_chance := ROCK_CHANCE
             if not water:
-                var region := region_id(Vector2i(x, y))
                 var variation := rng.randf()
                 match region:
                     "GREENWOOD":
                         tile = T_FOREST
+                        tree_chance = 0.12
+                        rock_chance = 0.012
                     "HIGHLANDS":
                         tile = T_HIGHLAND
+                        tree_chance = 0.04
+                        rock_chance = 0.045
                     "FENLANDS":
                         tile = T_MARSH
+                        tree_chance = 0.05
+                        rock_chance = 0.018
                     _:
                         tile = T_GRASS_ALT if variation < 0.2 else T_GRASS
             _layer.set_cell(Vector2i(x, y), 0, Vector2i(tile, 0))
@@ -132,12 +140,12 @@ func _generate() -> void:
             var foot := Vector2(x * TILE + TILE / 2.0, y * TILE + TILE)
             if water:
                 continue
-            if not safe and rng.randf() < TREE_CHANCE:
+            if not safe and rng.randf() < tree_chance:
                 var tree := TREE_SCRIPT.new()
                 tree.position = foot
                 entities.add_child(tree)
                 occupied[cell] = tree
-            elif Vector2(x, y).distance_to(center) > 5.5 and rng.randf() < ROCK_CHANCE:
+            elif Vector2(x, y).distance_to(center) > 5.5 and rng.randf() < rock_chance:
                 var rock := ROCK_SCRIPT.new()
                 rock.position = foot
                 entities.add_child(rock)
