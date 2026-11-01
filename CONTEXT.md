@@ -24,7 +24,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 | Villager | job penebang/penambang/petani/prajurit, kuota diatur pemain, A*, setor ke gudang/keep |
 | Ekonomi | kayu, batu, makanan; kapasitas rumah; upkeep 2 makanan/penduduk/hari |
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
-| Save/load | versi 8, autosave tiap fajar, F5/F9, temp + rollback backup, world identity, resource/fog/multi-stronghold HP/garrison/ekspedisi/recall/combat/campaign progression tersimpan; v1–v7 tetap satu stronghold |
+| Save/load | versi 10, autosave tiap fajar, F5/F9, temp + rollback backup, world identity, resource/fog/multi-stronghold HP/garrison/ekspedisi/recall/combat/campaign progression dan faction identity tersimpan; v1–v9 tetap kompatibel |
 | Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
 | Tampilan | windowed 1280×720 default, minimum 960×540 (enforced through `Window.min_size`), preset 16:9/16:10/4:3, integer-scaled viewport dengan aspect expand |
 | HUD | top bar ringkas, vitals, indikator bab, combat strip kompak, drawer JOBS, peta strategis TAB/MAP, hotbar bangunan, bar boss, bantuan (H) |
@@ -259,3 +259,14 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Job allocation order is configurable; Alt + job key promotes, Alt + Shift + job key demotes. The job panel also supports right-click priority changes.
 - Soldier identity is stored in `military_specialization`; labor tasks are stored in `occupation`. The legacy `job` property remains a compatibility alias.
 - Save format v9 persists role fields and ordered priority. Hunter, Scout, Healer and Blacksmith remain later Phase 04 increments.
+
+
+## 23. Phase 06 — Factions and enemy archetypes (2026-11-01)
+- Branch `feat/phase-06-factions-territorial-ai-rebased` is stacked on `feat/phase-05-resource-worksites`; Phase 05 Godot 4.3/4.7 CI passed (30/30 jobs), with manual gameplay review remaining.
+- `data/factions.json` defines Greenwood Raiders, Iron Legion, Fen Cult and Ashen Host, mapped to their Frontier regions with faction colors, rosters and signature garrisons.
+- `data/enemy_archetypes.json` defines Scout, Shieldbearer, Saboteur, War Shaman, Siege Engine and Beast Rider. Archetypes are loaded into `DataDB.enemies` while legacy enemy definitions remain unchanged.
+- Stronghold garrisons are selected from faction rosters; regional wave spawns receive faction identity. Enemy units use faction tint.
+- War Shaman has bounded ally healing with a cooldown. Target selection and ally support are extracted into `enemy_targeting.gd` and `enemy_support.gd`.
+- Save format v10 records enemy faction IDs; older v1–v9 saves remain accepted and restore with an empty/default faction identity.
+- `tests/faction_registry.gd` covers faction-region mapping, roster/garrison membership, faction tint, same-faction War Shaman healing and v10 save validation. Godot 4.3/4.7 CI passed 30/30 jobs.
+- Remaining Phase 06 work: fully distinct counterable behavior for all six archetypes, deterministic camps, bounded patrols, raids/counterattacks, camp/raid persistence, stress tests and manual gameplay review. Do not mark Phase 06 complete yet.

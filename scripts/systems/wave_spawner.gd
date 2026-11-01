@@ -105,9 +105,9 @@ func restore_enemy(d: Dictionary) -> void:
     var e := ENEMY_SCRIPT.new()
     if bool(d.get("garrison", false)):
         var origin := Vector2(float(d.get("guard_x", d["x"])), float(d.get("guard_y", d["y"])))
-        e.setup_guard(DataDB.enemies[d["id"]], world, flow, player, origin)
+        e.setup_guard(DataDB.enemies[d["id"]], world, flow, player, origin, String(d.get("faction", "")))
     else:
-        e.setup(DataDB.enemies[d["id"]], world, flow, player)
+        e.setup(DataDB.enemies[d["id"]], world, flow, player, String(d.get("faction", "")))
     e.position = Vector2(float(d["x"]), float(d["y"]))
     e.hp = int(d["hp"])
     world.entities.add_child(e)
@@ -173,7 +173,10 @@ func spawn_one(forced_type := "") -> bool:
         return false
     var data: Dictionary = DataDB.enemies[forced_type if forced_type != "" else _pick_type()]
     var e := ENEMY_SCRIPT.new()
-    e.setup(data, world, flow, player)
+    var faction_id := ""
+    if WorldConfig.profile_id == "frontier":
+        faction_id = FactionRegistry.faction_for_region(world.region_id(cell))
+    e.setup(data, world, flow, player, faction_id)
     e.position = Vector2(cell) * WorldConfig.tile_size + Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0)
     world.entities.add_child(e)
     return true

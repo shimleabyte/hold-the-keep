@@ -26,6 +26,7 @@ tests=(
     campaign_multi_stronghold
     workplace_assignments
     production_worksites
+    faction_registry
     input_rebinding
     map_stages
     player_combat

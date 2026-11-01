@@ -158,12 +158,21 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** every building has a distinct function, valid footprint, data definition, art asset, UI representation, unlock rule and save/load coverage.
 
 ### Phase 06 — Factions, enemy archetypes and territorial AI
-- Introduce four factions with distinct rosters, visual identity and regional behavior.
-- Add six initial archetypes: scout, shieldbearer, saboteur, war shaman, siege engine and beast rider.
-- Refactor target selection, movement, attack patterns, abilities and faction tactics into composable behavior modules.
-- Add camps, patrols, raids and counterattacks against vulnerable outposts and supply routes.
+**Status:** In progress on `feat/phase-06-factions-territorial-ai`; first faction/archetype runtime slice implemented. Full Phase 06 is not complete.
 
-**Acceptance gate:** each archetype creates a distinct tactical response; AI remains bounded under stress tests; factions obey territory and campaign state.
+- [x] Add four data-driven factions mapped to Frontier regions, with stable IDs, faction colors, rosters and signature garrison units.
+- [x] Add six archetype definitions: scout, shieldbearer, saboteur, war shaman, siege engine and beast rider.
+- [x] Spawn stronghold garrisons from faction rosters and tag regional wave enemies with faction identity.
+- [x] Add faction tint, War Shaman ally healing, shared target-selection/support modules and enemy faction save persistence (v10).
+- [x] Add faction registry validation and regression coverage for region mapping, rosters, garrisons, support and save validation.
+- [ ] Extract movement, attack-pattern and ability policies into composable modules; give each archetype its own counterable behavior.
+- [ ] Add deterministic faction camps, bounded patrol routes and camp reinforcement budgets.
+- [ ] Add raids/counterattacks against exposed Outposts, roads and depots with strict caps and reachability checks.
+- [ ] Persist camps, patrol assignments and raid state; validate v1–v9 migration and v10 round-trip.
+- [x] Godot 4.3 / 4.7 CI passed (30/30 jobs).
+- [ ] Manual Frontier gameplay review.
+
+**Acceptance gate:** each archetype creates a distinct tactical response; AI remains bounded under stress tests; factions obey territory and campaign state; save/load and both engine CI versions pass.
 
 ### Phase 07 — Technology and campaign objectives
 - Expand the 17-node technology tree without invalidating existing unlocks.
