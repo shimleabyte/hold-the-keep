@@ -44,21 +44,26 @@ func reachable_cells(nav: Node, start: Vector2i) -> Dictionary:
 
 
 func _initialize() -> void:
-    assert(WorldConfig.apply_profile("frontier"),
+    var world_config = root.get_node("WorldConfig")
+    var settings = root.get_node("Settings")
+    var save_system = root.get_node("SaveSystem")
+    var game_clock = root.get_node("GameClock")
+
+    assert(world_config.apply_profile("frontier"),
         "Frontier must be selectable before creating a new world")
-    assert(WorldConfig.profile_id == "frontier"
-        and WorldConfig.map_size == 128
-        and WorldConfig.map_cells == 128 * 128,
+    assert(world_config.profile_id == "frontier"
+        and world_config.map_size == 128
+        and world_config.map_cells == 128 * 128,
         "Frontier profile must apply all 128x128 dimensions")
-    assert(WorldConfig.starting_claim_radius == 15.0
-        and WorldConfig.safe_radius == 12.0,
+    assert(world_config.starting_claim_radius == 15.0
+        and world_config.safe_radius == 12.0,
         "Frontier must apply the expanded starting footprint and clearing")
 
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main
     await ticks(6)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
 
     var world = main.world
     assert(world.map_size == 128 and world.tile_size == 16,
@@ -76,8 +81,8 @@ func _initialize() -> void:
         "ASHEN_MARCH": 0
     }
     var tile_types: Dictionary = {}
-    for y in WorldConfig.map_size:
-        for x in WorldConfig.map_size:
+    for y in world_config.map_size:
+        for x in world_config.map_size:
             var cell := Vector2i(x, y)
             var region: String = world.region_id(cell)
             assert(region_cells.has(region),
@@ -108,22 +113,22 @@ func _initialize() -> void:
         "The Frontier Keep must claim the larger 15-tile starting territory")
 
     var far_cell := Vector2i(127, 127)
-    var far_index := WorldConfig.cell_index(far_cell)
+    var far_index := world_config.cell_index(far_cell)
     main.fog.import_state({"cells": [far_index]})
     assert(main.fog.is_revealed_cell(far_cell),
         "Frontier fog data must accept the final valid row-major map index")
-    var frontier_save: Dictionary = SaveSystem.collect(main)
+    var frontier_save: Dictionary = save_system.collect(main)
     assert(frontier_save["world"]["profile"] == "frontier"
         and int(frontier_save["world"]["map_size"]) == 128
-        and SaveSystem._valid_save(frontier_save),
+        and save_system._valid_save(frontier_save),
         "A 128x128 Frontier save must retain valid world and fog metadata")
     var invalid_frontier_save := frontier_save.duplicate(true)
-    invalid_frontier_save["fog"]["cells"].append(WorldConfig.map_cells)
-    assert(not SaveSystem._valid_save(invalid_frontier_save),
+    invalid_frontier_save["fog"]["cells"].append(world_config.map_cells)
+    assert(not save_system._valid_save(invalid_frontier_save),
         "Frontier save validation must reject fog indices outside the 128x128 map")
 
-    var clearing_center := Vector2(WorldConfig.map_size, WorldConfig.map_size) * 0.5
-    var clearing_radius := maxf(WorldConfig.safe_radius + 7.0, float(WorldConfig.map_size) * 0.15)
+    var clearing_center := Vector2(world_config.map_size, world_config.map_size) * 0.5
+    var clearing_radius := maxf(world_config.safe_radius + 7.0, float(world_config.map_size) * 0.15)
     for cell in world.occupied:
         var occupant = world.occupied[cell]
         if is_instance_valid(occupant) and occupant.is_in_group("resource_nodes"):
@@ -142,14 +147,14 @@ func _initialize() -> void:
     assert(not campaign_menu._campaign_center.visible,
         "The new-campaign panel must provide a working return path")
 
-    var previous_profile := Settings.world_profile
-    assert(Settings.set_world_profile("frontier"),
+    var previous_profile := settings.world_profile
+    assert(settings.set_world_profile("frontier"),
         "Frontier profile preference must be persistable")
     var preference_file := ConfigFile.new()
-    assert(preference_file.load(Settings.PATH) == OK
+    assert(preference_file.load(settings.PATH) == OK
         and String(preference_file.get_value("world", "profile", "")) == "frontier",
         "The selected campaign profile must persist in the settings file")
-    assert(Settings.set_world_profile(previous_profile),
+    assert(settings.set_world_profile(previous_profile),
         "The previous profile preference must be restorable after this test")
 
     var resource_counts := {
@@ -168,7 +173,7 @@ func _initialize() -> void:
             continue
         var kind := String(node.yield_kind)
         resource_counts[kind] = int(resource_counts.get(kind, 0)) + 1
-        var region := world.region_id(cell)
+        var region: String = world.region_id(cell)
         if regional_resources.has(region):
             regional_resources[region] += 1
 
@@ -192,7 +197,7 @@ func _initialize() -> void:
         "The starting settlement must connect to a substantial portion of the world")
     var reachable_regions: Dictionary = {}
     for cell in reachable:
-        var region := world.region_id(cell)
+        var region: String = world.region_id(cell)
         reachable_regions[region] = int(reachable_regions.get(region, 0)) + 1
     for region in region_cells:
         assert(int(reachable_regions.get(region, 0)) > 50,
@@ -202,8 +207,8 @@ func _initialize() -> void:
     var mirror = WORLD_SCRIPT.new()
     root.add_child(mirror)
     await process_frame
-    for y in WorldConfig.map_size:
-        for x in WorldConfig.map_size:
+    for y in world_config.map_size:
+        for x in world_config.map_size:
             var cell := Vector2i(x, y)
             assert(mirror.tile_type_at(cell) == world.tile_type_at(cell),
                 "Terrain generation must be deterministic at %s" % cell)
