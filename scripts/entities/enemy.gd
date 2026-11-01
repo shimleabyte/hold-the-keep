@@ -18,6 +18,7 @@ const TEXTURES := {
 const PLAYER_REACH := 12.0
 const ATTACK_HIT_DELAY := 0.14
 const SHIELD_TARGET_RANGE := 96.0
+const SCOUT_FOCUS_RANGE := 220.0
 const WALK_BASE_SPEED := 32.0
 const RUN_BASE_SPEED := 58.0
 
@@ -62,6 +63,12 @@ var shield_brace_duration := 1.05
 var shield_brace_cooldown_duration := 4.2
 var shield_brace_damage_multiplier := 0.45
 var shield_brace_front_dot := 0.5
+var scout_mark_range := 142.0
+var scout_preferred_range := 96.0
+var scout_windup_duration := 0.68
+var scout_mark_duration := 5.4
+var scout_mark_cooldown_duration := 8.4
+var scout_share_radius := 190.0
 
 var world
 var flow
@@ -84,6 +91,11 @@ var _brace_windup_t := 0.0
 var _brace_t := 0.0
 var _brace_cd := 0.0
 var _brace_dir := Vector2.ZERO
+var _scout_windup_t := 0.0
+var _scout_windup_target: Node2D
+var _scout_mark_target: Node2D
+var _scout_mark_t := 0.0
+var _scout_mark_cd := 0.0
 var _tex: Texture2D
 var _fw := 20
 var _fh := 20
@@ -124,6 +136,17 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     shield_brace_cooldown_duration = clampf(float(data.get("brace_cooldown", 4.2)), 1.0, 12.0)
     shield_brace_damage_multiplier = clampf(float(data.get("brace_damage_multiplier", 0.45)), 0.1, 1.0)
     shield_brace_front_dot = clampf(float(data.get("brace_front_dot", 0.5)), 0.1, 0.95)
+    scout_mark_range = clampf(float(data.get("scout_mark_range", 142.0)), 80.0, 190.0)
+    scout_preferred_range = clampf(float(data.get("scout_preferred_range", 96.0)), 56.0, 140.0)
+    scout_windup_duration = clampf(float(data.get("scout_windup", 0.68)), 0.25, 1.5)
+    scout_mark_duration = clampf(float(data.get("scout_mark_duration", 5.4)), 2.5, 10.0)
+    scout_mark_cooldown_duration = clampf(float(data.get("scout_mark_cooldown", 8.4)), 4.0, 18.0)
+    scout_share_radius = clampf(float(data.get("scout_share_radius", 190.0)), 80.0, 280.0)
+    _scout_windup_t = 0.0
+    _scout_windup_target = null
+    _scout_mark_target = null
+    _scout_mark_t = 0.0
+    _scout_mark_cd = 0.0
     _brace_windup_t = 0.0
     _brace_t = 0.0
     _brace_cd = 0.0
@@ -160,12 +183,22 @@ func _physics_process(delta: float) -> void:
     _hurt_t = maxf(0.0, _hurt_t - delta)
     _support_cd = maxf(0.0, _support_cd - delta)
     _brace_cd = maxf(0.0, _brace_cd - delta)
+    _scout_mark_t = maxf(0.0, _scout_mark_t - delta)
+    _scout_mark_cd = maxf(0.0, _scout_mark_cd - delta)
+    if _scout_mark_t <= 0.0 or not is_instance_valid(_scout_mark_target):
+        _scout_mark_t = 0.0
+        _scout_mark_target = null
     _resolve_pending(delta)
     _moving = false
 
     if _stagger_t > 0.0:
+        if archetype == "scout" and _scout_windup_t > 0.0:
+            _scout_windup_t = 0.0
+            _scout_windup_target = null
+            _scout_mark_cd = maxf(_scout_mark_cd, 1.2)
         _stagger_t = maxf(0.0, _stagger_t - delta)
         _update_anim(delta)
+        queue_redraw()
         return
 
     if _pounce_windup_t > 0.0:
@@ -187,6 +220,12 @@ func _physics_process(delta: float) -> void:
         _footsteps(delta)
         return
 
+    if archetype == "scout":
+        _tick_scout(delta)
+        _update_anim(delta)
+        _footsteps(delta)
+        return
+
     if archetype == "shieldbearer":
         _tick_shieldbearer(delta)
         _update_anim(delta)
@@ -200,6 +239,11 @@ func _physics_process(delta: float) -> void:
 
     if role == "ranged":
         _tick_ranged(delta)
+        _update_anim(delta)
+        _footsteps(delta)
+        return
+
+    if _tick_marked_target(delta):
         _update_anim(delta)
         _footsteps(delta)
         return
@@ -304,7 +348,137 @@ func _tick_flow(delta: float) -> void:
     _move_toward(Vector2(next) * WorldConfig.tile_size + Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0) + _offset, delta)
 
 
+func _nearest_scout_target() -> Node2D:
+    var candidates := get_tree().get_nodes_in_group("defenders")
+    if player != null and is_instance_valid(player):
+        candidates.append(player)
+    return ENEMY_TARGETING.nearest(
+        self,
+        candidates,
+        scout_mark_range,
+        guard_origin if is_garrison else Vector2.ZERO,
+        175.0 if is_garrison else 0.0
+    )
+
+
+func _tick_scout(delta: float) -> void:
+    if _scout_windup_t > 0.0:
+        var target := _scout_windup_target
+        if target == null or not is_instance_valid(target) or not target.visible \
+                or position.distance_to(target.position) > scout_mark_range + 24.0:
+            _scout_windup_t = 0.0
+            _scout_windup_target = null
+            _scout_mark_cd = minf(_scout_mark_cd, 0.8)
+            queue_redraw()
+        else:
+            var direction := target.position - position
+            if direction.length_squared() > 0.01:
+                anim.face(direction)
+            _moving = false
+            _scout_windup_t = maxf(0.0, _scout_windup_t - delta)
+            if _scout_windup_t <= 0.0:
+                _release_scout_mark(target)
+            queue_redraw()
+            return
+
+    var target: Node2D = null
+    if _scout_mark_t > 0.0 and is_instance_valid(_scout_mark_target):
+        target = _scout_mark_target
+    else:
+        target = _nearest_scout_target()
+
+    if target == null:
+        if is_garrison:
+            if position.distance_to(guard_origin) > 16.0:
+                _move_toward(guard_origin, delta)
+        else:
+            _tick_flow(delta)
+        return
+
+    var to_target := target.position - position
+    var distance := to_target.length()
+    var direction := to_target.normalized() if distance > 0.01 else Vector2.DOWN
+
+    if _scout_mark_t <= 0.0 and _scout_mark_cd <= 0.0 and distance <= scout_mark_range:
+        _scout_windup_target = target
+        _scout_windup_t = scout_windup_duration
+        anim.face(direction)
+        Events.fx_burst.emit("dust", position + Vector2(0, -3), -direction, 0.65)
+        queue_redraw()
+        return
+
+    if distance < scout_preferred_range - 14.0:
+        _move_toward(position - direction * 36.0, delta)
+    elif distance > scout_preferred_range + 18.0:
+        _move_toward(target.position - direction * scout_preferred_range, delta)
+    else:
+        _moving = false
+
+
+func _release_scout_mark(target: Node2D) -> void:
+    if target == null or not is_instance_valid(target) or not target.visible:
+        _scout_windup_t = 0.0
+        _scout_windup_target = null
+        return
+    _scout_windup_t = 0.0
+    _scout_windup_target = null
+    _scout_mark_target = target
+    _scout_mark_t = scout_mark_duration
+    _scout_mark_cd = scout_mark_cooldown_duration
+    var target_position := target.global_position + Vector2(0, -8)
+    Events.fx_burst.emit("rally", target_position, Vector2.ZERO, 1.0)
+
+    for ally in get_tree().get_nodes_in_group("enemies"):
+        if ally == self or not is_instance_valid(ally) or not (ally is Node2D):
+            continue
+        var enemy_ally := ally as Node2D
+        if String(enemy_ally.get("faction_id")) != faction_id:
+            continue
+        if global_position.distance_to(enemy_ally.global_position) > scout_share_radius:
+            continue
+        if enemy_ally.has_method("apply_scout_mark"):
+            enemy_ally.apply_scout_mark(target, scout_mark_duration)
+    queue_redraw()
+
+
+func apply_scout_mark(target: Node2D, duration: float) -> void:
+    if target == null or not is_instance_valid(target) or not target.visible or duration <= 0.0:
+        return
+    if _scout_mark_t > 0.0 and is_instance_valid(_scout_mark_target) and _scout_mark_target != target:
+        return
+    _scout_mark_target = target
+    _scout_mark_t = maxf(_scout_mark_t, minf(duration, 10.0))
+    queue_redraw()
+
+
+func _valid_scout_mark(max_distance: float) -> Node2D:
+    if _scout_mark_t <= 0.0 or _scout_mark_target == null or not is_instance_valid(_scout_mark_target):
+        return null
+    if not _scout_mark_target.visible:
+        return null
+    if position.distance_to(_scout_mark_target.position) > max_distance:
+        return null
+    if is_garrison and _scout_mark_target.position.distance_to(guard_origin) > 175.0:
+        return null
+    return _scout_mark_target
+
+
+func _tick_marked_target(delta: float) -> bool:
+    var target := _valid_scout_mark(SCOUT_FOCUS_RANGE)
+    if target == null:
+        return false
+    var distance := position.distance_to(target.position)
+    if distance <= _attack_reach():
+        _begin_attack(target, target.position - position)
+    else:
+        _move_toward(target.position, delta)
+    return true
+
+
 func _nearest_shield_target() -> Node2D:
+    var marked := _valid_scout_mark(SHIELD_TARGET_RANGE)
+    if marked != null:
+        return marked
     if is_garrison:
         return _nearest_guard_target()
     var candidates := get_tree().get_nodes_in_group("defenders")
@@ -409,6 +583,9 @@ func _tick_ranged(delta: float) -> void:
 
 
 func _nearest_ranged_target() -> Node2D:
+    var marked := _valid_scout_mark(165.0)
+    if marked != null:
+        return marked
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
         candidates.append(player)
@@ -431,6 +608,9 @@ func _tick_garrison(delta: float) -> void:
 
 
 func _nearest_guard_target() -> Node2D:
+    var marked := _valid_scout_mark(150.0)
+    if marked != null:
+        return marked
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
         candidates.append(player)
@@ -513,6 +693,10 @@ func apply_stagger(duration: float) -> void:
         _brace_t = 0.0
         _brace_cd = maxf(_brace_cd, 1.1)
         _brace_dir = Vector2.ZERO
+    if archetype == "scout" and _scout_windup_t > 0.0:
+        _scout_windup_t = 0.0
+        _scout_windup_target = null
+        _scout_mark_cd = maxf(_scout_mark_cd, 1.2)
     _hurt_t = maxf(_hurt_t, duration * 0.5)
     anim.play("hurt", true)
 
@@ -633,6 +817,14 @@ func _draw() -> void:
         "scout":
             draw_line(Vector2(-4, -15), Vector2(0, -19), color, 1.5)
             draw_line(Vector2(0, -19), Vector2(4, -15), color, 1.5)
+            var scout_target: Node2D = _scout_windup_target if _scout_windup_t > 0.0 else _scout_mark_target
+            if scout_target != null and is_instance_valid(scout_target):
+                var marker_center := scout_target.global_position - global_position + Vector2(0, -8)
+                var marker_color := Color("#efca78") if _scout_windup_t > 0.0 else Color("#d99b45")
+                draw_line(Vector2(0, -_fh - 5), marker_center, marker_color, 1.0)
+                draw_arc(marker_center, 10.0, 0.0, TAU, 12, marker_color, 1.5)
+            if _scout_windup_t > 0.0:
+                draw_arc(Vector2(0, -_fh - 8), 5.0, 0.0, TAU, 8, Color("#efca78"), 1.5)
         "shieldbearer":
             draw_rect(Rect2(-11, -14, 5, 10), color, false, 1.5)
             draw_line(Vector2(-11, -10), Vector2(-6, -10), color, 1.0)
