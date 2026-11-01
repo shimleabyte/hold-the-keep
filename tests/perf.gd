@@ -1,22 +1,214 @@
 extends SceneTree
-func ticks(n: int) -> void:
-    for i in n:
-        await physics_frame
-func _initialize() -> void:
+## Configurable diagnostic benchmark; timing output is informative, not a CI threshold.
+## Example:
+## PROFILE=frontier ENEMIES=96 VILLAGERS=80 FRAMES=360 godot --headless --path . --script res://tests/perf.gd
+
+const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
+const DEFAULTS := {
+    "profile": "frontier",
+    "enemies": 96,
+    "villagers": 80,
+    "frames": 360,
+    "warmup": 90
+}
+const FACTION_IDS := [
+    "greenwood_raiders",
+    "iron_legion",
+    "fen_cult",
+    "ashen_host"
+]
+
+
+func ticks(count: int) -> void:
+    for i in range(count):
+        await process_frame
+
+
+func env_int(key: String, fallback: int, minimum: int, maximum: int) -> int:
+    var value := OS.get_environment(key)
+    if value.is_valid_int():
+        return clampi(value.to_int(), minimum, maximum)
+    return fallback
+
+
+func percentile(values: Array[float], ratio: float) -> float:
+    if values.is_empty():
+        return 0.0
+    var ordered := values.duplicate()
+    ordered.sort()
+    var index := clampi(ceili(float(ordered.size()) * ratio) - 1, 0, ordered.size() - 1)
+    return ordered[index]
+
+
+func region_cells(main: Node, region_id: String, limit: int) -> Array[Vector2i]:
+    var cells: Array[Vector2i] = []
+    var reachable: Dictionary = main.nav.reachable_cells(
+        main.nav.cell_of(main.player.global_position)
+    )
+    for value in reachable.keys():
+        var cell: Vector2i = value
+        if String(main.world.region_id(cell)) != region_id:
+            continue
+        if main.world.occupied.has(cell):
+            continue
+        cells.append(cell)
+        if cells.size() >= limit:
+            break
+    return cells
+
+
+func spawn_enemy(main: Node, enemy_id: String, faction_id: String, cell: Vector2i) -> void:
+    if not DataDB.enemies.has(enemy_id):
+        return
+    var enemy = ENEMY_SCRIPT.new()
+    enemy.setup(DataDB.enemies[enemy_id], main.world, main.flow, main.player, faction_id)
+    enemy.position = Vector2(cell) * WorldConfig.tile_size + Vector2(8.0, 8.0)
+    main.world.entities.add_child(enemy)
+
+
+func spawn_workload(main: Node, profile: String, enemy_count: int, villager_count: int) -> void:
+    var per_faction := maxi(0, enemy_count / FACTION_IDS.size())
+    if profile == "frontier":
+        for faction_id in FACTION_IDS:
+            var faction: Dictionary = FactionRegistry.factions.get(faction_id, {})
+            var region_id := String(faction.get("region", ""))
+            var roster: Array[String] = FactionRegistry.roster_for(faction_id)
+            var cells := region_cells(main, region_id, per_faction)
+            for i in mini(per_faction, cells.size()):
+                spawn_enemy(main, roster[i % roster.size()], faction_id, cells[i])
+    else:
+        main.spawner._pool = DataDB.waves.get("types", []).duplicate(true)
+        for i in enemy_count:
+            main.spawner.spawn_one()
+
+    var keep_position: Vector2 = main.world.keep_center_position()
+    for i in villager_count:
+        var column := (i % 12) - 6
+        var row := floori(float(i) / 12.0) - 3
+        main.village.spawn_villager(
+            keep_position + Vector2(float(column * 5), float(row * 5))
+        )
+    main.village.quota = {
+        "woodcutter": mini(20, villager_count / 4),
+        "miner": mini(20, villager_count / 4),
+        "farmer": mini(20, villager_count / 4),
+        "builder": 0,
+        "soldier": mini(20, villager_count - 3 * (villager_count / 4))
+    }
+    main.village.assign_jobs()
+
+    # Keep at least one ranged unit/projectile in the sampled workload.
+    if DataDB.enemies.has("archer"):
+        var archer = ENEMY_SCRIPT.new()
+        archer.setup(
+            DataDB.enemies["archer"],
+            main.world,
+            main.flow,
+            main.player,
+            "iron_legion" if profile == "frontier" else ""
+        )
+        archer.position = main.player.position + Vector2(128.0, 0.0)
+        main.world.entities.add_child(archer)
+        archer._begin_ranged_attack(main.player)
+
+
+func _find_fx(main: Node) -> Node:
+    for child in main.world.get_children():
+        if child.has_method("count") and child.has_method("spawn"):
+            return child
+    return null
+
+
+func _run() -> void:
+    var profile := OS.get_environment("PROFILE")
+    if profile.is_empty():
+        profile = DEFAULTS["profile"]
+    if not ["classic", "frontier"].has(profile):
+        push_error("PROFILE must be either classic or frontier")
+        quit(2)
+        return
+
+    var enemy_count := env_int("ENEMIES", DEFAULTS["enemies"], 0, 240)
+    var villager_count := env_int("VILLAGERS", DEFAULTS["villagers"], 0, 160)
+    var sample_frames := env_int("FRAMES", DEFAULTS["frames"], 60, 3600)
+    var warmup_frames := env_int("WARMUP", DEFAULTS["warmup"], 0, 600)
+
+    WorldConfig.apply_profile(profile)
+    for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
+        DirAccess.remove_absolute(path)
+
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
-    await ticks(5)
-    root.get_node("GameClock").set_process(false)
-    main.player.global_position = Vector2(100, 100)
-    var sp = main.spawner
-    sp._pool = root.get_node("DataDB").waves["types"].duplicate()
-    for i in 150: sp.spawn_one()
-    for i in 40: main.village.spawn_villager(Vector2(520 + randf_range(-30, 30), 522))
-    main.village.quota = {"woodcutter": 10, "miner": 8, "farmer": 2, "soldier": 6}
-    main.village.assign_jobs()
-    await ticks(120)
-    var t0 = Time.get_ticks_usec()
-    await ticks(300)
-    var dt = (Time.get_ticks_usec() - t0) / 300.0 / 1000.0
-    print("PERF enemies=", get_nodes_in_group("enemies").size(), " villagers=", get_nodes_in_group("villagers").size(), " avg ms/frame=", snappedf(dt, 0.01))
-    quit()
+    current_scene = main
+    await ticks(8)
+    GameClock.set_process(false)
+    main.nav.rebuild()
+    spawn_workload(main, profile, enemy_count, villager_count)
+
+    var fx = _find_fx(main)
+    if fx == null:
+        push_error("Shared FX layer was not created")
+        quit(1)
+        return
+
+    await ticks(warmup_frames)
+    var process_ms: Array[float] = []
+    var physics_ms: Array[float] = []
+    var wall_ms: Array[float] = []
+    var peak_projectiles := 0
+    var peak_particles := 0
+    var peak_nodes := 0
+    var memory_bytes := 0
+
+    for frame_index in sample_frames:
+        if frame_index % 24 == 0:
+            # Refill transient FX so the benchmark includes sustained effect churn.
+            Events.fx_burst.emit("impact", main.player.position, Vector2.RIGHT, 2.0)
+            Events.fx_burst.emit("debris", main.player.position, Vector2.LEFT, 1.0)
+
+        var started := Time.get_ticks_usec()
+        await process_frame
+        wall_ms.append(float(Time.get_ticks_usec() - started) / 1000.0)
+
+        process_ms.append(float(Performance.get_monitor(Performance.TIME_PROCESS)) * 1000.0)
+        physics_ms.append(float(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)) * 1000.0)
+        peak_projectiles = maxi(peak_projectiles, get_nodes_in_group("enemy_projectiles").size())
+        peak_particles = maxi(peak_particles, fx.count())
+        peak_nodes = maxi(peak_nodes, get_nodes_in_group("enemies").size()
+            + get_nodes_in_group("villagers").size()
+            + get_nodes_in_group("buildings").size())
+        memory_bytes = maxi(memory_bytes, int(Performance.get_monitor(Performance.MEMORY_STATIC)))
+
+    var result := {
+        "profile": profile,
+        "map_size": WorldConfig.map_size,
+        "sample_frames": sample_frames,
+        "warmup_frames": warmup_frames,
+        "enemy_count": get_nodes_in_group("enemies").size(),
+        "villager_count": get_nodes_in_group("villagers").size(),
+        "peak_projectiles": peak_projectiles,
+        "peak_particles": peak_particles,
+        "peak_world_nodes": peak_nodes,
+        "peak_static_memory_bytes": memory_bytes,
+        "wall_frame_ms": {
+            "p50": percentile(wall_ms, 0.50),
+            "p95": percentile(wall_ms, 0.95),
+            "p99": percentile(wall_ms, 0.99)
+        },
+        "godot_process_ms": {
+            "p50": percentile(process_ms, 0.50),
+            "p95": percentile(process_ms, 0.95),
+            "p99": percentile(process_ms, 0.99)
+        },
+        "godot_physics_ms": {
+            "p50": percentile(physics_ms, 0.50),
+            "p95": percentile(physics_ms, 0.95),
+            "p99": percentile(physics_ms, 0.99)
+        }
+    }
+    print("PERF_REPORT " + JSON.stringify(result))
+    quit(0)
+
+
+func _initialize() -> void:
+    call_deferred("_run")
