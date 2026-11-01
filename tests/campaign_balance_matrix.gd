@@ -112,5 +112,5 @@ func _run() -> void:
 func _initialize() -> void:
     world_config = root.get_node("WorldConfig")
     game_clock = root.get_node("GameClock")
-    data_db = root.get_node("DataDb")
+    data_db = root.get_node("DataDB")
     call_deferred("_run")
