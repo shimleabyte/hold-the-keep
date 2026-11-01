@@ -159,6 +159,8 @@ func _ready() -> void:
     _refresh_resources()
     _refresh_slots()
     get_viewport().size_changed.connect(_on_viewport_size_changed)
+    if not Settings.content_viewport_resized.is_connected(_on_content_viewport_resized):
+        Settings.content_viewport_resized.connect(_on_content_viewport_resized)
     _layout_viewport()
 
 
@@ -491,6 +493,10 @@ func _build_overlay() -> void:
 
 func _on_viewport_size_changed() -> void:
     _layout_viewport()
+
+
+func _on_content_viewport_resized(next_size: Vector2i) -> void:
+    _layout_viewport(Vector2(next_size))
 
 
 func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:

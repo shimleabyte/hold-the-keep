@@ -218,6 +218,19 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **CI diagnostic (not target hardware):** Frontier 128×128, 119 active enemies, 82 villagers, six peak projectiles and 500 peak particles; wall-frame p50 4.27 ms / p95 10.45 ms / p99 13.55 ms. A process-monitor p95 outlier of 102.24 ms was also recorded; these figures are runner-specific, not an accepted target-hardware budget.
 
 **Acceptance gate:** fresh mainline CI green, measured target-hardware performance, no blocker bugs, multi-act human playtest completed, save migration/reload tested, and Windows/Linux exports verified.
+### Phase 10 — Resolution-matched viewport and HUD safe area
+**Status:** Rebased onto Phase 09 mainline as `feat/phase-10-adaptive-viewport-mainline`; prior stacked workflow #285 passed 30/30 jobs. Fresh mainline CI and physical-display visual review are pending.
+
+- [x] Derive logical viewport dimensions from actual client-window size at exact 2× pixel scale, with a 480×270 minimum.
+- [x] Use 640×360 at 1280×720 and cover 960×540, 1280×800, 1366×768, 1600×900 and 1920×1080.
+- [x] Detect native window resizing and emit an explicit viewport event for HUD/technology UI.
+- [x] Keep camera zoom, 16×16 tiles, movement/combat ranges, world profiles and save schema unchanged.
+- [x] Add six-resolution mapping, live synchronization, camera zoom, HUD safe-area, map and hotbar regression checks.
+- [ ] Run fresh Godot 4.3/4.7 import, parse and all assertion suites on the mainline branch.
+- [ ] Inspect rendered screenshots and play at physical desktop resolutions plus fullscreen.
+
+**Acceptance gate:** correct 2× mapping, unchanged gameplay scale, no HUD clipping, wider central playfield, full CI green and manual rendered review.
+
 ## 5. First implementation priorities
 
 1. **Phase 00 is mandatory.** Do not add content on top of duplicated spatial constants and unverified scripts.

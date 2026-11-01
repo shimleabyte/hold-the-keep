@@ -3,6 +3,8 @@ extends Node
 
 const PATH := "user://settings.cfg"
 const MIN_WINDOW_SIZE := Vector2i(960, 540)
+const MIN_VIEWPORT_SIZE := Vector2i(480, 270)
+const VIEWPORT_PIXEL_SCALE := 2
 const BINDABLE_ACTIONS := [
     "move_up", "move_down", "move_left", "move_right",
     "interact", "attack", "sprint"
@@ -21,6 +23,9 @@ var volume := 0.8
 var screen_shake := true
 var world_profile := "classic"
 var custom_bindings: Dictionary = {}
+var _last_window_size := Vector2i.ZERO
+
+signal content_viewport_resized(viewport_size: Vector2i)
 
 
 func _ready() -> void:
@@ -141,6 +146,42 @@ func apply() -> void:
         DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED
     )
     AudioServer.set_bus_volume_db(0, linear_to_db(maxf(volume, 0.0001)))
+    _sync_content_viewport()
+    call_deferred("_sync_content_viewport")
+
+
+func _process(_delta: float) -> void:
+    # Root Window.size_changed is unreliable with viewport stretch mode.
+    # Poll the native size cheaply; recompute only when the actual window changes.
+    var current_size := DisplayServer.window_get_size()
+    if current_size.x > 0 and current_size.y > 0 and current_size != _last_window_size:
+        _sync_content_viewport(current_size)
+
+
+func viewport_size_for_window(window_size: Vector2i) -> Vector2i:
+    if window_size.x <= 0 or window_size.y <= 0:
+        return MIN_VIEWPORT_SIZE
+    return Vector2i(
+        maxi(MIN_VIEWPORT_SIZE.x, floori(float(window_size.x) / float(VIEWPORT_PIXEL_SCALE))),
+        maxi(MIN_VIEWPORT_SIZE.y, floori(float(window_size.y) / float(VIEWPORT_PIXEL_SCALE)))
+    )
+
+
+func _sync_content_viewport(window_size: Vector2i = Vector2i.ZERO) -> void:
+    var actual_size := window_size
+    if actual_size.x <= 0 or actual_size.y <= 0:
+        actual_size = DisplayServer.window_get_size()
+    if actual_size.x <= 0 or actual_size.y <= 0:
+        return # Keep the last valid viewport while the window is minimized.
+
+    _last_window_size = actual_size
+    var target_size := viewport_size_for_window(actual_size)
+    var root_window := get_tree().root
+    if root_window.content_scale_size == target_size:
+        return
+
+    root_window.content_scale_size = target_size
+    content_viewport_resized.emit(target_size)
 
 
 func set_fullscreen(value: bool) -> void:

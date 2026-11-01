@@ -8,7 +8,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
-- Resolusi dasar 480x270 (stretch `viewport`, scale `integer`), jendela default 1440x810, pixel art.
+- Jendela default 1280×720, minimum 960×540. Viewport logis mengikuti setengah ukuran client window (minimum 480×270), pixel art integer-scale tepat 2×.
 - Tujuan pemain: bertahan 15 hari, di malam ke-15 kalahkan Raja Lawan. Keep hancur = kalah.
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
@@ -26,7 +26,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
 | Save/load | versi 11, autosave tiap fajar, F5/F9, temp + rollback backup, world identity, resource/fog/multi-stronghold HP/garrison/ekspedisi/recall/combat/campaign progression, objective/site state dan faction identity tersimpan; v1–v10 tetap kompatibel |
 | Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
-| Tampilan | windowed 1280×720 default, minimum 960×540 (enforced through `Window.min_size`), preset 16:9/16:10/4:3, integer-scaled viewport dengan aspect expand |
+| Tampilan | windowed 1280×720 default, minimum 960×540, preset 16:9/16:10/4:3, viewport logis dinamis = ukuran client window / 2 (minimum 480×270), integer pixel scale 2×, aspect expand |
 | HUD | top bar ringkas, vitals, indikator bab, combat strip kompak, drawer JOBS, peta strategis TAB/MAP, hotbar bangunan, bar boss, bantuan (H) |
 | Animasi | 22 frame x 3 arah per karakter; serang/panen jatuh di frame benturan |
 | Efek | partikel, busur tebasan, guncangan layar (bisa dimatikan) |
@@ -291,3 +291,12 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Release scripts verify non-empty Windows/Linux export outputs; CI installs Godot 4.3 export templates, validates the PE format and smoke-tests Linux headlessly.
 - Previous stacked Phase 09 workflow #282 passed 30/30 jobs. This mainline transplant requires a fresh CI run before merge.
 - Remaining gates: real target-machine performance profile, later-act/day-20 combat outcome cases, full manual campaign playtest, Windows runtime smoke and clean-machine migration.
+
+
+## 26. Phase 10 — Resolution-matched viewport and HUD safe area (2026-11-01)
+- Mainline continuation branch: `feat/phase-10-adaptive-viewport-mainline`, based on `feat/phase-09-balance-performance-release-mainline`.
+- Root Window logical viewport now follows half the actual client-window dimensions, with a 480×270 minimum and exact 2× pixel scaling. Reference mappings: 960×540 → 480×270; 1280×720 → 640×360; 1366×768 → 683×384; 1600×900 → 800×450; 1920×1080 → 960×540.
+- Settings checks the native window size and only updates content scaling when dimensions change. The `content_viewport_resized` signal explicitly reflows HUD and centers the technology panel.
+- HUD retains logical-pixel dimensions in edge bands; the central playfield grows with the window. Camera zoom, tile size, movement/combat ranges, world dimensions and save schema remain unchanged.
+- The prior stacked Phase 10 workflow #285 passed 30/30 jobs on Godot 4.3/4.7. A fresh mainline workflow remains required before merge.
+- Rendered screenshots and manual play at physical desktop resolutions/fullscreen remain a separate acceptance gate.

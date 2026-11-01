@@ -104,6 +104,8 @@ func _ready() -> void:
     Events.game_won.connect(func(_d: int) -> void: _force_close())
     Events.campaign_won.connect(func(_d: int) -> void: _force_close())
     get_viewport().size_changed.connect(_layout_viewport)
+    if not Settings.content_viewport_resized.is_connected(_layout_viewport):
+        Settings.content_viewport_resized.connect(_layout_viewport)
     _layout_viewport()
 
 
@@ -119,8 +121,8 @@ func _label(parent: Node, text: String, pos: Vector2, color := Color.WHITE) -> L
     return l
 
 
-func _layout_viewport() -> void:
-    var viewport_size := get_viewport().get_visible_rect().size
+func _layout_viewport(target_size: Vector2i = Vector2i.ZERO) -> void:
+    var viewport_size := Vector2(target_size) if target_size != Vector2i.ZERO else get_viewport().get_visible_rect().size
     _panel.position = (viewport_size - _panel.size) * 0.5
     _root.queue_redraw()
 
