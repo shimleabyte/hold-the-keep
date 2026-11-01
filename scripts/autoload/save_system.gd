@@ -254,6 +254,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         var seen_shipment_ids: Dictionary = {}
         var reserved_capacity: Dictionary = {}
         var max_shipment_id := 0
+        var active_shipment_count := 0
         for order in supply_state["orders"]:
             if not (order is Dictionary):
                 return false
@@ -275,8 +276,10 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 return false
             if not ["queued", "in_transit", "blocked", "delivered", "cancelled", "recovered"].has(status):
                 return false
-            if status in ["queued", "in_transit", "blocked"] and cargo != amount:
-                return false
+            if status in ["queued", "in_transit", "blocked"]:
+                active_shipment_count += 1
+                if cargo != amount:
+                    return false
             if status in ["delivered", "cancelled", "recovered"] and cargo != 0:
                 return false
             if not is_finite(float(order["x"])) or not is_finite(float(order["y"])):
@@ -295,7 +298,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 var key := "%d:%d" % [destination_cell.x, destination_cell.y]
                 reserved_capacity[key] = int(reserved_capacity.get(key, 0)) + cargo
 
-        if int(supply_state["next_id"]) <= max_shipment_id:
+        if active_shipment_count > 8 or int(supply_state["next_id"]) <= max_shipment_id:
             return false
         for key in reserved_capacity:
             var coords := String(key).split(":")
