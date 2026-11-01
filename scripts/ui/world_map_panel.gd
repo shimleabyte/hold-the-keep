@@ -217,7 +217,7 @@ func _draw_resource_markers() -> void:
 
 func _draw_building_markers() -> void:
     for building in get_tree().get_nodes_in_group("buildings"):
-        if not is_instance_valid(building) or not _position_is_known(building.global_position):
+        if not is_instance_valid(building) or String(building.id) == "road" or not _position_is_known(building.global_position):
             continue
         var color := Color("#c6b49a")
         var radius := 1.5
