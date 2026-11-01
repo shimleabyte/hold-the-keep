@@ -364,7 +364,7 @@ func _use_rally() -> bool:
 
 
 func _player_damage(base_damage: int) -> int:
-    var base := float(base_damage + maxi(0, level - 1) * 2)
+    var base := float(base_damage + maxi(0, level - 1))
     var damage_value := Tech.stat("player.damage", base)
     if _rally_t > 0.0:
         damage_value *= 1.25
