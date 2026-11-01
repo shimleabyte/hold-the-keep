@@ -100,6 +100,8 @@ func _ready() -> void:
 
     Events.tech_panel_requested.connect(_open)
     Events.tech_researched.connect(func(_id: String) -> void: _refresh())
+    Events.supply_cost_source_changed.connect(_refresh)
+    Events.supply_stock_changed.connect(_refresh)
     Events.game_over.connect(func(_d: int) -> void: _force_close())
     Events.game_won.connect(func(_d: int) -> void: _force_close())
     Events.campaign_won.connect(func(_d: int) -> void: _force_close())
@@ -188,8 +190,9 @@ func _refresh() -> void:
         n.state = _state_of(id)
         n.progress = Tech.progress_ratio() if n.state == "researching" else 0.0
         n.afford = {}
+        var supply = get_tree().get_first_node_in_group("supply_network")
         for c in n.costs:
-            n.afford[c[0]] = Inventory.get_amount(c[0]) >= int(c[1])
+            n.afford[c[0]] = supply.can_pay_cost({String(c[0]): int(c[1])}) if supply != null else Inventory.get_amount(c[0]) >= int(c[1])
         n.queue_redraw()
     for e in 3:
         _era_labels[e].add_theme_color_override("font_color", ERA_COLORS[e + 1] if Tech.era >= e + 1 else Color(1, 1, 1, 0.35))
