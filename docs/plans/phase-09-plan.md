@@ -1,7 +1,7 @@
 # Phase 09 — Balance, Performance and Release Hardening
 
-**Status:** First hardening slice in progress. The automated Frontier stress and save/export-configuration gates are being added; measured hardware baselines, full campaign playtests and actual release exports remain open.
-**Branch:** `feat/phase-09-balance-performance-release-v2`
+**Status:** Automated regression, save recovery, CI profiling and template-backed desktop exports are implemented and have passed workflow run #271. Target-hardware profiling, full act-by-act combat outcome review and manual release acceptance remain open.
+**Branch:** `feat/phase-09-balance-performance-release-v4`
 **Base:** `feat/phase-07-conquest-objectives` (stacked so the test line includes the Frontier campaign and v11 save schema).
 **Engine targets:** Godot 4.3 and 4.7.
 
@@ -23,7 +23,7 @@ Make the expanded 128×128 Frontier campaign predictable under load and safe to 
 - [x] Add a CI stress scenario that instantiates a 128×128 world, all four factions, mixed faction rosters, a ranged projectile, 48 villagers and the 500-particle ceiling.
 - [x] Add a deterministic Classic/Frontier campaign matrix for stage transitions, day-by-day wave budgets, act-specific faction rosters and final-boss timing.
 - [ ] Add representative campaign balance cases for the ends of all four Frontier acts and the final day-20 encounter.
-- [ ] Check that Classic remains a 15-day campaign with its original rules.
+- [x] Check that Classic remains a 15-day campaign with its original rules (15-day / 3-stage assertions in the campaign matrix).
 - [ ] Record faction-specific failure modes, Keep damage, surviving population, remaining enemy count and elapsed simulated time.
 - [ ] Perform human playtests across all four acts; automated simulations are not a substitute for pathing, readability and pacing review.
 
@@ -34,7 +34,7 @@ Make the expanded 128×128 Frontier campaign predictable under load and safe to 
 - [x] Verify the next save removes stale temporary data, rotates a valid backup and leaves a valid primary.
 - [x] Verify corrupt-primary detection and backup eligibility.
 - [ ] Extend reload coverage to later acts, conquered strongholds and the final-boss gate.
-- [ ] Run the migration matrix on both supported Godot versions.
+- [x] Run the migration and campaign regression matrix on Godot 4.3 and 4.7 (CI run #271).
 
 ### 09.4 — Release export hardening
 - [x] Add deterministic checks for the Windows Desktop and Linux export preset names, paths, resource filters and embedded PCK settings.
@@ -72,4 +72,11 @@ The benchmark is diagnostic by design. CI must validate bounded counts and funct
 
 ## Current blockers / honesty of verification
 
-The implementation environment does not contain Godot and cannot reach GitHub from the local shell. The repository changes can be committed through the connected GitHub integration, but local Godot execution, rendered screenshot review, target-hardware profiling and real export execution cannot be claimed here. The Godot 4.3/4.7 regression matrix, Frontier performance diagnostic and template-backed export job provide engine-backed CI evidence. Target-hardware profiling and clean-machine platform checks remain open.
+The connected GitHub Actions runner executed the Godot 4.3/4.7 import/parse and configured regression matrix, produced Windows/Linux exports using matching Godot 4.3 templates, verified the PE format, and smoke-tested Linux. The first performance artifact was diagnostic only and reached 340 particles; the benchmark script has since been tightened to sustain the full 500-particle ceiling, so its updated report is pending a fresh run. No target-hardware frame-time result, Windows runtime test or manual playtest is claimed.
+
+
+## CI evidence
+
+**Workflow run #271** completed successfully on the PR merge ref. It covered Godot 4.3 and 4.7 import/parse plus the configured regression jobs; the campaign balance matrix, Frontier reload, Frontier stress and save/release hardening checks passed. The stress job reported 64 registered enemies, 50 villagers (including the two initial villagers), one live projectile and exactly 500 particles.
+
+The Godot 4.3 export job generated both desktop binaries, validated the Windows PE format, smoke-launched Linux headlessly and uploaded the artifacts. The Godot 4.7 diagnostic job uploaded a `frontier-performance-godot-4.7` report. Its first report reached only 340 live particles, so the benchmark has been updated to sustain the full 500-particle ceiling; do not treat the older report as the final reference workload. A new workflow run is required to validate that change.
