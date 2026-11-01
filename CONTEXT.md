@@ -26,7 +26,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
 | Save/load | versi 6, autosave tiap fajar, F5/F9, file sementara + rollback backup, resource/fog/stronghold/garrison/ekspedisi/recall/combat progression tersimpan |
 | Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
-| Tampilan | windowed 1280×720 default, minimum 960×540, preset 16:9/16:10, integer-scaled viewport dengan aspect expand |
+| Tampilan | windowed 1280×720 default, minimum 960×540 (enforced through `Window.min_size`), preset 16:9/16:10, integer-scaled viewport dengan aspect expand |
 | HUD | top bar ringkas, vitals, indikator bab, combat strip kompak, drawer JOBS, peta strategis TAB/MAP, hotbar bangunan, bar boss, bantuan (H) |
 | Animasi | 22 frame x 3 arah per karakter; serang/panen jatuh di frame benturan |
 | Efek | partikel, busur tebasan, guncangan layar (bisa dimatikan) |
@@ -201,7 +201,7 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 
 
 ## 17. Responsive resolution and UI visual pass (2026-11-01)
-- Project base remains 480×270 with viewport rendering and integer scaling; stretch aspect is `expand` so wider/taller desktop windows reveal more world instead of distorting pixel art or forcing fixed letterboxing.
+- Project base remains 480×270 with viewport rendering and integer scaling; stretch aspect is `expand` so wider/taller desktop windows reveal more world instead of distorting pixel art. Integer scaling can still leave unused margins where the window dimensions do not align to an integer multiple of the logical viewport.
 - Default window is 1280×720; minimum is 960×540. Pause settings expose monitor-filtered 16:9, 16:10, and 4:3 window-size presets, remember the selected windowed size, and keep fullscreen as a separate mode.
 - HUD listens to viewport size changes. Resource/time strip spans the top; vitals and job drawer anchor to opposite sides; stage and boss panels center; map centers and scales; combat strip and building hotbar stay above the bottom edge.
 - Strategic map scales its tile grid and legend to the available viewport. Technology and pause overlays use full-viewport roots and centered panels.
