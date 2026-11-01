@@ -1,4 +1,9 @@
 extends SceneTree
+
+var world_config
+var game_clock
+var save_system
+
 ## End-to-end Frontier reload: completed objectives, an active escort and a damaged stronghold.
 
 
@@ -19,7 +24,7 @@ func first_reachable_cell_in_region(main: Node, region_id: String) -> Vector2i:
 
 
 func _run() -> void:
-    WorldConfig.apply_profile("frontier")
+    world_config.apply_profile("frontier")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
 
@@ -27,7 +32,7 @@ func _run() -> void:
     root.add_child(main)
     current_scene = main
     await ticks(10)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
 
     var greenwood := first_reachable_cell_in_region(main, "GREENWOOD")
     assert(greenwood.x >= 0, "Greenwood must be reachable for the campaign discovery")
@@ -57,17 +62,17 @@ func _run() -> void:
     var expected_escort_path_index: int = int(escort._path_index)
     var expected_escort_position: Vector2 = escort.position
 
-    assert(SaveSystem.save_current(true),
+    assert(save_system.save_current(true),
         "Frontier save must succeed with a partially damaged stronghold and active escort")
-    var snapshot: Dictionary = SaveSystem.collect(main)
+    var snapshot: Dictionary = save_system.collect(main)
     assert(snapshot["version"] == 11 and snapshot["frontier_campaign"]["profile"] == "frontier",
         "The snapshot must use the current Frontier campaign schema")
 
-    assert(SaveSystem.request_load(),
+    assert(save_system.request_load(),
         "The current Frontier campaign snapshot must be accepted for reload")
     await ticks(12)
     var restored = current_scene
-    GameClock.set_process(false)
+    game_clock.set_process(false)
 
     assert(restored != null and is_instance_valid(restored),
         "The reloaded scene must be available")
@@ -101,4 +106,7 @@ func _run() -> void:
 
 
 func _initialize() -> void:
+    world_config = root.get_node("WorldConfig")
+    game_clock = root.get_node("GameClock")
+    save_system = root.get_node("SaveSystem")
     call_deferred("_run")
