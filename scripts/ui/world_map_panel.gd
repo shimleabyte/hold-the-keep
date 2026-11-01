@@ -180,12 +180,28 @@ func _draw_campaign_markers() -> void:
             draw_rect(Rect2(_world_to_map(stronghold.global_position) - Vector2(2.5, 2.5), Vector2(5.0, 5.0)), ENEMY_MARKER)
 
 
+func _is_currently_observed(world_position: Vector2) -> bool:
+    var player_node = get_tree().get_first_node_in_group("player")
+    if player_node != null and player_node.global_position.distance_to(world_position) <= 112.0:
+        return true
+    for villager in get_tree().get_nodes_in_group("villagers"):
+        if is_instance_valid(villager) and villager.visible and villager.global_position.distance_to(world_position) <= 64.0:
+            return true
+    for building in get_tree().get_nodes_in_group("buildings"):
+        if not is_instance_valid(building):
+            continue
+        var radius := 160.0 if String(building.id) == "keep" else (144.0 if String(building.id) == "outpost" else 0.0)
+        if radius > 0.0 and building.global_position.distance_to(world_position) <= radius:
+            return true
+    return false
+
+
 func _draw_unit_markers() -> void:
     for villager in get_tree().get_nodes_in_group("villagers"):
         if is_instance_valid(villager) and villager.visible:
             _marker(villager.global_position, ALLY_MARKER, 1.0)
     for enemy in get_tree().get_nodes_in_group("enemies"):
-        if is_instance_valid(enemy):
+        if is_instance_valid(enemy) and _is_currently_observed(enemy.global_position):
             _marker(enemy.global_position, ENEMY_MARKER, 1.0)
 
 
