@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` includes PR #39 (`11f3f13`), adding Scout faction-aware marking. Workflow #41354720293 passed 58/58 jobs on Godot 4.3/4.7, including 27 regression suites per engine, Frontier performance and Windows/Linux export. Shieldbearer brace is merged via PR #36; Phase 02.5 supply pressure via PR #35. Save schema remains v13. Current development branch `feat/phase-06-saboteur-disruption` implements Saboteur building disruption; CI pending. Remaining Phase 06 work includes Siege Engine/Beast Rider policies, camps, patrols and expanded counterattacks.
+**Current source of truth:** default branch `main` includes PR #40 (`8f1a914`), adding Saboteur building disruption. Workflow #41355982522 passed 60/60 jobs on Godot 4.3/4.7, including 28 regression suites per engine, import/parse, Frontier performance and Windows/Linux export. Scout marking and Shieldbearer brace are merged through PRs #39/#36; Phase 02.5 supply pressure through PR #35. Save schema remains v13. Remaining Phase 06 work includes Siege Engine/Beast Rider policies, camps, patrols and expanded counterattacks.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -15,7 +15,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #39 (save schema v13; status per 2 November 2026). Shieldbearer directional brace dan Scout faction-aware marking sudah masuk `main`.
+Ringkasan implementasi aktual pada `main` setelah PR #40 (save schema v13; status per 2 November 2026). Shieldbearer brace, Scout marking dan Saboteur building disruption sudah masuk `main`.
 
 | Area | Kondisi saat ini |
 |---|---|
@@ -26,7 +26,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #39 (save schema v13; statu
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
-| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer and Scout behavior merged; Saboteur building disruption is implemented on a pending branch; Siege Engine/Beast Rider policies, camps, patrols and broader counterattacks remain incomplete |
+| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman support, Shieldbearer brace, Scout marking dan Saboteur building disruption sudah berjalan; Siege Engine/Beast Rider policies, camps, patrols and broader counterattacks remain incomplete |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
 | Save/load | v13 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo; Classic v1–v13 dan Frontier v7–v13 migration matrix dijaga. PR #34 adds optional cost-source preference without a save-version bump; earlier v13 snapshots without it remain valid |
@@ -35,7 +35,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #39 (save schema v13; statu
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 12 procedural SFX; musik belum ada |
 | Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | PR #35 workflow #41328005585 passed; PR #39 workflow #41354720293 passed 58/58 jobs: 27 assertion suites per Godot 4.3/4.7, import/parse, Frontier performance and Windows/Linux export. |
+| CI | PR #35 workflow #41328005585 passed; PR #39 workflow #41354720293 passed 58/58; PR #40 workflow #41355982522 passed 60/60 jobs: 28 assertion suites per Godot 4.3/4.7, import/parse, Frontier performance and Windows/Linux export. |
 
 ## 3. Struktur
 ```
@@ -390,9 +390,17 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - `tests/scout_marking.gd` passes on Godot 4.3 and 4.7. Save schema v13 remains unchanged.
 
 
-## 35. Phase 06.2 — Saboteur building disruption (2026-11-02, branch pending CI)
-- Branch: `feat/phase-06-saboteur-disruption`, based on main after PR #39.
+## 35. Phase 06.2 — Saboteur building disruption (2026-11-02, merged via PR #40)
+- Merged into `main` at `8f1a914`; workflow #41355982522 passed 60/60 jobs on Godot 4.3/4.7.
 - Saboteur scans a bounded set of reachable player buildings, scoring Tower/Outpost highest, then Storage, production facilities and House with path-distance weighting.
 - It follows nav-adjacent paths, telegraphs a wind-up and applies reversible temporary suppression plus bounded structural damage and a cooldown. Stagger interrupts the wind-up.
 - Sabotaged Towers stop firing; Storage/Outposts reject deposits and withdrawals; workplaces stop accepting new workers and pause active workers; repair and Outpost guard assignment are blocked until recovery.
-- No save-schema change: sabotage timer is transient and uses simulation delta, pausing with the game. Regression `tests/saboteur_disruption.gd` covers target priority, pathing, disable/recovery and stagger interruption. CI pending.
+- No save-schema change: sabotage timer is transient and uses simulation delta, pausing with the game. Regression `tests/saboteur_disruption.gd` covers target priority, pathing, disable/recovery and stagger interruption. All 28 assertion suites passed on both Godot versions; Frontier performance and Windows/Linux exports also passed.
+
+
+## 36. Phase 06.2 — Saboteur building disruption (2026-11-02, merged via PR #40)
+- Merged into `main` at `8f1a914`; workflow #41355982522 completed successfully with 60/60 jobs.
+- Saboteur performs a rotating bounded scan of up to 32 buildings, prioritizing Tower/Outpost, then Storage, production facilities and House; path length adjusts target score.
+- Nav-adjacent paths lead the unit to a target. A visible wind-up precedes temporary disruption and bounded structural damage. Player/defender interception and stagger can interrupt; a cooldown limits repeated attacks.
+- Sabotaged Towers stop firing; Storage/Outposts reject deposits and withdrawals; workplaces stop new assignments and pause their workers; repairs and Outpost guard assignment are temporarily blocked.
+- Disruption uses a transient simulation timer; save schema v13 remains unchanged. Regression passed on Godot 4.3 and 4.7.
