@@ -1,8 +1,8 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
-**Status (2026-11-01):** Phase 00, 01, 03 and the initial slices of 02, 04, 05, 06, 07, 09 and 10 are merged into `main`. Phase 02, 04, 05 and 06 remain partially implemented; Phase 08 has not been implemented as a distinct delivery. Phase 02.4 Outpost garrisons/depot inspection merged through PR #32 (`2f94959`) and passed CI 48/48. Phase 02.3 player-directed physical shipments are implemented on `feat/phase-02-physical-shipments`; Godot 4.3/4.7 verification is pending. Local Outpost vision and observed-only map markers were already present on `main`. Manual playtest gates remain open.  
-**Phase 02 merge commits:** PR #31 (`6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`) delivered local depot storage/transfers; PR #32 (`2f94959b497677eae49d4303f72322650fb591c2`) delivered garrisons and inspection. PR #32 validation: [workflow #41318897606](https://github.com/shimleabyte/hold-the-keep/actions/runs/41318897606), 48/48 jobs successful on Godot 4.3/4.7, including 22 regressions per engine, Frontier diagnostic and Windows/Linux export.  
-**Baseline:** Godot 4.3+ / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts. Mainline save format v12; shipment branch introduces v13 with backward compatibility for v1–v12.
+**Status (2026-11-01):** Phase 00, 01, 03 and the initial slices of 02, 04, 05, 06, 07, 09 and 10 are merged into `main`. Phase 02, 04, 05 and 06 remain partially implemented; Phase 08 has not been implemented as a distinct delivery. Phase 02.4 Outpost garrisons/depot inspection merged through PR #32 (`2f94959`) and passed CI 48/48. Phase 02.3 player-directed physical shipments merged through PR #33 (`5d7db56`); its Godot CI passed 50/50 jobs on 4.3 and 4.7. Local Outpost vision and observed-only map markers were already present on `main`. Manual playtest gates remain open.  
+**Phase 02 merge commits:** PR #31 (`6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`) delivered local depot storage/transfers; PR #32 (`2f94959b497677eae49d4303f72322650fb591c2`) delivered garrisons/inspection; PR #33 (`5d7db56b3a51a25541f541bb46c19b26996d22be`) delivered player-directed physical shipments and save v13. PR #33 validation: [workflow #41323062111](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323062111), 50/50 jobs successful on Godot 4.3/4.7, including 23 regressions per engine, Frontier diagnostic and Windows/Linux export.  
+**Baseline:** Godot 4.3+ / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, mainline save format v13 with backward compatibility for save versions v1–v12.
 
 ## 1. Product direction
 
@@ -96,7 +96,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate — passed:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable stronghold approach, valid map bounds, viewport fit and 128×128 fog/index round-trip.
 
 ### Phase 02 — Territory, roads and supply
-**Status:** Regional control/road/connected-depot foundation merged into `main`. PR #31 adds bounded local stockpiles and automatic Keep-bound shipments under save v12. PR #32 is merged and adds read-only Storage/Outpost stock inspection and local Outpost garrisons (two slots, assignment UI, 128-pixel defense leash, lifecycle/save integration); its 48/48 Godot CI gate passed. Local Outpost vision and observed-only enemy markers already exist on `main`. Branch `feat/phase-02-physical-shipments` implements player-directed physical orders, escrowed cargo, route recovery and save v13; automated CI is pending. Direct source-depot spending/reservation for build/research remains open.
+**Status:** Regional control/road/connected-depot foundation merged into `main`. PR #31 adds bounded local stockpiles and automatic Keep-bound shipments under save v12. PR #32 is merged and adds read-only Storage/Outpost stock inspection and local Outpost garrisons (two slots, assignment UI, 128-pixel defense leash, lifecycle/save integration); its 48/48 Godot CI gate passed. Local Outpost vision and observed-only enemy markers already exist on `main`. PR #33 merged player-directed physical orders, escrowed cargo, route recovery and save v13; Godot 4.3/4.7 CI passed 50/50. Direct source-depot spending/reservation for build/research remains open.
 
 - [x] Aggregate land claims into neutral/player/enemy/contested regional control records.
 - [x] Emit regional control changes independently from fog-of-war exploration.
@@ -114,7 +114,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Implement Outpost guard assignment/garrison support (PR #32 merged; Godot 4.3/4.7 CI passed); local vision and observed-only map markers were already implemented on `main`.
 - [x] Add bounded periodic transfer of up to 6 local units per connected depot to Keep Inventory every 3 seconds, with rotating resource-kind priority; disconnected depot stock stays local.
 - [x] Add read-only local stock inspection for Storage/Outposts through `JOBS → POS` (PR #32 merged; CI passed).
-- [x] Implement player-directed shipment orders between Keep/Storage/Outposts with visible carriers, immediate cargo reservation, Keep-bound withdrawals, cancellation/refund and interruption recovery (branch `feat/phase-02-physical-shipments`; CI pending).
+- [x] Implement player-directed shipment orders between Keep/Storage/Outposts with visible carriers, immediate cargo reservation, Keep-bound withdrawals, cancellation/refund and interruption recovery (PR #33 merged; Godot 4.3/4.7 CI passed 50/50).
 - [ ] Add direct source-depot spending/reservation for construction/research. Local stock is spendable through explicit shipment orders but not automatically shared with the global build/research ledger.
 - [ ] Add supply attrition and raid vulnerability after local logistics are reliable.
 
