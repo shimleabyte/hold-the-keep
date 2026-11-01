@@ -98,6 +98,7 @@ func import_state(d: Dictionary) -> void:
     _boss_pending = bool(d.get("boss", false))
     _boss_t = float(d.get("boss_t", 0.0))
     _pool = _pool_for(GameClock.day)
+    _sync_stage(GameClock.day)
 
 
 func restore_enemy(d: Dictionary) -> void:
