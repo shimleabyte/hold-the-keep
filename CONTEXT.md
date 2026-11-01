@@ -20,7 +20,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 | Kampanye | tiga bab (hari 1–5, 6–10, 11–15), bobot musuh berubah per bab, benteng lawan 900 HP, garrison, fog permanen, ekspedisi (G), conquest victory |
 | Pemain | gerak 8 arah, lari (Shift), serang radial, panen, HP 100 + regen, respawn di keep |
 | Bangunan | keep, rumah, tembok, menara, gudang, ladang; data di `data/buildings.json`; bongkar refund 50% |
-| Musuh | bandit, serigala, prajurit, Raja Lawan; flow field; menyerang bangunan/pemain/prajurit |
+| Musuh | bandit, serigala pouncer, soldier melee, archer ranged, brute siege, Raja Lawan; flow field; role-specific AI dan structure damage |
 | Villager | job penebang/penambang/petani/prajurit, kuota diatur pemain, A*, setor ke gudang/keep |
 | Ekonomi | kayu, batu, makanan; kapasitas rumah; upkeep 2 makanan/penduduk/hari |
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
@@ -195,5 +195,5 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - `scripts/ui/world_map_panel.gd` adds a TAB/MAP exploration-aware map with terrain, territory tint, resource/building/unit/player markers. Permanently explored fog is used for terrain memory; live enemy markers are restricted to current observation ranges.
 - `scripts/world/world_map.gd` defines four named regions: Hearthland, Greenwood, Highlands, and Fenlands. Their ground tiles differ while retaining the same 64x64 grid and water collision. Original tree/rock spawn probabilities and RNG draw order are preserved to keep saved resource cells compatible.
 - `data/waves.json` defines three campaign acts: Frontier (days 1–5), Black March (6–10), Last Siege (11–15). `wave_spawner.gd` applies archer pressure in Act II and archer/brute pressure in Act III; stage changes update the HUD banner and progress indicator.
-- HUD keeps core status and build hotbar visible. Job quotas move behind JOBS; map is opened by TAB/MAP and both overlays close with Escape. Combat strip and tech button occupy less screen space.
+- HUD keeps core status and build hotbar visible. Job quotas move behind JOBS; map is opened by TAB/MAP and closes with its X, backdrop click, TAB, or Escape; job drawer closes with JOBS or Escape. Combat strip and tech button occupy less screen space.
 - `tests/map_stages.gd` covers regional labels, map visibility, act boundaries, and act-specific enemy weights. Godot execution remains pending in an environment with the engine installed.
