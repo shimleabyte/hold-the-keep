@@ -62,6 +62,7 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 - Setiap penduduk mengonsumsi 2 makanan per hari. Kekurangan makanan membuat satu penduduk pergi.
 - Bangunan: rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Pos Terdepan, Kamp Penebang, Kuari, jalan, dan jembatan.
 - Kamp Penebang menyediakan dua workplace woodcutter dengan radius kerja 18 tile; Kuari menyediakan dua workplace miner dengan radius 16 tile. Jika belum ada fasilitas khusus, pekerja tetap memakai radius depot seperti pada Classic lama. Jika semua slot fasilitas penuh, pekerja tambahan tidak mengambil alih area kerja fasilitas tersebut.
+- Pada Frontier, Gudang menampung 180 unit dan Outpost 120 unit resource lokal. Worker menyetor ke depot terhubung; tiap 3 detik depot terhubung mengirim maksimal 6 unit ke Keep. Depot yang terputus menyimpan stok sampai jalurnya tersambung. Stok lokal belum bisa langsung dipakai untuk build/riset sebelum sampai ke Keep.
 - Teknologi 20-node dalam 3 era memperkuat ekonomi, pertahanan, eksplorasi, dan pengepungan.
 
 ### Simpanan dan pengaturan
