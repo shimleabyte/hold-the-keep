@@ -1,8 +1,6 @@
 extends Node
 ## Gelombang musuh tiap malam. Jumlah dan komposisi dari data/waves.json.
 
-const MAP_SIZE := 64
-const TILE := 16
 const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
 const SPAWN_WINDOW := 0.6  # bagian malam di mana musuh muncul
 
@@ -176,7 +174,7 @@ func spawn_one(forced_type := "") -> bool:
     var data: Dictionary = DataDB.enemies[forced_type if forced_type != "" else _pick_type()]
     var e := ENEMY_SCRIPT.new()
     e.setup(data, world, flow, player)
-    e.position = Vector2(cell) * TILE + Vector2(TILE / 2.0, TILE / 2.0)
+    e.position = Vector2(cell) * WorldConfig.tile_size + Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0)
     world.entities.add_child(e)
     return true
 
@@ -196,13 +194,13 @@ func _pick_type() -> String:
 func _pick_edge_cell() -> Vector2i:
     for i in 30:
         var side := randi() % 4
-        var t := randi_range(1, MAP_SIZE - 2)
+        var t := randi_range(1, WorldConfig.map_size - 2)
         var c := Vector2i.ZERO
         match side:
             0: c = Vector2i(t, 1)
-            1: c = Vector2i(t, MAP_SIZE - 2)
+            1: c = Vector2i(t, WorldConfig.map_size - 2)
             2: c = Vector2i(1, t)
-            _: c = Vector2i(MAP_SIZE - 2, t)
+            _: c = Vector2i(WorldConfig.map_size - 2, t)
         if world.is_buildable(c) and not world.occupied.has(c) and flow.is_reachable(c):
             return c
     return Vector2i(-1, -1)
