@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 6
+const VERSION := 7
 
 var pending: Dictionary = {}
 
@@ -136,6 +136,12 @@ func collect(main: Node) -> Dictionary:
 
     return {
         "version": VERSION,
+        "world": {
+            "profile": WorldConfig.profile_id,
+            "map_size": WorldConfig.map_size,
+            "tile_size": WorldConfig.tile_size,
+            "seed": main.world.map_seed
+        },
         "stronghold": stronghold_state,
         "fog": main.fog.export_state() if is_instance_valid(main.fog) else {},
         "inventory": Inventory.items,
@@ -175,13 +181,34 @@ func _valid_save(data: Variant) -> bool:
     var resources = data.get("resources", [])
     var stronghold = data.get("stronghold", {})
     var fog = data.get("fog", {})
+    var save_map_cells := 64 * 64
+    if version < 7:
+        # Legacy saves use the original 64x64 Classic world.
+        if WorldConfig.profile_id != "classic" or WorldConfig.map_size != 64:
+            return false
+    else:
+        var world_data = data.get("world", {})
+        if not (world_data is Dictionary):
+            return false
+        for key in ["profile", "map_size", "tile_size", "seed"]:
+            if not world_data.has(key):
+                return false
+        if String(world_data["profile"]) != WorldConfig.profile_id:
+            return false
+        if int(world_data["map_size"]) != WorldConfig.map_size:
+            return false
+        if int(world_data["tile_size"]) != WorldConfig.tile_size:
+            return false
+        if int(world_data["seed"]) != WorldConfig.world_seed:
+            return false
+        save_map_cells = WorldConfig.map_cells
     if not (fog is Dictionary):
         return false
     var explored_cells = fog.get("cells", [])
     if not (explored_cells is Array):
         return false
     for index in explored_cells:
-        if int(index) < 0 or int(index) >= 64 * 64:
+        if int(index) < 0 or int(index) >= save_map_cells:
             return false
     if not (stronghold is Dictionary):
         return false
