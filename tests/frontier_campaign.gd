@@ -122,6 +122,7 @@ func _run() -> void:
         "Highlands discovery must reward entry after Act II unlock")
     for objective_id in ["highland_survivors", "highland_caravan"]:
         var escort = main.frontier_campaign.sites[objective_id]
+        main.player.position = escort.global_position
         escort.interact()
         assert(escort.site_state == "escorting" and escort._path.size() > 1,
             "Rescue/escort must start a valid route back to the Keep")
@@ -167,6 +168,7 @@ func _run() -> void:
         "Fenlands discovery must complete during Act III")
     main.frontier_campaign.sites["fenland_ruins"].take_damage(9999)
     var beacon = main.frontier_campaign.sites["fenland_watch"]
+    main.player.position = beacon.global_position
     beacon.interact()
     beacon._on_phase_changed(true)
     beacon._on_phase_changed(false)
@@ -191,6 +193,7 @@ func _run() -> void:
     assert(bool(main.frontier_campaign.objectives["discover_ashen_march"]["completed"]),
         "Ashen March discovery must complete during Act IV")
     var refugees = main.frontier_campaign.sites["ashen_refugees"]
+    main.player.position = refugees.global_position
     refugees.interact()
     assert(refugees.site_state == "escorting", "Refugees must start an escort")
     for step in refugees._path.size() + 2:
