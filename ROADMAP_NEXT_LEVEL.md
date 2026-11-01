@@ -1,7 +1,7 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
 **Status (2026-11-01):** Phase 00, 01, 03 and the initial slices of 02, 04, 05, 06, 07, 09 and 10 are merged into `main`. Phase 02, 04, 05 and 06 remain partially implemented; Phase 08 has not been implemented as a distinct delivery. All remaining manual acceptance gates are still open.  
-**Current main:** `f540faebb83402030ea4a360161eacd737e28856`. Latest mainline CI: [workflow #294](https://github.com/shimleabyte/hold-the-keep/actions/runs/41309837812), 44/44 jobs successful on Godot 4.3 and 4.7 plus export/performance diagnostics.  
+**Current main:** `6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`. Latest mainline CI: [workflow #41314731305](https://github.com/shimleabyte/hold-the-keep/actions/runs/41314731305), 46/46 jobs successful on Godot 4.3 and 4.7, Frontier diagnostics and Windows/Linux export.  
 **Baseline:** Godot 4.3+ / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, save format v12.
 
 ## 1. Product direction
@@ -96,7 +96,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate — passed:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable stronghold approach, valid map bounds, viewport fit and 128×128 fog/index round-trip.
 
 ### Phase 02 — Territory, roads and supply
-**Status:** Regional control/road/connected-depot foundation merged into `main`. The current implementation branch adds bounded local stockpiles for Storage/Outposts, Frontier worker deposits into local depot balances, and periodic automatic shipments (3-second cadence, max 6 units per connected depot) to Keep under save v12. Player-directed orders, local stock UI, Outpost garrisons and local visibility remain open.
+**Status:** Regional control/road/connected-depot foundation merged into `main`. PR #31 merged into `main` adds bounded local stockpiles for Storage/Outposts, Frontier worker deposits into local depot balances, and periodic automatic shipments (3-second cadence, max 6 units per connected depot) to Keep under save v12. Player-directed orders, local stock UI, Outpost garrisons and local visibility remain open.
 
 - [x] Aggregate land claims into neutral/player/enemy/contested regional control records.
 - [x] Emit regional control changes independently from fog-of-war exploration.
@@ -178,7 +178,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** each archetype creates a distinct tactical response; AI remains bounded under stress tests; factions obey territory and campaign state; save/load and both engine CI versions pass.
 
 ### Phase 07 — Technology and campaign objectives
-**Status:** Implementation merged through PR #28. Current mainline workflow #294 passed 44/44 jobs; rendered/manual difficulty and campaign review remain open.
+**Status:** Implementation merged through PR #28. Current mainline workflow #41314731305 passed 46/46 jobs; rendered/manual difficulty and campaign review remain open.
 
 - [x] Expand the technology tree from 17 to 20 nodes without changing existing technology IDs or prerequisites.
 - [x] Add a Frontier 20-day / 4-act ruleset while preserving Classic's 15-day / 3-stage rules.
@@ -205,7 +205,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** screenshot passes at target desktop resolutions; visual readability under day/night, fog and combat load; no placeholder-only faction identity in release content.
 
 ### Phase 09 — Balance, performance and release hardening
-**Status:** Automated hardening and Godot 4.3/4.7 export CI merged through PR #29. Current mainline workflow #294 passed 44/44 jobs. Target-hardware profiling, complete campaign playtest, Windows runtime and clean-machine verification remain open.
+**Status:** Automated hardening and Godot 4.3/4.7 export CI merged through PR #29. Current mainline workflow #41314731305 passed 46/46 jobs. Target-hardware profiling, complete campaign playtest, Windows runtime and clean-machine verification remain open.
 
 - [x] Add configurable Classic/Frontier profiling for p50/p95/p99 process, physics and wall-frame timing, static memory, node count, projectiles and particles.
 - [x] Add bounded Frontier stress coverage for four factions, mixed rosters, villagers, ranged projectiles and the 500-particle ceiling.
@@ -224,7 +224,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 
 **Remaining acceptance work:** measured target-hardware performance, later-act/day-20 combat outcome simulations, full multi-act human playtest, Windows runtime on a real Windows machine, and clean-machine save/settings migration.
 ### Phase 10 — Resolution-matched viewport and HUD safe area
-**Status:** Adaptive viewport implementation merged through PR #30. Current mainline workflow #294 passed 44/44 jobs, including responsive layout tests. Physical-display screenshots and manual fullscreen review remain open.
+**Status:** Adaptive viewport implementation merged through PR #30. Current mainline workflow #41314731305 passed 46/46 jobs, including responsive layout tests. Physical-display screenshots and manual fullscreen review remain open.
 
 - [x] Derive logical viewport dimensions from actual client-window size at exact 2× pixel scale, with a 480×270 minimum.
 - [x] Use 640×360 at 1280×720 and cover 960×540, 1280×800, 1366×768, 1600×900 and 1920×1080.
