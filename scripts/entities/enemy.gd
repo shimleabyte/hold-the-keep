@@ -5,6 +5,8 @@ extends Node2D
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
 const ENEMY_BOLT := preload("res://scripts/entities/enemy_bolt.gd")
+const ENEMY_TARGETING := preload("res://scripts/systems/enemy_targeting.gd")
+const ENEMY_SUPPORT := preload("res://scripts/systems/enemy_support.gd")
 const TEXTURES := {
     "bandit": preload("res://assets/sprites/enemy_bandit.svg"),
     "wolf": preload("res://assets/sprites/enemy_wolf.svg"),
@@ -204,22 +206,9 @@ func _tick_flow(delta: float) -> void:
 func _tick_shaman_support() -> bool:
     if support_amount <= 0 or support_radius <= 0.0 or _support_cd > 0.0:
         return false
-    var best = null
-    var best_distance := support_radius
-    for candidate in get_tree().get_nodes_in_group("enemies"):
-        if candidate == self or not is_instance_valid(candidate) or not candidate.has_method("receive_healing"):
-            continue
-        if int(candidate.hp) >= int(candidate.max_hp):
-            continue
-        var distance := position.distance_to(candidate.position)
-        if distance < best_distance:
-            best_distance = distance
-            best = candidate
-    if best == null:
+    if not ENEMY_SUPPORT.heal_nearest_ally(self, support_radius, support_amount):
         return false
-    best.receive_healing(support_amount)
     _support_cd = maxf(0.5, support_interval)
-    Events.fx_burst.emit("impact", best.position + Vector2(0, -8), Vector2.ZERO, 1.0)
     return true
 
 
@@ -249,22 +238,10 @@ func _tick_ranged(delta: float) -> void:
 
 
 func _nearest_ranged_target() -> Node2D:
-    var best: Node2D = null
-    var best_distance := 165.0
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
         candidates.append(player)
-    for candidate in candidates:
-        var target := candidate as Node2D
-        if not is_instance_valid(target) or not target.visible:
-            continue
-        if is_garrison and target.global_position.distance_to(guard_origin) > 175.0:
-            continue
-        var distance := position.distance_to(target.global_position)
-        if distance < best_distance:
-            best_distance = distance
-            best = target
-    return best
+    return ENEMY_TARGETING.nearest(self, candidates, 165.0, guard_origin if is_garrison else Vector2.ZERO, 175.0 if is_garrison else 0.0)
 
 
 func _tick_garrison(delta: float) -> void:
@@ -283,22 +260,10 @@ func _tick_garrison(delta: float) -> void:
 
 
 func _nearest_guard_target() -> Node2D:
-    var best: Node2D = null
-    var best_distance := 150.0
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
         candidates.append(player)
-    for candidate in candidates:
-        var target := candidate as Node2D
-        if not is_instance_valid(target) or not target.visible:
-            continue
-        if target.global_position.distance_to(guard_origin) > 175.0:
-            continue
-        var distance := position.distance_to(target.global_position)
-        if distance < best_distance:
-            best_distance = distance
-            best = target
-    return best
+    return ENEMY_TARGETING.nearest(self, candidates, 150.0, guard_origin, 175.0)
 
 
 func _begin_attack(target, direction: Vector2) -> void:
