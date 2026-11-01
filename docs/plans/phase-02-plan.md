@@ -1,7 +1,7 @@
 # Phase 02 — Local Logistics and Outpost Support
 
-**Status:** Partial implementation merged into `main`. Regional ownership, roads/bridges, Keep-rooted connectivity and connected-depot eligibility exist. Local stockpiles, actual inter-depot transfers, Outpost garrisons and Outpost-local visibility remain open.
-**Dependency:** The existing Keep-connected supply graph and save v11.
+**Status:** Partial implementation. Regional ownership, roads/bridges, Keep-rooted connectivity and connected-depot eligibility are merged; the audit implementation branch adds local Storage/Outpost stockpiles and v12 persistence. Actual inter-depot transfers, stock inspection UI, Outpost garrisons and Outpost-local visibility remain open.
+**Dependency:** The existing Keep-connected supply graph and save v12.
 **Engine targets:** Godot 4.3 and 4.7.
 
 ## Goal
@@ -44,7 +44,7 @@ Turn road connectivity into an actual logistics system without changing Classic 
 ## Persistence and compatibility
 - [x] Bump save schema to v12 for persisted stockpiles; v1–v11 saves migrate with empty local stockpiles.
 - Preserve Classic's current shared-resource behavior unless a separate Classic design decision explicitly changes it.
-- Test Classic v1–v11 migration, Frontier v7–v11 migration, v12 round-trip if the schema is bumped, backup recovery and interrupted writes.
+- [x] Test Classic v1–v11 and Frontier v7–v11 migration defaults plus v12 local-stockpile round-trip, capacity rejection, backup recovery and interrupted writes.
 - Removing a depot must deterministically resolve its stock and in-transit cargo; no silent resource duplication.
 
 ## Required regression coverage
@@ -57,7 +57,7 @@ Turn road connectivity into an actual logistics system without changing Classic 
 - Classic economy remains unchanged.
 
 ## Acceptance gate
-- Local stockpiles are authoritative; shared global inventory cannot bypass transfer rules in Frontier.
+- Local stockpiles are authoritative for remote Frontier depot deposits; central construction/research spending must not consume remote stock before explicit transfer or source-depot rules exist.
 - Inter-depot transfers are bounded, deterministic, persistent and lossless except for explicitly documented combat losses.
 - Outposts provide working guard assignment and local visibility.
 - Godot 4.3/4.7 import, parse and regression matrices pass.
