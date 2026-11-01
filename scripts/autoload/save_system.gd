@@ -277,6 +277,10 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             return false
         if not DataDB.enemies.has(String(enemy["id"])):
             return false
+        if version >= 10:
+            var saved_faction := String(enemy.get("faction", ""))
+            if not saved_faction.is_empty() and not FactionRegistry.factions.has(saved_faction) and not ["classic_raiders", "legacy_raiders"].has(saved_faction):
+                return false
         if bool(enemy.get("garrison", false)) and (not enemy.has("guard_x") or not enemy.has("guard_y")):
             return false
     for job in quota:
