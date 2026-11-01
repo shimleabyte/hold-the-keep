@@ -12,7 +12,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 ## Kontrol
 - WASD / Panah / stick kiri: gerak
 - Tahan Shift / bumper kiri (gamepad): lari
-- Y atau tombol `Y` di HUD: panel teknologi
+- Y / chip `Y` di HUD: panel teknologi
 - TAB atau tombol `MAP`: peta strategis (fog-of-war, biome, klaim, resource, Keep, pasukan yang sedang teramati)
 - Tombol `JOBS`: buka/tutup kuota penebang, penambang, petani, dan prajurit; Esc menutup panel
 - E / Spasi / tombol A (gamepad): tebang pohon, tambang batu
