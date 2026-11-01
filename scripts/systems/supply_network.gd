@@ -71,7 +71,7 @@ func rebuild() -> void:
     for depot in get_tree().get_nodes_in_group("depots"):
         if not is_instance_valid(depot):
             continue
-        var is_connected := depot.id == "keep"
+        var is_connected: bool = depot.id == "keep"
         if not is_connected:
             for cell in depot.cells():
                 if _touches_any(cell, keep_cells) or _touches_any(cell, connected):
