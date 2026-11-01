@@ -19,6 +19,7 @@ const PRESSURE_WARNING_SECONDS := 30.0
 const PRESSURE_RAID_SECONDS := 60.0
 const PRESSURE_REPEAT_SECONDS := 150.0
 const MAX_RAIDS_PER_ISOLATION := 2
+const MAX_ACTIVE_SUPPLY_RAIDERS := 8
 const PRESSURE_TICK := 1.0
 const MAX_PRESSURE_RECORDS := 64
 
@@ -325,7 +326,7 @@ func advance_supply_pressure(delta: float) -> void:
         record["spawn_retry"] = retry_in
         var raid_count := int(record.get("raid_count", 0))
         var next_raid_at := PRESSURE_RAID_SECONDS + float(raid_count) * PRESSURE_REPEAT_SECONDS
-        if raid_count < MAX_RAIDS_PER_ISOLATION and contested_seconds >= next_raid_at and retry_in <= 0.0 and _active_supply_raiders(depot.cell) == 0:
+        if raid_count < MAX_RAIDS_PER_ISOLATION and contested_seconds >= next_raid_at and retry_in <= 0.0 and _active_supply_raiders(depot.cell) == 0 and get_tree().get_nodes_in_group("supply_raiders").size() < MAX_ACTIVE_SUPPLY_RAIDERS:
             if _spawn_supply_raid(depot):
                 raid_count += 1
                 record["raid_count"] = raid_count
@@ -392,7 +393,10 @@ func _find_supply_raid_spawn(depot: Node) -> Vector2i:
                 if not world.is_buildable(candidate) or not nav.is_walkable(candidate):
                     continue
                 var owner: String = territory.owner_at(candidate)
-                if owner != "enemy" and owner != "contested":
+                var region: Dictionary = territory.get_region_state(world.region_id(candidate))
+                var region_control := String(region.get("control", "neutral"))
+                var hostile_cell := owner == "enemy" or owner == "contested" or region_control == "enemy" or region_control == "contested"
+                if not hostile_cell:
                     continue
                 var path: PackedVector2Array = nav.path_adjacent(nav.center_of(candidate), target_cells)
                 if path.size() >= 2:
