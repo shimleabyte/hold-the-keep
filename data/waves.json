@@ -3,21 +3,11 @@
  "per_day": 3,
  "max": 120,
  "types": [
-  {
-   "id": "bandit",
-   "from_day": 1,
-   "weight": 6
-  },
-  {
-   "id": "wolf",
-   "from_day": 2,
-   "weight": 3
-  },
-  {
-   "id": "soldier",
-   "from_day": 4,
-   "weight": 2
-  }
+  {"id": "bandit", "from_day": 1, "weight": 6},
+  {"id": "wolf", "from_day": 2, "weight": 3},
+  {"id": "soldier", "from_day": 4, "weight": 2},
+  {"id": "archer", "from_day": 6, "weight": 2},
+  {"id": "brute", "from_day": 9, "weight": 1}
  ],
  "final_day": 15,
  "boss": "king"
