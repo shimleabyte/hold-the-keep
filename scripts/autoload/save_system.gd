@@ -230,8 +230,8 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         return false
     if not (resources is Array):
         return false
-    var world_data: Dictionary = data.get("world", {})
-    if version >= 8 and not _valid_campaign_state(data.get("campaign", {}), String(world_data.get("profile", "")), int(world_data.get("map_size", 0))):
+    var campaign_world_data: Dictionary = data.get("world", {})
+    if version >= 8 and not _valid_campaign_state(data.get("campaign", {}), String(campaign_world_data.get("profile", "")), int(campaign_world_data.get("map_size", 0))):
         return false
     if not clock.has("t") or not clock.has("day") or not clock.has("night"):
         return false

@@ -301,13 +301,20 @@ func _apply_save(d: Dictionary) -> void:
     var save_version := int(d.get("version", 0))
     if save_version >= 8 and d.get("campaign", {}) is Dictionary:
         campaign.import_state(d["campaign"])
+        campaign.restore_conquered_regions()
         for objective in campaign.objectives_in_order():
             if not bool(objective.get("destroyed", false)):
                 _spawn_enemy_keep(objective, false)
         campaign.sync_completion()
     else:
         var stronghold_state: Dictionary = d.get("stronghold", {})
+        if String(stronghold_state.get("region", "")).is_empty():
+            var legacy_cell := Vector2i(int(stronghold_state.get("cx", -1)), int(stronghold_state.get("cy", -1)))
+            stronghold_state["region"] = world.region_id(legacy_cell) if legacy_cell.x >= 0 and legacy_cell.y >= 0 else "HEARTHLAND"
+        if not stronghold_state.has("faction"):
+            stronghold_state["faction"] = "legacy_raiders"
         campaign.configure_legacy(WorldConfig.profile_id, stronghold_state)
+        campaign.restore_conquered_regions()
         if stronghold_state.is_empty():
             _spawn_enemy_keep()
         elif bool(stronghold_state.get("destroyed", false)):

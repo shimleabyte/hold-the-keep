@@ -161,6 +161,12 @@ func export_primary_state() -> Dictionary:
     return record.duplicate(true)
 
 
+func restore_conquered_regions() -> void:
+    for objective in objectives_in_order():
+        if bool(objective.get("destroyed", false)):
+            Events.campaign_objective_completed.emit(String(objective.get("id", "")), String(objective.get("region", "")))
+
+
 func sync_completion() -> void:
     _sync_primary()
     if _order.is_empty():

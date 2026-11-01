@@ -567,7 +567,21 @@ func _process(delta: float) -> void:
         var stage: Dictionary = main_node.spawner.stage_info(GameClock.day)
         var from_day := int(stage.get("from_day", 1))
         var to_day := int(stage.get("to_day", 15))
-        _stage_label.text = "%s  %s" % [String(stage.get("label", "BAB I")), String(stage.get("name", "PERBATASAN"))]
+        var objective_suffix := ""
+        var campaign = main_node.campaign
+        if campaign != null:
+            var objectives: Array = campaign.objectives_in_order()
+            if objectives.size() > 1:
+                var completed := 0
+                for objective in objectives:
+                    if bool(objective.get("destroyed", false)):
+                        completed += 1
+                objective_suffix = "  %d/%d" % [mini(completed + 1, objectives.size()), objectives.size()]
+        _stage_label.text = "%s  %s%s" % [
+            String(stage.get("label", "BAB I")),
+            String(stage.get("name", "PERBATASAN")),
+            objective_suffix
+        ]
         var stage_progress := float(GameClock.day - from_day + 1) / float(maxi(1, to_day - from_day + 1))
         _stage_bar.set_value(clampf(stage_progress, 0.0, 1.0))
         if _map_panel.world != main_node.world or _map_panel.fog != main_node.fog or _map_panel.territory != main_node.territory:
@@ -588,12 +602,13 @@ func _process(delta: float) -> void:
         _boss_panel.visible = true
         _boss_bar.set_value(float(boss.hp) / boss.max_hp)
     else:
-        var stronghold = get_tree().get_first_node_in_group("enemy_strongholds")
+        var campaign = get_tree().get_first_node_in_group("campaign")
+        var stronghold = campaign.current_target_node() if campaign != null else get_tree().get_first_node_in_group("enemy_strongholds")
         var fog = get_tree().get_first_node_in_group("fog_of_war")
         var discovered: bool = stronghold != null and fog != null and bool(fog.is_revealed_cell(stronghold.cell))
         _boss_panel.visible = discovered
         if discovered:
-            _boss_title.text = "BENTENG LAWAN"
+            _boss_title.text = String(stronghold.faction_id).replace("_", " ").to_upper()
             _boss_title.add_theme_color_override("font_color", Color("#d97868"))
             _boss_bar.set_value(float(stronghold.hp) / stronghold.max_hp)
 
