@@ -196,7 +196,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** screenshot passes at target desktop resolutions; visual readability under day/night, fog and combat load; no placeholder-only faction identity in release content.
 
 ### Phase 09 — Balance, performance and release hardening
-**Status:** First implementation slice on `feat/phase-09-balance-performance-release`, stacked on the Phase 07 campaign branch. Automated stress, save-hardening and export-preset checks are wired into the test suite; engine CI is pending.
+**Status:** First implementation slice on `feat/phase-09-balance-performance-release-v2`, stacked on the Phase 07 campaign branch. Automated stress, save-hardening and export-preset checks are wired into the test suite; engine CI is pending.
 
 - [x] Replace the Classic-only micro-benchmark with a configurable Classic/Frontier diagnostic reporting frame-time percentiles, static memory, node count, projectiles and particle peaks.
 - [x] Add a bounded Frontier stress regression with all four factions, mixed rosters, 48 villagers, a live ranged projectile and the 500-particle ceiling.
