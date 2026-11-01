@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` includes PR #40 (`8f1a914`), adding Saboteur building disruption. Workflow #41355982522 passed 60/60 jobs on Godot 4.3/4.7, including 28 regression suites per engine, import/parse, Frontier performance and Windows/Linux export. Scout marking and Shieldbearer brace are merged through PRs #39/#36; Phase 02.5 supply pressure through PR #35. Save schema remains v13. Remaining Phase 06 work includes Siege Engine/Beast Rider policies, camps, patrols and expanded counterattacks.
+**Current source of truth:** default branch `main` includes PR #40 (`8f1a914`), adding Saboteur building disruption. Workflow #41355982522 passed 60/60 jobs on Godot 4.3/4.7, including 28 regression suites per engine, import/parse, Frontier performance and Windows/Linux export. Scout marking and Shieldbearer brace are merged through PRs #39/#36; Phase 02.5 supply pressure through PR #35. Save schema remains v13. Current branch `feat/phase-06-siege-engine-cycle` implements Siege Engine target-prioritized heavy impacts; CI pending. Remaining Phase 06 work includes Beast Rider charge behavior, camps, patrols and expanded counterattacks.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -26,7 +26,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #40 (save schema v13; statu
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
-| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman support, Shieldbearer brace, Scout marking dan Saboteur building disruption sudah berjalan; Siege Engine/Beast Rider policies, camps, patrols and broader counterattacks remain incomplete |
+| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, and Saboteur behaviors merged; Siege Engine siege cycle is on a pending branch; Beast Rider, camps, patrols and broader counterattacks remain incomplete |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
 | Save/load | v13 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo; Classic v1–v13 dan Frontier v7–v13 migration matrix dijaga. PR #34 adds optional cost-source preference without a save-version bump; earlier v13 snapshots without it remain valid |
@@ -404,3 +404,11 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Nav-adjacent paths lead the unit to a target. A visible wind-up precedes temporary disruption and bounded structural damage. Player/defender interception and stagger can interrupt; a cooldown limits repeated attacks.
 - Sabotaged Towers stop firing; Storage/Outposts reject deposits and withdrawals; workplaces stop new assignments and pause their workers; repairs and Outpost guard assignment are temporarily blocked.
 - Disruption uses a transient simulation timer; save schema v13 remains unchanged. Regression passed on Godot 4.3 and 4.7.
+
+
+## 37. Phase 06.2 — Siege Engine telegraphed siege cycle (2026-11-02, branch pending CI)
+- Branch: `feat/phase-06-siege-engine-cycle`, based on main after PR #40.
+- Siege Engine scans a bounded rotating set of reachable buildings. Stone walls and wooden walls take priority, followed by Tower, Outpost, Keep and Storage; path distance influences target selection.
+- It moves to an adjacent attack position, holds a long visible wind-up, then applies heavy structure-only damage and enters a recovery cooldown.
+- Nearby player/defender pressure interrupts the wind-up and makes the unit reposition; stagger cancels the impact. It does not use its heavy strike on player/defender targets.
+- Siege state is transient and does not alter save v13. Regression `tests/siege_engine_behavior.gd` covers target priority, nav pathing, wind-up/impact timing, cooldown and stagger interruption. CI pending.
