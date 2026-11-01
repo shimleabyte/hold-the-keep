@@ -5,6 +5,7 @@ var world
 var claimed_cells: Dictionary = {}
 var enemy_claimed_cells: Dictionary = {}
 var region_states: Dictionary = {}
+var conquered_regions: Dictionary = {}
 var _dirty := true
 
 
@@ -15,6 +16,7 @@ func _ready() -> void:
     Events.building_destroyed.connect(_mark_dirty)
     Events.enemy_stronghold_placed.connect(_mark_enemy_dirty)
     Events.enemy_stronghold_destroyed.connect(_mark_enemy_dirty)
+    Events.campaign_objective_completed.connect(_on_campaign_objective_completed)
 
 
 func _mark_dirty(_id: String, _cell: Vector2i) -> void:
@@ -23,6 +25,12 @@ func _mark_dirty(_id: String, _cell: Vector2i) -> void:
 
 func _mark_enemy_dirty(_cell: Vector2i) -> void:
     _dirty = true
+
+
+func _on_campaign_objective_completed(_stronghold_id: String, region_id: String) -> void:
+    if not region_id.is_empty():
+        conquered_regions[region_id] = true
+        _dirty = true
 
 
 func _physics_process(_delta: float) -> void:
@@ -65,6 +73,14 @@ func rebuild() -> void:
                 var tile_center := Vector2(x + 0.5, y + 0.5)
                 if tile_center.distance_squared_to(center) <= radius * radius:
                     enemy_next[Vector2i(x, y)] = true
+    # A conquered region becomes player-controlled land, not merely neutral land
+    # after its last stronghold is removed.
+    for y in WorldConfig.map_size:
+        for x in WorldConfig.map_size:
+            var cell := Vector2i(x, y)
+            if conquered_regions.has(world.region_id(cell)) and world.is_buildable(cell):
+                next[cell] = true
+                enemy_next.erase(cell)
     claimed_cells = next
     enemy_claimed_cells = enemy_next
     _rebuild_region_states()

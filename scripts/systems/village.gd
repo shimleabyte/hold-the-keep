@@ -23,6 +23,7 @@ func _ready() -> void:
     add_to_group("village")
     Events.day_changed.connect(_on_day_changed)
     Events.job_quota_request.connect(adjust_quota)
+    Events.campaign_objective_completed.connect(_on_campaign_objective_completed)
 
 
 func villagers() -> Array:
@@ -129,7 +130,8 @@ func adjust_quota(job: String, delta: int) -> void:
 
 
 func command_expedition() -> void:
-    var stronghold = get_tree().get_first_node_in_group("enemy_strongholds")
+    var main = get_tree().get_first_node_in_group("main")
+    var stronghold = main.campaign.current_target_node() if main != null and main.campaign != null else null
     if stronghold == null or not is_instance_valid(stronghold):
         Events.build_feedback.emit("Benteng lawan sudah tidak ada")
         return
@@ -158,6 +160,18 @@ func command_expedition() -> void:
         if soldier.start_expedition(stronghold):
             sent += 1
     Events.build_feedback.emit("Ekspedisi bergerak: %d prajurit" % sent)
+
+
+func _on_campaign_objective_completed(_stronghold_id: String, _region_id: String) -> void:
+    var main = get_tree().get_first_node_in_group("main")
+    if main == null or main.campaign == null:
+        return
+    var next_target = main.campaign.current_target_node()
+    if next_target == null:
+        return
+    for soldier in villagers():
+        if soldier.job == "soldier" and soldier.is_expeditioning():
+            soldier.start_expedition(next_target)
 
 
 func _unhandled_input(event: InputEvent) -> void:

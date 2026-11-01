@@ -246,10 +246,17 @@ func _draw_building_markers() -> void:
 
 
 func _draw_campaign_markers() -> void:
+    var campaign = get_tree().get_first_node_in_group("campaign")
     for stronghold in get_tree().get_nodes_in_group("enemy_strongholds"):
-        if is_instance_valid(stronghold) and _position_is_known(stronghold.global_position):
-            var marker_size := 5.0 * _map_scale / 3.0
-            draw_rect(Rect2(_world_to_map(stronghold.global_position) - Vector2.ONE * marker_size * 0.5, Vector2.ONE * marker_size), ENEMY_MARKER)
+        if not is_instance_valid(stronghold) or not _position_is_known(stronghold.global_position):
+            continue
+        var marker_size := 5.0 * _map_scale / 3.0
+        var marker_position := _world_to_map(stronghold.global_position)
+        var is_active: bool = campaign != null and campaign.is_current_objective(stronghold.stronghold_id)
+        var marker_color := ENEMY_MARKER if is_active else ENEMY_TERRITORY.darkened(0.25)
+        if is_active:
+            draw_circle(marker_position, marker_size * 0.9, Color("#f3bd78"))
+        draw_rect(Rect2(marker_position - Vector2.ONE * marker_size * 0.5, Vector2.ONE * marker_size), marker_color)
 
 
 func _is_currently_observed(world_position: Vector2) -> bool:

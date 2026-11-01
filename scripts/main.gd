@@ -3,6 +3,7 @@ extends Node2D
 const WORLD_SCRIPT := preload("res://scripts/world/world_map.gd")
 const TERRITORY_SCRIPT := preload("res://scripts/systems/territory.gd")
 const ENEMY_KEEP_SCRIPT := preload("res://scripts/entities/enemy_keep.gd")
+const CAMPAIGN_SCRIPT := preload("res://scripts/systems/campaign.gd")
 const FOG_SCRIPT := preload("res://scripts/systems/fog_of_war.gd")
 const PLAYER_SCRIPT := preload("res://scripts/entities/player.gd")
 const BUILD_SCRIPT := preload("res://scripts/systems/build_system.gd")
@@ -24,6 +25,7 @@ const DIRS4: Array[Vector2i] = [
 ]
 var world
 var territory
+var campaign
 var enemy_keep
 var fog
 var campaign_conquered := false
@@ -51,6 +53,9 @@ func _ready() -> void:
     territory = TERRITORY_SCRIPT.new()
     territory.world = world
     world.add_child(territory)
+
+    campaign = CAMPAIGN_SCRIPT.new()
+    add_child(campaign)
 
     add_child_to_world_fx()
     player = PLAYER_SCRIPT.new()
@@ -102,7 +107,8 @@ func _ready() -> void:
     if save.is_empty():
         Tech.reset()
         build.place_raw("keep", world.starting_keep_cell())
-        _spawn_enemy_keep()
+        campaign.configure_new(WorldConfig.profile_id)
+        _spawn_campaign_strongholds()
         # Dua penduduk awal, relative to the configured Keep position.
         var keep_position: Vector2 = world.keep_center_position()
         for i in 2:
@@ -122,6 +128,30 @@ func _on_campaign_won(_day: int) -> void:
     campaign_conquered = true
 
 
+func set_primary_stronghold(stronghold) -> void:
+    enemy_keep = stronghold
+
+
+func _spawn_campaign_strongholds() -> void:
+    for objective in campaign.objectives_in_order():
+        var stronghold_id := String(objective["id"])
+        var target_region := String(objective.get("region", ""))
+        var anchor := _find_enemy_keep_cell(target_region)
+        if anchor.x < 0 or anchor.y < 0:
+            push_error("Campaign: no reachable stronghold site for %s in %s" % [stronghold_id, target_region])
+            continue
+        var region: String = world.region_id(anchor)
+        campaign.set_objective_location(stronghold_id, anchor, region)
+        var saved: Dictionary = objective.duplicate(true)
+        saved["cx"] = anchor.x
+        saved["cy"] = anchor.y
+        saved["region"] = region
+        saved["hp"] = 900
+        saved["destroyed"] = false
+        _spawn_enemy_keep(saved, true)
+    enemy_keep = campaign.current_target_node()
+
+
 func _enemy_keep_cells(anchor: Vector2i) -> Array[Vector2i]:
     var cells: Array[Vector2i] = []
     for y in 3:
@@ -130,10 +160,10 @@ func _enemy_keep_cells(anchor: Vector2i) -> Array[Vector2i]:
     return cells
 
 
-func _find_enemy_keep_cell() -> Vector2i:
+func _find_enemy_keep_cell(target_region := "") -> Vector2i:
     nav.rebuild()
     if WorldConfig.profile_id == "frontier":
-        return _find_frontier_enemy_keep_cell()
+        return _find_frontier_enemy_keep_cell(target_region)
     var candidates: Array[Dictionary] = []
     var keep_cell: Vector2i = world.starting_keep_cell()
     var keep_center := Vector2(keep_cell) + Vector2(1.5, 1.5)
@@ -163,7 +193,7 @@ func _find_enemy_keep_cell() -> Vector2i:
     return Vector2i(-1, -1)
 
 
-func _find_frontier_enemy_keep_cell() -> Vector2i:
+func _find_frontier_enemy_keep_cell(target_region := "") -> Vector2i:
     var start: Vector2i = nav.cell_of(player.global_position)
     var reachable: Dictionary = nav.reachable_cells(start)
     if reachable.is_empty():
@@ -182,11 +212,16 @@ func _find_frontier_enemy_keep_cell() -> Vector2i:
             var distance := center.distance_to(keep_center)
             if distance < float(map_size) * 0.34375 or distance <= best_distance:
                 continue
+            if not target_region.is_empty() and world.region_id(anchor) != target_region:
+                continue
 
             var accessible := false
             var clear := true
             for cell in _enemy_keep_cells(anchor):
                 if not world.is_buildable(cell) or world.occupied.has(cell):
+                    clear = false
+                    break
+                if not target_region.is_empty() and world.region_id(cell) != target_region:
                     clear = false
                     break
                 for direction in DIRS4:
@@ -202,28 +237,33 @@ func _find_frontier_enemy_keep_cell() -> Vector2i:
 
 func _spawn_enemy_keep(saved: Dictionary = {}, create_garrison := true) -> void:
     if bool(saved.get("destroyed", false)):
-        campaign_conquered = true
-        Events.campaign_won.emit(GameClock.day)
         return
     var anchor := Vector2i(int(saved.get("cx", -1)), int(saved.get("cy", -1)))
+    var target_region := String(saved.get("region", ""))
     if anchor.x < 0 or anchor.y < 0:
-        anchor = _find_enemy_keep_cell()
-    if anchor.x < 0:
-        push_error("Campaign: no reachable site for enemy stronghold")
+        anchor = _find_enemy_keep_cell(target_region)
+    if anchor.x < 0 or anchor.y < 0:
+        push_error("Campaign: no reachable site for enemy stronghold %s" % String(saved.get("id", "unknown")))
         return
 
-    enemy_keep = ENEMY_KEEP_SCRIPT.new()
-    enemy_keep.setup(world, flow, player, anchor, int(saved.get("hp", 900)))
-    enemy_keep.import_state(saved)
-    world.entities.add_child(enemy_keep)
-    for cell in enemy_keep.cells():
-        world.occupied[cell] = enemy_keep
+    var stronghold_id := String(saved.get("id", "classic_enemy_keep"))
+    var region := String(saved.get("region", world.region_id(anchor)))
+    var faction := String(saved.get("faction", "classic_raiders"))
+    var identity := {"id":stronghold_id,"region":region,"faction":faction}
+    var stronghold = ENEMY_KEEP_SCRIPT.new()
+    stronghold.setup(world, flow, player, anchor, int(saved.get("hp", 900)), identity)
+    stronghold.import_state(saved)
+    world.entities.add_child(stronghold)
+    for cell in stronghold.cells():
+        world.occupied[cell] = stronghold
+    campaign.register_stronghold(stronghold)
     Events.enemy_stronghold_placed.emit(anchor)
     nav.rebuild()
     flow.rebuild()
     territory.rebuild()
     if create_garrison:
-        enemy_keep.spawn_initial_garrison()
+        stronghold.spawn_initial_garrison()
+    enemy_keep = campaign.current_target_node()
 
 
 func add_child_to_world_fx() -> void:
@@ -258,11 +298,29 @@ func _apply_save(d: Dictionary) -> void:
         if node.id == "keep":
             Events.keep_hp_changed.emit(node.hp, node.max_hp)
 
-    var stronghold_state: Dictionary = d.get("stronghold", {})
-    if stronghold_state.is_empty():
-        _spawn_enemy_keep()
+    var save_version := int(d.get("version", 0))
+    if save_version >= 8 and d.get("campaign", {}) is Dictionary:
+        campaign.import_state(d["campaign"])
+        campaign.restore_conquered_regions()
+        for objective in campaign.objectives_in_order():
+            if not bool(objective.get("destroyed", false)):
+                _spawn_enemy_keep(objective, false)
+        campaign.sync_completion()
     else:
-        _spawn_enemy_keep(stronghold_state, false)
+        var stronghold_state: Dictionary = d.get("stronghold", {})
+        if String(stronghold_state.get("region", "")).is_empty():
+            var legacy_cell := Vector2i(int(stronghold_state.get("cx", -1)), int(stronghold_state.get("cy", -1)))
+            stronghold_state["region"] = world.region_id(legacy_cell) if legacy_cell.x >= 0 and legacy_cell.y >= 0 else "HEARTHLAND"
+        if not stronghold_state.has("faction"):
+            stronghold_state["faction"] = "legacy_raiders"
+        campaign.configure_legacy(WorldConfig.profile_id, stronghold_state)
+        campaign.restore_conquered_regions()
+        if stronghold_state.is_empty():
+            _spawn_enemy_keep()
+        elif bool(stronghold_state.get("destroyed", false)):
+            campaign.sync_completion()
+        else:
+            _spawn_enemy_keep(stronghold_state, false)
 
     var q: Dictionary = d.get("quota", {})
     for j in q:

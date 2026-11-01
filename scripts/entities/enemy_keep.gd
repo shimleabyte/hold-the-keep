@@ -22,16 +22,22 @@ var size := SIZE
 var hp := MAX_HP
 var max_hp := MAX_HP
 var claim_radius := CLAIM_RADIUS
+var stronghold_id := "classic_enemy_keep"
+var region_id := "HEARTHLAND"
+var faction_id := "classic_raiders"
 var _reinforce_timer := REINFORCE_INTERVAL
 var _spawn_index := 0
 
 
-func setup(world_ref, flow_ref, player_ref, anchor: Vector2i, saved_hp := MAX_HP) -> void:
+func setup(world_ref, flow_ref, player_ref, anchor: Vector2i, saved_hp := MAX_HP, identity: Dictionary = {}) -> void:
     world = world_ref
     flow = flow_ref
     player = player_ref
     cell = anchor
     size = SIZE
+    stronghold_id = String(identity.get("id", "classic_enemy_keep"))
+    region_id = String(identity.get("region", "HEARTHLAND"))
+    faction_id = String(identity.get("faction", "classic_raiders"))
     max_hp = MAX_HP
     hp = clampi(saved_hp, 1, max_hp)
     position = Vector2((cell.x + size.x / 2.0) * WorldConfig.tile_size, (cell.y + size.y) * WorldConfig.tile_size)
@@ -52,6 +58,9 @@ func cells() -> Array[Vector2i]:
 
 func export_state() -> Dictionary:
     return {
+        "id": stronghold_id,
+        "region": region_id,
+        "faction": faction_id,
         "cx": cell.x,
         "cy": cell.y,
         "hp": hp,
@@ -62,6 +71,9 @@ func export_state() -> Dictionary:
 
 
 func import_state(data: Dictionary) -> void:
+    stronghold_id = String(data.get("id", stronghold_id))
+    region_id = String(data.get("region", region_id))
+    faction_id = String(data.get("faction", faction_id))
     _reinforce_timer = clampf(float(data.get("reinforce_timer", REINFORCE_INTERVAL)), 0.0, REINFORCE_INTERVAL)
     _spawn_index = posmod(int(data.get("spawn_index", 0)), GUARD_DIRECTIONS.size() * GUARD_RINGS.size())
 
@@ -71,6 +83,14 @@ func spawn_initial_garrison() -> void:
         _spawn_guard()
 
 
+func _local_garrison() -> Array:
+    var guards: Array = []
+    for guard in get_tree().get_nodes_in_group("enemy_garrison"):
+        if is_instance_valid(guard) and guard.guard_origin.distance_squared_to(position) < 1.0:
+            guards.append(guard)
+    return guards
+
+
 func _process(delta: float) -> void:
     if hp <= 0:
         return
@@ -78,7 +98,7 @@ func _process(delta: float) -> void:
     if _reinforce_timer > 0.0:
         return
     _reinforce_timer = REINFORCE_INTERVAL
-    if get_tree().get_nodes_in_group("enemy_garrison").size() < 4:
+    if _local_garrison().size() < 4:
         _spawn_guard()
 
 
@@ -97,7 +117,7 @@ func _spawn_guard() -> bool:
         if not flow.is_reachable(spawn_cell):
             continue
         var too_close := false
-        for existing_guard in get_tree().get_nodes_in_group("enemy_garrison"):
+        for existing_guard in _local_garrison():
             if existing_guard.position.distance_to(spawn_position) < WorldConfig.tile_size * 1.5:
                 too_close = true
                 break
@@ -115,6 +135,10 @@ func _spawn_guard() -> bool:
 func take_damage(amount: int) -> void:
     if hp <= 0:
         return
+    var campaign = get_tree().get_first_node_in_group("campaign")
+    if campaign != null and not campaign.is_current_objective(stronghold_id):
+        Events.build_feedback.emit("Kalahkan sasaran kampanye sebelumnya terlebih dahulu")
+        return
     hp = maxi(0, hp - amount)
     queue_redraw()
     Events.fx_burst.emit("debris", position + Vector2(0, -24), Vector2.ZERO, 1.4)
@@ -125,11 +149,11 @@ func take_damage(amount: int) -> void:
     for occupied_cell in cells():
         if world.occupied.get(occupied_cell) == self:
             world.occupied.erase(occupied_cell)
-    for guard in get_tree().get_nodes_in_group("enemy_garrison"):
+    for guard in _local_garrison():
         guard.retreat()
     remove_from_group("enemy_strongholds")
     Events.enemy_stronghold_destroyed.emit(cell)
-    Events.campaign_won.emit(GameClock.day)
+    Events.stronghold_conquered.emit(stronghold_id, region_id, cell)
     Events.fx_burst.emit("puff", position + Vector2(0, -24), Vector2.ZERO, 3.0)
     Events.screen_shake.emit(2.8, 0.45)
     queue_free()
