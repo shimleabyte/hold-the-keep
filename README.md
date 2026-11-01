@@ -16,7 +16,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - TAB atau tombol `MAP`: peta strategis (fog-of-war, biome, klaim, resource, Keep, pasukan yang sedang teramati)
 - Tombol `JOBS`: buka/tutup kuota penebang, penambang, petani, dan prajurit; Esc menutup panel
 - E / Spasi / tombol A (gamepad): tebang pohon, tambang batu
-- 1-6 atau klik slot di bar bawah: pilih bangunan (termasuk Pos Terdepan)
+- 1-9 / 0 atau klik slot di bar bawah: pilih hingga 10 bangunan pertama (termasuk Pos Terdepan, Kamp Penebang, dan Kuari)
 - Klik kiri: pasang (tahan untuk melukis tembok)
 - Pos Terdepan memperluas wilayah; bangunan lain hanya dapat dipasang di area yang sudah diklaim
 - Klik kanan: batal / bongkar bangunan (refund 50%)
@@ -58,12 +58,13 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 - Penduduk baru membutuhkan 8 makanan dan hanya muncul pada siang hari ketika kapasitas cukup.
 - Atur penebang, penambang, petani, dan prajurit melalui T/M/K/R atau tombol kuota di HUD.
 - Setiap penduduk mengonsumsi 2 makanan per hari. Kekurangan makanan membuat satu penduduk pergi.
-- Bangunan: rumah, tembok, menara, gudang, ladang, tembok batu, tempa, dan Pos Terdepan.
+- Bangunan: rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Pos Terdepan, Kamp Penebang, Kuari, jalan, dan jembatan.
+- Kamp Penebang menyediakan dua workplace woodcutter dengan radius kerja 18 tile; Kuari menyediakan dua workplace miner dengan radius 16 tile. Jika belum ada fasilitas khusus, pekerja tetap memakai radius depot seperti pada Classic lama. Jika semua slot fasilitas penuh, pekerja tambahan tidak mengambil alih area kerja fasilitas tersebut.
 - Teknologi 17-node dalam 3 era memperkuat ekonomi, pertahanan, dan pasukan.
 
 ### Simpanan dan pengaturan
 - Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
-- Save versi 6 menyimpan semua status versi sebelumnya plus level dan XP tempur pemain; save versi 1–5 dimigrasikan ke level awal.
+- Save versi 9 menyimpan data world, kampanye multi-stronghold, pekerjaan, prioritas kerja, serta state bangunan/resource; format lama tetap dimigrasikan melalui jalur kompatibilitas.
 - Penulisan save memakai file sementara dan salinan pemulihan; loader mencoba salinan tersebut bila file utama rusak.
 - Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
