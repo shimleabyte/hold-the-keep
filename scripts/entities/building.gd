@@ -28,6 +28,8 @@ var world
 var data: Dictionary = {}
 var workers: Array = []
 var repairers: Array = []
+var local_stockpile: Dictionary = {}
+var stockpile_capacity := 0
 
 var _range := 0.0
 var _damage := 0
@@ -46,6 +48,7 @@ func setup(d: Dictionary, anchor: Vector2i) -> void:
     _range = float(data.get("range", 0.0))
     _damage = int(data.get("damage", 0))
     _interval = float(data.get("fire_interval", 1.0))
+    stockpile_capacity = int(data.get("stockpile_capacity", 0))
     position = Vector2((cell.x + size.x / 2.0) * WorldConfig.tile_size, (cell.y + size.y) * WorldConfig.tile_size)
 
 
@@ -56,6 +59,64 @@ func cells() -> Array[Vector2i]:
             out.append(cell + Vector2i(x, y))
     return out
 
+## Local Frontier depot storage. The Keep remains the central Inventory ledger.
+func stockpile_total() -> int:
+    var total := 0
+    for amount in local_stockpile.values():
+        total += int(amount)
+    return total
+
+
+func stockpile_amount(kind: String) -> int:
+    return int(local_stockpile.get(kind, 0))
+
+
+func can_store_resource(kind: String, amount: int) -> bool:
+    if amount <= 0 or stockpile_capacity <= 0:
+        return false
+    if not ["wood", "stone", "food", "iron"].has(kind):
+        return false
+    return stockpile_total() + amount <= stockpile_capacity
+
+
+func store_resource(kind: String, amount: int) -> bool:
+    if not can_store_resource(kind, amount):
+        return false
+    local_stockpile[kind] = stockpile_amount(kind) + amount
+    return true
+
+
+func take_resource(kind: String, amount: int) -> bool:
+    if amount <= 0 or stockpile_amount(kind) < amount:
+        return false
+    var remaining := stockpile_amount(kind) - amount
+    if remaining == 0:
+        local_stockpile.erase(kind)
+    else:
+        local_stockpile[kind] = remaining
+    return true
+
+
+func export_stockpile() -> Dictionary:
+    return local_stockpile.duplicate(true)
+
+
+func import_stockpile(value: Variant) -> bool:
+    if not (value is Dictionary):
+        return false
+    var restored: Dictionary = {}
+    var total := 0
+    for kind in value:
+        var amount := int(value[kind])
+        if not ["wood", "stone", "food", "iron"].has(String(kind)) or amount < 0:
+            return false
+        if amount > 0:
+            restored[String(kind)] = amount
+            total += amount
+    if total > stockpile_capacity or (total > 0 and stockpile_capacity <= 0):
+        return false
+    local_stockpile = restored
+    return true
 
 func _ready() -> void:
     if id != "road" and id != "bridge":
@@ -227,6 +288,10 @@ func _die() -> void:
 
 ## Dibongkar pemain (tanpa memicu event kehancuran).
 func demolish() -> void:
+    # Player demolition returns local goods to the central pool; destruction does not.
+    for kind in local_stockpile:
+        Inventory.add(String(kind), int(local_stockpile[kind]))
+    local_stockpile.clear()
     _release_workers()
     _leave_groups()
     queue_free()
