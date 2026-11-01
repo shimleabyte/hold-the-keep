@@ -101,7 +101,7 @@ func _key_is_used_by_other_action(action: String, code: int) -> bool:
 
 
 func set_key_binding(action: String, code: int) -> bool:
-    if not BINDABLE_ACTIONS.has(action) or code <= 0 or code in RESERVED_KEYS:
+    if not BINDABLE_ACTIONS.has(action) or not InputMap.has_action(action) or code <= 0 or code in RESERVED_KEYS:
         return false
     if code in [KEY_SHIFT, KEY_CTRL, KEY_ALT, KEY_META]:
         return false

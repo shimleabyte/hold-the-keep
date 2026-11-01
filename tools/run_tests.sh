@@ -23,6 +23,8 @@ fi
 tests=(
     animation_motion
     campaign_assault
+    campaign_multi_stronghold
+    workplace_assignments
     input_rebinding
     map_stages
     player_combat
@@ -31,6 +33,7 @@ tests=(
     territory_claims
     world_config
     frontier_world
+    regional_control_roads
 )
 
 for test_name in "${tests[@]}"; do

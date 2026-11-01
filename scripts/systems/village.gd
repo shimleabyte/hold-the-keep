@@ -1,6 +1,6 @@
 extends Node
-## Penduduk: kapasitas (keep + rumah), spawn, upkeep makanan, dan kuota job.
-## T/M/K/R = tambah penebang/penambang/petani(kebun)/prajurit, Shift = kurangi. Juga bisa diklik di HUD.
+## Population, labor occupations, military specializations and workplace assignment.
+## T/M/K/R/B changes job quotas; Alt + job key raises priority, Alt + Shift + key lowers it.
 
 const VILLAGER_SCRIPT := preload("res://scripts/entities/villager.gd")
 
@@ -8,12 +8,13 @@ const SPAWN_INTERVAL := 12.0
 const SPAWN_FOOD := 8
 const UPKEEP := 2  # makanan per penduduk per hari
 const MAX_QUOTA := 20
-const JOBS := ["woodcutter", "miner", "farmer", "soldier"]
-const KEY_TO_JOB := {KEY_T: "woodcutter", KEY_M: "miner", KEY_K: "farmer", KEY_R: "soldier"}
+const JOBS := ["woodcutter", "miner", "farmer", "builder", "soldier"]
+const KEY_TO_JOB := {KEY_T: "woodcutter", KEY_M: "miner", KEY_K: "farmer", KEY_B: "builder", KEY_R: "soldier"}
 
 var world
 var nav
-var quota := {"woodcutter": 1, "miner": 0, "farmer": 0, "soldier": 0}
+var quota := {"woodcutter": 1, "miner": 0, "farmer": 0, "builder": 0, "soldier": 0}
+var job_priority: Array[String] = ["woodcutter", "miner", "farmer", "builder", "soldier"]
 
 var _spawn_t := 0.0
 var _assign_t := 0.0
@@ -23,6 +24,11 @@ func _ready() -> void:
     add_to_group("village")
     Events.day_changed.connect(_on_day_changed)
     Events.job_quota_request.connect(adjust_quota)
+    Events.job_priority_request.connect(adjust_job_priority)
+    Events.building_placed.connect(_on_workplace_changed)
+    Events.building_removed.connect(_on_workplace_changed)
+    Events.building_destroyed.connect(_on_building_destroyed)
+    Events.campaign_objective_completed.connect(_on_campaign_objective_completed)
 
 
 func villagers() -> Array:
@@ -98,20 +104,60 @@ func _process(delta: float) -> void:
 
 func assign_jobs() -> void:
     var vs := villagers()
-    # Kurangi kelebihan
-    for j in JOBS:
-        var members: Array = vs.filter(func(v) -> bool: return v.job == j)
-        while members.size() > int(quota[j]):
+    for villager in vs:
+        if villager.job == "builder" and not villager.has_valid_workplace():
+            villager.set_job("")
+
+    for job_name in JOBS:
+        var members: Array = vs.filter(func(v) -> bool: return v.job == job_name)
+        while members.size() > int(quota[job_name]):
             members.pop_back().set_job("")
-    # Isi dari yang menganggur
-    for v in vs:
-        if v.job != "":
+
+    for villager in vs:
+        if villager.job != "":
             continue
-        for j in JOBS:
-            if count_job(j) < int(quota[j]):
-                v.set_job(j)
+        for job_name in job_priority:
+            if count_job(job_name) >= int(quota[job_name]):
+                continue
+            if villager.set_job(job_name):
                 break
     _emit()
+
+
+func restore_job_priority(saved: Variant) -> void:
+    var restored: Array[String] = []
+    if saved is Array:
+        for value in saved:
+            var job_name := String(value)
+            if JOBS.has(job_name) and not restored.has(job_name):
+                restored.append(job_name)
+    for job_name in JOBS:
+        if not restored.has(job_name):
+            restored.append(job_name)
+    job_priority = restored
+
+
+func adjust_job_priority(job_name: String, delta: int) -> void:
+    var current_index := job_priority.find(job_name)
+    if current_index < 0 or delta == 0:
+        return
+    var next_index := clampi(current_index + delta, 0, job_priority.size() - 1)
+    if next_index == current_index:
+        return
+    job_priority.remove_at(current_index)
+    job_priority.insert(next_index, job_name)
+    for villager in villagers():
+        if villager.job != "soldier":
+            villager.set_job("")
+    assign_jobs()
+
+
+func _on_workplace_changed(_id: String, _cell: Vector2i) -> void:
+    assign_jobs()
+
+
+func _on_building_destroyed(_id: String, _cell: Vector2i) -> void:
+    assign_jobs()
 
 
 func _emit() -> void:
@@ -129,7 +175,8 @@ func adjust_quota(job: String, delta: int) -> void:
 
 
 func command_expedition() -> void:
-    var stronghold = get_tree().get_first_node_in_group("enemy_strongholds")
+    var main = get_tree().get_first_node_in_group("main")
+    var stronghold = main.campaign.current_target_node() if main != null and main.campaign != null else null
     if stronghold == null or not is_instance_valid(stronghold):
         Events.build_feedback.emit("Benteng lawan sudah tidak ada")
         return
@@ -160,13 +207,28 @@ func command_expedition() -> void:
     Events.build_feedback.emit("Ekspedisi bergerak: %d prajurit" % sent)
 
 
+func _on_campaign_objective_completed(_stronghold_id: String, _region_id: String) -> void:
+    var main = get_tree().get_first_node_in_group("main")
+    if main == null or main.campaign == null:
+        return
+    var next_target = main.campaign.current_target_node()
+    if next_target == null:
+        return
+    for soldier in villagers():
+        if soldier.job == "soldier" and soldier.is_expeditioning():
+            soldier.start_expedition(next_target)
+
+
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo:
         if event.keycode == KEY_G:
             command_expedition()
             get_viewport().set_input_as_handled()
         elif KEY_TO_JOB.has(event.keycode):
-            adjust_quota(KEY_TO_JOB[event.keycode], -1 if event.shift_pressed else 1)
+            if event.alt_pressed:
+                adjust_job_priority(KEY_TO_JOB[event.keycode], 1 if event.shift_pressed else -1)
+            else:
+                adjust_quota(KEY_TO_JOB[event.keycode], -1 if event.shift_pressed else 1)
 
 
 ## Dipanggil tiap hari baru: makan. Kekurangan makanan = satu penduduk pergi.

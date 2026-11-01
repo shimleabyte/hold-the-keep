@@ -50,6 +50,8 @@ func _initialize() -> void:
 
     var guard_count := get_nodes_in_group("enemy_garrison").size()
     assert(guard_count >= 3, "Stronghold must create its initial defensive garrison")
+    assert(main.campaign.objectives_in_order().size() == 1,
+        "Classic mode must retain its original single-stronghold campaign")
     assert(stronghold._spawn_guard(), "Stronghold should find a free tile for a reinforcement")
     guard_count = get_nodes_in_group("enemy_garrison").size()
     assert(guard_count == 4, "Stronghold garrison must stay within its four-guard cap")
@@ -65,6 +67,8 @@ func _initialize() -> void:
     var snapshot: Dictionary = save_system.collect(main)
     assert(snapshot["stronghold"]["hp"] == stronghold.hp,
         "Save must preserve stronghold HP and location")
+    assert(snapshot["campaign"]["objectives"].size() == 1,
+        "Classic save must contain exactly one campaign objective")
     var saved_expedition := false
     for villager_state in snapshot["villagers"]:
         if villager_state["expedition"]:

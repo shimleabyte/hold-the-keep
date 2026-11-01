@@ -28,9 +28,12 @@ const ICONS := {
     "stone_wall": preload("res://assets/sprites/icon_stone_wall.svg"),
     "forge": preload("res://assets/sprites/icon_forge.svg"),
     "outpost": preload("res://assets/sprites/icon_outpost.svg"),
+    "hammer": preload("res://assets/sprites/icon_hammer.svg"),
+    "road": preload("res://assets/sprites/icon_road.svg"),
+    "bridge": preload("res://assets/sprites/icon_bridge.svg"),
 }
-const JOBS := ["woodcutter", "miner", "farmer", "soldier"]
-const JOB_ICONS := {"woodcutter": "axe", "miner": "pick", "farmer": "wheat", "soldier": "sword"}
+const JOBS := ["woodcutter", "miner", "farmer", "builder", "soldier"]
+const JOB_ICONS := {"woodcutter": "axe", "miner": "pick", "farmer": "wheat", "builder": "hammer", "soldier": "sword"}
 const PANEL_BG := Color(0.09, 0.08, 0.11, 0.82)
 const PANEL_BORDER := Color("#6b5a40")
 const GOLD := Color("#ffd23f")
@@ -46,12 +49,14 @@ const HELP_ROWS := [
     ["Q", "DASH (LEVEL 1)"],
     ["C", "TEBAS (LEVEL 2)"],
     ["V", "SERUAN (LEVEL 3)"],
-    ["1-6", "PILIH BANGUNAN"],
+    ["1-8", "PILIH BANGUNAN"],
     ["KLIK KIRI", "PASANG BANGUNAN"],
     ["KLIK KANAN", "BATAL / BONGKAR"],
-    ["T M K R", "TAMBAH JOB"],
+    ["T M K R B", "TAMBAH JOB"],
     ["G", "SERBU / TARIK PRAJURIT"],
-    ["SHIFT + T M K R", "KURANGI JOB"],
+    ["SHIFT + T M K R B", "KURANGI JOB"],
+    ["ALT + T/M/K/R/B", "NAIKKAN PRIORITAS"],
+    ["ALT + SHIFT + KEY", "TURUNKAN PRIORITAS"],
     ["KLIK + / -", "UBAH KUOTA JOB"],
     ["P / ESC", "MENU"],
     ["F5 / F9", "SIMPAN / MUAT"],
@@ -318,7 +323,7 @@ func _build_combat_bar() -> void:
     add_child(_combat_bar)
 
 func _build_jobs() -> void:
-    _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 54))
+    _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 66))
     for i in JOBS.size():
         var row := JobRow.new()
         row.job = JOBS[i]
@@ -327,6 +332,7 @@ func _build_jobs() -> void:
         row.position = Vector2(2, 3 + i * 12)
         row.size = Vector2(72, 12)
         row.adjust.connect(_on_job_adjust)
+        row.priority_adjust.connect(_on_job_priority_adjust)
         _jobs_panel.add_child(row)
         _jobs[JOBS[i]] = row
     _jobs_panel.visible = false
@@ -345,7 +351,7 @@ func _build_boss_bar() -> void:
 
 
 func _build_build_bar() -> void:
-    _build_left_hint = _label(self, "BANGUNAN 1-6", Vector2(4, 225), Color(1, 1, 1, 0.78))
+    _build_left_hint = _label(self, "BANGUNAN 1-8", Vector2(4, 225), Color(1, 1, 1, 0.78))
     _build_right_hint = _label(self, "TAB PETA  ·  H BANTUAN", Vector2(360, 225), Color(1, 1, 1, 0.78))
     _build_right_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     _rebuild_build_bar()
@@ -565,7 +571,21 @@ func _process(delta: float) -> void:
         var stage: Dictionary = main_node.spawner.stage_info(GameClock.day)
         var from_day := int(stage.get("from_day", 1))
         var to_day := int(stage.get("to_day", 15))
-        _stage_label.text = "%s  %s" % [String(stage.get("label", "BAB I")), String(stage.get("name", "PERBATASAN"))]
+        var objective_suffix := ""
+        var campaign = main_node.campaign
+        if campaign != null:
+            var objectives: Array = campaign.objectives_in_order()
+            if objectives.size() > 1:
+                var completed := 0
+                for objective in objectives:
+                    if bool(objective.get("destroyed", false)):
+                        completed += 1
+                objective_suffix = "  %d/%d" % [mini(completed + 1, objectives.size()), objectives.size()]
+        _stage_label.text = "%s  %s%s" % [
+            String(stage.get("label", "BAB I")),
+            String(stage.get("name", "PERBATASAN")),
+            objective_suffix
+        ]
         var stage_progress := float(GameClock.day - from_day + 1) / float(maxi(1, to_day - from_day + 1))
         _stage_bar.set_value(clampf(stage_progress, 0.0, 1.0))
         if _map_panel.world != main_node.world or _map_panel.fog != main_node.fog or _map_panel.territory != main_node.territory:
@@ -586,12 +606,13 @@ func _process(delta: float) -> void:
         _boss_panel.visible = true
         _boss_bar.set_value(float(boss.hp) / boss.max_hp)
     else:
-        var stronghold = get_tree().get_first_node_in_group("enemy_strongholds")
+        var campaign = get_tree().get_first_node_in_group("campaign")
+        var stronghold = campaign.current_target_node() if campaign != null else get_tree().get_first_node_in_group("enemy_strongholds")
         var fog = get_tree().get_first_node_in_group("fog_of_war")
         var discovered: bool = stronghold != null and fog != null and bool(fog.is_revealed_cell(stronghold.cell))
         _boss_panel.visible = discovered
         if discovered:
-            _boss_title.text = "BENTENG LAWAN"
+            _boss_title.text = String(stronghold.faction_id).replace("_", " ").to_upper()
             _boss_title.add_theme_color_override("font_color", Color("#d97868"))
             _boss_bar.set_value(float(stronghold.hp) / stronghold.max_hp)
 
@@ -675,6 +696,10 @@ func _on_job_adjust(job: String, delta: int) -> void:
     Events.job_quota_request.emit(job, delta)
 
 
+func _on_job_priority_adjust(job: String, delta: int) -> void:
+    Events.job_priority_request.emit(job, delta)
+
+
 func _on_player_hp(hp: int, max_hp: int) -> void:
     _hp_bar.set_value(float(hp) / max_hp)
     _hp_text.text = str(hp)
@@ -690,8 +715,10 @@ func _on_keep_hp(hp: int, max_hp: int) -> void:
 func _on_village_changed(pop: int, cap: int, quota: Dictionary, assigned: Dictionary) -> void:
     _pop.text = "%d/%d" % [pop, cap]
     _pop.add_theme_color_override("font_color", Color("#ff8a7a") if pop > cap else Color.WHITE)
+    var village = get_tree().get_first_node_in_group("village")
     for j in JOBS:
-        _jobs[j].set_counts(int(assigned[j]), int(quota[j]))
+        var rank: int = (int(village.job_priority.find(j)) + 1) if village != null else JOBS.find(j) + 1
+        _jobs[j].set_counts(int(assigned[j]), int(quota[j]), rank)
 
 
 func _refresh_resources() -> void:
@@ -753,7 +780,10 @@ func _on_game_over(day: int) -> void:
 
 func _on_campaign_won(day: int) -> void:
     _close_secondary_panels()
-    _over_label.text = "BENTENG LAWAN TAKLUK\\nWilayah musuh jatuh pada hari %d\\nTekan R untuk main lagi" % day + _load_hint()
+    var main_node = get_tree().get_first_node_in_group("main")
+    var objective_count: int = main_node.campaign.objectives_in_order().size() if main_node != null else 1
+    var victory_title := "SELURUH WILAYAH DITAKLUK" if objective_count > 1 else "BENTENG LAWAN TAKLUK"
+    _over_label.text = "%s\\nWilayah musuh jatuh pada hari %d\\nTekan R untuk main lagi" % [victory_title, day] + _load_hint()
     _over.visible = true
     get_tree().paused = true
 
@@ -819,18 +849,21 @@ class ClockWidget extends Control:
 ## Satu baris job: ikon, tombol -, "terisi/kuota", tombol +. Bisa diklik.
 class JobRow extends Control:
     signal adjust(job: String, delta: int)
+    signal priority_adjust(job: String, delta: int)
     var job := ""
     var icon: Texture2D
     var font: Font
     var assigned := 0
     var quota := 0
+    var priority_rank := 1
 
     func _ready() -> void:
         mouse_filter = Control.MOUSE_FILTER_STOP
 
-    func set_counts(a: int, q: int) -> void:
+    func set_counts(a: int, q: int, rank: int = 1) -> void:
         assigned = a
         quota = q
+        priority_rank = rank
         queue_redraw()
 
     func _gui_input(event: InputEvent) -> void:
@@ -839,6 +872,9 @@ class JobRow extends Control:
                 adjust.emit(job, -1)
             elif Rect2(58, 1, 10, 10).has_point(event.position):
                 adjust.emit(job, 1)
+            accept_event()
+        elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+            priority_adjust.emit(job, 1 if event.shift_pressed else -1)
             accept_event()
 
     func _draw() -> void:
@@ -852,7 +888,8 @@ class JobRow extends Control:
         var col := Color.WHITE
         if assigned < quota:
             col = Color("#ffb347")  # kuota belum terisi
-        draw_string(font, Vector2(26, 9), "%d/%d" % [assigned, quota], HORIZONTAL_ALIGNMENT_CENTER, 31, 8, col)
+        draw_string(font, Vector2(27, 9), "%d/%d" % [assigned, quota], HORIZONTAL_ALIGNMENT_CENTER, 19, 7, col)
+        draw_string(font, Vector2(48, 9), "P%d" % priority_rank, HORIZONTAL_ALIGNMENT_CENTER, 9, 6, Color("#d7ba7a"))
 
 
 

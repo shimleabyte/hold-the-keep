@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 7
+const VERSION := 9
 
 var pending: Dictionary = {}
 
@@ -104,8 +104,9 @@ func collect(main: Node) -> Dictionary:
 
     var villagers: Array = []
     for villager in get_tree().get_nodes_in_group("villagers"):
-        villagers.append({"x": villager.position.x, "y": villager.position.y, "job": villager.job, "hp": villager.hp,
-            "carry": villager.carry, "kind": villager.carry_kind,
+        villagers.append({"x": villager.position.x, "y": villager.position.y, "job": villager.job,
+            "occupation": villager.occupation, "military_specialization": villager.military_specialization,
+            "hp": villager.hp, "carry": villager.carry, "kind": villager.carry_kind,
             "expedition": villager.is_expeditioning(), "recalling": villager.is_recalling_expedition()})
 
     var enemies: Array = []
@@ -128,11 +129,8 @@ func collect(main: Node) -> Dictionary:
                 "state": node.export_state()
             })
 
-    var stronghold_state: Dictionary = {}
-    if main.campaign_conquered or not is_instance_valid(main.enemy_keep):
-        stronghold_state = {"destroyed": true}
-    else:
-        stronghold_state = main.enemy_keep.export_state()
+    var stronghold_state: Dictionary = main.campaign.export_primary_state() if main.campaign != null else {"destroyed": true}
+    var campaign_state: Dictionary = main.campaign.export_state() if main.campaign != null else {}
 
     return {
         "version": VERSION,
@@ -143,6 +141,7 @@ func collect(main: Node) -> Dictionary:
             "seed": main.world.map_seed
         },
         "stronghold": stronghold_state,
+        "campaign": campaign_state,
         "fog": main.fog.export_state() if is_instance_valid(main.fog) else {},
         "inventory": Inventory.items,
         "clock": {"t": GameClock.time_of_day, "day": GameClock.day, "night": GameClock.is_night},
@@ -157,6 +156,7 @@ func collect(main: Node) -> Dictionary:
         "enemies": enemies,
         "resources": resources,
         "quota": main.village.quota,
+        "job_priority": main.village.job_priority.duplicate(),
         "spawner": main.spawner.export_state(),
         "tech": Tech.export_state(),
     }
@@ -232,6 +232,9 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         return false
     if not (resources is Array):
         return false
+    var campaign_world_data: Dictionary = data.get("world", {})
+    if version >= 8 and not _valid_campaign_state(data.get("campaign", {}), String(campaign_world_data.get("profile", "")), int(campaign_world_data.get("map_size", 0))):
+        return false
     if not clock.has("t") or not clock.has("day") or not clock.has("night"):
         return false
     if not player.has("x") or not player.has("y") or not player.has("hp"):
@@ -256,6 +259,18 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 return false
         if version >= 5 and (not villager.has("expedition") or not villager.has("recalling")):
             return false
+        if version >= 9:
+            if not villager.has("occupation") or not villager.has("military_specialization"):
+                return false
+            var occupation := String(villager["occupation"])
+            var specialization := String(villager["military_specialization"])
+            if not ["", "woodcutter", "miner", "farmer", "builder"].has(occupation):
+                return false
+            if not ["", "soldier"].has(specialization):
+                return false
+            var legacy_job := specialization if not specialization.is_empty() else occupation
+            if String(villager["job"]) != legacy_job or (not occupation.is_empty() and not specialization.is_empty()):
+                return false
     for enemy in enemies:
         if not (enemy is Dictionary) or not enemy.has("id") or not enemy.has("x") or not enemy.has("y") or not enemy.has("hp"):
             return false
@@ -264,8 +279,21 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         if bool(enemy.get("garrison", false)) and (not enemy.has("guard_x") or not enemy.has("guard_y")):
             return false
     for job in quota:
-        if not ["woodcutter", "miner", "farmer", "soldier"].has(String(job)):
+        var allowed_jobs := ["woodcutter", "miner", "farmer", "soldier"]
+        if version >= 9:
+            allowed_jobs.append("builder")
+        if not allowed_jobs.has(String(job)):
             return false
+    if version >= 9:
+        var priority = data.get("job_priority", null)
+        if not (priority is Array) or priority.size() != 5:
+            return false
+        var unique_priority: Dictionary = {}
+        for value in priority:
+            var job_name := String(value)
+            if not ["woodcutter", "miner", "farmer", "builder", "soldier"].has(job_name) or unique_priority.has(job_name):
+                return false
+            unique_priority[job_name] = true
     for resource in resources:
         if not (resource is Dictionary):
             return false
@@ -279,6 +307,59 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         if not resource["state"].has("hp") or not resource["state"].has("regrow"):
             return false
     return true
+
+
+func _valid_campaign_state(value: Variant, expected_profile: String, map_size: int) -> bool:
+    if not (value is Dictionary) or String(value.get("profile", "")) != expected_profile:
+        return false
+    var order = value.get("order", null)
+    var objectives = value.get("objectives", null)
+    if not (order is Array) or not (objectives is Array):
+        return false
+    if objectives.is_empty() or order.size() != objectives.size():
+        return false
+    if expected_profile == "classic" and order.size() != 1:
+        return false
+    if expected_profile == "frontier" and not [1, 4].has(order.size()):
+        return false
+
+    var records: Dictionary = {}
+    for objective in objectives:
+        if not (objective is Dictionary):
+            return false
+        for key in ["id", "region", "faction", "cx", "cy", "hp", "destroyed", "reinforce_timer", "spawn_index", "reward"]:
+            if not objective.has(key):
+                return false
+        var stronghold_id := String(objective["id"])
+        if stronghold_id.is_empty() or records.has(stronghold_id):
+            return false
+        if String(objective["region"]).is_empty() or String(objective["faction"]).is_empty():
+            return false
+        var cx := int(objective["cx"])
+        var cy := int(objective["cy"])
+        if cx < 1 or cy < 1 or cx > map_size - 4 or cy > map_size - 4:
+            return false
+        var destroyed := bool(objective["destroyed"])
+        var hp := int(objective["hp"])
+        if destroyed and hp != 0:
+            return false
+        if not destroyed and (hp < 1 or hp > 900):
+            return false
+        if float(objective["reinforce_timer"]) < 0.0 or float(objective["reinforce_timer"]) > 105.0:
+            return false
+        if int(objective["spawn_index"]) < 0 or int(objective["spawn_index"]) >= 36:
+            return false
+        if not (objective["reward"] is Dictionary):
+            return false
+        records[stronghold_id] = true
+
+    var seen: Dictionary = {}
+    for value_id in order:
+        var stronghold_id := String(value_id)
+        if not records.has(stronghold_id) or seen.has(stronghold_id):
+            return false
+        seen[stronghold_id] = true
+    return seen.size() == records.size()
 
 
 func _read_saved_data(path: String, enforce_world_compatibility := true) -> Variant:

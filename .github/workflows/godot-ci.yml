@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+      - "feat/**"
   workflow_dispatch:
 
 permissions:
@@ -54,6 +55,8 @@ jobs:
         test:
           - animation_motion
           - campaign_assault
+          - campaign_multi_stronghold
+          - workplace_assignments
           - input_rebinding
           - map_stages
           - player_combat
@@ -62,6 +65,7 @@ jobs:
           - territory_claims
           - world_config
           - frontier_world
+          - regional_control_roads
     steps:
       - name: Checkout
         uses: actions/checkout@v7

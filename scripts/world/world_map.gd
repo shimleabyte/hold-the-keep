@@ -69,6 +69,12 @@ func is_buildable(cell: Vector2i) -> bool:
     return _layer.get_cell_atlas_coords(cell).x != T_WATER
 
 
+func is_bridgeable(cell: Vector2i) -> bool:
+    if cell.x < 1 or cell.y < 1 or cell.x > map_size - 2 or cell.y > map_size - 2:
+        return false
+    return _layer.get_cell_atlas_coords(cell).x == T_WATER
+
+
 func starting_keep_cell() -> Vector2i:
     return WorldConfig.starting_keep_cell()
 

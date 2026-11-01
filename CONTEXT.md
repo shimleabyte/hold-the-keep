@@ -15,16 +15,16 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 ## 2. Status fitur (implementasi aktif; status verifikasi per suite dicatat di bagian 6)
 | Area | Isi |
 |---|---|
-| Dunia | peta 64x64 prosedural (seed 1337): Hearthland, Greenwood, Highlands, Fenlands; enam atlas terrain termasuk air; resource generation tetap deterministik |
-| Wilayah | klaim pemain dari Keep/Outpost, klaim musuh dari benteng, ownership check, frontier expansion |
-| Kampanye | tiga bab (hari 1–5, 6–10, 11–15), bobot musuh berubah per bab, benteng lawan 900 HP, garrison, fog permanen, ekspedisi (G), conquest victory |
+| Dunia | Classic 64x64 tetap tersedia; Frontier 128x128 deterministik dengan lima biome, resource density regional, 32 urat besi dan starting claim radius 15 |
+| Wilayah | regional ownership neutral/player/enemy/contested; roads/bridges walkable; supply graph berakar di Keep dan depot aktif hanya saat terhubung |
+| Kampanye | Classic satu stronghold; Frontier empat stronghold regional berurutan (Greenwood, Highlands, Fenlands, Ashen March), garrison/reinforcement lokal, reward conquest, objective registry, fog dan ekspedisi (G) |
 | Pemain | gerak 8 arah, lari (Shift), serang radial, panen, HP 100 + regen, respawn di keep |
 | Bangunan | keep, rumah, tembok, menara, gudang, ladang; data di `data/buildings.json`; bongkar refund 50% |
 | Musuh | bandit, serigala pouncer, soldier melee, archer ranged, brute siege, Raja Lawan; flow field; role-specific AI dan structure damage |
 | Villager | job penebang/penambang/petani/prajurit, kuota diatur pemain, A*, setor ke gudang/keep |
 | Ekonomi | kayu, batu, makanan; kapasitas rumah; upkeep 2 makanan/penduduk/hari |
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
-| Save/load | versi 6, autosave tiap fajar, F5/F9, file sementara + rollback backup, resource/fog/stronghold/garrison/ekspedisi/recall/combat progression tersimpan |
+| Save/load | versi 8, autosave tiap fajar, F5/F9, temp + rollback backup, world identity, resource/fog/multi-stronghold HP/garrison/ekspedisi/recall/combat/campaign progression tersimpan; v1–v7 tetap satu stronghold |
 | Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
 | Tampilan | windowed 1280×720 default, minimum 960×540 (enforced through `Window.min_size`), preset 16:9/16:10/4:3, integer-scaled viewport dengan aspect expand |
 | HUD | top bar ringkas, vitals, indikator bab, combat strip kompak, drawer JOBS, peta strategis TAB/MAP, hotbar bangunan, bar boss, bantuan (H) |
@@ -226,3 +226,36 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Frontier stronghold placement uses cardinal reachable-cell traversal; the stronghold is placed adjacent to walkable terrain. The strategic map renders Ashen March, profile-aware labels and viewport-aware scaling.
 - The Frontier regression covers five biome shares, terrain indices, resource distribution, iron veins, Keep footprint/claim, fog/save index bounds, selector visibility/persistence, stronghold approach, deterministic layout and compact viewport bounds.
 - PR #9 (`feat/regional-control-roads`) contains the next territory/roads/supply slice but is still stacked on the superseded pre-mainline Frontier branch. Rebase it onto the verified Phase 01 line before treating it as the Phase 02 continuation. Do not merge PR #10 or PR #9 without explicit approval.
+
+## 20. Regional control and road-connected supply (2026-11-01)
+- Phase 02 branch: `feat/regional-control-roads-mainline`, stacked on the verified Phase 01 branch; draft PR #11.
+- Regional ownership aggregates buildable land coverage into neutral/player/enemy/contested states. Region control changes are independent of exploration fog.
+- Roads and bridges are one-cell infrastructure. They have no physical collision and remain walkable in villager A* and enemy flow-field routing. Bridge construction is restricted to valid water cells.
+- `supply_network.gd` flood-fills cardinal road connections from the Keep footprint and exposes connected road/depot state. Keep, Storage and Outposts are depots; workers ignore disconnected depots and retain cargo if a route breaks before deposit.
+- Strategic map renders explored road links and colors region labels by ownership state. HUD exposes road and bridge build choices.
+- Phase 02 initial slice CI passed on Godot 4.3 and 4.7: run `41289421611` completed successfully with 24/24 jobs, including `regional_control_roads` on both engines.
+- `tests/regional_control_roads.gd` covers Classic's regional states, walkable roads, deterministic bridge placement/traversal, Keep-connected roads and depots, isolated Outposts, rerouting and cargo retention after road removal, plus infrastructure save persistence.
+- Current supply scope is not full local logistics: resources still enter shared inventory after workers reach a connected depot. Local stockpile balances and inter-depot transfer semantics are not implemented.
+- Outpost guards/garrisons and local visibility are also not implemented. Supply attrition and raid vulnerability remain deferred until local logistics exist.
+- PR #11 is the clean Phase 02 transplant based on the Phase 01 branch. PR #9 was the old stacked version on the retired pre-mainline Frontier branch and is closed as superseded.
+
+
+## 21. Multi-stronghold campaign (2026-11-01)
+
+- Phase 03 implementation branch: `feat/multi-stronghold-campaign`, based on the verified Phase 02 branch.
+- New Frontier campaigns create four sequential objectives: Greenwood Raiders, Iron Legion, Fen Cult and Ashen Host.
+- Each stronghold has its own reinforcement cap and garrison. Conquering one objective does not retreat guards from other strongholds.
+- Later objectives remain damage-locked until the active objective is conquered. Soldiers on expedition automatically retarget the next objective.
+- Regional conquest grants resources; the campaign only ends after the fourth stronghold falls.
+- Save format v8 persists the full objective order, region/faction identity, health, garrison timers and completion state. Existing v1–v7 saves retain their one-stronghold flow; Classic remains one stronghold.
+- Regression status: dedicated multi-stronghold test added to CI; Godot 4.3 and 4.7 execution pending.
+
+
+## 22. Jobs and workplaces — first Phase 04 slice (2026-11-01)
+
+- Branch: `feat/workplaces-and-specialist-jobs`, stacked on the Phase 03 campaign branch.
+- Builder is a labor occupation with Keep/Outpost workplace slots and a workplace-bounded repair radius. It consumes repair material and cannot share a repair target with another Builder.
+- Woodcutters, miners and farmers are constrained to connected-depot work radii. Resource carriers select a reachable connected depot rather than failing on the nearest but inaccessible depot.
+- Job allocation order is configurable; Alt + job key promotes, Alt + Shift + job key demotes. The job panel also supports right-click priority changes.
+- Soldier identity is stored in `military_specialization`; labor tasks are stored in `occupation`. The legacy `job` property remains a compatibility alias.
+- Save format v9 persists role fields and ordered priority. Hunter, Scout, Healer and Blacksmith remain later Phase 04 increments.
