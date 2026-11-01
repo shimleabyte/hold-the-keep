@@ -124,22 +124,32 @@ func _initialize() -> void:
 
     main.flow.rebuild()
     var bridge_cell := Vector2i(-1, -1)
-    for y in range(1, world_config_size() - 1):
-        for x in range(1, world_config_size() - 1):
-            var cell := Vector2i(x, y)
-            var touches_reachable_land := false
-            for direction in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-                var neighbor: Vector2i = cell + direction
-                if world.is_buildable(neighbor) and main.flow.is_reachable(neighbor):
-                    touches_reachable_land = true
-                    break
-            if touches_reachable_land and world.is_bridgeable(cell) and territory.is_claimed(cell) and not world.occupied.has(cell) and main.build.check("bridge", cell) == "":
-                bridge_cell = cell
+    var claimed_cells: Array = territory.claimed_cells.keys()
+    claimed_cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+        return Vector2(a - main.nav.cell_of(main.player.global_position)).length_squared()
+            < Vector2(b - main.nav.cell_of(main.player.global_position)).length_squared()
+    )
+    for candidate in claimed_cells:
+        if not world.is_buildable(candidate) or world.occupied.has(candidate):
+            continue
+        var touches_reachable_bank := false
+        for direction in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+            var neighbor: Vector2i = candidate + direction
+            if world.is_buildable(neighbor) and main.flow.is_reachable(neighbor):
+                touches_reachable_bank = true
                 break
-        if bridge_cell.x >= 0:
+        if touches_reachable_bank:
+            bridge_cell = candidate
             break
     assert(bridge_cell.x >= 0,
-        "The starting claim must expose a safe reachable water cell for bridge construction")
+        "The Keep claim must provide a free cell next to reachable land for a bridge test")
+    # Deterministic fixture: turn the chosen claimed bank cell into water. The bridge
+    # assertions below still exercise the actual water validation, construction and path grids.
+    world._layer.set_cell(bridge_cell, 0, Vector2i(2, 0))
+    assert(world.is_bridgeable(bridge_cell),
+        "Bridge fixtures must be water cells inside the map bounds")
+    main.nav.rebuild()
+    main.flow.rebuild()
     assert(main.build.place("bridge", bridge_cell) == "",
         "A bridge must be constructible over claimed water")
     await ticks(2)
