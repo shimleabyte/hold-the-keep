@@ -96,7 +96,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate — passed:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable stronghold approach, valid map bounds, viewport fit and 128×128 fog/index round-trip.
 
 ### Phase 02 — Territory, roads and supply
-**Status:** Initial implementation on `feat/regional-control-roads-mainline`; stacked draft PR #11. Verification pending.
+**Status:** Initial implementation slice passed Godot 4.3/4.7 CI; stacked draft PR #11. The broader phase remains in progress.
 
 - [x] Aggregate land claims into neutral/player/enemy/contested regional control records.
 - [x] Emit regional control changes independently from fog-of-war exploration.
@@ -111,7 +111,9 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [ ] Add Outpost guard assignment, garrison support and local visibility.
 - [ ] Add local stockpile accounting and actual transfer/delivery semantics; currently delivered resources enter the shared inventory when a connected depot is reached.
 - [ ] Add supply attrition and raid vulnerability only after route and depot behavior is reliable.
-- [ ] Pass the Godot 4.3/4.7 CI matrix, including the regional control/roads integration test.
+- [x] Pass the Godot 4.3/4.7 CI matrix, including the regional control/roads integration test (run `41289421611`, 24/24 jobs).
+- [ ] Add Outpost guard assignment, garrison support and local visibility.
+- [ ] Add local stockpile accounting and actual inter-depot transfers. Current delivery still credits shared inventory at any Keep-connected depot.
 
 **Acceptance gate:** ownership remains separate from fog and supply; road/bridge routes remain navigable; depot connectivity changes correctly when road segments are built or removed; disconnected depots cannot receive global inventory deposits; save/load preserves infrastructure.
 

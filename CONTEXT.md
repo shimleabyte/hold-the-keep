@@ -229,10 +229,12 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 
 ## 20. Regional control and road-connected supply (2026-11-01)
 - Phase 02 branch: `feat/regional-control-roads-mainline`, stacked on the verified Phase 01 branch; draft PR #11.
-- Regional ownership is aggregated from buildable land coverage into neutral/player/enemy/contested states. State changes use a dedicated signal and do not depend on exploration fog.
-- Roads and bridges are one-cell construction infrastructure. They have no physical collision and remain walkable in villager A* and enemy flow-field routing. Bridges are restricted to valid water cells.
-- `supply_network.gd` flood-fills cardinal road connections from the Keep footprint and exposes connected road/depot state. Keep, Storage and Outposts are depots; workers ignore disconnected depots and retain their carried resources if a route breaks before deposit.
-- Strategic map draws revealed road links and colors region labels by ownership state. HUD now exposes road and bridge build choices.
-- `tests/regional_control_roads.gd` covers Classic's four region states, road walkability, bridge traversal, connected depots, disconnected Outposts, rerouting on broken routes and infrastructure save persistence. Godot 4.3/4.7 CI is pending.
-- Current supply scope is deliberately limited: resources still enter the shared inventory after workers reach a connected depot. Local stockpile accounting, actual inter-depot transfers, Outpost guards/garrisons and supply attrition/raids are not implemented yet.
-- Earlier draft PR #9 was based on the superseded pre-mainline Frontier branch. PR #11 is the clean transplant rooted on the verified Phase 01 branch; close PR #9 after confirming PR #11 contains the complete changes.
+- Regional ownership aggregates buildable land coverage into neutral/player/enemy/contested states. Region control changes are independent of exploration fog.
+- Roads and bridges are one-cell infrastructure. They have no physical collision and remain walkable in villager A* and enemy flow-field routing. Bridge construction is restricted to valid water cells.
+- `supply_network.gd` flood-fills cardinal road connections from the Keep footprint and exposes connected road/depot state. Keep, Storage and Outposts are depots; workers ignore disconnected depots and retain cargo if a route breaks before deposit.
+- Strategic map renders explored road links and colors region labels by ownership state. HUD exposes road and bridge build choices.
+- Phase 02 initial slice CI passed on Godot 4.3 and 4.7: run `41289421611` completed successfully with 24/24 jobs, including `regional_control_roads` on both engines.
+- `tests/regional_control_roads.gd` covers Classic's regional states, walkable roads, deterministic bridge placement/traversal, Keep-connected roads and depots, isolated Outposts, rerouting and cargo retention after road removal, plus infrastructure save persistence.
+- Current supply scope is not full local logistics: resources still enter shared inventory after workers reach a connected depot. Local stockpile balances and inter-depot transfer semantics are not implemented.
+- Outpost guards/garrisons and local visibility are also not implemented. Supply attrition and raid vulnerability remain deferred until local logistics exist.
+- PR #11 is the clean Phase 02 transplant based on the Phase 01 branch. PR #9 was the old stacked version on the retired pre-mainline Frontier branch and is closed as superseded.
