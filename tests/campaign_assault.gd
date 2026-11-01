@@ -30,7 +30,7 @@ func _initialize() -> void:
     main.fog.reveal_position(stronghold.global_position, 180.0)
     assert(main.fog.is_revealed_cell(stronghold.cell),
         "Exploration must reveal the enemy stronghold")
-    var revealed_index: int = stronghold.cell.y * 64 + stronghold.cell.x
+    var revealed_index: int = WorldConfig.cell_index(stronghold.cell)
     var fog_state: Dictionary = main.fog.export_state()
     assert(fog_state["cells"].has(revealed_index),
         "Explored cells must be part of the fog save state")
