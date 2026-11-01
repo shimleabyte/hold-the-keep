@@ -49,7 +49,7 @@ func _initialize() -> void:
     require(source.store_resource("wood", 18),
         "The source depot must accept stock before the shipment is ordered")
 
-    var source_before := source.stockpile_amount("wood")
+    var source_before: int = source.stockpile_amount("wood")
     var shipment_id: int = main.supply.create_shipment(source_cell, destination_cell, "wood", 10)
     require(shipment_id > 0, "A valid connected-depot shipment order must be accepted")
     require(source.stockpile_amount("wood") == source_before - 10,
@@ -83,7 +83,7 @@ func _initialize() -> void:
     require(String(order_for(main.supply.get_shipment_orders(), withdrawal_id)["status"]) == "delivered",
         "The Keep-bound physical withdrawal must complete")
 
-    var cancel_source_before := source.stockpile_amount("wood")
+    var cancel_source_before: int = source.stockpile_amount("wood")
     var cancel_id: int = main.supply.create_shipment(source_cell, destination_cell, "wood", 2)
     require(cancel_id > 0, "A cancellable shipment must be accepted")
     require(main.supply.cancel_shipment(cancel_id),
@@ -96,7 +96,7 @@ func _initialize() -> void:
 
     require(destination.store_resource("stone", 170),
         "The destination must accept stock up to its remaining capacity")
-    var stock_before_rejected_order := source.stockpile_amount("wood")
+    var stock_before_rejected_order: int = source.stockpile_amount("wood")
     require(main.supply.create_shipment(source_cell, destination_cell, "wood", 1) < 0,
         "A shipment exceeding reserved destination capacity must be rejected")
     require(source.stockpile_amount("wood") == stock_before_rejected_order,
