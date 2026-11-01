@@ -730,19 +730,15 @@ class CombatBar extends Control:
         queue_redraw()
 
     func _draw() -> void:
-        draw_rect(Rect2(Vector2.ZERO, size), Color(0.07, 0.065, 0.075, 0.9))
+        draw_rect(Rect2(Vector2.ZERO, size), Color("#111319", 0.88))
         draw_rect(Rect2(Vector2.ZERO, size), Color("#6b5a40"), false, 1.0)
         var level := int(state.get("level", 1))
         var xp := int(state.get("xp", 0))
         var next_xp := int(state.get("next_xp", 0))
-        draw_string(font, Vector2(4, 9), "LV %02d" % level,
-            HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#ffd23f"))
+        draw_string(font, Vector2(4, 10), "LV%d" % level, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("#ffd23f"))
         var ratio := float(xp) / float(maxi(1, next_xp)) if next_xp > 0 else 1.0
-        draw_rect(Rect2(45, 3, 228, 5), Color("#211b19"))
-        draw_rect(Rect2(46, 4, 226.0 * clampf(ratio, 0.0, 1.0), 3), Color("#d39b42"))
-        var xp_text := "MAX" if next_xp <= 0 else "%d/%d XP" % [xp, next_xp]
-        draw_string(font, Vector2(45, 15), xp_text,
-            HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color("#bcae99"))
+        draw_rect(Rect2(25, 4, 25, 7), Color("#29231d"))
+        draw_rect(Rect2(26, 5, 23.0 * clampf(ratio, 0.0, 1.0), 5), Color("#d39b42"))
         var abilities := [
             ["Q", "DASH", true, float(state.get("dash_cd", 0.0))],
             ["C", "TEBAS", bool(state.get("cleave_unlocked", false)), float(state.get("cleave_cd", 0.0))],
@@ -750,18 +746,16 @@ class CombatBar extends Control:
         ]
         for i in abilities.size():
             var item: Array = abilities[i]
-            var x := 4.0 + i * 91.0
+            var x := 54.0 + i * 40.0
             var unlocked := bool(item[2])
             var cooldown := float(item[3])
             var ready := unlocked and cooldown <= 0.05
             var tint := Color("#ffd23f") if ready else (Color("#a99a83") if unlocked else Color("#665d52"))
-            draw_rect(Rect2(x, 17, 88, 9), Color("#211b19"))
-            draw_rect(Rect2(x, 17, 88, 9), Color("#6b5a40"), false, 1.0)
-            draw_string(font, Vector2(x + 3, 24), "%s %s" % [item[0], item[1]],
+            draw_rect(Rect2(x, 2, 38, 12), Color("#211b19"))
+            draw_rect(Rect2(x, 2, 38, 12), Color("#6b5a40"), false, 1.0)
+            var status := "OK" if ready else ("--" if not unlocked else "%.0f" % cooldown)
+            draw_string(font, Vector2(x + 3, 10), String(item[0]) + " " + status,
                 HORIZONTAL_ALIGNMENT_LEFT, -1, 7, tint)
-            var status := "READY" if ready else ("LOCK" if not unlocked else "%.1f" % cooldown)
-            draw_string(font, Vector2(x + 53, 24), status,
-                HORIZONTAL_ALIGNMENT_LEFT, -1, 6, tint)
 
 
 ## Slot bar bangunan: ikon, nomor + nama, biaya. Bisa diklik.
@@ -812,6 +806,37 @@ class BuildSlot extends Control:
             draw_string(font, Vector2(x, 27), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 1, 1, a))
             x += font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 4.0
 
+## Compact top-bar button for secondary panels.
+class HudChip extends Control:
+    signal pressed
+    var label := ""
+    var font: Font
+    var active := false
+    var hover := false
+
+    func _ready() -> void:
+        mouse_filter = Control.MOUSE_FILTER_STOP
+        mouse_entered.connect(func() -> void:
+            hover = true
+            queue_redraw())
+        mouse_exited.connect(func() -> void:
+            hover = false
+            queue_redraw())
+
+    func _gui_input(event: InputEvent) -> void:
+        if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+            pressed.emit()
+            accept_event()
+
+    func _draw() -> void:
+        var bg := Color("#51432f") if active else Color("#201d1a")
+        if hover:
+            bg = bg.lightened(0.18)
+        draw_rect(Rect2(Vector2.ZERO, size), bg)
+        draw_rect(Rect2(Vector2.ZERO, size), Color("#e0b969") if active else Color("#6b5a40"), false, 1.0)
+        draw_string(font, Vector2(size.x / 2.0, 9), label, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color("#f0e2c7"))
+
+
 ## Tombol "RISET [Y]" di panel atas.
 class TechButton extends Control:
     signal pressed
@@ -839,4 +864,4 @@ class TechButton extends Control:
         draw_rect(Rect2(Vector2.ZERO, size), bg)
         draw_rect(Rect2(Vector2.ZERO, size), Color("#ffd23f") if busy else Color("#6b5a40"), false, 1.0)
         draw_texture(icon, Vector2(2, 1))
-        draw_string(font, Vector2(14, 10), "RISET Y", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE)
+        draw_string(font, Vector2(14, 10), "Y", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE)
