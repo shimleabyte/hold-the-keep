@@ -200,6 +200,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 
 - [x] Replace the Classic-only micro-benchmark with a configurable Classic/Frontier diagnostic reporting frame-time percentiles, static memory, node count, projectiles and particle peaks.
 - [x] Add a bounded Frontier stress regression with all four factions, mixed rosters, 48 villagers, a live ranged projectile and the 500-particle ceiling.
+- [x] Add a deterministic Classic/Frontier balance matrix covering stage transitions, day wave budgets, act-specific faction rosters and final-boss timing.
 - [x] Add structural migration fixtures for Classic v1–v11 and Frontier v7–v11; test stale temporary saves, backup rotation and invalid campaign state.
 - [x] Add an end-to-end Frontier reload regression preserving completed objectives, unlocked Act II, an active escort/path index and partially damaged stronghold HP.
 - [x] Verify Windows/Linux export preset names, paths, resource filters and embedded PCK settings.
