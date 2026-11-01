@@ -291,4 +291,5 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - `tests/campaign_balance_matrix.gd` locks down Classic's day-15 / 3-stage and Frontier's day-20 / 4-act schedules, wave budgets at act boundaries, faction archetype pools and final-boss day gating.
 - New assertion tests are wired into `tools/run_tests.sh` and the Godot 4.3/4.7 workflow. The performance benchmark is available through `tools/run_diagnostics.sh`.
 - Release scripts now verify that both output binaries exist and are non-empty after export.
-- Still open: run CI, measure on target hardware, add representative Frontier act/day-20 balance runs, human-playtest the campaign, execute real platform exports and smoke-test those artifacts. No local Godot run or target-hardware result is claimed.
+- CI now runs the Frontier reference benchmark (96 requested faction enemies, 80 villagers, 500-particle cap) on Godot 4.7 and uploads a percentile report. A separate Godot 4.3 job installs matching templates, exports Windows/Linux, checks the Windows PE format and smoke-tests the Linux executable.
+- Still open: target desktop hardware profiling, later-act/day-20 combat outcome cases, human playtests across the campaign, Windows runtime smoke test and clean-machine save/settings migration. No hardware performance result is claimed.
