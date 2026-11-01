@@ -120,6 +120,22 @@ func _initialize() -> void:
         "The pause menu must expose Classic and Frontier as separate new-campaign choices")
     assert(campaign_menu._campaign_profile.selected == 1,
         "New-campaign selector must reflect the currently active Frontier profile")
+    campaign_menu._open_campaign_panel()
+    assert(campaign_menu._campaign_center.visible,
+        "The new-campaign panel must open from the pause menu")
+    campaign_menu._close_campaign_panel()
+    assert(not campaign_menu._campaign_center.visible,
+        "The new-campaign panel must provide a working return path")
+
+    var previous_profile := Settings.world_profile
+    assert(Settings.set_world_profile("frontier"),
+        "Frontier profile preference must be persistable")
+    var preference_file := ConfigFile.new()
+    assert(preference_file.load(Settings.PATH) == OK
+        and String(preference_file.get_value("world", "profile", "")) == "frontier",
+        "The selected campaign profile must persist in the settings file")
+    assert(Settings.set_world_profile(previous_profile),
+        "The previous profile preference must be restorable after this test")
 
     var resource_counts := {
         "wood": 0,
