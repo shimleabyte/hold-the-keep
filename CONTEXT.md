@@ -273,9 +273,11 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 
 
 ## 9. Phase 07 — Frontier Conquest objectives
-- Branch: `feat/phase-07-conquest-objectives`, based on `feat/phase-06-factions-territorial-ai` so parallel Phase 06 work is inherited without modifying that branch.
-- Technology expands from 17 to 20 nodes: Surveying, Regional Cartography and Siegecraft. Existing technology IDs remain intact.
-- Classic keeps its 15-day / 3-stage schedule. Frontier uses 20 days / 4 acts, with faction archetypes joining later wave pools.
-- Eleven regional objectives cover four biome discoveries plus camp/ruin clearing, rescue, escort and defense. Press O to inspect; E interacts with a site.
-- Frontier victory requires every regional objective, all four strongholds and the King encounter on day 20.
-- Save v11 records objective state and site progress; v1-v10 remain supported by the existing compatibility path. Godot 4.3 / 4.7 import/parse has passed; regression matrix is running.
+- Branch: `feat/phase-07-conquest-objectives`, based on `feat/phase-06-factions-territorial-ai`; Phase 06 remains independently editable and is not merged into main by this branch.
+- Technology expands from 17 to 20 nodes: Surveying, Regional Cartography and Siegecraft. Cartography also increases Outpost reveal radius; Siegecraft increases player damage against active strongholds and regional sites.
+- Classic keeps its 15-day / 3-stage schedule and existing victory rules. Frontier uses 20 days / 4 acts, with faction archetypes joining later wave pools.
+- Eleven regional objectives are listed in act order: four biome discoveries plus camp/ruin clearing, rescue, escort and defense. Press O to inspect progress; E interacts with a nearby site.
+- Discovered objective sites appear on the TAB strategic map with type-based markers. Future-act sites remain dimmed/locked until the previous act's required objectives and stronghold are complete.
+- Escort paths rebuild from the saved world position after load. Objective/site progress and final-boss state persist in save v11; v1-v10 compatibility is retained.
+- Frontier victory requires every required regional objective, all four strongholds and the King encounter on day 20.
+- Latest fixes add explicit locked-objective UI, Cartography/Siegecraft cross-profile effects, and end-to-end regression for escort reload and actual King death. Current CI import/parse is green on Godot 4.3/4.7; latest regression matrix is running. Rendered/manual difficulty review remains open.
