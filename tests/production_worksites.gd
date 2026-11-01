@@ -101,7 +101,7 @@ func _initialize() -> void:
     var away_from_keep: Vector2 = (camp.position - keep.position).normalized()
     if away_from_keep == Vector2.ZERO:
         away_from_keep = Vector2.RIGHT
-    radius_probe.position = camp.position + away_from_keep * WorldConfig.tile_size * 17.0
+    radius_probe.position = camp.position + away_from_keep * config.tile_size * 17.0
     assert(woodcutter_a._is_in_workplace_radius(radius_probe),
         "Lumber Camp work radius must include resources 17 tiles from its center")
     assert(not woodcutter_a._is_in_work_radius(radius_probe),
@@ -110,7 +110,7 @@ func _initialize() -> void:
 
     var quarry_probe := Node2D.new()
     main.world.entities.add_child(quarry_probe)
-    quarry_probe.position = quarry.position + Vector2(WorldConfig.tile_size * 15.0, 0)
+    quarry_probe.position = quarry.position + Vector2(config.tile_size * 15.0, 0)
     assert(miner._is_in_workplace_radius(quarry_probe),
         "Quarry work radius must include resources 15 tiles from its center")
     quarry_probe.queue_free()
