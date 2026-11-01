@@ -34,7 +34,7 @@ func require(condition: bool, message: String) -> void:
     if not condition:
         push_error("FAIL: " + message)
         quit(1)
-    require(condition, message)
+    assert(condition, message)
 
 
 func _initialize() -> void:
@@ -189,9 +189,7 @@ func _initialize() -> void:
     for y in range(2, world_config_size() - 3):
         for x in range(2, world_config_size() - 3):
             var anchor := Vector2i(x, y)
-            if Vector2(anchor) + Vector2.ONE.distance_to(keep_center) < 0.0:
-                continue
-            if Vector2(anchor) + Vector2.ONE.distance_to(keep_center) < 13.0:
+            if (Vector2(anchor) + Vector2.ONE).distance_to(keep_center) < 13.0:
                 continue
             var clear := true
             for dy in 2:
