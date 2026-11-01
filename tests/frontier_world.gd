@@ -98,8 +98,8 @@ func _initialize() -> void:
 
     # The entire initial Keep footprint must be inside the generated home clearing.
     var keep_cell: Vector2i = world.starting_keep_cell()
-    for y in 2:
-        for x in 2:
+    for y in 3:
+        for x in 3:
             var cell := keep_cell + Vector2i(x, y)
             assert(world.is_buildable(cell),
                 "The starting Keep footprint must not overlap water")
