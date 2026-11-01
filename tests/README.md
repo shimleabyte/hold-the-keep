@@ -17,7 +17,7 @@ Dari akar proyek:
 Skrip observasi lama yang hanya mencetak hasil tanpa assertion dipisahkan ke `run_diagnostics.sh`;
 jalankan saat meninjau animasi, pertarungan, efek, ekonomi atau alur save/menu.
 
-GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 21 assertion regression tests per versi, Frontier performance diagnostic, serta Windows/Linux export. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Mainline workflow #41314731305 menyelesaikan 46/46 jobs setelah PR #31, termasuk test local depot stockpile pada kedua versi Godot.
+GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 23 assertion regression tests per versi, Frontier performance diagnostic, serta Windows/Linux export. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Mainline workflow #41314731305 menyelesaikan 46/46 jobs setelah PR #31, termasuk test local depot stockpile pada kedua versi Godot.
 
 | Skrip | Menguji |
 |---|---|
@@ -63,7 +63,7 @@ Suite assertion yang dijalankan pada Godot 4.3 dan 4.7 masing-masing mencakup 23
 
 `animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `production_worksites`, `faction_registry`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, `regional_control_roads`, `local_depot_stockpiles`, `outpost_garrisons`, dan `physical_shipments`.
 
-CI juga menjalankan import/parse pada kedua versi Godot, performance diagnostic Frontier pada Godot 4.7, serta template-backed Windows/Linux release export pada Godot 4.3. Pada 1 November 2026, workflow validasi PR #32 (#41318897606) lulus 48/48 jobs setelah Outpost garrison coverage masuk ke matrix. Phase 02.3 menambah `physical_shipments` dan menguji seluruh 23 skrip pada kedua versi engine.
+CI juga menjalankan import/parse pada kedua versi Godot, performance diagnostic Frontier pada Godot 4.7, serta template-backed Windows/Linux release export pada Godot 4.3. Pada 1 November 2026, workflow validasi PR #32 (#41318897606) lulus 48/48 jobs setelah Outpost garrison coverage masuk ke matrix. Phase 02.3 menambah `physical_shipments` ke matrix sehingga setiap versi engine menjalankan 23 skrip; workflow branch fisik menunggu hasil CI.
 
 Skrip observasi/manual yang tidak termasuk assertion CI: `anim_sync`, `combat_tower_walls`, `events_boss_final_night`, `fx_shake_settings`, `restart_gameover`, `save_load_audio_menu`, `tech_tree`, dan `villagers_economy`. Jalankan skrip tersebut ketika memeriksa perilaku runtime yang belum dikonversi menjadi assertion.
 
