@@ -49,7 +49,7 @@ Suite headless saat ini mencakup: `anim_sync`, `animation_motion`, `campaign_ass
 `combat_tower_walls`, `events_boss_final_night`, `fx_shake_settings`, `input_rebinding`,
 `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`,
 `restart_gameover`, `save_load_audio_menu`, `tech_tree`, `territory_claims`,
-`villagers_economy`, dan `world_config`.
+`villagers_economy`, `world_config`, dan `frontier_world`.
 
 `perf.gd` dan `balance_final_night.gd` tetap berupa diagnostic/balance runs; jalankan terpisah saat
 mengukur performa atau mengubah komposisi gelombang. Screenshot, preview sprite dan klik HUD tetap
