@@ -15,7 +15,7 @@ func _ready() -> void:
 
 
 func has_save() -> bool:
-    return FileAccess.file_exists(PATH) or FileAccess.file_exists(BACKUP)
+    return _read_valid_save(PATH) != null or _read_valid_save(BACKUP) != null
 
 
 func _on_day_changed(_day: int) -> void:
@@ -63,7 +63,7 @@ func save_current(silent := false) -> bool:
 
     # Only replace the rollback copy with a verified primary save.
     if FileAccess.file_exists(PATH):
-        if _read_valid_save(PATH) != null:
+        if _read_saved_data(PATH, false) != null:
             DirAccess.remove_absolute(BACKUP)
             var backup_error := DirAccess.rename_absolute(PATH, BACKUP)
             if backup_error != OK:
@@ -162,7 +162,7 @@ func collect(main: Node) -> Dictionary:
     }
 
 
-func _valid_save(data: Variant) -> bool:
+func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
     if not (data is Dictionary):
         return false
     var version := int(data.get("version", 0))
@@ -184,7 +184,7 @@ func _valid_save(data: Variant) -> bool:
     var save_map_cells := 64 * 64
     if version < 7:
         # Legacy saves use the original 64x64 Classic world.
-        if WorldConfig.profile_id != "classic" or WorldConfig.map_size != 64:
+        if enforce_world_compatibility and (WorldConfig.profile_id != "classic" or WorldConfig.map_size != 64):
             return false
     else:
         var world_data = data.get("world", {})
@@ -193,15 +193,24 @@ func _valid_save(data: Variant) -> bool:
         for key in ["profile", "map_size", "tile_size", "seed"]:
             if not world_data.has(key):
                 return false
-        if String(world_data["profile"]) != WorldConfig.profile_id:
+        var saved_profile := String(world_data["profile"])
+        var saved_map_size := int(world_data["map_size"])
+        var saved_tile_size := int(world_data["tile_size"])
+        if not WorldConfig.PROFILES.has(saved_profile) or saved_map_size <= 0 or saved_tile_size <= 0:
             return false
-        if int(world_data["map_size"]) != WorldConfig.map_size:
+        var saved_profile_data: Dictionary = WorldConfig.profile_definition(saved_profile)
+        if saved_map_size != int(saved_profile_data.get("map_size", 0)) or saved_tile_size != WorldConfig.TILE_SIZE:
             return false
-        if int(world_data["tile_size"]) != WorldConfig.tile_size:
-            return false
-        if int(world_data["seed"]) != WorldConfig.world_seed:
-            return false
-        save_map_cells = WorldConfig.map_cells
+        if enforce_world_compatibility:
+            if saved_profile != WorldConfig.profile_id:
+                return false
+            if saved_map_size != WorldConfig.map_size:
+                return false
+            if saved_tile_size != WorldConfig.tile_size:
+                return false
+            if int(world_data["seed"]) != WorldConfig.world_seed:
+                return false
+        save_map_cells = saved_map_size * saved_map_size
     if not (fog is Dictionary):
         return false
     var explored_cells = fog.get("cells", [])
@@ -272,7 +281,7 @@ func _valid_save(data: Variant) -> bool:
     return true
 
 
-func _read_valid_save(path: String) -> Variant:
+func _read_saved_data(path: String, enforce_world_compatibility := true) -> Variant:
     if not FileAccess.file_exists(path):
         return null
     var file := FileAccess.open(path, FileAccess.READ)
@@ -281,9 +290,13 @@ func _read_valid_save(path: String) -> Variant:
     var json := JSON.new()
     var parse_result := json.parse(file.get_as_text())
     file.close()
-    if parse_result != OK or not _valid_save(json.data):
+    if parse_result != OK or not _valid_save(json.data, enforce_world_compatibility):
         return null
     return json.data
+
+
+func _read_valid_save(path: String) -> Variant:
+    return _read_saved_data(path, true)
 
 
 ## Load the primary save, falling back to the last known-good copy when necessary.
