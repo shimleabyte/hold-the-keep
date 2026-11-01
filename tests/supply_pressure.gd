@@ -265,7 +265,7 @@ func _initialize() -> void:
 
     restored_main.supply.set_process(false)
     var restored_keep = null
-    for building in get_tree().get_nodes_in_group("buildings"):
+    for building in get_nodes_in_group("buildings"):
         if String(building.id) == "keep":
             restored_keep = building
             break
