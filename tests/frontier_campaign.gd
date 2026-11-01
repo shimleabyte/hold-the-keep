@@ -30,6 +30,7 @@ func _run() -> void:
         assert(data_db.techs.has(tech_id), "Existing technology ID lost: " + tech_id)
     assert(data_db.tech_order.size() == 20, "Technology tree must contain twenty nodes")
     assert(data_db.campaign_modes["classic"]["final_day"] == 15, "Classic must remain 15 days")
+    assert(data_db.campaign_modes["classic"]["stages"].size() == 3, "Classic must retain three stages")
     assert(data_db.campaign_modes["frontier"]["final_day"] == 20, "Frontier must last 20 days")
     assert(data_db.campaign_modes["frontier"]["stages"].size() == 4, "Frontier must have four acts")
 
@@ -209,8 +210,17 @@ func _run() -> void:
 
     main.frontier_campaign._on_final_boss_defeated(19)
     assert(not main.frontier_campaign.final_boss_defeated, "Conquest King must not be accepted before day 20")
-    main.frontier_campaign._on_final_boss_defeated(20)
-    assert(main.campaign_conquered, "Conquest must finish after all objectives, strongholds and day-20 King")
+    clock.day = 20
+    main.spawner.start_wave(20)
+    assert(main.spawner._boss_pending, "The actual Frontier final wave must schedule the King on day 20")
+    var king = load("res://scripts/entities/enemy.gd").new()
+    king.setup(data_db.enemies["king"], main.world, main.flow, main.player, "ashen_host")
+    king.position = main.player.position + Vector2(20, 0)
+    main.world.entities.add_child(king)
+    await ticks(1)
+    king.take_damage(999999)
+    assert(main.frontier_campaign.final_boss_defeated, "Killing the spawned King must trigger Frontier boss completion")
+    assert(main.campaign_conquered, "Conquest must finish after all objectives, strongholds and the day-20 King")
 
-    print("PASS: 20-day/four-act Conquest, all objective types, rewards, technology compatibility, v11/legacy saves and final victory gate")
+    print("PASS: 20-day/four-act Conquest, all objective types, rewards, technology, escort reload, save compatibility and actual King death")
     quit(0)
