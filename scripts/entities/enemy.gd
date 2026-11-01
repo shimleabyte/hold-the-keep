@@ -39,7 +39,9 @@ const SIEGE_TARGET_PRIORITIES := {
     "storage": 3,
     "forge": 3,
     "lumber_camp": 2,
-    "quarry": 2
+    "quarry": 2,
+    "house": 1,
+    "farm": 1
 }
 const SIEGE_TARGET_SCAN_LIMIT := 32
 const WALK_BASE_SPEED := 32.0
@@ -527,6 +529,30 @@ func _nearest_siege_disruptor() -> Node2D:
     return nearest
 
 
+func _tick_siege_advance(delta: float) -> void:
+    if flow == null:
+        return
+    var cell := Vector2i((position / WorldConfig.tile_size).floor())
+    var next: Vector2i = flow.next_cell(cell)
+    if next == cell:
+        _move_toward(flow.target_pos, delta)
+        return
+    var occupied = world.occupied.get(next)
+    if occupied != null and is_instance_valid(occupied) and occupied.is_in_group("buildings"):
+        var structure := occupied as Node2D
+        if _siege_target_valid(structure):
+            _siege_target = structure
+            _siege_path = PackedVector2Array()
+            _siege_path_index = 0
+            _siege_path_version = -1
+            _siege_scan_t = 0.0
+            return
+    var next_position := Vector2(next) * WorldConfig.tile_size + Vector2(
+        WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0
+    ) + _offset
+    _move_toward(next_position, delta)
+
+
 func _tick_siege_engine(delta: float) -> void:
     var disruptor := _nearest_siege_disruptor()
     if disruptor != null:
@@ -577,8 +603,8 @@ func _tick_siege_engine(delta: float) -> void:
         if is_garrison:
             if position.distance_to(guard_origin) > 16.0:
                 _move_toward(guard_origin, delta)
-        elif flow != null:
-            _move_toward(flow.target_pos, delta)
+        else:
+            _tick_siege_advance(delta)
         return
 
     var distance := position.distance_to(_siege_target.position)
