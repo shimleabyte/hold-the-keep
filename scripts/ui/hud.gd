@@ -64,6 +64,7 @@ const HELP_ROWS := [
     ["F5 / F9", "SIMPAN / MUAT"],
     ["F3", "TAMPILKAN FPS"],
     ["TAB", "PETA WILAYAH"],
+    ["O", "OBJEKTIF CONQUEST"],
     ["JOBS", "PANEL KUOTA"],
 ]
 
