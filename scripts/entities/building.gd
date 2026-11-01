@@ -12,6 +12,7 @@ const TEXTURES := {
     "forge": preload("res://assets/sprites/forge.svg"),
     "outpost": preload("res://assets/sprites/outpost.svg"),
     "road": preload("res://assets/sprites/road.svg"),
+    "bridge": preload("res://assets/sprites/bridge.svg"),
 }
 const ARROW_SCRIPT := preload("res://scripts/entities/arrow.gd")
 
@@ -54,7 +55,7 @@ func cells() -> Array[Vector2i]:
 
 
 func _ready() -> void:
-    if id != "road":
+    if id != "road" and id != "bridge":
         var w := size.x * WorldConfig.tile_size
         var h := size.y * WorldConfig.tile_size
         var shape := RectangleShape2D.new()
