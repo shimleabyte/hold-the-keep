@@ -6,14 +6,14 @@ func ticks(count: int) -> void:
         await physics_frame
 
 
-func _find_buildable_near(main, origin: Vector2i, min_radius: int, max_radius: int) -> Vector2i:
+func _find_buildable_near(main, origin: Vector2i, min_radius: int, max_radius: int, map_size: int) -> Vector2i:
     for radius in range(min_radius, max_radius + 1):
         for y in range(-radius, radius + 1):
             for x in range(-radius, radius + 1):
                 if maxi(absi(x), absi(y)) != radius:
                     continue
                 var cell := origin + Vector2i(x, y)
-                if cell.x < 1 or cell.y < 1 or cell.x >= WorldConfig.map_size - 2 or cell.y >= WorldConfig.map_size - 2:
+                if cell.x < 1 or cell.y < 1 or cell.x >= map_size - 2 or cell.y >= map_size - 2:
                     continue
                 if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
                     continue
@@ -26,6 +26,7 @@ func _initialize() -> void:
     var clock = root.get_node("GameClock")
     var config = root.get_node("WorldConfig")
     var save_system = root.get_node("SaveSystem")
+    var inventory = root.get_node("Inventory")
     config.apply_profile("classic")
     DirAccess.remove_absolute("user://save.json")
     DirAccess.remove_absolute("user://save.tmp")
@@ -54,13 +55,13 @@ func _initialize() -> void:
     assert(builder_a.occupation == "builder" and builder_a.military_specialization.is_empty(),
         "Builder is a labor occupation, not a military specialization")
 
-    var wall_cell := _find_buildable_near(main, keep.cell, 2, 7)
+    var wall_cell := _find_buildable_near(main, keep.cell, 2, 7, int(config.map_size))
     assert(wall_cell.x >= 0, "Test must find a reachable wall site near the Keep")
     var wall = main.build.place_raw("wall", wall_cell)
     wall.take_damage(30)
     assert(builder_a._is_in_work_radius(wall), "Nearby damaged buildings must be in Keep work radius")
 
-    var distant_cell := _find_buildable_near(main, keep.cell, 22, 25)
+    var distant_cell := _find_buildable_near(main, keep.cell, 22, 25, int(config.map_size))
     assert(distant_cell.x >= 0, "Test must find a reachable distant wall site")
     var distant_wall = main.build.place_raw("wall", distant_cell)
     distant_wall.take_damage(30)
@@ -71,11 +72,11 @@ func _initialize() -> void:
     assert(builder_a.target == wall, "Builder must select a damaged building in its work area")
     assert(not wall.claim_repairer(builder_b), "A repair target cannot be double-booked")
     var hp_before: int = wall.hp
-    var wood_before := Inventory.get_amount("wood")
+    var wood_before: int = inventory.get_amount("wood")
     builder_a.state = builder_a.State.WORKING
     builder_a._tick_working(2.0)
     assert(wall.hp > hp_before, "Builder work must restore building HP")
-    assert(Inventory.get_amount("wood") == wood_before - 1,
+    assert(inventory.get_amount("wood") == wood_before - 1,
         "Repair must consume its configured material")
 
     var gatherer = main.village.spawn_villager(keep.position + Vector2(0, 20))
