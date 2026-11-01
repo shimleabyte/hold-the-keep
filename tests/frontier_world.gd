@@ -65,6 +65,15 @@ func _initialize() -> void:
     game_clock.set_process(false)
 
     var world = main.world
+    var hud = get_first_node_in_group("hud")
+    assert(hud != null, "The Frontier scene must create the HUD")
+    hud._layout_viewport(Vector2(480, 270))
+    await process_frame
+    var frontier_map = hud._map_panel
+    assert(frontier_map.position.x >= 0.0 and frontier_map.position.y >= 0.0
+        and frontier_map.position.x + frontier_map.size.x <= 480.1
+        and frontier_map.position.y + frontier_map.size.y <= 270.1,
+        "The 128x128 strategic map must fit a compact viewport")
     assert(world.map_size == 128 and world.tile_size == 16,
         "Main world must use the Frontier dimensions and existing tile size")
     assert(world.pixel_size == Vector2i(2048, 2048),
