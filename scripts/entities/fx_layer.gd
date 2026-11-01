@@ -19,6 +19,8 @@ const KINDS := {
         "colors": ["#d9d2c3", "#c4bba8", "#e8e2d0", "#b3ab9a"], "alpha": 0.8},
     "debris": {"n": 6, "speed": [20.0, 65.0], "up": [25.0, 70.0], "g": 280.0, "life": [0.4, 0.7], "size": [1, 2],
         "colors": ["#8b6b43", "#6b4a2b", "#8a8f98", "#6e737b", "#b08a5a"]},
+    "rally": {"n": 9, "speed": [5.0, 22.0], "up": [8.0, 25.0], "g": 20.0, "life": [0.45, 0.8], "size": [1, 2],
+        "colors": ["#ffd23f", "#f08e3c", "#fff2b2"], "alpha": 0.9},
 }
 
 var _pos := PackedVector2Array()
