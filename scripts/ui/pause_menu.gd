@@ -110,6 +110,9 @@ func _ready() -> void:
         Settings.set_fullscreen(not Settings.fullscreen)
         _refresh())
 
+    var resolution_label := Label.new()
+    resolution_label.text = "RESOLUSI JENDELA"
+    box.add_child(resolution_label)
     _resolution = OptionButton.new()
     _resolution.custom_minimum_size = Vector2(190, 18)
     var screen_size := DisplayServer.screen_get_size()
