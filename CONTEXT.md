@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** `main` at `37a9ac2c4404134bf180df243e7ce7f1462162b8`; save schema v12; latest main CI [workflow #41314731305](https://github.com/shimleabyte/hold-the-keep/actions/runs/41314731305) passed 46/46 jobs. See `ROADMAP_NEXT_LEVEL.md` for current phase status and `docs/plans/` for phase execution plans.
+**Current source of truth:** default branch `main`; Phase 02 local logistics merged by PR #31 (merge commit `6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`); save schema v12; latest successful full main CI [workflow #41314731305](https://github.com/shimleabyte/hold-the-keep/actions/runs/41314731305) passed 46/46 jobs. See `ROADMAP_NEXT_LEVEL.md` for current phase status and `docs/plans/` for phase execution plans.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
