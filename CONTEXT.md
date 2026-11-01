@@ -21,7 +21,7 @@ Ringkasan implementasi aktual pada audit branch berdasarkan main (save schema v1
 |---|---|
 | Dunia | Classic 64×64 / 15 hari tetap tersedia; Frontier 128×128 / 20 hari / 4 act dengan lima biome deterministik, 32 urat besi, dan starting Keep claim radius 15 |
 | Wilayah | Regional ownership neutral/player/enemy/contested; roads/bridges walkable; supply graph dari Keep; depot terputus tidak menerima deposit |
-| Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; Frontier workers deposit ke depot lokal dan save v12 mempersistensikannya. Explicit inter-depot shipment dan local-stock spending belum ada |
+| Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; Frontier workers deposit secara lokal; connected depots mengirim maksimal 6 unit tiap 3 detik ke Keep. Player-directed shipment dan local-stock spending/UI belum ada |
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
@@ -124,7 +124,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 - Belum ada full human playthrough Classic hari 1–15 dan Frontier act 1–4/day 20 yang terdokumentasi.
 - Belum ada target-hardware benchmark yang mencatat CPU, GPU, OS, resolusi, workload, dan frame-time percentiles.
 - Windows export telah dibuat dan diperiksa format PE di CI, tetapi belum dijalankan pada native Windows atau clean Windows machine.
-- Local stockpile Storage/Outpost dan Frontier worker deposit sudah tersedia pada audit branch; actual inter-depot shipment dan local-stock spending masih belum tersedia.
+- Local stockpile Storage/Outpost, Frontier worker deposits, dan atomic bounded automatic transfer to Keep sudah tersedia pada audit branch; physical carrier/player-directed shipment dan local-stock spending masih belum tersedia.
 - Outpost guard/garrison dan local visibility belum tersedia.
 - Hunter, Scout, Healer, dan Blacksmith belum tersedia.
 - Construction queue serta staged completion dengan Builder belum tersedia.
@@ -136,7 +136,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 
 ## 9. Rencana berikut (belum dikerjakan)
 Urutan backlog berdasarkan dependency:
-1. Phase 02: selesaikan explicit inter-depot shipments, inspect/withdraw local stock, Outpost garrison dan local visibility. Supply attrition menunggu sampai transfer benar-benar bekerja.
+1. Phase 02: selesaikan player-directed shipments/carrier visuals, inspect/withdraw local stock, Outpost garrison dan local visibility. Supply attrition menunggu sampai transfer behavior dan local defense tervalidasi.
 2. Phase 04: implementasikan Hunter, Scout, Healer dan Blacksmith dengan workplace, radius, biaya/hasil, UI kuota, pathfinding dan save/load.
 3. Phase 05: construction queue dan staged building completion dengan Builder; lanjutkan bangunan sesuai dependency produksi dan strategi.
 4. Phase 06: distinct/counterable policy keenam archetype, faction camps, bounded patrols, reinforcement budget, raids/counterattacks dan persistence.
