@@ -545,6 +545,7 @@ func _build_outpost_panel() -> void:
     for kind in ["wood", "stone", "food", "iron"]:
         _shipment_kind.add_item(kind.to_upper())
         _shipment_kind.set_item_metadata(_shipment_kind.item_count - 1, kind)
+    _shipment_kind.select(0)
     _outpost_panel.add_child(_shipment_kind)
 
     _shipment_amount = SpinBox.new()
