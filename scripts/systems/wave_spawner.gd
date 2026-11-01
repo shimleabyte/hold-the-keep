@@ -173,7 +173,9 @@ func spawn_one(forced_type := "") -> bool:
         return false
     var data: Dictionary = DataDB.enemies[forced_type if forced_type != "" else _pick_type()]
     var e := ENEMY_SCRIPT.new()
-    var faction_id := FactionRegistry.faction_for_region(world.region_id(cell))
+    var faction_id := ""
+    if WorldConfig.profile_id == "frontier":
+        faction_id = FactionRegistry.faction_for_region(world.region_id(cell))
     e.setup(data, world, flow, player, faction_id)
     e.position = Vector2(cell) * WorldConfig.tile_size + Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0)
     world.entities.add_child(e)
