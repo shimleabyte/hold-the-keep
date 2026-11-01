@@ -22,7 +22,7 @@ func reachable_cells(nav: Node, start: Vector2i) -> Dictionary:
         var current := queue[cursor]
         cursor += 1
         for direction in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-            var next := current + direction
+            var next: Vector2i = current + direction
             if visited.has(next) or not nav.is_walkable(next):
                 continue
             visited[next] = true
