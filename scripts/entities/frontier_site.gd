@@ -46,7 +46,6 @@ func setup(data: Dictionary, manager_ref, world_ref, nav_ref, player_ref, cell: 
 
     if objective_type in ["clear_camp", "clear_ruins"]:
         add_to_group("campaign_targets")
-        add_to_group("defenders")
         if saved.is_empty():
             _spawn_guards()
     elif objective_type == "defend" and site_state == "active":
@@ -65,6 +64,9 @@ func _ready() -> void:
 
 func interact() -> void:
     if site_state == "complete":
+        return
+    if int(definition.get("act", 1)) > manager.unlocked_act:
+        Events.build_feedback.emit("Objektif ini terbuka pada ACT %d." % int(definition.get("act", 1)))
         return
     match objective_type:
         "clear_camp", "clear_ruins":
@@ -152,11 +154,15 @@ func _on_phase_changed(is_night: bool) -> void:
 func take_damage(amount: int) -> void:
     if hp <= 0 or site_state in ["complete", "failed", "waiting"]:
         return
+    if int(definition.get("act", 1)) > manager.unlocked_act:
+        Events.build_feedback.emit("Objektif ini belum terbuka.")
+        return
     hp = maxi(0, hp - maxi(1, amount))
     if hp > 0:
         queue_redraw()
         return
     if objective_type in ["clear_camp", "clear_ruins"]:
+        site_state = "complete"
         _retreat_guards()
         remove_from_group("campaign_targets")
         remove_from_group("defenders")
