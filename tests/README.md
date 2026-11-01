@@ -87,6 +87,6 @@ Dijalankan di layar virtual dengan OpenGL software, hasilnya PNG di /tmp/shots:
   menulis /tmp/prev.png (pratinjau sprite sheet)
 
 
-Phase 09 CI also runs `tests/perf.gd` as a non-gating timing diagnostic using Frontier 128×128, 96 requested faction enemies, 80 villagers and a 500-particle ceiling. The `frontier-performance-godot-4.7` workflow artifact contains the p50/p95/p99 report. Timing values are diagnostic and runner-specific. The benchmark explicitly primes and sustains the configured 500-particle ceiling; its earlier artifact reached only 340 particles and should not be used as the final reference report.
+Phase 09 CI also runs `tests/perf.gd` as a non-gating timing diagnostic using Frontier 128×128, 96 requested faction enemies, 80 villagers and a 500-particle ceiling. The `frontier-performance-godot-4.7` workflow artifact contains the p50/p95/p99 report. Timing values are diagnostic and runner-specific. The benchmark explicitly primes and sustains the configured 500-particle ceiling; the updated run #278 artifact reaches 500 particles. It reports wall-frame percentiles; CI monitor spikes are runner-specific and do not substitute for target-hardware profiling.
 
 The release-export workflow installs Godot 4.3-matching export templates, produces Windows and Linux binaries, verifies the Windows PE format, and starts the Linux export with a bounded headless smoke test. These are CI environment checks, not clean-machine user acceptance.
