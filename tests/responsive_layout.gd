@@ -15,15 +15,15 @@ func _initialize() -> void:
     await process_frame
     game_clock.set_process(false)
 
-    assert(String(Projectsettings.get_setting("display/window/stretch/aspect")) == "expand",
+    assert(String(ProjectSettings.get_setting("display/window/stretch/aspect")) == "expand",
         "The project must expand the viewport instead of cropping or distorting the game")
-    assert(String(Projectsettings.get_setting("display/window/stretch/mode")) == "viewport",
+    assert(String(ProjectSettings.get_setting("display/window/stretch/mode")) == "viewport",
         "Pixel-art world rendering must remain viewport-based")
-    assert(String(Projectsettings.get_setting("display/window/stretch/scale_mode")) == "integer",
+    assert(String(ProjectSettings.get_setting("display/window/stretch/scale_mode")) == "integer",
         "Pixel-art scaling must remain integer-based")
     assert(root.min_size.x >= 960 and root.min_size.y >= 540,
         "Runtime window minimum size must remain laptop-friendly")
-    assert(int(Projectsettings.get_setting("display/window/size/initial_position_type")) == 1,
+    assert(int(ProjectSettings.get_setting("display/window/size/initial_position_type")) == 1,
         "The initial window must be centered on the primary screen")
     assert(settings.windowed_size.x >= 960 and settings.windowed_size.y >= 540,
         "Saved windowed size must satisfy the minimum display dimensions")

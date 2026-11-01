@@ -52,6 +52,27 @@ func is_walkable(c: Vector2i) -> bool:
     return c.x >= 0 and c.y >= 0 and c.x < WorldConfig.map_size and c.y < WorldConfig.map_size and not astar.is_point_solid(c)
 
 
+## Cardinally connected walkable cells from a start tile. Shared by world placement and logistics.
+func reachable_cells(start: Vector2i) -> Dictionary:
+    var visited: Dictionary = {}
+    if not is_walkable(start):
+        return visited
+
+    var queue: Array[Vector2i] = [start]
+    visited[start] = true
+    var cursor := 0
+    while cursor < queue.size():
+        var current := queue[cursor]
+        cursor += 1
+        for direction in DIRS4:
+            var next := current + direction
+            if visited.has(next) or not is_walkable(next):
+                continue
+            visited[next] = true
+            queue.append(next)
+    return visited
+
+
 func _nearest_free(c: Vector2i) -> Vector2i:
     if is_walkable(c):
         return c

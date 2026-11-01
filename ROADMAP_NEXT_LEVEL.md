@@ -1,8 +1,8 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
-**Status:** Approved direction; Phase 00 foundation in progress  
-**Implementation branch:** `feat/kingdom-expansion-foundation`  
-**Baseline:** Godot 4.x / GDScript, current Classic world 64×64, save format v6
+**Status:** Phase 00 foundation merged into `main`; regression verification pending. Phase 01 implementation in progress.  
+**Implementation branches:** `main` (Phase 00, merged PR #7) → `feat/frontier-world-generation-mainline` (Phase 01)  
+**Baseline:** Godot 4.x / GDScript, Classic world 64×64, save format v7
 
 ## 1. Product direction
 
@@ -64,16 +64,16 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 ## 4. Phased implementation
 
 ### Phase 00 — Foundation and verification
-**Status:** In progress
+**Status:** Merged into `main`; full CI regression verification pending
 
-- [ ] Add this roadmap and link it from project documentation.
-- [ ] Add Godot CI on Godot 4.3 and 4.7.
-- [ ] Add parse-only validation for every GDScript file.
-- [ ] Add one headless regression runner with deterministic 60 FPS.
-- [ ] Centralize world profiles, dimensions, tile size, seed, starting Keep position and profile-level resource density.
-- [ ] Migrate all spatial systems away from duplicated 64×64 constants while keeping Classic active.
-- [ ] Bump save format to v7 and persist world identity.
-- [ ] Prove v1–v6 saves remain valid in Classic and are rejected for non-Classic profiles.
+- [x] Add this roadmap and link it from project documentation.
+- [x] Add Godot CI on Godot 4.3 and 4.7.
+- [x] Add parse-only validation for every GDScript file.
+- [x] Add one headless regression runner with deterministic 60 FPS.
+- [x] Centralize world profiles, dimensions, tile size, seed, starting Keep position and profile-level resource density.
+- [x] Migrate all spatial systems away from duplicated 64×64 constants while keeping Classic active.
+- [x] Bump save format to v7 and persist world identity.
+- [ ] Prove v1–v6 saves remain valid in Classic and are rejected for non-Classic profiles on both engine versions.
 
 **Acceptance gate**
 - Both CI engine versions import the project, parse every script and complete the headless suite.
@@ -82,12 +82,16 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - No Frontier gameplay switch is made in this phase.
 
 ### Phase 01 — Expanded deterministic world
-- Activate the 128×128 Frontier profile behind explicit new-game/profile selection.
-- Rework region generation into connected terrain-biome regions rather than coordinate-only quadrant labels.
-- Add biome-specific resource tables and resource clusters; scale deposit counts to land area.
-- Increase the starting Keep claim to 15 tiles and create a generous, readable home clearing.
-- Recalculate Keep placement, enemy stronghold placement, camera bounds, map rendering and spawn safety from profile dimensions.
-- Add region, seed, generation and resource-density regression tests.
+**Status:** Implementation in progress on `feat/frontier-world-generation-mainline`
+
+- [x] Add explicit Classic/Frontier selection to the new-campaign panel and persist the selected profile.
+- [x] Generate five warped regions: Hearthland, Greenwood, Highlands, Fenlands and Ashen March.
+- [x] Add biome-specific tree/rock density, patch noise and profile-scaled iron-vein clusters.
+- [x] Give Ashen March its own terrain atlas tile.
+- [x] Apply the 15-tile Keep claim and keep resource nodes outside the enlarged home clearing.
+- [x] Preserve the original Classic terrain and resource-generation paths.
+- [ ] Verify resource density, path reachability, deterministic output, selector behavior and map bounds in Godot 4.3/4.7.
+- [ ] Verify the 128×128 fog/save index round-trip and cross-profile save backup behavior.
 
 **Acceptance gate:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable frontier, valid map bounds and 128×128 fog/index round-trip.
 
@@ -179,4 +183,4 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - Frontier target size is 128×128; Classic remains 64×64.
 - The larger starting territory is a 15-tile Keep radius, not an unrestricted starting half-map.
 - Five terrain biomes are the initial target; Old Frontier is a ruin-rich subregion theme.
-- The first implementation branch is `feat/kingdom-expansion-foundation`.
+- Phase 00 was merged into `main` through PR #7. Phase 01 is based directly on `main` in `feat/frontier-world-generation-mainline`.

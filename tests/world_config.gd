@@ -69,6 +69,12 @@ func _initialize() -> void:
     world_config.profile_id = "frontier"
     assert(not save_system._valid_save(legacy_save),
         "Legacy 64x64 saves must not load into the Frontier profile")
+    assert(save_system._valid_save(legacy_save, false),
+        "A structurally valid legacy save must remain retainable as a profile-switch backup")
+    assert(not save_system._valid_save(current_save),
+        "A Classic v7 save must not load into Frontier")
+    assert(save_system._valid_save(current_save, false),
+        "A valid Classic v7 save must remain eligible for a cross-profile backup")
     world_config.profile_id = legacy_profile
 
     print("PASS: world profiles, tile indexing, and save profile compatibility")
