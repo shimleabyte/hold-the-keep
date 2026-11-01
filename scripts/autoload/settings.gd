@@ -33,24 +33,26 @@ func _ready() -> void:
 func load_settings() -> void:
     custom_bindings.clear()
     var config := ConfigFile.new()
-    if config.load(PATH) != OK:
-        return
-    fullscreen = bool(config.get_value("display", "fullscreen", fullscreen))
-    var saved_width := int(config.get_value("display", "window_width", windowed_size.x))
-    var saved_height := int(config.get_value("display", "window_height", windowed_size.y))
+    var has_saved_settings := config.load(PATH) == OK
     var screen_size := DisplayServer.screen_get_size()
+    var saved_width := windowed_size.x
+    var saved_height := windowed_size.y
+    if has_saved_settings:
+        fullscreen = bool(config.get_value("display", "fullscreen", fullscreen))
+        saved_width = int(config.get_value("display", "window_width", saved_width))
+        saved_height = int(config.get_value("display", "window_height", saved_height))
+        vsync = bool(config.get_value("display", "vsync", vsync))
+        volume = clampf(float(config.get_value("audio", "volume", volume)), 0.0, 1.0)
+        screen_shake = bool(config.get_value("display", "screen_shake", screen_shake))
+        for action in BINDABLE_ACTIONS:
+            if config.has_section_key("input", action):
+                var code := int(config.get_value("input", action, 0))
+                if code > 0:
+                    custom_bindings[action] = code
     windowed_size = Vector2i(
-        clampi(saved_width, 960, maxi(960, screen_size.x)),
-        clampi(saved_height, 540, maxi(540, screen_size.y))
+        clampi(saved_width, MIN_WINDOW_SIZE.x, maxi(MIN_WINDOW_SIZE.x, screen_size.x)),
+        clampi(saved_height, MIN_WINDOW_SIZE.y, maxi(MIN_WINDOW_SIZE.y, screen_size.y))
     )
-    vsync = bool(config.get_value("display", "vsync", vsync))
-    volume = clampf(float(config.get_value("audio", "volume", volume)), 0.0, 1.0)
-    screen_shake = bool(config.get_value("display", "screen_shake", screen_shake))
-    for action in BINDABLE_ACTIONS:
-        if config.has_section_key("input", action):
-            var code := int(config.get_value("input", action, 0))
-            if code > 0:
-                custom_bindings[action] = code
 
 
 func save_settings() -> void:
