@@ -247,6 +247,7 @@ func take_damage(amount: int) -> void:
 
 func leave() -> void:
     _release()
+    _release_workplace()
     remove_from_group("villagers")
     remove_from_group("defenders")
     queue_free()
@@ -578,9 +579,17 @@ func _find_work() -> void:
     var cands: Array = []
     match job:
         "woodcutter", "miner":
+            if not has_valid_workplace():
+                _release_workplace()
+                _claim_workplace(job)
+            # Once a matching worksite exists, its capacity is authoritative.
+            # Keep the old connected-depot radius only when no specialty site exists.
+            if not has_valid_workplace() and _has_specialized_workplace(job):
+                return
             var kind := "wood" if job == "woodcutter" else _mine_kind()
             for n in get_tree().get_nodes_in_group("harvestable"):
-                if n.yield_kind == kind and n.is_available(self) and _is_in_work_radius(n) and not _bad.has(n):
+                var in_work_area := _is_in_workplace_radius(n) if has_valid_workplace() else _is_in_work_radius(n)
+                if n.yield_kind == kind and n.is_available(self) and in_work_area and not _bad.has(n):
                     cands.append(n)
         "farmer":
             for f in get_tree().get_nodes_in_group("farms"):
@@ -645,6 +654,23 @@ func _release() -> void:
     target = null
     _work_t = 0.0
     _hit_done = false
+
+
+func _has_specialized_workplace(job_name: String) -> bool:
+    for building in get_tree().get_nodes_in_group("buildings"):
+        if not is_instance_valid(building) or int(building.hp) <= 0:
+            continue
+        var workplaces: Dictionary = building.data.get("workplaces", {})
+        if workplaces.has(job_name):
+            return true
+    return false
+
+
+func _is_in_workplace_radius(candidate) -> bool:
+    if not has_valid_workplace():
+        return false
+    var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
+    return workplace.position.distance_squared_to(candidate.position) <= radius * radius
 
 
 func _is_in_work_radius(candidate) -> bool:
