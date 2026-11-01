@@ -1,10 +1,6 @@
 extends Node2D
 ## Territory claims projected from the Keep and Outposts onto the world grid.
 
-const TILE_SIZE := 16
-const MAP_SIZE := 64
-const KEEP_RADIUS := 10.0
-
 var world
 var claimed_cells: Dictionary = {}
 var enemy_claimed_cells: Dictionary = {}
@@ -40,15 +36,15 @@ func rebuild() -> void:
     for building in get_tree().get_nodes_in_group("buildings"):
         if not is_instance_valid(building):
             continue
-        var fallback := KEEP_RADIUS if building.id == "keep" else 0.0
+        var fallback := WorldConfig.starting_claim_radius if building.id == "keep" else 0.0
         var radius := float(building.data.get("claim_radius", fallback))
         if radius <= 0.0:
             continue
         var center := Vector2(building.cell) + Vector2(building.size) / 2.0
         var min_x := maxi(0, floori(center.x - radius))
-        var max_x := mini(MAP_SIZE - 1, ceili(center.x + radius))
+        var max_x := mini(WorldConfig.map_size - 1, ceili(center.x + radius))
         var min_y := maxi(0, floori(center.y - radius))
-        var max_y := mini(MAP_SIZE - 1, ceili(center.y + radius))
+        var max_y := mini(WorldConfig.map_size - 1, ceili(center.y + radius))
         for y in range(min_y, max_y + 1):
             for x in range(min_x, max_x + 1):
                 var tile_center := Vector2(x + 0.5, y + 0.5)
@@ -60,9 +56,9 @@ func rebuild() -> void:
         var center := Vector2(stronghold.cell) + Vector2(stronghold.size) / 2.0
         var radius := float(stronghold.claim_radius)
         var min_x := maxi(0, floori(center.x - radius))
-        var max_x := mini(MAP_SIZE - 1, ceili(center.x + radius))
+        var max_x := mini(WorldConfig.map_size - 1, ceili(center.x + radius))
         var min_y := maxi(0, floori(center.y - radius))
-        var max_y := mini(MAP_SIZE - 1, ceili(center.y + radius))
+        var max_y := mini(WorldConfig.map_size - 1, ceili(center.y + radius))
         for y in range(min_y, max_y + 1):
             for x in range(min_x, max_x + 1):
                 var tile_center := Vector2(x + 0.5, y + 0.5)
@@ -136,10 +132,10 @@ func _draw() -> void:
     var border := Color("#e3bf75")
     border.a = 0.42
     for cell in claimed_cells:
-        var left := float(cell.x * TILE_SIZE)
-        var top := float(cell.y * TILE_SIZE)
-        var right := left + TILE_SIZE
-        var bottom := top + TILE_SIZE
+        var left := float(cell.x * WorldConfig.tile_size)
+        var top := float(cell.y * WorldConfig.tile_size)
+        var right := left + WorldConfig.tile_size
+        var bottom := top + WorldConfig.tile_size
         if not claimed_cells.has(cell + Vector2i(0, -1)):
             draw_line(Vector2(left, top), Vector2(right, top), border, 1.0)
         if not claimed_cells.has(cell + Vector2i(0, 1)):
@@ -150,10 +146,10 @@ func _draw() -> void:
             draw_line(Vector2(right, top), Vector2(right, bottom), border, 1.0)
     var enemy_border := Color("#b84b43", 0.48)
     for cell in enemy_claimed_cells:
-        var left := float(cell.x * TILE_SIZE)
-        var top := float(cell.y * TILE_SIZE)
-        var right := left + TILE_SIZE
-        var bottom := top + TILE_SIZE
+        var left := float(cell.x * WorldConfig.tile_size)
+        var top := float(cell.y * WorldConfig.tile_size)
+        var right := left + WorldConfig.tile_size
+        var bottom := top + WorldConfig.tile_size
         if not enemy_claimed_cells.has(cell + Vector2i(0, -1)):
             draw_line(Vector2(left, top), Vector2(right, top), enemy_border, 1.0)
         if not enemy_claimed_cells.has(cell + Vector2i(0, 1)):
