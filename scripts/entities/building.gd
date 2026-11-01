@@ -86,6 +86,7 @@ func store_resource(kind: String, amount: int) -> bool:
     if not can_store_resource(kind, amount):
         return false
     local_stockpile[kind] = stockpile_amount(kind) + amount
+    Events.supply_stock_changed.emit()
     return true
 
 
@@ -97,6 +98,7 @@ func take_resource(kind: String, amount: int) -> bool:
         local_stockpile.erase(kind)
     else:
         local_stockpile[kind] = remaining
+    Events.supply_stock_changed.emit()
     return true
 
 
@@ -119,6 +121,7 @@ func import_stockpile(value: Variant) -> bool:
     if total > stockpile_capacity or (total > 0 and stockpile_capacity <= 0):
         return false
     local_stockpile = restored
+    Events.supply_stock_changed.emit()
     return true
 
 func _ready() -> void:
@@ -254,7 +257,11 @@ func repair(amount: int) -> bool:
     if amount <= 0 or hp <= 0 or hp >= max_hp:
         return false
     var cost: Dictionary = data.get("repair_cost", {})
-    if cost.is_empty() or not Inventory.spend_all(cost):
+    if cost.is_empty():
+        return false
+    var supply = get_tree().get_first_node_in_group("supply_network")
+    var paid: bool = supply.pay_cost(cost) if supply != null else Inventory.spend_all(cost)
+    if not paid:
         return false
     hp = mini(max_hp, hp + amount)
     queue_redraw()
