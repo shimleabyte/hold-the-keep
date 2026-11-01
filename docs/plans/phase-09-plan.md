@@ -28,7 +28,7 @@ Make the expanded 128×128 Frontier campaign predictable under load and safe to 
 - [ ] Perform human playtests across all four acts; automated simulations are not a substitute for pathing, readability and pacing review.
 
 ### 09.3 — Save and recovery hardening
-- [x] Validate the current save structure and legacy schemas v1–v11 in Classic, plus v7–v11 in Frontier.
+- [x] Validate the current save structure and legacy schemas v1–v12 in Classic, plus v7–v12 in Frontier.
 - [x] Exercise the interrupted-write window: valid primary save plus an incomplete `save.tmp`.
 - [x] Add an end-to-end Frontier reload pass preserving completed objectives, unlocked act, an active escort/path index and damaged stronghold HP.
 - [x] Verify the next save removes stale temporary data, rotates a valid backup and leaves a valid primary.
