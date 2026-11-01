@@ -158,8 +158,8 @@ func _find_enemy_keep_cell() -> Vector2i:
 
 
 func _find_frontier_enemy_keep_cell() -> Vector2i:
-    var start := nav.cell_of(player.global_position)
-    var reachable := nav.reachable_cells(start)
+    var start: Vector2i = nav.cell_of(player.global_position)
+    var reachable: Dictionary = nav.reachable_cells(start)
     if reachable.is_empty():
         return Vector2i(-1, -1)
 
