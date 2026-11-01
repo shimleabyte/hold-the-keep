@@ -15,6 +15,7 @@ var _dirty := true
 
 
 func _ready() -> void:
+    add_to_group("supply_network")
     Events.building_placed.connect(_on_building_event)
     Events.building_removed.connect(_on_building_event)
     Events.building_destroyed.connect(_on_building_event)
