@@ -124,7 +124,7 @@ func _spawn_guard() -> bool:
         if too_close:
             continue
         _spawn_index = (slot + 1) % attempts
-            var guard = ENEMY_SCRIPT.new()
+        var guard = ENEMY_SCRIPT.new()
         var roster := FactionRegistry.roster_for(faction_id)
         var guard_id := FactionRegistry.garrison_enemy(faction_id)
         if not roster.is_empty() and not _local_garrison().is_empty():
