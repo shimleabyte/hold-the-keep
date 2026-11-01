@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** main at `f540faebb83402030ea4a360161eacd737e28856` (save v11 before the local-stockpile PR); audit branch implements save v12; latest main CI [workflow #294](https://github.com/shimleabyte/hold-the-keep/actions/runs/41309837812) passed 44/44 jobs. See `ROADMAP_NEXT_LEVEL.md` for current phase status and `docs/plans/` for phase execution plans.
+**Current source of truth:** `main` at `37a9ac2c4404134bf180df243e7ce7f1462162b8`; save schema v12; latest main CI [workflow #41314731305](https://github.com/shimleabyte/hold-the-keep/actions/runs/41314731305) passed 46/46 jobs. See `ROADMAP_NEXT_LEVEL.md` for current phase status and `docs/plans/` for phase execution plans.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -15,7 +15,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada audit branch berdasarkan main (save schema v12; status acceptance per 1 November 2026).
+Ringkasan implementasi aktual pada `main` setelah merge Phase 02 local logistics (save schema v12; status acceptance per 1 November 2026).
 
 | Area | Kondisi saat ini |
 |---|---|
@@ -29,13 +29,13 @@ Ringkasan implementasi aktual pada audit branch berdasarkan main (save schema v1
 | Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman support berjalan; perilaku khusus seluruh archetype, camps, patrol, raids dan counterattacks belum lengkap |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
-| Save/load | v12 pada audit branch; state world/campaign/objective/site/job/building/resource/faction/local depot inventory; Classic v1–v11 dan Frontier v7–v11 tetap dimigrasikan dengan stockpile kosong |
+| Save/load | v12 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory; Classic v1–v11 dan Frontier v7–v11 tetap dimigrasikan dengan stockpile kosong |
 | Kontrol | Rebind gerak, interaksi, serang, lari; shortcut UI/job/build belum dapat di-rebind |
 | Tampilan | Adaptive logical viewport = setengah ukuran client window, minimum 480×270, pixel scale tepat 2×; physical-display/fullscreen review belum dilakukan |
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 12 procedural SFX; musik belum ada |
 | Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | Mainline workflow #294: 44/44 jobs sukses pada Godot 4.3/4.7, export dan diagnostic jobs ikut berjalan |
+| CI | Mainline workflow #41314731305: 46/46 jobs sukses pada Godot 4.3/4.7, export dan diagnostic jobs ikut berjalan |
 
 ## 3. Struktur
 ```
@@ -102,7 +102,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 ## 6. Cara memverifikasi
 - Jalankan: `godot --headless --path . --import` sekali, lalu `godot --headless --fixed-fps 60 --path . --script tests/<x>.gd`.
 - Render nyata lewat Xvfb + OpenGL software untuk screenshot (lihat tests/README.md).
-- Latest mainline workflow #294 completed with 44/44 successful jobs, including Godot 4.3/4.7 import/parse, assertion regressions, performance diagnostic, and Windows/Linux export checks. This is CI evidence, not a substitute for human campaign playtesting or physical-display review.
+- Latest mainline workflow #41314731305 completed with 46/46 successful jobs, including Godot 4.3/4.7 import/parse, assertion regressions, performance diagnostic, and Windows/Linux export checks. This is CI evidence, not a substitute for human campaign playtesting or physical-display review.
 - Angka perf historis: ~2 ms/frame untuk 150 musuh + 42 villager + 300 partikel (headless, tanpa render); belum mengukur biaya fog/campaign.
 - Setelah mengubah `tools/gen_assets.py`: `python3 tools/gen_assets.py`, lalu import ulang.
 
@@ -124,7 +124,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 - Belum ada full human playthrough Classic hari 1–15 dan Frontier act 1–4/day 20 yang terdokumentasi.
 - Belum ada target-hardware benchmark yang mencatat CPU, GPU, OS, resolusi, workload, dan frame-time percentiles.
 - Windows export telah dibuat dan diperiksa format PE di CI, tetapi belum dijalankan pada native Windows atau clean Windows machine.
-- Local stockpile Storage/Outpost, Frontier worker deposits, dan atomic bounded automatic transfer to Keep sudah tersedia pada audit branch; physical carrier/player-directed shipment dan local-stock spending masih belum tersedia.
+- Local stockpile Storage/Outpost, Frontier worker deposits, dan atomic bounded automatic transfer to Keep sudah tersedia di `main` melalui PR #31; physical carrier/player-directed shipment dan local-stock spending masih belum tersedia.
 - Outpost guard/garrison dan local visibility belum tersedia.
 - Hunter, Scout, Healer, dan Blacksmith belum tersedia.
 - Construction queue serta staged completion dengan Builder belum tersedia.
@@ -132,7 +132,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 - Phase 08 art/audio identity belum dikirim sebagai satu implementation slice; unit/faction/building visuals masih membutuhkan art pass khusus dan musik belum ada.
 - Hotkey UI/job/build belum dapat di-rebind; tooltip bangunan/job dan Windows .ico juga belum tersedia.
 - Steam integration opsional dan bukan blocker gameplay.
-- Save v12 dan compatibility coverage tersedia pada audit branch, tetapi acceptance upgrade pada mesin bersih tetap belum diverifikasi.
+- Save v12 dan compatibility coverage tersedia di `main` melalui PR #31, tetapi acceptance upgrade pada mesin bersih tetap belum diverifikasi.
 
 ## 9. Rencana berikut (belum dikerjakan)
 Urutan backlog berdasarkan dependency:
@@ -255,7 +255,7 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Strategic map renders explored road links and colors region labels by ownership state. HUD exposes road and bridge build choices.
 - Phase 02 initial slice CI passed on Godot 4.3 and 4.7: run `41289421611` completed successfully with 24/24 jobs, including `regional_control_roads` on both engines.
 - `tests/regional_control_roads.gd` covers Classic's regional states, walkable roads, deterministic bridge placement/traversal, Keep-connected roads and depots, isolated Outposts, rerouting and cargo retention after road removal, plus infrastructure save persistence.
-- Historical note for the Phase 02 initial-slice merge: deposits originally credited shared inventory. The audit implementation branch now adds local Storage/Outpost stockpiles and v12 persistence; explicit inter-depot shipment semantics remain open.
+- Historical note for the Phase 02 initial-slice merge: deposits originally credited shared inventory. PR #31 merged the local Storage/Outpost stockpiles and v12 persistence into `main`; explicit inter-depot shipment semantics remain open.
 - Outpost guards/garrisons and local visibility are also not implemented. Supply attrition and raid vulnerability remain deferred until local logistics exist.
 - PR #11 is the clean Phase 02 transplant based on the Phase 01 branch. PR #9 was the old stacked version on the retired pre-mainline Frontier branch and is closed as superseded.
 
