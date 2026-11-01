@@ -66,12 +66,12 @@ func _run() -> void:
     main.world.entities.add_child(ally)
     ally.set_physics_process(false)
     ally.hp -= 12
-    var ally_hp := ally.hp
+    var ally_hp: int = ally.hp
     assert(shaman._tick_shaman_support(), "War Shaman must activate support when an ally is injured")
     assert(ally.hp > ally_hp, "War Shaman must restore ally health")
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 10, "Faction persistence must increment save format to v10")
+    assert(snapshot["version"] == 11, "Faction persistence must use save format v11")
     var found_faction_save := false
     for saved_enemy in snapshot["enemies"]:
         if String(saved_enemy.get("faction", "")).is_empty():
@@ -82,5 +82,5 @@ func _run() -> void:
     assert(found_faction_save, "Save must retain faction identity for spawned enemies")
     assert(save_system._valid_save(snapshot), "Faction-enabled save must pass structural validation")
 
-    print("PASS: faction data, regional mapping, garrison rosters, faction tint, shaman support and v10 persistence")
+    print("PASS: faction data, regional mapping, garrison rosters, faction tint, shaman support and v11 persistence")
     quit(0)
