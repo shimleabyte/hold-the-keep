@@ -10,7 +10,6 @@ var save_system
 ## Bounded Frontier workload: four factions, mixed rosters, ranged projectile,
 ## 48 villagers, and the shared particle ceiling.
 
-const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
 const MAX_PARTICLES := 500
 const VILLAGERS := 48
 const ENEMIES_PER_FACTION := 10
@@ -44,7 +43,7 @@ func _reachable_region_cells(main: Node, region_id: String, limit: int) -> Array
 
 
 func _spawn_faction_enemy(main: Node, faction_id: String, enemy_id: String, cell: Vector2i) -> Node:
-    var enemy = ENEMY_SCRIPT.new()
+    var enemy = load("res://scripts/entities/enemy.gd").new()
     enemy.setup(data_db.enemies[enemy_id], main.world, main.flow, main.player, faction_id)
     enemy.position = Vector2(cell) * world_config.tile_size + Vector2(8.0, 8.0)
     main.world.entities.add_child(enemy)
@@ -115,7 +114,7 @@ func _run() -> void:
 
     # Trigger a real ranged attack so the projectile node and physics path are exercised.
     assert(data_db.enemies.has("archer"), "The ranged archer definition must exist")
-    var archer = ENEMY_SCRIPT.new()
+    var archer = load("res://scripts/entities/enemy.gd").new()
     archer.setup(data_db.enemies["archer"], main.world, main.flow, main.player, "iron_legion")
     archer.position = main.player.position + Vector2(128.0, 0.0)
     main.world.entities.add_child(archer)
