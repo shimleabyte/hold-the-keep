@@ -37,7 +37,11 @@ func load_settings() -> void:
     fullscreen = bool(config.get_value("display", "fullscreen", fullscreen))
     var saved_width := int(config.get_value("display", "window_width", windowed_size.x))
     var saved_height := int(config.get_value("display", "window_height", windowed_size.y))
-    windowed_size = Vector2i(maxi(960, saved_width), maxi(540, saved_height))
+    var screen_size := DisplayServer.screen_get_size()
+    windowed_size = Vector2i(
+        clampi(saved_width, 960, maxi(960, screen_size.x)),
+        clampi(saved_height, 540, maxi(540, screen_size.y))
+    )
     vsync = bool(config.get_value("display", "vsync", vsync))
     volume = clampf(float(config.get_value("audio", "volume", volume)), 0.0, 1.0)
     screen_shake = bool(config.get_value("display", "screen_shake", screen_shake))
