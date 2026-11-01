@@ -401,8 +401,9 @@ func _tick_idle(delta: float) -> void:
 
 
 func _facility_sabotaged(facility: Variant) -> bool:
-    return facility != null and is_instance_valid(facility) \
-        and facility.has_method("is_sabotaged") and bool(facility.is_sabotaged())
+    if facility == null or not is_instance_valid(facility):
+        return false
+    return facility.has_method("is_sabotaged") and bool(facility.is_sabotaged())
 
 
 func _tick_working(delta: float) -> void:
