@@ -146,6 +146,16 @@ func _initialize() -> void:
     assert(courier._depot != null and courier._depot != remote_outpost,
         "Workers must select a connected depot, not a closer isolated Outpost")
 
+    courier._depot = remote_outpost
+    courier.carry = 3
+    courier.carry_kind = "wood"
+    var inventory_before := inventory.get_amount("wood")
+    courier._deposit()
+    assert(inventory.get_amount("wood") == inventory_before,
+        "A worker must not credit global inventory through a disconnected depot")
+    assert(courier._depot != remote_outpost and courier.carry == 3,
+        "A worker with a broken route must retain cargo and reroute to a connected depot")
+
     assert(main.build.demolish_at(road_b.cell),
         "Road infrastructure must be removable")
     main.supply.rebuild()
