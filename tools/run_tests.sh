@@ -28,6 +28,9 @@ tests=(
     production_worksites
     faction_registry
     frontier_campaign
+    frontier_stress
+    campaign_reload_hardening
+    release_hardening
     input_rebinding
     map_stages
     player_combat
