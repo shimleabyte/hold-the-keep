@@ -1,7 +1,7 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
-**Status (2026-11-01):** Phase 00, 01, 03 and the initial slices of 02, 04, 05, 06, 07, 09 and 10 are merged into `main`. Phase 02, 04, 05 and 06 remain partially implemented; Phase 08 has not been implemented as a distinct delivery. The follow-up branch `feat/phase-02-outpost-garrisons` implements the next Phase 02.4 slice and awaits CI; local Outpost vision and observed-only map markers were already present on `main`. All remaining manual acceptance gates are still open.  
-**Phase 02 merge commit:** `6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8` (PR #31; included in `main`). Latest successful full mainline CI: [workflow #41314731305](https://github.com/shimleabyte/hold-the-keep/actions/runs/41314731305), 46/46 jobs successful on Godot 4.3 and 4.7, Frontier diagnostics and Windows/Linux export.  
+**Status (2026-11-01):** Phase 00, 01, 03 and the initial slices of 02, 04, 05, 06, 07, 09 and 10 are merged into `main`. Phase 02, 04, 05 and 06 remain partially implemented; Phase 08 has not been implemented as a distinct delivery. Phase 02.4 Outpost garrisons and depot inspection merged through PR #32 (`2f94959`); its Godot CI passed 48/48 jobs on both engine versions. Local Outpost vision and observed-only map markers were already present on `main`. All remaining manual acceptance gates are still open.  
+**Phase 02 merge commits:** PR #31 (`6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`) delivered local depot storage/transfers; PR #32 (`2f94959b497677eae49d4303f72322650fb591c2`) delivered garrisons and inspection. PR #32 validation: [workflow #41318897606](https://github.com/shimleabyte/hold-the-keep/actions/runs/41318897606), 48/48 jobs successful on Godot 4.3/4.7, including 22 regressions per engine, Frontier diagnostic and Windows/Linux export.  
 **Baseline:** Godot 4.3+ / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, save format v12.
 
 ## 1. Product direction
@@ -96,7 +96,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate — passed:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable stronghold approach, valid map bounds, viewport fit and 128×128 fog/index round-trip.
 
 ### Phase 02 — Territory, roads and supply
-**Status:** Regional control/road/connected-depot foundation merged into `main`. PR #31 adds bounded local stockpiles and automatic Keep-bound shipments under save v12. Follow-up branch `feat/phase-02-outpost-garrisons` adds read-only Storage/Outpost stock inspection and local Outpost garrisons (two slots, assignment UI, 128-pixel defense leash, lifecycle/save integration); Godot CI is pending. Local Outpost vision and observed-only enemy markers already exist on `main`. Player-directed orders, withdrawals and source-depot spending remain open.
+**Status:** Regional control/road/connected-depot foundation merged into `main`. PR #31 adds bounded local stockpiles and automatic Keep-bound shipments under save v12. PR #32 is merged and adds read-only Storage/Outpost stock inspection and local Outpost garrisons (two slots, assignment UI, 128-pixel defense leash, lifecycle/save integration); its 48/48 Godot CI gate passed. Local Outpost vision and observed-only enemy markers already exist on `main`. Player-directed orders, withdrawals and source-depot spending remain open.
 
 - [x] Aggregate land claims into neutral/player/enemy/contested regional control records.
 - [x] Emit regional control changes independently from fog-of-war exploration.
@@ -111,9 +111,9 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Show explored roads and regional control state on the strategic map.
 - [x] Cover ownership states, road/bridge traversal, depot connectivity/disconnection, isolated Outposts and road save persistence.
 - [x] Pass the Godot 4.3/4.7 CI matrix, including the regional integration test (run `41289421611`, 24/24 jobs).
-- [x] Implement Outpost guard assignment/garrison support on the follow-up branch (CI pending); local vision and observed-only map markers were already implemented on `main`.
+- [x] Implement Outpost guard assignment/garrison support (PR #32 merged; Godot 4.3/4.7 CI passed); local vision and observed-only map markers were already implemented on `main`.
 - [x] Add bounded periodic transfer of up to 6 local units per connected depot to Keep Inventory every 3 seconds, with rotating resource-kind priority; disconnected depot stock stays local.
-- [x] Add read-only local stock inspection for Storage/Outposts on the follow-up branch (CI pending).
+- [x] Add read-only local stock inspection for Storage/Outposts through `JOBS → POS` (PR #32 merged; CI passed).
 - [ ] Add player-directed shipment orders, physical carrier trips/in-transit recovery and local stock withdrawal/source-depot spending. Remote stock is not globally spendable until transferred.
 - [ ] Add supply attrition and raid vulnerability after local logistics are reliable.
 
