@@ -43,8 +43,8 @@ const HELP_ROWS := [
     ["E / SPASI", "TEBANG, TAMBANG"],
     ["F / KLIK", "SERANG"],
     ["Q", "DASH (LEVEL 1)"],
-    ["C", "CLEAVE (LEVEL 2)"],
-    ["V", "RALLY (LEVEL 3)"],
+    ["C", "TEBAS (LEVEL 2)"],
+    ["V", "SERUAN (LEVEL 3)"],
     ["1-6", "PILIH BANGUNAN"],
     ["KLIK KIRI", "PASANG BANGUNAN"],
     ["KLIK KANAN", "BATAL / BONGKAR"],
@@ -646,8 +646,8 @@ class CombatBar extends Control:
             HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color("#bcae99"))
         var abilities := [
             ["Q", "DASH", true, float(state.get("dash_cd", 0.0))],
-            ["C", "CLEAVE", bool(state.get("cleave_unlocked", false)), float(state.get("cleave_cd", 0.0))],
-            ["V", "RALLY", bool(state.get("rally_unlocked", false)), float(state.get("rally_cd", 0.0))]
+            ["C", "TEBAS", bool(state.get("cleave_unlocked", false)), float(state.get("cleave_cd", 0.0))],
+            ["V", "SERUAN", bool(state.get("rally_unlocked", false)), float(state.get("rally_cd", 0.0))]
         ]
         for i in abilities.size():
             var item: Array = abilities[i]
