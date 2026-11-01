@@ -240,4 +240,4 @@ func _draw_legend() -> void:
         draw_rect(Rect2(x, y - 5.0, 5.0, 5.0), item[0])
         draw_string(font, Vector2(x + 8.0, y), String(item[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color("#d4c8b5"))
         x += 76.0
-    draw_string(font, Vector2(size.x - 8.0, size.y - 3.0), "TAB / ESC", HORIZONTAL_ALIGNMENT_RIGHT, -1, 6, Color("#9f988d"))
+    draw_string(font, Vector2(size.x - 50.0, size.y - 3.0), "TAB / ESC", HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color("#9f988d"))
