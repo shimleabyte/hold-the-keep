@@ -91,11 +91,11 @@ func motion_offset() -> Vector2:
             # Napas halus satu piksel, dengan fase awal berbeda per unit.
             return Vector2(0, -roundf(sin(_motion_t * TAU * 0.7 + _motion_phase) * 0.55))
         "walk":
-            var lift := absf(sin(progress * TAU))
-            return Vector2(0, -roundf(lift))
+            var walk_lift := absf(sin(progress * TAU))
+            return Vector2(0, -roundf(walk_lift))
         "run":
-            var lift := absf(sin(progress * TAU))
-            return Vector2(0, -roundf(lift * 2.0))
+            var run_lift := absf(sin(progress * TAU))
+            return Vector2(0, -roundf(run_lift * 2.0))
         "work":
             # Bobot badan bergerak maju tepat di sekitar titik pukulan.
             var strike := 1.0 - absf(progress - 0.5) * 2.0
