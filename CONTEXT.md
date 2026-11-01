@@ -124,7 +124,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 - Belum ada full human playthrough Classic hari 1–15 dan Frontier act 1–4/day 20 yang terdokumentasi.
 - Belum ada target-hardware benchmark yang mencatat CPU, GPU, OS, resolusi, workload, dan frame-time percentiles.
 - Windows export telah dibuat dan diperiksa format PE di CI, tetapi belum dijalankan pada native Windows atau clean Windows machine.
-- Local stockpile dan actual inter-depot transfer belum tersedia; seluruh depot terhubung masih memakai shared inventory.
+- Local stockpile Storage/Outpost dan Frontier worker deposit sudah tersedia pada audit branch; actual inter-depot shipment dan local-stock spending masih belum tersedia.
 - Outpost guard/garrison dan local visibility belum tersedia.
 - Hunter, Scout, Healer, dan Blacksmith belum tersedia.
 - Construction queue serta staged completion dengan Builder belum tersedia.
@@ -132,11 +132,11 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 - Phase 08 art/audio identity belum dikirim sebagai satu implementation slice; unit/faction/building visuals masih membutuhkan art pass khusus dan musik belum ada.
 - Hotkey UI/job/build belum dapat di-rebind; tooltip bangunan/job dan Windows .ico juga belum tersedia.
 - Steam integration opsional dan bukan blocker gameplay.
-- Save v11 dan compatibility coverage tersedia, tetapi acceptance upgrade pada mesin bersih tetap belum diverifikasi.
+- Save v12 dan compatibility coverage tersedia pada audit branch, tetapi acceptance upgrade pada mesin bersih tetap belum diverifikasi.
 
 ## 9. Rencana berikut (belum dikerjakan)
 Urutan backlog berdasarkan dependency:
-1. Phase 02: local stockpile per depot, transfer antar-depot, Outpost garrison dan local visibility. Supply attrition menunggu sampai transfer benar-benar bekerja.
+1. Phase 02: selesaikan explicit inter-depot shipments, inspect/withdraw local stock, Outpost garrison dan local visibility. Supply attrition menunggu sampai transfer benar-benar bekerja.
 2. Phase 04: implementasikan Hunter, Scout, Healer dan Blacksmith dengan workplace, radius, biaya/hasil, UI kuota, pathfinding dan save/load.
 3. Phase 05: construction queue dan staged building completion dengan Builder; lanjutkan bangunan sesuai dependency produksi dan strategi.
 4. Phase 06: distinct/counterable policy keenam archetype, faction camps, bounded patrols, reinforcement budget, raids/counterattacks dan persistence.
@@ -255,7 +255,7 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Strategic map renders explored road links and colors region labels by ownership state. HUD exposes road and bridge build choices.
 - Phase 02 initial slice CI passed on Godot 4.3 and 4.7: run `41289421611` completed successfully with 24/24 jobs, including `regional_control_roads` on both engines.
 - `tests/regional_control_roads.gd` covers Classic's regional states, walkable roads, deterministic bridge placement/traversal, Keep-connected roads and depots, isolated Outposts, rerouting and cargo retention after road removal, plus infrastructure save persistence.
-- Current supply scope is not full local logistics: resources still enter shared inventory after workers reach a connected depot. Local stockpile balances and inter-depot transfer semantics are not implemented.
+- Historical note for the Phase 02 initial-slice merge: deposits originally credited shared inventory. The audit implementation branch now adds local Storage/Outpost stockpiles and v12 persistence; explicit inter-depot shipment semantics remain open.
 - Outpost guards/garrisons and local visibility are also not implemented. Supply attrition and raid vulnerability remain deferred until local logistics exist.
 - PR #11 is the clean Phase 02 transplant based on the Phase 01 branch. PR #9 was the old stacked version on the retired pre-mainline Frontier branch and is closed as superseded.
 
@@ -298,7 +298,7 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Classic keeps its 15-day / 3-stage schedule and victory rules. Frontier uses 20 days / 4 acts with faction archetypes joining later wave pools.
 - Eleven regional objectives cover four biome discoveries plus camp/ruin clearing, rescue, escort and defense. Press O to inspect progress; E interacts with a nearby site.
 - Discovered objective sites appear on the strategic map with type-based markers. Future-act sites remain dimmed/locked until the previous act's required objectives and stronghold are complete.
-- Escort paths rebuild from the saved world position after load. Save v11 persists objective/site progress, site health/location, escort progress and final-boss state; v1–v10 remain compatible.
+- Escort paths rebuild from the saved world position after load. Save v12 persists objective/site progress, site health/location, escort progress, final-boss state and local Storage/Outpost stockpiles; v1–v11 remain compatible with empty local stockpiles.
 - Frontier victory requires all required regional objectives, all four strongholds and the King encounter on day 20. Classic's original 15-day victory path remains intact.
 - Mainline implementation merged through PR #28; Godot 4.3/4.7 workflow #288 passed 30/30 jobs. Rendered/manual difficulty review remains.
 
@@ -307,7 +307,7 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Merged into `main` through PR #29. Mainline Godot 4.3/4.7 workflow #290 passed 30/30 jobs.
 - Adds configurable Classic/Frontier profiling for frame timing, static memory, world nodes, projectiles and particles; results are diagnostic and runner-specific.
 - Adds bounded Frontier stress coverage for faction rosters, villagers, projectiles and the 500-particle ceiling.
-- Adds deterministic campaign-balance, objective reload and save migration/recovery coverage, including Classic v1–v11 and Frontier v7–v11.
+- Adds deterministic campaign-balance, objective reload and save migration/recovery coverage, including Classic v1–v12 and Frontier v7–v12.
 - Release scripts verify non-empty Windows/Linux export outputs; CI installs Godot 4.3 export templates, validates the PE format and smoke-tests Linux headlessly.
 - Previous stacked workflow #282 and mainline workflow #290 both passed 30/30 jobs. Windows/Linux template-backed export checks also passed in CI.
 - Remaining gates: real target-machine performance profile, later-act/day-20 combat outcome cases, full manual campaign playtest, Windows runtime smoke and clean-machine migration.
