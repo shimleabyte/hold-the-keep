@@ -268,5 +268,5 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Stronghold garrisons are selected from faction rosters; regional wave spawns receive faction identity. Enemy units use faction tint.
 - War Shaman has bounded ally healing with a cooldown. Target selection and ally support are extracted into `enemy_targeting.gd` and `enemy_support.gd`.
 - Save format v10 records enemy faction IDs; older v1–v9 saves remain accepted and restore with an empty/default faction identity.
-- `tests/faction_registry.gd` covers faction-region mapping, roster/garrison membership, faction tint, War Shaman healing and v10 save validation. Godot 4.3/4.7 execution is pending CI.
+- `tests/faction_registry.gd` covers faction-region mapping, roster/garrison membership, faction tint, same-faction War Shaman healing and v10 save validation. Godot 4.3/4.7 CI passed 30/30 jobs.
 - Remaining Phase 06 work: fully distinct counterable behavior for all six archetypes, deterministic camps, bounded patrols, raids/counterattacks, camp/raid persistence, stress tests and manual gameplay review. Do not mark Phase 06 complete yet.
