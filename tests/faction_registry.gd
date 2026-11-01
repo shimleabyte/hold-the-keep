@@ -66,7 +66,7 @@ func _run() -> void:
     main.world.entities.add_child(ally)
     ally.set_physics_process(false)
     ally.hp -= 12
-    var ally_hp := ally.hp
+    var ally_hp: int = int(ally.hp)
 
     var rival = enemy_script.new()
     rival.setup(DataDB.enemies["enemy_scout"], main.world, main.flow, main.player, "greenwood_raiders")
@@ -74,7 +74,7 @@ func _run() -> void:
     main.world.entities.add_child(rival)
     rival.set_physics_process(false)
     rival.hp -= 12
-    var rival_hp := rival.hp
+    var rival_hp: int = int(rival.hp)
 
     assert(shaman._tick_shaman_support(), "War Shaman must activate support when an ally is injured")
     assert(ally.hp > ally_hp, "War Shaman must restore same-faction ally health")
