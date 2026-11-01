@@ -347,6 +347,8 @@ func _rebuild_build_bar() -> void:
     _slots.clear()
     var ids: Array = Tech.available_buildings()
     var n := ids.size()
+    if n <= 0:
+        return
     var available_width := maxf(220.0, _viewport_size.x - 14.0)
     var w := mini(SLOT_W, int((available_width - (n - 1) * 3.0) / maxi(1, n)))
     var total := n * w + (n - 1) * 3
@@ -473,7 +475,7 @@ func _on_viewport_size_changed() -> void:
 func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     var next_size := target_size
     if next_size == Vector2.ZERO:
-        next_size = get_viewport_rect().size
+        next_size = get_viewport().get_visible_rect().size
     _viewport_size = Vector2(maxf(480.0, next_size.x), maxf(270.0, next_size.y))
 
     _top_bar.size.x = _viewport_size.x
