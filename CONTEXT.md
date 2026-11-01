@@ -178,7 +178,7 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Fog of war permanen membuka area dari player, Keep, Outpost, dan villager; peta eksplorasi ikut save versi 4.
 - G mengirim semua villager dengan job soldier ke ekspedisi setelah benteng ditemukan; G kedua mengarahkan mereka pulang ke Keep.
 - Prajurit ekspedisi memprioritaskan garrison, lalu menyerang stronghold. Benteng hancur membersihkan garrison dan memicu campaign victory.
-- Save versi 5 menyimpan stronghold, status reinforcement, identitas/origin garrison, status ekspedisi/recall, dan fog discovery. Versi 1–4 masih diterima lewat default.
+- Save versi 5 menambahkan stronghold, reinforcement, garrison, ekspedisi/recall, dan fog discovery; save versi 6 menambahkan level/XP pemain. Versi 1–5 tetap diterima dengan default field baru.
 - Tes regresi baru: `tests/campaign_assault.gd`.
 
 
