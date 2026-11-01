@@ -165,12 +165,12 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add four data-driven factions mapped to Frontier regions, with stable IDs, faction colors, rosters and signature garrison units.
 - [x] Add six archetype definitions: scout, shieldbearer, saboteur, war shaman, siege engine and beast rider.
 - [x] Spawn stronghold garrisons from faction rosters and tag regional wave enemies with faction identity.
-- [x] Add faction tint, War Shaman ally healing, shared target-selection/support modules and enemy faction save persistence (initially v10; now compatible with v11).
+- [x] Add faction tint, War Shaman ally healing, shared target-selection/support modules and enemy faction save persistence (initially v10; now compatible with v12).
 - [x] Add faction registry validation and regression coverage for region mapping, rosters, garrisons, support and save validation.
 - [ ] Extract movement, attack-pattern and ability policies into composable modules; give each archetype its own counterable behavior.
 - [ ] Add deterministic faction camps, bounded patrol routes and camp reinforcement budgets.
 - [ ] Add raids/counterattacks against exposed Outposts, roads and depots with strict caps and reachability checks.
-- [ ] Persist camps, patrol assignments and raid state; validate v1–v10 migration and v11 round-trip.
+- [ ] Persist camps, patrol assignments and raid state; validate v1–v11 migration and v12 round-trip.
 - [x] Merged through PR #21; Godot 4.3 / 4.7 CI passed (30/30 jobs).
 - [ ] Manual Frontier gameplay review.
 
@@ -182,7 +182,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Expand the technology tree from 17 to 20 nodes without changing existing technology IDs or prerequisites.
 - [x] Add a Frontier 20-day / 4-act ruleset while preserving Classic's 15-day / 3-stage rules.
 - [x] Add eleven ordered regional objectives: four biome discoveries, camp/ruin clearing, rescue, escort and night defense.
-- [x] Persist objective state, site health/location, escort progress and final-boss state in save v11; retain v1-v10 compatibility.
+- [x] Persist objective state, site health/location, escort progress and final-boss state in save v12; retain v1-v11 compatibility.
 - [x] Gate Frontier victory behind all required regional objectives, all four strongholds and the day-20 King; preserve Classic victory rules.
 - [x] Add the objective tracker (O), E interaction help, discovered objective markers on the TAB strategic map, and subdued visuals for locked acts.
 - [x] Fix escort reload path reconstruction; make Cartography improve Outpost reveal and Siegecraft improve player damage against active strongholds/sites across profiles.
