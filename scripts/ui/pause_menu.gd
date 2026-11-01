@@ -23,21 +23,41 @@ func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
 
     _root = Control.new()
-    _root.size = Vector2(480, 270)
+    _root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _root.visible = false
     var theme := Theme.new()
     theme.default_font = PIXEL_FONT.get_font()
     theme.default_font_size = 8
+
+    var button_normal := StyleBoxFlat.new()
+    button_normal.bg_color = Color("#20282a")
+    button_normal.border_color = Color("#756044")
+    button_normal.set_border_width_all(1)
+    var button_hover := StyleBoxFlat.new()
+    button_hover.bg_color = Color("#354044")
+    button_hover.border_color = Color("#d0a35e")
+    button_hover.set_border_width_all(1)
+    var button_pressed := StyleBoxFlat.new()
+    button_pressed.bg_color = Color("#51402b")
+    button_pressed.border_color = Color("#e8c078")
+    button_pressed.set_border_width_all(1)
+    theme.set_stylebox("normal", "Button", button_normal)
+    theme.set_stylebox("hover", "Button", button_hover)
+    theme.set_stylebox("pressed", "Button", button_pressed)
+    theme.set_stylebox("focus", "Button", button_hover)
+    theme.set_color("font_color", "Button", Color("#eadcc1"))
+    theme.set_color("font_hover_color", "Button", Color("#fff1d2"))
+    theme.set_color("font_pressed_color", "Button", Color("#ffd38d"))
     _root.theme = theme
     add_child(_root)
 
     var dim := ColorRect.new()
-    dim.color = Color(0, 0, 0, 0.65)
-    dim.size = Vector2(480, 270)
+    dim.color = Color(0.015, 0.02, 0.028, 0.82)
+    dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _root.add_child(dim)
 
     _menu_center = CenterContainer.new()
-    _menu_center.size = Vector2(480, 270)
+    _menu_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _root.add_child(_menu_center)
     var panel := PanelContainer.new()
     _menu_center.add_child(panel)
@@ -89,7 +109,7 @@ func _ready() -> void:
 
 func _build_controls_panel() -> void:
     _controls_center = CenterContainer.new()
-    _controls_center.size = Vector2(480, 270)
+    _controls_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _controls_center.visible = false
     _root.add_child(_controls_center)
 
