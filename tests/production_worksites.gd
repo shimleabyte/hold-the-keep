@@ -124,7 +124,7 @@ func _initialize() -> void:
         "Remaining woodcutters must retain their workplace after another worker leaves")
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 12, "Current campaign and depot state must use save format v12")
+    assert(snapshot["version"] == 13, "Current campaign, depot and shipment state must use save format v13")
     var saved_camp := false
     var saved_quarry := false
     for saved_building in snapshot["buildings"]:
@@ -132,7 +132,7 @@ func _initialize() -> void:
         saved_quarry = saved_quarry or String(saved_building["id"]) == "quarry"
     assert(saved_camp and saved_quarry, "Both worksites must use the generic building save payload")
     assert(save_system._valid_save(snapshot),
-        "Worksite buildings must pass v12 save validation")
+        "Worksite buildings must pass v13 save validation")
 
     camp.demolish()
     assert(woodcutter_b.workplace == null,
@@ -146,5 +146,5 @@ func _initialize() -> void:
     assert(legacy_worker.workplace == null,
         "Classic fallback must not require a Lumber Camp to assign resource workers")
 
-    print("PASS: Lumber Camp/Quarry workplaces, slot limits, specialized radius, cleanup and v12 save compatibility")
+    print("PASS: Lumber Camp/Quarry workplaces, slot limits, specialized radius, cleanup and v13 save compatibility")
     quit()
