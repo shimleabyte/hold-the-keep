@@ -43,7 +43,7 @@ func _initialize() -> void:
     var cells := {}
     for cell in main.world.occupied:
         var candidate = main.world.occupied[cell]
-        if not is_instance_valid(candidate) or not candidate.has_method("export_state"):
+        if not is_instance_valid(candidate) or not candidate.is_in_group("resource_nodes") or not candidate.has_method("export_state"):
             continue
         var kind := String(candidate.yield_kind)
         if not nodes.has(kind):
