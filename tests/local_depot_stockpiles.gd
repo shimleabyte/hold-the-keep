@@ -68,7 +68,7 @@ func _initialize() -> void:
 
     var central_wood_before: int = inventory.get_amount("wood")
     var central_stone_before: int = inventory.get_amount("stone")
-    var transferred := main.supply.transfer_local_stockpiles()
+    var transferred: int = int(main.supply.transfer_local_stockpiles())
     require(transferred == 6,
         "A connected remote depot must transfer no more than its six-unit interval budget")
     require(inventory.get_amount("wood") == central_wood_before + 5
