@@ -44,8 +44,8 @@ func _on_building_event(id: String, cell: Vector2i) -> void:
             _cost_source_cell = keep.cell
             Events.supply_cost_source_changed.emit()
     elif _cost_source_cell == cell and id != "keep":
-        var keep = _find_keep()
-        _cost_source_cell = keep.cell if keep != null else Vector2i(-1, -1)
+        var fallback_keep = _find_keep()
+        _cost_source_cell = fallback_keep.cell if fallback_keep != null else Vector2i(-1, -1)
         Events.supply_cost_source_changed.emit()
 
 
