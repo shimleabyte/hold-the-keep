@@ -109,7 +109,7 @@ func check(id: String, c: Vector2i) -> String:
             return "Terlalu jauh"
     var cost: Dictionary = DataDB.cost_of(id)
     var supply = get_tree().get_first_node_in_group("supply_network")
-    var cost_error := supply.cost_reason(cost) if supply != null else (
+    var cost_error: String = supply.cost_reason(cost) if supply != null else (
         "" if Inventory.can_afford(cost) else "Bahan kurang di KEEP"
     )
     if cost_error != "":
@@ -126,7 +126,7 @@ func place(id: String, c: Vector2i) -> String:
     var supply = get_tree().get_first_node_in_group("supply_network")
     var paid: bool = supply.pay_cost(cost) if supply != null else Inventory.spend_all(cost)
     if not paid:
-        var cost_error := supply.cost_reason(cost) if supply != null else "Bahan kurang di KEEP"
+        var cost_error: String = supply.cost_reason(cost) if supply != null else "Bahan kurang di KEEP"
         return cost_error if cost_error != "" else "Stok sumber biaya berubah"
     place_raw(id, c)
     return ""
