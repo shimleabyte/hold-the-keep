@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` includes PR #36 (`b02aa60`), adding Shieldbearer directional brace without a save-schema change. The available first results page for workflow #41329202804 showed 30/30 jobs successful; the connector did not expose the remainder of the matrix in that snapshot. Phase 02.5 supply pressure remains merged via PR #35; save schema v13. Current development branch `feat/phase-06-scout-marking-mainline` implements Scout scouting/marking; CI and merge pending. See `ROADMAP_NEXT_LEVEL.md` and `docs/plans/` for phase status.
+**Current source of truth:** default branch `main` includes PR #39 (`11f3f13`), adding Scout faction-aware marking. Workflow #41354720293 passed 58/58 jobs on Godot 4.3/4.7, including 27 regression suites per engine, Frontier performance and Windows/Linux export. Shieldbearer brace is merged via PR #36; Phase 02.5 supply pressure via PR #35. Save schema remains v13. Next Phase 06 work: Saboteur disruption policy and remaining archetype/camp/patrol behavior.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -15,7 +15,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #36 (save schema v13; status per 2 November 2026). Shieldbearer directional brace sudah masuk `main`; Scout behavior menjadi irisan Phase 06 berikutnya.
+Ringkasan implementasi aktual pada `main` setelah PR #39 (save schema v13; status per 2 November 2026). Shieldbearer directional brace dan Scout faction-aware marking sudah masuk `main`.
 
 | Area | Kondisi saat ini |
 |---|---|
@@ -26,7 +26,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #36 (save schema v13; statu
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
-| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman support berjalan; Shieldbearer directional brace is merged; Scout/Siege Engine/Beast Rider policies, camps, patrols and broader counterattacks remain incomplete |
+| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman support, Shieldbearer directional brace, dan Scout faction-aware marking sudah berjalan; Saboteur/Siege Engine/Beast Rider policies, camps, patrols and broader counterattacks remain incomplete |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
 | Save/load | v13 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo; Classic v1–v13 dan Frontier v7–v13 migration matrix dijaga. PR #34 adds optional cost-source preference without a save-version bump; earlier v13 snapshots without it remain valid |
@@ -35,7 +35,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #36 (save schema v13; statu
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 12 procedural SFX; musik belum ada |
 | Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | PR #35 workflow #41328005585 passed; PR #36 workflow #41329202804 first-page results showed 30/30 jobs successful, including parse and the visible regression jobs; the full matrix was not independently available in that snapshot. |
+| CI | PR #35 workflow #41328005585 passed; PR #39 workflow #41354720293 passed 58/58 jobs: 27 assertion suites per Godot 4.3/4.7, import/parse, Frontier performance and Windows/Linux export. |
 
 ## 3. Struktur
 ```
@@ -375,9 +375,16 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - New regression `tests/shieldbearer_behavior.gd` covers telegraph, facing, frontal mitigation, flank/rear damage, stagger interruption and disengage recovery. The available workflow result page showed the Shieldbearer regression successful; remaining matrix jobs were not independently exposed in that snapshot. No save-schema migration was needed.
 
 
-## 33. Phase 06.2 — Scout scouting and faction focus (2026-11-02, branch pending CI)
-- Branch: `feat/phase-06-scout-marking-mainline`, based on main after PR #36.
+## 33. Phase 06.2 — Scout scouting and faction focus (2026-11-02, merged via PR #39)
+- Merged into `main` at `11f3f13`; workflow #41354720293 passed 58/58 jobs on Godot 4.3/4.7.
 - Scout is no longer a fast pouncing melee unit. It maintains a data-defined safe range, telegraphs a target callout, then marks one visible player/soldier target for a finite duration.
 - The mark is shared only with same-faction enemies within a bounded radius. Nearby allies prioritize the marked target; normal nearest-target behavior resumes at expiry.
 - Stagger or target disengagement cancels an unfinished callout. Mark state is transient and does not alter save v13.
-- Regression `tests/scout_marking.gd` covers telegraph, faction-only propagation, focus priority, expiry, stagger interruption and disengage. Added as suite #27 in both Godot CI matrices; results pending.
+- Regression `tests/scout_marking.gd` covers telegraph, faction-only propagation, melee/ranged focus priority, mark expiry, stagger interruption and target disengage. Passed on both Godot versions. Save schema v13 remains unchanged.
+
+
+## 34. Phase 06.2 — Scout faction-aware marking (2026-11-02, merged via PR #39)
+- Merged into `main` at `11f3f13`; workflow #41354720293 completed with 58/58 successful jobs.
+- Scout uses a ranged scouting posture, telegraphs a finite target mark and shares it only with same-faction enemies inside a bounded radius.
+- Nearby melee, ranged, Shieldbearer and garrison enemies prioritize the marked defender while respecting range/leash limits. Marks expire naturally; stagger or target disengagement cancels an unfinished callout.
+- `tests/scout_marking.gd` passes on Godot 4.3 and 4.7. Save schema v13 remains unchanged.
