@@ -99,7 +99,8 @@
     },
     "hp": 240,
     "color": "#a27a4d",
-    "claim_radius": 9
+    "claim_radius": 9,
+    "depot": true
   },
   {
     "id": "stone_wall",
