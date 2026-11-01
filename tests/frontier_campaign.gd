@@ -75,7 +75,7 @@ func _run() -> void:
     legacy_snapshot.erase("frontier_campaign")
     assert(save_system._valid_save(legacy_snapshot), "Version 10 Frontier saves must remain compatible")
 
-    var old_done := tech.researched.duplicate()
+    var old_done: Array = tech.researched.duplicate()
     tech.researched = ["tools_wood", "masonry", "surveying"]
     tech._recompute()
     assert(tech.is_done("tools_wood") and tech.is_done("masonry"), "Existing researched IDs must still resolve")
