@@ -26,6 +26,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
 | Save/load | versi 6, autosave tiap fajar, F5/F9, file sementara + rollback backup, resource/fog/stronghold/garrison/ekspedisi/recall/combat progression tersimpan |
 | Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
+| Tampilan | windowed 1280×720 default, minimum 960×540, preset 16:9/16:10, integer-scaled viewport dengan aspect expand |
 | HUD | top bar ringkas, vitals, indikator bab, combat strip kompak, drawer JOBS, peta strategis TAB/MAP, hotbar bangunan, bar boss, bantuan (H) |
 | Animasi | 22 frame x 3 arah per karakter; serang/panen jatuh di frame benturan |
 | Efek | partikel, busur tebasan, guncangan layar (bisa dimatikan) |
@@ -45,7 +46,7 @@ scripts/systems/       flow_field (Dijkstra musuh), nav_grid (AStarGrid2D villag
                        fog_of_war (peta permanen), village/expedition, wave_spawner, event_manager
 scripts/entities/      player, enemy, enemy_keep (stronghold/garrison source), villager (expedition/recall), building, resource_tree, rock, iron_ore, arrow, corpse,
                        fx_layer, sprite_anim
-scripts/ui/            hud.gd, world_map_panel.gd (peta eksplorasi), tech_panel.gd, pause_menu.gd, pixel_font.gd
+scripts/ui/            hud.gd (layout viewport-aware), world_map_panel.gd, tech_panel.gd, pause_menu.gd (window-size presets), pixel_font.gd
 data/                  buildings.json, enemies.json, waves.json, events.json, techs.json
 assets/sprites/        40 SVG pixel-art (dibuat oleh tools/gen_assets.py)
 assets/fonts/          Silkscreen (OFL) + lisensinya
@@ -197,3 +198,12 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - `data/waves.json` defines three campaign acts: Frontier (days 1–5), Black March (6–10), Last Siege (11–15). `wave_spawner.gd` applies archer pressure in Act II and archer/brute pressure in Act III; stage changes update the HUD banner and progress indicator.
 - HUD keeps core status and build hotbar visible. Job quotas move behind JOBS; map is opened by TAB/MAP and closes with its X, backdrop click, TAB, or Escape; job drawer closes with JOBS or Escape. Combat strip and tech button occupy less screen space.
 - `tests/map_stages.gd` covers regional labels, map visibility, act boundaries, and act-specific enemy weights. Godot execution remains pending in an environment with the engine installed.
+
+
+## 17. Responsive resolution and UI visual pass (2026-11-01)
+- Project base remains 480×270 with viewport rendering and integer scaling; stretch aspect is `expand` so wider/taller desktop windows reveal more world instead of distorting pixel art or forcing fixed letterboxing.
+- Default window is 1280×720; minimum is 960×540. Pause settings expose monitor-filtered 16:9 and 16:10 window-size presets, remember the selected windowed size, and keep fullscreen as a separate mode.
+- HUD listens to viewport size changes. Resource/time strip spans the top; vitals and job drawer anchor to opposite sides; stage and boss panels center; map centers and scales; combat strip and building hotbar stay above the bottom edge.
+- Strategic map scales its tile grid and legend to the available viewport. Technology and pause overlays use full-viewport roots and centered panels.
+- Updated panel surfaces, borders, shadows, focus/hover/pressed button states, and resource color hierarchy.
+- `tests/responsive_layout.gd` checks viewport settings and panel/hotbar bounds across 480×270, 640×360, 640×400, 683×384, and 960×540 logical viewports. Godot compile/render execution remains pending.
