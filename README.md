@@ -1,6 +1,6 @@
 # Hold the Keep
 
-> Konteks proyek: [CONTEXT.md](CONTEXT.md). Roadmap ekspansi kerajaan: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Rencana Phase 06: [docs/plans/phase-06-plan.md](docs/plans/phase-06-plan.md). Rencana Phase 09: [docs/plans/phase-09-plan.md](docs/plans/phase-09-plan.md). Skrip tes: [tests/README.md](tests/README.md).
+> Konteks proyek: [CONTEXT.md](CONTEXT.md). Roadmap ekspansi kerajaan: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Rencana Phase 06: [docs/plans/phase-06-plan.md](docs/plans/phase-06-plan.md). Rencana Phase 09: [docs/plans/phase-09-plan.md](docs/plans/phase-09-plan.md). Rencana Phase 10: [docs/plans/phase-10-plan.md](docs/plans/phase-10-plan.md). Skrip tes: [tests/README.md](tests/README.md).
 
 Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (GDScript).
 
@@ -34,7 +34,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - R: mulai ulang setelah game over | L: muat save terakhir dari layar game over
 
 ## Tampilan dan resolusi
-Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 16:9, 16:10, dan 4:3; resolusi jendela tersimpan, sedangkan fullscreen tetap terpisah. Rendering pixel-art tetap memakai viewport 480×270 dan integer scaling. Aspect `expand` memperluas area dunia pada rasio layar yang berbeda tanpa meregangkan sprite; ruang kosong dapat tetap muncul ketika ukuran jendela bukan kelipatan integer viewport. HUD, hotbar, indikator bab, peta, menu teknologi, dan menu jeda mengikuti viewport yang terlihat.
+Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 16:9, 16:10, dan 4:3; resolusi jendela tersimpan, sedangkan fullscreen tetap terpisah. Viewport logis mengikuti setengah ukuran jendela pada skala pixel tepat 2×: 640×360 pada 1280×720, 800×450 pada 1600×900, dan 960×540 pada 1920×1080; minimum viewport 480×270. Resolusi lebih tinggi memperlihatkan lebih banyak dunia tanpa mengubah zoom kamera, ukuran tile, kecepatan gerak, jangkauan serangan atau aturan gameplay. HUD tetap pada ukuran logis yang sama di pita atas/bawah sehingga area tengah permainan bertambah. HUD, hotbar, peta, panel teknologi dan menu jeda mengikuti perubahan resolusi/fullscreen.
 
 ## Sistem permainan
 

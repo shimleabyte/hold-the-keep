@@ -36,7 +36,7 @@ ke `main`, push ke `main` atau branch `feat/**` / `fix/**`, serta workflow manua
 | workplace_assignments.gd | Builder workplace capacity/radius, repair material consumption, reachable depot selection, job priority reassignment and v11 save validation |
 | production_worksites.gd | Lumber Camp/Quarry workplace limits, specialist work radius, Classic fallback, cleanup and v11 save compatibility |
 | map_stages.gd | empat biome, fog map panel, batas tiga bab, bobot archer/brute per bab |
-| responsive_layout.gd | expanded integer-scaled viewport, HUD/map/hotbar bounds across five logical resolutions |
+| responsive_layout.gd | resolution-to-viewport mapping, exact 2× pixel scale, live synchronization, HUD safe playfield and map/hotbar bounds across six desktop resolutions |
 | player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, archer projectile, brute armor, combat save |
 | input_rebinding.gd | perubahan keybind, penolakan konflik/reserved key, persistensi settings |
 | restart_gameover.gd | layar game over dan restart (R) |

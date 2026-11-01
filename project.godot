@@ -37,8 +37,8 @@ file_logging/max_log_files=5
 
 [display]
 
-window/size/viewport_width=480
-window/size/viewport_height=270
+window/size/viewport_width=640
+window/size/viewport_height=360
 window/size/window_width_override=1280
 window/size/window_height_override=720
 window/size/initial_position_type=1
