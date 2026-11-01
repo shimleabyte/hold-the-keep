@@ -176,7 +176,7 @@ func cost_reason(cost: Dictionary) -> String:
             continue
         if String(source.id) != "keep" and not TRANSFER_KINDS.has(String(kind)):
             return "Jenis bahan tidak tersedia di depot lokal"
-        var available := Inventory.get_amount(String(kind)) if String(source.id) == "keep" else source.stockpile_amount(String(kind))
+        var available: int = Inventory.get_amount(String(kind)) if String(source.id) == "keep" else int(source.stockpile_amount(String(kind)))
         if available < amount:
             return "Bahan kurang di " + cost_source_label()
     return ""
