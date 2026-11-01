@@ -67,7 +67,8 @@ func reveal_position(position_world: Vector2, radius: float) -> bool:
 func _scan_sources() -> void:
     var changed := false
     if player != null and is_instance_valid(player):
-        changed = reveal_position(player.global_position, 112.0) or changed
+        var player_reveal_radius := 144.0 if Tech.has_flag("frontier_surveying") else 112.0
+        changed = reveal_position(player.global_position, player_reveal_radius) or changed
     for building in get_tree().get_nodes_in_group("buildings"):
         if building.id == "keep":
             changed = reveal_position(building.global_position, 160.0) or changed
