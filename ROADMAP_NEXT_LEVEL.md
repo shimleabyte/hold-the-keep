@@ -143,12 +143,12 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** workers select valid tasks, avoid cross-map wandering, recover from blocked paths, deposit at reachable storage and retain their state through saves.
 
 ### Phase 05 — Buildings and production chains
-**Status:** First resource-worksite slice is implemented on `feat/phase-05-resource-worksites`; Godot 4.3 / 4.7 CI passed (30/30 jobs). Manual in-game balance/pathing review remains.
+**Status:** Merged into `main` through PR #19. Godot 4.3/4.7 CI passed (30/30 jobs); manual in-game balance/pathing review remains.
 
 - [x] Add a Lumber Camp with two woodcutter workplace slots and an 18-tile resource work radius.
 - [x] Add a Quarry with two miner workplace slots and a 16-tile resource work radius.
 - [x] Bind woodcutters/miners to matching worksites; retain connected-depot fallback only when no matching specialty site exists.
-- [x] Release worksite claims when workers leave or a worksite is removed; retain the generic v9 building save payload.
+- [x] Release worksite claims when workers leave or a worksite is removed; worksite buildings use the generic save payload and remain compatible with save v11.
 - [x] Add separate pixel-art buildings/icons, hotbar entries, numeric hotkeys, controls documentation and headless regression coverage.
 - [ ] Add construction work queues and staged building completion with Builder labor.
 - [ ] Add remaining facilities according to dependency: Watchtower, Granary, Barracks, Archery Range, Hunting Lodge, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress and Signal Beacon.
@@ -158,24 +158,24 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** every building has a distinct function, valid footprint, data definition, art asset, UI representation, unlock rule and save/load coverage.
 
 ### Phase 06 — Factions, enemy archetypes and territorial AI
-**Status:** In progress on `feat/phase-06-factions-territorial-ai`; first faction/archetype runtime slice implemented. Full Phase 06 is not complete.
+**Status:** First faction/archetype runtime slice merged into `main` through PR #21; Phase 06 remains partially implemented.
 
 - [x] Add four data-driven factions mapped to Frontier regions, with stable IDs, faction colors, rosters and signature garrison units.
 - [x] Add six archetype definitions: scout, shieldbearer, saboteur, war shaman, siege engine and beast rider.
 - [x] Spawn stronghold garrisons from faction rosters and tag regional wave enemies with faction identity.
-- [x] Add faction tint, War Shaman ally healing, shared target-selection/support modules and enemy faction save persistence (v10).
+- [x] Add faction tint, War Shaman ally healing, shared target-selection/support modules and enemy faction save persistence (initially v10; now compatible with v11).
 - [x] Add faction registry validation and regression coverage for region mapping, rosters, garrisons, support and save validation.
 - [ ] Extract movement, attack-pattern and ability policies into composable modules; give each archetype its own counterable behavior.
 - [ ] Add deterministic faction camps, bounded patrol routes and camp reinforcement budgets.
 - [ ] Add raids/counterattacks against exposed Outposts, roads and depots with strict caps and reachability checks.
-- [ ] Persist camps, patrol assignments and raid state; validate v1–v9 migration and v10 round-trip.
-- [x] Godot 4.3 / 4.7 CI passed (30/30 jobs).
+- [ ] Persist camps, patrol assignments and raid state; validate v1–v10 migration and v11 round-trip.
+- [x] Merged through PR #21; Godot 4.3 / 4.7 CI passed (30/30 jobs).
 - [ ] Manual Frontier gameplay review.
 
 **Acceptance gate:** each archetype creates a distinct tactical response; AI remains bounded under stress tests; factions obey territory and campaign state; save/load and both engine CI versions pass.
 
 ### Phase 07 — Technology and campaign objectives
-**Status:** Code review fixes are committed on `feat/phase-07-conquest-objectives`, stacked on Phase 06; final Godot 4.3 / 4.7 regression run is in progress.
+**Status:** Merged into `main` through mainline PR #28. Fresh Godot 4.3/4.7 workflow #288 passed 30/30 jobs; rendered/manual difficulty review remains open.
 
 - [x] Expand the technology tree from 17 to 20 nodes without changing existing technology IDs or prerequisites.
 - [x] Add a Frontier 20-day / 4-act ruleset while preserving Classic's 15-day / 3-stage rules.
@@ -191,6 +191,8 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** every objective type resolves, rewards/state survive save/load, act transitions follow the Frontier schedule, Classic remains unchanged, player-facing objective/map state is readable, and Frontier victory cannot occur before required objectives and the final encounter.
 
 ### Phase 08 — Visual and audio identity
+**Status:** Planned; no separate Phase 08 implementation was merged. The old `feat/phase-08-visual-audio-identity` ref was a stale ancestor of Phase 07, not a unique Phase 08 delivery.
+
 - Create distinct biome tiles, environmental props, landmarks and faction assets.
 - Give new units unique silhouettes, weapons, animations and hit feedback.
 - Add building art for each new structure rather than reusing generic placeholders.
@@ -200,7 +202,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** screenshot passes at target desktop resolutions; visual readability under day/night, fog and combat load; no placeholder-only faction identity in release content.
 
 ### Phase 09 — Balance, performance and release hardening
-**Status:** Rebased onto Phase 07 mainline as `feat/phase-09-balance-performance-release-mainline`; previous stacked workflow #282 passed 30/30 jobs. Fresh mainline CI and target-machine review are pending.
+**Status:** Merged into `main` through PR #29. Mainline Godot 4.3/4.7 workflow #290 passed 30/30 jobs, including Windows/Linux export checks. Target-machine profiling and human campaign review remain open.
 
 - [x] Add configurable Classic/Frontier profiling for p50/p95/p99 process, physics and wall-frame timing, static memory, node count, projectiles and particles.
 - [x] Add bounded Frontier stress coverage for four factions, mixed rosters, villagers, ranged projectiles and the 500-particle ceiling.
@@ -217,19 +219,19 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 
 **CI diagnostic (not target hardware):** Frontier 128×128, 119 active enemies, 82 villagers, six peak projectiles and 500 peak particles; wall-frame p50 4.27 ms / p95 10.45 ms / p99 13.55 ms. A process-monitor p95 outlier of 102.24 ms was also recorded; these figures are runner-specific, not an accepted target-hardware budget.
 
-**Acceptance gate:** fresh mainline CI green, measured target-hardware performance, no blocker bugs, multi-act human playtest completed, save migration/reload tested, and Windows/Linux exports verified.
+**Remaining acceptance work:** measured target-hardware performance, later-act/day-20 combat outcome simulations, full multi-act human playtest, Windows runtime on a real Windows machine, and clean-machine save/settings migration.
 ### Phase 10 — Resolution-matched viewport and HUD safe area
-**Status:** Rebased onto Phase 09 mainline as `feat/phase-10-adaptive-viewport-mainline`; prior stacked workflow #285 passed 30/30 jobs. Fresh mainline CI and physical-display visual review are pending.
+**Status:** Merged into `main` through PR #30. Mainline Godot 4.3/4.7 workflow #292 passed 30/30 jobs, including `responsive_layout` and `map_stages`. Physical-display screenshot and manual fullscreen review remain open.
 
 - [x] Derive logical viewport dimensions from actual client-window size at exact 2× pixel scale, with a 480×270 minimum.
 - [x] Use 640×360 at 1280×720 and cover 960×540, 1280×800, 1366×768, 1600×900 and 1920×1080.
 - [x] Detect native window resizing and emit an explicit viewport event for HUD/technology UI.
 - [x] Keep camera zoom, 16×16 tiles, movement/combat ranges, world profiles and save schema unchanged.
 - [x] Add six-resolution mapping, live synchronization, camera zoom, HUD safe-area, map and hotbar regression checks.
-- [ ] Run fresh Godot 4.3/4.7 import, parse and all assertion suites on the mainline branch.
+- [x] Run fresh Godot 4.3/4.7 import, parse and all assertion suites on the mainline branch (workflow #292, 30/30 jobs).
 - [ ] Inspect rendered screenshots and play at physical desktop resolutions plus fullscreen.
 
-**Acceptance gate:** correct 2× mapping, unchanged gameplay scale, no HUD clipping, wider central playfield, full CI green and manual rendered review.
+**Remaining acceptance work:** inspect rendered screenshots and play at physical desktop resolutions plus fullscreen; confirm HUD readability on the target laptop/display.
 
 ## 5. First implementation priorities
 

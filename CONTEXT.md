@@ -262,7 +262,7 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 
 
 ## 23. Phase 06 — Factions and enemy archetypes (2026-11-01)
-- Branch `feat/phase-06-factions-territorial-ai-rebased` is stacked on `feat/phase-05-resource-worksites`; Phase 05 Godot 4.3/4.7 CI passed (30/30 jobs), with manual gameplay review remaining.
+- Phase 06 faction foundation merged into `main` through PR #21 after Phase 05 PR #19. Godot 4.3/4.7 CI passed (30/30 jobs); manual gameplay review remains.
 - `data/factions.json` defines Greenwood Raiders, Iron Legion, Fen Cult and Ashen Host, mapped to their Frontier regions with faction colors, rosters and signature garrisons.
 - `data/enemy_archetypes.json` defines Scout, Shieldbearer, Saboteur, War Shaman, Siege Engine and Beast Rider. Archetypes are loaded into `DataDB.enemies` while legacy enemy definitions remain unchanged.
 - Stronghold garrisons are selected from faction rosters; regional wave spawns receive faction identity. Enemy units use faction tint.
@@ -280,23 +280,23 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Discovered objective sites appear on the strategic map with type-based markers. Future-act sites remain dimmed/locked until the previous act's required objectives and stronghold are complete.
 - Escort paths rebuild from the saved world position after load. Save v11 persists objective/site progress, site health/location, escort progress and final-boss state; v1–v10 remain compatible.
 - Frontier victory requires all required regional objectives, all four strongholds and the King encounter on day 20. Classic's original 15-day victory path remains intact.
-- The original Phase 07 branch passed its Godot 4.3/4.7 workflow (30/30 jobs). The mainline-rebased integration branch requires a fresh CI run before it is considered merge-ready.
+- Mainline implementation merged through PR #28; Godot 4.3/4.7 workflow #288 passed 30/30 jobs. Rendered/manual difficulty review remains.
 
 
 ## 25. Phase 09 — Balance, performance and release hardening (2026-11-01)
-- Mainline continuation branch: `feat/phase-09-balance-performance-release-mainline`, based on Phase 07 mainline integration commit `131e116a3330e0e01af26298ff8529157e335391`.
+- Merged into `main` through PR #29. Mainline Godot 4.3/4.7 workflow #290 passed 30/30 jobs.
 - Adds configurable Classic/Frontier profiling for frame timing, static memory, world nodes, projectiles and particles; results are diagnostic and runner-specific.
 - Adds bounded Frontier stress coverage for faction rosters, villagers, projectiles and the 500-particle ceiling.
 - Adds deterministic campaign-balance, objective reload and save migration/recovery coverage, including Classic v1–v11 and Frontier v7–v11.
 - Release scripts verify non-empty Windows/Linux export outputs; CI installs Godot 4.3 export templates, validates the PE format and smoke-tests Linux headlessly.
-- Previous stacked Phase 09 workflow #282 passed 30/30 jobs. This mainline transplant requires a fresh CI run before merge.
+- Previous stacked workflow #282 and mainline workflow #290 both passed 30/30 jobs. Windows/Linux template-backed export checks also passed in CI.
 - Remaining gates: real target-machine performance profile, later-act/day-20 combat outcome cases, full manual campaign playtest, Windows runtime smoke and clean-machine migration.
 
 
 ## 26. Phase 10 — Resolution-matched viewport and HUD safe area (2026-11-01)
-- Mainline continuation branch: `feat/phase-10-adaptive-viewport-mainline`, based on `feat/phase-09-balance-performance-release-mainline`.
+- Merged into `main` through PR #30. Mainline Godot 4.3/4.7 workflow #292 passed 30/30 jobs.
 - Root Window logical viewport now follows half the actual client-window dimensions, with a 480×270 minimum and exact 2× pixel scaling. Reference mappings: 960×540 → 480×270; 1280×720 → 640×360; 1366×768 → 683×384; 1600×900 → 800×450; 1920×1080 → 960×540.
 - Settings checks the native window size and only updates content scaling when dimensions change. The `content_viewport_resized` signal explicitly reflows HUD and centers the technology panel.
 - HUD retains logical-pixel dimensions in edge bands; the central playfield grows with the window. Camera zoom, tile size, movement/combat ranges, world dimensions and save schema remain unchanged.
-- The prior stacked Phase 10 workflow #285 passed 30/30 jobs on Godot 4.3/4.7. A fresh mainline workflow remains required before merge.
+- Both the prior stacked workflow #285 and mainline workflow #292 passed 30/30 jobs, including responsive viewport and map regressions.
 - Rendered screenshots and manual play at physical desktop resolutions/fullscreen remain a separate acceptance gate.
