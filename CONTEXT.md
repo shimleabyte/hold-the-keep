@@ -31,7 +31,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 | Animasi | 22 frame x 3 arah per karakter; serang/panen jatuh di frame benturan |
 | Efek | partikel, busur tebasan, guncangan layar (bisa dimatikan) |
 | Audio | SFX prosedural (12 suara); **belum ada musik** |
-| Teknologi | 17 teknologi, 3 era, panel Y, bijih besi, Tempa, tembok batu; efek berupa data (`Tech.stat`) |
+| Teknologi | 20 teknologi, 3 era, panel Y, bijih besi, Tempa, tembok batu; efek berupa data (`Tech.stat`) |
 | Rilis | export preset Windows+Linux, `tools/build.sh|ps1` (template export belum pernah dipasang di sini) |
 
 ## 3. Struktur
@@ -267,7 +267,7 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - `data/enemy_archetypes.json` defines Scout, Shieldbearer, Saboteur, War Shaman, Siege Engine and Beast Rider. Archetypes are loaded into `DataDB.enemies` while legacy enemy definitions remain unchanged.
 - Stronghold garrisons are selected from faction rosters; regional wave spawns receive faction identity. Enemy units use faction tint.
 - War Shaman has bounded ally healing with a cooldown. Target selection and ally support are extracted into `enemy_targeting.gd` and `enemy_support.gd`.
-- Save format v10 records enemy faction IDs; older v1–v9 saves remain accepted and restore with an empty/default faction identity.
+- Save format v11 records Frontier objective/site progress plus enemy faction IDs; older v1–v10 saves remain accepted and restore with compatible defaults.
 - `tests/faction_registry.gd` covers faction-region mapping, roster/garrison membership, faction tint, War Shaman healing and v10 save validation. Godot 4.3/4.7 execution is pending CI.
 - Remaining Phase 06 work: fully distinct counterable behavior for all six archetypes, deterministic camps, bounded patrols, raids/counterattacks, camp/raid persistence, stress tests and manual gameplay review. Do not mark Phase 06 complete yet.
 
@@ -276,6 +276,6 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Branch: `feat/phase-07-conquest-objectives`, based on `feat/phase-06-factions-territorial-ai` so parallel Phase 06 work is inherited without modifying that branch.
 - Technology expands from 17 to 20 nodes: Surveying, Regional Cartography and Siegecraft. Existing technology IDs remain intact.
 - Classic keeps its 15-day / 3-stage schedule. Frontier uses 20 days / 4 acts, with faction archetypes joining later wave pools.
-- Eight regional objectives cover discovery rewards, camp/ruin clearing, rescue, escort and defense. Press O to inspect; E interacts with a site.
+- Eleven regional objectives cover four biome discoveries plus camp/ruin clearing, rescue, escort and defense. Press O to inspect; E interacts with a site.
 - Frontier victory requires every regional objective, all four strongholds and the King encounter on day 20.
-- Save v11 records objective state and site progress; v1-v10 remain supported by the existing compatibility path. Godot 4.3 / 4.7 CI verification is pending.
+- Save v11 records objective state and site progress; v1-v10 remain supported by the existing compatibility path. Godot 4.3 / 4.7 import/parse has passed; regression matrix is running.
