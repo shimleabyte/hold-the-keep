@@ -33,10 +33,10 @@ func _find_outpost_cell(main, keep, config) -> Vector2i:
     return Vector2i(-1, -1)
 
 
-func _spawn_test_enemy(main, position_world: Vector2):
+func _spawn_test_enemy(main, position_world: Vector2, data_db):
     var script = load("res://scripts/entities/enemy.gd")
     var enemy = script.new()
-    enemy.setup(DataDB.enemies["bandit"], main.world, main.flow, main.player)
+    enemy.setup(data_db.enemies["bandit"], main.world, main.flow, main.player)
     enemy.position = position_world
     main.world.entities.add_child(enemy)
     return enemy
@@ -46,6 +46,7 @@ func _initialize() -> void:
     var clock = root.get_node("GameClock")
     var config = root.get_node("WorldConfig")
     var save_system = root.get_node("SaveSystem")
+    var data_db = root.get_node("DataDB")
     config.apply_profile("frontier")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
@@ -112,21 +113,22 @@ func _initialize() -> void:
         enemy.queue_free()
     await ticks(2)
     guard.position = outpost.position + Vector2(0, 32)
-    var distant_enemy = _spawn_test_enemy(main, outpost.position + Vector2(170, 0))
+    var distant_enemy = _spawn_test_enemy(main, outpost.position + Vector2(170, 0), data_db)
     await ticks(2)
     assert(guard._nearest_enemy() == null,
         "A guard must ignore enemies outside its Outpost defense radius")
-    var local_enemy = _spawn_test_enemy(main, outpost.position + Vector2(24, 0))
+    var local_enemy = _spawn_test_enemy(main, outpost.position + Vector2(24, 0), data_db)
     await ticks(2)
     assert(guard._nearest_enemy() == local_enemy,
         "A guard must prioritize an enemy inside its Outpost defense radius")
     guard._tick_outpost_guard(0.31)
-    assert(guard.state == guard.State.FIGHT,
+    var villager_states: Dictionary = guard.get_script().get_script_constant_map()["State"]
+    assert(guard.state == int(villager_states["FIGHT"]),
         "A nearby hostile must pull an idle Outpost guard into combat")
     local_enemy.queue_free()
     await ticks(2)
     guard._tick_fight(0.31)
-    assert(guard.state == guard.State.IDLE and guard._path.is_empty(),
+    assert(guard.state == int(villager_states["IDLE"]) and guard._path.is_empty(),
         "A guard must clear its chase path and return to its local idle state when no in-radius enemies remain")
     distant_enemy.queue_free()
     await ticks(2)
