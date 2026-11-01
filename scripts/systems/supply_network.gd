@@ -226,6 +226,8 @@ func pay_cost(cost: Dictionary) -> bool:
 
 ## Return the raid exposure state used by the depot panel.
 func depot_pressure_state(depot: Node) -> Dictionary:
+    if WorldConfig.profile_id != "frontier":
+        return {"status": "connected", "label": "NONAKTIF"}
     if depot == null or not is_instance_valid(depot) or String(depot.id) == "keep":
         return {"status": "connected", "label": "TERHUBUNG"}
     if is_depot_connected(depot):
