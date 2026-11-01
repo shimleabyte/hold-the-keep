@@ -26,7 +26,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
 | Save/load | versi 6, autosave tiap fajar, F5/F9, file sementara + rollback backup, resource/fog/stronghold/garrison/ekspedisi/recall/combat progression tersimpan |
 | Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
-| Tampilan | windowed 1280×720 default, minimum 960×540 (enforced through `Window.min_size`), preset 16:9/16:10, integer-scaled viewport dengan aspect expand |
+| Tampilan | windowed 1280×720 default, minimum 960×540 (enforced through `Window.min_size`), preset 16:9/16:10/4:3, integer-scaled viewport dengan aspect expand |
 | HUD | top bar ringkas, vitals, indikator bab, combat strip kompak, drawer JOBS, peta strategis TAB/MAP, hotbar bangunan, bar boss, bantuan (H) |
 | Animasi | 22 frame x 3 arah per karakter; serang/panen jatuh di frame benturan |
 | Efek | partikel, busur tebasan, guncangan layar (bisa dimatikan) |
