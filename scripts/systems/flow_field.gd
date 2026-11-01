@@ -3,8 +3,6 @@ extends Node
 ## Tembok/bangunan boleh "dilewati" dengan biaya tinggi (musuh akan menghancurkannya);
 ## pohon, batu, dan air tidak bisa dilewati.
 
-const MAP_SIZE := 64
-const TILE := 16
 const INF_COST := 1000000000
 const STEP := 10
 const DIAG := 14
@@ -49,13 +47,13 @@ func next_cell(cell: Vector2i) -> Vector2i:
     var i := _idx(cell)
     if i < 0 or i >= _next.size() or _next[i] < 0:
         return cell
-    return Vector2i(_next[i] % MAP_SIZE, _next[i] / MAP_SIZE)
+    return Vector2i(_next[i] % WorldConfig.map_size, _next[i] / WorldConfig.map_size)
 
 
 func _idx(c: Vector2i) -> int:
-    if c.x < 0 or c.y < 0 or c.x >= MAP_SIZE or c.y >= MAP_SIZE:
+    if c.x < 0 or c.y < 0 or c.x >= WorldConfig.map_size or c.y >= WorldConfig.map_size:
         return -1
-    return c.y * MAP_SIZE + c.x
+    return c.y * WorldConfig.map_size + c.x
 
 
 func _is_building(n) -> bool:
@@ -83,7 +81,7 @@ func _penalty(c: Vector2i) -> int:
 @warning_ignore("integer_division")
 func rebuild() -> void:
     _dirty = false
-    var n := MAP_SIZE * MAP_SIZE
+    var n := WorldConfig.map_size * WorldConfig.map_size
     _cost.resize(n)
     _cost.fill(INF_COST)
     _next.resize(n)
@@ -94,7 +92,7 @@ func rebuild() -> void:
     for b in get_tree().get_nodes_in_group("buildings"):
         if b.id != "keep":
             continue
-        target_pos = b.position + Vector2(0, -b.size.y * TILE / 2.0)
+        target_pos = b.position + Vector2(0, -b.size.y * WorldConfig.tile_size / 2.0)
         for c in b.cells():
             var i := _idx(c)
             _cost[i] = 0
@@ -106,7 +104,7 @@ func rebuild() -> void:
         var i := top.y
         if c > _cost[i]:
             continue
-        var here := Vector2i(i % MAP_SIZE, i / MAP_SIZE)
+        var here := Vector2i(i % WorldConfig.map_size, i / WorldConfig.map_size)
         var pen := _penalty(here)
         for d in DIRS:
             var nb := here + d
