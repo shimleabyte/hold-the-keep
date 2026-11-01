@@ -68,7 +68,8 @@ func _initialize() -> void:
     wolf.set_physics_process(false)
     assert(wolf.role == "pouncer", "Wolf must use its pounce role")
     wolf._begin_attack(player, Vector2.LEFT)
-    assert(wolf._pounce_t > 0.0, "Wolf attack must launch a lunge")
+    assert(wolf._pounce_windup_t > 0.0 and wolf._pounce_t > 0.0,
+        "Wolf attack must telegraph before launching its lunge")
     wolf.apply_stagger(0.3)
     assert(wolf._pounce_t == 0.0 and wolf._stagger_t > 0.0,
         "Stagger must interrupt an active pounce")
