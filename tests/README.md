@@ -5,11 +5,18 @@ Sebagian skrip lama mencetak hasil untuk inspeksi manual; tes regresi baru memak
 Folder ini ada di dalam proyek, jadi Godot akan mengimpornya sebagai skrip biasa (tidak mengganggu game).
 
 ## Menjalankan
-Semua dari akar proyek (setelah `godot --headless --path . --import` sekali):
+Dari akar proyek:
 
-    godot --headless --fixed-fps 60 --path . --script tests/<nama>.gd
+    godot --headless --path . --import
+    bash tools/check_gdscript.sh
+    bash tools/run_tests.sh
 
-`--fixed-fps 60` penting: tanpa itu simulasi berjalan real-time dan tes panjang tidak selesai.
+`check_gdscript.sh` menjalankan parse-only terhadap seluruh skrip di `scripts/` dan `tests/`.
+`run_tests.sh` menjalankan suite regresi headless dengan fixed 60 FPS. `--fixed-fps 60` penting:
+tanpa itu simulasi tes panjang berjalan mengikuti waktu nyata.
+
+GitHub Actions menjalankan kedua langkah tersebut pada Godot 4.3 dan 4.7 untuk setiap pull request
+ke `main`, push ke `main` atau branch `feat/**` / `fix/**`, serta workflow manual.
 
 | Skrip | Menguji |
 |---|---|
