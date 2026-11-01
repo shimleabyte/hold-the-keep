@@ -117,9 +117,10 @@ func _initialize() -> void:
     assert(bool(data_db.buildings["outpost"].get("depot", false)),
         "Forward Outposts must function as local depots")
 
+    main.nav.rebuild()
     var remote_outpost_cell := Vector2i(-1, -1)
-    for y in range(40, 60):
-        for x in range(40, 60):
+    for y in range(34, 44):
+        for x in range(36, 48):
             var anchor := Vector2i(x, y)
             var clear := true
             for dy in 2:
@@ -127,7 +128,8 @@ func _initialize() -> void:
                     var cell := anchor + Vector2i(dx, dy)
                     if not world.is_buildable(cell) or world.occupied.has(cell):
                         clear = false
-            if clear:
+            var approach := Vector2(anchor) * float(world_config_size()) / float(world_config_size()) * 16.0 + Vector2(8.0, 8.0)
+            if clear and not main.nav.path_to(approach, world.starting_keep_cell()).is_empty():
                 remote_outpost_cell = anchor
                 break
         if remote_outpost_cell.x >= 0:
@@ -141,8 +143,8 @@ func _initialize() -> void:
         "An isolated Outpost must not join the Keep's supply network")
     var courier = main.village.spawn_villager(remote_outpost.global_position + Vector2(32, 0))
     courier._go_depot()
-    assert(courier._depot != remote_outpost,
-        "Workers must not deposit globally through an isolated Outpost")
+    assert(courier._depot != null and courier._depot != remote_outpost,
+        "Workers must select a connected depot, not a closer isolated Outpost")
 
     assert(main.build.demolish_at(road_b.cell),
         "Road infrastructure must be removable")
