@@ -15,6 +15,7 @@ Make the expanded 128×128 Frontier campaign predictable under load and safe to 
 - [x] Replace the old Classic-only micro-benchmark with a configurable diagnostic for Classic or Frontier.
 - [x] Include faction-specific rosters, villagers, ranged projectiles and capped particle effects in the Frontier workload.
 - [x] Report process/physics frame-time percentiles, wall-frame percentiles, peak projectile count, particle count, node count and static memory.
+- [x] Run the reference Frontier workload in CI and publish p50/p95/p99 metrics as an artifact (Godot 4.7 headless runner; diagnostic only).
 - [ ] Run the benchmark on the actual target desktop hardware and record Godot version, OS, CPU, GPU, resolution and workload.
 - [ ] Compare the same workload before/after any optimization; do not optimize based on intuition alone.
 
@@ -37,8 +38,9 @@ Make the expanded 128×128 Frontier campaign predictable under load and safe to 
 
 ### 09.4 — Release export hardening
 - [x] Add deterministic checks for the Windows Desktop and Linux export preset names, paths, resource filters and embedded PCK settings.
-- [ ] Install the matching export templates in CI and produce real Windows and Linux release artifacts.
-- [ ] Launch or smoke-check each exported build on its target platform.
+- [x] Install the Godot 4.3-matching export templates in CI and produce real Windows and Linux release artifacts.
+- [x] Verify the Windows PE executable format and launch the Linux release headlessly for a bounded smoke test.
+- [ ] Smoke-test the Windows build on a Windows runner and verify both binaries on clean target machines.
 - [ ] Verify clean-machine first launch, save directory creation, settings persistence and upgrade from an older save.
 
 ### 09.5 — Manual release gate
@@ -70,4 +72,4 @@ The benchmark is diagnostic by design. CI must validate bounded counts and funct
 
 ## Current blockers / honesty of verification
 
-The implementation environment does not contain Godot and cannot reach GitHub from the local shell. The repository changes can be committed through the connected GitHub integration, but local Godot execution, rendered screenshot review, target-hardware profiling and real export execution cannot be claimed here. The GitHub Actions matrix and export-smoke job must provide the engine-backed verification after the branch is pushed.
+The implementation environment does not contain Godot and cannot reach GitHub from the local shell. The repository changes can be committed through the connected GitHub integration, but local Godot execution, rendered screenshot review, target-hardware profiling and real export execution cannot be claimed here. The Godot 4.3/4.7 regression matrix, Frontier performance diagnostic and template-backed export job provide engine-backed CI evidence. Target-hardware profiling and clean-machine platform checks remain open.
