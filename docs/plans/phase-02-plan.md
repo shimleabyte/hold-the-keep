@@ -1,7 +1,7 @@
 # Phase 02 — Local Logistics and Outpost Support
 
-**Status:** Partial implementation. Regional ownership, roads/bridges, Keep-rooted connectivity, local Storage/Outpost stockpiles, Frontier deposits and bounded automatic shipments to Keep are merged into `main` through PR #31 with save v12. PR #32 is merged into `main` and adds read-only depot inspection, Outpost guard slots/assignment, local defense leash, lifecycle handling and save/load persistence. Its Godot 4.3/4.7 CI passed 48/48 jobs. Outpost-local visibility and currently-observed enemy map markers already exist in `main` and are not new work. Branch `feat/phase-02-physical-shipments` implements manual Keep/Storage/Outpost shipments with physical carriers, escrowed cargo and interruption recovery; CI is pending. Direct source-depot spending for build/research remains open.
-**Dependency:** Keep-connected supply graph and local stockpiles in save v12; physical shipment records add save v13 with v1–v12 migration compatibility.
+**Status:** Partial implementation. Regional ownership, roads/bridges, Keep-rooted connectivity, local Storage/Outpost stockpiles, Frontier deposits and bounded automatic shipments to Keep are merged into `main` through PR #31 with save v12. PR #32 is merged into `main` and adds read-only depot inspection, Outpost guard slots/assignment, local defense leash, lifecycle handling and save/load persistence. Its Godot 4.3/4.7 CI passed 48/48 jobs. Outpost-local visibility and currently-observed enemy map markers already exist in `main` and are not new work. PR #33 is merged into `main` and delivers manual Keep/Storage/Outpost shipments with physical carriers, escrowed cargo and interruption recovery. Godot 4.3/4.7 CI passed 50/50 jobs. Direct source-depot spending for build/research remains open.
+**Dependency:** Keep-connected supply graph and local stockpiles in save v12; mainline now uses save v13 for physical shipment records, with v1–v12 migration compatibility.
 **Engine targets:** Godot 4.3 and 4.7.
 
 ## Goal
@@ -27,10 +27,10 @@ Turn road connectivity into an actual logistics system without changing Classic 
 - [x] Atomically remove the exact quantity from the source stockpile and credit Keep Inventory in the same simulation tick.
 - [x] Use deterministic depot ordering, a 3-second cadence, a six-unit per-depot budget and rotating resource-kind priority; no per-frame global cargo scan.
 - [x] Leave disconnected depot stock in place until its route is restored.
-- [x] Add player-directed shipment orders between Keep/Storage/Outposts with explicit source reservation and destination-capacity reservation (physical shipment branch; CI pending).
-- [x] Spawn visible physical couriers on nav paths and deliver exact cargo into destination stockpiles or Keep Inventory (physical shipment branch; CI pending).
-- [x] Preserve the carrier's last position and escrowed cargo when a route is interrupted; resume when the destination route is reconnected (physical shipment branch; CI pending).
-- [x] Support cancellation/refund and capacity-safe recovery when a destination disappears; source destruction falls back to central Inventory on recovery (physical shipment branch; CI pending).
+- [x] Add player-directed shipment orders between Keep/Storage/Outposts with explicit source reservation and destination-capacity reservation (PR #33 merged; Godot 4.3/4.7 CI passed 50/50).
+- [x] Spawn visible physical couriers on nav paths and deliver exact cargo into destination stockpiles or Keep Inventory (PR #33 merged; Godot 4.3/4.7 CI passed 50/50).
+- [x] Preserve the carrier's last position and escrowed cargo when a route is interrupted; resume when the destination route is reconnected (PR #33 merged; Godot 4.3/4.7 CI passed 50/50).
+- [x] Support cancellation/refund and capacity-safe recovery when a destination disappears; source destruction falls back to central Inventory on recovery (PR #33 merged; Godot 4.3/4.7 CI passed 50/50).
 - Keep automatic 3-second atomic Keep transfers distinct from player-directed carrier trips; they are separate services and budgets.
 
 ### 02.4 — Outpost defense and visibility
@@ -56,15 +56,15 @@ Turn road connectivity into an actual logistics system without changing Classic 
 - Disconnected depot refuses deposit and retains villager cargo.
 - Full depot handles overflow without loss.
 - [x] Automatic transfer moves exact quantities once and stays within the configured per-depot budget.
-- [x] Physical carrier shipment interruption preserves escrowed cargo and last position; reconnection resumes the courier (physical shipment branch; CI pending).
+- [x] Physical carrier shipment interruption preserves escrowed cargo and last position; reconnection resumes the courier (PR #33 merged; Godot 4.3/4.7 CI passed 50/50).
 - [x] Save/load preserves each depot local balance after automatic transfer.
-- [x] Physical carrier order history and pending cargo survive v13 save/load; v12 saves migrate with no active shipment orders (physical shipment branch; CI pending).
+- [x] Physical carrier order history and pending cargo survive v13 save/load; v12 saves migrate with no active shipment orders (PR #33 merged; Godot 4.3/4.7 CI passed 50/50).
 - [x] Outpost guard assignment, death/reassignment, removal, local combat radius, local visibility and v12 save compatibility (PR #32; regression passed on Godot 4.3/4.7).
 - Classic economy remains unchanged.
 
 ## Acceptance gate
 - Local stockpiles are authoritative for remote Frontier depot deposits; central construction/research spending must not consume remote stock before explicit transfer or source-depot rules exist.
 - [x] Automatic Keep-bound transfers are bounded, deterministic and atomic; local balances persist through save/load.
-- [x] Player-directed physical shipments, cancellation/refund, destination-capacity reservation and recoverable route interruption are implemented on `feat/phase-02-physical-shipments` (Godot CI pending).
+- [x] Player-directed physical shipments, cancellation/refund, destination-capacity reservation and recoverable route interruption are merged through PR #33 (Godot 4.3/4.7 CI passed 50/50).
 - [x] Outposts provide working guard assignment and local visibility (PR #32 merged; Godot CI passed 48/48).
 - Godot 4.3/4.7 import, parse and regression matrices pass.
