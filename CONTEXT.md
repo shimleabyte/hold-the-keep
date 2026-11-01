@@ -281,3 +281,13 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Escort paths rebuild from the saved world position after load. Save v11 persists objective/site progress, site health/location, escort progress and final-boss state; v1–v10 remain compatible.
 - Frontier victory requires all required regional objectives, all four strongholds and the King encounter on day 20. Classic's original 15-day victory path remains intact.
 - The original Phase 07 branch passed its Godot 4.3/4.7 workflow (30/30 jobs). The mainline-rebased integration branch requires a fresh CI run before it is considered merge-ready.
+
+
+## 25. Phase 09 — Balance, performance and release hardening (2026-11-01)
+- Mainline continuation branch: `feat/phase-09-balance-performance-release-mainline`, based on Phase 07 mainline integration commit `131e116a3330e0e01af26298ff8529157e335391`.
+- Adds configurable Classic/Frontier profiling for frame timing, static memory, world nodes, projectiles and particles; results are diagnostic and runner-specific.
+- Adds bounded Frontier stress coverage for faction rosters, villagers, projectiles and the 500-particle ceiling.
+- Adds deterministic campaign-balance, objective reload and save migration/recovery coverage, including Classic v1–v11 and Frontier v7–v11.
+- Release scripts verify non-empty Windows/Linux export outputs; CI installs Godot 4.3 export templates, validates the PE format and smoke-tests Linux headlessly.
+- Previous stacked Phase 09 workflow #282 passed 30/30 jobs. This mainline transplant requires a fresh CI run before merge.
+- Remaining gates: real target-machine performance profile, later-act/day-20 combat outcome cases, full manual campaign playtest, Windows runtime smoke and clean-machine migration.
