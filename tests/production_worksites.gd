@@ -59,6 +59,7 @@ func _initialize() -> void:
     var camp_cell := find_build_site(main, keep.cell, Vector2i(3, 2))
     assert(camp_cell.x >= 0, "A reachable Lumber Camp footprint must exist")
     var camp = main.build.place_raw("lumber_camp", camp_cell)
+    await ticks(2)  # Let navigation rebuild around the new footprint before choosing the next site.
     var quarry_cell := find_build_site(main, keep.cell, Vector2i(3, 2))
     assert(quarry_cell.x >= 0, "A reachable Quarry footprint must exist")
     var quarry = main.build.place_raw("quarry", quarry_cell)
