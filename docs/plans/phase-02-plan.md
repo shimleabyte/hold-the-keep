@@ -1,0 +1,59 @@
+# Phase 02 — Local Logistics and Outpost Support
+
+**Status:** Partial implementation merged into `main`. Regional ownership, roads/bridges, Keep-rooted connectivity and connected-depot eligibility exist. Local stockpiles, actual inter-depot transfers, Outpost garrisons and Outpost-local visibility remain open.
+**Dependency:** The existing Keep-connected supply graph and save v11.
+**Engine targets:** Godot 4.3 and 4.7.
+
+## Goal
+
+Turn road connectivity into an actual logistics system without changing Classic economy rules. A connected road graph is not itself a supply simulation: each depot must own stock, deliveries must change that stock, and transfers must move real quantities between depots.
+
+## Workstreams
+
+### 02.2 — Local depot inventories
+- Give each eligible depot a persisted resource ledger with explicit capacity and accepted resource types.
+- Keep the Keep as the initial central depot. Storage and Outposts hold local stock rather than silently crediting a global shared balance.
+- Worker deposits must atomically remove carried cargo from the villager and add exactly that amount to one reachable depot. Disconnected depots are ineligible.
+- Define overflow behavior: workers retain unaccepted cargo or select another eligible depot; never silently destroy or duplicate resources.
+- Keep existing build/research spending compatible by introducing an explicit source-depot selection/reservation rule. Do not make a local outpost stock globally spendable without a transfer or a documented local-consumption rule.
+- Render local stock in a depot inspection UI before adding management complexity to the global HUD.
+
+### 02.3 — Inter-depot transfers
+- Add an explicit transfer order or bounded logistics service that moves resource quantities along Keep-connected road edges.
+- A transfer removes stock from its source when a carrier departs and credits the destination only on successful arrival.
+- Revalidate road connectivity, destination validity and capacity during the trip; interruption must preserve cargo and support return, reroute or recoverable dropped cargo.
+- Use deterministic carrier selection, bounded active transfers and clear cooldowns to avoid per-frame global scans.
+- Persist transfer assignments and in-transit cargo. Save/load must not duplicate or erase stock.
+
+### 02.4 — Outpost defense and visibility
+- Add configurable guard slots to Outposts and an assignment UI using existing soldier specialization.
+- Assigned guards remain attached to their Outpost, defend a local radius, and return after enemies leave or are defeated.
+- Outposts reveal a bounded local radius independent of ownership and road supply.
+- Strategic map markers must reveal enemy locations only while observed; unseen hostile units must not leak through stored territory data.
+- Persist assigned guards and validate release/reassignment when an Outpost is removed or captured.
+
+### 02.5 — Supply pressure (deferred)
+- Only after local stock and transfers are reliable, introduce raid vulnerability and optional supply attrition.
+- Attrition must be tied to a concrete disconnected/contested supply condition, have a readable warning and recovery path, and never randomly destroy inventory.
+- Do not implement attrition in the local-stockpile slice.
+
+## Persistence and compatibility
+- Bump save schema only when new persisted state is introduced; include a migration default for every prior schema.
+- Preserve Classic's current shared-resource behavior unless a separate Classic design decision explicitly changes it.
+- Test Classic v1–v11 migration, Frontier v7–v11 migration, v12 round-trip if the schema is bumped, backup recovery and interrupted writes.
+- Removing a depot must deterministically resolve its stock and in-transit cargo; no silent resource duplication.
+
+## Required regression coverage
+- Two depots with different balances; deposit to one must not alter the other.
+- Disconnected depot refuses deposit and retains villager cargo.
+- Full depot handles overflow without loss.
+- Transfer moves exact quantities once; interrupted route preserves recoverable cargo.
+- Save/load preserves each depot balance and in-flight transfer state.
+- Outpost guard assignment, death/reassignment, removal and local visibility bounds.
+- Classic economy remains unchanged.
+
+## Acceptance gate
+- Local stockpiles are authoritative; shared global inventory cannot bypass transfer rules in Frontier.
+- Inter-depot transfers are bounded, deterministic, persistent and lossless except for explicitly documented combat losses.
+- Outposts provide working guard assignment and local visibility.
+- Godot 4.3/4.7 import, parse and regression matrices pass.
