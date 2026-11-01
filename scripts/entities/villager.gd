@@ -66,6 +66,9 @@ var _pending_foe = null
 var _pending_t := 0.0
 var _hit_done := false
 var _running := false
+var _rally_t := 0.0
+var _rally_damage_mult := 1.0
+var _rally_interval_mult := 1.0
 
 
 func _ready() -> void:
@@ -84,7 +87,23 @@ func _hit_interval() -> float:
 
 
 func _soldier_damage() -> int:
-    return roundi(Tech.stat("soldier.damage", float(SOLDIER_DAMAGE)))
+    var value := Tech.stat("soldier.damage", float(SOLDIER_DAMAGE))
+    if _rally_t > 0.0:
+        value *= _rally_damage_mult
+    return roundi(value)
+
+
+func _soldier_attack_interval() -> float:
+    return SOLDIER_INTERVAL * (_rally_interval_mult if _rally_t > 0.0 else 1.0)
+
+
+func apply_rally(duration: float, damage_multiplier: float, interval_multiplier: float) -> void:
+    if job != "soldier":
+        return
+    _rally_t = maxf(_rally_t, duration)
+    _rally_damage_mult = maxf(_rally_damage_mult, damage_multiplier)
+    _rally_interval_mult = minf(_rally_interval_mult, interval_multiplier)
+    Events.fx_burst.emit("rally", position + Vector2(0, -8), Vector2.ZERO, 0.7)
 
 
 func _hp_cap_for(j: String) -> int:
@@ -168,6 +187,10 @@ func leave() -> void:
 func _physics_process(delta: float) -> void:
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _hurt_t = maxf(0.0, _hurt_t - delta)
+    _rally_t = maxf(0.0, _rally_t - delta)
+    if _rally_t <= 0.0:
+        _rally_damage_mult = 1.0
+        _rally_interval_mult = 1.0
     _resolve_pending(delta)
 
     if state == State.HIDDEN:
@@ -413,7 +436,7 @@ func _tick_expedition(delta: float) -> void:
         if anim.face(_expedition_target.position - position):
             queue_redraw()
         if _atk_cd <= 0.0:
-            _atk_cd = SOLDIER_INTERVAL
+            _atk_cd = _soldier_attack_interval()
             _pending_foe = _expedition_target
             _pending_t = ATTACK_HIT_DELAY
             anim.play("attack", true)
@@ -442,7 +465,7 @@ func _tick_fight(delta: float) -> void:
         if anim.face(_foe.position - position):
             queue_redraw()
         if _atk_cd <= 0.0:
-            _atk_cd = SOLDIER_INTERVAL
+            _atk_cd = _soldier_attack_interval()
             _pending_foe = _foe
             _pending_t = ATTACK_HIT_DELAY
             anim.play("attack", true)
