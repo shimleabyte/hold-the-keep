@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` includes PR #36 (`b02aa60`), adding Shieldbearer directional brace without a save-schema change. Workflow #41329202804 completed successfully on Godot 4.3/4.7. Phase 02.5 supply pressure remains merged via PR #35; save schema v13. Current development branch `feat/phase-06-scout-marking` implements Scout scouting/marking; CI and merge pending. See `ROADMAP_NEXT_LEVEL.md` and `docs/plans/` for phase status.
+**Current source of truth:** default branch `main` includes PR #36 (`b02aa60`), adding Shieldbearer directional brace without a save-schema change. The available first results page for workflow #41329202804 showed 30/30 jobs successful; the connector did not expose the remainder of the matrix in that snapshot. Phase 02.5 supply pressure remains merged via PR #35; save schema v13. Current development branch `feat/phase-06-scout-marking` implements Scout scouting/marking; CI and merge pending. See `ROADMAP_NEXT_LEVEL.md` and `docs/plans/` for phase status.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -35,7 +35,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #36 (save schema v13; statu
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 12 procedural SFX; musik belum ada |
 | Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | PR #35 workflow #41328005585 passed; PR #36 workflow #41329202804 completed successfully, including import/parse and the Shieldbearer regression on Godot 4.3/4.7. |
+| CI | PR #35 workflow #41328005585 passed; PR #36 workflow #41329202804 first-page results showed 30/30 jobs successful, including parse and the visible regression jobs; the full matrix was not independently available in that snapshot. |
 
 ## 3. Struktur
 ```
@@ -372,7 +372,7 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Branch: `feat/phase-06-shieldbearer-brace`, based on main after PR #35.
 - Shieldbearer now uses a data-defined telegraphed brace, locks a facing direction during its active window, and mitigates frontal damage while leaving side/rear attacks more effective.
 - Player attacks, Dash, Cleave and tower arrows pass their source position. Stagger interrupts the brace; target disengagement cancels an unfinished wind-up.
-- New regression `tests/shieldbearer_behavior.gd` covers telegraph, facing, frontal mitigation, flank/rear damage, stagger interruption and disengage recovery. Workflow #41329202804 completed successfully on Godot 4.3/4.7. No save-schema migration was needed.
+- New regression `tests/shieldbearer_behavior.gd` covers telegraph, facing, frontal mitigation, flank/rear damage, stagger interruption and disengage recovery. The available workflow result page showed the Shieldbearer regression successful; remaining matrix jobs were not independently exposed in that snapshot. No save-schema migration was needed.
 
 
 ## 33. Phase 06.2 — Scout scouting and faction focus (2026-11-02, branch pending CI)
