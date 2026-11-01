@@ -1,6 +1,6 @@
 # Phase 09 — Balance, Performance and Release Hardening
 
-**Status:** Automated regression, save recovery, CI profiling and template-backed desktop exports are merged through PR #29. Current `main` baseline workflow #294 passed 44/44 jobs. Target-hardware profiling, full act-by-act combat outcome review, native Windows runtime and manual release acceptance remain open.
+**Status:** Automated regression, save recovery, CI profiling and template-backed desktop exports are merged through PR #29. Current `main` workflow #41314731305 passed 46/46 jobs after PR #31. Target-hardware profiling, full act-by-act combat outcome review, native Windows runtime and manual release acceptance remain open.
 **Mainline:** `main` (merged); run a focused release-acceptance branch for remaining gates.
 **Save schema:** v12 after the Phase 02 local-depot-stockpile slice in the current implementation PR.
 **Engine targets:** Godot 4.3 and 4.7.
@@ -72,7 +72,7 @@ The benchmark is diagnostic by design. CI must validate bounded counts and funct
 
 ## Current blockers / honesty of verification
 
-The latest completed mainline baseline workflow #294 executed 44 successful jobs, including Godot 4.3/4.7 import/parse and regression coverage, Frontier performance diagnostics, and Windows/Linux export checks. The Phase 02 stockpile PR adds one regression test per engine and updates the save schema to v12; its own CI results must be used for acceptance. No target-hardware frame-time result, native Windows runtime test or full manual playtest is claimed.
+The latest completed mainline workflow #41314731305 executed 46 successful jobs, including Godot 4.3/4.7 import/parse and regression coverage, Frontier performance diagnostics, and Windows/Linux export checks. PR #31 merged the Phase 02 local stockpile/automatic-shipment slice and save schema v12; its 21 regression scripts per engine, export and diagnostic checks all passed. No target-hardware frame-time result, native Windows runtime test or full manual playtest is claimed.
 
 
 ## CI evidence
