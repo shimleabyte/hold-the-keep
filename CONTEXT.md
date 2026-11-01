@@ -279,3 +279,17 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Eleven regional objectives cover four biome discoveries plus camp/ruin clearing, rescue, escort and defense. Press O to inspect; E interacts with a site.
 - Frontier victory requires every regional objective, all four strongholds and the King encounter on day 20.
 - Save v11 records objective state and site progress; v1-v10 remain supported by the existing compatibility path. Godot 4.3 / 4.7 import/parse has passed; regression matrix is running.
+
+
+## 24. Phase 09 — Balance, performance and release hardening (2026-11-01)
+- Work branch: `feat/phase-09-balance-performance-release-v2`, based on the Phase 07 campaign head so the 20-day Frontier objectives and save v11 schema are present without modifying `main` or the other active phase branches.
+- Added `docs/plans/phase-09-plan.md` with measured-performance, deterministic stress, save-recovery, export and manual-playtest gates.
+- `tests/perf.gd` now supports Classic/Frontier profiles and configurable population/workload; it reports p50/p95/p99 process, physics and wall-frame timing, static memory, world node count, projectile peak and particle peak. It is diagnostic and deliberately has no machine-independent timing assertion.
+- `tests/frontier_stress.gd` exercises a 128×128 Frontier world, four faction identities and rosters, 48 villagers, ranged projectile creation, the 500-particle ceiling and current save validation.
+- `tests/release_hardening.gd` creates structural migration fixtures for Classic v1–v11 and Frontier v7–v11, validates world-profile isolation, checks stale `save.tmp`, backup rotation, malformed primary rejection and Windows/Linux export preset definitions.
+- `tests/campaign_reload_hardening.gd` performs an end-to-end Frontier reload with completed Act I objectives, unlocked Act II, an active Highlands escort/path index and partially damaged Iron Legion stronghold.
+- `tests/campaign_balance_matrix.gd` locks down Classic's day-15 / 3-stage and Frontier's day-20 / 4-act schedules, wave budgets at act boundaries, faction archetype pools and final-boss day gating.
+- New assertion tests are wired into `tools/run_tests.sh` and the Godot 4.3/4.7 workflow. The performance benchmark is available through `tools/run_diagnostics.sh`.
+- Release scripts now verify that both output binaries exist and are non-empty after export.
+- CI now runs the Frontier reference benchmark (96 requested faction enemies, 80 villagers, 500-particle cap) on Godot 4.7 and uploads a percentile report. A separate Godot 4.3 job installs matching templates, exports Windows/Linux, checks the Windows PE format and smoke-tests the Linux executable.
+- Still open: target desktop hardware profiling, later-act/day-20 combat outcome cases, human playtests across the campaign, Windows runtime smoke test and clean-machine save/settings migration. No hardware performance result is claimed.
