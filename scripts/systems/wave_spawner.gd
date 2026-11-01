@@ -95,6 +95,8 @@ func end_wave() -> void:
         enemy.retreat()
     if left.size() > 0:
         Events.build_feedback.emit("Fajar tiba, musuh mundur")
+    elif not get_tree().get_nodes_in_group("enemy_garrison").is_empty():
+        Events.build_feedback.emit("Fajar tiba. Penjaga benteng lawan tetap bertahan")
     else:
         Events.build_feedback.emit("Fajar tiba. Semua musuh terkalahkan!")
 
