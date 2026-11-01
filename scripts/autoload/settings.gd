@@ -19,6 +19,7 @@ var windowed_size := Vector2i(1280, 720)
 var vsync := true
 var volume := 0.8
 var screen_shake := true
+var world_profile := "classic"
 var custom_bindings: Dictionary = {}
 
 
@@ -44,6 +45,9 @@ func load_settings() -> void:
         vsync = bool(config.get_value("display", "vsync", vsync))
         volume = clampf(float(config.get_value("audio", "volume", volume)), 0.0, 1.0)
         screen_shake = bool(config.get_value("display", "screen_shake", screen_shake))
+        world_profile = String(config.get_value("world", "profile", world_profile))
+        if not WorldConfig.PROFILES.has(world_profile):
+            world_profile = "classic"
         for action in BINDABLE_ACTIONS:
             if config.has_section_key("input", action):
                 var code := int(config.get_value("input", action, 0))
@@ -63,6 +67,7 @@ func save_settings() -> void:
     config.set_value("display", "vsync", vsync)
     config.set_value("audio", "volume", volume)
     config.set_value("display", "screen_shake", screen_shake)
+    config.set_value("world", "profile", world_profile)
     for action in custom_bindings:
         config.set_value("input", action, int(custom_bindings[action]))
     config.save(PATH)
@@ -169,6 +174,14 @@ func set_volume(value: float) -> void:
     volume = clampf(value, 0.0, 1.0)
     apply()
     save_settings()
+
+
+func set_world_profile(profile_id: String) -> bool:
+    if not WorldConfig.PROFILES.has(profile_id):
+        return false
+    world_profile = profile_id
+    save_settings()
+    return true
 
 
 func _log_session_header() -> void:
