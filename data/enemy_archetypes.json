@@ -10,12 +10,18 @@
     "color": "#72a96a",
     "scale": 0.9,
     "run": true,
-    "role": "pouncer",
-    "range": 24.0,
+    "role": "melee",
+    "range": 20.0,
     "preferred_range": 0.0,
     "armor": 0.0,
     "stagger_resistance": 0.0,
-    "structure_damage_mult": 1.0
+    "structure_damage_mult": 1.0,
+    "scout_mark_range": 142.0,
+    "scout_preferred_range": 96.0,
+    "scout_windup": 0.68,
+    "scout_mark_duration": 5.4,
+    "scout_mark_cooldown": 8.4,
+    "scout_share_radius": 190.0
   },
   {
     "id": "enemy_shieldbearer",
