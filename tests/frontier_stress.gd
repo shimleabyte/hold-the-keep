@@ -159,7 +159,7 @@ func _run() -> void:
 
 func _initialize() -> void:
     world_config = root.get_node("WorldConfig")
-    data_db = root.get_node("DataDb")
+    data_db = root.get_node("DataDB")
     faction_registry = root.get_node("FactionRegistry")
     game_clock = root.get_node("GameClock")
     events = root.get_node("Events")
