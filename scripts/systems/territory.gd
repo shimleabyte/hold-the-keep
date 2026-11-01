@@ -4,6 +4,8 @@ extends Node2D
 var world
 var claimed_cells: Dictionary = {}
 var enemy_claimed_cells: Dictionary = {}
+var region_states: Dictionary = {}
+var conquered_regions: Dictionary = {}
 var _dirty := true
 
 
@@ -14,6 +16,7 @@ func _ready() -> void:
     Events.building_destroyed.connect(_mark_dirty)
     Events.enemy_stronghold_placed.connect(_mark_enemy_dirty)
     Events.enemy_stronghold_destroyed.connect(_mark_enemy_dirty)
+    Events.campaign_objective_completed.connect(_on_campaign_objective_completed)
 
 
 func _mark_dirty(_id: String, _cell: Vector2i) -> void:
@@ -22,6 +25,12 @@ func _mark_dirty(_id: String, _cell: Vector2i) -> void:
 
 func _mark_enemy_dirty(_cell: Vector2i) -> void:
     _dirty = true
+
+
+func _on_campaign_objective_completed(_stronghold_id: String, region_id: String) -> void:
+    if not region_id.is_empty():
+        conquered_regions[region_id] = true
+        _dirty = true
 
 
 func _physics_process(_delta: float) -> void:
@@ -64,10 +73,89 @@ func rebuild() -> void:
                 var tile_center := Vector2(x + 0.5, y + 0.5)
                 if tile_center.distance_squared_to(center) <= radius * radius:
                     enemy_next[Vector2i(x, y)] = true
+    # A conquered region becomes player-controlled land, not merely neutral land
+    # after its last stronghold is removed.
+    for y in WorldConfig.map_size:
+        for x in WorldConfig.map_size:
+            var cell := Vector2i(x, y)
+            if conquered_regions.has(world.region_id(cell)) and world.is_buildable(cell):
+                next[cell] = true
+                enemy_next.erase(cell)
     claimed_cells = next
     enemy_claimed_cells = enemy_next
+    _rebuild_region_states()
     Events.territory_changed.emit(claimed_cells.size())
     queue_redraw()
+
+
+func _rebuild_region_states() -> void:
+    var next_states: Dictionary = {}
+    for y in WorldConfig.map_size:
+        for x in WorldConfig.map_size:
+            var cell := Vector2i(x, y)
+            var region_id: String = world.region_id(cell)
+            if not next_states.has(region_id):
+                next_states[region_id] = {
+                    "id": region_id,
+                    "land_cells": 0,
+                    "player_cells": 0,
+                    "enemy_cells": 0,
+                    "contested_cells": 0
+                }
+            if not world.is_buildable(cell):
+                continue
+
+            var region: Dictionary = next_states[region_id]
+            region["land_cells"] = int(region["land_cells"]) + 1
+            var player_owns: bool = claimed_cells.has(cell)
+            var enemy_owns: bool = enemy_claimed_cells.has(cell)
+            if player_owns:
+                region["player_cells"] = int(region["player_cells"]) + 1
+            if enemy_owns:
+                region["enemy_cells"] = int(region["enemy_cells"]) + 1
+            if player_owns and enemy_owns:
+                region["contested_cells"] = int(region["contested_cells"]) + 1
+            next_states[region_id] = region
+
+    for region_id in next_states:
+        var region: Dictionary = next_states[region_id]
+        var land := maxi(1, int(region["land_cells"]))
+        var player_share := float(region["player_cells"]) / land
+        var enemy_share := float(region["enemy_cells"]) / land
+        var contested_share := float(region["contested_cells"]) / land
+        var control := "neutral"
+        if contested_share >= 0.06 or (player_share >= 0.12 and enemy_share >= 0.12):
+            control = "contested"
+        elif player_share >= 0.30 and player_share - enemy_share >= 0.12:
+            control = "player"
+        elif enemy_share >= 0.30 and enemy_share - player_share >= 0.12:
+            control = "enemy"
+
+        region["player_ratio"] = player_share
+        region["enemy_ratio"] = enemy_share
+        region["contested_ratio"] = contested_share
+        region["control"] = control
+        next_states[region_id] = region
+
+        var previous: Dictionary = region_states.get(region_id, {})
+        if String(previous.get("control", "")) != control:
+            Events.region_control_changed.emit(region_id, control)
+
+    region_states = next_states
+
+
+func region_ids() -> Array[String]:
+    _ensure_current()
+    var ids: Array[String] = []
+    for region_id in region_states:
+        ids.append(String(region_id))
+    ids.sort()
+    return ids
+
+
+func get_region_state(region_id: String) -> Dictionary:
+    _ensure_current()
+    return region_states.get(region_id, {}).duplicate(true)
 
 
 func _ensure_current() -> void:

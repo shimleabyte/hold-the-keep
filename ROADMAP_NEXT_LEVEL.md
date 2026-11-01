@@ -1,7 +1,7 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
-**Status:** Phase 00 merged and verified; Phase 01 implemented and verified on Godot 4.3 and 4.7. PR #10 remains open for review.  
-**Implementation branches:** `main` (Phase 00, merged PR #7) → `feat/frontier-world-generation-mainline` (Phase 01, PR #10)  
+**Status:** Phase 00 merged; Phase 01 and Phase 02 implemented and verified on Godot 4.3 and 4.7 in stacked PRs #10 and #11. Phase 03 implementation is in progress.  
+**Implementation branches:** `main` → `feat/frontier-world-generation-mainline` (Phase 01, PR #10) → `feat/regional-control-roads-mainline` (Phase 02, PR #11) → `feat/multi-stronghold-campaign` (Phase 03)  
 **Baseline:** Godot 4.x / GDScript, Classic world 64×64, save format v7
 
 ## 1. Product direction
@@ -96,19 +96,34 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate — passed:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable stronghold approach, valid map bounds, viewport fit and 128×128 fog/index round-trip.
 
 ### Phase 02 — Territory, roads and supply
-- Add regional ownership records and neutral/player/enemy/contested states.
-- Make Outposts meaningful forward infrastructure with guard assignment and local visibility.
-- Add roads, bridges, local depots and supply-route connectivity.
-- Separate ownership from supply and line-of-sight.
-- Add supply attrition and raid vulnerability only after the basic route model is reliable.
+**Status:** Initial implementation slice verified on Godot 4.3 and 4.7; stacked draft PR #11. Broader phase remains in progress.
 
-**Acceptance gate:** claim boundaries, outpost frontier rules, path connectivity, supply routing, local depot access and save/load all work across region boundaries.
+- [x] Aggregate land claims into neutral/player/enemy/contested regional control records.
+- [x] Emit regional control changes independently from fog-of-war exploration.
+- [x] Add road and bridge construction definitions, pixel assets and HUD icons.
+- [x] Allow bridge placement on valid water cells inside player claims.
+- [x] Keep roads and bridges walkable in villager A* and enemy flow-field routing.
+- [x] Build a cardinal road graph rooted at the Keep and expose connected road/depot state.
+- [x] Treat Keep, Storage and Outposts as depots; Outposts are forward depots.
+- [x] Restrict worker deposits to Keep-connected depots and retain cargo when a route disconnects.
+- [x] Show explored roads and regional control state on the strategic map.
+- [x] Cover ownership states, road/bridge traversal, depot connectivity/disconnection, isolated Outposts and road save persistence.
+- [x] Pass the Godot 4.3/4.7 CI matrix, including the regional integration test (run `41289421611`, 24/24 jobs).
+- [ ] Add Outpost guard assignment, garrison support and local visibility.
+- [ ] Add local stockpile accounting and actual inter-depot transfers. Current delivery still credits shared inventory at a connected depot.
+- [ ] Add supply attrition and raid vulnerability after local logistics are reliable.
+
+**Initial slice acceptance gate — passed:** regional ownership is independent of fog and supply; road/bridge routes remain navigable; depot connectivity updates when roads are built or removed; disconnected depots cannot receive inventory deposits; infrastructure persists in saves.
 
 ### Phase 03 — Multi-stronghold campaign
-- Replace the single enemy stronghold reference with a campaign objective/stronghold registry.
-- Support multiple enemy settlements, garrisons, reinforcement sources and regional conquest rewards.
-- Make regional capture unlock new objectives rather than immediately ending the campaign.
-- Preserve the existing single-stronghold flow in Classic Mode.
+**Status:** Implemented on `feat/multi-stronghold-campaign`; Godot regression verification pending.
+
+- [x] Replace the single enemy stronghold reference with an ordered campaign objective/stronghold registry.
+- [x] Support four region-specific Frontier strongholds with independent local garrisons and reinforcement caps.
+- [x] Make objective order deterministic; each conquered region unlocks the next objective and grants a regional resource reward.
+- [x] Persist the full objective registry, stronghold health and conquest state in save format v8; retain v1–v7 single-stronghold compatibility.
+- [x] Preserve the existing one-stronghold Classic campaign.
+- [ ] Complete the Godot 4.3 / 4.7 regression matrix and review the in-game objective/map presentation.
 
 **Acceptance gate:** multiple strongholds can be found, attacked, destroyed, restored from saves and completed in a deterministic objective sequence.
 

@@ -89,7 +89,7 @@ func check(id: String, c: Vector2i) -> String:
     for y in size.y:
         for x in size.x:
             var cell := c + Vector2i(x, y)
-            if not world.is_buildable(cell):
+            if not world.is_buildable(cell) and not (id == "bridge" and world.is_bridgeable(cell)):
                 return "Tidak bisa dibangun di sini"
             if world.occupied.has(cell):
                 return "Terhalang"
