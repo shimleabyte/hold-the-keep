@@ -287,6 +287,7 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - `tests/perf.gd` now supports Classic/Frontier profiles and configurable population/workload; it reports p50/p95/p99 process, physics and wall-frame timing, static memory, world node count, projectile peak and particle peak. It is diagnostic and deliberately has no machine-independent timing assertion.
 - `tests/frontier_stress.gd` exercises a 128×128 Frontier world, four faction identities and rosters, 48 villagers, ranged projectile creation, the 500-particle ceiling and current save validation.
 - `tests/release_hardening.gd` creates structural migration fixtures for Classic v1–v11 and Frontier v7–v11, validates world-profile isolation, checks stale `save.tmp`, backup rotation, malformed primary rejection and Windows/Linux export preset definitions.
+- `tests/campaign_reload_hardening.gd` performs an end-to-end Frontier reload with completed Act I objectives, unlocked Act II, an active Highlands escort/path index and partially damaged Iron Legion stronghold.
 - New assertion tests are wired into `tools/run_tests.sh` and the Godot 4.3/4.7 workflow. The performance benchmark is available through `tools/run_diagnostics.sh`.
 - Release scripts now verify that both output binaries exist and are non-empty after export.
 - Still open: run CI, measure on target hardware, add representative Frontier act/day-20 balance runs, human-playtest the campaign, execute real platform exports and smoke-test those artifacts. No local Godot run or target-hardware result is claimed.
