@@ -40,7 +40,7 @@ func _run() -> void:
     var shield = _spawn_shieldbearer(main, player.global_position + Vector2(52, 0))
     shield._tick_shieldbearer(0.016)
     assert(shield._brace_windup_t > 0.0, "Shieldbearer must telegraph before bracing")
-    var expected_front := (player.global_position - shield.global_position).normalized()
+    var expected_front: Vector2 = (player.global_position - shield.global_position).normalized()
     assert(shield._brace_dir.dot(expected_front) > 0.99,
         "Brace must face the nearest valid defender")
     shield._tick_shieldbearer(shield.shield_brace_windup_duration + 0.01)
@@ -49,7 +49,7 @@ func _run() -> void:
     # A front hit is mitigated; side and rear attacks bypass the directional guard.
     var starting_hp: int = shield.hp
     shield.take_damage_from(20, shield.global_position + shield._brace_dir * 32.0)
-    var front_loss := starting_hp - shield.hp
+    var front_loss: int = starting_hp - shield.hp
     assert(front_loss == 7, "Front block should apply passive armor and brace mitigation")
 
     var side_shield = _spawn_shieldbearer(main, player.global_position + Vector2(-180, 0))
@@ -57,7 +57,7 @@ func _run() -> void:
     side_shield._brace_dir = Vector2.RIGHT
     var side_hp: int = side_shield.hp
     side_shield.take_damage_from(20, side_shield.global_position + Vector2(0, 32))
-    var side_loss := side_hp - side_shield.hp
+    var side_loss: int = side_hp - side_shield.hp
     assert(side_loss == 16, "Side attack must bypass the frontal shield arc")
 
     var rear_shield = _spawn_shieldbearer(main, player.global_position + Vector2(-220, 0))
@@ -65,7 +65,7 @@ func _run() -> void:
     rear_shield._brace_dir = Vector2.RIGHT
     var rear_hp: int = rear_shield.hp
     rear_shield.take_damage_from(20, rear_shield.global_position + Vector2(-32, 0))
-    var rear_loss := rear_hp - rear_shield.hp
+    var rear_loss: int = rear_hp - rear_shield.hp
     assert(rear_loss == 16, "Rear attack must bypass the frontal shield arc")
     assert(rear_loss > front_loss, "Flanking must be measurably more effective than frontal attacks")
 
