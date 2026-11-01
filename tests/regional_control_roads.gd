@@ -103,11 +103,18 @@ func _initialize() -> void:
     assert(main.flow.is_reachable(road_a),
         "Enemy flow routing must remain valid across road tiles")
 
+    main.flow.rebuild()
     var bridge_cell := Vector2i(-1, -1)
     for y in range(1, world_config_size() - 1):
         for x in range(1, world_config_size() - 1):
             var cell := Vector2i(x, y)
-            if world.is_bridgeable(cell) and territory.is_claimed(cell) and not world.occupied.has(cell) and main.build.check("bridge", cell) == "":
+            var touches_reachable_land := false
+            for direction in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+                var neighbor := cell + direction
+                if world.is_buildable(neighbor) and main.flow.is_reachable(neighbor):
+                    touches_reachable_land = true
+                    break
+            if touches_reachable_land and world.is_bridgeable(cell) and territory.is_claimed(cell) and not world.occupied.has(cell) and main.build.check("bridge", cell) == "":
                 bridge_cell = cell
                 break
         if bridge_cell.x >= 0:
