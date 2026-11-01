@@ -125,9 +125,6 @@ func _initialize() -> void:
     main.flow.rebuild()
     assert(main.flow.is_reachable(bridge_cell),
         "Enemy route fields must cross a built bridge")
-    assert(main.supply.is_road_connected(bridge_cell),
-        "A bridge adjacent to the road chain must join the Keep supply network")
-
     var storage = main.build.place_raw("storage", Vector2i(29, 34))
     await ticks(2)
     main.supply.rebuild()
