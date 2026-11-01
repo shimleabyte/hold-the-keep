@@ -120,7 +120,7 @@ func collect(main: Node) -> Dictionary:
     var resources: Array = []
     for cell in main.world.occupied:
         var node = main.world.occupied[cell]
-        if is_instance_valid(node) and node.has_method("export_state"):
+        if is_instance_valid(node) and node.is_in_group("resource_nodes") and node.has_method("export_state"):
             resources.append({
                 "cx": cell.x,
                 "cy": cell.y,

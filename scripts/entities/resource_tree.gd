@@ -24,6 +24,7 @@ func _ready() -> void:
     col.shape = shape
     col.position = Vector2(0, -2)
     add_child(col)
+    add_to_group("resource_nodes")
     add_to_group("harvestable")
 
 

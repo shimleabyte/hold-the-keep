@@ -53,7 +53,7 @@ tools/                 gen_assets.py (generator SVG), build.sh, build.ps1
 tests/                 skrip tes headless dan screenshot (lihat tests/README.md)
 ```
 Grup node yang dipakai lintas skrip: `main`, `hud`, `village`, `buildings`, `depots`, `farms`,
-`harvestable`, `enemies`, `enemy_garrison`, `enemy_strongholds`, `villagers`, `defenders`, `fog_of_war`.
+`harvestable`, `resource_nodes`, `enemies`, `enemy_garrison`, `enemy_strongholds`, `villagers`, `defenders`, `fog_of_war`.
 
 ## 4. Konvensi arsitektur
 - **Signal bus**: sistem berkomunikasi lewat `Events` (resource_changed, building_*, village_changed,
