@@ -182,12 +182,13 @@ func advance_shipment_orders() -> void:
         var destination = _find_depot(Vector2i(int(order["destination_x"]), int(order["destination_y"])))
         if destination == null:
             _remove_carrier(int(order["id"]))
+            order = shipment_orders[index]
             _recover_cargo(order, "recovered")
-            shipment_orders[index] = order
             continue
         if not shipment_route_available(int(order["id"])):
             if String(order["status"]) == "in_transit":
                 _remove_carrier(int(order["id"]))
+                order = shipment_orders[index]
             order["status"] = "blocked"
             shipment_orders[index] = order
             continue
