@@ -243,6 +243,7 @@ func _build_combat_bar() -> void:
     _combat_bar.font = _font
     _combat_bar.position = Vector2(100, 207)
     _combat_bar.size = Vector2(280, 28)
+    _combat_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(_combat_bar)
 
 
