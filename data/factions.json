@@ -1,0 +1,38 @@
+[
+  {
+    "id": "greenwood_raiders",
+    "name": "Greenwood Raiders",
+    "region": "GREENWOOD",
+    "color": "#4f8b54",
+    "doctrine": "ambush",
+    "garrison": "enemy_scout",
+    "roster": ["bandit", "enemy_scout", "enemy_saboteur", "enemy_beast_rider"]
+  },
+  {
+    "id": "iron_legion",
+    "name": "Iron Legion",
+    "region": "HIGHLANDS",
+    "color": "#8795a5",
+    "doctrine": "fortress",
+    "garrison": "enemy_shieldbearer",
+    "roster": ["enemy_shieldbearer", "archer", "enemy_siege_engine"]
+  },
+  {
+    "id": "fen_cult",
+    "name": "Fen Cult",
+    "region": "FENLANDS",
+    "color": "#8d9b55",
+    "doctrine": "attrition",
+    "garrison": "enemy_war_shaman",
+    "roster": ["wolf", "enemy_war_shaman", "enemy_scout", "enemy_beast_rider"]
+  },
+  {
+    "id": "ashen_host",
+    "name": "Ashen Host",
+    "region": "ASHEN_MARCH",
+    "color": "#b46b4c",
+    "doctrine": "siege",
+    "garrison": "enemy_siege_engine",
+    "roster": ["enemy_siege_engine", "enemy_shieldbearer", "enemy_war_shaman", "enemy_saboteur"]
+  }
+]
