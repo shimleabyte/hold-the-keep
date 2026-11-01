@@ -6,7 +6,7 @@ func ticks(count: int) -> void:
         await physics_frame
 
 
-func _find_buildable_near(main, origin: Vector2i, min_radius: int, max_radius: int, map_size: int) -> Vector2i:
+func _find_buildable_near(main, origin: Vector2i, min_radius: int, max_radius: int, map_size: int, require_reachable := false) -> Vector2i:
     for radius in range(min_radius, max_radius + 1):
         for y in range(-radius, radius + 1):
             for x in range(-radius, radius + 1):
@@ -17,7 +17,7 @@ func _find_buildable_near(main, origin: Vector2i, min_radius: int, max_radius: i
                     continue
                 if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
                     continue
-                if not main.nav.path_adjacent(main.player.position, [cell]).is_empty():
+                if not require_reachable or not main.nav.path_adjacent(main.player.position, [cell]).is_empty():
                     return cell
     return Vector2i(-1, -1)
 
@@ -55,13 +55,13 @@ func _initialize() -> void:
     assert(builder_a.occupation == "builder" and builder_a.military_specialization.is_empty(),
         "Builder is a labor occupation, not a military specialization")
 
-    var wall_cell := _find_buildable_near(main, keep.cell, 2, 7, int(config.map_size))
+    var wall_cell := _find_buildable_near(main, keep.cell, 2, 7, int(config.map_size), true)
     assert(wall_cell.x >= 0, "Test must find a reachable wall site near the Keep")
     var wall = main.build.place_raw("wall", wall_cell)
     wall.take_damage(30)
     assert(builder_a._is_in_work_radius(wall), "Nearby damaged buildings must be in Keep work radius")
 
-    var distant_cell := _find_buildable_near(main, keep.cell, 22, 25, int(config.map_size))
+    var distant_cell := _find_buildable_near(main, keep.cell, 22, 25, int(config.map_size), false)
     assert(distant_cell.x >= 0, "Test must find a reachable distant wall site")
     var distant_wall = main.build.place_raw("wall", distant_cell)
     distant_wall.take_damage(30)
@@ -91,12 +91,20 @@ func _initialize() -> void:
     assert(soldier.occupation.is_empty() and soldier.military_specialization == "soldier",
         "Soldier must be stored as a military specialization")
 
+    main.village.quota["builder"] = 2
     main.village.adjust_job_priority("builder", -1)
     assert(main.village.job_priority.find("builder") == 2,
         "A priority adjustment must move Builder upward by one position")
     var snapshot: Dictionary = save_system.collect(main)
     assert(snapshot["version"] == 9, "New role format must increment saves to version 9")
     assert(snapshot["job_priority"][2] == "builder", "Save must persist job priority")
+    var has_saved_builder := false
+    var has_saved_soldier := false
+    for saved_villager in snapshot["villagers"]:
+        has_saved_builder = has_saved_builder or String(saved_villager.get("occupation", "")) == "builder"
+        has_saved_soldier = has_saved_soldier or String(saved_villager.get("military_specialization", "")) == "soldier"
+    assert(has_saved_builder and has_saved_soldier,
+        "Save must persist both labor occupation and military specialization")
     assert(save_system._valid_save(snapshot), "Builder/soldier role save must pass v9 validation")
 
     print("PASS: Builder workplaces, repair material, work radius, reachable depot, role split and priority persistence")
