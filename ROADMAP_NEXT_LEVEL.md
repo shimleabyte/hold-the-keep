@@ -8,6 +8,10 @@
 
 Evolve Hold the Keep from a compact village-defense/action-combat game into a **frontier kingdom strategy game**. Preserve direct player control and the existing defensive loop, but add meaningful exploration, regional ownership, settlements, supply networks, faction warfare and multi-stage conquest.
 
+**World identity:** Grim Medieval Folklore Fantasy. Grounded hardship—food, labor, disease, weather, trade and human conflict—is the foundation. Folklore shapes regional culture and player interpretation. Confirmed supernatural threats are rare, telegraphed, consequential and counterable; they must not turn the game into a constant monster-clearing loop. The binding design reference is [docs/WORLD_AND_GAMEPLAY_BIBLE.md](docs/WORLD_AND_GAMEPLAY_BIBLE.md).
+
+The product must retain its hybrid identity: the player directly fights and explores while managing a settlement and its supply network. Classic remains the approachable entry point; Frontier carries the broader conquest and regional campaign. Complexity is layered through onboarding and sensible defaults rather than exposed all at once.
+
 The central loop becomes:
 
 1. **Establish** a defensible homeland and a functioning settlement economy.
