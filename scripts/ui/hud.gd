@@ -350,20 +350,59 @@ func _rebuild_build_bar() -> void:
     _refresh_slots()
 
 
+func _build_map() -> void:
+    _map_backdrop = ColorRect.new()
+    _map_backdrop.color = Color(0.015, 0.02, 0.028, 0.78)
+    _map_backdrop.size = Vector2(480, 270)
+    _map_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+    _map_backdrop.visible = false
+    add_child(_map_backdrop)
+    _blockers.append(_map_backdrop)
+
+    _map_panel = MAP_PANEL_SCRIPT.new()
+    _map_panel.position = Vector2(80, 14)
+    _map_panel.size = Vector2(320, 242)
+    _map_panel.visible = false
+    add_child(_map_panel)
+    _blockers.append(_map_panel)
+
+
+func _toggle_map() -> void:
+    var opening := not _map_panel.visible
+    _map_panel.visible = opening
+    _map_backdrop.visible = opening
+    if opening:
+        _jobs_panel.visible = false
+        _jobs_button.active = false
+    _map_button.active = opening
+    _map_button.queue_redraw()
+
+
+func _toggle_jobs() -> void:
+    var opening := not _jobs_panel.visible
+    _jobs_panel.visible = opening
+    _jobs_button.active = opening
+    if opening and _map_panel.visible:
+        _map_panel.visible = false
+        _map_backdrop.visible = false
+        _map_button.active = false
+        _map_button.queue_redraw()
+    _jobs_button.queue_redraw()
+
+
 func _build_help() -> void:
-    var h := HELP_ROWS.size() * 11 + 36
+    var h := HELP_ROWS.size() * 10 + 30
     _help = _panel(Vector2(96, (270 - h) / 2), Vector2(288, h))
-    var title := _label(_help, "KONTROL", Vector2(0, 6), GOLD)
+    var title := _label(_help, "KONTROL", Vector2(0, 5), GOLD)
     title.size = Vector2(288, 9)
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     for i in HELP_ROWS.size():
-        _label(_help, HELP_ROWS[i][0], Vector2(14, 22 + i * 11), Color("#ffd9a0"))
-        _label(_help, HELP_ROWS[i][1], Vector2(124, 22 + i * 11))
-    var foot := _label(_help, "H  TUTUP BANTUAN", Vector2(0, h - 13), Color(1, 1, 1, 0.7))
+        _label(_help, HELP_ROWS[i][0], Vector2(14, 18 + i * 10), Color("#ffd9a0"))
+        _label(_help, HELP_ROWS[i][1], Vector2(124, 18 + i * 10))
+    var foot := _label(_help, "H  TUTUP BANTUAN", Vector2(0, h - 12), Color(1, 1, 1, 0.7))
     foot.size = Vector2(288, 9)
     foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _help.visible = false
-
 
 func _build_messages() -> void:
     _msg = _label(self, "", Vector2(0, 194))
