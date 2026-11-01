@@ -19,6 +19,8 @@ const PLAYER_MARKER := Color("#f5e2a4")
 const ALLY_MARKER := Color("#8fc4c2")
 const ENEMY_MARKER := Color("#ef7567")
 
+signal close_requested
+
 var world
 var fog
 var territory
@@ -50,15 +52,25 @@ func _process(delta: float) -> void:
     queue_redraw()
 
 
+func _gui_input(event: InputEvent) -> void:
+    if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+        if Rect2(size.x - 22.0, 2.0, 18.0, 13.0).has_point(event.position):
+            close_requested.emit()
+        accept_event()
+
+
 func _draw() -> void:
     draw_rect(Rect2(Vector2.ZERO, size), Color("#111319"))
     draw_rect(Rect2(Vector2.ZERO, size), Color("#a88a5e"), false, 1.0)
     if font == null:
         return
 
-    var day_text := "HARI %02d" % GameClock.day
     draw_string(font, Vector2(8, 11), "PETA WILAYAH", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#e7c783"))
-    draw_string(font, Vector2(size.x - 8, 11), day_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 8, Color("#c5bba8"))
+    draw_string(font, Vector2(size.x - 52.0, 11), "HARI %02d" % GameClock.day, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("#c5bba8"))
+    draw_rect(Rect2(size.x - 22.0, 2.0, 18.0, 13.0), Color("#302820"))
+    draw_rect(Rect2(size.x - 22.0, 2.0, 18.0, 13.0), Color("#9f7652"), false, 1.0)
+    draw_line(Vector2(size.x - 17.0, 5.0), Vector2(size.x - 9.0, 12.0), Color("#e8d8bc"), 1.0)
+    draw_line(Vector2(size.x - 9.0, 5.0), Vector2(size.x - 17.0, 12.0), Color("#e8d8bc"), 1.0)
 
     if world == null or fog == null:
         draw_string(font, Vector2(8, 124), "MEMUAT PETA...", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE)
@@ -109,7 +121,6 @@ func _draw() -> void:
 
     draw_rect(Rect2(MAP_ORIGIN, Vector2(MAP_PIXELS, MAP_PIXELS)), Color("#d4c09a"), false, 1.0)
     _draw_legend()
-
 
 func _world_to_map(world_position: Vector2) -> Vector2:
     if world == null:
