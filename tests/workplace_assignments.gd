@@ -41,7 +41,7 @@ func _initialize() -> void:
     await ticks(8)
     clock.set_process(false)
     main.village.set_process(false)
-    main.village.quota["builder"] = 2
+    main.village.quota["builder"] = 0
 
     var keep = null
     for depot in get_nodes_in_group("depots"):
@@ -53,6 +53,7 @@ func _initialize() -> void:
     main.village.adjust_job_priority("builder", -1)
     assert(main.village.job_priority.find("builder") == 2,
         "A priority adjustment must move Builder upward by one position")
+    main.village.quota["builder"] = 2
 
     var builder_a = main.village.spawn_villager(keep.position + Vector2(0, 14))
     var builder_b = main.village.spawn_villager(keep.position + Vector2(10, 14))
