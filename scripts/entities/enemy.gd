@@ -241,9 +241,11 @@ func take_damage(amount: int) -> void:
 
 
 func retreat() -> void:
-    if is_boss or is_garrison:
-        return  # raja dan penjaga benteng tidak mundur saat fajar
+    if is_boss:
+        return  # raja tidak mundur saat fajar
+    is_garrison = false
     remove_from_group("enemies")
+    remove_from_group("enemy_garrison")
     queue_free()
 
 

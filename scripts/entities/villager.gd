@@ -344,7 +344,10 @@ func start_expedition(stronghold) -> bool:
     state = State.EXPEDITION
     _goal_cells = stronghold.cells()
     _repath_t = 0.0
-    return _plan_expedition_path()
+    if not _plan_expedition_path():
+        recall_expedition()
+        return false
+    return true
 
 
 func recall_expedition() -> void:

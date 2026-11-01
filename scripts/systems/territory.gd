@@ -88,12 +88,15 @@ func is_claimed(cell: Vector2i) -> bool:
 func can_place(id: String, anchor: Vector2i, size: Vector2i) -> bool:
     _ensure_current()
     if id == "outpost":
+        var touches_frontier := false
         for y in range(size.y):
             for x in range(size.x):
                 var cell := anchor + Vector2i(x, y)
-                if _is_frontier_cell(cell) and not enemy_claimed_cells.has(cell):
-                    return true
-        return false
+                if enemy_claimed_cells.has(cell):
+                    return false
+                if _is_frontier_cell(cell):
+                    touches_frontier = true
+        return touches_frontier
     for y in range(size.y):
         for x in range(size.x):
             var cell := anchor + Vector2i(x, y)

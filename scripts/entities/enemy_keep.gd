@@ -102,6 +102,8 @@ func take_damage(amount: int) -> void:
     for occupied_cell in cells():
         if world.occupied.get(occupied_cell) == self:
             world.occupied.erase(occupied_cell)
+    for guard in get_tree().get_nodes_in_group("enemy_garrison"):
+        guard.retreat()
     remove_from_group("enemy_strongholds")
     Events.enemy_stronghold_destroyed.emit(cell)
     Events.campaign_won.emit(GameClock.day)
