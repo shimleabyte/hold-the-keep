@@ -20,9 +20,9 @@ concurrency:
 
 jobs:
   validate:
-    name: Godot ${{ matrix.godot-version }} · parse and regression
+    name: Godot ${{ matrix.godot-version }} · import and parse
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -37,13 +37,45 @@ jobs:
           version: ${{ matrix.godot-version }}
           use-dotnet: false
 
-      - name: Verify engine and import project
-        run: |
-          godot --headless --version
-          godot --headless --path . --import
+      - name: Import project
+        run: godot --headless --path . --import
 
       - name: Parse every GDScript file
         run: bash tools/check_gdscript.sh
 
-      - name: Run headless regression suite
-        run: bash tools/run_tests.sh
+  regression:
+    name: Godot ${{ matrix.godot-version }} · ${{ matrix.test }}
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        godot-version: ["4.3.0", "4.7.0"]
+        test:
+          - animation_motion
+          - campaign_assault
+          - input_rebinding
+          - map_stages
+          - player_combat
+          - resource_save_state
+          - responsive_layout
+          - territory_claims
+          - world_config
+          - frontier_world
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: ${{ matrix.godot-version }}
+          use-dotnet: false
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Run ${{ matrix.test }}
+        run: timeout 180s godot --headless --fixed-fps 60 --path . --script "res://tests/${{ matrix.test }}.gd"
