@@ -1,15 +1,17 @@
 # Phase 08 — Visual and Audio Identity
 
 **Status:** Not yet delivered as a dedicated implementation phase. Existing SVG/procedural assets and procedural SFX are foundations, not final faction/biome identity.
+**Art direction:** [World & Gameplay Design Bible](../WORLD_AND_GAMEPLAY_BIBLE.md) — Grim Medieval Folklore Fantasy, weathered medieval pixel art and restrained folklore motifs.
 **Dependency:** Stable gameplay contracts from Phases 02, 04, 05, 06 and current UI layouts from Phase 10.
 **Engine targets:** Godot 4.3 and 4.7.
 
 ## Goal
 
-Give the Frontier campaign a coherent medieval visual language with readable silhouettes and terrain identity while preserving pixel-art scaling, runtime performance and Classic readability.
+Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual language: weathered medieval material surfaces, grounded biome identity and restrained regional folklore. Preserve readable silhouettes, pixel-art scaling, runtime performance and Classic readability.
 
 ## 08.1 — Art direction and asset pipeline
-- Define a compact palette and material language for Hearthland, Greenwood, Highlands, Fenlands and Ashen March.
+- Define an earthy, weathered palette and material language for Hearthland, Greenwood, Highlands, Fenlands and Ashen March; avoid relying on a global dark filter to create atmosphere.
+- Add restrained regional folklore motifs through landmarks, boundary marks, burial customs and environmental storytelling. Keep overt supernatural visual effects rare and reserved for confirmed threats.
 - Define sprite scale, pivot, outline, contrast and animation-frame conventions before producing bulk assets.
 - Keep generated/procedural SVG assets reproducible; hand-authored replacements must preserve import paths or update references atomically.
 - Establish preview sheets and in-engine screenshot baselines so visual changes are reviewed rather than inferred from source files.
