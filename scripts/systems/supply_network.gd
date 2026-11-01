@@ -11,6 +11,7 @@ const TRANSFER_BUDGET_PER_DEPOT := 6
 const TRANSFER_KINDS: Array[String] = ["wood", "stone", "food", "iron"]
 const MAX_SHIPMENT_AMOUNT := 60
 const MAX_SHIPMENT_HISTORY := 16
+const MAX_ACTIVE_SHIPMENTS := 8
 const SHIPMENT_TICK := 0.2
 const CARRIER_SCRIPT := preload("res://scripts/entities/supply_carrier.gd")
 
@@ -101,6 +102,12 @@ func create_shipment(source_cell: Vector2i, destination_cell: Vector2i, kind: St
     if WorldConfig.profile_id != "frontier" or not TRANSFER_KINDS.has(kind):
         return -1
     if amount <= 0 or amount > MAX_SHIPMENT_AMOUNT or source_cell == destination_cell:
+        return -1
+    var active_orders := 0
+    for order in shipment_orders:
+        if _is_active_order(order):
+            active_orders += 1
+    if active_orders >= MAX_ACTIVE_SHIPMENTS:
         return -1
     _ensure_current()
     var source = _find_depot(source_cell)
