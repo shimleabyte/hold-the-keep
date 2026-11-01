@@ -116,6 +116,7 @@ var _scout_mark_cd := 0.0
 var saboteur_nav
 var _saboteur_target: Node2D
 var _saboteur_scan_t := 0.0
+var _saboteur_scan_cursor := 0
 var _saboteur_windup_t := 0.0
 var _saboteur_cd := 0.0
 var _saboteur_path := PackedVector2Array()
@@ -176,6 +177,7 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     saboteur_damage_multiplier = clampf(float(data.get("saboteur_damage_multiplier", 1.5)), 1.0, 2.5)
     _saboteur_target = null
     _saboteur_scan_t = 0.0
+    _saboteur_scan_cursor = 0
     _saboteur_windup_t = 0.0
     _saboteur_cd = 0.0
     _saboteur_path = PackedVector2Array()
@@ -411,14 +413,16 @@ func _select_saboteur_target() -> Node2D:
     if saboteur_nav == null:
         return null
 
+    var buildings: Array = get_tree().get_nodes_in_group("buildings")
+    var building_count := buildings.size()
+    if building_count <= 0:
+        return null
+    var scan_count := mini(SABOTEUR_TARGET_SCAN_LIMIT, building_count)
     var best_target: Node2D
     var best_path := PackedVector2Array()
     var best_score := -INF
-    var scanned := 0
-    for candidate in get_tree().get_nodes_in_group("buildings"):
-        if scanned >= SABOTEUR_TARGET_SCAN_LIMIT:
-            break
-        scanned += 1
+    for offset in scan_count:
+        var candidate = buildings[(_saboteur_scan_cursor + offset) % building_count]
         if not (candidate is Node2D):
             continue
         var building := candidate as Node2D
@@ -439,6 +443,7 @@ func _select_saboteur_target() -> Node2D:
             best_target = building
             best_path = candidate_path
 
+    _saboteur_scan_cursor = (_saboteur_scan_cursor + scan_count) % building_count
     _saboteur_target = best_target
     _saboteur_path = best_path
     _saboteur_path_index = 1 if best_path.size() > 1 else 0
