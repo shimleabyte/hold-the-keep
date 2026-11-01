@@ -199,13 +199,25 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** screenshot passes at target desktop resolutions; visual readability under day/night, fog and combat load; no placeholder-only faction identity in release content.
 
 ### Phase 09 — Balance, performance and release hardening
-- Profile 128×128 worlds with larger populations, multiple factions, projectiles and effects.
-- Optimize only measured hotspots. Consider chunk streaming only if full-map loading causes real problems.
-- Simulate campaign difficulty and perform human playtests across all acts.
-- Test save migration, interrupted saves, campaign reload and export builds.
+**Status:** Automated hardening slice implemented on `feat/phase-09-balance-performance-release-v5`, stacked on the latest Phase 07 base. PR #26 is open as draft. Previous workflow run #271 passed; benchmark script has since been tightened to sustain all 500 particles and awaits a fresh run.
 
-**Acceptance gate:** full CI green, no known blocker bugs, performance budget documented, fresh and migrated saves tested, and release builds verified on target desktop platforms.
+- [x] Replace the Classic-only micro-benchmark with configurable Classic/Frontier profiling for frame timing, static memory, node count, projectiles and particles.
+- [x] Add a bounded Frontier stress regression with all four factions, mixed rosters, 48 additional villagers, a live ranged projectile and the 500-particle ceiling.
+- [x] Add a deterministic Classic/Frontier campaign matrix for stage transitions, day wave budgets, faction archetypes, Classic day-15 preservation and final-boss timing.
+- [x] Add save migration/recovery tests for Classic v1–v11 and Frontier v7–v11, interrupted temp writes, backup rotation, malformed campaign data and profile isolation.
+- [x] Add a Frontier campaign reload test preserving completed objectives, unlocked Act II, active escort/path progress and damaged stronghold HP.
+- [x] Run the configured Godot 4.3/4.7 import, parse and regression matrix (previous workflow run #271).
+- [x] Install Godot 4.3-matching export templates in CI, export Windows/Linux binaries, validate the Windows PE format and smoke-test Linux headlessly.
+- [x] Publish a Godot 4.7 Frontier benchmark artifact; latest script revision now sustains the 500-particle ceiling and requires a fresh workflow run.
+- [ ] Measure the reference workload on actual target desktop hardware and compare p50/p95/p99 before making performance optimizations.
+- [ ] Add combat outcome simulations at the end of all four Frontier acts and on day 20; record Keep HP, survivors, enemy remainder and simulated time.
+- [ ] Extend reload coverage to later acts, conquered strongholds and the final-boss gate.
+- [ ] Human-playtest all acts, objective readability, navigation, combat pacing and failure recovery.
+- [ ] Verify Windows runtime on a Windows runner and test both exports on clean target machines, including first launch and save/settings migration.
 
+**Provisional desktop target (not measured):** 60 FPS at 1280×720 under Frontier 128×128 with 96 requested faction enemies, 80 additional villagers and up to 500 live particles; p95 frame time ≤16.67 ms and p99 ≤33.3 ms. CI headless timings are diagnostic only and are not evidence of target-machine performance.
+
+**Acceptance gate:** fresh CI green, a measured target-hardware performance budget, no known blocker bugs, multi-act human playtest completed, migration/reload tested, and Windows/Linux release binaries verified on their target platforms.
 ## 5. First implementation priorities
 
 1. **Phase 00 is mandatory.** Do not add content on top of duplicated spatial constants and unverified scripts.
