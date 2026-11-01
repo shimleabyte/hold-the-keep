@@ -46,6 +46,7 @@ tests=(
     physical_shipments
     depot_cost_sources
     supply_pressure
+    shieldbearer_behavior
 )
 
 for test_name in "${tests[@]}"; do
