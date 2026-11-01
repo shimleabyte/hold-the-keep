@@ -283,12 +283,9 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             max_shipment_id = maxi(max_shipment_id, shipment_id)
 
             var destination_building: Dictionary = {}
-            var source_exists := false
             for saved_building in buildings:
                 var saved_cell := Vector2i(int(saved_building["cx"]), int(saved_building["cy"]))
                 var saved_id := String(saved_building["id"])
-                if saved_cell == source_cell and ["keep", "storage", "outpost"].has(saved_id):
-                    source_exists = true
                 if saved_cell == destination_cell and ["keep", "storage", "outpost"].has(saved_id):
                     destination_building = saved_building
             # Cargo is escrowed in the order; the source can be destroyed before delivery.
@@ -306,7 +303,8 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                     continue
                 var capacity := int(DataDB.buildings[String(saved_building["id"])].get("stockpile_capacity", 0))
                 var current_total := 0
-                for stock_amount in saved_building.get("stockpile", {}).values():
+                var saved_stockpile: Dictionary = saved_building.get("stockpile", {})
+                for stock_amount in saved_stockpile.values():
                     current_total += int(stock_amount)
                 if current_total + int(reserved_capacity[key]) > capacity:
                     return false
