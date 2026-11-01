@@ -24,6 +24,7 @@ var _transfer_timer := 0.0
 var _transfer_cursor := 0
 var _shipment_timer := 0.0
 var _next_shipment_id := 1
+var _cost_source_cell := Vector2i(-1, -1)
 var shipment_orders: Array[Dictionary] = []
 var _carriers: Dictionary = {}
 
@@ -35,8 +36,17 @@ func _ready() -> void:
     Events.building_destroyed.connect(_on_building_event)
 
 
-func _on_building_event(_id: String, _cell: Vector2i) -> void:
+func _on_building_event(id: String, cell: Vector2i) -> void:
     _dirty = true
+    if id == "keep" and _cost_source_cell == Vector2i(-1, -1):
+        var keep = _find_keep()
+        if keep != null:
+            _cost_source_cell = keep.cell
+            Events.supply_cost_source_changed.emit()
+    elif _cost_source_cell == cell and id != "keep":
+        var keep = _find_keep()
+        _cost_source_cell = keep.cell if keep != null else Vector2i(-1, -1)
+        Events.supply_cost_source_changed.emit()
 
 
 func _physics_process(_delta: float) -> void:
@@ -93,6 +103,108 @@ func transfer_local_stockpiles() -> int:
                 break
     _transfer_cursor = (_transfer_cursor + 1) % TRANSFER_KINDS.size()
     return moved
+
+
+
+## Construction and research draw from one explicitly selected depot.
+## Remote balances remain separate; nothing is pooled or silently transferred.
+func get_cost_source_cell() -> Vector2i:
+    var source = _selected_cost_depot()
+    return source.cell if source != null else Vector2i(-1, -1)
+
+
+func _selected_cost_depot():
+    _ensure_current()
+    if _cost_source_cell != Vector2i(-1, -1):
+        var selected = _find_depot(_cost_source_cell)
+        if selected != null:
+            return selected
+    return _find_keep()
+
+
+func set_cost_source(cell: Vector2i) -> bool:
+    if WorldConfig.profile_id != "frontier":
+        return cell == get_cost_source_cell()
+    _ensure_current()
+    var depot = _find_depot(cell)
+    if depot == null or not ["keep", "storage", "outpost"].has(String(depot.id)):
+        return false
+    if not is_depot_connected(depot):
+        return false
+    if _cost_source_cell == cell:
+        return true
+    _cost_source_cell = cell
+    Events.supply_cost_source_changed.emit()
+    return true
+
+
+func cost_source_label() -> String:
+    var source = _selected_cost_depot()
+    if source == null:
+        return "KEEP"
+    var label := "KEEP" if String(source.id) == "keep" else (
+        "POS %d,%d" % [source.cell.x, source.cell.y] if String(source.id) == "outpost"
+        else "GUDANG %d,%d" % [source.cell.x, source.cell.y]
+    )
+    if WorldConfig.profile_id == "frontier" and not is_depot_connected(source):
+        label += " · JALUR PUTUS"
+    return label
+
+
+func cost_source_amount(kind: String) -> int:
+    if WorldConfig.profile_id != "frontier":
+        return Inventory.get_amount(kind)
+    var source = _selected_cost_depot()
+    if source == null or not is_depot_connected(source):
+        return 0
+    return Inventory.get_amount(kind) if String(source.id) == "keep" else source.stockpile_amount(kind)
+
+
+func cost_reason(cost: Dictionary) -> String:
+    if WorldConfig.profile_id != "frontier":
+        return "" if Inventory.can_afford(cost) else "Bahan kurang di KEEP"
+    var source = _selected_cost_depot()
+    if source == null:
+        return "Depot sumber biaya tidak tersedia"
+    if not is_depot_connected(source):
+        return "Jalur ke sumber biaya terputus"
+    for kind in cost:
+        var amount := int(cost[kind])
+        if amount < 0:
+            return "Biaya bahan tidak valid"
+        if amount == 0:
+            continue
+        if String(source.id) != "keep" and not TRANSFER_KINDS.has(String(kind)):
+            return "Jenis bahan tidak tersedia di depot lokal"
+        var available := Inventory.get_amount(String(kind)) if String(source.id) == "keep" else source.stockpile_amount(String(kind))
+        if available < amount:
+            return "Bahan kurang di " + cost_source_label()
+    return ""
+
+
+func can_pay_cost(cost: Dictionary) -> bool:
+    return cost_reason(cost) == ""
+
+
+func pay_cost(cost: Dictionary) -> bool:
+    if cost_reason(cost) != "":
+        return false
+    var source = _selected_cost_depot()
+    if WorldConfig.profile_id != "frontier" or source == null or String(source.id) == "keep":
+        return Inventory.spend_all(cost)
+    var paid: Dictionary = {}
+    for kind in cost:
+        var resource := String(kind)
+        var amount := int(cost[kind])
+        if amount <= 0:
+            continue
+        if not source.take_resource(resource, amount):
+            for paid_kind in paid:
+                source.store_resource(String(paid_kind), int(paid[paid_kind]))
+            return false
+        paid[resource] = amount
+    Events.supply_stock_changed.emit()
+    return true
 
 
 ## Create a reserved shipment. Cargo leaves its source immediately and remains
@@ -370,7 +482,13 @@ func export_state() -> Dictionary:
         if String(order.get("status", "")) == "in_transit":
             order["status"] = "blocked"
         orders[index] = order
-    return {"next_id": _next_shipment_id, "orders": orders}
+    var source_cell := get_cost_source_cell()
+    return {
+        "next_id": _next_shipment_id,
+        "orders": orders,
+        "cost_source": {"cx": source_cell.x, "cy": source_cell.y}
+            if source_cell != Vector2i(-1, -1) else null
+    }
 
 
 func import_state(value: Variant) -> void:
@@ -391,6 +509,19 @@ func import_state(value: Variant) -> void:
         shipment_orders.append(restored)
         _next_shipment_id = maxi(_next_shipment_id, int(restored.get("id", 0)) + 1)
     _next_shipment_id = maxi(_next_shipment_id, int(value.get("next_id", 1)))
+    var saved_source: Variant = value.get("cost_source", null)
+    if saved_source is Dictionary and saved_source.has("cx") and saved_source.has("cy"):
+        var candidate := Vector2i(int(saved_source["cx"]), int(saved_source["cy"]))
+        var source = _find_depot(candidate)
+        if source != null and ["keep", "storage", "outpost"].has(String(source.id)):
+            _cost_source_cell = candidate
+        else:
+            var keep = _find_keep()
+            _cost_source_cell = keep.cell if keep != null else Vector2i(-1, -1)
+    else:
+        var keep = _find_keep()
+        _cost_source_cell = keep.cell if keep != null else Vector2i(-1, -1)
+    Events.supply_cost_source_changed.emit()
     _trim_shipment_history()
 
 
