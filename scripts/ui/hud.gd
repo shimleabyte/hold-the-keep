@@ -61,6 +61,12 @@ const HELP_ROWS := [
 ]
 
 var _font: Font
+var _viewport_size := Vector2(480, 270)
+var _top_bar: Panel
+var _vitals_panel: Panel
+var _stage_panel: Panel
+var _build_left_hint: Label
+var _build_right_hint: Label
 var _blockers: Array[Control] = []
 
 var _wood: Label
@@ -141,6 +147,8 @@ func _ready() -> void:
         _on_stage_changed(String(initial_stage.get("id", "frontier")), String(initial_stage.get("name", "PERBATASAN")), GameClock.day)
     _refresh_resources()
     _refresh_slots()
+    get_viewport().size_changed.connect(_on_viewport_size_changed)
+    _layout_viewport()
 
 
 # ---------------------------------------------------------------- pembangun UI
@@ -153,6 +161,13 @@ func _panel(pos: Vector2, panel_size: Vector2, parent: Node = null) -> Panel:
     sb.bg_color = PANEL_BG
     sb.border_color = PANEL_BORDER
     sb.set_border_width_all(1)
+    sb.shadow_color = Color(0, 0, 0, 0.48)
+    sb.shadow_size = 3
+    sb.shadow_offset = Vector2(0, 2)
+    sb.corner_radius_top_left = 0
+    sb.corner_radius_top_right = 0
+    sb.corner_radius_bottom_left = 0
+    sb.corner_radius_bottom_right = 0
     p.add_theme_stylebox_override("panel", sb)
     p.mouse_filter = Control.MOUSE_FILTER_STOP
     (parent if parent != null else self).add_child(p)
@@ -192,7 +207,8 @@ func _stat(parent: Node, icon_name: String, pos: Vector2) -> Label:
 
 
 func _build_top_bar() -> void:
-    var bar := _panel(Vector2.ZERO, Vector2(480, 16))
+    _top_bar = _panel(Vector2.ZERO, Vector2(480, 18))
+    var bar := _top_bar
     _wood = _stat(bar, "wood", Vector2(3, 1))
     _stone = _stat(bar, "stone", Vector2(39, 1))
     _food = _stat(bar, "food", Vector2(75, 1))
@@ -252,7 +268,8 @@ func _build_top_bar() -> void:
     _fps.visible = false
 
 func _build_vitals() -> void:
-    var p := _panel(Vector2(4, 19), Vector2(122, 18))
+    _vitals_panel = _panel(Vector2(4, 22), Vector2(122, 20))
+    var p := _vitals_panel
     _icon(p, "heart", Vector2(3, 2))
     _hp_bar = StatBar.new()
     _hp_bar.position = Vector2(17, 3)
@@ -269,10 +286,11 @@ func _build_vitals() -> void:
     _keep_text = _label(p, "-", Vector2(66, 9))
 
 func _build_stage_bar() -> void:
-    var p := _panel(Vector2(136, 19), Vector2(205, 18))
+    _stage_panel = _panel(Vector2(136, 22), Vector2(205, 20))
+    var p := _stage_panel
     _stage_label = _label(p, "BAB I  PERBATASAN", Vector2(3, 1), Color("#e7c783"))
     _stage_bar = StatBar.new()
-    _stage_bar.position = Vector2(3, 11)
+    _stage_bar.position = Vector2(3, 13)
     _stage_bar.size = Vector2(199, 4)
     _stage_bar.fill = Color("#b98c4a")
     p.add_child(_stage_bar)
@@ -282,12 +300,12 @@ func _build_combat_bar() -> void:
     _combat_bar = CombatBar.new()
     _combat_bar.font = _font
     _combat_bar.position = Vector2(151, 219)
-    _combat_bar.size = Vector2(178, 16)
+    _combat_bar.size = Vector2(178, 18)
     _combat_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(_combat_bar)
 
 func _build_jobs() -> void:
-    _jobs_panel = _panel(Vector2(400, 19), Vector2(76, 54))
+    _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 54))
     for i in JOBS.size():
         var row := JobRow.new()
         row.job = JOBS[i]
@@ -301,7 +319,7 @@ func _build_jobs() -> void:
     _jobs_panel.visible = false
 
 func _build_boss_bar() -> void:
-    _boss_panel = _panel(Vector2(140, 40), Vector2(200, 18))
+    _boss_panel = _panel(Vector2(140, 46), Vector2(200, 18))
     _boss_title = _label(_boss_panel, "RAJA LAWAN", Vector2(0, 0), Color("#ff8a7a"))
     _boss_title.size = Vector2(200, 9)
     _boss_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -314,8 +332,9 @@ func _build_boss_bar() -> void:
 
 
 func _build_build_bar() -> void:
-    _label(self, "BANGUNAN 1-6", Vector2(4, 225), Color(1, 1, 1, 0.7))
-    _label(self, "TAB PETA  ·  H BANTUAN", Vector2(360, 225), Color(1, 1, 1, 0.7))
+    _build_left_hint = _label(self, "BANGUNAN 1-6", Vector2(4, 225), Color(1, 1, 1, 0.78))
+    _build_right_hint = _label(self, "TAB PETA  ·  H BANTUAN", Vector2(360, 225), Color(1, 1, 1, 0.78))
+    _build_right_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     _rebuild_build_bar()
 
 func _rebuild_build_bar() -> void:
@@ -326,9 +345,10 @@ func _rebuild_build_bar() -> void:
     _slots.clear()
     var ids: Array = Tech.available_buildings()
     var n := ids.size()
-    var w := mini(SLOT_W, int((466.0 - (n - 1) * 3.0) / n))
+    var available_width := maxf(220.0, _viewport_size.x - 14.0)
+    var w := mini(SLOT_W, int((available_width - (n - 1) * 3.0) / maxi(1, n)))
     var total := n * w + (n - 1) * 3
-    var x0 := (480 - total) / 2
+    var x0 := int((_viewport_size.x - total) / 2.0)
     for i in n:
         var id: String = ids[i]
         var slot := BuildSlot.new()
@@ -344,7 +364,7 @@ func _rebuild_build_bar() -> void:
             if cost.has(kind):
                 costs.append([ICONS[kind], int(cost[kind])])
         slot.costs = costs
-        slot.position = Vector2(x0 + i * (w + 3), 270 - SLOT_H - 2)
+        slot.position = Vector2(x0 + i * (w + 3), _viewport_size.y - SLOT_H - 2)
         slot.size = Vector2(w, SLOT_H)
         slot.pressed.connect(_on_slot_pressed)
         add_child(slot)
@@ -357,7 +377,7 @@ func _rebuild_build_bar() -> void:
 func _build_map() -> void:
     _map_backdrop = ColorRect.new()
     _map_backdrop.color = Color(0.015, 0.02, 0.028, 0.78)
-    _map_backdrop.size = Vector2(480, 270)
+    _map_backdrop.size = _viewport_size
     _map_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
     _map_backdrop.gui_input.connect(_on_map_backdrop_input)
     _map_backdrop.visible = false
@@ -365,8 +385,8 @@ func _build_map() -> void:
     _blockers.append(_map_backdrop)
 
     _map_panel = MAP_PANEL_SCRIPT.new()
-    _map_panel.position = Vector2(80, 14)
-    _map_panel.size = Vector2(320, 242)
+    _map_panel.configure_layout(_viewport_size)
+    _map_panel.position = (_viewport_size - _map_panel.size) * 0.5
     _map_panel.visible = false
     _map_panel.close_requested.connect(_toggle_map)
     add_child(_map_panel)
@@ -404,7 +424,7 @@ func _toggle_jobs() -> void:
 
 func _build_help() -> void:
     var h := HELP_ROWS.size() * 10 + 30
-    _help = _panel(Vector2(96, (270 - h) / 2), Vector2(288, h))
+    _help = _panel(Vector2((_viewport_size.x - 288.0) / 2.0, (_viewport_size.y - h) / 2.0), Vector2(288, h))
     var title := _label(_help, "KONTROL", Vector2(0, 5), GOLD)
     title.size = Vector2(288, 9)
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -430,16 +450,87 @@ func _build_messages() -> void:
 func _build_overlay() -> void:
     _over = ColorRect.new()
     _over.color = Color(0, 0, 0, 0.75)
-    _over.size = Vector2(480, 270)
+    _over.size = _viewport_size
     _over.visible = false
     add_child(_over)
     _over_label = Label.new()
-    _over_label.position = Vector2(0, 90)
+    _over_label.position = Vector2(0, 85)
     _over_label.size = Vector2(480, 100)
     _over_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _over_label.add_theme_font_override("font", _font)
     _over_label.add_theme_font_size_override("font_size", 16)
     _over.add_child(_over_label)
+
+
+# ---------------------------------------------------------------- responsive layout
+
+func _on_viewport_size_changed() -> void:
+    _layout_viewport()
+
+
+func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
+    var next_size := target_size
+    if next_size == Vector2.ZERO:
+        next_size = get_viewport_rect().size
+    _viewport_size = Vector2(maxf(480.0, next_size.x), maxf(270.0, next_size.y))
+
+    _top_bar.size.x = _viewport_size.x
+    _foes_icon.position.x = _viewport_size.x - 180.0
+    _foes.position.x = _viewport_size.x - 167.0
+    _top_bar.get_child(0) # Keep the bar's own coordinates independent from other panels.
+    var clock = _top_bar.get_child(5)
+    if clock is ClockWidget:
+        clock.position.x = 151.0
+    _top_bar.get_child(0)
+
+    _map_button.position.x = _viewport_size.x - 110.0
+    _jobs_button.position.x = _viewport_size.x - 71.0
+    _tech_btn.position.x = _viewport_size.x - 32.0
+    var people_icon = _top_bar.get_child(6)
+    if people_icon is TextureRect:
+        people_icon.position.x = _viewport_size.x - 144.0
+    _pop.position.x = _viewport_size.x - 131.0
+
+    _vitals_panel.position = Vector2(4, 22)
+    _stage_panel.position = Vector2((_viewport_size.x - _stage_panel.size.x) * 0.5, 22)
+    _jobs_panel.position = Vector2(_viewport_size.x - _jobs_panel.size.x - 4.0, 22)
+    _boss_panel.position = Vector2((_viewport_size.x - _boss_panel.size.x) * 0.5, 46)
+
+    _map_backdrop.size = _viewport_size
+    _map_panel.configure_layout(_viewport_size)
+    _map_panel.position = (_viewport_size - _map_panel.size) * 0.5
+
+    var help_height := _help.size.y
+    _help.position = Vector2((_viewport_size.x - _help.size.x) * 0.5, (_viewport_size.y - help_height) * 0.5)
+
+    var build_y := _viewport_size.y - SLOT_H - 2.0
+    var hint_y := build_y - 14.0
+    _build_left_hint.position = Vector2(5, hint_y)
+    _build_right_hint.position = Vector2(_viewport_size.x - 132.0, hint_y)
+    _build_right_hint.size = Vector2(127.0, 10)
+    _build_right_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+
+    _combat_bar.position = Vector2((_viewport_size.x - _combat_bar.size.x) * 0.5, build_y - _combat_bar.size.y - 3.0)
+    _msg.position = Vector2(0, _viewport_size.y - 76.0)
+    _msg.size.x = _viewport_size.x
+    _banner.position = Vector2(0, maxf(44.0, _viewport_size.y * 0.16))
+    _banner.size.x = _viewport_size.x
+    _fps.position = Vector2(72, _viewport_size.y - 11.0)
+
+    _over.size = _viewport_size
+    _over_label.position = Vector2(0, (_viewport_size.y - _over_label.size.y) * 0.5)
+    _over_label.size.x = _viewport_size.x
+
+    for slot_index in _slot_nodes.size():
+        var slot: BuildSlot = _slot_nodes[slot_index]
+        var total_width := 0.0
+        for current in _slot_nodes:
+            total_width += current.size.x
+        total_width += maxi(0, _slot_nodes.size() - 1) * 3.0
+        var slot_x := (_viewport_size.x - total_width) * 0.5
+        for j in slot_index:
+            slot_x += _slot_nodes[j].size.x + 3.0
+        slot.position = Vector2(slot_x, build_y)
 
 
 # ---------------------------------------------------------------- loop & input
