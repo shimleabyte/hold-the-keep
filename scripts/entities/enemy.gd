@@ -19,6 +19,17 @@ const PLAYER_REACH := 12.0
 const ATTACK_HIT_DELAY := 0.14
 const SHIELD_TARGET_RANGE := 96.0
 const SCOUT_FOCUS_RANGE := 220.0
+const SABOTEUR_TARGET_PRIORITIES := {
+    "tower": 6,
+    "outpost": 6,
+    "storage": 5,
+    "lumber_camp": 4,
+    "quarry": 4,
+    "forge": 4,
+    "farm": 3,
+    "house": 2
+}
+const SABOTEUR_TARGET_SCAN_LIMIT := 32
 const WALK_BASE_SPEED := 32.0
 const RUN_BASE_SPEED := 58.0
 
@@ -69,6 +80,12 @@ var scout_windup_duration := 0.68
 var scout_mark_duration := 5.4
 var scout_mark_cooldown_duration := 8.4
 var scout_share_radius := 190.0
+var saboteur_scan_range := 460.0
+var saboteur_scan_interval := 1.25
+var saboteur_windup_duration := 0.85
+var saboteur_disruption_duration := 5.0
+var saboteur_cooldown_duration := 8.5
+var saboteur_damage_multiplier := 1.5
 
 var world
 var flow
@@ -96,6 +113,16 @@ var _scout_windup_target: Node2D
 var _scout_mark_target: Node2D
 var _scout_mark_t := 0.0
 var _scout_mark_cd := 0.0
+var saboteur_nav
+var _saboteur_target: Node2D
+var _saboteur_scan_t := 0.0
+var _saboteur_scan_cursor := 0
+var _saboteur_windup_t := 0.0
+var _saboteur_cd := 0.0
+var _saboteur_path := PackedVector2Array()
+var _saboteur_path_index := 0
+var _saboteur_path_version := -1
+var _saboteur_repath_t := 0.0
 var _tex: Texture2D
 var _fw := 20
 var _fh := 20
@@ -142,6 +169,21 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     scout_mark_duration = clampf(float(data.get("scout_mark_duration", 5.4)), 2.5, 10.0)
     scout_mark_cooldown_duration = clampf(float(data.get("scout_mark_cooldown", 8.4)), 4.0, 18.0)
     scout_share_radius = clampf(float(data.get("scout_share_radius", 190.0)), 80.0, 280.0)
+    saboteur_scan_range = clampf(float(data.get("saboteur_scan_range", 460.0)), 160.0, 720.0)
+    saboteur_scan_interval = clampf(float(data.get("saboteur_scan_interval", 1.25)), 0.4, 4.0)
+    saboteur_windup_duration = clampf(float(data.get("saboteur_windup", 0.85)), 0.35, 1.8)
+    saboteur_disruption_duration = clampf(float(data.get("saboteur_disruption_duration", 5.0)), 2.0, 10.0)
+    saboteur_cooldown_duration = clampf(float(data.get("saboteur_cooldown", 8.5)), 4.0, 18.0)
+    saboteur_damage_multiplier = clampf(float(data.get("saboteur_damage_multiplier", 1.5)), 1.0, 2.5)
+    _saboteur_target = null
+    _saboteur_scan_t = 0.0
+    _saboteur_scan_cursor = 0
+    _saboteur_windup_t = 0.0
+    _saboteur_cd = 0.0
+    _saboteur_path = PackedVector2Array()
+    _saboteur_path_index = 0
+    _saboteur_path_version = -1
+    _saboteur_repath_t = 0.0
     _scout_windup_t = 0.0
     _scout_windup_target = null
     _scout_mark_target = null
@@ -168,6 +210,8 @@ func setup_guard(data: Dictionary, world_ref, flow_ref, player_ref, origin: Vect
 
 func _ready() -> void:
     add_to_group("enemies")
+    if archetype == "saboteur":
+        saboteur_nav = get_tree().get_first_node_in_group("navigation_grid")
     if is_supply_raider:
         add_to_group("supply_raiders")
     if is_garrison:
@@ -183,6 +227,9 @@ func _physics_process(delta: float) -> void:
     _hurt_t = maxf(0.0, _hurt_t - delta)
     _support_cd = maxf(0.0, _support_cd - delta)
     _brace_cd = maxf(0.0, _brace_cd - delta)
+    _saboteur_cd = maxf(0.0, _saboteur_cd - delta)
+    _saboteur_scan_t = maxf(0.0, _saboteur_scan_t - delta)
+    _saboteur_repath_t = maxf(0.0, _saboteur_repath_t - delta)
     _scout_mark_t = maxf(0.0, _scout_mark_t - delta)
     _scout_mark_cd = maxf(0.0, _scout_mark_cd - delta)
     if _scout_mark_t <= 0.0 or not is_instance_valid(_scout_mark_target):
@@ -216,6 +263,12 @@ func _physics_process(delta: float) -> void:
 
     if is_supply_raider:
         _tick_supply_raid(delta)
+        _update_anim(delta)
+        _footsteps(delta)
+        return
+
+    if archetype == "saboteur":
+        _tick_saboteur(delta)
         _update_anim(delta)
         _footsteps(delta)
         return
@@ -346,6 +399,148 @@ func _tick_flow(delta: float) -> void:
             _begin_attack(occupied, occupied.position - position)
         return
     _move_toward(Vector2(next) * WorldConfig.tile_size + Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0) + _offset, delta)
+
+
+func _saboteur_target_valid(target: Node2D) -> bool:
+    if target == null or not is_instance_valid(target) or not target.is_in_group("buildings"):
+        return false
+    if int(target.get("hp")) <= 0 or not target.has_method("apply_sabotage"):
+        return false
+    return not bool(target.call("is_sabotaged"))
+
+
+func _select_saboteur_target() -> Node2D:
+    if saboteur_nav == null:
+        return null
+
+    var buildings: Array = get_tree().get_nodes_in_group("buildings")
+    var building_count := buildings.size()
+    if building_count <= 0:
+        return null
+    var scan_count := mini(SABOTEUR_TARGET_SCAN_LIMIT, building_count)
+    var best_target: Node2D
+    var best_path := PackedVector2Array()
+    var best_score := -INF
+    for offset in scan_count:
+        var candidate = buildings[(_saboteur_scan_cursor + offset) % building_count]
+        if not (candidate is Node2D):
+            continue
+        var building := candidate as Node2D
+        var priority := int(SABOTEUR_TARGET_PRIORITIES.get(String(building.get("id")), 0))
+        if priority <= 0 or not _saboteur_target_valid(building):
+            continue
+        if position.distance_to(building.position) > saboteur_scan_range:
+            continue
+        if is_garrison and building.position.distance_to(guard_origin) > 175.0:
+            continue
+        var cells: Array[Vector2i] = building.call("cells")
+        var candidate_path: PackedVector2Array = saboteur_nav.path_adjacent(position, cells)
+        if candidate_path.is_empty():
+            continue
+        var score := float(priority * 120) - float(maxi(0, candidate_path.size() - 1)) * 8.0
+        if score > best_score:
+            best_score = score
+            best_target = building
+            best_path = candidate_path
+
+    _saboteur_scan_cursor = (_saboteur_scan_cursor + scan_count) % building_count
+    _saboteur_target = best_target
+    _saboteur_path = best_path
+    _saboteur_path_index = 1 if best_path.size() > 1 else 0
+    _saboteur_path_version = saboteur_nav.version
+    _saboteur_repath_t = 0.9
+    return best_target
+
+
+func _nearest_saboteur_interceptor() -> Node2D:
+    if player != null and is_instance_valid(player) and position.distance_to(player.position) <= _attack_reach() + 4.0:
+        return player
+    for defender in get_tree().get_nodes_in_group("defenders"):
+        if not is_instance_valid(defender) or not defender.visible:
+            continue
+        if position.distance_to(defender.position) <= _attack_reach() + 4.0:
+            return defender as Node2D
+    return null
+
+
+func _tick_saboteur(delta: float) -> void:
+    if _saboteur_windup_t > 0.0:
+        if not _saboteur_target_valid(_saboteur_target) or position.distance_to(_saboteur_target.position) > 48.0:
+            _saboteur_windup_t = 0.0
+            _saboteur_target = null
+            _saboteur_cd = maxf(_saboteur_cd, 1.0)
+            queue_redraw()
+            return
+
+        var windup_direction := _saboteur_target.position - position
+        if windup_direction.length_squared() > 0.01:
+            anim.face(windup_direction)
+        _moving = false
+        _saboteur_windup_t = maxf(0.0, _saboteur_windup_t - delta)
+        if _saboteur_windup_t <= 0.0:
+            var target := _saboteur_target
+            if bool(target.call("apply_sabotage", saboteur_disruption_duration)):
+                var sabotage_damage := maxi(1, roundi(float(damage) * saboteur_damage_multiplier))
+                target.call("take_damage", sabotage_damage)
+                Events.fx_burst.emit("debris", target.global_position + Vector2(0, -8), Vector2.ZERO, 1.2)
+                _saboteur_cd = saboteur_cooldown_duration
+            else:
+                _saboteur_cd = maxf(_saboteur_cd, 1.0)
+            _saboteur_target = null
+            _saboteur_path = PackedVector2Array()
+            _saboteur_path_index = 0
+            _saboteur_path_version = -1
+            queue_redraw()
+        return
+
+    var interceptor := _nearest_saboteur_interceptor()
+    if interceptor != null:
+        _saboteur_target = null
+        _saboteur_path = PackedVector2Array()
+        _begin_attack(interceptor, interceptor.position - position)
+        return
+
+    if not _saboteur_target_valid(_saboteur_target):
+        _saboteur_target = null
+        _saboteur_path = PackedVector2Array()
+        _saboteur_path_index = 0
+        _saboteur_path_version = -1
+        _saboteur_scan_t = 0.0
+
+    if _saboteur_target == null and _saboteur_scan_t <= 0.0:
+        _select_saboteur_target()
+        _saboteur_scan_t = saboteur_scan_interval
+
+    if _saboteur_target == null:
+        _tick_flow(delta)
+        return
+
+    var distance := position.distance_to(_saboteur_target.position)
+    if distance <= maxf(22.0, _attack_reach() + 8.0):
+        _moving = false
+        if _saboteur_cd <= 0.0:
+            _saboteur_windup_t = saboteur_windup_duration
+            anim.face(_saboteur_target.position - position)
+            Events.fx_burst.emit("dust", position + Vector2(0, -3), Vector2.ZERO, 0.6)
+            queue_redraw()
+        return
+
+    if saboteur_nav == null:
+        _tick_flow(delta)
+        return
+    if _saboteur_path_version != saboteur_nav.version or _saboteur_path.is_empty() or _saboteur_repath_t <= 0.0:
+        var target_cells: Array[Vector2i] = _saboteur_target.call("cells")
+        _saboteur_path = saboteur_nav.path_adjacent(position, target_cells)
+        _saboteur_path_index = 1 if _saboteur_path.size() > 1 else 0
+        _saboteur_path_version = saboteur_nav.version
+        _saboteur_repath_t = 0.9
+    while _saboteur_path_index < _saboteur_path.size() and position.distance_to(_saboteur_path[_saboteur_path_index]) <= 3.0:
+        _saboteur_path_index += 1
+    if _saboteur_path_index < _saboteur_path.size():
+        _move_toward(_saboteur_path[_saboteur_path_index], delta)
+    else:
+        _saboteur_target = null
+        _saboteur_scan_t = 0.0
 
 
 func _nearest_scout_target() -> Node2D:
@@ -696,6 +891,11 @@ func apply_stagger(duration: float) -> void:
         _scout_windup_t = 0.0
         _scout_windup_target = null
         _scout_mark_cd = maxf(_scout_mark_cd, 1.2)
+    if archetype == "saboteur" and _saboteur_windup_t > 0.0:
+        _saboteur_windup_t = 0.0
+        _saboteur_target = null
+        _saboteur_cd = maxf(_saboteur_cd, 1.2)
+        _saboteur_path = PackedVector2Array()
     _hurt_t = maxf(_hurt_t, duration * 0.5)
     anim.play("hurt", true)
 
@@ -830,6 +1030,13 @@ func _draw() -> void:
         "saboteur":
             draw_circle(Vector2(7, -12), 2.5, color)
             draw_line(Vector2(7, -15), Vector2(10, -18), color, 1.0)
+            if _saboteur_target != null and is_instance_valid(_saboteur_target):
+                var sabotage_center := _saboteur_target.global_position - global_position + Vector2(0, -8)
+                var sabotage_color := Color("#efb45d") if _saboteur_windup_t > 0.0 else Color("#b85e48")
+                draw_line(Vector2(0, -_fh - 5), sabotage_center, sabotage_color, 1.2)
+                draw_arc(sabotage_center, 11.0, 0.0, TAU, 12, sabotage_color, 1.5)
+            if _saboteur_windup_t > 0.0:
+                draw_arc(Vector2(0, -_fh - 8), 6.0, 0.0, TAU, 10, Color("#efb45d"), 1.5)
         "war_shaman":
             draw_arc(Vector2(0, -_fh * 0.55), 7.0, 0.0, TAU, 12, color, 1.0)
         "siege_engine":

@@ -175,6 +175,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add faction tint, War Shaman ally healing, shared target-selection/support modules and enemy faction save persistence; current save schema is v13.
 - [x] Add faction registry validation and regression coverage for region mapping, rosters, garrisons, support and save validation.
 - [ ] Extract movement, attack-pattern and ability policies into composable modules; give each archetype its own counterable behavior.
+- [ ] Saboteur building disruption: implementation on `feat/phase-06-saboteur-disruption`; bounded target scan, reachable building priorities, telegraphed reversible disruption and stagger counterplay. CI pending.
 - [x] Scout scouting/marking merged via PR #39 (`11f3f13`); workflow #41354720293 passed 58/58 jobs on Godot 4.3/4.7.
 - [x] Shieldbearer directional brace merged via PR #36 (`b02aa60`); the available first results page for workflow #41329202804 showed 30/30 successful jobs; full matrix not independently verified.
 - [ ] Add deterministic faction camps, bounded patrol routes and camp reinforcement budgets.

@@ -400,7 +400,16 @@ func _tick_idle(delta: float) -> void:
             _wander()
 
 
+func _facility_sabotaged(facility: Variant) -> bool:
+    if facility == null or not is_instance_valid(facility):
+        return false
+    return facility.has_method("is_sabotaged") and bool(facility.is_sabotaged())
+
+
 func _tick_working(delta: float) -> void:
+    if _facility_sabotaged(target) or _facility_sabotaged(workplace):
+        anim.play("idle")
+        return
     if target == null or not is_instance_valid(target):
         target = null
         state = State.IDLE

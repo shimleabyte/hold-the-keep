@@ -80,6 +80,7 @@ jobs:
           - supply_pressure
           - shieldbearer_behavior
           - scout_marking
+          - saboteur_disruption
     steps:
       - name: Checkout
         uses: actions/checkout@v7
