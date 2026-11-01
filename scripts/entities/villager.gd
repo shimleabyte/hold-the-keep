@@ -692,6 +692,9 @@ func _go_depot() -> void:
     for depot in get_tree().get_nodes_in_group("depots"):
         if supply != null and not supply.is_depot_connected(depot):
             continue
+        if WorldConfig.profile_id == "frontier" and carry > 0 and depot.id != "keep":
+            if not depot.can_store_resource(carry_kind, carry):
+                continue
         var path: PackedVector2Array = nav.path_adjacent(position, depot.cells())
         if path.is_empty():
             continue
@@ -710,11 +713,21 @@ func _go_depot() -> void:
 func _deposit() -> void:
     if carry > 0 and carry_kind != "":
         var supply = get_tree().get_first_node_in_group("supply_network")
-        if supply != null and _depot != null and is_instance_valid(_depot) and not supply.is_depot_connected(_depot):
+        if _depot == null or not is_instance_valid(_depot):
             _depot = null
             _go_depot()
             return
-        Inventory.add(carry_kind, carry)
+        if supply != null and not supply.is_depot_connected(_depot):
+            _depot = null
+            _go_depot()
+            return
+        if WorldConfig.profile_id == "frontier" and _depot.id != "keep":
+            if not _depot.store_resource(carry_kind, carry):
+                _depot = null
+                _go_depot()
+                return
+        else:
+            Inventory.add(carry_kind, carry)
     carry = 0
     carry_kind = ""
     queue_redraw()
