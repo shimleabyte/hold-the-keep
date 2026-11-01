@@ -59,6 +59,7 @@
   "scale": 1.45,
   "role": "siege",
   "armor": 0.2,
+  "stagger_resistance": 0.55,
   "structure_damage_mult": 1.8
  },
  {
@@ -72,6 +73,7 @@
   "scale": 1.8,
   "boss": true,
   "armor": 0.12,
+  "stagger_resistance": 0.75,
   "role": "siege",
   "structure_damage_mult": 1.4
  }
