@@ -42,6 +42,7 @@ tests=(
     frontier_world
     regional_control_roads
     local_depot_stockpiles
+    outpost_garrisons
 )
 
 for test_name in "${tests[@]}"; do

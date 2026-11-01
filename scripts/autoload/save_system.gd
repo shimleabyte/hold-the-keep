@@ -104,10 +104,14 @@ func collect(main: Node) -> Dictionary:
 
     var villagers: Array = []
     for villager in get_tree().get_nodes_in_group("villagers"):
+        var guard_outpost: Variant = null
+        if villager.is_outpost_guard():
+            guard_outpost = {"cx": villager.guard_outpost.cell.x, "cy": villager.guard_outpost.cell.y}
         villagers.append({"x": villager.position.x, "y": villager.position.y, "job": villager.job,
             "occupation": villager.occupation, "military_specialization": villager.military_specialization,
             "hp": villager.hp, "carry": villager.carry, "kind": villager.carry_kind,
-            "expedition": villager.is_expeditioning(), "recalling": villager.is_recalling_expedition()})
+            "expedition": villager.is_expeditioning(), "recalling": villager.is_recalling_expedition(),
+            "guard_outpost": guard_outpost})
 
     var enemies: Array = []
     for enemy in get_tree().get_nodes_in_group("enemies"):
@@ -269,6 +273,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 stockpile_total += amount
             if stockpile_total > stockpile_limit or (stockpile_total > 0 and stockpile_limit <= 0):
                 return false
+    var outpost_guard_counts: Dictionary = {}
     for villager in villagers:
         if not (villager is Dictionary):
             return false
@@ -288,6 +293,25 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 return false
             var legacy_job := specialization if not specialization.is_empty() else occupation
             if String(villager["job"]) != legacy_job or (not occupation.is_empty() and not specialization.is_empty()):
+                return false
+        var guard_data: Variant = villager.get("guard_outpost", null)
+        if guard_data != null:
+            if not (guard_data is Dictionary) or not guard_data.has("cx") or not guard_data.has("cy"):
+                return false
+            if String(villager.get("job", "")) != "soldier" or bool(villager.get("expedition", false)) or bool(villager.get("recalling", false)):
+                return false
+            var guard_cell := Vector2i(int(guard_data["cx"]), int(guard_data["cy"]))
+            var outpost_exists := false
+            for saved_building in buildings:
+                if String(saved_building.get("id", "")) == "outpost" and int(saved_building.get("cx", -1)) == guard_cell.x and int(saved_building.get("cy", -1)) == guard_cell.y:
+                    outpost_exists = true
+                    break
+            if not outpost_exists:
+                return false
+            var guard_key := "%d:%d" % [guard_cell.x, guard_cell.y]
+            outpost_guard_counts[guard_key] = int(outpost_guard_counts.get(guard_key, 0)) + 1
+            var outpost_limit := int(DataDB.buildings["outpost"].get("guard_slots", 0))
+            if int(outpost_guard_counts[guard_key]) > outpost_limit:
                 return false
     for enemy in enemies:
         if not (enemy is Dictionary) or not enemy.has("id") or not enemy.has("x") or not enemy.has("y") or not enemy.has("hp"):
