@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 9
+const VERSION := 10
 
 var pending: Dictionary = {}
 
@@ -115,7 +115,8 @@ func collect(main: Node) -> Dictionary:
             "id": enemy.id, "x": enemy.position.x, "y": enemy.position.y, "hp": enemy.hp,
             "garrison": enemy.is_garrison,
             "guard_x": enemy.guard_origin.x,
-            "guard_y": enemy.guard_origin.y
+            "guard_y": enemy.guard_origin.y,
+            "faction": enemy.faction_id
         })
 
     var resources: Array = []
@@ -276,6 +277,10 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             return false
         if not DataDB.enemies.has(String(enemy["id"])):
             return false
+        if version >= 10:
+            var saved_faction := String(enemy.get("faction", ""))
+            if not saved_faction.is_empty() and not FactionRegistry.factions.has(saved_faction) and not ["classic_raiders", "legacy_raiders"].has(saved_faction):
+                return false
         if bool(enemy.get("garrison", false)) and (not enemy.has("guard_x") or not enemy.has("guard_y")):
             return false
     for job in quota:
