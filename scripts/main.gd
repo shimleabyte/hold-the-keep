@@ -140,7 +140,7 @@ func _spawn_campaign_strongholds() -> void:
         if anchor.x < 0 or anchor.y < 0:
             push_error("Campaign: no reachable stronghold site for %s in %s" % [stronghold_id, target_region])
             continue
-        var region := world.region_id(anchor)
+        var region: String = world.region_id(anchor)
         campaign.set_objective_location(stronghold_id, anchor, region)
         var saved: Dictionary = objective.duplicate(true)
         saved["cx"] = anchor.x

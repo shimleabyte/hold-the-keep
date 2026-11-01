@@ -252,7 +252,7 @@ func _draw_campaign_markers() -> void:
             continue
         var marker_size := 5.0 * _map_scale / 3.0
         var marker_position := _world_to_map(stronghold.global_position)
-        var is_active := campaign != null and campaign.is_current_objective(stronghold.stronghold_id)
+        var is_active: bool = campaign != null and campaign.is_current_objective(stronghold.stronghold_id)
         var marker_color := ENEMY_MARKER if is_active else ENEMY_TERRITORY.darkened(0.25)
         if is_active:
             draw_circle(marker_position, marker_size * 0.9, Color("#f3bd78"))

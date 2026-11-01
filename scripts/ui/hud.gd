@@ -771,7 +771,7 @@ func _on_game_over(day: int) -> void:
 func _on_campaign_won(day: int) -> void:
     _close_secondary_panels()
     var main_node = get_tree().get_first_node_in_group("main")
-    var objective_count := main_node.campaign.objectives_in_order().size() if main_node != null else 1
+    var objective_count: int = main_node.campaign.objectives_in_order().size() if main_node != null else 1
     var victory_title := "SELURUH WILAYAH DITAKLUK" if objective_count > 1 else "BENTENG LAWAN TAKLUK"
     _over_label.text = "%s\\nWilayah musuh jatuh pada hari %d\\nTekan R untuk main lagi" % [victory_title, day] + _load_hint()
     _over.visible = true
