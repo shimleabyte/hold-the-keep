@@ -179,3 +179,12 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Prajurit ekspedisi memprioritaskan garrison, lalu menyerang stronghold. Benteng hancur membersihkan garrison dan memicu campaign victory.
 - Save versi 5 menyimpan stronghold, status reinforcement, identitas/origin garrison, status ekspedisi/recall, dan fog discovery. Versi 1–4 masih diterima lewat default.
 - Tes regresi baru: `tests/campaign_assault.gd`.
+
+
+## 15. Combat progression and enemy roles (2026-11-01)
+- Player gains XP on enemy kills. Level-ups restore 18 HP; level and XP persist in save version 6. Saves v1–v5 load with level 1 / 0 XP defaults.
+- Active abilities: Q Dash (level 1, short burst + brief invulnerability + impact stagger), C Cleave (level 2, frontal area strike + stagger), V Rally (level 3, temporary player and nearby soldier damage/attack-rate buff). Each skill has an independent cooldown. HUD shows XP progress, unlock state and cooldown state.
+- Friendly soldiers carry a timed Rally buff during ordinary defense and expeditions.
+- Enemy roles: bandit melee raider; wolf pouncer with wind-up and lunge; archer keeps preferred distance and fires homing hostile bolts; brute has armor and deals multiplied damage to structures; final king gains armor and siege damage.
+- Wave roster adds archers on day 6 and brutes on day 9. New roles reuse existing humanoid sprite sheets with role-specific markers; bespoke enemy art remains a future visual pass.
+- Regression coverage: `tests/player_combat.gd` checks XP unlocks, dash movement/invulnerability, directional Cleave, Rally buffs, archer projectile launch, brute armor and save data. The test is committed but unexecuted because Godot is not installed in the current environment.
