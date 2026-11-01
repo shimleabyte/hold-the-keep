@@ -44,8 +44,8 @@ func _initialize() -> void:
     rear_enemy.set_physics_process(false)
 
     player.facing = Vector2.RIGHT
-    var forward_hp := forward_enemy.hp
-    var rear_hp := rear_enemy.hp
+    var forward_hp: int = forward_enemy.hp
+    var rear_hp: int = rear_enemy.hp
     assert(player.activate_ability("cleave"), "Cleave should activate after unlocking")
     await ticks(20)
     assert(forward_enemy.hp < forward_hp, "Cleave must damage enemies in its forward arc")
@@ -90,14 +90,14 @@ func _initialize() -> void:
     brute.setup(DataDB.enemies["brute"], main.world, main.flow, player)
     main.world.entities.add_child(brute)
     brute.set_physics_process(false)
-    var brute_hp := brute.hp
+    var brute_hp: int = brute.hp
     brute.take_damage(20)
     assert(brute.hp == brute_hp - 16, "Brute armor must reduce incoming damage")
     brute.apply_stagger(0.55)
     assert(brute._stagger_t < 0.55 and brute._stagger_t > 0.0,
         "Brute stagger resistance must reduce control duration")
 
-    var xp_before_kill := player.experience
+    var xp_before_kill: int = player.experience
     brute.take_damage(9999)
     assert(player.experience == xp_before_kill + 32,
         "Enemy kill signal must award the player's XP reward")
