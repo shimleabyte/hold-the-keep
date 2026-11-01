@@ -213,11 +213,16 @@ func _initialize() -> void:
 
     assert(main.enemy_keep != null and is_instance_valid(main.enemy_keep),
         "Frontier must place its campaign stronghold")
-    var stronghold_path: PackedVector2Array = main.nav.path_adjacent(
-        main.player.global_position, main.enemy_keep.cells()
-    )
-    assert(not stronghold_path.is_empty(),
-        "The Frontier stronghold must be reachable from the starting settlement")
+    var stronghold_has_reachable_approach := false
+    for cell in main.enemy_keep.cells():
+        for direction in DIRS4:
+            if reachable.has(cell + direction):
+                stronghold_has_reachable_approach = true
+                break
+        if stronghold_has_reachable_approach:
+            break
+    assert(stronghold_has_reachable_approach,
+        "The Frontier stronghold must border the starting settlement's reachable terrain")
 
     # Generate the same profile again and compare every terrain cell and resource placement.
     var mirror = WORLD_SCRIPT.new()
