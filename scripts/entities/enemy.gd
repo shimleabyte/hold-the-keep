@@ -36,6 +36,7 @@ var attack_range := PLAYER_REACH
 var preferred_range := 0.0
 var projectile_speed := 120.0
 var armor := 0.0
+var stagger_resistance := 0.0
 var structure_damage_mult := 1.0
 
 var world
@@ -76,6 +77,7 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref) -> void:
     preferred_range = float(data.get("preferred_range", 0.0))
     projectile_speed = float(data.get("projectile_speed", 120.0))
     armor = clampf(float(data.get("armor", 0.0)), 0.0, 0.8)
+    stagger_resistance = clampf(float(data.get("stagger_resistance", 0.0)), 0.0, 0.9)
     structure_damage_mult = maxf(1.0, float(data.get("structure_damage_mult", 1.0)))
     world = world_ref
     flow = flow_ref
@@ -312,13 +314,14 @@ func _resolve_pending(delta: float) -> void:
 
 
 func apply_stagger(duration: float) -> void:
-    _stagger_t = maxf(_stagger_t, duration * (0.45 if is_boss else 1.0))
+    _stagger_t = maxf(_stagger_t, duration * (1.0 - stagger_resistance))
     _pending = null
     _pending_is_projectile = false
     _pending_t = 0.0
     _pounce_windup_t = 0.0
     _pounce_t = 0.0
     _hurt_t = maxf(_hurt_t, duration * 0.5)
+    anim.play("hurt", true)
 
 
 func _footsteps(delta: float) -> void:
