@@ -1,6 +1,6 @@
 extends SceneTree
-## Loads every GDScript resource inside the actual project context.
-## This is intentionally not --check-only per-file: standalone parsing cannot resolve autoloads.
+## Loads and validates every GDScript resource inside the actual project context.
+## can_instantiate() checks compilation without reloading active autoload scripts.
 
 
 func _initialize() -> void:
@@ -15,10 +15,14 @@ func _check_all_scripts() -> void:
 
     var failures: Array[String] = []
     for path in paths:
-        var script_resource: Resource = load(path)
+        var script_resource := load(path) as GDScript
         if script_resource == null:
-            failures.append(path)
+            failures.append(path + " (resource load)")
             push_error("GDScript failed to load: " + path)
+            continue
+        if not script_resource.can_instantiate():
+            failures.append(path + " (script cannot instantiate)")
+            push_error("GDScript failed to compile: " + path)
 
     if not failures.is_empty():
         push_error("GDScript parse/load failures: " + ", ".join(failures))
