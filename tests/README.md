@@ -97,4 +97,4 @@ Phase 09 CI runs the Frontier timing benchmark as a non-gating diagnostic and up
 The release-export workflow installs Godot 4.3-matching templates, builds Windows and Linux binaries, validates the Windows PE format and smoke-tests the Linux executable. These checks do not replace clean-machine user acceptance.
 
 
-PR #35 merged Phase 02.5 at `2ba5628`; workflow #41328005585 passed. PR #36 merged Shieldbearer directional brace at `b02aa60`. PR #39 merged Scout faction-aware marking at `11f3f13`; workflow #41354720293 passed 58/58 jobs, including 27 assertion suites on each of Godot 4.3 and 4.7. Branch `feat/phase-06-saboteur-disruption` adds regression suite #28 per engine; CI pending.
+PR #35 merged Phase 02.5 at `2ba5628`; workflow #41328005585 passed. PR #36 merged Shieldbearer directional brace at `b02aa60`. PR #39 merged Scout faction-aware marking at `11f3f13`. PR #40 merged Saboteur building disruption at `8f1a914`; workflow #41355982522 passed 60/60 jobs, including 28 assertion suites on each of Godot 4.3 and 4.7, import/parse, Frontier performance diagnostic and Windows/Linux release export.
