@@ -96,4 +96,4 @@ Phase 09 CI runs the Frontier timing benchmark as a non-gating diagnostic and up
 The release-export workflow installs Godot 4.3-matching templates, builds Windows and Linux binaries, validates the Windows PE format and smoke-tests the Linux executable. These checks do not replace clean-machine user acceptance.
 
 
-PR #35 merged Phase 02.5 at `2ba5628`; workflow #41328005585 passed. PR #36 merged Shieldbearer directional brace at `b02aa60`; workflow #41329202804 completed successfully. Branch `feat/phase-06-scout-marking` adds regression suite #27 per engine; CI is pending.
+PR #35 merged Phase 02.5 at `2ba5628`; workflow #41328005585 passed. PR #36 merged Shieldbearer directional brace at `b02aa60`; its available first results page showed 30/30 jobs successful, but did not expose the full matrix. Branch `feat/phase-06-scout-marking` adds regression suite #27 per engine; CI is pending.
