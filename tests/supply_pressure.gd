@@ -136,7 +136,7 @@ func _initialize() -> void:
             for x in range(-radius, radius + 1):
                 if maxi(absi(x), absi(y)) != radius:
                     continue
-                var contested_cell := outpost.cell + Vector2i(x, y)
+                var contested_cell: Vector2i = outpost.cell + Vector2i(x, y)
                 if main.world.is_buildable(contested_cell):
                     main.territory.enemy_claimed_cells[contested_cell] = true
     main.territory._dirty = false
@@ -252,7 +252,7 @@ func _initialize() -> void:
     require(restored_main != null,
         "Loading must recreate the Frontier campaign")
     var restored_outpost = null
-    for depot in get_tree().get_nodes_in_group("depots"):
+    for depot in get_nodes_in_group("depots"):
         if depot.cell == outpost_cell:
             restored_outpost = depot
             break
