@@ -5,6 +5,8 @@ melanjutkan tanpa membaca ulang seluruh riwayat. **Perbarui bagian "Status" dan 
 selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; file ini = konteks.
 
 ## 1. Ringkasan
+
+**Current source of truth:** main at `f540faebb83402030ea4a360161eacd737e28856`; save schema v11; latest main CI [workflow #294](https://github.com/shimleabyte/hold-the-keep/actions/runs/41309837812) passed 44/44 jobs. See `ROADMAP_NEXT_LEVEL.md` for current phase status and `docs/plans/` for phase execution plans.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -12,27 +14,28 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Tujuan pemain: bertahan 15 hari, di malam ke-15 kalahkan Raja Lawan. Keep hancur = kalah.
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
-## 2. Status fitur (implementasi aktif; status verifikasi per suite dicatat di bagian 6)
-| Area | Isi |
+## 2. Status fitur
+Ringkasan implementasi aktual pada main (save schema v11; status acceptance per 1 November 2026).
+
+| Area | Kondisi saat ini |
 |---|---|
-| Dunia | Classic 64x64 tetap tersedia; Frontier 128x128 deterministik dengan lima biome, resource density regional, 32 urat besi dan starting claim radius 15 |
-| Wilayah | regional ownership neutral/player/enemy/contested; roads/bridges walkable; supply graph berakar di Keep dan depot aktif hanya saat terhubung |
-| Kampanye | Classic satu stronghold; Frontier empat stronghold regional berurutan (Greenwood, Highlands, Fenlands, Ashen March), garrison/reinforcement lokal, reward conquest, objective registry, fog dan ekspedisi (G) |
-| Pemain | gerak 8 arah, lari (Shift), serang radial, panen, HP 100 + regen, respawn di keep |
-| Bangunan | keep, rumah, tembok, menara, gudang, ladang; data di `data/buildings.json`; bongkar refund 50% |
-| Musuh | bandit, serigala pouncer, soldier melee, archer ranged, brute siege, Raja Lawan; flow field; role-specific AI dan structure damage |
-| Villager | job penebang/penambang/petani/prajurit, kuota diatur pemain, A*, setor ke gudang/keep |
-| Ekonomi | kayu, batu, makanan; kapasitas rumah; upkeep 2 makanan/penduduk/hari |
-| Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
-| Save/load | versi 11, autosave tiap fajar, F5/F9, temp + rollback backup, world identity, resource/fog/multi-stronghold HP/garrison/ekspedisi/recall/combat/campaign progression, objective/site state dan faction identity tersimpan; v1–v10 tetap kompatibel |
-| Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
-| Tampilan | windowed 1280×720 default, minimum 960×540, preset 16:9/16:10/4:3, viewport logis dinamis = ukuran client window / 2 (minimum 480×270), integer pixel scale 2×, aspect expand |
-| HUD | top bar ringkas, vitals, indikator bab, combat strip kompak, drawer JOBS, peta strategis TAB/MAP, hotbar bangunan, bar boss, bantuan (H) |
-| Animasi | 22 frame x 3 arah per karakter; serang/panen jatuh di frame benturan |
-| Efek | partikel, busur tebasan, guncangan layar (bisa dimatikan) |
-| Audio | SFX prosedural (12 suara); **belum ada musik** |
-| Teknologi | 20 teknologi, 3 era, panel Y, bijih besi, Tempa, tembok batu; efek berupa data (`Tech.stat`) |
-| Rilis | export preset Windows+Linux, `tools/build.sh|ps1` (template export belum pernah dipasang di sini) |
+| Dunia | Classic 64×64 / 15 hari tetap tersedia; Frontier 128×128 / 20 hari / 4 act dengan lima biome deterministik, 32 urat besi, dan starting Keep claim radius 15 |
+| Wilayah | Regional ownership neutral/player/enemy/contested; roads/bridges walkable; supply graph dari Keep; depot terputus tidak menerima deposit |
+| Logistik | **Parsial:** inventory resource masih shared setelah worker mencapai depot terhubung; local stockpile dan transfer antar-depot belum ada |
+| Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload |
+| Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
+| Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
+| Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
+| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman support berjalan; perilaku khusus seluruh archetype, camps, patrol, raids dan counterattacks belum lengkap |
+| Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
+| Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
+| Save/load | v11; state world/campaign/objective/site/job/building/resource/faction; migrasi Classic v1–v10 dan Frontier v7–v10 dicakup regression |
+| Kontrol | Rebind gerak, interaksi, serang, lari; shortcut UI/job/build belum dapat di-rebind |
+| Tampilan | Adaptive logical viewport = setengah ukuran client window, minimum 480×270, pixel scale tepat 2×; physical-display/fullscreen review belum dilakukan |
+| HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map, hotbar, objective tracker, tech panel, pause menu |
+| Audio | 12 procedural SFX; musik belum ada |
+| Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
+| CI | Mainline workflow #294: 44/44 jobs sukses pada Godot 4.3/4.7, export dan diagnostic jobs ikut berjalan |
 
 ## 3. Struktur
 ```
@@ -99,7 +102,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 ## 6. Cara memverifikasi
 - Jalankan: `godot --headless --path . --import` sekali, lalu `godot --headless --fixed-fps 60 --path . --script tests/<x>.gd`.
 - Render nyata lewat Xvfb + OpenGL software untuk screenshot (lihat tests/README.md).
-- Base suite sebelumnya tercatat lolos di Godot 4.3 dan (yang relevan) 4.7; perubahan campaign menambah `tests/campaign_assault.gd`. Tes baru ini belum dijalankan pada sesi implementasi ini karena executable Godot tidak tersedia di environment kerja. Jalankan seluruh suite setelah pull branch.
+- Latest mainline workflow #294 completed with 44/44 successful jobs, including Godot 4.3/4.7 import/parse, assertion regressions, performance diagnostic, and Windows/Linux export checks. This is CI evidence, not a substitute for human campaign playtesting or physical-display review.
 - Angka perf historis: ~2 ms/frame untuk 150 musuh + 42 villager + 300 partikel (headless, tanpa render); belum mengukur biaya fog/campaign.
 - Setelah mengubah `tools/gen_assets.py`: `python3 tools/gen_assets.py`, lalu import ulang.
 
@@ -117,26 +120,43 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 - Event sintetis di tes HUD memakai koordinat jendela, bukan viewport (lihat tests/README.md).
 
 ## 8. Batasan dan masalah yang diketahui
-- Visual belum pernah dilihat di mesin pemilik (semua render lewat software di server).
-- Build executable sungguhan belum pernah dibuat (butuh export template Godot; PCK sudah teruji).
-- Save versi 6 memulihkan HP/timer resource, fog eksplorasi, posisi/HP benteng, timer reinforcement, garrison, status ekspedisi/perjalanan pulang, serta level/XP tempur; save versi 1–5 tetap diterima dengan default untuk field baru.
-- Satu arah samping digambar; kiri/kanan identik (cermin). Animasi dari pose prosedural, bukan gambar tangan.
-- Tidak ada musik; SFX prosedural sederhana.
-- Rebind empat kelompok kontrol inti sudah ada melalui menu jeda; shortcut UI/job/build masih tetap.
-- Teks HUD hanya huruf kapital; automated bounds coverage for common non-16:9 logical sizes has been added. Visual rendering still needs manual confirmation in Godot.
-- Map overlay is responsive to expanded logical viewport dimensions; the new automated layout test is committed, but actual rendered screenshots still need manual confirmation.
+- Belum ada bukti screenshot dan playtest pada monitor fisik pemilik; render CI/software tidak menggantikan pemeriksaan display dan fullscreen.
+- Belum ada full human playthrough Classic hari 1–15 dan Frontier act 1–4/day 20 yang terdokumentasi.
+- Belum ada target-hardware benchmark yang mencatat CPU, GPU, OS, resolusi, workload, dan frame-time percentiles.
+- Windows export telah dibuat dan diperiksa format PE di CI, tetapi belum dijalankan pada native Windows atau clean Windows machine.
+- Local stockpile dan actual inter-depot transfer belum tersedia; seluruh depot terhubung masih memakai shared inventory.
+- Outpost guard/garrison dan local visibility belum tersedia.
+- Hunter, Scout, Healer, dan Blacksmith belum tersedia.
+- Construction queue serta staged completion dengan Builder belum tersedia.
+- Phase 06 baru memiliki faction/archetype foundation; perilaku counterable semua archetype, camps, patrol, raids, counterattacks, dan persistence belum lengkap.
+- Phase 08 art/audio identity belum dikirim sebagai satu implementation slice; unit/faction/building visuals masih membutuhkan art pass khusus dan musik belum ada.
+- Hotkey UI/job/build belum dapat di-rebind; tooltip bangunan/job dan Windows .ico juga belum tersedia.
+- Steam integration opsional dan bukan blocker gameplay.
+- Save v11 dan compatibility coverage tersedia, tetapi acceptance upgrade pada mesin bersih tetap belum diverifikasi.
 
 ## 9. Rencana berikut (belum dikerjakan)
-1. Mainkan dan catat bagian yang janggal; sesuaikan balancing hari 2-14 (teknologi mengubah kurva kekuatan).
-2. **Kampanye wilayah**: peta awal kini memiliki empat biome dan tiga bab progression. Tahap lanjut: beberapa map region yang dapat ditransisikan, beberapa stronghold berurutan, AI logistik/serangan musuh lintas wilayah, dan upgrade ekspedisi.
-3. Rebind shortcut UI/job/build dan navigasi menu; kontrol gerak/interaksi/serang/lari sudah dapat diubah.
-4. Musik (komposisi/aset) dan SFX untuk partikel.
-5. Tooltip pada slot bangunan dan ikon job; ikon .ico Windows; integrasi Steam (opsional).
+Urutan backlog berdasarkan dependency:
+1. Phase 02: local stockpile per depot, transfer antar-depot, Outpost garrison dan local visibility. Supply attrition menunggu sampai transfer benar-benar bekerja.
+2. Phase 04: implementasikan Hunter, Scout, Healer dan Blacksmith dengan workplace, radius, biaya/hasil, UI kuota, pathfinding dan save/load.
+3. Phase 05: construction queue dan staged building completion dengan Builder; lanjutkan bangunan sesuai dependency produksi dan strategi.
+4. Phase 06: distinct/counterable policy keenam archetype, faction camps, bounded patrols, reinforcement budget, raids/counterattacks dan persistence.
+5. Phase 08: biome/faction/unit/building art pass, strategic-map readability, combat/environmental audio dan musik.
+6. Phase 07/09/10 acceptance: human campaign playtest, difficulty review, target-hardware profile, native Windows smoke, clean-machine migration, physical-resolution screenshots dan fullscreen test.
+7. Polish sekunder: rebind shortcut UI/job/build, tooltip, Windows .ico; Steam tetap opsional.
+
+Dokumen kanonik setiap fase berada di ROADMAP_NEXT_LEVEL.md dan docs/plans/. Automated CI, headless simulation, rendered screenshot, dan human playtest harus dilaporkan sebagai bukti yang berbeda.
 
 ## 9b. Tahap lanjutan kampanye wilayah
-Fase pertama conquest sudah tersedia pada peta 64x64: satu benteng lawan ditempatkan di lokasi yang dapat dicapai; klaimnya bertabrakan secara aturan dengan pembangunan pemain; fog of war permanen memperlihatkan wilayah setelah dieksplorasi; G mengirim/menarik pasukan prajurit; garrison bertahan saat fajar dan direinforce; benteng hancur memicu kemenangan.
+Pondasi Frontier campaign sekarang sudah tersedia: world 128×128, lima biome, empat stronghold, 11 regional objectives, empat faksi, road-connected supply, dan 20-day/4-act calendar. Karena itu, jangan mengulang roadmap awal berupa peta region transisi atau single-stronghold upgrade.
 
-Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) peta/region tambahan dengan streaming atau transisi terkontrol; (2) lebih dari satu stronghold dan jalur conquest berurutan; (3) AI lawan yang membangun, mengumpulkan resource, dan mengirim raid; (4) logistik ekspedisi seperti suplai makanan, rally point, dan biaya korban; (5) tech/upgrade untuk siege equipment dan unit ofensif. Jangan menambah banyak basis sebelum satu campaign slice ini tervalidasi dalam build Godot sungguhan.
+Batas sistem berikutnya:
+- Supply graph hanya menentukan konektivitas; itu belum menjadi ekonomi lokal. Implementasikan saldo per depot dan transfer barang sebelum menghitung attrition.
+- Outpost merupakan depot forward, tetapi belum memiliki garrison assignment dan visibility lokal.
+- Faction registry sudah menentukan identitas/roster; territorial AI masih harus dibangun dengan batas spawn, radius patrol, cooldown, target selection bounded, path reachability, dan save persistence.
+- Construction queue harus menjadi sumber progress pembangunan; jangan langsung menjadikan semua bangunan instant-place jika Builder adalah labor occupation.
+- Pertahankan Classic 64×64/15-day dan save compatibility pada setiap fase.
+
+Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardware nyata menunjukkan kebutuhan.
 
 ## 10. Riwayat singkat
 1. Rencana game + pemilihan stack (Godot 4, native).
