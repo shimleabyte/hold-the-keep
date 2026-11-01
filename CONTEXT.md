@@ -16,14 +16,15 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 | Area | Isi |
 |---|---|
 | Dunia | peta 64x64 prosedural (seed 1337): rumput, kolam (collision), pohon, batu |
-| Wilayah | Keep dan Pos Terdepan mengklaim radius grid; bangunan biasa dibatasi wilayah, outpost memperluas frontier |
+| Wilayah | klaim pemain dari Keep/Outpost, klaim musuh dari benteng, ownership check, frontier expansion |
+| Kampanye | benteng lawan 900 HP, garrison dan reinforcement, fog of war permanen, ekspedisi prajurit (G), conquest victory |
 | Pemain | gerak 8 arah, lari (Shift), serang radial, panen, HP 100 + regen, respawn di keep |
 | Bangunan | keep, rumah, tembok, menara, gudang, ladang; data di `data/buildings.json`; bongkar refund 50% |
 | Musuh | bandit, serigala, prajurit, Raja Lawan; flow field; menyerang bangunan/pemain/prajurit |
 | Villager | job penebang/penambang/petani/prajurit, kuota diatur pemain, A*, setor ke gudang/keep |
 | Ekonomi | kayu, batu, makanan; kapasitas rumah; upkeep 2 makanan/penduduk/hari |
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
-| Save/load | versi 2, autosave tiap fajar, F5/F9, file sementara + rollback backup, status resource node ikut tersimpan |
+| Save/load | versi 4, autosave tiap fajar, F5/F9, file sementara + rollback backup, resource/fog/stronghold/garrison/ekspedisi tersimpan |
 | Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
 | HUD | panel atas, vitals, kuota job (klik), bar bangunan (klik), bar boss, bantuan (H) |
 | Animasi | 22 frame x 3 arah per karakter; serang/panen jatuh di frame benturan |
@@ -36,13 +37,13 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 ```
 project.godot          autoload, display, rendering, debug log
 scenes/main.tscn       satu node dengan script main.gd (semua dirakit lewat kode)
-scripts/main.gd        merakit dunia, pemain, flow, nav, village, event, spawner, build, HUD, menu, keep
+scripts/main.gd        merakit dunia, pemain, flow, nav, village, event, spawner, build, territory, fog, enemy keep, HUD, menu
 scripts/autoload/      InputSetup, Events (signal bus), DataDB (JSON), Settings, Inventory, Tech,
                        GameClock, SaveSystem, Audio
 scripts/world/         world_map.gd (tileset dari tiles.svg, noise, pohon/batu, occupied dict)
 scripts/systems/       flow_field (Dijkstra musuh), nav_grid (AStarGrid2D villager), build_system, territory,
-                       village (kapasitas, spawn, kuota, upkeep), wave_spawner, event_manager
-scripts/entities/      player, enemy, villager, building, resource_tree, rock, iron_ore, arrow, corpse,
+                       fog_of_war (peta permanen), village/expedition, wave_spawner, event_manager
+scripts/entities/      player, enemy, enemy_keep (stronghold/garrison source), villager (expedition), building, resource_tree, rock, iron_ore, arrow, corpse,
                        fx_layer, sprite_anim
 scripts/ui/            hud.gd, tech_panel.gd, pause_menu.gd, pixel_font.gd
 data/                  buildings.json, enemies.json, waves.json, events.json, techs.json
@@ -62,7 +63,9 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `village`, `buildings`, `dep
 - **Semua visual dari SVG** + `_draw()`; sprite karakter = sheet 22 frame x 3 baris (depan, belakang,
   samping menghadap kanan, kiri = flip). `SpriteAnim` memilih frame; klip: idle, walk, run, attack,
   work, hurt, death. Titik tumpu = tengah-bawah kanvas, Y-sort di `world.entities`.
-- **Territory**: `territory.gd` menghitung klaim dari Keep/Pos Terdepan. Pos harus menyentuh frontier; bangunan lain harus berada sepenuhnya dalam wilayah.
+- **Territory**: `territory.gd` menghitung klaim Keep/Pos Terdepan dan benteng lawan. Klaim merah memblokir bangunan pemain; Outpost hanya sah jika seluruh footprint di luar klaim musuh dan setidaknya satu tile menyentuh frontier.
+- **Fog**: `fog_of_war.gd` menyimpan eksplorasi permanen dari player, Keep, Outpost, dan villager; bit-map eksplorasi tersimpan di save versi 4.
+- **Campaign**: `enemy_keep.gd` memiliki 900 HP, garrison dan reinforcement. Villager dengan job soldier dapat menjadi ekspedisi, melawan garrison, lalu menghancurkan stronghold.
 - **Occupancy**: `world.occupied` (Vector2i -> Node) berisi pohon, batu, bangunan; dipakai build_system,
   flow field, nav grid. Flow field: bangunan dilewati dengan biaya (musuh menghancurkannya), pohon/batu/air tidak.
 - **Grid**: tile 16 px, peta 64x64, tepi peta = air.
@@ -115,7 +118,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `village`, `buildings`, `dep
 ## 8. Batasan dan masalah yang diketahui
 - Visual belum pernah dilihat di mesin pemilik (semua render lewat software di server).
 - Build executable sungguhan belum pernah dibuat (butuh export template Godot; PCK sudah teruji).
-- Save versi 2 memulihkan HP dan sisa timer tumbuh ulang resource node; save versi 1 tetap dapat dibaca tanpa data resource.
+- Save versi 4 memulihkan HP/timer resource, fog eksplorasi, posisi/HP benteng, timer reinforcement, garrison, dan status ekspedisi; save versi 1–3 tetap diterima dengan default untuk field baru.
 - Satu arah samping digambar; kiri/kanan identik (cermin). Animasi dari pose prosedural, bukan gambar tangan.
 - Tidak ada musik; SFX prosedural sederhana.
 - Rebind empat kelompok kontrol inti sudah ada melalui menu jeda; shortcut UI/job/build masih tetap.
@@ -123,20 +126,15 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `village`, `buildings`, `dep
 
 ## 9. Rencana berikut (belum dikerjakan)
 1. Mainkan dan catat bagian yang janggal; sesuaikan balancing hari 2-14 (teknologi mengubah kurva kekuatan).
-2. **Kampanye wilayah**: klaim lokal dan frontier outpost sudah ada; wilayah musuh, basis lawan, pasukan ekspedisi, AI pertahanan, dan fog of war masih perlu dibangun.
+2. **Kampanye wilayah**: satu benteng lawan, garrison, klaim musuh, fog of war, ekspedisi G, dan kemenangan conquest sudah tersedia. Tahap lanjut: multi-region, beberapa stronghold, AI logistik/serangan musuh lintas wilayah, dan upgrade ekspedisi.
 3. Rebind shortcut UI/job/build dan navigasi menu; kontrol gerak/interaksi/serang/lari sudah dapat diubah.
 4. Musik (komposisi/aset) dan SFX untuk partikel.
 5. Tooltip pada slot bangunan dan ikon job; ikon .ico Windows; integrasi Steam (opsional).
 
-## 9b. Tahap berikut kampanye wilayah
-Fondasi klaim lokal sudah diimplementasikan pada branch ini: Keep dan Pos Terdepan menghasilkan wilayah pemain pada peta tunggal. Yang belum tersedia adalah wilayah musuh dan operasi ofensif. Efek teknologi generik (`unlock_building`, `flags`, `mult`/`add`) bisa dipakai untuk teknologi
-wilayah/militer; bijih besi sengaja jauh dari keep sehingga memberi alasan untuk memperluas wilayah; `Events` dan
-data JSON memudahkan menambah jenis unit/bangunan musuh.
-Yang perlu dibangun lebih dulu: (1) abstraksi wilayah/region (kepemilikan tile, batas yang membesar; sekarang satu
-peta 64x64 dengan `world.occupied` global), (2) unit ofensif (pasukan serang, bukan hanya penjaga keep),
-(3) basis musuh dengan AI/pertahanan sendiri, (4) fog of war/penjelajahan, (5) kondisi menang/kalah baru
-(boss malam ke-15 mungkin berubah peran), (6) save yang memuat banyak wilayah.
-Disarankan memutuskan dulu: apakah dunia menjadi peta lebih besar yang terbuka bertahap, atau beberapa peta terpisah.
+## 9b. Tahap lanjutan kampanye wilayah
+Fase pertama conquest sudah tersedia pada peta 64x64: satu benteng lawan ditempatkan di lokasi yang dapat dicapai; klaimnya bertabrakan secara aturan dengan pembangunan pemain; fog of war permanen memperlihatkan wilayah setelah dieksplorasi; G mengirim/menarik pasukan prajurit; garrison bertahan saat fajar dan direinforce; benteng hancur memicu kemenangan.
+
+Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) peta/region tambahan dengan streaming atau transisi terkontrol; (2) lebih dari satu stronghold dan jalur conquest berurutan; (3) AI lawan yang membangun, mengumpulkan resource, dan mengirim raid; (4) logistik ekspedisi seperti suplai makanan, rally point, dan biaya korban; (5) tech/upgrade untuk siege equipment dan unit ofensif. Jangan menambah banyak basis sebelum satu campaign slice ini tervalidasi dalam build Godot sungguhan.
 
 ## 10. Riwayat singkat
 1. Rencana game + pemilihan stack (Godot 4, native).
@@ -171,3 +169,13 @@ Disarankan memutuskan dulu: apakah dunia menjadi peta lebih besar yang terbuka b
 - Konflik antar-keybind inti dan tombol reserved untuk menu, riset, bantuan, save/load, job, serta slot bangunan ditolak.
 - Binding gamepad dan mouse untuk attack tetap dipertahankan saat keyboard binding diganti.
 - Hotkey UI/job/build di luar tujuh aksi inti belum dapat di-rebind.
+
+
+## 14. Update kampanye wilayah (2026-11-01)
+- Benteng lawan 3x3 ditempatkan secara deterministik pada site kosong yang dapat dicapai; memiliki 900 HP, klaim radius 9, sprite dan health bar sendiri.
+- Stronghold memunculkan garrison prajurit, menjaga radius lokal, dan merekrut pengganti secara berkala hingga cap 4. Garrison tidak ikut despawn pada fajar.
+- Fog of war permanen membuka area dari player, Keep, Outpost, dan villager; peta eksplorasi ikut save versi 4.
+- G mengirim semua villager dengan job soldier ke ekspedisi setelah benteng ditemukan; G kedua mengarahkan mereka pulang ke Keep.
+- Prajurit ekspedisi memprioritaskan garrison, lalu menyerang stronghold. Benteng hancur membersihkan garrison dan memicu campaign victory.
+- Save versi 4 menyimpan stronghold, status reinforcement, identitas/origin garrison, status ekspedisi, dan fog discovery. Versi 1–3 masih diterima lewat default.
+- Tes regresi baru: `tests/campaign_assault.gd`.

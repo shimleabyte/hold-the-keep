@@ -30,6 +30,14 @@ func _initialize() -> void:
     main.fog.reveal_position(stronghold.global_position, 180.0)
     assert(main.fog.is_revealed_cell(stronghold.cell),
         "Exploration must reveal the enemy stronghold")
+    var revealed_index := stronghold.cell.y * 64 + stronghold.cell.x
+    var fog_state: Dictionary = main.fog.export_state()
+    assert(fog_state["cells"].has(revealed_index),
+        "Explored cells must be part of the fog save state")
+    main.fog.discovered.fill(0)
+    main.fog.import_state(fog_state)
+    assert(main.fog.is_revealed_cell(stronghold.cell),
+        "Fog import must restore previously explored cells")
 
     var soldier = main.village.spawn_villager(main.player.position + Vector2(-8, 0))
     soldier.set_job("soldier")
@@ -56,8 +64,14 @@ func _initialize() -> void:
         if enemy_state["garrison"]:
             saved_garrison = true
     assert(saved_garrison, "Save must preserve garrison identity and guard origin")
+    assert(snapshot["fog"]["cells"].has(revealed_index),
+        "Save payload must include explored territory")
     assert(SaveSystem._valid_save(snapshot),
         "Campaign snapshot must pass save payload validation")
+
+    main.village.command_expedition()
+    assert(soldier.is_recalling_expedition(),
+        "Second G command must order the expedition soldier back to the Keep")
 
     var enemy_cell := stronghold.cell
     stronghold.take_damage(9999)

@@ -341,6 +341,10 @@ func is_expeditioning() -> bool:
     return _expeditioning
 
 
+func is_recalling_expedition() -> bool:
+    return state == State.RECALLING
+
+
 func start_expedition(stronghold) -> bool:
     if job != "soldier" or not is_instance_valid(stronghold):
         return false

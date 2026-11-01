@@ -21,6 +21,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - Esc: batal mode bangun
 - F / klik kiri (di luar mode bangun) / tombol X: serang sekitar pemain
 - T / M / K / R: tambah penebang / penambang / petani (kebun) / prajurit (Shift = kurangi); atau klik tombol + / - di panel job
+- G: kirim seluruh prajurit untuk menyerbu benteng lawan yang sudah ditemukan; tekan lagi untuk menarik mereka kembali ke Keep
 - P / Esc (saat tidak membangun): menu jeda (simpan, muat, layar penuh, vsync, volume)
 - Menu jeda > Atur kontrol: rebind gerak, interaksi, serang, dan lari; gamepad tetap didukung
 - F5: simpan | F9: muat | H: bantuan kontrol | F3: tampilkan FPS
@@ -46,7 +47,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 
 ### Simpanan dan pengaturan
 - Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
-- Save versi 2 menyimpan inventori, jam, bangunan, penduduk, musuh, riset, pemain, serta HP dan sisa waktu tumbuh ulang pohon, batu, dan bijih besi.
+- Save versi 4 menyimpan inventori, jam, bangunan, penduduk, musuh, riset, pemain, status resource node, eksplorasi fog of war, benteng lawan, timer penguatan, dan status ekspedisi.
 - Penulisan save memakai file sementara dan salinan pemulihan; loader mencoba salinan tersebut bila file utama rusak.
 - Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
@@ -66,13 +67,15 @@ membuka Tempa dan membuat bijih besi (urat oranye, jauh dari keep) bisa ditamban
 memilih besi bila stoknya kurang dari separuh batu. Game di-pause saat panel terbuka.
 Efek berupa data (pengali, penambah, buka bangunan, bendera) lewat `Tech.stat(kunci, dasar)`.
 
-## Wilayah
-Keep mengklaim area awal. Pos Terdepan (hotkey 6) dapat dibangun pada atau tepat di frontier wilayah sendiri dan memperluas klaim dalam radius 9 tile. Bangunan lain harus sepenuhnya berada di area yang diklaim. Garis emas tipis menandai batas wilayah. Wilayah masih berupa klaim pada satu peta; basis musuh dan sistem invasi belum tersedia.
+## Wilayah dan kampanye
+Keep mengklaim area awal dalam radius 10 tile. Pos Terdepan (hotkey 6) memperluas klaim dalam radius 9 tile dan hanya boleh dibangun di frontier sendiri. Benteng lawan ditempatkan pada lokasi yang dapat dicapai di peta yang sama, mengklaim radius 9 tile, dan dijaga oleh prajurit yang berpatroli serta menerima penguatan berkala. Garis emas menunjukkan wilayah pemain; garis merah menunjukkan wilayah lawan.
+
+Fog of war menutup peta yang belum dijelajahi. Player, Keep, Pos Terdepan, dan villager membuka area; wilayah yang sudah ditemukan tetap terlihat setelah disimpan dan dimuat. Setelah benteng lawan ditemukan, tekan G untuk mengirim semua villager dengan job prajurit. Prajurit menyerang penjaga dahulu, lalu menghancurkan benteng (900 HP). Tekan G lagi untuk menarik pasukan kembali ke Keep. Benteng hancur = kemenangan kampanye; kemenangan bertahan hari ke-15 melawan Raja Lawan tetap menjadi jalur kemenangan lain.
 
 ## HUD
 Panel atas: kayu, batu, makanan, hari + lintasan siang/malam (kuning = siang, biru = malam, oranye = fajar),
 jumlah musuh, penduduk. Kiri: bar HP pemain dan keep. Kanan: kuota job (klik + / -; oranye = belum terisi).
-Bawah: bar bangunan berikon dan biaya (redup = bahan kurang). Bar Raja Lawan muncul di malam terakhir.
+Bawah: bar bangunan berikon dan biaya (redup = bahan kurang). Bar Raja Lawan muncul di malam terakhir; bar Benteng Lawan muncul setelah ditemukan.
 
 ## Aset
 Semua visual berupa SVG pixel-art di `assets/sprites/` (karakter, musuh, pohon, batu,
@@ -107,5 +110,5 @@ diam (2), jalan (4), lari (4), serang (4), kerja (4), kena pukul (1), mati (3).
 Font HUD: Silkscreen (c) The Silkscreen Project Authors, SIL Open Font License 1.1
 (lihat `assets/fonts/OFL-Silkscreen.txt`). Font hanya punya huruf kapital.
 
-Belum ada: musik, rebind shortcut UI/job/build, wilayah musuh, AI basis lawan, pasukan ekspedisi, invasi, fog of war, ikon .ico untuk Windows, integrasi Steam.
+Belum ada: musik, rebind shortcut UI/job/build, multi-basis dan multi-region campaign, upgrade khusus invasi, ikon .ico untuk Windows, integrasi Steam.
 Visual masih placeholder prosedural.
