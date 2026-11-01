@@ -207,3 +207,8 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Strategic map scales its tile grid and legend to the available viewport. Technology and pause overlays use full-viewport roots and centered panels.
 - Updated panel surfaces, borders, shadows, focus/hover/pressed button states, and resource color hierarchy.
 - `tests/responsive_layout.gd` checks viewport settings and panel/hotbar bounds across 480×270, 640×360, 640×400, 683×384, and 960×540 logical viewports. Godot compile/render execution remains pending.
+
+## 18. Character animation and impact feedback pass (2026-11-01)
+- `scripts/entities/sprite_anim.gd` adds pixel-snapped secondary motion: desynchronized idle breathing, walk/run lift, directional attack anticipation/lunge, work lean at the strike point, and hurt recoil. Translation is separated from horizontal mirroring so left-facing attacks move in the correct direction.
+- `scripts/entities/fx_layer.gd` adds a short high-contrast impact burst and directional streaks for fast particles. Enemy damage now uses the dedicated impact burst instead of the generic spark.
+- `tests/animation_motion.gd` asserts the expected motion direction and state-specific behavior. Godot execution and rendered frame comparisons remain pending because the engine is unavailable in the implementation environment.
