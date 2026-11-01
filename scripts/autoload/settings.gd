@@ -2,6 +2,7 @@ extends Node
 ## Pengaturan pemain di user://settings.cfg (display, audio, dan keybind utama).
 
 const PATH := "user://settings.cfg"
+const MIN_WINDOW_SIZE := Vector2i(960, 540)
 const BINDABLE_ACTIONS := [
     "move_up", "move_down", "move_left", "move_right",
     "interact", "attack", "sprint"
@@ -123,6 +124,7 @@ func binding_label(action: String) -> String:
 
 
 func apply() -> void:
+    get_tree().root.min_size = MIN_WINDOW_SIZE
     DisplayServer.window_set_mode(
         DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
     )
