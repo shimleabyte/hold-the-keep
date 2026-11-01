@@ -1,5 +1,5 @@
 extends SceneTree
-## Frontier local depot stockpiles, bounded capacity and save v12 persistence.
+## Frontier local depot stockpiles, bounded capacity and save v13 persistence.
 
 func ticks(count: int) -> void:
     for i in range(count):
@@ -80,7 +80,7 @@ func _initialize() -> void:
         "The remaining depot must still accept new local deposits after a shipment")
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 12, "Local depot state must use save schema v12")
+    require(snapshot["version"] == 13, "Local depot state must use save schema v13")
     var saved_storage: Dictionary = {}
     for saved_building in snapshot["buildings"]:
         if String(saved_building["id"]) == "storage" and int(saved_building["cx"]) == storage_cell.x:
@@ -113,7 +113,7 @@ func _initialize() -> void:
         "Existing v11 saves without local stockpile fields must remain migratable")
 
     require(save_system.save_current(true), "A Frontier save with local depot inventory must succeed")
-    require(save_system.request_load(), "A v12 Frontier save with local inventory must reload")
+    require(save_system.request_load(), "A v13 Frontier save with local inventory must reload")
     await ticks(12)
     var restored = current_scene
     game_clock.set_process(false)
