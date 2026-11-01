@@ -73,7 +73,8 @@ func _scan_sources() -> void:
         if building.id == "keep":
             changed = reveal_position(building.global_position, 160.0) or changed
         elif building.id == "outpost":
-            changed = reveal_position(building.global_position, 144.0) or changed
+            var outpost_reveal_radius := 144.0 * Tech.stat("map.outpost_reveal", 1.0)
+            changed = reveal_position(building.global_position, outpost_reveal_radius) or changed
     for villager in get_tree().get_nodes_in_group("villagers"):
         if villager.visible:
             changed = reveal_position(villager.global_position, 64.0) or changed
