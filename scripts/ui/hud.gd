@@ -393,7 +393,7 @@ func _process(delta: float) -> void:
     else:
         var stronghold = get_tree().get_first_node_in_group("enemy_strongholds")
         var fog = get_tree().get_first_node_in_group("fog_of_war")
-        var discovered := stronghold != null and fog != null and fog.is_revealed_cell(stronghold.cell)
+        var discovered: bool = stronghold != null and fog != null and bool(fog.is_revealed_cell(stronghold.cell))
         _boss_panel.visible = discovered
         if discovered:
             _boss_title.text = "BENTENG LAWAN"
