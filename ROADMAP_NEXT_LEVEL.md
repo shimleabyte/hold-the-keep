@@ -1,7 +1,7 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
 **Status (2026-11-01):** Phase 00, 01, 03 and the initial slices of 02, 04, 05, 06, 07, 09 and 10 are merged into `main`. Phase 02, 04, 05 and 06 remain partially implemented; Phase 08 has not been implemented as a distinct delivery. All remaining manual acceptance gates are still open.  
-**Current main:** `6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`. Latest mainline CI: [workflow #41314731305](https://github.com/shimleabyte/hold-the-keep/actions/runs/41314731305), 46/46 jobs successful on Godot 4.3 and 4.7, Frontier diagnostics and Windows/Linux export.  
+**Phase 02 merge commit:** `6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8` (PR #31; included in `main`). Latest successful full mainline CI: [workflow #41314731305](https://github.com/shimleabyte/hold-the-keep/actions/runs/41314731305), 46/46 jobs successful on Godot 4.3 and 4.7, Frontier diagnostics and Windows/Linux export.  
 **Baseline:** Godot 4.3+ / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, save format v12.
 
 ## 1. Product direction
