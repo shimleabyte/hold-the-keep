@@ -125,7 +125,10 @@ func _spawn_guard() -> bool:
             continue
         _spawn_index = (slot + 1) % attempts
             var guard = ENEMY_SCRIPT.new()
+        var roster := FactionRegistry.roster_for(faction_id)
         var guard_id := FactionRegistry.garrison_enemy(faction_id)
+        if not roster.is_empty() and not _local_garrison().is_empty():
+            guard_id = roster[posmod(_spawn_index, roster.size())]
         guard.setup_guard(DataDB.enemies[guard_id], world, flow, player, position, faction_id)
         guard.position = spawn_position
         world.entities.add_child(guard)
