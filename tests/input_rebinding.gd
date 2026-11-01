@@ -2,18 +2,19 @@ extends SceneTree
 ## Checks persisted keyboard rebinding, duplicate rejection, and protected shortcuts.
 
 func _initialize() -> void:
-    var previous_bindings: Dictionary = Settings.custom_bindings.duplicate()
+    var settings = root.get_node("Settings")
+    var previous_bindings: Dictionary = settings.custom_bindings.duplicate()
     var previous_events: Dictionary = {}
-    for action in Settings.BINDABLE_ACTIONS:
+    for action in settings.BINDABLE_ACTIONS:
         previous_events[action] = InputMap.action_get_events(action).duplicate()
 
-    assert(Settings.set_key_binding("move_up", KEY_I),
+    assert(settings.set_key_binding("move_up", KEY_I),
         "A free key should be accepted")
-    assert(Settings.get_key_binding("move_up") == KEY_I,
+    assert(settings.get_key_binding("move_up") == KEY_I,
         "InputMap should apply the new key immediately")
-    assert(not Settings.set_key_binding("move_down", KEY_I),
+    assert(not settings.set_key_binding("move_down", KEY_I),
         "A key already used by another core action must be rejected")
-    assert(not Settings.set_key_binding("move_up", KEY_P),
+    assert(not settings.set_key_binding("move_up", KEY_P),
         "Hardcoded menu shortcuts must be protected")
 
     var config := ConfigFile.new()
@@ -22,12 +23,12 @@ func _initialize() -> void:
     assert(int(config.get_value("input", "move_up", 0)) == KEY_I,
         "New key should persist in settings.cfg")
 
-    Settings.custom_bindings = previous_bindings
-    for action in Settings.BINDABLE_ACTIONS:
+    settings.custom_bindings = previous_bindings
+    for action in settings.BINDABLE_ACTIONS:
         InputMap.action_erase_events(action)
         for event in previous_events[action]:
             InputMap.action_add_event(action, event)
-    Settings.save_settings()
+    settings.save_settings()
 
     print("PASS: key rebinding, duplicate/reserved rejection, settings persistence, and restoration")
     quit()
