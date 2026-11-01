@@ -1,11 +1,29 @@
 extends CanvasLayer
 
 const PIXEL_FONT := preload("res://scripts/ui/pixel_font.gd")
+const RESOLUTION_PRESETS := [
+    Vector2i(960, 540),
+    Vector2i(1024, 768),
+    Vector2i(1024, 640),
+    Vector2i(1152, 720),
+    Vector2i(1280, 720),
+    Vector2i(1280, 800),
+    Vector2i(1280, 960),
+    Vector2i(1366, 768),
+    Vector2i(1440, 900),
+    Vector2i(1600, 900),
+    Vector2i(1600, 1200),
+    Vector2i(1680, 1050),
+    Vector2i(1920, 1080),
+    Vector2i(1920, 1200)
+]
 ## Menu jeda: P atau Esc (saat tidak membangun). Simpan/muat, layar penuh, vsync, volume.
 
 var _root: Control
 var _load_btn: Button
 var _fs_btn: Button
+var _resolution: OptionButton
+var _resolution_values: Array[Vector2i] = []
 var _vs_btn: Button
 var _sh_btn: Button
 var _vol: HSlider
@@ -23,27 +41,60 @@ func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
 
     _root = Control.new()
-    _root.size = Vector2(480, 270)
+    _root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _root.visible = false
     var theme := Theme.new()
     theme.default_font = PIXEL_FONT.get_font()
     theme.default_font_size = 8
+
+    var button_normal := StyleBoxFlat.new()
+    button_normal.bg_color = Color("#20282a")
+    button_normal.border_color = Color("#756044")
+    button_normal.set_border_width_all(1)
+    var button_hover := StyleBoxFlat.new()
+    button_hover.bg_color = Color("#354044")
+    button_hover.border_color = Color("#d0a35e")
+    button_hover.set_border_width_all(1)
+    var button_pressed := StyleBoxFlat.new()
+    button_pressed.bg_color = Color("#51402b")
+    button_pressed.border_color = Color("#e8c078")
+    button_pressed.set_border_width_all(1)
+    theme.set_stylebox("normal", "Button", button_normal)
+    theme.set_stylebox("hover", "Button", button_hover)
+    theme.set_stylebox("pressed", "Button", button_pressed)
+    theme.set_stylebox("focus", "Button", button_hover)
+    theme.set_stylebox("normal", "OptionButton", button_normal)
+    theme.set_stylebox("hover", "OptionButton", button_hover)
+    theme.set_stylebox("pressed", "OptionButton", button_pressed)
+    theme.set_stylebox("focus", "OptionButton", button_hover)
+    theme.set_color("font_color", "Button", Color("#eadcc1"))
+    theme.set_color("font_color", "OptionButton", Color("#eadcc1"))
+    theme.set_color("font_hover_color", "Button", Color("#fff1d2"))
+    theme.set_color("font_pressed_color", "Button", Color("#ffd38d"))
+    var panel_style := StyleBoxFlat.new()
+    panel_style.bg_color = Color("#171d20")
+    panel_style.border_color = Color("#a17b4d")
+    panel_style.set_border_width_all(1)
+    panel_style.shadow_color = Color(0, 0, 0, 0.58)
+    panel_style.shadow_size = 5
+    panel_style.shadow_offset = Vector2(0, 3)
+    theme.set_stylebox("panel", "PanelContainer", panel_style)
     _root.theme = theme
     add_child(_root)
 
     var dim := ColorRect.new()
-    dim.color = Color(0, 0, 0, 0.65)
-    dim.size = Vector2(480, 270)
+    dim.color = Color(0.015, 0.02, 0.028, 0.82)
+    dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _root.add_child(dim)
 
     _menu_center = CenterContainer.new()
-    _menu_center.size = Vector2(480, 270)
+    _menu_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _root.add_child(_menu_center)
     var panel := PanelContainer.new()
     _menu_center.add_child(panel)
     var box := VBoxContainer.new()
     box.custom_minimum_size = Vector2(190, 0)
-    box.add_theme_constant_override("separation", 4)
+    box.add_theme_constant_override("separation", 3)
     panel.add_child(box)
 
     var title := Label.new()
@@ -58,6 +109,23 @@ func _ready() -> void:
     _fs_btn = _add_button(box, "", func() -> void:
         Settings.set_fullscreen(not Settings.fullscreen)
         _refresh())
+
+    var resolution_label := Label.new()
+    resolution_label.text = "RESOLUSI JENDELA"
+    box.add_child(resolution_label)
+    _resolution = OptionButton.new()
+    _resolution.custom_minimum_size = Vector2(190, 18)
+    var screen_size := DisplayServer.screen_get_size()
+    for preset in RESOLUTION_PRESETS:
+        if preset.x <= screen_size.x and preset.y <= screen_size.y:
+            _resolution_values.append(preset)
+            _resolution.add_item("%d x %d" % [preset.x, preset.y])
+    if not _resolution_values.has(Settings.windowed_size):
+        _resolution_values.append(Settings.windowed_size)
+        _resolution.add_item("%d x %d" % [Settings.windowed_size.x, Settings.windowed_size.y])
+    _resolution.item_selected.connect(_on_resolution_selected)
+    box.add_child(_resolution)
+
     _vs_btn = _add_button(box, "", func() -> void:
         Settings.set_vsync(not Settings.vsync)
         _refresh())
@@ -75,6 +143,7 @@ func _ready() -> void:
     _vol.step = 0.05
     _vol.value = Settings.volume
     _vol.value_changed.connect(func(v: float) -> void: Settings.set_volume(v))
+    _vol.custom_minimum_size = Vector2(190, 15)
     box.add_child(_vol)
 
     _add_button(box, "Keluar ke desktop", func() -> void: get_tree().quit())
@@ -89,7 +158,7 @@ func _ready() -> void:
 
 func _build_controls_panel() -> void:
     _controls_center = CenterContainer.new()
-    _controls_center.size = Vector2(480, 270)
+    _controls_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _controls_center.visible = false
     _root.add_child(_controls_center)
 
@@ -204,6 +273,7 @@ func _capture_binding(event: InputEventKey) -> void:
 func _add_button(parent: Control, text: String, action: Callable) -> Button:
     var b := Button.new()
     b.text = text
+    b.custom_minimum_size = Vector2(190, 18)
     b.pressed.connect(action)
     parent.add_child(b)
     return b
@@ -214,6 +284,17 @@ func _refresh() -> void:
     _vs_btn.text = "VSync: %s" % ("ya" if Settings.vsync else "tidak")
     _sh_btn.text = "Guncangan layar: %s" % ("ya" if Settings.screen_shake else "tidak")
     _load_btn.disabled = not SaveSystem.has_save()
+    _resolution.disabled = Settings.fullscreen
+    var selected_index := _resolution_values.find(Settings.windowed_size)
+    if selected_index >= 0:
+        _resolution.select(selected_index)
+
+
+func _on_resolution_selected(index: int) -> void:
+    if index < 0 or index >= _resolution_values.size():
+        return
+    Settings.set_window_size(_resolution_values[index])
+    _refresh()
 
 
 func is_open() -> bool:

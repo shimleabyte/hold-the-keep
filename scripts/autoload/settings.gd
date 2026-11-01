@@ -2,6 +2,7 @@ extends Node
 ## Pengaturan pemain di user://settings.cfg (display, audio, dan keybind utama).
 
 const PATH := "user://settings.cfg"
+const MIN_WINDOW_SIZE := Vector2i(960, 540)
 const BINDABLE_ACTIONS := [
     "move_up", "move_down", "move_left", "move_right",
     "interact", "attack", "sprint"
@@ -14,6 +15,7 @@ const RESERVED_KEYS := [
 ]
 
 var fullscreen := false
+var windowed_size := Vector2i(1280, 720)
 var vsync := true
 var volume := 0.8
 var screen_shake := true
@@ -31,22 +33,33 @@ func _ready() -> void:
 func load_settings() -> void:
     custom_bindings.clear()
     var config := ConfigFile.new()
-    if config.load(PATH) != OK:
-        return
-    fullscreen = bool(config.get_value("display", "fullscreen", fullscreen))
-    vsync = bool(config.get_value("display", "vsync", vsync))
-    volume = clampf(float(config.get_value("audio", "volume", volume)), 0.0, 1.0)
-    screen_shake = bool(config.get_value("display", "screen_shake", screen_shake))
-    for action in BINDABLE_ACTIONS:
-        if config.has_section_key("input", action):
-            var code := int(config.get_value("input", action, 0))
-            if code > 0:
-                custom_bindings[action] = code
+    var has_saved_settings := config.load(PATH) == OK
+    var screen_size := DisplayServer.screen_get_size()
+    var saved_width := windowed_size.x
+    var saved_height := windowed_size.y
+    if has_saved_settings:
+        fullscreen = bool(config.get_value("display", "fullscreen", fullscreen))
+        saved_width = int(config.get_value("display", "window_width", saved_width))
+        saved_height = int(config.get_value("display", "window_height", saved_height))
+        vsync = bool(config.get_value("display", "vsync", vsync))
+        volume = clampf(float(config.get_value("audio", "volume", volume)), 0.0, 1.0)
+        screen_shake = bool(config.get_value("display", "screen_shake", screen_shake))
+        for action in BINDABLE_ACTIONS:
+            if config.has_section_key("input", action):
+                var code := int(config.get_value("input", action, 0))
+                if code > 0:
+                    custom_bindings[action] = code
+    windowed_size = Vector2i(
+        clampi(saved_width, MIN_WINDOW_SIZE.x, maxi(MIN_WINDOW_SIZE.x, screen_size.x)),
+        clampi(saved_height, MIN_WINDOW_SIZE.y, maxi(MIN_WINDOW_SIZE.y, screen_size.y))
+    )
 
 
 func save_settings() -> void:
     var config := ConfigFile.new()
     config.set_value("display", "fullscreen", fullscreen)
+    config.set_value("display", "window_width", windowed_size.x)
+    config.set_value("display", "window_height", windowed_size.y)
     config.set_value("display", "vsync", vsync)
     config.set_value("audio", "volume", volume)
     config.set_value("display", "screen_shake", screen_shake)
@@ -113,9 +126,12 @@ func binding_label(action: String) -> String:
 
 
 func apply() -> void:
+    get_tree().root.min_size = MIN_WINDOW_SIZE
     DisplayServer.window_set_mode(
         DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
     )
+    if not fullscreen:
+        DisplayServer.window_set_size(windowed_size)
     DisplayServer.window_set_vsync_mode(
         DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED
     )
@@ -124,6 +140,16 @@ func apply() -> void:
 
 func set_fullscreen(value: bool) -> void:
     fullscreen = value
+    apply()
+    save_settings()
+
+
+func set_window_size(value: Vector2i) -> void:
+    var screen_size := DisplayServer.screen_get_size()
+    var safe_width := clampi(value.x, 960, maxi(960, screen_size.x))
+    var safe_height := clampi(value.y, 540, maxi(540, screen_size.y))
+    windowed_size = Vector2i(safe_width, safe_height)
+    fullscreen = false
     apply()
     save_settings()
 

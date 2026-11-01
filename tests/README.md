@@ -22,6 +22,7 @@ Semua dari akar proyek (setelah `godot --headless --path . --import` sekali):
 | resource_save_state.gd | status pohon/batu/bijih besi dan timer tumbuh ulang, rollback ke backup save |
 | campaign_assault.gd | klaim musuh, fog reveal/save, G assault/recall, garrison saat fajar, conquest victory |
 | map_stages.gd | empat biome, fog map panel, batas tiga bab, bobot archer/brute per bab |
+| responsive_layout.gd | expanded integer-scaled viewport, HUD/map/hotbar bounds across five logical resolutions |
 | player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, archer projectile, brute armor, combat save |
 | input_rebinding.gd | perubahan keybind, penolakan konflik/reserved key, persistensi settings |
 | restart_gameover.gd | layar game over dan restart (R) |
