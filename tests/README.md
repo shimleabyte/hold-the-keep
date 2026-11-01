@@ -10,10 +10,12 @@ Dari akar proyek:
     godot --headless --path . --import
     bash tools/check_gdscript.sh
     bash tools/run_tests.sh
+    bash tools/run_diagnostics.sh
 
 `check_gdscript.sh` menjalankan parse-only terhadap seluruh skrip di `scripts/` dan `tests/`.
-`run_tests.sh` menjalankan suite regresi headless dengan fixed 60 FPS. `--fixed-fps 60` penting:
-tanpa itu simulasi tes panjang berjalan mengikuti waktu nyata.
+`run_tests.sh` menjalankan pemeriksaan regresi berbasis `assert` di headless dengan fixed 60 FPS.
+Skrip observasi lama yang hanya mencetak hasil tanpa assertion dipisahkan ke `run_diagnostics.sh`;
+jalankan saat meninjau animasi, pertarungan, efek, ekonomi atau alur save/menu.
 
 GitHub Actions menjalankan kedua langkah tersebut pada Godot 4.3 dan 4.7 untuk setiap pull request
 ke `main`, push ke `main` atau branch `feat/**` / `fix/**`, serta workflow manual.
@@ -45,11 +47,13 @@ Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; 
 Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan key dictionary inventori.
 
 ## Skrip yang dijalankan otomatis di CI
-Suite headless saat ini mencakup: `anim_sync`, `animation_motion`, `campaign_assault`,
-`combat_tower_walls`, `events_boss_final_night`, `fx_shake_settings`, `input_rebinding`,
-`map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`,
-`restart_gameover`, `save_load_audio_menu`, `tech_tree`, `territory_claims`,
-`villagers_economy`, `world_config`, dan `frontier_world`.
+Suite headless CI yang berbasis assertion mencakup: `animation_motion`, `campaign_assault`,
+`input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`,
+`territory_claims`, `world_config`, dan `frontier_world`.
+
+Skrip observasi manual mencakup: `anim_sync`, `combat_tower_walls`, `events_boss_final_night`,
+`fx_shake_settings`, `restart_gameover`, `save_load_audio_menu`, `tech_tree`, dan
+`villagers_economy`.
 
 `perf.gd` dan `balance_final_night.gd` tetap berupa diagnostic/balance runs; jalankan terpisah saat
 mengukur performa atau mengubah komposisi gelombang. Screenshot, preview sprite dan klik HUD tetap
