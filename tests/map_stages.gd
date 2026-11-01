@@ -70,6 +70,14 @@ func _initialize() -> void:
     hud._toggle_map()
     assert(map_panel.visible and hud.get("_map_backdrop").visible,
         "The map control must open the map overlay and backdrop")
+    var close_click := InputEventMouseButton.new()
+    close_click.button_index = MOUSE_BUTTON_LEFT
+    close_click.pressed = true
+    close_click.position = Vector2(306, 8)
+    map_panel._gui_input(close_click)
+    assert(not map_panel.visible,
+        "The map close control must dismiss the overlay by mouse")
+    hud._toggle_map()
     hud._toggle_jobs()
     assert(not map_panel.visible and hud.get("_jobs_panel").visible,
         "Opening the job drawer must close the map")
