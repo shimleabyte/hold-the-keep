@@ -11,11 +11,15 @@ Turn road connectivity into an actual logistics system without changing Classic 
 ## Workstreams
 
 ### 02.2 — Local depot inventories
-- Give each eligible depot a persisted resource ledger with explicit capacity and accepted resource types.
+
+**First implementation slice (audit branch):** Storage and Outposts now have bounded local stockpile capacity (180 and 120 units respectively). Frontier workers deposit carried resources into the selected remote depot instead of the shared Keep inventory; full/unsupported stockpiles reject deposits, and workers retain cargo while selecting another destination. Save schema v12 persists local balances and validates resource kinds, non-negative quantities and per-building capacity. Classic worker deposits remain on the original central Inventory path.
+
+**Still open in 02.2:** player-facing local stock inspection, explicit source-depot spending/reservation, and all inter-depot transfer behavior described below.
+- [x] Give Storage and Outposts a persisted resource ledger with explicit capacity and accepted resource types.
 - Keep the Keep as the initial central depot. Storage and Outposts hold local stock rather than silently crediting a global shared balance.
-- Worker deposits must atomically remove carried cargo from the villager and add exactly that amount to one reachable depot. Disconnected depots are ineligible.
+- [x] Frontier worker deposits atomically remove carried cargo and add exactly that amount to one connected depot. Disconnected depots are ineligible.
 - Define overflow behavior: workers retain unaccepted cargo or select another eligible depot; never silently destroy or duplicate resources.
-- Keep existing build/research spending compatible by introducing an explicit source-depot selection/reservation rule. Do not make a local outpost stock globally spendable without a transfer or a documented local-consumption rule.
+- Keep existing build/research spending compatible by introducing an explicit source-depot selection/reservation rule. Local Outpost/Storage stock is not globally spendable until an actual transfer or documented local-consumption rule exists.
 - Render local stock in a depot inspection UI before adding management complexity to the global HUD.
 
 ### 02.3 — Inter-depot transfers
@@ -38,7 +42,7 @@ Turn road connectivity into an actual logistics system without changing Classic 
 - Do not implement attrition in the local-stockpile slice.
 
 ## Persistence and compatibility
-- Bump save schema only when new persisted state is introduced; include a migration default for every prior schema.
+- [x] Bump save schema to v12 for persisted stockpiles; v1–v11 saves migrate with empty local stockpiles.
 - Preserve Classic's current shared-resource behavior unless a separate Classic design decision explicitly changes it.
 - Test Classic v1–v11 migration, Frontier v7–v11 migration, v12 round-trip if the schema is bumped, backup recovery and interrupted writes.
 - Removing a depot must deterministically resolve its stock and in-transit cargo; no silent resource duplication.
