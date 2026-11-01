@@ -291,9 +291,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                     source_exists = true
                 if saved_cell == destination_cell and ["keep", "storage", "outpost"].has(saved_id):
                     destination_building = saved_building
-            # A source may be destroyed while its already-reserved cargo is in transit.
-            if status == "queued" and not source_exists:
-                return false
+            # Cargo is escrowed in the order; the source can be destroyed before delivery.
             if status in ["queued", "in_transit", "blocked"] and not destination_building.is_empty() and String(destination_building["id"]) != "keep":
                 var key := "%d:%d" % [destination_cell.x, destination_cell.y]
                 reserved_capacity[key] = int(reserved_capacity.get(key, 0)) + cargo
