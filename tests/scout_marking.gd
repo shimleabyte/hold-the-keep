@@ -40,6 +40,8 @@ func _run() -> void:
         player.global_position + Vector2(130, 0))
     var ally = _spawn_enemy(main, data_db.enemies["bandit"], "greenwood_raiders",
         player.global_position + Vector2(145, 5))
+    var ranged_ally = _spawn_enemy(main, data_db.enemies["archer"], "greenwood_raiders",
+        player.global_position + Vector2(140, -10))
     var rival = _spawn_enemy(main, data_db.enemies["bandit"], "iron_legion",
         player.global_position + Vector2(154, -6))
 
@@ -54,20 +56,26 @@ func _run() -> void:
     # Only same-faction allies inside the bounded share radius inherit the mark.
     assert(ally._scout_mark_target == player and ally._scout_mark_t > 0.0,
         "Nearby same-faction allies must receive the Scout's target")
+    assert(ranged_ally._scout_mark_target == player and ranged_ally._scout_mark_t > 0.0,
+        "A nearby same-faction ranged ally must receive the target")
     assert(rival._scout_mark_target == null and rival._scout_mark_t == 0.0,
         "A different faction must not inherit the Scout's mark")
 
-    # A marked target outranks a closer defender until the mark expires.
+    # Marked targets outrank nearer alternatives; melee focus expires normally.
     var closer_soldier = main.village.spawn_villager(player.global_position + Vector2(146, 8))
     closer_soldier.set_job("soldier")
-    assert(ally._nearest_guard_target() == player,
-        "Marked target must outrank a closer unmarked defender")
+    assert(ranged_ally._nearest_ranged_target() == player,
+        "Ranged allies must prioritize the marked target over a closer defender")
     assert(ally._tick_marked_target(0.1) and ally._moving,
         "Marked melee allies must move to focus the designated target")
     ally._scout_mark_t = 0.0
     ally._scout_mark_target = null
-    assert(ally._nearest_guard_target() == closer_soldier,
-        "Normal nearest-target behavior must resume after mark expiry")
+    assert(not ally._tick_marked_target(0.1),
+        "Normal melee behavior must resume after mark expiry")
+    ranged_ally._scout_mark_t = 0.0
+    ranged_ally._scout_mark_target = null
+    assert(ranged_ally._nearest_ranged_target() == closer_soldier,
+        "Normal ranged target selection must resume after mark expiry")
 
     # Stagger interrupts an unfinished Scout callout before it reaches allies.
     var interrupted_scout = _spawn_enemy(main, data_db.enemies["enemy_scout"],
