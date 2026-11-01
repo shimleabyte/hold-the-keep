@@ -77,6 +77,7 @@ jobs:
           - outpost_garrisons
           - physical_shipments
           - depot_cost_sources
+          - supply_pressure
     steps:
       - name: Checkout
         uses: actions/checkout@v7
