@@ -329,6 +329,12 @@ func _is_active_order(order: Dictionary) -> bool:
 func _remove_carrier(order_id: int) -> void:
     var carrier = _carriers.get(order_id, null)
     if is_instance_valid(carrier):
+        var index := _order_index(order_id)
+        if index >= 0:
+            var order: Dictionary = shipment_orders[index]
+            order["x"] = carrier.position.x
+            order["y"] = carrier.position.y
+            shipment_orders[index] = order
         carrier.queue_free()
     _carriers.erase(order_id)
 
