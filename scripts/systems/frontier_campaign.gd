@@ -195,14 +195,17 @@ func objective_summary() -> String:
     for objective_id in objectives:
         var record: Dictionary = objectives[objective_id]
         var definition: Dictionary = record["definition"]
-        var marker := "[X]" if bool(record["completed"]) else "[ ]"
-        if sites.has(objective_id) and is_instance_valid(sites[objective_id]):
+        var objective_act := int(definition.get("act", 1))
+        var marker := "[L]" if objective_act > unlocked_act else "[ ]"
+        if bool(record["completed"]):
+            marker = "[X]"
+        elif sites.has(objective_id) and is_instance_valid(sites[objective_id]):
             var state := String(sites[objective_id].site_state)
             if state == "escorting":
                 marker = "[>]"
             elif state == "active" and String(definition["type"]) == "defend":
                 marker = "[!]"
-        lines.append("%s A%d %s" % [marker, int(definition.get("act", 1)), String(definition["name"])])
+        lines.append("%s A%d %s" % [marker, objective_act, String(definition["name"])])
     if final_boss_defeated:
         lines.append("")
         lines.append("RAJA: DIKALAHKAN")
