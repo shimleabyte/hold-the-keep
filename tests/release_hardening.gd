@@ -1,4 +1,9 @@
 extends SceneTree
+
+var world_config
+var game_clock
+var save_system
+
 ## Release hardening: historical save schemas, interrupted writes and export presets.
 
 
@@ -80,7 +85,7 @@ func _check_export_presets() -> void:
 
 
 func _run() -> void:
-    WorldConfig.apply_profile("classic")
+    world_config.apply_profile("classic")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
 
@@ -88,80 +93,80 @@ func _run() -> void:
     root.add_child(classic_main)
     current_scene = classic_main
     await ticks(8)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
 
-    var classic_snapshot: Dictionary = SaveSystem.collect(classic_main)
+    var classic_snapshot: Dictionary = save_system.collect(classic_main)
     assert(classic_snapshot["version"] == 11,
         "Current release hardening must exercise the latest v11 schema")
     for version in range(1, 12):
         var fixture := _fixture_for_version(classic_snapshot, version)
-        assert(SaveSystem._valid_save(fixture),
+        assert(save_system._valid_save(fixture),
             "Classic migration fixture v%d must remain structurally valid" % version)
 
     var unsupported := classic_snapshot.duplicate(true)
     unsupported["version"] = 12
-    assert(not SaveSystem._valid_save(unsupported),
+    assert(not save_system._valid_save(unsupported),
         "Unknown future save versions must be rejected")
     var invalid_index := classic_snapshot.duplicate(true)
     invalid_index["fog"]["cells"].append(64 * 64)
-    assert(not SaveSystem._valid_save(invalid_index),
+    assert(not save_system._valid_save(invalid_index),
         "Out-of-range Classic fog indices must be rejected")
 
     _check_export_presets()
 
     # Simulate a crash after writing a temporary file but before installing it.
-    assert(SaveSystem.save_current(true), "The first primary save must be installed")
+    assert(save_system.save_current(true), "The first primary save must be installed")
     assert(_write_text("user://save.tmp", "{incomplete temporary save"),
         "The interrupted-write fixture must be writable")
-    assert(SaveSystem._read_valid_save("user://save.json") != null,
+    assert(save_system._read_valid_save("user://save.json") != null,
         "A valid primary save must remain loadable while a stale temp file exists")
-    assert(SaveSystem.save_current(true),
+    assert(save_system.save_current(true),
         "A subsequent save must safely replace stale temp data")
     assert(not FileAccess.file_exists("user://save.tmp"),
         "A successful save must not leave a temporary file behind")
-    assert(SaveSystem._read_valid_save("user://save.json") != null,
+    assert(save_system._read_valid_save("user://save.json") != null,
         "The newly installed primary save must validate")
-    assert(SaveSystem._read_valid_save("user://save.bak") != null,
+    assert(save_system._read_valid_save("user://save.bak") != null,
         "The previous valid primary must be retained as a rollback backup")
 
     assert(_write_text("user://save.json", "{corrupt primary"),
         "The primary corruption fixture must be writable")
-    assert(SaveSystem._read_valid_save("user://save.json") == null,
+    assert(save_system._read_valid_save("user://save.json") == null,
         "A corrupted primary save must be rejected")
-    assert(SaveSystem._read_valid_save("user://save.bak") != null,
+    assert(save_system._read_valid_save("user://save.bak") != null,
         "A valid rollback backup must remain eligible after primary corruption")
 
     classic_main.queue_free()
     await ticks(3)
-    WorldConfig.apply_profile("frontier")
+    world_config.apply_profile("frontier")
 
     var frontier_main = load("res://scenes/main.tscn").instantiate()
     root.add_child(frontier_main)
     current_scene = frontier_main
     await ticks(10)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
 
-    var frontier_snapshot: Dictionary = SaveSystem.collect(frontier_main)
+    var frontier_snapshot: Dictionary = save_system.collect(frontier_main)
     assert(frontier_snapshot["world"]["map_size"] == 128,
         "Frontier fixtures must use the 128x128 world")
     for version in range(7, 12):
         var fixture := _fixture_for_version(frontier_snapshot, version)
-        assert(SaveSystem._valid_save(fixture),
+        assert(save_system._valid_save(fixture),
             "Frontier migration fixture v%d must remain structurally valid" % version)
 
     var legacy_classic := _fixture_for_version(classic_snapshot, 6)
-    assert(not SaveSystem._valid_save(legacy_classic),
+    assert(not save_system._valid_save(legacy_classic),
         "Legacy Classic saves must not load into Frontier")
-    assert(SaveSystem._valid_save(legacy_classic, false),
+    assert(save_system._valid_save(legacy_classic, false),
         "Structurally valid legacy saves must remain available as profile-switch backups")
 
     var wrong_profile := classic_snapshot.duplicate(true)
-    assert(not SaveSystem._valid_save(wrong_profile),
+    assert(not save_system._valid_save(wrong_profile),
         "A current Classic save must not load into the Frontier world")
 
     var broken_campaign := frontier_snapshot.duplicate(true)
     broken_campaign["frontier_campaign"]["objectives"].pop_back()
-    assert(not SaveSystem._valid_save(broken_campaign),
+    assert(not save_system._valid_save(broken_campaign),
         "A truncated Frontier objective registry must be rejected")
 
     print("PASS: Classic save schemas v1-v11, Frontier v7-v11, interrupted writes, backup recovery eligibility and Windows/Linux export presets")
@@ -169,4 +174,7 @@ func _run() -> void:
 
 
 func _initialize() -> void:
+    world_config = root.get_node("WorldConfig")
+    game_clock = root.get_node("GameClock")
+    save_system = root.get_node("SaveSystem")
     call_deferred("_run")
