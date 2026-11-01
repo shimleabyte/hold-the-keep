@@ -40,7 +40,11 @@ ke `main`, push ke `main` atau branch `feat/**` / `fix/**`, serta workflow manua
 | input_rebinding.gd | perubahan keybind, penolakan konflik/reserved key, persistensi settings |
 | restart_gameover.gd | layar game over dan restart (R) |
 | fx_shake_settings.gd | batas partikel, guncangan layar, tombol menu, performa dengan efek |
-| perf.gd | biaya per frame: 150 musuh + 42 villager |
+| perf.gd | benchmark diagnostik configurable; `PROFILE=frontier ENEMIES=96 VILLAGERS=80 FRAMES=360` melaporkan p50/p95/p99 frame time, node, memori statis, proyektil dan partikel |
+| frontier_stress.gd | workload Frontier 128×128, empat faksi, 40 musuh, 48 villager, projectile dan batas 500 partikel |
+| campaign_reload_hardening.gd | reload Frontier dengan objective selesai, escort aktif, path progress dan HP stronghold parsial |
+| campaign_balance_matrix.gd | jadwal 15-hari Classic dan 20-hari Frontier, ukuran gelombang tiap act, pool archetype faction, serta gate boss final |
+| release_hardening.gd | migrasi save Classic v1–v11 dan Frontier v7–v11, temp-save terputus, backup, profil dan export preset Windows/Linux |
 | anim_sync.gd | pukulan penebang jatuh di frame benturan; pelarian memakai klip lari |
 | animation_motion.gd | idle breathing, walk/run lift, directional attack/work lean, hurt recoil, stable death pose |
 | world_config.gd | profile dimensions, tile indexing, Keep placement, Classic/Frontier profile definitions |
@@ -52,7 +56,7 @@ Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; 
 Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan key dictionary inventori.
 
 ## Skrip yang dijalankan otomatis di CI
-Suite headless CI yang berbasis assertion mencakup: `animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `faction_registry`, `production_worksites`,
+Suite headless CI yang berbasis assertion mencakup: `animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `campaign_reload_hardening`, `campaign_balance_matrix`, `faction_registry`, `frontier_stress`, `release_hardening`, `production_worksites`,
 `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`,
 `territory_claims`, `world_config`, dan `frontier_world`.
 
@@ -61,7 +65,8 @@ Skrip observasi manual mencakup: `anim_sync`, `combat_tower_walls`, `events_boss
 `villagers_economy`.
 
 `perf.gd` dan `balance_final_night.gd` tetap berupa diagnostic/balance runs; jalankan terpisah saat
-mengukur performa atau mengubah komposisi gelombang. Screenshot, preview sprite dan klik HUD tetap
+mengukur performa atau mengubah komposisi gelombang. Benchmark default menjalankan Frontier 128×128; atur `PROFILE=classic`
+untuk pembanding 64×64. Contoh workload target: `PROFILE=frontier ENEMIES=96 VILLAGERS=80 FRAMES=360 godot --headless --path . --script res://tests/perf.gd`. Screenshot, preview sprite dan klik HUD tetap
 memerlukan jalur render/manual yang dijelaskan di bawah.
 
 ## Skrip yang butuh layar (render sungguhan)
@@ -80,3 +85,8 @@ Dijalankan di layar virtual dengan OpenGL software, hasilnya PNG di /tmp/shots:
   posisi mouse viewport harus diset dengan `warp_mouse`)
 - preview_sprites.gd: `NAMES=player,enemy_wolf SCALE=3 godot --headless --path . --script tests/preview_sprites.gd`
   menulis /tmp/prev.png (pratinjau sprite sheet)
+
+
+Phase 09 CI also runs `tests/perf.gd` as a non-gating timing diagnostic using Frontier 128×128, 96 requested faction enemies, 80 villagers and a 500-particle ceiling. The `frontier-performance-godot-4.7` workflow artifact contains the p50/p95/p99 report. Timing values are diagnostic and runner-specific. The benchmark explicitly primes and sustains the configured 500-particle ceiling; its earlier artifact reached only 340 particles and should not be used as the final reference report.
+
+The release-export workflow installs Godot 4.3-matching export templates, produces Windows and Linux binaries, verifies the Windows PE format, and starts the Linux export with a bounded headless smoke test. These are CI environment checks, not clean-machine user acceptance.
