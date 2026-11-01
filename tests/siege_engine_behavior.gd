@@ -99,6 +99,7 @@ func _run() -> void:
         "Siege Engine must prioritize a reachable stone wall over Storage, House and the Keep")
     require(not siege._siege_path.is_empty(),
         "Selected siege target must have a reachable adjacent path")
+    main.player.global_position = Vector2(180, 180)
 
     # The wind-up must be readable and cause no immediate damage.
     siege.global_position = wall.global_position + Vector2(18, 0)
