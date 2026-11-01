@@ -67,8 +67,18 @@ func _run() -> void:
     ally.set_physics_process(false)
     ally.hp -= 12
     var ally_hp := ally.hp
+
+    var rival = enemy_script.new()
+    rival.setup(DataDB.enemies["enemy_scout"], main.world, main.flow, main.player, "greenwood_raiders")
+    rival.position = shaman.position + Vector2(5, 0)
+    main.world.entities.add_child(rival)
+    rival.set_physics_process(false)
+    rival.hp -= 12
+    var rival_hp := rival.hp
+
     assert(shaman._tick_shaman_support(), "War Shaman must activate support when an ally is injured")
-    assert(ally.hp > ally_hp, "War Shaman must restore ally health")
+    assert(ally.hp > ally_hp, "War Shaman must restore same-faction ally health")
+    assert(rival.hp == rival_hp, "War Shaman must not heal a rival faction unit")
 
     var snapshot: Dictionary = save_system.collect(main)
     assert(snapshot["version"] == 10, "Faction persistence must increment save format to v10")
