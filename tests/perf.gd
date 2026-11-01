@@ -1,4 +1,11 @@
 extends SceneTree
+
+var world_config
+var data_db
+var faction_registry
+var game_clock
+var events
+
 ## Configurable diagnostic benchmark; timing output is informative, not a CI threshold.
 ## Example:
 ## PROFILE=frontier ENEMIES=96 VILLAGERS=80 FRAMES=360 godot --headless --path . --script res://tests/perf.gd
@@ -58,11 +65,11 @@ func region_cells(main: Node, region_id: String, limit: int) -> Array[Vector2i]:
 
 
 func spawn_enemy(main: Node, enemy_id: String, faction_id: String, cell: Vector2i) -> void:
-    if not DataDB.enemies.has(enemy_id):
+    if not data_db.enemies.has(enemy_id):
         return
     var enemy = ENEMY_SCRIPT.new()
-    enemy.setup(DataDB.enemies[enemy_id], main.world, main.flow, main.player, faction_id)
-    enemy.position = Vector2(cell) * WorldConfig.tile_size + Vector2(8.0, 8.0)
+    enemy.setup(data_db.enemies[enemy_id], main.world, main.flow, main.player, faction_id)
+    enemy.position = Vector2(cell) * world_config.tile_size + Vector2(8.0, 8.0)
     main.world.entities.add_child(enemy)
 
 
@@ -70,14 +77,14 @@ func spawn_workload(main: Node, profile: String, enemy_count: int, villager_coun
     var per_faction := maxi(0, floori(float(enemy_count) / float(FACTION_IDS.size())))
     if profile == "frontier":
         for faction_id in FACTION_IDS:
-            var faction: Dictionary = FactionRegistry.factions.get(faction_id, {})
+            var faction: Dictionary = faction_registry.factions.get(faction_id, {})
             var region_id := String(faction.get("region", ""))
-            var roster: Array[String] = FactionRegistry.roster_for(faction_id)
+            var roster: Array[String] = faction_registry.roster_for(faction_id)
             var cells := region_cells(main, region_id, per_faction)
             for i in mini(per_faction, cells.size()):
                 spawn_enemy(main, roster[i % roster.size()], faction_id, cells[i])
     else:
-        main.spawner._pool = DataDB.waves.get("types", []).duplicate(true)
+        main.spawner._pool = data_db.waves.get("types", []).duplicate(true)
         for i in enemy_count:
             main.spawner.spawn_one()
 
@@ -99,10 +106,10 @@ func spawn_workload(main: Node, profile: String, enemy_count: int, villager_coun
     main.village.assign_jobs()
 
     # Keep at least one ranged unit/projectile in the sampled workload.
-    if DataDB.enemies.has("archer"):
+    if data_db.enemies.has("archer"):
         var archer = ENEMY_SCRIPT.new()
         archer.setup(
-            DataDB.enemies["archer"],
+            data_db.enemies["archer"],
             main.world,
             main.flow,
             main.player,
@@ -134,7 +141,7 @@ func _run() -> void:
     var sample_frames := env_int("FRAMES", DEFAULTS["frames"], 60, 3600)
     var warmup_frames := env_int("WARMUP", DEFAULTS["warmup"], 0, 600)
 
-    WorldConfig.apply_profile(profile)
+    world_config.apply_profile(profile)
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
 
@@ -142,7 +149,7 @@ func _run() -> void:
     root.add_child(main)
     current_scene = main
     await ticks(8)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
     main.nav.rebuild()
     spawn_workload(main, profile, enemy_count, villager_count)
 
@@ -164,8 +171,8 @@ func _run() -> void:
     for frame_index in sample_frames:
         if frame_index % 24 == 0:
             # Refill transient FX so the benchmark includes sustained effect churn.
-            Events.fx_burst.emit("impact", main.player.position, Vector2.RIGHT, 2.0)
-            Events.fx_burst.emit("debris", main.player.position, Vector2.LEFT, 1.0)
+            events.fx_burst.emit("impact", main.player.position, Vector2.RIGHT, 2.0)
+            events.fx_burst.emit("debris", main.player.position, Vector2.LEFT, 1.0)
 
         var started := Time.get_ticks_usec()
         await process_frame
@@ -182,7 +189,7 @@ func _run() -> void:
 
     var result := {
         "profile": profile,
-        "map_size": WorldConfig.map_size,
+        "map_size": world_config.map_size,
         "sample_frames": sample_frames,
         "warmup_frames": warmup_frames,
         "enemy_count": get_nodes_in_group("enemies").size(),
@@ -212,4 +219,9 @@ func _run() -> void:
 
 
 func _initialize() -> void:
+    world_config = root.get_node("WorldConfig")
+    data_db = root.get_node("DataDb")
+    faction_registry = root.get_node("FactionRegistry")
+    game_clock = root.get_node("GameClock")
+    events = root.get_node("Events")
     call_deferred("_run")
