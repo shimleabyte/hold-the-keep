@@ -1,7 +1,7 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
-**Status:** Phase 00 merged and verified; Phase 01 implemented and verified on Godot 4.3 and 4.7. PR #10 remains open for review.  
-**Implementation branches:** `main` (Phase 00, merged PR #7) → `feat/frontier-world-generation-mainline` (Phase 01, PR #10)  
+**Status:** Phase 00 merged; Phase 01 and Phase 02 implemented and verified on Godot 4.3 and 4.7 in stacked PRs #10 and #11. Phase 03 implementation is in progress.  
+**Implementation branches:** `main` → `feat/frontier-world-generation-mainline` (Phase 01, PR #10) → `feat/regional-control-roads-mainline` (Phase 02, PR #11) → `feat/multi-stronghold-campaign` (Phase 03)  
 **Baseline:** Godot 4.x / GDScript, Classic world 64×64, save format v7
 
 ## 1. Product direction
@@ -116,10 +116,14 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Initial slice acceptance gate — passed:** regional ownership is independent of fog and supply; road/bridge routes remain navigable; depot connectivity updates when roads are built or removed; disconnected depots cannot receive inventory deposits; infrastructure persists in saves.
 
 ### Phase 03 — Multi-stronghold campaign
-- Replace the single enemy stronghold reference with a campaign objective/stronghold registry.
-- Support multiple enemy settlements, garrisons, reinforcement sources and regional conquest rewards.
-- Make regional capture unlock new objectives rather than immediately ending the campaign.
-- Preserve the existing single-stronghold flow in Classic Mode.
+**Status:** Implemented on `feat/multi-stronghold-campaign`; Godot regression verification pending.
+
+- [x] Replace the single enemy stronghold reference with an ordered campaign objective/stronghold registry.
+- [x] Support four region-specific Frontier strongholds with independent local garrisons and reinforcement caps.
+- [x] Make objective order deterministic; each conquered region unlocks the next objective and grants a regional resource reward.
+- [x] Persist the full objective registry, stronghold health and conquest state in save format v8; retain v1–v7 single-stronghold compatibility.
+- [x] Preserve the existing one-stronghold Classic campaign.
+- [ ] Complete the Godot 4.3 / 4.7 regression matrix and review the in-game objective/map presentation.
 
 **Acceptance gate:** multiple strongholds can be found, attacked, destroyed, restored from saves and completed in a deterministic objective sequence.
 

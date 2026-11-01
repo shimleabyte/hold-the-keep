@@ -15,16 +15,16 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 ## 2. Status fitur (implementasi aktif; status verifikasi per suite dicatat di bagian 6)
 | Area | Isi |
 |---|---|
-| Dunia | peta 64x64 prosedural (seed 1337): Hearthland, Greenwood, Highlands, Fenlands; enam atlas terrain termasuk air; resource generation tetap deterministik |
-| Wilayah | klaim pemain dari Keep/Outpost, klaim musuh dari benteng, ownership check, frontier expansion |
-| Kampanye | tiga bab (hari 1–5, 6–10, 11–15), bobot musuh berubah per bab, benteng lawan 900 HP, garrison, fog permanen, ekspedisi (G), conquest victory |
+| Dunia | Classic 64x64 tetap tersedia; Frontier 128x128 deterministik dengan lima biome, resource density regional, 32 urat besi dan starting claim radius 15 |
+| Wilayah | regional ownership neutral/player/enemy/contested; roads/bridges walkable; supply graph berakar di Keep dan depot aktif hanya saat terhubung |
+| Kampanye | Classic satu stronghold; Frontier empat stronghold regional berurutan (Greenwood, Highlands, Fenlands, Ashen March), garrison/reinforcement lokal, reward conquest, objective registry, fog dan ekspedisi (G) |
 | Pemain | gerak 8 arah, lari (Shift), serang radial, panen, HP 100 + regen, respawn di keep |
 | Bangunan | keep, rumah, tembok, menara, gudang, ladang; data di `data/buildings.json`; bongkar refund 50% |
 | Musuh | bandit, serigala pouncer, soldier melee, archer ranged, brute siege, Raja Lawan; flow field; role-specific AI dan structure damage |
 | Villager | job penebang/penambang/petani/prajurit, kuota diatur pemain, A*, setor ke gudang/keep |
 | Ekonomi | kayu, batu, makanan; kapasitas rumah; upkeep 2 makanan/penduduk/hari |
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
-| Save/load | versi 6, autosave tiap fajar, F5/F9, file sementara + rollback backup, resource/fog/stronghold/garrison/ekspedisi/recall/combat progression tersimpan |
+| Save/load | versi 8, autosave tiap fajar, F5/F9, temp + rollback backup, world identity, resource/fog/multi-stronghold HP/garrison/ekspedisi/recall/combat/campaign progression tersimpan; v1–v7 tetap satu stronghold |
 | Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
 | Tampilan | windowed 1280×720 default, minimum 960×540 (enforced through `Window.min_size`), preset 16:9/16:10/4:3, integer-scaled viewport dengan aspect expand |
 | HUD | top bar ringkas, vitals, indikator bab, combat strip kompak, drawer JOBS, peta strategis TAB/MAP, hotbar bangunan, bar boss, bantuan (H) |
@@ -238,3 +238,14 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - Current supply scope is not full local logistics: resources still enter shared inventory after workers reach a connected depot. Local stockpile balances and inter-depot transfer semantics are not implemented.
 - Outpost guards/garrisons and local visibility are also not implemented. Supply attrition and raid vulnerability remain deferred until local logistics exist.
 - PR #11 is the clean Phase 02 transplant based on the Phase 01 branch. PR #9 was the old stacked version on the retired pre-mainline Frontier branch and is closed as superseded.
+
+
+## 21. Multi-stronghold campaign (2026-11-01)
+
+- Phase 03 implementation branch: `feat/multi-stronghold-campaign`, based on the verified Phase 02 branch.
+- New Frontier campaigns create four sequential objectives: Greenwood Raiders, Iron Legion, Fen Cult and Ashen Host.
+- Each stronghold has its own reinforcement cap and garrison. Conquering one objective does not retreat guards from other strongholds.
+- Later objectives remain damage-locked until the active objective is conquered. Soldiers on expedition automatically retarget the next objective.
+- Regional conquest grants resources; the campaign only ends after the fourth stronghold falls.
+- Save format v8 persists the full objective order, region/faction identity, health, garrison timers and completion state. Existing v1–v7 saves retain their one-stronghold flow; Classic remains one stronghold.
+- Regression status: dedicated multi-stronghold test added to CI; Godot 4.3 and 4.7 execution pending.

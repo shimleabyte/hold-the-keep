@@ -29,7 +29,8 @@ ke `main`, push ke `main` atau branch `feat/**` / `fix/**`, serta workflow manua
 | events_boss_final_night.gd | event acak, boss, kemenangan, malam terakhir vs tingkat pertahanan |
 | save_load_audio_menu.gd | round-trip save/load, autosave, save rusak, audio, menu, pengaturan |
 | resource_save_state.gd | status pohon/batu/bijih besi dan timer tumbuh ulang, rollback ke backup save |
-| campaign_assault.gd | klaim musuh, fog reveal/save, G assault/recall, garrison saat fajar, conquest victory |
+| campaign_assault.gd | Classic single-stronghold compatibility, fog reveal/save, G assault/recall, garrison at dawn and conquest victory |
+| campaign_multi_stronghold.gd | four Frontier strongholds, deterministic objective order, regional placement, independent garrisons, locked objectives, save/load and final conquest |
 | map_stages.gd | empat biome, fog map panel, batas tiga bab, bobot archer/brute per bab |
 | responsive_layout.gd | expanded integer-scaled viewport, HUD/map/hotbar bounds across five logical resolutions |
 | player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, archer projectile, brute armor, combat save |
@@ -48,7 +49,7 @@ Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; 
 Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan key dictionary inventori.
 
 ## Skrip yang dijalankan otomatis di CI
-Suite headless CI yang berbasis assertion mencakup: `animation_motion`, `campaign_assault`,
+Suite headless CI yang berbasis assertion mencakup: `animation_motion`, `campaign_assault`, `campaign_multi_stronghold`,
 `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`,
 `territory_claims`, `world_config`, dan `frontier_world`.
 
