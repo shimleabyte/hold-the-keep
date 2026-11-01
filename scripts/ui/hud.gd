@@ -42,6 +42,9 @@ const HELP_ROWS := [
     ["Y", "TEKNOLOGI (RISET)"],
     ["E / SPASI", "TEBANG, TAMBANG"],
     ["F / KLIK", "SERANG"],
+    ["Q", "DASH (LEVEL 1)"],
+    ["C", "CLEAVE (LEVEL 2)"],
+    ["V", "RALLY (LEVEL 3)"],
     ["1-6", "PILIH BANGUNAN"],
     ["KLIK KIRI", "PASANG BANGUNAN"],
     ["KLIK KANAN", "BATAL / BONGKAR"],
@@ -75,6 +78,7 @@ var _hp_bar: StatBar
 var _hp_text: Label
 var _keep_bar: StatBar
 var _keep_text: Label
+var _combat_bar: CombatBar
 var _boss_panel: Panel
 var _boss_bar: StatBar
 var _boss_title: Label
@@ -99,6 +103,7 @@ func _ready() -> void:
 
     _build_top_bar()
     _build_vitals()
+    _build_combat_bar()
     _build_jobs()
     _build_boss_bar()
     _build_build_bar()
@@ -233,6 +238,14 @@ func _build_vitals() -> void:
     _keep_text = _label(p, "-", Vector2(62, 14))
 
 
+func _build_combat_bar() -> void:
+    _combat_bar = CombatBar.new()
+    _combat_bar.font = _font
+    _combat_bar.position = Vector2(100, 207)
+    _combat_bar.size = Vector2(280, 28)
+    add_child(_combat_bar)
+
+
 func _build_jobs() -> void:
     var p := _panel(Vector2(402, 18), Vector2(74, 54))
     for i in JOBS.size():
@@ -319,7 +332,7 @@ func _build_help() -> void:
 
 
 func _build_messages() -> void:
-    _msg = _label(self, "", Vector2(0, 208))
+    _msg = _label(self, "", Vector2(0, 194))
     _msg.size = Vector2(480, 12)
     _msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _msg.modulate.a = 0.0
@@ -353,6 +366,9 @@ func _process(delta: float) -> void:
     if _scan_t > 0.0:
         return
     _scan_t = 0.2
+    var player = get_tree().get_first_node_in_group("player")
+    if player != null:
+        _combat_bar.update_state(player.combat_status())
     _research_panel.visible = Tech.current != ""
     if Tech.current != "":
         _research_name.text = Tech.tech_name(Tech.current).substr(0, 12)
@@ -601,6 +617,51 @@ class JobRow extends Control:
         if assigned < quota:
             col = Color("#ffb347")  # kuota belum terisi
         draw_string(font, Vector2(26, 9), "%d/%d" % [assigned, quota], HORIZONTAL_ALIGNMENT_CENTER, 31, 8, col)
+
+
+
+## Level, XP, and active-skill cooldowns.
+class CombatBar extends Control:
+    var font: Font
+    var state: Dictionary = {}
+
+    func update_state(value: Dictionary) -> void:
+        state = value
+        queue_redraw()
+
+    func _draw() -> void:
+        draw_rect(Rect2(Vector2.ZERO, size), Color(0.07, 0.065, 0.075, 0.9))
+        draw_rect(Rect2(Vector2.ZERO, size), Color("#6b5a40"), false, 1.0)
+        var level := int(state.get("level", 1))
+        var xp := int(state.get("xp", 0))
+        var next_xp := int(state.get("next_xp", 0))
+        draw_string(font, Vector2(4, 9), "LV %02d" % level,
+            HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#ffd23f"))
+        var ratio := float(xp) / float(maxi(1, next_xp)) if next_xp > 0 else 1.0
+        draw_rect(Rect2(45, 3, 228, 5), Color("#211b19"))
+        draw_rect(Rect2(46, 4, 226.0 * clampf(ratio, 0.0, 1.0), 3), Color("#d39b42"))
+        var xp_text := "MAX" if next_xp <= 0 else "%d/%d XP" % [xp, next_xp]
+        draw_string(font, Vector2(45, 15), xp_text,
+            HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color("#bcae99"))
+        var abilities := [
+            ["Q", "DASH", true, float(state.get("dash_cd", 0.0))],
+            ["C", "CLEAVE", bool(state.get("cleave_unlocked", false)), float(state.get("cleave_cd", 0.0))],
+            ["V", "RALLY", bool(state.get("rally_unlocked", false)), float(state.get("rally_cd", 0.0))]
+        ]
+        for i in abilities.size():
+            var item: Array = abilities[i]
+            var x := 4.0 + i * 91.0
+            var unlocked := bool(item[2])
+            var cooldown := float(item[3])
+            var ready := unlocked and cooldown <= 0.05
+            var tint := Color("#ffd23f") if ready else (Color("#a99a83") if unlocked else Color("#665d52"))
+            draw_rect(Rect2(x, 17, 88, 9), Color("#211b19"))
+            draw_rect(Rect2(x, 17, 88, 9), Color("#6b5a40"), false, 1.0)
+            draw_string(font, Vector2(x + 3, 24), "%s %s" % [item[0], item[1]],
+                HORIZONTAL_ALIGNMENT_LEFT, -1, 7, tint)
+            var status := "READY" if ready else ("LOCK" if not unlocked else "%.1f" % cooldown)
+            draw_string(font, Vector2(x + 53, 24), status,
+                HORIZONTAL_ALIGNMENT_LEFT, -1, 6, tint)
 
 
 ## Slot bar bangunan: ikon, nomor + nama, biaya. Bisa diklik.
