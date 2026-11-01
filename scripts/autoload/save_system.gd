@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 5
+const VERSION := 6
 
 var pending: Dictionary = {}
 
@@ -140,7 +140,12 @@ func collect(main: Node) -> Dictionary:
         "fog": main.fog.export_state() if is_instance_valid(main.fog) else {},
         "inventory": Inventory.items,
         "clock": {"t": GameClock.time_of_day, "day": GameClock.day, "night": GameClock.is_night},
-        "player": {"x": main.player.position.x, "y": main.player.position.y, "hp": main.player.hp},
+        "player": {
+            "x": main.player.position.x,
+            "y": main.player.position.y,
+            "hp": main.player.hp,
+            "combat": main.player.export_combat_state()
+        },
         "buildings": buildings,
         "villagers": villagers,
         "enemies": enemies,
@@ -195,6 +200,12 @@ func _valid_save(data: Variant) -> bool:
         return false
     if not player.has("x") or not player.has("y") or not player.has("hp"):
         return false
+    if version >= 6:
+        var combat = player.get("combat", {})
+        if not (combat is Dictionary) or not combat.has("level") or not combat.has("xp"):
+            return false
+        if int(combat["level"]) < 1 or int(combat["level"]) > 10 or int(combat["xp"]) < 0:
+            return false
 
     for building in buildings:
         if not (building is Dictionary) or not building.has("id") or not building.has("cx") or not building.has("cy") or not building.has("hp"):
