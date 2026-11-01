@@ -7,11 +7,14 @@ func ticks(count: int) -> void:
 
 
 func _initialize() -> void:
+    var game_clock = root.get_node("GameClock")
+    var save_system = root.get_node("SaveSystem")
+    var data_db = root.get_node("DataDB")
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main
     await ticks(4)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
 
     var player = main.player
     var start_position: Vector2 = player.global_position
@@ -29,7 +32,7 @@ func _initialize() -> void:
     assert(not player.combat_status()["rally_unlocked"], "Rally must remain locked before level 3")
 
     var enemy_script = load("res://scripts/entities/enemy.gd")
-    var sturdy_bandit: Dictionary = DataDB.enemies["bandit"].duplicate()
+    var sturdy_bandit: Dictionary = data_db.enemies["bandit"].duplicate()
     sturdy_bandit["hp"] = 80
     var forward_enemy = enemy_script.new()
     forward_enemy.setup(sturdy_bandit, main.world, main.flow, player)
@@ -62,7 +65,7 @@ func _initialize() -> void:
         "Rally must improve soldier damage and attack cadence")
 
     var wolf = enemy_script.new()
-    wolf.setup(DataDB.enemies["wolf"], main.world, main.flow, player)
+    wolf.setup(data_db.enemies["wolf"], main.world, main.flow, player)
     wolf.position = player.global_position + Vector2(20, 0)
     main.world.entities.add_child(wolf)
     wolf.set_physics_process(false)
@@ -75,7 +78,7 @@ func _initialize() -> void:
         "Stagger must interrupt an active pounce")
 
     var archer = enemy_script.new()
-    archer.setup(DataDB.enemies["archer"], main.world, main.flow, player)
+    archer.setup(data_db.enemies["archer"], main.world, main.flow, player)
     assert(archer.role == "ranged" and archer.preferred_range > 0.0,
         "Archer must use ranged spacing behavior")
     archer.position = player.global_position + Vector2(90, 0)
@@ -87,7 +90,7 @@ func _initialize() -> void:
         "Archer attack must create a hostile projectile")
 
     var brute = enemy_script.new()
-    brute.setup(DataDB.enemies["brute"], main.world, main.flow, player)
+    brute.setup(data_db.enemies["brute"], main.world, main.flow, player)
     main.world.entities.add_child(brute)
     brute.set_physics_process(false)
     var brute_hp: int = brute.hp
@@ -102,12 +105,12 @@ func _initialize() -> void:
     assert(player.experience == xp_before_kill + 32,
         "Enemy kill signal must award the player's XP reward")
 
-    var snapshot: Dictionary = SaveSystem.collect(main)
+    var snapshot: Dictionary = save_system.collect(main)
     assert(snapshot["player"]["combat"]["level"] == 3,
         "Save payload must preserve player level")
     assert(snapshot["player"]["combat"]["xp"] == player.experience,
         "Save payload must preserve player XP")
-    assert(SaveSystem._valid_save(snapshot),
+    assert(save_system._valid_save(snapshot),
         "Combat-enabled save payload must pass validation")
 
     print("PASS: XP, level unlocks, dash, directional cleave, rally buff, ranged projectile, brute armor, combat save")
