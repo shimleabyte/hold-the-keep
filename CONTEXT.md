@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** main at `f540faebb83402030ea4a360161eacd737e28856`; save schema v11; latest main CI [workflow #294](https://github.com/shimleabyte/hold-the-keep/actions/runs/41309837812) passed 44/44 jobs. See `ROADMAP_NEXT_LEVEL.md` for current phase status and `docs/plans/` for phase execution plans.
+**Current source of truth:** main at `f540faebb83402030ea4a360161eacd737e28856` (save v11 before the local-stockpile PR); audit branch implements save v12; latest main CI [workflow #294](https://github.com/shimleabyte/hold-the-keep/actions/runs/41309837812) passed 44/44 jobs. See `ROADMAP_NEXT_LEVEL.md` for current phase status and `docs/plans/` for phase execution plans.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -15,13 +15,13 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada main (save schema v11; status acceptance per 1 November 2026).
+Ringkasan implementasi aktual pada audit branch berdasarkan main (save schema v12; status acceptance per 1 November 2026).
 
 | Area | Kondisi saat ini |
 |---|---|
 | Dunia | Classic 64×64 / 15 hari tetap tersedia; Frontier 128×128 / 20 hari / 4 act dengan lima biome deterministik, 32 urat besi, dan starting Keep claim radius 15 |
 | Wilayah | Regional ownership neutral/player/enemy/contested; roads/bridges walkable; supply graph dari Keep; depot terputus tidak menerima deposit |
-| Logistik | **Parsial:** inventory resource masih shared setelah worker mencapai depot terhubung; local stockpile dan transfer antar-depot belum ada |
+| Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; Frontier workers deposit ke depot lokal dan save v12 mempersistensikannya. Explicit inter-depot shipment dan local-stock spending belum ada |
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
@@ -29,7 +29,7 @@ Ringkasan implementasi aktual pada main (save schema v11; status acceptance per 
 | Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman support berjalan; perilaku khusus seluruh archetype, camps, patrol, raids dan counterattacks belum lengkap |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
-| Save/load | v11; state world/campaign/objective/site/job/building/resource/faction; migrasi Classic v1–v10 dan Frontier v7–v10 dicakup regression |
+| Save/load | v12 pada audit branch; state world/campaign/objective/site/job/building/resource/faction/local depot inventory; Classic v1–v11 dan Frontier v7–v11 tetap dimigrasikan dengan stockpile kosong |
 | Kontrol | Rebind gerak, interaksi, serang, lari; shortcut UI/job/build belum dapat di-rebind |
 | Tampilan | Adaptive logical viewport = setengah ukuran client window, minimum 480×270, pixel scale tepat 2×; physical-display/fullscreen review belum dilakukan |
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map, hotbar, objective tracker, tech panel, pause menu |
@@ -287,8 +287,8 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - `data/enemy_archetypes.json` defines Scout, Shieldbearer, Saboteur, War Shaman, Siege Engine and Beast Rider. Archetypes are loaded into `DataDB.enemies` while legacy enemy definitions remain unchanged.
 - Stronghold garrisons are selected from faction rosters; regional wave spawns receive faction identity. Enemy units use faction tint.
 - War Shaman has bounded ally healing with a cooldown. Target selection and ally support are extracted into `enemy_targeting.gd` and `enemy_support.gd`.
-- Save format v11 records Frontier objective/site progress plus enemy faction IDs; older v1–v10 saves remain accepted and restore with compatible defaults.
-- `tests/faction_registry.gd` covers faction-region mapping, roster/garrison membership, faction tint, same-faction War Shaman healing and v11 save validation. Godot 4.3/4.7 CI passed 30/30 jobs.
+- Save format v12 records Frontier objective/site progress, enemy faction IDs and local Storage/Outpost stockpiles; Classic v1–v11 and Frontier v7–v11 migrate with empty stockpiles.
+- `tests/faction_registry.gd` covers faction-region mapping, roster/garrison membership, faction tint, same-faction War Shaman healing and v12 save validation. Godot 4.3/4.7 CI passed 30/30 jobs.
 - Remaining Phase 06 work: fully distinct counterable behavior for all six archetypes, deterministic camps, bounded patrols, raids/counterattacks, camp/raid persistence, stress tests and manual gameplay review. Do not mark Phase 06 complete yet.
 
 
