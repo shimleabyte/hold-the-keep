@@ -14,6 +14,9 @@ func _run() -> void:
     var config = root.get_node("WorldConfig")
     var clock = root.get_node("GameClock")
     var save_system = root.get_node("SaveSystem")
+    var data_db = root.get_node("DataDB")
+    var inventory = root.get_node("Inventory")
+    var tech = root.get_node("Tech")
     config.apply_profile("frontier")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
@@ -24,11 +27,11 @@ func _run() -> void:
         "iron_tools", "iron_weapons", "iron_armor", "iron_towers", "fortress"
     ]
     for tech_id in legacy_ids:
-        assert(DataDB.techs.has(tech_id), "Existing technology ID lost: " + tech_id)
-    assert(DataDB.tech_order.size() == 20, "Technology tree must contain twenty nodes")
-    assert(DataDB.campaign_modes["classic"]["final_day"] == 15, "Classic must remain 15 days")
-    assert(DataDB.campaign_modes["frontier"]["final_day"] == 20, "Frontier must last 20 days")
-    assert(DataDB.campaign_modes["frontier"]["stages"].size() == 4, "Frontier must have four acts")
+        assert(data_db.techs.has(tech_id), "Existing technology ID lost: " + tech_id)
+    assert(data_db.tech_order.size() == 20, "Technology tree must contain twenty nodes")
+    assert(data_db.campaign_modes["classic"]["final_day"] == 15, "Classic must remain 15 days")
+    assert(data_db.campaign_modes["frontier"]["final_day"] == 20, "Frontier must last 20 days")
+    assert(data_db.campaign_modes["frontier"]["stages"].size() == 4, "Frontier must have four acts")
 
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
@@ -56,7 +59,7 @@ func _run() -> void:
     main.frontier_campaign._scan_discovery()
     assert(bool(main.frontier_campaign.objectives["discover_greenwood"]["completed"]),
         "Entering Greenwood must complete its discovery objective")
-    assert(Inventory.get_amount("wood") >= 60, "Discovery must grant its configured resource reward")
+    assert(inventory.get_amount("wood") >= 60, "Discovery must grant its configured resource reward")
 
     var camp = main.frontier_campaign.sites["greenwood_raider_camp"]
     camp.take_damage(9999)
@@ -72,14 +75,14 @@ func _run() -> void:
     legacy_snapshot.erase("frontier_campaign")
     assert(save_system._valid_save(legacy_snapshot), "Version 10 Frontier saves must remain compatible")
 
-    var old_done := Tech.researched.duplicate()
-    Tech.researched = ["tools_wood", "masonry", "surveying"]
-    Tech._recompute()
-    assert(Tech.is_done("tools_wood") and Tech.is_done("masonry"), "Existing researched IDs must still resolve")
-    assert(Tech.has_flag("frontier_surveying"), "Surveying must activate its exploration flag")
-    assert(not Tech.is_done("cartography"), "New research must not unlock automatically")
-    Tech.researched = old_done
-    Tech._recompute()
+    var old_done := tech.researched.duplicate()
+    tech.researched = ["tools_wood", "masonry", "surveying"]
+    tech._recompute()
+    assert(tech.is_done("tools_wood") and tech.is_done("masonry"), "Existing researched IDs must still resolve")
+    assert(tech.has_flag("frontier_surveying"), "Surveying must activate its exploration flag")
+    assert(not tech.is_done("cartography"), "New research must not unlock automatically")
+    tech.researched = old_done
+    tech._recompute()
 
     # Act I: complete the first regional objectives and conquer Greenwood.
     var first_id: String = main.campaign._order[0]
@@ -88,8 +91,8 @@ func _run() -> void:
 
     # Act II: discovery plus two escorted groups.
     var highland_cell := Vector2i(-1, -1)
-    for y in WorldConfig.map_size:
-        for x in WorldConfig.map_size:
+    for y in config.map_size:
+        for x in config.map_size:
             var candidate := Vector2i(x, y)
             if String(main.world.region_id(candidate)) == "HIGHLANDS" and main.nav.is_walkable(candidate):
                 highland_cell = candidate
@@ -118,8 +121,8 @@ func _run() -> void:
 
     # Act III: ruins and a defended signal point.
     var fenland_cell := Vector2i(-1, -1)
-    for y in WorldConfig.map_size:
-        for x in WorldConfig.map_size:
+    for y in config.map_size:
+        for x in config.map_size:
             var candidate := Vector2i(x, y)
             if String(main.world.region_id(candidate)) == "FENLANDS" and main.nav.is_walkable(candidate):
                 fenland_cell = candidate
@@ -143,8 +146,8 @@ func _run() -> void:
 
     # Act IV: final discovery, refugee escort and Ashen siege camp.
     var ashen_cell := Vector2i(-1, -1)
-    for y in WorldConfig.map_size:
-        for x in WorldConfig.map_size:
+    for y in config.map_size:
+        for x in config.map_size:
             var candidate := Vector2i(x, y)
             if String(main.world.region_id(candidate)) == "ASHEN_MARCH" and main.nav.is_walkable(candidate):
                 ashen_cell = candidate
