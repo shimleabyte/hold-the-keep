@@ -61,21 +61,23 @@ func _is_building(n) -> bool:
 
 
 func _passable(c: Vector2i) -> bool:
-    if not world.is_buildable(c):
-        return false
     var occ = world.occupied.get(c)
+    var is_bridge: bool = occ != null and is_instance_valid(occ) and String(occ.id) == "bridge"
+    if not world.is_buildable(c) and not is_bridge:
+        return false
     return occ == null or _is_building(occ)
 
 
 func _solid(c: Vector2i) -> bool:
     var occupant = world.occupied.get(c)
+    var is_bridge: bool = occupant != null and is_instance_valid(occupant) and String(occupant.id) == "bridge"
     var blocks_path: bool = occupant != null and not (is_instance_valid(occupant) and occupant.is_in_group("roads"))
-    return not world.is_buildable(c) or blocks_path
+    return (not world.is_buildable(c) and not is_bridge) or blocks_path
 
 
 func _penalty(c: Vector2i) -> int:
     var occ = world.occupied.get(c)
-    if _is_building(occ) and occ.id != "keep" and occ.id != "road":
+    if _is_building(occ) and not occ.is_in_group("roads") and occ.id != "keep":
         return BUILD_PENALTY
     return 0
 
