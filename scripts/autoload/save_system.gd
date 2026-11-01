@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 12
+const VERSION := 13
 
 var pending: Dictionary = {}
 
@@ -165,6 +165,7 @@ func collect(main: Node) -> Dictionary:
         "job_priority": main.village.job_priority.duplicate(),
         "spawner": main.spawner.export_state(),
         "tech": Tech.export_state(),
+        "supply": main.supply.export_state(),
         "frontier_campaign": main.frontier_campaign.export_state() if main.frontier_campaign != null else {"profile": WorldConfig.profile_id, "objectives": [], "final_boss_defeated": false, "unlocked_act": 1},
     }
 
@@ -244,6 +245,74 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         return false
     if version >= 11 and not _valid_frontier_campaign(data.get("frontier_campaign", {}), String(campaign_world_data.get("profile", "")), int(campaign_world_data.get("map_size", 0))):
         return false
+    if version >= 13:
+        var supply_state = data.get("supply", null)
+        if not (supply_state is Dictionary) or not supply_state.has("next_id") or not (supply_state.get("orders", null) is Array):
+            return false
+        var seen_shipment_ids: Dictionary = {}
+        var reserved_capacity: Dictionary = {}
+        var max_shipment_id := 0
+        for order in supply_state["orders"]:
+            if not (order is Dictionary):
+                return false
+            for key in ["id", "source_x", "source_y", "destination_x", "destination_y", "kind", "amount", "cargo", "status", "x", "y"]:
+                if not order.has(key):
+                    return false
+            var shipment_id := int(order["id"])
+            var source_cell := Vector2i(int(order["source_x"]), int(order["source_y"]))
+            var destination_cell := Vector2i(int(order["destination_x"]), int(order["destination_y"]))
+            var kind := String(order["kind"])
+            var amount := int(order["amount"])
+            var cargo := int(order["cargo"])
+            var status := String(order["status"])
+            if shipment_id <= 0 or seen_shipment_ids.has(shipment_id) or source_cell == destination_cell:
+                return false
+            if not WorldConfig.is_valid_cell(source_cell) or not WorldConfig.is_valid_cell(destination_cell):
+                return false
+            if not ["wood", "stone", "food", "iron"].has(kind) or amount <= 0 or amount > 60 or cargo < 0 or cargo > amount:
+                return false
+            if not ["queued", "in_transit", "blocked", "delivered", "cancelled", "recovered"].has(status):
+                return false
+            if status in ["queued", "in_transit", "blocked"] and cargo != amount:
+                return false
+            if status in ["delivered", "cancelled", "recovered"] and cargo != 0:
+                return false
+            if not is_finite(float(order["x"])) or not is_finite(float(order["y"])):
+                return false
+            seen_shipment_ids[shipment_id] = true
+            max_shipment_id = maxi(max_shipment_id, shipment_id)
+
+            var destination_building: Dictionary = {}
+            var source_exists := false
+            for saved_building in buildings:
+                var saved_cell := Vector2i(int(saved_building["cx"]), int(saved_building["cy"]))
+                var saved_id := String(saved_building["id"])
+                if saved_cell == source_cell and ["keep", "storage", "outpost"].has(saved_id):
+                    source_exists = true
+                if saved_cell == destination_cell and ["keep", "storage", "outpost"].has(saved_id):
+                    destination_building = saved_building
+            # A source may be destroyed while its already-reserved cargo is in transit.
+            if status == "queued" and not source_exists:
+                return false
+            if status in ["queued", "in_transit", "blocked"] and not destination_building.is_empty() and String(destination_building["id"]) != "keep":
+                var key := "%d:%d" % [destination_cell.x, destination_cell.y]
+                reserved_capacity[key] = int(reserved_capacity.get(key, 0)) + cargo
+
+        if int(supply_state["next_id"]) <= max_shipment_id:
+            return false
+        for key in reserved_capacity:
+            var coords := String(key).split(":")
+            var destination_cell := Vector2i(int(coords[0]), int(coords[1]))
+            for saved_building in buildings:
+                if Vector2i(int(saved_building["cx"]), int(saved_building["cy"])) != destination_cell:
+                    continue
+                var capacity := int(DataDB.buildings[String(saved_building["id"])].get("stockpile_capacity", 0))
+                var current_total := 0
+                for stock_amount in saved_building.get("stockpile", {}).values():
+                    current_total += int(stock_amount)
+                if current_total + int(reserved_capacity[key]) > capacity:
+                    return false
+                break
     if not clock.has("t") or not clock.has("day") or not clock.has("night"):
         return false
     if not player.has("x") or not player.has("y") or not player.has("hp"):
