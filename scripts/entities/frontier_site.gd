@@ -98,9 +98,10 @@ func interact() -> void:
 
 
 func _build_escort_path() -> void:
+    # The path is recalculated from the saved world position, so the previous
+    # path's index is no longer meaningful after a save/load.
     _path = nav.path_to(position, WorldConfig.starting_keep_cell())
-    if _path.size() > 1:
-        _path_index = clampi(_path_index, 1, _path.size() - 1)
+    _path_index = 1 if _path.size() > 1 else 0
 
 
 func _process(delta: float) -> void:
