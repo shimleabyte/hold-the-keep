@@ -135,6 +135,7 @@ func _draw() -> void:
     _draw_resource_markers()
     _draw_building_markers()
     _draw_campaign_markers()
+    _draw_frontier_site_markers()
     _draw_unit_markers()
     _draw_camera_window()
     _draw_player_marker()
@@ -259,6 +260,54 @@ func _draw_campaign_markers() -> void:
         draw_rect(Rect2(marker_position - Vector2.ONE * marker_size * 0.5, Vector2.ONE * marker_size), marker_color)
 
 
+
+
+func _draw_frontier_site_markers() -> void:
+    if WorldConfig.profile_id != "frontier":
+        return
+    for site in get_tree().get_nodes_in_group("frontier_sites"):
+        if not is_instance_valid(site) or site.site_state == "complete":
+            continue
+        if not _position_is_known(site.global_position):
+            continue
+
+        var marker_position := _world_to_map(site.global_position)
+        var marker_size := maxf(2.0, 5.0 * _map_scale / 3.0)
+        var marker_color := Color("#c48d4d")
+        match String(site.objective_type):
+            "clear_camp":
+                marker_color = Color("#d66a59")
+            "clear_ruins":
+                marker_color = Color("#aab5b8")
+            "rescue":
+                marker_color = Color("#83c09a")
+            "escort":
+                marker_color = Color("#e0bd70")
+            "defend":
+                marker_color = Color("#84a9d2")
+
+        var is_locked: bool = int(site.definition.get("act", 1)) > int(site.manager.unlocked_act)
+        if site.site_state == "failed":
+            marker_color = Color("#765453")
+        elif is_locked:
+            marker_color = marker_color.darkened(0.55)
+
+        if not is_locked and (site.site_state == "escorting" or site.site_state == "active"):
+            draw_circle(marker_position, marker_size * 1.05, Color("#f4d08a"))
+        if String(site.objective_type) in ["rescue", "escort"]:
+            draw_circle(marker_position, marker_size * 0.58, marker_color)
+        elif String(site.objective_type) == "clear_ruins":
+            var half := marker_size * 0.55
+            draw_colored_polygon(PackedVector2Array([
+                marker_position + Vector2(0, -half),
+                marker_position + Vector2(half, 0),
+                marker_position + Vector2(0, half),
+                marker_position + Vector2(-half, 0)
+            ]), marker_color)
+        else:
+            draw_rect(Rect2(marker_position - Vector2.ONE * marker_size * 0.5,
+                Vector2.ONE * marker_size), marker_color)
+
 func _is_currently_observed(world_position: Vector2) -> bool:
     var player_node = get_tree().get_first_node_in_group("player")
     if player_node != null and player_node.global_position.distance_to(world_position) <= 112.0:
@@ -317,10 +366,11 @@ func _draw_legend() -> void:
         [PLAYER_TERRITORY, "KITA"],
         [ENEMY_TERRITORY, "MUSUH"],
         [PLAYER_MARKER, "KEEP"],
-        [ALLY_MARKER, "PASUKAN"]
+        [ALLY_MARKER, "PASUKAN"],
+        [Color("#e0bd70"), "OBJEK"]
     ]
     var x := 9.0
     for item in items:
         draw_rect(Rect2(x, y - 7.0, 6.0, 6.0), item[0])
         draw_string(font, Vector2(x + 9.0, y), String(item[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("#e1d4bd"))
-        x += 75.0
+        x += 61.0

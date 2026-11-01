@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 10
+const VERSION := 11
 
 var pending: Dictionary = {}
 
@@ -116,7 +116,8 @@ func collect(main: Node) -> Dictionary:
             "garrison": enemy.is_garrison,
             "guard_x": enemy.guard_origin.x,
             "guard_y": enemy.guard_origin.y,
-            "faction": enemy.faction_id
+            "faction": enemy.faction_id,
+            "site_id": enemy.campaign_site_id
         })
 
     var resources: Array = []
@@ -160,6 +161,7 @@ func collect(main: Node) -> Dictionary:
         "job_priority": main.village.job_priority.duplicate(),
         "spawner": main.spawner.export_state(),
         "tech": Tech.export_state(),
+        "frontier_campaign": main.frontier_campaign.export_state() if main.frontier_campaign != null else {"profile": WorldConfig.profile_id, "objectives": [], "final_boss_defeated": false, "unlocked_act": 1},
     }
 
 
@@ -235,6 +237,8 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         return false
     var campaign_world_data: Dictionary = data.get("world", {})
     if version >= 8 and not _valid_campaign_state(data.get("campaign", {}), String(campaign_world_data.get("profile", "")), int(campaign_world_data.get("map_size", 0))):
+        return false
+    if version >= 11 and not _valid_frontier_campaign(data.get("frontier_campaign", {}), String(campaign_world_data.get("profile", "")), int(campaign_world_data.get("map_size", 0))):
         return false
     if not clock.has("t") or not clock.has("day") or not clock.has("night"):
         return false
@@ -366,6 +370,49 @@ func _valid_campaign_state(value: Variant, expected_profile: String, map_size: i
         seen[stronghold_id] = true
     return seen.size() == records.size()
 
+
+
+
+func _valid_frontier_campaign(value: Variant, expected_profile: String, map_size: int) -> bool:
+    if not (value is Dictionary) or String(value.get("profile", "")) != expected_profile:
+        return false
+    var objectives = value.get("objectives", null)
+    if not (objectives is Array):
+        return false
+    if expected_profile == "classic":
+        return objectives.is_empty()
+    if expected_profile != "frontier" or objectives.size() != DataDB.frontier_objectives.size():
+        return false
+    if not value.has("final_boss_defeated") or not (value["final_boss_defeated"] is bool):
+        return false
+    var unlocked_act := int(value.get("unlocked_act", 0))
+    if unlocked_act < 1 or unlocked_act > 4:
+        return false
+
+    var expected_ids: Dictionary = {}
+    for definition in DataDB.frontier_objectives:
+        expected_ids[String(definition.get("id", ""))] = true
+    var seen: Dictionary = {}
+    for record in objectives:
+        if not (record is Dictionary):
+            return false
+        for key in ["id", "completed", "cell_x", "cell_y", "state", "hp", "x", "y", "path_index", "saw_night"]:
+            if not record.has(key):
+                return false
+        var objective_id := String(record["id"])
+        if not expected_ids.has(objective_id) or seen.has(objective_id):
+            return false
+        seen[objective_id] = true
+        if not (record["completed"] is bool) or not (record["saw_night"] is bool):
+            return false
+        var cell := Vector2i(int(record["cell_x"]), int(record["cell_y"]))
+        if not ((cell == Vector2i(-1, -1)) or (cell.x >= 0 and cell.y >= 0 and cell.x < map_size and cell.y < map_size)):
+            return false
+        if not ["waiting", "active", "escorting", "failed", "complete"].has(String(record["state"])):
+            return false
+        if int(record["hp"]) < 0 or int(record["hp"]) > 500 or int(record["path_index"]) < 0:
+            return false
+    return seen.size() == expected_ids.size()
 
 func _read_saved_data(path: String, enforce_world_compatibility := true) -> Variant:
     if not FileAccess.file_exists(path):

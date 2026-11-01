@@ -17,6 +17,8 @@ const FX_SCRIPT := preload("res://scripts/entities/fx_layer.gd")
 const HUD_SCRIPT := preload("res://scripts/ui/hud.gd")
 const TECH_PANEL_SCRIPT := preload("res://scripts/ui/tech_panel.gd")
 const MENU_SCRIPT := preload("res://scripts/ui/pause_menu.gd")
+const FRONTIER_CAMPAIGN_SCRIPT := preload("res://scripts/systems/frontier_campaign.gd")
+const FRONTIER_OBJECTIVE_PANEL_SCRIPT := preload("res://scripts/ui/frontier_objective_panel.gd")
 
 const NIGHT_TINT := Color(0.45, 0.5, 0.75)
 const DIRS4: Array[Vector2i] = [
@@ -37,6 +39,7 @@ var nav
 var supply
 var village
 var events
+var frontier_campaign
 
 var _tint: CanvasModulate
 
@@ -122,6 +125,13 @@ func _ready() -> void:
     world.add_child(fog)
     if not save.is_empty():
         fog.import_state(save.get("fog", {}))
+
+    frontier_campaign = FRONTIER_CAMPAIGN_SCRIPT.new()
+    add_child(frontier_campaign)
+    frontier_campaign.setup(self, save.get("frontier_campaign", {}) if not save.is_empty() else {})
+    var objective_panel = FRONTIER_OBJECTIVE_PANEL_SCRIPT.new()
+    objective_panel.campaign = frontier_campaign
+    add_child(objective_panel)
 
 
 func _on_campaign_won(_day: int) -> void:

@@ -24,14 +24,14 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 | Villager | job penebang/penambang/petani/prajurit, kuota diatur pemain, A*, setor ke gudang/keep |
 | Ekonomi | kayu, batu, makanan; kapasitas rumah; upkeep 2 makanan/penduduk/hari |
 | Event acak | 6 jenis di `data/events.json`, awal hari mulai hari 2 (60%) |
-| Save/load | versi 10, autosave tiap fajar, F5/F9, temp + rollback backup, world identity, resource/fog/multi-stronghold HP/garrison/ekspedisi/recall/combat/campaign progression dan faction identity tersimpan; v1–v9 tetap kompatibel |
+| Save/load | versi 11, autosave tiap fajar, F5/F9, temp + rollback backup, world identity, resource/fog/multi-stronghold HP/garrison/ekspedisi/recall/combat/campaign progression, objective/site state dan faction identity tersimpan; v1–v10 tetap kompatibel |
 | Kontrol | rebind keyboard untuk gerak, interaksi, serang, lari; gamepad default tetap ada |
 | Tampilan | windowed 1280×720 default, minimum 960×540 (enforced through `Window.min_size`), preset 16:9/16:10/4:3, integer-scaled viewport dengan aspect expand |
 | HUD | top bar ringkas, vitals, indikator bab, combat strip kompak, drawer JOBS, peta strategis TAB/MAP, hotbar bangunan, bar boss, bantuan (H) |
 | Animasi | 22 frame x 3 arah per karakter; serang/panen jatuh di frame benturan |
 | Efek | partikel, busur tebasan, guncangan layar (bisa dimatikan) |
 | Audio | SFX prosedural (12 suara); **belum ada musik** |
-| Teknologi | 17 teknologi, 3 era, panel Y, bijih besi, Tempa, tembok batu; efek berupa data (`Tech.stat`) |
+| Teknologi | 20 teknologi, 3 era, panel Y, bijih besi, Tempa, tembok batu; efek berupa data (`Tech.stat`) |
 | Rilis | export preset Windows+Linux, `tools/build.sh|ps1` (template export belum pernah dipasang di sini) |
 
 ## 3. Struktur
@@ -267,6 +267,17 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - `data/enemy_archetypes.json` defines Scout, Shieldbearer, Saboteur, War Shaman, Siege Engine and Beast Rider. Archetypes are loaded into `DataDB.enemies` while legacy enemy definitions remain unchanged.
 - Stronghold garrisons are selected from faction rosters; regional wave spawns receive faction identity. Enemy units use faction tint.
 - War Shaman has bounded ally healing with a cooldown. Target selection and ally support are extracted into `enemy_targeting.gd` and `enemy_support.gd`.
-- Save format v10 records enemy faction IDs; older v1–v9 saves remain accepted and restore with an empty/default faction identity.
-- `tests/faction_registry.gd` covers faction-region mapping, roster/garrison membership, faction tint, same-faction War Shaman healing and v10 save validation. Godot 4.3/4.7 CI passed 30/30 jobs.
+- Save format v11 records Frontier objective/site progress plus enemy faction IDs; older v1–v10 saves remain accepted and restore with compatible defaults.
+- `tests/faction_registry.gd` covers faction-region mapping, roster/garrison membership, faction tint, same-faction War Shaman healing and v11 save validation. Godot 4.3/4.7 CI passed 30/30 jobs.
 - Remaining Phase 06 work: fully distinct counterable behavior for all six archetypes, deterministic camps, bounded patrols, raids/counterattacks, camp/raid persistence, stress tests and manual gameplay review. Do not mark Phase 06 complete yet.
+
+
+## 24. Phase 07 — Frontier Conquest objectives (2026-11-01)
+- Integration branch: `feat/phase-07-conquest-objectives-mainline`, created from the current `main` after Phase 05 and Phase 06 were merged. This avoids the old Phase 07 branch's diverged Phase 06 ancestry.
+- Technology expands from 17 to 20 nodes: Surveying, Regional Cartography and Siegecraft. Cartography increases Outpost reveal radius; Siegecraft increases player damage against active strongholds and regional sites.
+- Classic keeps its 15-day / 3-stage schedule and victory rules. Frontier uses 20 days / 4 acts with faction archetypes joining later wave pools.
+- Eleven regional objectives cover four biome discoveries plus camp/ruin clearing, rescue, escort and defense. Press O to inspect progress; E interacts with a nearby site.
+- Discovered objective sites appear on the strategic map with type-based markers. Future-act sites remain dimmed/locked until the previous act's required objectives and stronghold are complete.
+- Escort paths rebuild from the saved world position after load. Save v11 persists objective/site progress, site health/location, escort progress and final-boss state; v1–v10 remain compatible.
+- Frontier victory requires all required regional objectives, all four strongholds and the King encounter on day 20. Classic's original 15-day victory path remains intact.
+- The original Phase 07 branch passed its Godot 4.3/4.7 workflow (30/30 jobs). The mainline-rebased integration branch requires a fresh CI run before it is considered merge-ready.

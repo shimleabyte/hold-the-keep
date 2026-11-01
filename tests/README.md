@@ -30,10 +30,11 @@ ke `main`, push ke `main` atau branch `feat/**` / `fix/**`, serta workflow manua
 | save_load_audio_menu.gd | round-trip save/load, autosave, save rusak, audio, menu, pengaturan |
 | resource_save_state.gd | status pohon/batu/bijih besi dan timer tumbuh ulang, rollback ke backup save |
 | campaign_assault.gd | Classic single-stronghold compatibility, fog reveal/save, G assault/recall, garrison at dawn and conquest victory |
-| faction_registry.gd | four faction definitions, region mapping, roster membership, stronghold garrisons, War Shaman support and faction save persistence |
+| faction_registry.gd | four faction definitions, region mapping, roster membership, stronghold garrisons, War Shaman support and v11 faction save persistence |
+| frontier_campaign.gd | Classic/Frontier campaign calendars, act gates, all regional objectives, rewards, save/load and day-20 King victory |
 | campaign_multi_stronghold.gd | four Frontier strongholds, deterministic objective order, regional placement, independent garrisons, locked objectives, save/load and final conquest |
 | workplace_assignments.gd | Builder workplace capacity/radius, repair material consumption, reachable depot selection, job priority reassignment and v9 save validation |
-| production_worksites.gd | Lumber Camp/Quarry workplace limits, specialist work radius, Classic fallback, cleanup and v9 save compatibility |
+| production_worksites.gd | Lumber Camp/Quarry workplace limits, specialist work radius, Classic fallback, cleanup and v11 save compatibility |
 | map_stages.gd | empat biome, fog map panel, batas tiga bab, bobot archer/brute per bab |
 | responsive_layout.gd | expanded integer-scaled viewport, HUD/map/hotbar bounds across five logical resolutions |
 | player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, archer projectile, brute armor, combat save |
@@ -52,7 +53,7 @@ Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; 
 Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan key dictionary inventori.
 
 ## Skrip yang dijalankan otomatis di CI
-Suite headless CI yang berbasis assertion mencakup: `animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `faction_registry`, `production_worksites`,
+Suite headless CI yang berbasis assertion mencakup: `animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `faction_registry`, `frontier_campaign`, `production_worksites`,
 `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`,
 `territory_claims`, `world_config`, dan `frontier_world`.
 

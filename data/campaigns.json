@@ -1,0 +1,19 @@
+{
+  "classic": {
+    "final_day": 15, "base": 6, "per_day": 3, "max": 120, "boss": "king",
+    "stages": [
+      {"id":"frontier","label":"BAB I","name":"PERBATASAN","from_day":1,"to_day":5,"summary":"Bangun ekonomi dan siapkan pertahanan pertama."},
+      {"id":"black_march","label":"BAB II","name":"PAWAI HITAM","from_day":6,"to_day":10,"summary":"Pemanah dan penghancur mulai menekan garis pertahanan."},
+      {"id":"last_siege","label":"BAB III","name":"PENGEPUNGAN AKHIR","from_day":11,"to_day":15,"summary":"Gelombang berat. Raja lawan datang pada malam terakhir."}
+    ]
+  },
+  "frontier": {
+    "final_day": 20, "base": 8, "per_day": 3, "max": 120, "boss": "king",
+    "stages": [
+      {"id":"act_1","act":1,"label":"ACT I","name":"PERBATASAN HIJAU","from_day":1,"to_day":5,"summary":"Temukan Greenwood dan hancurkan kamp perampok."},
+      {"id":"act_2","act":2,"label":"ACT II","name":"JALUR PEGUNUNGAN","from_day":6,"to_day":10,"summary":"Selamatkan penyintas dan kawal karavan melewati Highlands."},
+      {"id":"act_3","act":3,"label":"ACT III","name":"RAHASIA RAWA","from_day":11,"to_day":15,"summary":"Bersihkan reruntuhan Fenlands dan pertahankan pos penjagaan."},
+      {"id":"act_4","act":4,"label":"ACT IV","name":"PENGEPUNGAN ABU","from_day":16,"to_day":20,"summary":"Evakuasi pengungsi, runtuhkan kamp Ashen, lalu kalahkan Raja."}
+    ]
+  }
+}

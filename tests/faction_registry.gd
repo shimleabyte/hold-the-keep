@@ -83,7 +83,7 @@ func _run() -> void:
     assert(rival.hp == rival_hp, "War Shaman must not heal a rival faction unit")
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 10, "Faction persistence must increment save format to v10")
+    assert(snapshot["version"] == 11, "Phase 07 campaign state must use save format v11")
     var found_faction_save := false
     for saved_enemy in snapshot["enemies"]:
         if String(saved_enemy.get("faction", "")).is_empty():
@@ -94,5 +94,5 @@ func _run() -> void:
     assert(found_faction_save, "Save must retain faction identity for spawned enemies")
     assert(save_system._valid_save(snapshot), "Faction-enabled save must pass structural validation")
 
-    print("PASS: faction data, regional mapping, garrison rosters, faction tint, shaman support and v10 persistence")
+    print("PASS: faction data, regional mapping, garrison rosters, faction tint, shaman support and v11 persistence")
     quit(0)

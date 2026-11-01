@@ -203,6 +203,10 @@ func _on_stronghold_conquered(stronghold_id: String, region: String, _cell: Vect
 func _emit_campaign_completion() -> void:
     if _completion_emitted:
         return
+    if WorldConfig.profile_id == "frontier":
+        var progression = get_tree().get_first_node_in_group("frontier_campaign")
+        if progression == null or not progression.is_victory_ready():
+            return
     _completion_emitted = true
     _sync_primary()
     Events.campaign_won.emit(GameClock.day)

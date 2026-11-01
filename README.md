@@ -60,11 +60,11 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 - Setiap penduduk mengonsumsi 2 makanan per hari. Kekurangan makanan membuat satu penduduk pergi.
 - Bangunan: rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Pos Terdepan, Kamp Penebang, Kuari, jalan, dan jembatan.
 - Kamp Penebang menyediakan dua workplace woodcutter dengan radius kerja 18 tile; Kuari menyediakan dua workplace miner dengan radius 16 tile. Jika belum ada fasilitas khusus, pekerja tetap memakai radius depot seperti pada Classic lama. Jika semua slot fasilitas penuh, pekerja tambahan tidak mengambil alih area kerja fasilitas tersebut.
-- Teknologi 17-node dalam 3 era memperkuat ekonomi, pertahanan, dan pasukan.
+- Teknologi 20-node dalam 3 era memperkuat ekonomi, pertahanan, eksplorasi, dan pengepungan.
 
 ### Simpanan dan pengaturan
 - Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
-- Save versi 10 menyimpan world/campaign state, pekerjaan, prioritas kerja, state bangunan/resource, dan identitas faksi musuh; save versi 1–9 tetap diterima melalui jalur kompatibilitas.
+- Save versi 11 menyimpan world/campaign state, objektif regional, situs dan progres pengawalan, pekerjaan, state bangunan/resource, serta identitas faksi musuh; save versi 1–10 tetap diterima melalui jalur kompatibilitas.
 - Penulisan save memakai file sementara dan salinan pemulihan; loader mencoba salinan tersebut bila file utama rusak.
 - Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
@@ -75,7 +75,7 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 3. Hasil: `build/windows/HoldTheKeep.exe` dan `build/linux/HoldTheKeep.x86_64` (PCK tertanam)
 
 ## Teknologi
-Pohon riset 17 teknologi dalam 3 era (data/techs.json), dibuka dengan Y:
+Pohon riset 20 teknologi dalam 3 era (data/techs.json), dibuka dengan Y:
 - **Era Kayu** (awal): perkakas, bajak, palisade, rumah panjang, panah berbulu, dan **Ilmu Batu** (naik era)
 - **Era Batu**: perkakas batu, lumbung, menara batu, zirah kulit, latihan prajurit, dan **Tambang Besi** (naik era)
 - **Era Besi**: perkakas, senjata, zirah, menara, dan benteng besi (sebagian butuh bangunan Tempa)
@@ -90,7 +90,7 @@ Peta strategis dibuka dengan TAB atau tombol MAP di HUD. Peta menampilkan hanya 
 ## Wilayah dan kampanye
 Keep mengklaim area awal dalam radius 10 tile. Pos Terdepan (hotkey 6) memperluas klaim dalam radius 9 tile dan hanya boleh dibangun di frontier sendiri. Benteng lawan ditempatkan pada lokasi yang dapat dicapai di peta yang sama, mengklaim radius 9 tile, dan dijaga oleh prajurit yang berpatroli serta menerima penguatan berkala. Garis emas menunjukkan wilayah pemain; garis merah menunjukkan wilayah lawan.
 
-Fog of war menutup peta yang belum dijelajahi. Player, Keep, Pos Terdepan, dan villager membuka area; wilayah yang sudah ditemukan tetap terlihat setelah disimpan dan dimuat. Setelah benteng lawan ditemukan, tekan G untuk mengirim semua villager dengan job prajurit. Prajurit menyerang penjaga dahulu, lalu menghancurkan benteng (900 HP). Tekan G lagi untuk menarik pasukan kembali ke Keep. Benteng hancur = kemenangan kampanye; kemenangan bertahan hari ke-15 melawan Raja Lawan tetap menjadi jalur kemenangan lain.
+Fog of war menutup peta yang belum dijelajahi. Player, Keep, Pos Terdepan, dan villager membuka area; wilayah yang sudah ditemukan tetap terlihat setelah disimpan dan dimuat. Setelah benteng lawan ditemukan, tekan G untuk mengirim semua villager dengan job prajurit. Prajurit menyerang penjaga dahulu, lalu menghancurkan benteng (900 HP). Tekan G lagi untuk menarik pasukan kembali ke Keep. Classic mempertahankan jalur kemenangan 15 hari melawan Raja Lawan atau menaklukkan Keep lawan. Frontier adalah Conquest 20 hari: empat stronghold dan seluruh objektif regional harus selesai sebelum Raja pada hari ke-20 dikalahkan.
 
 ## HUD
 HUD permanen diringkas menjadi resource, jam, populasi, tombol MAP/JOBS/riset, vitals pemain dan Keep, indikator bab, serta bar bangunan. Kuota job berada di drawer JOBS dan tertutup secara default. XP dan Q/C/V tampil sebagai bar kompak di atas hotbar; detail bantuan tetap tersedia lewat H. Health bar Raja Lawan atau Benteng Lawan muncul saat relevan.
@@ -129,5 +129,9 @@ diam (2), jalan (4), lari (4), serang (4), kerja (4), kena pukul (1), mati (3).
 Font HUD: Silkscreen (c) The Silkscreen Project Authors, SIL Open Font License 1.1
 (lihat `assets/fonts/OFL-Silkscreen.txt`). Font hanya punya huruf kapital.
 
-Belum ada: musik, rebind shortcut UI/job/build, multi-basis dan multi-region campaign, upgrade khusus invasi, ikon .ico untuk Windows, integrasi Steam.
+Belum ada: musik, rebind shortcut UI/job/build, upgrade khusus invasi, ikon .ico untuk Windows, integrasi Steam.
 Visual masih placeholder prosedural.
+
+
+## Frontier Conquest
+Frontier memakai kampanye 20 hari dalam empat act; Classic tetap 15 hari. Tekan **O** untuk membuka tracker objektif. Tekan **TAB** untuk peta strategis; situs objektif yang sudah ditemukan muncul sebagai marker dengan bentuk/warna sesuai jenis. Marker untuk act terkunci dibuat redup. Gunakan **E** di situs bertanda untuk memulai penyelamatan/pengawalan atau mengaktifkan pertahanan; kamp dan reruntuhan dihancurkan dengan serangan pemain. Cartography memperluas reveal radius Outpost; Siegecraft meningkatkan damage pemain terhadap stronghold, kamp, dan reruntuhan. Kemenangan Conquest mensyaratkan semua objektif regional, empat stronghold, dan Raja pada hari ke-20.

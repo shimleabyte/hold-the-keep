@@ -9,6 +9,8 @@ var waves: Dictionary = {}
 var events: Array = []
 var techs: Dictionary = {}
 var tech_order: Array = []
+var campaign_modes: Dictionary = {}
+var frontier_objectives: Array = []
 
 
 func _ready() -> void:
@@ -38,6 +40,12 @@ func _ready() -> void:
     var w = _load_json("res://data/waves.json")
     if w is Dictionary:
         waves = w
+    var campaign_data = _load_json("res://data/campaigns.json")
+    if campaign_data is Dictionary:
+        campaign_modes = campaign_data
+    var objective_data = _load_json("res://data/frontier_objectives.json")
+    if objective_data is Array:
+        frontier_objectives = objective_data
 
 
 func _load_json(path: String) -> Variant:

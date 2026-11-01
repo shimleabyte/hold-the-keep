@@ -11,8 +11,8 @@ const ICONS := {
 }
 const ERA_COLORS := [Color.WHITE, Color("#c9a06a"), Color("#aeb3b9"), Color("#e8803a")]
 const NODE_W := 136
-const NODE_H := 28
-const STEP := 30
+const NODE_H := 25
+const STEP := 27
 const COL_X := [10, 160, 310]
 const TOP := 36
 const GOLD := Color("#ffd23f")
@@ -48,7 +48,7 @@ func _ready() -> void:
     _root.add_child(_dim)
 
     _panel = Panel.new()
-    _panel.size = Vector2(472, 262)
+    _panel.size = Vector2(472, 264)
     var sb := StyleBoxFlat.new()
     sb.bg_color = Color("#171d20")
     sb.border_color = Color("#a17b4d")
@@ -96,7 +96,7 @@ func _ready() -> void:
         per_era[era] += 1
 
     for i in 3:
-        _foot.append(_label(_panel, "", Vector2(8, 220 + i * 11), Color.WHITE))
+        _foot.append(_label(_panel, "", Vector2(8, 222 + i * 10), Color.WHITE))
 
     Events.tech_panel_requested.connect(_open)
     Events.tech_researched.connect(func(_id: String) -> void: _refresh())
