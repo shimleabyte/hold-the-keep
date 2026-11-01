@@ -121,7 +121,7 @@ func create_shipment(source_cell: Vector2i, destination_cell: Vector2i, kind: St
         if destination.stockpile_total() + reserved + amount > destination.stockpile_capacity:
             return -1
 
-    var withdrawn := Inventory.spend(kind, amount) if source.id == "keep" else source.take_resource(kind, amount)
+    var withdrawn: bool = Inventory.spend(kind, amount) if source.id == "keep" else source.take_resource(kind, amount)
     if not withdrawn:
         return -1
 
