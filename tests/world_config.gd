@@ -31,5 +31,39 @@ func _initialize() -> void:
     assert(int(frontier.get("iron_veins", 0)) == 32,
         "Frontier resource density must scale with the fourfold map area")
 
-    print("PASS: centralized Classic/Frontier world profiles and tile indexing")
+    var main = load("res://scenes/main.tscn").instantiate()
+    root.add_child(main)
+    current_scene = main
+    await process_frame
+    await process_frame
+    await process_frame
+    GameClock.set_process(false)
+
+    var current_save: Dictionary = SaveSystem.collect(main)
+    assert(current_save["world"]["profile"] == "classic",
+        "New saves must record the active world profile")
+    assert(current_save["world"]["map_size"] == 64,
+        "New Classic saves must record the original map dimensions")
+    assert(SaveSystem._valid_save(current_save),
+        "A current v7 save must validate against its matching world configuration")
+
+    var legacy_save := current_save.duplicate(true)
+    legacy_save["version"] = 6
+    legacy_save.erase("world")
+    assert(SaveSystem._valid_save(legacy_save),
+        "A v6 save must remain compatible with Classic Mode")
+
+    var incompatible_save := current_save.duplicate(true)
+    incompatible_save["world"]["profile"] = "frontier"
+    incompatible_save["world"]["map_size"] = 128
+    assert(not SaveSystem._valid_save(incompatible_save),
+        "A save from another profile or map size must be rejected")
+
+    var legacy_profile := WorldConfig.profile_id
+    WorldConfig.profile_id = "frontier"
+    assert(not SaveSystem._valid_save(legacy_save),
+        "Legacy 64x64 saves must not load into the Frontier profile")
+    WorldConfig.profile_id = legacy_profile
+
+    print("PASS: world profiles, tile indexing, and save profile compatibility")
     quit()
