@@ -2,6 +2,8 @@ extends SceneTree
 ## Responsive viewport and HUD layout regression checks across common desktop aspect ratios.
 
 func _initialize() -> void:
+    var game_clock = root.get_node("GameClock")
+    var settings = root.get_node("Settings")
     DirAccess.remove_absolute("user://save.json")
     DirAccess.remove_absolute("user://save.tmp")
     DirAccess.remove_absolute("user://save.bak")
@@ -11,23 +13,23 @@ func _initialize() -> void:
     current_scene = main
     await process_frame
     await process_frame
-    GameClock.set_process(false)
+    game_clock.set_process(false)
 
-    assert(String(ProjectSettings.get_setting("display/window/stretch/aspect")) == "expand",
+    assert(String(Projectsettings.get_setting("display/window/stretch/aspect")) == "expand",
         "The project must expand the viewport instead of cropping or distorting the game")
-    assert(String(ProjectSettings.get_setting("display/window/stretch/mode")) == "viewport",
+    assert(String(Projectsettings.get_setting("display/window/stretch/mode")) == "viewport",
         "Pixel-art world rendering must remain viewport-based")
-    assert(String(ProjectSettings.get_setting("display/window/stretch/scale_mode")) == "integer",
+    assert(String(Projectsettings.get_setting("display/window/stretch/scale_mode")) == "integer",
         "Pixel-art scaling must remain integer-based")
     assert(root.min_size.x >= 960 and root.min_size.y >= 540,
         "Runtime window minimum size must remain laptop-friendly")
-    assert(int(ProjectSettings.get_setting("display/window/size/initial_position_type")) == 1,
+    assert(int(Projectsettings.get_setting("display/window/size/initial_position_type")) == 1,
         "The initial window must be centered on the primary screen")
-    assert(Settings.windowed_size.x >= 960 and Settings.windowed_size.y >= 540,
+    assert(settings.windowed_size.x >= 960 and settings.windowed_size.y >= 540,
         "Saved windowed size must satisfy the minimum display dimensions")
     var screen_size := DisplayServer.screen_get_size()
-    assert(Settings.windowed_size.x <= maxi(960, screen_size.x)
-        and Settings.windowed_size.y <= maxi(540, screen_size.y),
+    assert(settings.windowed_size.x <= maxi(960, screen_size.x)
+        and settings.windowed_size.y <= maxi(540, screen_size.y),
         "Default and saved windowed sizes must not exceed the active display")
 
     var hud = get_first_node_in_group("hud")
@@ -78,7 +80,7 @@ func _initialize() -> void:
         "Pause overlay root must fill the viewport")
     assert(pause._resolution_values.size() > 0,
         "The pause menu must expose at least one monitor-compatible window preset")
-    assert(pause._resolution_values.has(Settings.windowed_size),
+    assert(pause._resolution_values.has(settings.windowed_size),
         "The currently saved window size must remain selectable")
 
     print("PASS: expanded integer-scaled viewport and responsive HUD/map layout at five resolutions")
