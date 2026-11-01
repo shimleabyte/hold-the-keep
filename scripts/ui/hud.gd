@@ -739,7 +739,7 @@ func _refresh_shipment_controls() -> void:
 
         var source_name := _shipment_name(Vector2i(int(order["source_x"]), int(order["source_y"])))
         var destination_name := _shipment_name(Vector2i(int(order["destination_x"]), int(order["destination_y"])))
-        var state_name := main_node.supply.get_shipment_status_label(String(order["status"]))
+        var state_name: String = main_node.supply.get_shipment_status_label(String(order["status"]))
         var detail := Label.new()
         detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         detail.add_theme_font_override("font", _font)
