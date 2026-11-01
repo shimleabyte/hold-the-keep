@@ -1,10 +1,6 @@
 extends Node2D
 ## Permanent exploration fog: unrevealed tiles are covered; discovered tiles remain mapped.
 
-const TILE := 16
-const MAP_SIZE := 64
-const MAP_CELLS := MAP_SIZE * MAP_SIZE
-
 var world
 var player
 var discovered := PackedByteArray()
@@ -14,14 +10,14 @@ var _scan_timer := 0.0
 func _ready() -> void:
     add_to_group("fog_of_war")
     z_index = 100
-    discovered.resize(MAP_CELLS)
+    discovered.resize(WorldConfig.map_cells)
     discovered.fill(0)
     _scan_sources()
 
 
 func export_state() -> Dictionary:
     var cells: Array[int] = []
-    for index in MAP_CELLS:
+    for index in WorldConfig.map_cells:
         if discovered[index] != 0:
             cells.append(index)
     return {"cells": cells}
@@ -33,7 +29,7 @@ func import_state(data: Dictionary) -> void:
     if cells is Array:
         for value in cells:
             var index := int(value)
-            if index >= 0 and index < MAP_CELLS:
+            if index >= 0 and index < WorldConfig.map_cells:
                 discovered[index] = 1
     queue_redraw()
 
@@ -47,21 +43,21 @@ func _process(delta: float) -> void:
 
 
 func is_revealed_cell(cell: Vector2i) -> bool:
-    if cell.x < 0 or cell.y < 0 or cell.x >= MAP_SIZE or cell.y >= MAP_SIZE:
+    if cell.x < 0 or cell.y < 0 or cell.x >= WorldConfig.map_size or cell.y >= WorldConfig.map_size:
         return false
-    return discovered[cell.y * MAP_SIZE + cell.x] != 0
+    return discovered[cell.y * WorldConfig.map_size + cell.x] != 0
 
 
 func reveal_position(position_world: Vector2, radius: float) -> bool:
-    var center := Vector2i((position_world / TILE).floor())
-    var radius_tiles := ceili(radius / TILE)
+    var center := Vector2i((position_world / WorldConfig.tile_size).floor())
+    var radius_tiles := ceili(radius / WorldConfig.tile_size)
     var changed := false
-    for y in range(maxi(0, center.y - radius_tiles), mini(MAP_SIZE - 1, center.y + radius_tiles) + 1):
-        for x in range(maxi(0, center.x - radius_tiles), mini(MAP_SIZE - 1, center.x + radius_tiles) + 1):
+    for y in range(maxi(0, center.y - radius_tiles), mini(WorldConfig.map_size - 1, center.y + radius_tiles) + 1):
+        for x in range(maxi(0, center.x - radius_tiles), mini(WorldConfig.map_size - 1, center.x + radius_tiles) + 1):
             var offset := Vector2(x + 0.5, y + 0.5) - Vector2(center) - Vector2(0.5, 0.5)
-            if offset.length_squared() * TILE * TILE > radius * radius:
+            if offset.length_squared() * WorldConfig.tile_size * WorldConfig.tile_size > radius * radius:
                 continue
-            var index := y * MAP_SIZE + x
+            var index := y * WorldConfig.map_size + x
             if discovered[index] == 0:
                 discovered[index] = 1
                 changed = true
@@ -86,7 +82,7 @@ func _scan_sources() -> void:
 
 func _draw() -> void:
     var unexplored := Color(0.012, 0.016, 0.024, 0.96)
-    for y in MAP_SIZE:
-        for x in MAP_SIZE:
-            if discovered[y * MAP_SIZE + x] == 0:
-                draw_rect(Rect2(x * TILE, y * TILE, TILE, TILE), unexplored)
+    for y in WorldConfig.map_size:
+        for x in WorldConfig.map_size:
+            if discovered[y * WorldConfig.map_size + x] == 0:
+                draw_rect(Rect2(x * WorldConfig.tile_size, y * WorldConfig.tile_size, WorldConfig.tile_size, WorldConfig.tile_size), unexplored)

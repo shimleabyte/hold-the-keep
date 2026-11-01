@@ -2,8 +2,6 @@ extends Node
 ## A* grid untuk villager. Pohon, batu, air, dan semua bangunan = solid.
 ## Dibangun ulang saat bangunan berubah; `version` naik tiap rebuild.
 
-const MAP_SIZE := 64
-const TILE := 16
 const DIRS4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 var world
@@ -14,9 +12,9 @@ var _dirty := true
 
 
 func _ready() -> void:
-    astar.region = Rect2i(0, 0, MAP_SIZE, MAP_SIZE)
-    astar.cell_size = Vector2(TILE, TILE)
-    astar.offset = Vector2(TILE / 2.0, TILE / 2.0)
+    astar.region = Rect2i(0, 0, WorldConfig.map_size, WorldConfig.map_size)
+    astar.cell_size = Vector2(WorldConfig.tile_size, WorldConfig.tile_size)
+    astar.offset = Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0)
     astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
     astar.update()
     Events.building_placed.connect(_on_building_event)
@@ -35,23 +33,23 @@ func _physics_process(_delta: float) -> void:
 
 func rebuild() -> void:
     _dirty = false
-    for y in MAP_SIZE:
-        for x in MAP_SIZE:
+    for y in WorldConfig.map_size:
+        for x in WorldConfig.map_size:
             var c := Vector2i(x, y)
             astar.set_point_solid(c, not world.is_buildable(c) or world.occupied.get(c) != null)
     version += 1
 
 
 func cell_of(pos: Vector2) -> Vector2i:
-    return Vector2i((pos / TILE).floor())
+    return Vector2i((pos / WorldConfig.tile_size).floor())
 
 
 func center_of(c: Vector2i) -> Vector2:
-    return Vector2(c) * TILE + Vector2(TILE / 2.0, TILE / 2.0)
+    return Vector2(c) * WorldConfig.tile_size + Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0)
 
 
 func is_walkable(c: Vector2i) -> bool:
-    return c.x >= 0 and c.y >= 0 and c.x < MAP_SIZE and c.y < MAP_SIZE and not astar.is_point_solid(c)
+    return c.x >= 0 and c.y >= 0 and c.x < WorldConfig.map_size and c.y < WorldConfig.map_size and not astar.is_point_solid(c)
 
 
 func _nearest_free(c: Vector2i) -> Vector2i:

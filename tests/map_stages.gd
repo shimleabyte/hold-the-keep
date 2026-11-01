@@ -14,6 +14,7 @@ func enemy_entry(pool: Array, enemy_id: String) -> Dictionary:
 
 
 func _initialize() -> void:
+    var game_clock = root.get_node("GameClock")
     DirAccess.remove_absolute("user://save.json")
     DirAccess.remove_absolute("user://save.tmp")
     DirAccess.remove_absolute("user://save.bak")
@@ -22,7 +23,7 @@ func _initialize() -> void:
     root.add_child(main)
     current_scene = main
     await ticks(4)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
 
     assert(main.world.region_id(Vector2i(32, 32)) == "HEARTHLAND",
         "The central region must be identified as Hearthland")

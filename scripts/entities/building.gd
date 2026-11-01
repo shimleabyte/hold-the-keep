@@ -1,7 +1,6 @@
 extends StaticBody2D
 ## Bangunan. Origin node = tengah-bawah footprint (untuk Y-sort).
 
-const TILE := 16
 const TEXTURES := {
     "keep": preload("res://assets/sprites/keep.svg"),
     "house": preload("res://assets/sprites/house.svg"),
@@ -42,7 +41,7 @@ func setup(d: Dictionary, anchor: Vector2i) -> void:
     _range = float(data.get("range", 0.0))
     _damage = int(data.get("damage", 0))
     _interval = float(data.get("fire_interval", 1.0))
-    position = Vector2((cell.x + size.x / 2.0) * TILE, (cell.y + size.y) * TILE)
+    position = Vector2((cell.x + size.x / 2.0) * WorldConfig.tile_size, (cell.y + size.y) * WorldConfig.tile_size)
 
 
 func cells() -> Array[Vector2i]:
@@ -54,8 +53,8 @@ func cells() -> Array[Vector2i]:
 
 
 func _ready() -> void:
-    var w := size.x * TILE
-    var h := size.y * TILE
+    var w := size.x * WorldConfig.tile_size
+    var h := size.y * WorldConfig.tile_size
     var shape := RectangleShape2D.new()
     shape.size = Vector2(w, h)
     var col := CollisionShape2D.new()
@@ -77,7 +76,7 @@ func _physics_process(delta: float) -> void:
     _fire_cd -= delta
     if _fire_cd > 0.0:
         return
-    var from := global_position + Vector2(0, -size.y * TILE * 1.2)
+    var from := global_position + Vector2(0, -size.y * WorldConfig.tile_size * 1.2)
     var best: Node2D = null
     var best_d := _range * Tech.stat("tower.range", 1.0)
     for e in get_tree().get_nodes_in_group("enemies"):
@@ -170,8 +169,8 @@ func demolish() -> void:
 
 
 func _draw() -> void:
-    var w := float(size.x * TILE)
-    var h := float(size.y * TILE)
+    var w := float(size.x * WorldConfig.tile_size)
+    var h := float(size.y * WorldConfig.tile_size)
     var tex_h := h
     if TEXTURES.has(id):
         var tex: Texture2D = TEXTURES[id]

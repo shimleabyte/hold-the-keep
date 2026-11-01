@@ -1,6 +1,6 @@
 # Hold the Keep
 
-> Konteks lengkap proyek (arsitektur, status, keputusan, rencana): [CONTEXT.md](CONTEXT.md). Skrip tes: [tests/README.md](tests/README.md).
+> Konteks proyek: [CONTEXT.md](CONTEXT.md). Roadmap ekspansi kerajaan: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Skrip tes: [tests/README.md](tests/README.md).
 
 Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (GDScript).
 

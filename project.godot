@@ -11,6 +11,7 @@ boot_splash/show_image=false
 
 [autoload]
 
+WorldConfig="*res://scripts/autoload/world_config.gd"
 InputSetup="*res://scripts/autoload/input_setup.gd"
 Events="*res://scripts/autoload/events.gd"
 DataDB="*res://scripts/autoload/data_db.gd"
@@ -20,6 +21,11 @@ Tech="*res://scripts/autoload/tech.gd"
 GameClock="*res://scripts/autoload/game_clock.gd"
 SaveSystem="*res://scripts/autoload/save_system.gd"
 Audio="*res://scripts/autoload/audio.gd"
+
+[world]
+
+profile="classic"
+seed=1337
 
 [debug]
 

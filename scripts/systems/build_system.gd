@@ -2,7 +2,6 @@ extends Node2D
 ## Mode bangun: pilih dengan 1-4, klik kiri pasang (tahan untuk melukis),
 ## klik kanan batal / bongkar (refund 50%), Esc batal.
 
-const TILE := 16
 const BUILD_RANGE := 120.0
 const REFUND_RATE := 0.5
 const BUILDING_SCRIPT := preload("res://scripts/entities/building.gd")
@@ -69,7 +68,7 @@ func _process(_delta: float) -> void:
 
 
 func _mouse_cell() -> Vector2i:
-    return Vector2i((get_global_mouse_position() / TILE).floor())
+    return Vector2i((get_global_mouse_position() / WorldConfig.tile_size).floor())
 
 
 func _size_of(id: String) -> Vector2i:
@@ -79,7 +78,7 @@ func _size_of(id: String) -> Vector2i:
 
 ## Tile kiri-atas footprint supaya bangunan berpusat di kursor.
 func _anchor_for(id: String, world_pos: Vector2) -> Vector2i:
-    return Vector2i((world_pos / TILE - Vector2(_size_of(id)) / 2.0 + Vector2(0.5, 0.5)).floor())
+    return Vector2i((world_pos / WorldConfig.tile_size - Vector2(_size_of(id)) / 2.0 + Vector2(0.5, 0.5)).floor())
 
 
 ## Mengembalikan "" jika valid, selain itu pesan alasannya.
@@ -98,7 +97,7 @@ func check(id: String, c: Vector2i) -> String:
         if id == "outpost":
             return "Pos Terdepan harus terhubung ke wilayah sendiri"
         return "Di luar wilayah. Bangun Pos Terdepan di perbatasan"
-    var rect := Rect2(Vector2(c) * TILE, Vector2(size) * TILE)
+    var rect := Rect2(Vector2(c) * WorldConfig.tile_size, Vector2(size) * WorldConfig.tile_size)
     if player != null:
         if rect.grow(6).has_point(player.global_position + Vector2(0, -4)):
             return "Ada pemain di situ"
@@ -154,7 +153,7 @@ func _draw() -> void:
     var size := _size_of(active)
     var ok := check(active, c) == ""
     var col := Color(0.3, 1.0, 0.4, 0.4) if ok else Color(1.0, 0.3, 0.3, 0.4)
-    var rect := Rect2(Vector2(c) * TILE, Vector2(size) * TILE)
+    var rect := Rect2(Vector2(c) * WorldConfig.tile_size, Vector2(size) * WorldConfig.tile_size)
     draw_rect(rect, col)
     draw_rect(rect, Color(col, 0.9), false, 1.0)
     var textures: Dictionary = BUILDING_SCRIPT.TEXTURES

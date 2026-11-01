@@ -212,3 +212,13 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 - `scripts/entities/sprite_anim.gd` adds pixel-snapped secondary motion: desynchronized idle breathing, walk/run lift, directional attack anticipation/lunge, work lean at the strike point, and hurt recoil. Translation is separated from horizontal mirroring so left-facing attacks move in the correct direction.
 - `scripts/entities/fx_layer.gd` adds a short high-contrast impact burst and directional streaks for fast particles. Enemy damage now uses the dedicated impact burst instead of the generic spark.
 - `tests/animation_motion.gd` asserts the expected motion direction and state-specific behavior. Godot execution and rendered frame comparisons remain pending because the engine is unavailable in the implementation environment.
+
+
+## 19. Next-level kingdom expansion roadmap (2026-11-01)
+- Product direction: evolve the existing village-defense/action-combat game into a frontier kingdom strategy campaign while preserving the original 15-day experience as Classic Mode.
+- Authoritative plan: `ROADMAP_NEXT_LEVEL.md`. It defines the target 128x128 Frontier world, five terrain biomes, a 15-tile starting Keep claim, multiple regional strongholds, four enemy factions, additional labor/military roles, new infrastructure and a 20-day conquest campaign.
+- Implementation order is dependency-driven: (00) CI/save/world configuration; (01) expanded deterministic world; (02) territory, roads and supply; (03) multi-stronghold campaign; (04) jobs/workplaces; (05) buildings/production; (06) faction AI/enemy archetypes; (07) technology/objectives; (08) art/audio; (09) balancing and release validation.
+- Phase 00 is being implemented on `feat/kingdom-expansion-foundation`. The initial profile remains `classic` (64x64, 10-tile Keep claim) until the Frontier profile is fully migrated and tested. `WorldConfig` is the new source of truth for dimensions, tile size, seed, Keep claim radius and profile resource density.
+- Save format v7 records world profile, dimensions, tile size and seed. Legacy v1-v6 saves remain valid only in the Classic profile; they must not be loaded into a differently generated Frontier world.
+- CI is introduced for Godot 4.3 and 4.7 with a full GDScript parse pass and headless regression suite. Screenshot/render checks and manual playtesting remain separate release gates.
+- Do not enable the Frontier profile until world generation, Keep placement, territory, fog, navigation, enemy routing, resource density and save migration have dedicated coverage at 128x128.

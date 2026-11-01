@@ -3,7 +3,6 @@ extends Node2D
 
 const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
 const SPRITE := preload("res://assets/sprites/enemy_keep.svg")
-const TILE := 16
 const SIZE := Vector2i(3, 3)
 const MAX_HP := 900
 const CLAIM_RADIUS := 9.0
@@ -35,7 +34,7 @@ func setup(world_ref, flow_ref, player_ref, anchor: Vector2i, saved_hp := MAX_HP
     size = SIZE
     max_hp = MAX_HP
     hp = clampi(saved_hp, 1, max_hp)
-    position = Vector2((cell.x + size.x / 2.0) * TILE, (cell.y + size.y) * TILE)
+    position = Vector2((cell.x + size.x / 2.0) * WorldConfig.tile_size, (cell.y + size.y) * WorldConfig.tile_size)
 
 
 func _ready() -> void:
@@ -86,20 +85,20 @@ func _process(delta: float) -> void:
 func _spawn_guard() -> bool:
     var directions := GUARD_DIRECTIONS.size()
     var attempts := directions * GUARD_RINGS.size()
-    var fortress_center := position + Vector2(0, -size.y * TILE / 2.0)
+    var fortress_center := position + Vector2(0, -size.y * WorldConfig.tile_size / 2.0)
     for i in attempts:
         var slot := (_spawn_index + i) % attempts
         var ring_index := floori(float(slot) / directions)
         var direction: Vector2 = Vector2(GUARD_DIRECTIONS[slot % directions])
-        var spawn_position := fortress_center + direction * float(GUARD_RINGS[ring_index] * TILE)
-        var spawn_cell := Vector2i((spawn_position / TILE).floor())
+        var spawn_position := fortress_center + direction * float(GUARD_RINGS[ring_index] * WorldConfig.tile_size)
+        var spawn_cell := Vector2i((spawn_position / WorldConfig.tile_size).floor())
         if not world.is_buildable(spawn_cell) or world.occupied.has(spawn_cell):
             continue
         if not flow.is_reachable(spawn_cell):
             continue
         var too_close := false
         for existing_guard in get_tree().get_nodes_in_group("enemy_garrison"):
-            if existing_guard.position.distance_to(spawn_position) < TILE * 1.5:
+            if existing_guard.position.distance_to(spawn_position) < WorldConfig.tile_size * 1.5:
                 too_close = true
                 break
         if too_close:

@@ -1,0 +1,49 @@
+name: Godot CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feat/**"
+      - "fix/**"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: godot-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Godot ${{ matrix.godot-version }} · parse and regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        godot-version: ["4.3.0", "4.7.0"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: ${{ matrix.godot-version }}
+          use-dotnet: false
+
+      - name: Verify engine and import project
+        run: |
+          godot --headless --version
+          godot --headless --path . --import
+
+      - name: Parse every GDScript file
+        run: bash tools/check_gdscript.sh
+
+      - name: Run headless regression suite
+        run: bash tools/run_tests.sh

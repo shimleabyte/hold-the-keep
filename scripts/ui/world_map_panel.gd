@@ -1,8 +1,6 @@
 extends Control
 ## Exploration-aware strategic map. Unexplored cells stay hidden; all markers use world coordinates.
 
-const MAP_SIZE := 64
-const TILE_SIZE := 16
 var _map_scale := 3.0
 var _map_pixels := 192.0
 var _map_origin := Vector2(64.0, 20.0)
@@ -46,8 +44,8 @@ func configure(world_ref, fog_ref, territory_ref, font_ref: Font = null) -> void
 func configure_layout(viewport_size: Vector2) -> void:
     var available_width := maxf(192.0, viewport_size.x - 150.0)
     var available_height := maxf(192.0, viewport_size.y - 70.0)
-    _map_scale = clampf(minf(available_width, available_height) / float(MAP_SIZE), 3.0, 4.5)
-    _map_pixels = MAP_SIZE * _map_scale
+    _map_scale = clampf(minf(available_width, available_height) / float(WorldConfig.map_size), 3.0, 4.5)
+    _map_pixels = WorldConfig.map_size * _map_scale
     size = Vector2(_map_pixels + 128.0, _map_pixels + 50.0)
     _map_origin = Vector2((size.x - _map_pixels) * 0.5, 20.0)
     queue_redraw()
@@ -94,8 +92,8 @@ func _draw() -> void:
     if territory != null:
         territory._ensure_current()
 
-    for y in MAP_SIZE:
-        for x in MAP_SIZE:
+    for y in WorldConfig.map_size:
+        for x in WorldConfig.map_size:
             var cell := Vector2i(x, y)
             var rect := Rect2(_map_origin + Vector2(x, y) * _map_scale, Vector2(_map_scale, _map_scale))
             if not fog.is_revealed_cell(cell):
@@ -135,7 +133,7 @@ func _draw() -> void:
     _draw_camera_window()
     _draw_player_marker()
 
-    for grid in range(8, MAP_SIZE, 8):
+    for grid in range(8, WorldConfig.map_size, 8):
         var line_color := Color(0.82, 0.76, 0.62, 0.2)
         var offset := float(grid) * _map_scale
         draw_line(_map_origin + Vector2(offset, 0), _map_origin + Vector2(offset, _map_pixels), line_color, 1.0)
@@ -156,7 +154,7 @@ func _world_to_map(world_position: Vector2) -> Vector2:
 func _position_is_known(world_position: Vector2) -> bool:
     if fog == null:
         return false
-    var cell := Vector2i((world_position / float(TILE_SIZE)).floor())
+    var cell := Vector2i((world_position / float(WorldConfig.tile_size)).floor())
     return fog.is_revealed_cell(cell)
 
 

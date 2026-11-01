@@ -16,13 +16,15 @@ func footprint_clear(main, anchor: Vector2i, size: Vector2i) -> bool:
 
 
 func _initialize() -> void:
+    var game_clock = root.get_node("GameClock")
+    var inventory = root.get_node("Inventory")
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main
     await ticks(4)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
     main.build.player = null
-    Inventory.items = {"wood": 500, "stone": 500, "food": 500, "iron": 0}
+    inventory.items = {"wood": 500, "stone": 500, "food": 500, "iron": 0}
     main.territory.rebuild()
 
     assert(main.territory.claimed_cells.size() > 250,
