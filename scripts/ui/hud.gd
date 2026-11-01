@@ -3,6 +3,7 @@ extends CanvasLayer
 ## bar boss, bar bangunan (bisa diklik), bantuan (H), dan layar game over / menang.
 
 const PIXEL_FONT := preload("res://scripts/ui/pixel_font.gd")
+const MAP_PANEL_SCRIPT := preload("res://scripts/ui/world_map_panel.gd")
 const ICONS := {
     "wood": preload("res://assets/sprites/icon_wood.svg"),
     "stone": preload("res://assets/sprites/icon_stone.svg"),
@@ -55,6 +56,8 @@ const HELP_ROWS := [
     ["P / ESC", "MENU"],
     ["F5 / F9", "SIMPAN / MUAT"],
     ["F3", "TAMPILKAN FPS"],
+    ["TAB", "PETA WILAYAH"],
+    ["JOBS", "PANEL KUOTA"],
 ]
 
 var _font: Font
@@ -70,6 +73,13 @@ var _fps: Label
 var _iron: Label
 var _iron_icon: TextureRect
 var _tech_btn: TechButton
+var _map_button: HudChip
+var _jobs_button: HudChip
+var _jobs_panel: Panel
+var _map_backdrop: ColorRect
+var _map_panel: Control
+var _stage_label: Label
+var _stage_bar: StatBar
 var _research_panel: Panel
 var _research_name: Label
 var _research_bar: StatBar
@@ -103,6 +113,7 @@ func _ready() -> void:
 
     _build_top_bar()
     _build_vitals()
+    _build_stage_bar()
     _build_combat_bar()
     _build_jobs()
     _build_boss_bar()
@@ -110,6 +121,7 @@ func _ready() -> void:
     _build_help()
     _build_messages()
     _build_overlay()
+    _build_map()
 
     Events.resource_changed.connect(_on_resource_changed)
     Events.build_selected.connect(_on_build_selected)
@@ -122,6 +134,7 @@ func _ready() -> void:
     Events.event_triggered.connect(_on_event)
     Events.village_changed.connect(_on_village_changed)
     Events.tech_researched.connect(_on_tech_changed)
+    Events.stage_changed.connect(_on_stage_changed)
     _refresh_resources()
     _refresh_slots()
 
