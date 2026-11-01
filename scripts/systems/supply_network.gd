@@ -347,9 +347,15 @@ func _trim_shipment_history() -> void:
 
 func export_state() -> Dictionary:
     var orders := shipment_orders.duplicate(true)
-    for order in orders:
+    for index in orders.size():
+        var order: Dictionary = orders[index]
+        var carrier = _carriers.get(int(order.get("id", -1)), null)
+        if is_instance_valid(carrier):
+            order["x"] = carrier.position.x
+            order["y"] = carrier.position.y
         if String(order.get("status", "")) == "in_transit":
             order["status"] = "blocked"
+        orders[index] = order
     return {"next_id": _next_shipment_id, "orders": orders}
 
 
