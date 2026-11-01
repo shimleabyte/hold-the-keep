@@ -31,11 +31,31 @@ var world_seed := DEFAULT_SEED
 
 func _ready() -> void:
     var requested_profile := String(ProjectSettings.get_setting("world/profile", "classic"))
+    # The last selected world profile is a player preference. Read it here because
+    # WorldConfig is initialized before the Settings autoload.
+    var preferences := ConfigFile.new()
+    if preferences.load("user://settings.cfg") == OK:
+        requested_profile = String(preferences.get_value("world", "profile", requested_profile))
     if not PROFILES.has(requested_profile):
         push_error("WorldConfig: unknown world profile '%s'; falling back to Classic" % requested_profile)
         requested_profile = "classic"
 
-    profile_id = requested_profile
+    _apply_profile_values(requested_profile)
+    world_seed = int(ProjectSettings.get_setting("world/seed", DEFAULT_SEED))
+
+
+## Switches the profile before the main scene is rebuilt. Never call this mid-world.
+func apply_profile(id: String) -> bool:
+    if not PROFILES.has(id):
+        push_error("WorldConfig: cannot apply unknown profile '%s'" % id)
+        return false
+    _apply_profile_values(id)
+    ProjectSettings.set_setting("world/profile", id)
+    return true
+
+
+func _apply_profile_values(id: String) -> void:
+    profile_id = id
     var profile: Dictionary = PROFILES[profile_id]
     map_size = int(profile["map_size"])
     tile_size = TILE_SIZE
@@ -43,7 +63,6 @@ func _ready() -> void:
     starting_claim_radius = float(profile["starting_claim_radius"])
     safe_radius = float(profile["safe_radius"])
     iron_veins = int(profile["iron_veins"])
-    world_seed = int(ProjectSettings.get_setting("world/seed", DEFAULT_SEED))
 
 
 func profile_definition(id: String) -> Dictionary:
