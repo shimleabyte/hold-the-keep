@@ -6,7 +6,7 @@ func ticks(count: int) -> void:
         await physics_frame
 
 
-func _find_outpost_cell(main, keep) -> Vector2i:
+func _find_outpost_cell(main, keep, config) -> Vector2i:
     for radius in range(5, 13):
         for y in range(-radius, radius + 1):
             for x in range(-radius, radius + 1):
@@ -18,7 +18,7 @@ func _find_outpost_cell(main, keep) -> Vector2i:
                 for cy in 2:
                     for cx in 2:
                         var cell := anchor + Vector2i(cx, cy)
-                        if cell.x < 1 or cell.y < 1 or cell.x >= WorldConfig.map_size - 1 or cell.y >= WorldConfig.map_size - 1:
+                        if cell.x < 1 or cell.y < 1 or cell.x >= int(config.map_size) - 1 or cell.y >= int(config.map_size) - 1:
                             valid = false
                             break
                         if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
@@ -66,7 +66,7 @@ func _initialize() -> void:
             break
     assert(keep != null, "Frontier campaign must have a Keep")
 
-    var outpost_cell := _find_outpost_cell(main, keep)
+    var outpost_cell := _find_outpost_cell(main, keep, config)
     assert(outpost_cell.x >= 0, "Test must find a reachable 2x2 Outpost site")
     var outpost = main.build.place_raw("outpost", outpost_cell)
     await ticks(5)
