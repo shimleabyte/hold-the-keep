@@ -79,6 +79,7 @@ jobs:
           - depot_cost_sources
           - supply_pressure
           - shieldbearer_behavior
+          - scout_marking
     steps:
       - name: Checkout
         uses: actions/checkout@v7
