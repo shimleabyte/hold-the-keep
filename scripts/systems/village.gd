@@ -14,7 +14,7 @@ const KEY_TO_JOB := {KEY_T: "woodcutter", KEY_M: "miner", KEY_K: "farmer", KEY_B
 var world
 var nav
 var quota := {"woodcutter": 1, "miner": 0, "farmer": 0, "builder": 0, "soldier": 0}
-var job_priority: Array[String] = JOBS.duplicate()
+var job_priority: Array[String] = ["woodcutter", "miner", "farmer", "builder", "soldier"]
 
 var _spawn_t := 0.0
 var _assign_t := 0.0

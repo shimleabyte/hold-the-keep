@@ -17,8 +17,11 @@ func _find_buildable_near(main, origin: Vector2i, min_radius: int, max_radius: i
                     continue
                 if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
                     continue
-                if not require_reachable or not main.nav.path_adjacent(main.player.position, [cell]).is_empty():
-                    return cell
+                if require_reachable:
+                    var target_cells: Array[Vector2i] = [cell]
+                    if main.nav.path_adjacent(main.player.position, target_cells).is_empty():
+                        continue
+                return cell
     return Vector2i(-1, -1)
 
 
