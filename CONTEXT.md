@@ -15,7 +15,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 ## 2. Status fitur (implementasi aktif; status verifikasi per suite dicatat di bagian 6)
 | Area | Isi |
 |---|---|
-| Dunia | peta 64x64 prosedural (seed 1337): Hearthland, Greenwood, Highlands, Fenlands; enam atlas terrain termasuk air, density resource mengikuti biome |
+| Dunia | peta 64x64 prosedural (seed 1337): Hearthland, Greenwood, Highlands, Fenlands; enam atlas terrain termasuk air; resource generation tetap deterministik |
 | Wilayah | klaim pemain dari Keep/Outpost, klaim musuh dari benteng, ownership check, frontier expansion |
 | Kampanye | tiga bab (hari 1–5, 6–10, 11–15), bobot musuh berubah per bab, benteng lawan 900 HP, garrison, fog permanen, ekspedisi (G), conquest victory |
 | Pemain | gerak 8 arah, lari (Shift), serang radial, panen, HP 100 + regen, respawn di keep |
@@ -193,7 +193,7 @@ Tahap berikutnya sebaiknya memperluas skala tanpa merusak loop yang ada: (1) pet
 
 ## 16. Strategic map, campaign acts, and compact HUD (2026-11-01)
 - `scripts/ui/world_map_panel.gd` adds a TAB/MAP exploration-aware map with terrain, territory tint, resource/building/unit/player markers. Permanently explored fog is used for terrain memory; live enemy markers are restricted to current observation ranges.
-- `scripts/world/world_map.gd` defines four named regions: Hearthland, Greenwood, Highlands, and Fenlands. Their ground tiles and tree/rock density differ while retaining the same 64x64 grid and water collision. RNG draw order for terrain/resource placement is preserved.
+- `scripts/world/world_map.gd` defines four named regions: Hearthland, Greenwood, Highlands, and Fenlands. Their ground tiles differ while retaining the same 64x64 grid and water collision. Original tree/rock spawn probabilities and RNG draw order are preserved to keep saved resource cells compatible.
 - `data/waves.json` defines three campaign acts: Frontier (days 1–5), Black March (6–10), Last Siege (11–15). `wave_spawner.gd` applies archer pressure in Act II and archer/brute pressure in Act III; stage changes update the HUD banner and progress indicator.
 - HUD keeps core status and build hotbar visible. Job quotas move behind JOBS; map is opened by TAB/MAP and both overlays close with Escape. Combat strip and tech button occupy less screen space.
 - `tests/map_stages.gd` covers regional labels, map visibility, act boundaries, and act-specific enemy weights. Godot execution remains pending in an environment with the engine installed.
