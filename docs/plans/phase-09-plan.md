@@ -20,6 +20,7 @@ Make the expanded 128×128 Frontier campaign predictable under load and safe to 
 
 ### 09.2 — Bounded stress and tactical balance
 - [x] Add a CI stress scenario that instantiates a 128×128 world, all four factions, mixed faction rosters, a ranged projectile, 48 villagers and the 500-particle ceiling.
+- [x] Add a deterministic Classic/Frontier campaign matrix for stage transitions, day-by-day wave budgets, act-specific faction rosters and final-boss timing.
 - [ ] Add representative campaign balance cases for the ends of all four Frontier acts and the final day-20 encounter.
 - [ ] Check that Classic remains a 15-day campaign with its original rules.
 - [ ] Record faction-specific failure modes, Keep damage, surviving population, remaining enemy count and elapsed simulated time.
