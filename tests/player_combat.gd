@@ -93,6 +93,9 @@ func _initialize() -> void:
     var brute_hp := brute.hp
     brute.take_damage(20)
     assert(brute.hp == brute_hp - 16, "Brute armor must reduce incoming damage")
+    brute.apply_stagger(0.55)
+    assert(brute._stagger_t < 0.55 and brute._stagger_t > 0.0,
+        "Brute stagger resistance must reduce control duration")
 
     var xp_before_kill := player.experience
     brute.take_damage(9999)
