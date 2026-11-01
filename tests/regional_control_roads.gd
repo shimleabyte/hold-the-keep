@@ -125,9 +125,11 @@ func _initialize() -> void:
     main.flow.rebuild()
     var bridge_cell := Vector2i(-1, -1)
     var claimed_cells: Array = territory.claimed_cells.keys()
+    var player_cell: Vector2i = main.nav.cell_of(main.player.global_position)
     claimed_cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
-        return Vector2(a - main.nav.cell_of(main.player.global_position)).length_squared()
-            < Vector2(b - main.nav.cell_of(main.player.global_position)).length_squared()
+        var distance_a: float = Vector2(a - player_cell).length_squared()
+        var distance_b: float = Vector2(b - player_cell).length_squared()
+        return distance_a < distance_b
     )
     for candidate in claimed_cells:
         if not world.is_buildable(candidate) or world.occupied.has(candidate):
