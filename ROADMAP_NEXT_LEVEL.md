@@ -143,7 +143,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** workers select valid tasks, avoid cross-map wandering, recover from blocked paths, deposit at reachable storage and retain their state through saves.
 
 ### Phase 05 — Buildings and production chains
-**Status:** First resource-worksite slice is implemented on `feat/phase-05-resource-worksites`; Godot 4.3 / 4.7 verification pending.
+**Status:** First resource-worksite slice is implemented on `feat/phase-05-resource-worksites`; Godot 4.3 / 4.7 CI passed (30/30 jobs). Manual in-game balance/pathing review remains.
 
 - [x] Add a Lumber Camp with two woodcutter workplace slots and an 18-tile resource work radius.
 - [x] Add a Quarry with two miner workplace slots and a 16-tile resource work radius.
