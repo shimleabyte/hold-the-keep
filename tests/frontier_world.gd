@@ -15,10 +15,9 @@ func ticks(count: int) -> void:
 
 func resource_signature(world: Node) -> Array[String]:
     var signature: Array[String] = []
-    for cell in world.occupied:
-        var node = world.occupied[cell]
-        if is_instance_valid(node) and node.is_in_group("resource_nodes"):
-            signature.append("%d,%d:%s" % [cell.x, cell.y, String(node.yield_kind)])
+    for entry in world.generated_resource_layout:
+        var cell: Vector2i = entry["cell"]
+        signature.append("%d,%d:%s" % [cell.x, cell.y, String(entry["kind"])])
     signature.sort()
     return signature
 
@@ -213,6 +212,7 @@ func _initialize() -> void:
 
     # Generate the same profile again and compare every terrain cell and resource placement.
     var mirror = WORLD_SCRIPT.new()
+    mirror.generate_resource_nodes = false
     root.add_child(mirror)
     await process_frame
     for y in world_config.map_size:
