@@ -60,7 +60,7 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 - Setiap penduduk mengonsumsi 2 makanan per hari. Kekurangan makanan membuat satu penduduk pergi.
 - Bangunan: rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Pos Terdepan, Kamp Penebang, Kuari, jalan, dan jembatan.
 - Kamp Penebang menyediakan dua workplace woodcutter dengan radius kerja 18 tile; Kuari menyediakan dua workplace miner dengan radius 16 tile. Jika belum ada fasilitas khusus, pekerja tetap memakai radius depot seperti pada Classic lama. Jika semua slot fasilitas penuh, pekerja tambahan tidak mengambil alih area kerja fasilitas tersebut.
-- Teknologi 17-node dalam 3 era memperkuat ekonomi, pertahanan, dan pasukan.
+- Teknologi 20-node dalam 3 era memperkuat ekonomi, pertahanan, eksplorasi, dan pengepungan.
 
 ### Simpanan dan pengaturan
 - Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
@@ -131,3 +131,7 @@ Font HUD: Silkscreen (c) The Silkscreen Project Authors, SIL Open Font License 1
 
 Belum ada: musik, rebind shortcut UI/job/build, multi-basis dan multi-region campaign, upgrade khusus invasi, ikon .ico untuk Windows, integrasi Steam.
 Visual masih placeholder prosedural.
+
+
+## Frontier Conquest
+Frontier memakai kampanye 20 hari dalam empat act; Classic tetap 15 hari. Tekan **O** untuk membuka objektif regional. Gunakan **E** di situs bertanda untuk memulai penyelamatan/pengawalan atau mengaktifkan pertahanan; kamp dan reruntuhan dihancurkan dengan serangan pemain. Kemenangan Conquest mensyaratkan semua objektif regional, empat stronghold, dan Raja pada hari ke-20.
