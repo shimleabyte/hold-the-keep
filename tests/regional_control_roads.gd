@@ -128,7 +128,7 @@ func _initialize() -> void:
                     var cell := anchor + Vector2i(dx, dy)
                     if not world.is_buildable(cell) or world.occupied.has(cell):
                         clear = false
-            var approach := Vector2(anchor) * float(world_config_size()) / float(world_config_size()) * 16.0 + Vector2(8.0, 8.0)
+            var approach := Vector2(anchor) * 16.0 + Vector2(8.0, 8.0)
             if clear and not main.nav.path_to(approach, world.starting_keep_cell()).is_empty():
                 remote_outpost_cell = anchor
                 break
