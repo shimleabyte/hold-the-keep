@@ -46,6 +46,7 @@ const HELP_ROWS := [
     ["KLIK KIRI", "PASANG BANGUNAN"],
     ["KLIK KANAN", "BATAL / BONGKAR"],
     ["T M K R", "TAMBAH JOB"],
+    ["G", "SERBU / TARIK PRAJURIT"],
     ["SHIFT + T M K R", "KURANGI JOB"],
     ["KLIK + / -", "UBAH KUOTA JOB"],
     ["P / ESC", "MENU"],
@@ -76,6 +77,7 @@ var _keep_bar: StatBar
 var _keep_text: Label
 var _boss_panel: Panel
 var _boss_bar: StatBar
+var _boss_title: Label
 var _jobs: Dictionary = {}
 var _slots: Dictionary = {}
 var _help: Panel
@@ -111,6 +113,7 @@ func _ready() -> void:
     Events.keep_hp_changed.connect(_on_keep_hp)
     Events.game_over.connect(_on_game_over)
     Events.game_won.connect(_on_game_won)
+    Events.campaign_won.connect(_on_campaign_won)
     Events.event_triggered.connect(_on_event)
     Events.village_changed.connect(_on_village_changed)
     Events.tech_researched.connect(_on_tech_changed)
@@ -246,9 +249,9 @@ func _build_jobs() -> void:
 
 func _build_boss_bar() -> void:
     _boss_panel = _panel(Vector2(140, 18), Vector2(200, 18))
-    var name_lbl := _label(_boss_panel, "RAJA LAWAN", Vector2(0, 0), Color("#ff8a7a"))
-    name_lbl.size = Vector2(200, 9)
-    name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _boss_title = _label(_boss_panel, "RAJA LAWAN", Vector2(0, 0), Color("#ff8a7a"))
+    _boss_title.size = Vector2(200, 9)
+    _boss_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _boss_bar = StatBar.new()
     _boss_bar.position = Vector2(6, 10)
     _boss_bar.size = Vector2(188, 6)
@@ -365,9 +368,20 @@ func _process(delta: float) -> void:
         if e.is_boss:
             boss = e
             break
-    _boss_panel.visible = boss != null
     if boss != null:
+        _boss_title.text = "RAJA LAWAN"
+        _boss_title.add_theme_color_override("font_color", Color("#ff8a7a"))
+        _boss_panel.visible = true
         _boss_bar.set_value(float(boss.hp) / boss.max_hp)
+    else:
+        var stronghold = get_tree().get_first_node_in_group("enemy_strongholds")
+        var fog = get_tree().get_first_node_in_group("fog_of_war")
+        var discovered := stronghold != null and fog != null and fog.is_revealed_cell(stronghold.cell)
+        _boss_panel.visible = discovered
+        if discovered:
+            _boss_title.text = "BENTENG LAWAN"
+            _boss_title.add_theme_color_override("font_color", Color("#d97868"))
+            _boss_bar.set_value(float(stronghold.hp) / stronghold.max_hp)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -482,6 +496,12 @@ func _on_game_won(day: int) -> void:
 
 func _on_game_over(day: int) -> void:
     _over_label.text = "KEEP HANCUR\nBertahan sampai hari %d\nTekan R untuk mulai ulang" % day + _load_hint()
+    _over.visible = true
+    get_tree().paused = true
+
+
+func _on_campaign_won(day: int) -> void:
+    _over_label.text = "BENTENG LAWAN TAKLUK\\nWilayah musuh jatuh pada hari %d\\nTekan R untuk main lagi" % day + _load_hint()
     _over.visible = true
     get_tree().paused = true
 

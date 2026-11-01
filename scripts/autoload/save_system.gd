@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 2
+const VERSION := 3
 
 var pending: Dictionary = {}
 
@@ -105,11 +105,16 @@ func collect(main: Node) -> Dictionary:
     var villagers: Array = []
     for villager in get_tree().get_nodes_in_group("villagers"):
         villagers.append({"x": villager.position.x, "y": villager.position.y, "job": villager.job, "hp": villager.hp,
-            "carry": villager.carry, "kind": villager.carry_kind})
+            "carry": villager.carry, "kind": villager.carry_kind, "expedition": villager.is_expeditioning()})
 
     var enemies: Array = []
     for enemy in get_tree().get_nodes_in_group("enemies"):
-        enemies.append({"id": enemy.id, "x": enemy.position.x, "y": enemy.position.y, "hp": enemy.hp})
+        enemies.append({
+            "id": enemy.id, "x": enemy.position.x, "y": enemy.position.y, "hp": enemy.hp,
+            "garrison": enemy.is_garrison,
+            "guard_x": enemy.guard_origin.x,
+            "guard_y": enemy.guard_origin.y
+        })
 
     var resources: Array = []
     for cell in main.world.occupied:
@@ -122,8 +127,15 @@ func collect(main: Node) -> Dictionary:
                 "state": node.export_state()
             })
 
+    var stronghold_state: Dictionary = {}
+    if main.campaign_conquered or not is_instance_valid(main.enemy_keep):
+        stronghold_state = {"destroyed": true}
+    else:
+        stronghold_state = main.enemy_keep.export_state()
+
     return {
         "version": VERSION,
+        "stronghold": stronghold_state,
         "inventory": Inventory.items,
         "clock": {"t": GameClock.time_of_day, "day": GameClock.day, "night": GameClock.is_night},
         "player": {"x": main.player.position.x, "y": main.player.position.y, "hp": main.player.hp},
@@ -154,6 +166,12 @@ func _valid_save(data: Variant) -> bool:
     var spawner = data.get("spawner", {})
     var tech = data.get("tech", {})
     var resources = data.get("resources", [])
+    var stronghold = data.get("stronghold", {})
+    if not (stronghold is Dictionary):
+        return false
+    if not stronghold.is_empty() and not bool(stronghold.get("destroyed", false)):
+        if not stronghold.has("cx") or not stronghold.has("cy") or not stronghold.has("hp"):
+            return false
     if not (inventory is Dictionary) or not (clock is Dictionary) or not (player is Dictionary):
         return false
     if not (buildings is Array) or not (villagers is Array) or not (enemies is Array):
@@ -182,6 +200,8 @@ func _valid_save(data: Variant) -> bool:
         if not (enemy is Dictionary) or not enemy.has("id") or not enemy.has("x") or not enemy.has("y") or not enemy.has("hp"):
             return false
         if not DataDB.enemies.has(String(enemy["id"])):
+            return false
+        if bool(enemy.get("garrison", false)) and (not enemy.has("guard_x") or not enemy.has("guard_y")):
             return false
     for job in quota:
         if not ["woodcutter", "miner", "farmer", "soldier"].has(String(job)):

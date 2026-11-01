@@ -83,6 +83,7 @@ func _ready() -> void:
     Events.menu_requested.connect(_on_menu_requested)
     Events.game_over.connect(func(_d: int) -> void: _blocked = true)
     Events.game_won.connect(func(_d: int) -> void: _blocked = true)
+    Events.campaign_won.connect(func(_d: int) -> void: _blocked = true)
     _refresh()
 
 

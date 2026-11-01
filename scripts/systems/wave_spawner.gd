@@ -59,7 +59,11 @@ func restore_enemy(d: Dictionary) -> void:
     if not DataDB.enemies.has(d["id"]):
         return
     var e := ENEMY_SCRIPT.new()
-    e.setup(DataDB.enemies[d["id"]], world, flow, player)
+    if bool(d.get("garrison", false)):
+        var origin := Vector2(float(d.get("guard_x", d["x"])), float(d.get("guard_y", d["y"])))
+        e.setup_guard(DataDB.enemies[d["id"]], world, flow, player, origin)
+    else:
+        e.setup(DataDB.enemies[d["id"]], world, flow, player)
     e.position = Vector2(float(d["x"]), float(d["y"]))
     e.hp = int(d["hp"])
     world.entities.add_child(e)
@@ -83,9 +87,12 @@ func start_wave(day: int) -> void:
 
 func end_wave() -> void:
     _to_spawn = 0
-    var left := get_tree().get_nodes_in_group("enemies")
-    for e in left:
-        e.retreat()
+    var left: Array = []
+    for enemy in get_tree().get_nodes_in_group("enemies"):
+        if not enemy.is_garrison:
+            left.append(enemy)
+    for enemy in left:
+        enemy.retreat()
     if left.size() > 0:
         Events.build_feedback.emit("Fajar tiba, musuh mundur")
     else:
