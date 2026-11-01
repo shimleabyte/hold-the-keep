@@ -717,7 +717,7 @@ func _on_village_changed(pop: int, cap: int, quota: Dictionary, assigned: Dictio
     _pop.add_theme_color_override("font_color", Color("#ff8a7a") if pop > cap else Color.WHITE)
     var village = get_tree().get_first_node_in_group("village")
     for j in JOBS:
-        var rank := village.job_priority.find(j) + 1 if village != null else JOBS.find(j) + 1
+        var rank: int = (int(village.job_priority.find(j)) + 1) if village != null else JOBS.find(j) + 1
         _jobs[j].set_counts(int(assigned[j]), int(quota[j]), rank)
 
 
