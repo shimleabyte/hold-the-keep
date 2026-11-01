@@ -42,6 +42,8 @@ func _run() -> void:
 
     assert(main.frontier_campaign.objectives.size() == 11, "Frontier must register all regional objectives")
     assert(main.frontier_campaign.sites.size() == 7, "Seven camp, ruin, escort and defense sites must be placed")
+    assert(main.frontier_campaign.objective_summary().contains("[L] A2 Jelajahi Highlands"),
+        "The objective tracker must distinguish locked future-act objectives")
     assert(main.spawner.stage_info(1)["id"] == "act_1", "Day 1 must start Act I")
     assert(main.spawner.stage_info(6)["id"] == "act_2", "Day 6 must start Act II")
     assert(main.spawner.stage_info(11)["id"] == "act_3", "Day 11 must start Act III")
