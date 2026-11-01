@@ -12,6 +12,7 @@ var _dirty := true
 
 
 func _ready() -> void:
+    add_to_group("navigation_grid")
     astar.region = Rect2i(0, 0, WorldConfig.map_size, WorldConfig.map_size)
     astar.cell_size = Vector2(WorldConfig.tile_size, WorldConfig.tile_size)
     astar.offset = Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0)
