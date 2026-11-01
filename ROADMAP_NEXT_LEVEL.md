@@ -96,7 +96,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate — passed:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable stronghold approach, valid map bounds, viewport fit and 128×128 fog/index round-trip.
 
 ### Phase 02 — Territory, roads and supply
-**Status:** Initial implementation slice passed Godot 4.3/4.7 CI; stacked draft PR #11. The broader phase remains in progress.
+**Status:** Initial implementation slice verified on Godot 4.3 and 4.7; stacked draft PR #11. Broader phase remains in progress.
 
 - [x] Aggregate land claims into neutral/player/enemy/contested regional control records.
 - [x] Emit regional control changes independently from fog-of-war exploration.
@@ -104,18 +104,16 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Allow bridge placement on valid water cells inside player claims.
 - [x] Keep roads and bridges walkable in villager A* and enemy flow-field routing.
 - [x] Build a cardinal road graph rooted at the Keep and expose connected road/depot state.
-- [x] Treat Keep, Storage and Outposts as depots; Outposts are now forward depots.
-- [x] Restrict worker deposit selection to Keep-connected depots and retain cargo when a route disconnects.
-- [x] Show explored roads and regional control state in the strategic map.
-- [x] Add regression coverage for the four regional control states, road/bridge traversal, supply connection/disconnection, isolated Outposts and road save persistence.
+- [x] Treat Keep, Storage and Outposts as depots; Outposts are forward depots.
+- [x] Restrict worker deposits to Keep-connected depots and retain cargo when a route disconnects.
+- [x] Show explored roads and regional control state on the strategic map.
+- [x] Cover ownership states, road/bridge traversal, depot connectivity/disconnection, isolated Outposts and road save persistence.
+- [x] Pass the Godot 4.3/4.7 CI matrix, including the regional integration test (run `41289421611`, 24/24 jobs).
 - [ ] Add Outpost guard assignment, garrison support and local visibility.
-- [ ] Add local stockpile accounting and actual transfer/delivery semantics; currently delivered resources enter the shared inventory when a connected depot is reached.
-- [ ] Add supply attrition and raid vulnerability only after route and depot behavior is reliable.
-- [x] Pass the Godot 4.3/4.7 CI matrix, including the regional control/roads integration test (run `41289421611`, 24/24 jobs).
-- [ ] Add Outpost guard assignment, garrison support and local visibility.
-- [ ] Add local stockpile accounting and actual inter-depot transfers. Current delivery still credits shared inventory at any Keep-connected depot.
+- [ ] Add local stockpile accounting and actual inter-depot transfers. Current delivery still credits shared inventory at a connected depot.
+- [ ] Add supply attrition and raid vulnerability after local logistics are reliable.
 
-**Acceptance gate:** ownership remains separate from fog and supply; road/bridge routes remain navigable; depot connectivity changes correctly when road segments are built or removed; disconnected depots cannot receive global inventory deposits; save/load preserves infrastructure.
+**Initial slice acceptance gate — passed:** regional ownership is independent of fog and supply; road/bridge routes remain navigable; depot connectivity updates when roads are built or removed; disconnected depots cannot receive inventory deposits; infrastructure persists in saves.
 
 ### Phase 03 — Multi-stronghold campaign
 - Replace the single enemy stronghold reference with a campaign objective/stronghold registry.
