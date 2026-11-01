@@ -135,6 +135,10 @@ func _ready() -> void:
     Events.village_changed.connect(_on_village_changed)
     Events.tech_researched.connect(_on_tech_changed)
     Events.stage_changed.connect(_on_stage_changed)
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node != null:
+        var initial_stage: Dictionary = main_node.spawner.stage_info(GameClock.day)
+        _on_stage_changed(String(initial_stage.get("id", "frontier")), String(initial_stage.get("name", "PERBATASAN")), GameClock.day)
     _refresh_resources()
     _refresh_slots()
 
