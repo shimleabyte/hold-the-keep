@@ -1,11 +1,19 @@
 extends CanvasLayer
 
 const PIXEL_FONT := preload("res://scripts/ui/pixel_font.gd")
+const RESOLUTION_PRESETS := [
+    Vector2i(960, 540),
+    Vector2i(1280, 720),
+    Vector2i(1600, 900),
+    Vector2i(1920, 1080)
+]
 ## Menu jeda: P atau Esc (saat tidak membangun). Simpan/muat, layar penuh, vsync, volume.
 
 var _root: Control
 var _load_btn: Button
 var _fs_btn: Button
+var _resolution: OptionButton
+var _resolution_values: Array[Vector2i] = []
 var _vs_btn: Button
 var _sh_btn: Button
 var _vol: HSlider
@@ -45,7 +53,12 @@ func _ready() -> void:
     theme.set_stylebox("hover", "Button", button_hover)
     theme.set_stylebox("pressed", "Button", button_pressed)
     theme.set_stylebox("focus", "Button", button_hover)
+    theme.set_stylebox("normal", "OptionButton", button_normal)
+    theme.set_stylebox("hover", "OptionButton", button_hover)
+    theme.set_stylebox("pressed", "OptionButton", button_pressed)
+    theme.set_stylebox("focus", "OptionButton", button_hover)
     theme.set_color("font_color", "Button", Color("#eadcc1"))
+    theme.set_color("font_color", "OptionButton", Color("#eadcc1"))
     theme.set_color("font_hover_color", "Button", Color("#fff1d2"))
     theme.set_color("font_pressed_color", "Button", Color("#ffd38d"))
     var panel_style := StyleBoxFlat.new()
@@ -71,7 +84,7 @@ func _ready() -> void:
     _menu_center.add_child(panel)
     var box := VBoxContainer.new()
     box.custom_minimum_size = Vector2(190, 0)
-    box.add_theme_constant_override("separation", 4)
+    box.add_theme_constant_override("separation", 3)
     panel.add_child(box)
 
     var title := Label.new()
@@ -86,6 +99,20 @@ func _ready() -> void:
     _fs_btn = _add_button(box, "", func() -> void:
         Settings.set_fullscreen(not Settings.fullscreen)
         _refresh())
+
+    _resolution = OptionButton.new()
+    _resolution.custom_minimum_size = Vector2(190, 18)
+    var screen_size := DisplayServer.screen_get_size()
+    for preset in RESOLUTION_PRESETS:
+        if preset.x <= screen_size.x and preset.y <= screen_size.y:
+            _resolution_values.append(preset)
+            _resolution.add_item("%d x %d" % [preset.x, preset.y])
+    if not _resolution_values.has(Settings.windowed_size):
+        _resolution_values.append(Settings.windowed_size)
+        _resolution.add_item("%d x %d" % [Settings.windowed_size.x, Settings.windowed_size.y])
+    _resolution.item_selected.connect(_on_resolution_selected)
+    box.add_child(_resolution)
+
     _vs_btn = _add_button(box, "", func() -> void:
         Settings.set_vsync(not Settings.vsync)
         _refresh())
@@ -103,6 +130,7 @@ func _ready() -> void:
     _vol.step = 0.05
     _vol.value = Settings.volume
     _vol.value_changed.connect(func(v: float) -> void: Settings.set_volume(v))
+    _vol.custom_minimum_size = Vector2(190, 15)
     box.add_child(_vol)
 
     _add_button(box, "Keluar ke desktop", func() -> void: get_tree().quit())
@@ -232,6 +260,7 @@ func _capture_binding(event: InputEventKey) -> void:
 func _add_button(parent: Control, text: String, action: Callable) -> Button:
     var b := Button.new()
     b.text = text
+    b.custom_minimum_size = Vector2(190, 18)
     b.pressed.connect(action)
     parent.add_child(b)
     return b
@@ -242,6 +271,17 @@ func _refresh() -> void:
     _vs_btn.text = "VSync: %s" % ("ya" if Settings.vsync else "tidak")
     _sh_btn.text = "Guncangan layar: %s" % ("ya" if Settings.screen_shake else "tidak")
     _load_btn.disabled = not SaveSystem.has_save()
+    _resolution.disabled = Settings.fullscreen
+    var selected_index := _resolution_values.find(Settings.windowed_size)
+    if selected_index >= 0:
+        _resolution.select(selected_index)
+
+
+func _on_resolution_selected(index: int) -> void:
+    if index < 0 or index >= _resolution_values.size():
+        return
+    Settings.set_window_size(_resolution_values[index])
+    _refresh()
 
 
 func is_open() -> bool:
