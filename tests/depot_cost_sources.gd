@@ -64,6 +64,10 @@ func _initialize() -> void:
         "The selected Storage must accept the construction budget")
     require(main.supply.set_cost_source(first_cell),
         "A connected Storage must be selectable as the active cost source")
+    var stock_before_atomic_failure: int = first.stockpile_amount("wood")
+    require(not main.supply.pay_cost({"wood": 12, "stone": 1})
+        and first.stockpile_amount("wood") == stock_before_atomic_failure,
+        "A multi-resource payment must reject atomically without partially debiting wood")
     require(main.supply.can_pay_cost({"wood": 12}),
         "Cost availability must read the selected depot's local stock")
     require(not inventory.can_afford({"wood": 12}),
@@ -122,7 +126,7 @@ func _initialize() -> void:
     require(save_system._valid_save(legacy_v13),
         "Existing v13 saves without the additive source field must remain valid")
     var invalid_source := snapshot.duplicate(true)
-    invalid_source["supply"]["cost_source"] = {"cx": keep_cell.x + 30, "cy": keep_cell.y}
+    invalid_source["supply"]["cost_source"] = {"cx": 999, "cy": keep_cell.y}
     require(not save_system._valid_save(invalid_source),
         "Save validation must reject a cost source outside map bounds")
 
