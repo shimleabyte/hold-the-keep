@@ -23,6 +23,7 @@ tests=(
     territory_claims
     villagers_economy
     world_config
+    frontier_world
 )
 
 for test_name in "${tests[@]}"; do
