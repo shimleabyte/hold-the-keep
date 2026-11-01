@@ -385,6 +385,7 @@ func _toggle_map() -> void:
     if opening:
         _jobs_panel.visible = false
         _jobs_button.active = false
+        _jobs_button.queue_redraw()
     _map_button.active = opening
     _map_button.queue_redraw()
 
