@@ -37,10 +37,22 @@ ke `main`, push ke `main` atau branch `feat/**` / `fix/**`, serta workflow manua
 | perf.gd | biaya per frame: 150 musuh + 42 villager |
 | anim_sync.gd | pukulan penebang jatuh di frame benturan; pelarian memakai klip lari |
 | animation_motion.gd | idle breathing, walk/run lift, directional attack/work lean, hurt recoil, stable death pose |
+| world_config.gd | profile dimensions, tile indexing, Keep placement, Classic/Frontier profile definitions |
 | balance_final_night.gd | `CASES="4,2;6,3"` = daftar "prajurit,menara"; `TECH=era2` atau `TECH=all` memberi teknologi; hasil MENANG/KALAH |
 
 Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; nilai sebenarnya 12).
 Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan key dictionary inventori.
+
+## Skrip yang dijalankan otomatis di CI
+Suite headless saat ini mencakup: `anim_sync`, `animation_motion`, `campaign_assault`,
+`combat_tower_walls`, `events_boss_final_night`, `fx_shake_settings`, `input_rebinding`,
+`map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`,
+`restart_gameover`, `save_load_audio_menu`, `tech_tree`, `territory_claims`,
+`villagers_economy`, dan `world_config`.
+
+`perf.gd` dan `balance_final_night.gd` tetap berupa diagnostic/balance runs; jalankan terpisah saat
+mengukur performa atau mengubah komposisi gelombang. Screenshot, preview sprite dan klik HUD tetap
+memerlukan jalur render/manual yang dijelaskan di bawah.
 
 ## Skrip yang butuh layar (render sungguhan)
 Dijalankan di layar virtual dengan OpenGL software, hasilnya PNG di /tmp/shots:
