@@ -88,6 +88,7 @@ func _ready() -> void:
     spawner.world = world
     spawner.flow = flow
     spawner.player = player
+    spawner.nav = nav
     add_child(spawner)
 
     build = BUILD_SCRIPT.new()
@@ -99,6 +100,9 @@ func _ready() -> void:
     supply = SUPPLY_SCRIPT.new()
     supply.world = world
     supply.nav = nav
+    supply.flow = flow
+    supply.player = player
+    supply.territory = territory
     add_child(supply)
 
     add_child(HUD_SCRIPT.new())
