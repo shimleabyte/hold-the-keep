@@ -118,15 +118,16 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 ## 8. Batasan dan masalah yang diketahui
 - Visual belum pernah dilihat di mesin pemilik (semua render lewat software di server).
 - Build executable sungguhan belum pernah dibuat (butuh export template Godot; PCK sudah teruji).
-- Save versi 5 memulihkan HP/timer resource, fog eksplorasi, posisi/HP benteng, timer reinforcement, garrison, serta status ekspedisi dan perjalanan pulang; save versi 1–4 tetap diterima dengan default untuk field baru.
+- Save versi 6 memulihkan HP/timer resource, fog eksplorasi, posisi/HP benteng, timer reinforcement, garrison, status ekspedisi/perjalanan pulang, serta level/XP tempur; save versi 1–5 tetap diterima dengan default untuk field baru.
 - Satu arah samping digambar; kiri/kanan identik (cermin). Animasi dari pose prosedural, bukan gambar tangan.
 - Tidak ada musik; SFX prosedural sederhana.
 - Rebind empat kelompok kontrol inti sudah ada melalui menu jeda; shortcut UI/job/build masih tetap.
 - Teks HUD hanya huruf kapital; resolusi non-16:9 belum diuji.
+- Map overlay dibangun untuk layout dasar 480x270; penyesuaian resolusi non-16:9 tetap perlu uji manual.
 
 ## 9. Rencana berikut (belum dikerjakan)
 1. Mainkan dan catat bagian yang janggal; sesuaikan balancing hari 2-14 (teknologi mengubah kurva kekuatan).
-2. **Kampanye wilayah**: satu benteng lawan, garrison, klaim musuh, fog of war, ekspedisi G, dan kemenangan conquest sudah tersedia. Tahap lanjut: multi-region, beberapa stronghold, AI logistik/serangan musuh lintas wilayah, dan upgrade ekspedisi.
+2. **Kampanye wilayah**: peta awal kini memiliki empat biome dan tiga bab progression. Tahap lanjut: beberapa map region yang dapat ditransisikan, beberapa stronghold berurutan, AI logistik/serangan musuh lintas wilayah, dan upgrade ekspedisi.
 3. Rebind shortcut UI/job/build dan navigasi menu; kontrol gerak/interaksi/serang/lari sudah dapat diubah.
 4. Musik (komposisi/aset) dan SFX untuk partikel.
 5. Tooltip pada slot bangunan dan ikon job; ikon .ico Windows; integrasi Steam (opsional).
