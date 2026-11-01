@@ -11,6 +11,8 @@ static func heal_nearest_ally(source: Node2D, radius: float, amount: int) -> boo
             continue
         if not candidate.has_method("receive_healing"):
             continue
+        if not String(source.faction_id).is_empty() and String(candidate.faction_id) != String(source.faction_id):
+            continue
         if int(candidate.hp) >= int(candidate.max_hp):
             continue
         var distance := source.global_position.distance_to(candidate.global_position)
