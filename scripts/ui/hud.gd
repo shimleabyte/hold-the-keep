@@ -188,43 +188,58 @@ func _stat(parent: Node, icon_name: String, pos: Vector2) -> Label:
 
 
 func _build_top_bar() -> void:
-    var bar := _panel(Vector2(0, 0), Vector2(480, 15))
+    var bar := _panel(Vector2.ZERO, Vector2(480, 16))
     _wood = _stat(bar, "wood", Vector2(3, 1))
-    _stone = _stat(bar, "stone", Vector2(46, 1))
-    _food = _stat(bar, "food", Vector2(89, 1))
-    _iron_icon = _icon(bar, "iron", Vector2(132, 3))
-    _iron = _label(bar, "0", Vector2(145, 1))
+    _stone = _stat(bar, "stone", Vector2(39, 1))
+    _food = _stat(bar, "food", Vector2(75, 1))
+    _iron_icon = _icon(bar, "iron", Vector2(111, 3))
+    _iron = _label(bar, "0", Vector2(124, 1))
 
     var clock := ClockWidget.new()
     clock.font = _font
     clock.sun = ICONS["sun"]
     clock.moon = ICONS["moon"]
-    clock.position = Vector2(176, 2)
+    clock.position = Vector2(151, 2)
     clock.size = Vector2(142, 11)
     bar.add_child(clock)
 
-    _foes_icon = _icon(bar, "skull", Vector2(322, 3))
-    _foes = _label(bar, "0", Vector2(335, 1), Color("#ff8a7a"))
+    _foes_icon = _icon(bar, "skull", Vector2(300, 3))
+    _foes = _label(bar, "0", Vector2(313, 1), Color("#ff8a7a"))
     _foes_icon.visible = false
     _foes.visible = false
 
-    _icon(bar, "people", Vector2(362, 3))
-    _pop = _label(bar, "0/0", Vector2(375, 1))
+    _icon(bar, "people", Vector2(336, 3))
+    _pop = _label(bar, "0/0", Vector2(349, 1))
+
+    _map_button = HudChip.new()
+    _map_button.label = "MAP"
+    _map_button.font = _font
+    _map_button.position = Vector2(370, 1)
+    _map_button.size = Vector2(35, 13)
+    _map_button.pressed.connect(_toggle_map)
+    bar.add_child(_map_button)
+
+    _jobs_button = HudChip.new()
+    _jobs_button.label = "JOBS"
+    _jobs_button.font = _font
+    _jobs_button.position = Vector2(409, 1)
+    _jobs_button.size = Vector2(35, 13)
+    _jobs_button.pressed.connect(_toggle_jobs)
+    bar.add_child(_jobs_button)
 
     _tech_btn = TechButton.new()
     _tech_btn.icon = ICONS["tech"]
     _tech_btn.font = _font
-    _tech_btn.position = Vector2(420, 1)
-    _tech_btn.size = Vector2(58, 13)
+    _tech_btn.position = Vector2(448, 1)
+    _tech_btn.size = Vector2(30, 13)
     _tech_btn.pressed.connect(func() -> void: Events.tech_panel_requested.emit())
     bar.add_child(_tech_btn)
 
-    # Progres riset: muncul di bawah jam saat ada riset berjalan.
-    _research_panel = _panel(Vector2(176, 16), Vector2(146, 12))
+    _research_panel = _panel(Vector2(4, 39), Vector2(126, 12))
     _research_name = _label(_research_panel, "", Vector2(3, 1), Color("#ffd23f"))
     _research_bar = StatBar.new()
-    _research_bar.position = Vector2(80, 3)
-    _research_bar.size = Vector2(62, 6)
+    _research_bar.position = Vector2(77, 3)
+    _research_bar.size = Vector2(45, 6)
     _research_bar.fill = Color("#6fcf5a")
     _research_panel.add_child(_research_bar)
     _research_panel.visible = false
@@ -232,50 +247,57 @@ func _build_top_bar() -> void:
     _fps = _label(self, "", Vector2(72, 259), Color("#9ad0ff"))
     _fps.visible = false
 
-
 func _build_vitals() -> void:
-    var p := _panel(Vector2(3, 18), Vector2(94, 27))
-    _icon(p, "heart", Vector2(4, 3))
+    var p := _panel(Vector2(4, 19), Vector2(122, 18))
+    _icon(p, "heart", Vector2(3, 2))
     _hp_bar = StatBar.new()
-    _hp_bar.position = Vector2(17, 4)
-    _hp_bar.size = Vector2(42, 7)
+    _hp_bar.position = Vector2(17, 3)
+    _hp_bar.size = Vector2(45, 5)
     _hp_bar.fill = Color("#d63a3a")
     p.add_child(_hp_bar)
-    _hp_text = _label(p, "100", Vector2(62, 2))
-    _icon(p, "keep", Vector2(4, 15))
+    _hp_text = _label(p, "100", Vector2(66, 1))
+    _icon(p, "keep", Vector2(3, 10))
     _keep_bar = StatBar.new()
-    _keep_bar.position = Vector2(17, 16)
-    _keep_bar.size = Vector2(42, 7)
+    _keep_bar.position = Vector2(17, 11)
+    _keep_bar.size = Vector2(45, 5)
     _keep_bar.fill = GOLD
     p.add_child(_keep_bar)
-    _keep_text = _label(p, "-", Vector2(62, 14))
+    _keep_text = _label(p, "-", Vector2(66, 9))
+
+func _build_stage_bar() -> void:
+    var p := _panel(Vector2(136, 19), Vector2(205, 18))
+    _stage_label = _label(p, "BAB I  PERBATASAN", Vector2(3, 1), Color("#e7c783"))
+    _stage_bar = StatBar.new()
+    _stage_bar.position = Vector2(3, 11)
+    _stage_bar.size = Vector2(199, 4)
+    _stage_bar.fill = Color("#b98c4a")
+    p.add_child(_stage_bar)
 
 
 func _build_combat_bar() -> void:
     _combat_bar = CombatBar.new()
     _combat_bar.font = _font
-    _combat_bar.position = Vector2(100, 207)
-    _combat_bar.size = Vector2(280, 28)
+    _combat_bar.position = Vector2(151, 219)
+    _combat_bar.size = Vector2(178, 16)
     _combat_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(_combat_bar)
 
-
 func _build_jobs() -> void:
-    var p := _panel(Vector2(402, 18), Vector2(74, 54))
+    _jobs_panel = _panel(Vector2(400, 19), Vector2(76, 54))
     for i in JOBS.size():
         var row := JobRow.new()
         row.job = JOBS[i]
         row.icon = ICONS[JOB_ICONS[JOBS[i]]]
         row.font = _font
         row.position = Vector2(2, 3 + i * 12)
-        row.size = Vector2(70, 12)
+        row.size = Vector2(72, 12)
         row.adjust.connect(_on_job_adjust)
-        p.add_child(row)
+        _jobs_panel.add_child(row)
         _jobs[JOBS[i]] = row
-
+    _jobs_panel.visible = false
 
 func _build_boss_bar() -> void:
-    _boss_panel = _panel(Vector2(140, 18), Vector2(200, 18))
+    _boss_panel = _panel(Vector2(140, 40), Vector2(200, 18))
     _boss_title = _label(_boss_panel, "RAJA LAWAN", Vector2(0, 0), Color("#ff8a7a"))
     _boss_title.size = Vector2(200, 9)
     _boss_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -288,12 +310,10 @@ func _build_boss_bar() -> void:
 
 
 func _build_build_bar() -> void:
-    _label(self, "H BANTUAN", Vector2(4, 270 - SLOT_H - 14), Color(1, 1, 1, 0.7))
+    _label(self, "BANGUNAN 1-6", Vector2(4, 225), Color(1, 1, 1, 0.7))
+    _label(self, "TAB PETA  ·  H BANTUAN", Vector2(360, 225), Color(1, 1, 1, 0.7))
     _rebuild_build_bar()
 
-
-## Bar hanya menampilkan bangunan yang sudah terbuka; dibangun ulang saat riset selesai.
-## Bangunan baru selalu di ujung kanan, jadi nomor hotkey yang sudah dikenal tidak bergeser.
 func _rebuild_build_bar() -> void:
     for s in _slot_nodes:
         _blockers.erase(s)
