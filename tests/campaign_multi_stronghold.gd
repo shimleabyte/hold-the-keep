@@ -122,11 +122,19 @@ func _initialize() -> void:
             assert(not restored.campaign_conquered,
                 "Campaign must remain active while strongholds remain")
 
+    assert(not restored.campaign_conquered,
+        "Stronghold conquest alone must not bypass Phase 07 regional objectives and final King")
+
+    for objective_id in restored.frontier_campaign.objectives:
+        assert(restored.frontier_campaign.complete_objective(String(objective_id)),
+            "Every required regional objective must be completable: " + String(objective_id))
+    restored.frontier_campaign._on_final_boss_defeated(20)
+
     assert(restored.campaign_conquered,
-        "Frontier victory must trigger only after all four strongholds fall")
+        "Frontier victory requires all four strongholds, all regional objectives and the day-20 King")
     assert(restored.campaign.current_target_node() == null,
         "Completed campaign must not retain an active target")
     assert(paused, "Final conquest must display the paused victory state")
 
-    print("PASS: four regional objectives, deterministic unlocks, local garrisons, v8 save/load and final conquest")
+    print("PASS: ordered strongholds, regional objective gate, day-20 King, local garrisons and save/load")
     quit()
