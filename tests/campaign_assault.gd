@@ -7,6 +7,9 @@ func ticks(count: int) -> void:
 
 
 func _initialize() -> void:
+    var game_clock = root.get_node("GameClock")
+    var world_config = root.get_node("WorldConfig")
+    var save_system = root.get_node("SaveSystem")
     DirAccess.remove_absolute("user://save.json")
     DirAccess.remove_absolute("user://save.tmp")
     DirAccess.remove_absolute("user://save.bak")
@@ -15,7 +18,7 @@ func _initialize() -> void:
     root.add_child(main)
     current_scene = main
     await ticks(4)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
 
     var stronghold = main.enemy_keep
     assert(stronghold != null and is_instance_valid(stronghold),
@@ -30,7 +33,7 @@ func _initialize() -> void:
     main.fog.reveal_position(stronghold.global_position, 180.0)
     assert(main.fog.is_revealed_cell(stronghold.cell),
         "Exploration must reveal the enemy stronghold")
-    var revealed_index: int = WorldConfig.cell_index(stronghold.cell)
+    var revealed_index: int = world_config.cell_index(stronghold.cell)
     var fog_state: Dictionary = main.fog.export_state()
     assert(fog_state["cells"].has(revealed_index),
         "Explored cells must be part of the fog save state")
@@ -59,7 +62,7 @@ func _initialize() -> void:
     assert(get_nodes_in_group("enemy_garrison").size() == guard_count,
         "Regular dawn cleanup must not despawn stronghold guards")
 
-    var snapshot: Dictionary = SaveSystem.collect(main)
+    var snapshot: Dictionary = save_system.collect(main)
     assert(snapshot["stronghold"]["hp"] == stronghold.hp,
         "Save must preserve stronghold HP and location")
     var saved_expedition := false
@@ -74,18 +77,18 @@ func _initialize() -> void:
     assert(saved_garrison, "Save must preserve garrison identity and guard origin")
     assert(snapshot["fog"]["cells"].has(revealed_index),
         "Save payload must include explored territory")
-    assert(SaveSystem._valid_save(snapshot),
+    assert(save_system._valid_save(snapshot),
         "Campaign snapshot must pass save payload validation")
 
     main.village.command_expedition()
     assert(soldier.is_recalling_expedition(),
         "Second G command must order the expedition soldier back to the Keep")
-    var recall_snapshot: Dictionary = SaveSystem.collect(main)
+    var recall_snapshot: Dictionary = save_system.collect(main)
     var saved_recall := false
     for villager_state in recall_snapshot["villagers"]:
         if bool(villager_state.get("recalling", false)):
             saved_recall = true
-    assert(saved_recall and SaveSystem._valid_save(recall_snapshot),
+    assert(saved_recall and save_system._valid_save(recall_snapshot),
         "Save must preserve a soldier who is travelling back to the Keep")
 
     var enemy_cell: Vector2i = stronghold.cell
