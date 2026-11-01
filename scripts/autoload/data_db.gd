@@ -4,6 +4,7 @@ extends Node
 var buildings: Dictionary = {}
 var building_order: Array = []  # hanya yang bisa dibangun pemain (urutan hotkey)
 var enemies: Dictionary = {}
+var enemy_archetypes: Dictionary = {}
 var waves: Dictionary = {}
 var events: Array = []
 var techs: Dictionary = {}
@@ -20,6 +21,11 @@ func _ready() -> void:
     var e = _load_json("res://data/enemies.json")
     if e is Array:
         for item in e:
+            enemies[item["id"]] = item
+    var archetype_data = _load_json("res://data/enemy_archetypes.json")
+    if archetype_data is Array:
+        for item in archetype_data:
+            enemy_archetypes[item["id"]] = item
             enemies[item["id"]] = item
     var ev = _load_json("res://data/events.json")
     if ev is Array:
