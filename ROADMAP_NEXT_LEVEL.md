@@ -196,27 +196,25 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** screenshot passes at target desktop resolutions; visual readability under day/night, fog and combat load; no placeholder-only faction identity in release content.
 
 ### Phase 09 — Balance, performance and release hardening
-**Status:** First implementation slice on `feat/phase-09-balance-performance-release-v2`, stacked on the Phase 07 campaign branch. Automated stress, save-hardening and export-preset checks are wired into the test suite; engine CI is pending.
+**Status:** Automated hardening slice implemented on `feat/phase-09-balance-performance-release-v4`. PR #25 is open as draft. Workflow run #271 passed; the benchmark has just been tightened to sustain all 500 particles and awaits a fresh run.
 
-- [x] Replace the Classic-only micro-benchmark with a configurable Classic/Frontier diagnostic reporting frame-time percentiles, static memory, node count, projectiles and particle peaks.
-- [x] Add a bounded Frontier stress regression with all four factions, mixed rosters, 48 villagers, a live ranged projectile and the 500-particle ceiling.
-- [x] Add a deterministic Classic/Frontier balance matrix covering stage transitions, day wave budgets, act-specific faction rosters and final-boss timing.
-- [x] Add structural migration fixtures for Classic v1–v11 and Frontier v7–v11; test stale temporary saves, backup rotation and invalid campaign state.
-- [x] Add an end-to-end Frontier reload regression preserving completed objectives, unlocked Act II, an active escort/path index and partially damaged stronghold HP.
-- [x] Verify Windows/Linux export preset names, paths, resource filters and embedded PCK settings.
-- [x] Make both release build scripts fail if either export artifact is missing or empty.
-- [ ] Run and record the benchmark on target hardware at the reference workload; compare p50/p95/p99 results and OS/CPU/GPU/Godot version.
-- [ ] Add act-by-act Frontier balance cases, including day 20, and preserve Classic's 15-day behavior.
-- [ ] Perform human playtests across all acts and inspect navigation, combat readability, pacing and failure recovery.
-- [ ] Extend reload coverage through later acts/final-boss progression and run the migration/reload matrix on Godot 4.3 and 4.7.
-- [ ] Produce and smoke-test real Windows and Linux exports using installed export templates.
+- [x] Replace the Classic-only micro-benchmark with configurable Classic/Frontier profiling for frame timing, static memory, node count, projectiles and particles.
+- [x] Add a bounded Frontier stress regression with all four factions, mixed rosters, 48 additional villagers, a live ranged projectile and the 500-particle ceiling.
+- [x] Add a deterministic Classic/Frontier campaign matrix for stage transitions, day wave budgets, faction archetypes, Classic day-15 preservation and final-boss timing.
+- [x] Add save migration/recovery tests for Classic v1–v11 and Frontier v7–v11, interrupted temp writes, backup rotation, malformed campaign data and profile isolation.
+- [x] Add a Frontier campaign reload test preserving completed objectives, unlocked Act II, active escort/path progress and damaged stronghold HP.
+- [x] Run the configured Godot 4.3/4.7 import, parse and regression matrix (workflow run #271).
+- [x] Install Godot 4.3-matching export templates in CI, export Windows/Linux binaries, validate the Windows PE format and smoke-test Linux headlessly.
+- [x] Publish a Godot 4.7 Frontier benchmark artifact; latest script revision now sustains the 500-particle ceiling and requires a fresh workflow run.
+- [ ] Measure the reference workload on actual target desktop hardware and compare p50/p95/p99 before making performance optimizations.
+- [ ] Add combat outcome simulations at the end of all four Frontier acts and on day 20; record Keep HP, survivors, enemy remainder and simulated time.
+- [ ] Extend reload coverage to later acts, conquered strongholds and the final-boss gate.
+- [ ] Human-playtest all acts, objective readability, navigation, combat pacing and failure recovery.
+- [ ] Verify Windows runtime on a Windows runner and test both exports on clean target machines, including first launch and save/settings migration.
 
-**Provisional budget (not yet measured):** target 60 FPS at 1280×720 under Frontier 128×128 with 96 faction enemies, 80 villagers and up to 500 particles; p95 frame time ≤16.67 ms and p99 ≤33.3 ms. Do not treat these numbers as achieved until target-hardware results are attached.
+**Provisional desktop target (not measured):** 60 FPS at 1280×720 under Frontier 128×128 with 96 requested faction enemies, 80 additional villagers and up to 500 live particles; p95 frame time ≤16.67 ms and p99 ≤33.3 ms. CI headless timings are diagnostic only and are not evidence of target-machine performance.
 
-**Acceptance gate:** full CI green, no known blocker bugs, performance budget documented from target hardware, fresh and migrated saves tested, and release builds verified on target desktop platforms.
-
-**Acceptance gate:** full CI green, no known blocker bugs, performance budget documented, fresh and migrated saves tested, and release builds verified on target desktop platforms.
-
+**Acceptance gate:** fresh CI green, a measured target-hardware performance budget, no known blocker bugs, multi-act human playtest completed, migration/reload tested, and Windows/Linux release binaries verified on their target platforms.
 ## 5. First implementation priorities
 
 1. **Phase 00 is mandatory.** Do not add content on top of duplicated spatial constants and unverified scripts.
