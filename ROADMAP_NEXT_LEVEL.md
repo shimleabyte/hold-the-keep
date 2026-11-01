@@ -1,8 +1,8 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
-**Status:** Phase 00 merged; Phase 01 and Phase 02 implemented and verified on Godot 4.3 and 4.7 in stacked PRs #10 and #11. Phase 03 implementation is in progress.  
-**Implementation branches:** `main` → `feat/frontier-world-generation-mainline` (Phase 01, PR #10) → `feat/regional-control-roads-mainline` (Phase 02, PR #11) → `feat/multi-stronghold-campaign` (Phase 03)  
-**Baseline:** Godot 4.x / GDScript, Classic world 64×64, save format v7
+**Status:** Phase 00–04 foundations are merged into `main`; the latest `main` CI is green on Godot 4.3 and 4.7. Phase 05 starts with specialized resource workplaces on `feat/phase-05-resource-worksites`.  
+**Implementation branches:** merged expansion foundations on `main` → `feat/phase-05-resource-worksites` (Phase 05 resource-worksite slice).  
+**Baseline:** Godot 4.3+ / GDScript, Classic world 64×64, Frontier world 128×128, save format v9
 
 ## 1. Product direction
 
@@ -82,7 +82,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - Frontier remains an explicit new-campaign choice; Classic stays the shipped default.
 
 ### Phase 01 — Expanded deterministic world
-**Status:** Implemented and verified on Godot 4.3 and 4.7; draft PR #10 open for review
+**Status:** Merged into `main`; Godot 4.3 / 4.7 CI passed.
 
 - [x] Add explicit Classic/Frontier selection to the new-campaign panel and persist the selected profile.
 - [x] Generate five warped regions: Hearthland, Greenwood, Highlands, Fenlands and Ashen March.
@@ -96,7 +96,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate — passed:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable stronghold approach, valid map bounds, viewport fit and 128×128 fog/index round-trip.
 
 ### Phase 02 — Territory, roads and supply
-**Status:** Initial implementation slice verified on Godot 4.3 and 4.7; stacked draft PR #11. Broader phase remains in progress.
+**Status:** Initial implementation slice merged into `main`; Godot 4.3 / 4.7 CI passed. Broader logistics phase remains in progress.
 
 - [x] Aggregate land claims into neutral/player/enemy/contested regional control records.
 - [x] Emit regional control changes independently from fog-of-war exploration.
@@ -116,19 +116,19 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Initial slice acceptance gate — passed:** regional ownership is independent of fog and supply; road/bridge routes remain navigable; depot connectivity updates when roads are built or removed; disconnected depots cannot receive inventory deposits; infrastructure persists in saves.
 
 ### Phase 03 — Multi-stronghold campaign
-**Status:** Implemented on `feat/multi-stronghold-campaign`; Godot regression verification pending.
+**Status:** Implemented and merged into `main`; multi-stronghold regression CI passed on Godot 4.3 and 4.7.
 
 - [x] Replace the single enemy stronghold reference with an ordered campaign objective/stronghold registry.
 - [x] Support four region-specific Frontier strongholds with independent local garrisons and reinforcement caps.
 - [x] Make objective order deterministic; each conquered region unlocks the next objective and grants a regional resource reward.
 - [x] Persist the full objective registry, stronghold health and conquest state in save format v8; retain v1–v7 single-stronghold compatibility.
 - [x] Preserve the existing one-stronghold Classic campaign.
-- [ ] Complete the Godot 4.3 / 4.7 regression matrix and review the in-game objective/map presentation.
+- [x] Complete the Godot 4.3 / 4.7 regression matrix; objective/map presentation still needs a human gameplay review.
 
 **Acceptance gate:** multiple strongholds can be found, attacked, destroyed, restored from saves and completed in a deterministic objective sequence.
 
 ### Phase 04 — Jobs and workplaces
-**Status:** First implementation slice is on `feat/workplaces-and-specialist-jobs`; regression matrix pending.
+**Status:** First Builder/workplace slice is merged into `main`; workplace regression CI passed on Godot 4.3 and 4.7.
 
 - [x] Introduce Builder as a real labor occupation; soldier is stored separately as a military specialization, with a compatibility `job` alias.
 - [x] Add Builder workplace capacity on Keeps and Outposts, plus data-driven work radii.
@@ -138,12 +138,20 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add configurable job priority order, reassignment, Alt+job hotkeys and right-click controls in the job panel.
 - [x] Persist occupation, military specialization and priority order in save format v9; older saves still load through the compatibility job field.
 - [ ] Add Hunter, Scout, Healer and Blacksmith in subsequent incremental slices.
-- [ ] Complete Godot 4.3 / 4.7 regression matrix and real gameplay pathing checks.
+- [x] Complete Godot 4.3 / 4.7 CI regression matrix; real gameplay pathing still needs a manual playtest.
 
 **Acceptance gate:** workers select valid tasks, avoid cross-map wandering, recover from blocked paths, deposit at reachable storage and retain their state through saves.
 
 ### Phase 05 — Buildings and production chains
-- Add buildings according to dependency: Lumber Camp, Watchtower, Granary, Barracks, Quarry, Archery Range, Hunting Lodge, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress and Signal Beacon.
+**Status:** First resource-worksite slice is implemented on `feat/phase-05-resource-worksites`; Godot 4.3 / 4.7 CI passed (30/30 jobs). Manual in-game balance/pathing review remains.
+
+- [x] Add a Lumber Camp with two woodcutter workplace slots and an 18-tile resource work radius.
+- [x] Add a Quarry with two miner workplace slots and a 16-tile resource work radius.
+- [x] Bind woodcutters/miners to matching worksites; retain connected-depot fallback only when no matching specialty site exists.
+- [x] Release worksite claims when workers leave or a worksite is removed; retain the generic v9 building save payload.
+- [x] Add separate pixel-art buildings/icons, hotbar entries, numeric hotkeys, controls documentation and headless regression coverage.
+- [ ] Add construction work queues and staged building completion with Builder labor.
+- [ ] Add remaining facilities according to dependency: Watchtower, Granary, Barracks, Archery Range, Hunting Lodge, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress and Signal Beacon.
 - Introduce leather and gold only when a building or campaign system consumes them.
 - Add construction/repair work, military training, trade and siege production as separate validated slices.
 

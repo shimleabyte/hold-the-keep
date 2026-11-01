@@ -35,7 +35,11 @@ func _unhandled_input(event: InputEvent) -> void:
                 Events.menu_requested.emit()
             get_viewport().set_input_as_handled()
             return
-        var idx: int = int(event.keycode) - int(KEY_1)
+        var idx := -1
+        if event.keycode == KEY_0:
+            idx = 9
+        elif event.keycode >= KEY_1 and event.keycode <= KEY_9:
+            idx = int(event.keycode) - int(KEY_1)
         var order: Array = Tech.available_buildings()
         if idx >= 0 and idx < order.size():
             var id: String = order[idx]

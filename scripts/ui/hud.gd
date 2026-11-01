@@ -31,6 +31,8 @@ const ICONS := {
     "hammer": preload("res://assets/sprites/icon_hammer.svg"),
     "road": preload("res://assets/sprites/icon_road.svg"),
     "bridge": preload("res://assets/sprites/icon_bridge.svg"),
+    "lumber_camp": preload("res://assets/sprites/icon_lumber_camp.svg"),
+    "quarry": preload("res://assets/sprites/icon_quarry.svg"),
 }
 const JOBS := ["woodcutter", "miner", "farmer", "builder", "soldier"]
 const JOB_ICONS := {"woodcutter": "axe", "miner": "pick", "farmer": "wheat", "builder": "hammer", "soldier": "sword"}
@@ -49,7 +51,7 @@ const HELP_ROWS := [
     ["Q", "DASH (LEVEL 1)"],
     ["C", "TEBAS (LEVEL 2)"],
     ["V", "SERUAN (LEVEL 3)"],
-    ["1-8", "PILIH BANGUNAN"],
+    ["1-9 / 0", "PILIH BANGUNAN"],
     ["KLIK KIRI", "PASANG BANGUNAN"],
     ["KLIK KANAN", "BATAL / BONGKAR"],
     ["T M K R B", "TAMBAH JOB"],
