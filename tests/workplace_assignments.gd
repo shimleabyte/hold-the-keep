@@ -50,6 +50,10 @@ func _initialize() -> void:
             break
     assert(keep != null, "New campaign must create its Keep")
 
+    main.village.adjust_job_priority("builder", -1)
+    assert(main.village.job_priority.find("builder") == 2,
+        "A priority adjustment must move Builder upward by one position")
+
     var builder_a = main.village.spawn_villager(keep.position + Vector2(0, 14))
     var builder_b = main.village.spawn_villager(keep.position + Vector2(10, 14))
     var builder_c = main.village.spawn_villager(keep.position + Vector2(-10, 14))
@@ -96,9 +100,6 @@ func _initialize() -> void:
     assert(soldier.occupation.is_empty() and soldier.military_specialization == "soldier",
         "Soldier must be stored as a military specialization")
 
-    main.village.adjust_job_priority("builder", -1)
-    assert(main.village.job_priority.find("builder") == 2,
-        "A priority adjustment must move Builder upward by one position")
     var snapshot: Dictionary = save_system.collect(main)
     assert(snapshot["version"] == 9, "New role format must increment saves to version 9")
     assert(snapshot["job_priority"][2] == "builder", "Save must persist job priority")
