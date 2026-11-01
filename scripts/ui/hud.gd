@@ -212,10 +212,20 @@ func _build_top_bar() -> void:
     _top_bar = _panel(Vector2.ZERO, Vector2(480, 18))
     var bar := _top_bar
     _wood = _stat(bar, "wood", Vector2(3, 1))
+    _wood.add_theme_color_override("font_color", Color("#d9bd8d"))
     _stone = _stat(bar, "stone", Vector2(39, 1))
+    _stone.add_theme_color_override("font_color", Color("#c2c9ca"))
     _food = _stat(bar, "food", Vector2(75, 1))
+    _food.add_theme_color_override("font_color", Color("#e2cb78"))
     _iron_icon = _icon(bar, "iron", Vector2(111, 3))
-    _iron = _label(bar, "0", Vector2(124, 1))
+    _iron = _label(bar, "0", Vector2(124, 1), Color("#e19a68"))
+    for divider_x in [35.0, 71.0, 107.0, 145.0]:
+        var divider := ColorRect.new()
+        divider.position = Vector2(divider_x, 4)
+        divider.size = Vector2(1, 10)
+        divider.color = Color("#756044")
+        divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        bar.add_child(divider)
 
     _clock_widget = ClockWidget.new()
     _clock_widget.font = _font
@@ -231,7 +241,7 @@ func _build_top_bar() -> void:
     _foes.visible = false
 
     _people_icon = _icon(bar, "people", Vector2(336, 3))
-    _pop = _label(bar, "0/0", Vector2(349, 1))
+    _pop = _label(bar, "0/0", Vector2(349, 1), Color("#a9c9bf"))
 
     _map_button = HudChip.new()
     _map_button.label = "MAP"
@@ -290,7 +300,8 @@ func _build_vitals() -> void:
 func _build_stage_bar() -> void:
     _stage_panel = _panel(Vector2(136, 22), Vector2(205, 20))
     var p := _stage_panel
-    _stage_label = _label(p, "BAB I  PERBATASAN", Vector2(3, 1), Color("#e7c783"))
+    _stage_label = _label(p, "BAB I  PERBATASAN", Vector2(3, 1), Color("#f0d39a"))
+    _stage_label.add_theme_font_size_override("font_size", 9)
     _stage_bar = StatBar.new()
     _stage_bar.position = Vector2(3, 13)
     _stage_bar.size = Vector2(199, 4)
