@@ -17,8 +17,7 @@ Dari akar proyek:
 Skrip observasi lama yang hanya mencetak hasil tanpa assertion dipisahkan ke `run_diagnostics.sh`;
 jalankan saat meninjau animasi, pertarungan, efek, ekonomi atau alur save/menu.
 
-GitHub Actions menjalankan kedua langkah tersebut pada Godot 4.3 dan 4.7 untuk setiap pull request
-ke `main`, push ke `main` atau branch `feat/**` / `fix/**`, serta workflow manual.
+GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 20 assertion regression tests per versi, Frontier performance diagnostic, serta Windows/Linux export. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Latest mainline run #294 menyelesaikan 44/44 jobs.
 
 | Skrip | Menguji |
 |---|---|
@@ -35,7 +34,7 @@ ke `main`, push ke `main` atau branch `feat/**` / `fix/**`, serta workflow manua
 | campaign_multi_stronghold.gd | four Frontier strongholds, deterministic objective order, regional placement, independent garrisons, locked objectives, save/load and final conquest |
 | workplace_assignments.gd | Builder workplace capacity/radius, repair material consumption, reachable depot selection, job priority reassignment and v11 save validation |
 | production_worksites.gd | Lumber Camp/Quarry workplace limits, specialist work radius, Classic fallback, cleanup and v11 save compatibility |
-| map_stages.gd | empat biome, fog map panel, batas tiga bab, bobot archer/brute per bab |
+| map_stages.gd | empat biome Classic, fog map panel, batas tiga bab, bobot archer/brute per bab |
 | responsive_layout.gd | resolution-to-viewport mapping, exact 2× pixel scale, live synchronization, HUD safe playfield and map/hotbar bounds across six desktop resolutions |
 | player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, archer projectile, brute armor, combat save |
 | input_rebinding.gd | perubahan keybind, penolakan konflik/reserved key, persistensi settings |
@@ -57,17 +56,16 @@ Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; 
 Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan key dictionary inventori.
 
 ## Skrip yang dijalankan otomatis di CI
-Suite headless CI yang berbasis assertion mencakup: `animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `campaign_reload_hardening`, `campaign_balance_matrix`, `faction_registry`, `frontier_campaign`, `frontier_stress`, `release_hardening`, `production_worksites`,
-`input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`,
-`territory_claims`, `world_config`, dan `frontier_world`.
 
-Skrip observasi manual mencakup: `anim_sync`, `combat_tower_walls`, `events_boss_final_night`,
-`fx_shake_settings`, `restart_gameover`, `save_load_audio_menu`, `tech_tree`, dan
-`villagers_economy`.
+Suite assertion yang dijalankan pada Godot 4.3 dan 4.7 masing-masing mencakup 20 skrip:
 
-`perf.gd` dan `balance_final_night.gd` tetap berupa diagnostic/balance runs; jalankan terpisah saat
-mengukur performa atau mengubah komposisi gelombang. Benchmark default menjalankan Frontier 128×128; atur `PROFILE=classic` untuk pembanding 64×64. Contoh: `PROFILE=frontier ENEMIES=96 VILLAGERS=80 FRAMES=360 godot --headless --path . --script res://tests/perf.gd`. Screenshot, preview sprite dan klik HUD tetap
-memerlukan jalur render/manual yang dijelaskan di bawah.
+`animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `production_worksites`, `faction_registry`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, dan `regional_control_roads`.
+
+CI juga menjalankan import/parse pada kedua versi Godot, performance diagnostic Frontier pada Godot 4.7, serta template-backed Windows/Linux release export pada Godot 4.3. Pada 1 November 2026, mainline workflow #294 lulus 44/44 jobs.
+
+Skrip observasi/manual yang tidak termasuk assertion CI: `anim_sync`, `combat_tower_walls`, `events_boss_final_night`, `fx_shake_settings`, `restart_gameover`, `save_load_audio_menu`, `tech_tree`, dan `villagers_economy`. Jalankan skrip tersebut ketika memeriksa perilaku runtime yang belum dikonversi menjadi assertion.
+
+`perf.gd` dan `balance_final_night.gd` tetap berupa diagnostic/balance runs; jalankan terpisah saat mengukur performa atau mengubah komposisi gelombang. Benchmark default menjalankan Frontier 128×128; atur `PROFILE=classic` untuk pembanding 64×64. Screenshot, preview sprite dan klik HUD tetap memerlukan jalur render/manual di bawah.
 
 ## Skrip yang butuh layar (render sungguhan)
 Dijalankan di layar virtual dengan OpenGL software, hasilnya PNG di /tmp/shots:
