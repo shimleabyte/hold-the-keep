@@ -31,6 +31,12 @@ var runs := false
 var is_garrison := false
 var guard_origin := Vector2.ZERO
 var role := "melee"
+var archetype := "raider"
+var faction_id := ""
+var support_radius := 0.0
+var support_amount := 0
+var support_interval := 0.0
+var _support_cd := 0.0
 var attack_range := PLAYER_REACH
 var preferred_range := 0.0
 var projectile_speed := 120.0
@@ -60,7 +66,7 @@ var _fw := 20
 var _fh := 20
 
 
-func setup(data: Dictionary, world_ref, flow_ref, player_ref) -> void:
+func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override := "") -> void:
     id = data["id"]
     max_hp = int(data["hp"])
     hp = max_hp
@@ -72,6 +78,12 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref) -> void:
     is_boss = bool(data.get("boss", false))
     runs = bool(data.get("run", false))
     role = String(data.get("role", "pouncer" if id == "wolf" else "melee"))
+    archetype = String(data.get("archetype", role))
+    faction_id = faction_override
+    support_radius = maxf(0.0, float(data.get("support_radius", 0.0)))
+    support_amount = maxi(0, int(data.get("support_amount", 0)))
+    support_interval = maxf(0.0, float(data.get("support_interval", 0.0)))
+    _support_cd = 0.0
     attack_range = float(data.get("range", 30.0 if role == "pouncer" else PLAYER_REACH))
     preferred_range = float(data.get("preferred_range", 0.0))
     projectile_speed = float(data.get("projectile_speed", 120.0))
@@ -87,8 +99,8 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref) -> void:
     _fh = int(_tex.get_height() / 3.0)
 
 
-func setup_guard(data: Dictionary, world_ref, flow_ref, player_ref, origin: Vector2) -> void:
-    setup(data, world_ref, flow_ref, player_ref)
+func setup_guard(data: Dictionary, world_ref, flow_ref, player_ref, origin: Vector2, faction_override := "") -> void:
+    setup(data, world_ref, flow_ref, player_ref, faction_override)
     is_garrison = true
     guard_origin = origin
 
@@ -105,6 +117,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _hurt_t = maxf(0.0, _hurt_t - delta)
+    _support_cd = maxf(0.0, _support_cd - delta)
     _resolve_pending(delta)
     _moving = false
 
@@ -122,6 +135,11 @@ func _physics_process(delta: float) -> void:
         _pounce_t = maxf(0.0, _pounce_t - delta)
         position += _pounce_dir * speed * 2.4 * delta
         _moving = true
+        _update_anim(delta)
+        _footsteps(delta)
+        return
+
+    if archetype == "war_shaman" and _tick_shaman_support():
         _update_anim(delta)
         _footsteps(delta)
         return
@@ -174,6 +192,28 @@ func _tick_flow(delta: float) -> void:
             _begin_attack(occupied, occupied.position - position)
         return
     _move_toward(Vector2(next) * WorldConfig.tile_size + Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0) + _offset, delta)
+
+
+func _tick_shaman_support() -> bool:
+    if support_amount <= 0 or support_radius <= 0.0 or _support_cd > 0.0:
+        return false
+    var best = null
+    var best_distance := support_radius
+    for candidate in get_tree().get_nodes_in_group("enemies"):
+        if candidate == self or not is_instance_valid(candidate) or not candidate.has_method("receive_healing"):
+            continue
+        if int(candidate.hp) >= int(candidate.max_hp):
+            continue
+        var distance := position.distance_to(candidate.position)
+        if distance < best_distance:
+            best_distance = distance
+            best = candidate
+    if best == null:
+        return false
+    best.receive_healing(support_amount)
+    _support_cd = maxf(0.5, support_interval)
+    Events.fx_burst.emit("impact", best.position + Vector2(0, -8), Vector2.ZERO, 1.0)
+    return true
 
 
 func _tick_ranged(delta: float) -> void:
@@ -360,6 +400,15 @@ func _move_toward(target: Vector2, delta: float) -> void:
         position += to / distance * minf(speed * delta, distance)
 
 
+func receive_healing(amount: int) -> void:
+    if hp <= 0 or amount <= 0:
+        return
+    var previous_hp := hp
+    hp = mini(max_hp, hp + amount)
+    if hp != previous_hp:
+        queue_redraw()
+
+
 func take_damage(amount: int) -> void:
     if hp <= 0:
         return
@@ -400,6 +449,8 @@ func _draw() -> void:
     if _pounce_windup_t > 0.0:
         draw_line(Vector2(0, -6), Vector2(0, -6) + _pounce_dir * 14.0,
             Color("#ffb347"), 2.0)
+    if archetype == "war_shaman":
+        draw_arc(Vector2(0, -_fh * 0.55), 7.0, 0.0, TAU, 12, Color("#b9a4d8"), 1.0)
     if role == "ranged":
         draw_arc(Vector2(7, -11), 4.0, -PI * 0.55, PI * 0.55, 7, Color("#91c99a"), 1.0)
         draw_line(Vector2(7, -15), Vector2(7, -7), Color("#d9e7c8"), 1.0)
