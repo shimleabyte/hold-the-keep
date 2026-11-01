@@ -50,7 +50,7 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 21 assertion reg
 | world_config.gd | profile dimensions, tile indexing, Keep placement, Classic/Frontier profile definitions |
 | frontier_world.gd | 128×128 terrain, five biomes, Ashen tile, regional resources, iron veins, Keep claims, reachability and deterministic generation |
 | regional_control_roads.gd | regional neutral/player/enemy/contested states, walkable roads/bridges, Keep-connected supply routes, depot isolation, rerouting and save persistence |
-| local_depot_stockpiles.gd | Frontier local depot balances, capacity rejection, worker cargo deposit, v12 migration and save/load round-trip |
+| local_depot_stockpiles.gd | Frontier local depot balances, capacity rejection, worker cargo deposit, bounded connected-depot shipments, v12 migration and save/load round-trip |
 | balance_final_night.gd | `CASES="4,2;6,3"` = daftar "prajurit,menara"; `TECH=era2` atau `TECH=all` memberi teknologi; hasil MENANG/KALAH |
 
 Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; nilai sebenarnya 12).
