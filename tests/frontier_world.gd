@@ -192,7 +192,7 @@ func _initialize() -> void:
 
     # Validate path connectivity from the Keep's spawn point into every biome.
     main.nav.rebuild()
-    var reachable := reachable_cells(main.nav, main.nav.cell_of(main.player.global_position))
+    var reachable := main.nav.reachable_cells(main.nav.cell_of(main.player.global_position))
     assert(reachable.size() > 2500,
         "The starting settlement must connect to a substantial portion of the world")
     var reachable_regions: Dictionary = {}
@@ -202,6 +202,14 @@ func _initialize() -> void:
     for region in region_cells:
         assert(int(reachable_regions.get(region, 0)) > 50,
             "Every Frontier biome must be reachable from the Keep: " + region)
+
+    assert(main.enemy_keep != null and is_instance_valid(main.enemy_keep),
+        "Frontier must place its campaign stronghold")
+    var stronghold_path := main.nav.path_adjacent(
+        main.player.global_position, main.enemy_keep.cells()
+    )
+    assert(not stronghold_path.is_empty(),
+        "The Frontier stronghold must be reachable from the starting settlement")
 
     # Generate the same profile again and compare every terrain cell and resource placement.
     var mirror = WORLD_SCRIPT.new()
