@@ -53,8 +53,12 @@ func _initialize() -> void:
         assert(_guards_for(stronghold).size() == 3,
             "Each stronghold must spawn its own initial garrison")
 
-    assert(get_nodes_in_group("enemy_garrison").size() == 12,
-        "Four independent strongholds must maintain twelve initial guards")
+    var stronghold_guard_count := 0
+    for guard in get_nodes_in_group("enemy_garrison"):
+        if is_instance_valid(guard) and String(guard.campaign_site_id).is_empty():
+            stronghold_guard_count += 1
+    assert(stronghold_guard_count == 12,
+        "Four strongholds must maintain twelve local guards, excluding Frontier objective-site guards")
     assert(main.campaign.current_target_id() == expected[0],
         "Greenwood must be the first objective")
 
