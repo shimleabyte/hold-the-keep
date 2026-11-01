@@ -1,7 +1,7 @@
 # Phase 06 — Factions, Enemy Archetypes and Territorial AI
 
-**Status:** Partially implemented. Faction foundations, Shieldbearer brace, Scout marking and Saboteur building disruption are merged. Siege Engine behavior is implemented on `feat/phase-06-siege-engine-cycle`; CI pending. Beast Rider policy, camps, patrols, raid extensions and manual playtesting remain open.
-**Mainline:** `main`; current branch: `feat/phase-06-siege-engine-cycle` (CI pending).
+**Status:** Partially implemented. Faction foundations, Shieldbearer brace, Scout marking, Saboteur disruption and Siege Engine siege cycle are merged into `main`. PR #41 merged as `58da7be`; workflow #41356689758 passed 62/62 jobs on Godot 4.3/4.7, including 29 regression suites per engine, import/parse, Frontier performance and Windows/Linux export. Beast Rider policy, camps, patrols, raid extensions and manual playtesting remain open.
+**Mainline:** `main`; next Phase 06 slice: distinct Beast Rider charge behavior.
 **Current save schema:** v13. Preserve Classic compatibility and validate legacy migrations through v13 plus v13 round-trip.
 **Engine target:** Godot 4.3 and 4.7.
 
@@ -22,13 +22,13 @@ Replace the single generic enemy identity with four regional powers whose units 
 
 ## Remaining implementation sequence
 
-### 06.2 — Composable combat behaviors (partial; Shieldbearer, Scout and Saboteur delivered)
+### 06.2 — Composable combat behaviors (partial; Shieldbearer, Scout, Saboteur and Siege Engine delivered)
 - Extract movement, attack-pattern and ability policies from the enemy controller.
 - [x] Scout scouting/marking merged through PR #39 (`11f3f13`): a telegraphed mark is shared only with same-faction enemies in a bounded radius, prioritizes the marked defender until expiry, and can be interrupted by stagger or target disengagement. `tests/scout_marking.gd` passed on Godot 4.3 and 4.7; workflow #41354720293 passed 58/58 jobs.
 - [x] Shieldbearer directional brace merged through PR #36 (`b02aa60`): data-defined wind-up, locked facing, finite active window and frontal damage mitigation; side/rear hits bypass the block. Player attacks, Cleave, Dash and tower arrows pass their impact origin. Stagger interrupts the brace; disengaging during wind-up cancels it. `tests/shieldbearer_behavior.gd` appeared in the available successful job list; the complete 4.3/4.7 matrix was not independently verifiable from that snapshot.
 - Shieldbearer, Scout and Saboteur behavior state is transient; no save-schema bump is required.
 - [x] Saboteur building disruption merged through PR #40 (`8f1a914`): bounded rotating scans prioritize Tower/Outpost, then Storage, production and House, weighted against reachable nav paths. A telegraphed wind-up applies reversible temporary suppression and limited structure damage; interception/stagger can interrupt. Towers stop firing; depots reject transfers; workplaces pause tasks until recovery. `tests/saboteur_disruption.gd` passed on Godot 4.3/4.7; workflow #41355982522 passed 60/60 jobs.
-- [ ] Siege Engine siege cycle: implemented on `feat/phase-06-siege-engine-cycle`; bounded reachable structure scan prioritizes stone/wood walls, then Tower/Outpost/Keep and storage. A long telegraph precedes heavy structure-only damage, followed by recovery; stagger or nearby defenders can interrupt the wind-up. CI pending.
+- [x] Siege Engine siege cycle merged through PR #41 (`58da7be`): bounded rotating scans prioritize stone/wood walls, then Tower/Outpost/Keep and Storage, weighted against reachable path length. It advances through flow-field cells, moves to adjacent target cells, telegraphs a heavy structure-only impact and enters recovery. Nearby defenders/player pressure or stagger interrupt the wind-up. `tests/siege_engine_behavior.gd` passed on Godot 4.3/4.7; workflow #41356689758 passed 62/62 jobs.
 - Give Beast Rider a telegraphed charge that can be interrupted or baited.
 - Keep War Shaman support separate from its ranged attack loop.
 
