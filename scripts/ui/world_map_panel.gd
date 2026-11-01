@@ -12,6 +12,7 @@ const GRASS := Color("#668b4a")
 const FOREST := Color("#385f38")
 const HIGHLAND := Color("#74796e")
 const MARSH := Color("#727a4a")
+const ASHEN := Color("#706052")
 const PLAYER_TERRITORY := Color("#d2aa59")
 const ENEMY_TERRITORY := Color("#ae5148")
 const PLAYER_MARKER := Color("#f5e2a4")
@@ -111,6 +112,8 @@ func _draw() -> void:
                     tint = HIGHLAND
                 5:
                     tint = MARSH
+                6:
+                    tint = ASHEN
                 _:
                     tint = GRASS
 
@@ -165,18 +168,29 @@ func _marker(world_position: Vector2, color: Color, radius := 1.5) -> void:
 
 
 func _draw_region_labels() -> void:
-    var regions := [
-        [Vector2i(32, 8), "GREENWOOD"],
-        [Vector2i(53, 32), "HIGHLANDS"],
-        [Vector2i(20, 49), "FENLANDS"],
-        [Vector2i(32, 32), "HEARTHLAND"]
-    ]
+    var center := WorldConfig.map_size / 2
+    var regions: Array = []
+    if WorldConfig.profile_id == "frontier":
+        regions = [
+            [Vector2i(roundi(WorldConfig.map_size * 0.19), roundi(WorldConfig.map_size * 0.20)), "GREENWOOD"],
+            [Vector2i(roundi(WorldConfig.map_size * 0.81), roundi(WorldConfig.map_size * 0.20)), "HIGHLANDS"],
+            [Vector2i(roundi(WorldConfig.map_size * 0.19), roundi(WorldConfig.map_size * 0.80)), "FENLANDS"],
+            [Vector2i(roundi(WorldConfig.map_size * 0.81), roundi(WorldConfig.map_size * 0.80)), "ASHEN MARCH"],
+            [Vector2i(center, center), "HEARTHLAND"]
+        ]
+    else:
+        regions = [
+            [Vector2i(32, 8), "GREENWOOD"],
+            [Vector2i(53, 32), "HIGHLANDS"],
+            [Vector2i(20, 49), "FENLANDS"],
+            [Vector2i(32, 32), "HEARTHLAND"]
+        ]
     for item in regions:
         var cell: Vector2i = item[0]
         if fog.is_revealed_cell(cell):
             var label_position := _map_origin + (Vector2(cell) + Vector2(0.5, 0.5)) * _map_scale
             var font_size := maxi(6, roundi(6.0 * _map_scale / 3.0))
-            draw_string(font, label_position, String(item[1]), HORIZONTAL_ALIGNMENT_CENTER, 52.0 * _map_scale / 3.0, font_size, Color(1, 1, 1, 0.84))
+            draw_string(font, label_position, String(item[1]), HORIZONTAL_ALIGNMENT_CENTER, 60.0 * _map_scale / 3.0, font_size, Color(1, 1, 1, 0.84))
 
 
 func _draw_resource_markers() -> void:
