@@ -96,7 +96,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate — passed:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable stronghold approach, valid map bounds, viewport fit and 128×128 fog/index round-trip.
 
 ### Phase 02 — Territory, roads and supply
-**Status:** Regional control/road/connected-depot foundation merged into `main`. The current implementation branch adds bounded local stockpiles for Storage/Outposts, Frontier worker deposits into local depot balances, and save v12 persistence. Explicit inter-depot shipments, player-facing stock inspection, Outpost garrisons and local visibility remain open.
+**Status:** Regional control/road/connected-depot foundation merged into `main`. The current implementation branch adds bounded local stockpiles for Storage/Outposts, Frontier worker deposits into local depot balances, and periodic automatic shipments (3-second cadence, max 6 units per connected depot) to Keep under save v12. Player-directed orders, local stock UI, Outpost garrisons and local visibility remain open.
 
 - [x] Aggregate land claims into neutral/player/enemy/contested regional control records.
 - [x] Emit regional control changes independently from fog-of-war exploration.
@@ -112,7 +112,8 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Cover ownership states, road/bridge traversal, depot connectivity/disconnection, isolated Outposts and road save persistence.
 - [x] Pass the Godot 4.3/4.7 CI matrix, including the regional integration test (run `41289421611`, 24/24 jobs).
 - [ ] Add Outpost guard assignment, garrison support and local visibility.
-- [ ] Add explicit inter-depot shipment orders, in-transit cargo/recovery and stock inspection UI. Local outpost stock is not yet spendable by global construction/research until a transfer completes.
+- [x] Add bounded periodic transfer of up to 6 local units per connected depot to Keep Inventory every 3 seconds, with rotating resource-kind priority; disconnected depot stock stays local.
+- [ ] Add player-directed shipment orders, physical carrier trips/in-transit recovery and local stock inspection UI. Remote stock is not globally spendable until transferred.
 - [ ] Add supply attrition and raid vulnerability after local logistics are reliable.
 
 **Initial slice acceptance gate — passed:** regional ownership is independent of fog and supply; road/bridge routes remain navigable; depot connectivity updates when roads are built or removed; disconnected depots cannot receive inventory deposits; infrastructure persists in saves.
