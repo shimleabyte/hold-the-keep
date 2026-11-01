@@ -45,7 +45,8 @@ func configure(world_ref, fog_ref, territory_ref, font_ref: Font = null) -> void
 func configure_layout(viewport_size: Vector2) -> void:
     var available_width := maxf(192.0, viewport_size.x - 150.0)
     var available_height := maxf(192.0, viewport_size.y - 70.0)
-    _map_scale = clampf(minf(available_width, available_height) / float(WorldConfig.map_size), 3.0, 4.5)
+    var minimum_tile_scale := 1.0 if WorldConfig.profile_id == "frontier" else 3.0
+    _map_scale = clampf(minf(available_width, available_height) / float(WorldConfig.map_size), minimum_tile_scale, 4.5)
     _map_pixels = WorldConfig.map_size * _map_scale
     size = Vector2(_map_pixels + 128.0, _map_pixels + 50.0)
     _map_origin = Vector2((size.x - _map_pixels) * 0.5, 20.0)
