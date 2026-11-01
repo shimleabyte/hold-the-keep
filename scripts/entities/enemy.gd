@@ -28,6 +28,8 @@ var color := Color.RED
 var scale_f := 1.0
 var is_boss := false
 var runs := false
+var is_garrison := false
+var guard_origin := Vector2.ZERO
 
 var world
 var flow
@@ -67,8 +69,16 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref) -> void:
     _fh = int(_tex.get_height() / 3.0)
 
 
+func setup_guard(data: Dictionary, world_ref, flow_ref, player_ref, origin: Vector2) -> void:
+    setup(data, world_ref, flow_ref, player_ref)
+    is_garrison = true
+    guard_origin = origin
+
+
 func _ready() -> void:
     add_to_group("enemies")
+    if is_garrison:
+        add_to_group("enemy_garrison")
     anim.view = SpriteAnim.SIDE
 
 
@@ -79,6 +89,10 @@ func _physics_process(delta: float) -> void:
     _update_anim(delta)
     _footsteps(delta)
     _moving = false
+
+    if is_garrison:
+        _tick_garrison(delta)
+        return
 
     if player != null and is_instance_valid(player):
         if position.distance_to(player.position) < PLAYER_REACH:
@@ -108,6 +122,40 @@ func _physics_process(delta: float) -> void:
 
 
 ## Mulai ayunan jika serangan siap; damage jatuh ATTACK_HIT_DELAY kemudian (frame benturan).
+func _tick_garrison(delta: float) -> void:
+    var target := _nearest_guard_target()
+    if target != null:
+        var distance := position.distance_to(target.position)
+        if distance <= PLAYER_REACH:
+            _begin_attack(target, target.position - position)
+            return
+        if position.distance_to(guard_origin) <= 150.0:
+            _move_toward(target.position, delta)
+        else:
+            _move_toward(guard_origin, delta)
+    elif position.distance_to(guard_origin) > 16.0:
+        _move_toward(guard_origin, delta)
+
+
+func _nearest_guard_target() -> Node2D:
+    var best: Node2D = null
+    var best_distance := 150.0
+    var candidates := get_tree().get_nodes_in_group("defenders")
+    if player != null and is_instance_valid(player):
+        candidates.append(player)
+    for candidate in candidates:
+        var node := candidate as Node2D
+        if not is_instance_valid(node) or not node.visible:
+            continue
+        if node.global_position.distance_to(guard_origin) > 175.0:
+            continue
+        var distance := position.distance_to(node.global_position)
+        if distance < best_distance:
+            best_distance = distance
+            best = node
+    return best
+
+
 func _begin_attack(target, dir: Vector2) -> void:
     if _atk_cd > 0.0:
         return
@@ -179,6 +227,7 @@ func take_damage(amount: int) -> void:
     queue_redraw()
     if hp <= 0:
         remove_from_group("enemies")
+        remove_from_group("enemy_garrison")
         Events.enemy_killed.emit(id)
         if is_boss:
             Events.game_won.emit(GameClock.day)
@@ -192,8 +241,8 @@ func take_damage(amount: int) -> void:
 
 
 func retreat() -> void:
-    if is_boss:
-        return  # raja lawan tidak mundur saat fajar
+    if is_boss or is_garrison:
+        return  # raja dan penjaga benteng tidak mundur saat fajar
     remove_from_group("enemies")
     queue_free()
 

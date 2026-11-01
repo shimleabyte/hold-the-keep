@@ -128,9 +128,45 @@ func adjust_quota(job: String, delta: int) -> void:
     assign_jobs()
 
 
+func command_expedition() -> void:
+    var stronghold = get_tree().get_first_node_in_group("enemy_strongholds")
+    if stronghold == null or not is_instance_valid(stronghold):
+        Events.build_feedback.emit("Benteng lawan sudah tidak ada")
+        return
+    var fog = get_tree().get_first_node_in_group("fog_of_war")
+    if fog != null and not fog.is_revealed_cell(stronghold.cell):
+        Events.build_feedback.emit("Jelajahi wilayah lawan sebelum mengirim ekspedisi")
+        return
+
+    var soldiers: Array = []
+    var should_recall := false
+    for villager in villagers():
+        if villager.job == "soldier":
+            soldiers.append(villager)
+            should_recall = should_recall or villager.is_expeditioning()
+    if soldiers.is_empty():
+        Events.build_feedback.emit("Tetapkan kuota prajurit terlebih dahulu")
+        return
+    if should_recall:
+        for soldier in soldiers:
+            soldier.recall_expedition()
+        Events.build_feedback.emit("Ekspedisi ditarik. Prajurit kembali bertahan")
+        return
+
+    var sent := 0
+    for soldier in soldiers:
+        if soldier.start_expedition(stronghold):
+            sent += 1
+    Events.build_feedback.emit("Ekspedisi bergerak: %d prajurit" % sent)
+
+
 func _unhandled_input(event: InputEvent) -> void:
-    if event is InputEventKey and event.pressed and not event.echo and KEY_TO_JOB.has(event.keycode):
-        adjust_quota(KEY_TO_JOB[event.keycode], -1 if event.shift_pressed else 1)
+    if event is InputEventKey and event.pressed and not event.echo:
+        if event.keycode == KEY_G:
+            command_expedition()
+            get_viewport().set_input_as_handled()
+        elif KEY_TO_JOB.has(event.keycode):
+            adjust_quota(KEY_TO_JOB[event.keycode], -1 if event.shift_pressed else 1)
 
 
 ## Dipanggil tiap hari baru: makan. Kekurangan makanan = satu penduduk pergi.
