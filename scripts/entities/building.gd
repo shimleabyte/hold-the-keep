@@ -28,6 +28,8 @@ var world
 var data: Dictionary = {}
 var workers: Array = []
 var repairers: Array = []
+var guards: Array = []
+var guard_capacity := 0
 var local_stockpile: Dictionary = {}
 var stockpile_capacity := 0
 
@@ -49,6 +51,7 @@ func setup(d: Dictionary, anchor: Vector2i) -> void:
     _damage = int(data.get("damage", 0))
     _interval = float(data.get("fire_interval", 1.0))
     stockpile_capacity = int(data.get("stockpile_capacity", 0))
+    guard_capacity = int(data.get("guard_slots", 0))
     position = Vector2((cell.x + size.x / 2.0) * WorldConfig.tile_size, (cell.y + size.y) * WorldConfig.tile_size)
 
 
@@ -260,6 +263,30 @@ func repair(amount: int) -> bool:
     return true
 
 
+func guard_count() -> int:
+    guards = guards.filter(func(guard): return is_instance_valid(guard))
+    return guards.size()
+
+
+func free_guard_slots() -> int:
+    return maxi(0, guard_capacity - guard_count())
+
+
+func claim_guard(soldier) -> bool:
+    if id != "outpost" or guard_capacity <= 0 or not is_instance_valid(soldier):
+        return false
+    if guards.has(soldier):
+        return true
+    if free_guard_slots() <= 0:
+        return false
+    guards.append(soldier)
+    return true
+
+
+func release_guard(soldier) -> void:
+    guards.erase(soldier)
+
+
 func _release_workers() -> void:
     for worker in workers.duplicate():
         if is_instance_valid(worker):
@@ -269,6 +296,10 @@ func _release_workers() -> void:
         if is_instance_valid(worker):
             worker.on_repair_target_lost(self)
     repairers.clear()
+    for guard in guards.duplicate():
+        if is_instance_valid(guard) and guard.has_method("on_guard_outpost_lost"):
+            guard.on_guard_outpost_lost(self)
+    guards.clear()
 
 
 func _die() -> void:
