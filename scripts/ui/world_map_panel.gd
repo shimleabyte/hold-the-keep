@@ -192,7 +192,21 @@ func _draw_region_labels() -> void:
         if fog.is_revealed_cell(cell):
             var label_position := _map_origin + (Vector2(cell) + Vector2(0.5, 0.5)) * _map_scale
             var font_size := maxi(6, roundi(6.0 * _map_scale / 3.0))
-            draw_string(font, label_position, String(item[1]), HORIZONTAL_ALIGNMENT_CENTER, 60.0 * _map_scale / 3.0, font_size, Color(1, 1, 1, 0.84))
+            var label_color := Color(1, 1, 1, 0.84)
+            var control := "neutral"
+            if territory != null and world != null:
+                var region_id: String = world.region_id(cell)
+                var state: Dictionary = territory.get_region_state(region_id)
+                control = String(state.get("control", "neutral"))
+            match control:
+                "player":
+                    label_color = Color("#f0d39a")
+                "enemy":
+                    label_color = Color("#ef8a7c")
+                "contested":
+                    label_color = Color("#d49caa")
+            draw_circle(label_position + Vector2(-4.0, -3.0), maxf(1.2, _map_scale * 0.32), label_color)
+            draw_string(font, label_position, String(item[1]), HORIZONTAL_ALIGNMENT_CENTER, 60.0 * _map_scale / 3.0, font_size, label_color)
 
 
 func _draw_road_markers() -> void:
