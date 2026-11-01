@@ -150,7 +150,7 @@ Dokumen kanonik setiap fase berada di ROADMAP_NEXT_LEVEL.md dan docs/plans/. Aut
 Pondasi Frontier campaign sekarang sudah tersedia: world 128×128, lima biome, empat stronghold, 11 regional objectives, empat faksi, road-connected supply, dan 20-day/4-act calendar. Karena itu, jangan mengulang roadmap awal berupa peta region transisi atau single-stronghold upgrade.
 
 Batas sistem berikutnya:
-- Supply graph hanya menentukan konektivitas; itu belum menjadi ekonomi lokal. Implementasikan saldo per depot dan transfer barang sebelum menghitung attrition.
+- Supply graph menentukan konektivitas; local stockpile dan automatic Keep-bound shipments sekarang memberi saldo depot dan transfer dasar. Ini belum physical carrier simulation/player-directed shipment; attrition tetap ditunda sampai Outpost defense, camps dan raid consequences tersedia.
 - Outpost merupakan depot forward, tetapi belum memiliki garrison assignment dan visibility lokal.
 - Faction registry sudah menentukan identitas/roster; territorial AI masih harus dibangun dengan batas spawn, radius patrol, cooldown, target selection bounded, path reachability, dan save persistence.
 - Construction queue harus menjadi sumber progress pembangunan; jangan langsung menjadikan semua bangunan instant-place jika Builder adalah labor occupation.
