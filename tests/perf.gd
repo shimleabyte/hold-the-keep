@@ -10,7 +10,6 @@ var events
 ## Example:
 ## PROFILE=frontier ENEMIES=96 VILLAGERS=80 FRAMES=360 godot --headless --path . --script res://tests/perf.gd
 
-const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
 const DEFAULTS := {
     "profile": "frontier",
     "enemies": 96,
@@ -67,7 +66,7 @@ func region_cells(main: Node, region_id: String, limit: int) -> Array[Vector2i]:
 func spawn_enemy(main: Node, enemy_id: String, faction_id: String, cell: Vector2i) -> void:
     if not data_db.enemies.has(enemy_id):
         return
-    var enemy = ENEMY_SCRIPT.new()
+    var enemy = load("res://scripts/entities/enemy.gd").new()
     enemy.setup(data_db.enemies[enemy_id], main.world, main.flow, main.player, faction_id)
     enemy.position = Vector2(cell) * world_config.tile_size + Vector2(8.0, 8.0)
     main.world.entities.add_child(enemy)
@@ -107,7 +106,7 @@ func spawn_workload(main: Node, profile: String, enemy_count: int, villager_coun
 
     # Keep at least one ranged unit/projectile in the sampled workload.
     if data_db.enemies.has("archer"):
-        var archer = ENEMY_SCRIPT.new()
+        var archer = load("res://scripts/entities/enemy.gd").new()
         archer.setup(
             data_db.enemies["archer"],
             main.world,
