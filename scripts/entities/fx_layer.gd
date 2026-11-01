@@ -1,12 +1,13 @@
 extends Node2D
 ## Efek partikel ringan: satu node menyimpan dan menggambar semua partikel (tanpa node per partikel).
-## Dipicu lewat Events.fx_burst(kind, pos, dir, amount). Partikel punya "tinggi" semu (z) agar
-## serpihan terlempar ke atas lalu jatuh di tampilan top-down.
+## Partikel punya tinggi semu agar serpihan terlempar ke atas lalu jatuh di tampilan top-down.
 
 const MAX_PARTICLES := 500
 const KINDS := {
     "spark": {"n": 5, "speed": [25.0, 75.0], "up": [20.0, 55.0], "g": 240.0, "life": [0.16, 0.34], "size": [1, 1],
         "colors": ["#fff3b0", "#ffd23f", "#ffffff"]},
+    "impact": {"n": 8, "speed": [42.0, 105.0], "up": [28.0, 62.0], "g": 360.0, "life": [0.13, 0.27], "size": [1, 2],
+        "colors": ["#fffbe0", "#ffe08a", "#f3a64d", "#ffffff"]},
     "hurt": {"n": 5, "speed": [20.0, 60.0], "up": [20.0, 50.0], "g": 240.0, "life": [0.2, 0.4], "size": [1, 2],
         "colors": ["#ff8a7a", "#d63a3a", "#ffd9d0"]},
     "wood": {"n": 5, "speed": [15.0, 50.0], "up": [30.0, 75.0], "g": 280.0, "life": [0.35, 0.6], "size": [1, 2],
@@ -47,7 +48,7 @@ func _on_burst(kind: String, at: Vector2, dir: Vector2, amount: float) -> void:
     spawn(kind, at, dir, amount)
 
 
-## dir: arah dorongan (mis. menjauhi penyerang); nol = menyebar ke segala arah.
+## dir: arah dorongan; nol = menyebar ke segala arah.
 func spawn(kind: String, at: Vector2, dir := Vector2.ZERO, amount := 1.0) -> void:
     if not KINDS.has(kind):
         return
@@ -95,7 +96,7 @@ func _process(delta: float) -> void:
         else:
             _vz[i] -= _g[i] * delta
             _z[i] += _vz[i] * delta
-            if _z[i] < 0.0:  # mendarat: berhenti memantul, meluncur pelan
+            if _z[i] < 0.0:
                 _z[i] = 0.0
                 _vz[i] = 0.0
                 _vel[i] *= 0.85
@@ -107,7 +108,22 @@ func _process(delta: float) -> void:
 func _draw() -> void:
     for i in _pos.size():
         var c := _col[i]
-        var fade := clampf(_life[i] / _max[i] * 2.0, 0.0, 1.0)
-        c.a *= fade
-        var s := _size[i]
-        draw_rect(Rect2(floorf(_pos[i].x - s / 2.0), floorf(_pos[i].y - _z[i] - s / 2.0), s, s), c)
+        var life_ratio := clampf(_life[i] / _max[i], 0.0, 1.0)
+        c.a *= smoothstep(0.0, 0.3, life_ratio)
+        var particle_pos := _pos[i] - Vector2(0.0, _z[i])
+        var speed := _vel[i].length()
+        # Fast sparks/debris leave a short directional streak; dust stays soft.
+        if speed >= 80.0:
+            var trail_length := minf(4.0, speed * 0.025)
+            var tail := particle_pos - _vel[i].normalized() * trail_length
+            draw_line(tail, particle_pos, Color(c.r, c.g, c.b, c.a * 0.72), 1.0)
+        var particle_size := maxf(1.0, _size[i] * lerpf(0.55, 1.0, life_ratio))
+        draw_rect(
+            Rect2(
+                floorf(particle_pos.x - particle_size / 2.0),
+                floorf(particle_pos.y - particle_size / 2.0),
+                particle_size,
+                particle_size
+            ),
+            c
+        )

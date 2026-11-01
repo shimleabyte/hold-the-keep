@@ -109,6 +109,7 @@ diam (2), jalan (4), lari (4), serang (4), kerja (4), kena pukul (1), mati (3).
 - Penebang/penambang disinkronkan dengan timer pukulan; petani mengulang gerak menusuk
 - Villager yang kabur di malam hari dan prajurit yang mengejar musuh jauh berlari
 - Musuh yang tewas meninggalkan mayat yang jatuh lalu memudar
+- Secondary motion pixel-snapped: napas idle yang tidak serempak, lift langkah, antisipasi/lunge serangan, lean kerja, dan recoil saat terkena pukul
 - Dibuat oleh renderer humanoid berbasis pose di `tools/gen_assets.py`; ubah satu pose
   atau tampilan, jalankan ulang skrip, semua frame ikut berubah
 - Pemutar animasi: `scripts/entities/sprite_anim.gd`
@@ -117,7 +118,7 @@ diam (2), jalan (4), lari (4), serang (4), kerja (4), kena pukul (1), mati (3).
 - Busur tebasan pemain mengikuti arah hadap (menyapu dari aba-aba sampai pulih)
 - Partikel ringan (satu node menggambar semua, maksimal 500): percikan saat musuh kena,
   serpihan kayu dan batu saat panen, debu langkah saat berlari, puing saat bangunan diserang,
-  awan puing saat bangunan hancur atau raja tumbang
+  awan puing saat bangunan hancur atau raja tumbang; impact burst berkontras tinggi dan streak pendek untuk partikel cepat
 - Guncangan layar (bangunan hancur, pemain kena, langkah raja, raja tumbang); bisa dimatikan
   di menu jeda ("Guncangan layar") dan tersimpan di settings.cfg
 - Efek dipicu lewat `Events.fx_burst(kind, pos, dir, amount)` dan `Events.screen_shake(strength, duration)`;

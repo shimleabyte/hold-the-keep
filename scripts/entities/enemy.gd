@@ -366,7 +366,7 @@ func take_damage(amount: int) -> void:
         return
     var applied := maxi(1, roundi(float(amount) * (1.0 - armor)))
     hp -= applied
-    Events.fx_burst.emit("spark", position + Vector2(0, -_fh * 0.4), Vector2.ZERO, 2.0 if is_boss else 1.0)
+    Events.fx_burst.emit("impact", position + Vector2(0, -_fh * 0.4), Vector2.ZERO, 2.0 if is_boss else 1.0)
     modulate = Color(1.8, 1.8, 1.8)
     create_tween().tween_property(self, "modulate", Color.WHITE, 0.12)
     queue_redraw()
