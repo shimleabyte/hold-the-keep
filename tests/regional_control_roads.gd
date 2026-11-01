@@ -103,6 +103,31 @@ func _initialize() -> void:
     assert(main.flow.is_reachable(road_a),
         "Enemy flow routing must remain valid across road tiles")
 
+    var bridge_cell := Vector2i(-1, -1)
+    for y in range(1, world_config_size() - 1):
+        for x in range(1, world_config_size() - 1):
+            var cell := Vector2i(x, y)
+            if world.is_bridgeable(cell) and territory.is_claimed(cell)
+                and not world.occupied.has(cell)
+                and main.build.check("bridge", cell) == "":
+                bridge_cell = cell
+                break
+        if bridge_cell.x >= 0:
+            break
+    assert(bridge_cell.x >= 0,
+        "The starting claim must expose a safe reachable water cell for bridge construction")
+    assert(main.build.place("bridge", bridge_cell) == "",
+        "A bridge must be constructible over claimed water")
+    await ticks(2)
+    main.nav.rebuild()
+    assert(main.nav.is_walkable(bridge_cell),
+        "Villagers must be able to traverse a bridge over water")
+    main.flow.rebuild()
+    assert(main.flow.is_reachable(bridge_cell),
+        "Enemy route fields must cross a built bridge")
+    assert(main.supply.is_road_connected(bridge_cell),
+        "A bridge adjacent to the road chain must join the Keep supply network")
+
     var storage = main.build.place_raw("storage", Vector2i(29, 34))
     await ticks(2)
     main.supply.rebuild()
