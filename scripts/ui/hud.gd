@@ -448,6 +448,17 @@ func _process(delta: float) -> void:
         _research_bar.set_value(Tech.progress_ratio())
     _tech_btn.busy = Tech.current != ""
     _tech_btn.queue_redraw()
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node != null:
+        var stage: Dictionary = main_node.spawner.stage_info(GameClock.day)
+        var from_day := int(stage.get("from_day", 1))
+        var to_day := int(stage.get("to_day", 15))
+        _stage_label.text = "%s  %s" % [String(stage.get("label", "BAB I")), String(stage.get("name", "PERBATASAN"))]
+        var stage_progress := float(GameClock.day - from_day + 1) / float(maxi(1, to_day - from_day + 1))
+        _stage_bar.set_value(clampf(stage_progress, 0.0, 1.0))
+        if _map_panel.world != main_node.world or _map_panel.fog != main_node.fog or _map_panel.territory != main_node.territory:
+            _map_panel.configure(main_node.world, main_node.fog, main_node.territory, _font)
+
     var foes := get_tree().get_nodes_in_group("enemies")
     _foes.text = str(foes.size())
     _foes.visible = foes.size() > 0
@@ -486,7 +497,13 @@ func _unhandled_input(event: InputEvent) -> void:
             get_tree().paused = false
             get_tree().reload_current_scene()
         return
-    if event.keycode == KEY_H or event.keycode == KEY_F1:
+    if event.keycode == KEY_ESCAPE and _map_panel.visible:
+        _toggle_map()
+        get_viewport().set_input_as_handled()
+    elif event.keycode == KEY_TAB:
+        _toggle_map()
+        get_viewport().set_input_as_handled()
+    elif event.keycode == KEY_H or event.keycode == KEY_F1:
         _help.visible = not _help.visible
     elif event.keycode == KEY_F3:
         _fps.visible = not _fps.visible
@@ -502,6 +519,16 @@ func blocks_mouse(pos: Vector2) -> bool:
 
 
 # ---------------------------------------------------------------- handler event
+
+func _on_stage_changed(_stage_id: String, stage_name: String, day: int) -> void:
+    _banner.text = "%s\nHARI %d" % [stage_name, day]
+    _banner.modulate.a = 1.0
+    if _banner_tween != null:
+        _banner_tween.kill()
+    _banner_tween = create_tween()
+    _banner_tween.tween_interval(2.8)
+    _banner_tween.tween_property(_banner, "modulate:a", 0.0, 0.6)
+
 
 func _on_resource_changed(_kind: String, _amount: int) -> void:
     _refresh_resources()
