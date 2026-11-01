@@ -101,7 +101,7 @@ func reason(id: String) -> String:
         return "Butuh bangunan: " + String(DataDB.buildings[need_b]["name"])
     var cost: Dictionary = cost_of(id)
     var supply = get_tree().get_first_node_in_group("supply_network")
-    var cost_error := supply.cost_reason(cost) if supply != null else (
+    var cost_error: String = supply.cost_reason(cost) if supply != null else (
         "" if Inventory.can_afford(cost) else "Bahan kurang di KEEP"
     )
     if cost_error != "":
@@ -129,7 +129,7 @@ func start(id: String) -> bool:
     var supply = get_tree().get_first_node_in_group("supply_network")
     var paid: bool = supply.pay_cost(cost) if supply != null else Inventory.spend_all(cost)
     if not paid:
-        var cost_error := supply.cost_reason(cost) if supply != null else "Bahan kurang di KEEP"
+        var cost_error: String = supply.cost_reason(cost) if supply != null else "Bahan kurang di KEEP"
         Events.build_feedback.emit(cost_error if cost_error != "" else "Stok sumber biaya berubah")
         return false
     current = id
