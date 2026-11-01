@@ -21,6 +21,7 @@ Semua dari akar proyek (setelah `godot --headless --path . --import` sekali):
 | save_load_audio_menu.gd | round-trip save/load, autosave, save rusak, audio, menu, pengaturan |
 | resource_save_state.gd | status pohon/batu/bijih besi dan timer tumbuh ulang, rollback ke backup save |
 | campaign_assault.gd | klaim musuh, fog reveal/save, G assault/recall, garrison saat fajar, conquest victory |
+| map_stages.gd | empat biome, fog map panel, batas tiga bab, bobot archer/brute per bab |
 | player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, archer projectile, brute armor, combat save |
 | input_rebinding.gd | perubahan keybind, penolakan konflik/reserved key, persistensi settings |
 | restart_gameover.gd | layar game over dan restart (R) |
@@ -40,6 +41,7 @@ Dijalankan di layar virtual dengan OpenGL software, hasilnya PNG di /tmp/shots:
     xvfb-run -a -s "-screen 0 1600x900x24" godot --path . --rendering-driver opengl3 --fixed-fps 60 --script tests/shot_overview.gd
 
 - shot_overview.gd: siang, bantuan, malam, boss, mode bangun
+- strategic map: buka TAB/MAP dan cek fog, marker, ownership tint, serta label region
 - shot_tech.gd: panel teknologi, HUD dengan riset berjalan, urat bijih besi
 - shot_animation.gd: close-up serang, lari, mayat
 - shot_fx.gd: close-up efek partikel
