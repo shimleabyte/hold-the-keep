@@ -26,6 +26,8 @@ const REGION_FENLANDS := 3
 const REGION_ASHEN_MARCH := 4
 
 var _frontier_regions := PackedByteArray()
+var generated_resource_layout: Array[Dictionary] = []
+var generate_resource_nodes := true
 
 var map_seed := 1337
 var map_size := 64
@@ -53,6 +55,7 @@ func _ready() -> void:
     entities.y_sort_enabled = true
     add_child(entities)
 
+    generated_resource_layout.clear()
     if WorldConfig.profile_id == "frontier":
         _generate_frontier()
     else:
@@ -215,15 +218,23 @@ func _generate_frontier() -> void:
             var foot := Vector2(x * tile_size + tile_size / 2.0, y * tile_size + tile_size)
 
             if resource_rng.randf() < tree_density:
-                var tree := TREE_SCRIPT.new()
-                tree.position = foot
-                entities.add_child(tree)
-                occupied[cell] = tree
+                generated_resource_layout.append({"cell": cell, "kind": "wood"})
+                if generate_resource_nodes:
+                    var tree := TREE_SCRIPT.new()
+                    tree.position = foot
+                    entities.add_child(tree)
+                    occupied[cell] = tree
+                else:
+                    occupied[cell] = true
             elif resource_rng.randf() < rock_density:
-                var rock := ROCK_SCRIPT.new()
-                rock.position = foot
-                entities.add_child(rock)
-                occupied[cell] = rock
+                generated_resource_layout.append({"cell": cell, "kind": "stone"})
+                if generate_resource_nodes:
+                    var rock := ROCK_SCRIPT.new()
+                    rock.position = foot
+                    entities.add_child(rock)
+                    occupied[cell] = rock
+                else:
+                    occupied[cell] = true
 
 
 func _build_frontier_regions() -> void:
@@ -372,6 +383,10 @@ func _spawn_frontier_iron() -> void:
 
 
 func _place_iron_node(cell: Vector2i) -> void:
+    generated_resource_layout.append({"cell": cell, "kind": "iron"})
+    if not generate_resource_nodes:
+        occupied[cell] = true
+        return
     var ore := IRON_SCRIPT.new()
     ore.position = Vector2(
         cell.x * tile_size + tile_size / 2.0,
