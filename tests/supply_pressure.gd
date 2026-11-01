@@ -43,6 +43,54 @@ func saved_raider_for(enemies: Array) -> Dictionary:
     return {}
 
 
+func _road_cell_passable(main, cell: Vector2i) -> bool:
+    if not main.world.is_buildable(cell):
+        return false
+    var occupant = main.world.occupied.get(cell)
+    return occupant == null or (is_instance_valid(occupant) and occupant.is_in_group("roads"))
+
+
+func find_road_path(main, keep, depot) -> Array[Vector2i]:
+    var directions: Array[Vector2i] = [
+        Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)
+    ]
+    var queue: Array[Vector2i] = []
+    var parents: Dictionary = {}
+    for keep_cell in keep.cells():
+        for direction in directions:
+            var start: Vector2i = keep_cell + direction
+            if _road_cell_passable(main, start) and not parents.has(start):
+                parents[start] = Vector2i(-1, -1)
+                queue.append(start)
+    var destination_cells: Array[Vector2i] = depot.cells()
+    var cursor := 0
+    var endpoint := Vector2i(-1, -1)
+    while cursor < queue.size():
+        var current: Vector2i = queue[cursor]
+        cursor += 1
+        for direction in directions:
+            if destination_cells.has(current + direction):
+                endpoint = current
+                break
+        if endpoint.x >= 0:
+            break
+        for direction in directions:
+            var next: Vector2i = current + direction
+            if parents.has(next) or not _road_cell_passable(main, next):
+                continue
+            parents[next] = current
+            queue.append(next)
+    if endpoint.x < 0:
+        return []
+    var path: Array[Vector2i] = []
+    var current := endpoint
+    while current.x >= 0:
+        path.append(current)
+        current = parents[current]
+    path.reverse()
+    return path
+
+
 func _initialize() -> void:
     var config = root.get_node("WorldConfig")
     var clock = root.get_node("GameClock")
@@ -82,6 +130,7 @@ func _initialize() -> void:
         "The isolated Outpost must hold local stock for raid tests")
 
     main.territory.rebuild()
+    main.territory.enemy_claimed_cells[outpost.cell] = true
     for radius in range(4, 10):
         for y in range(-radius, radius + 1):
             for x in range(-radius, radius + 1):
@@ -215,7 +264,20 @@ func _initialize() -> void:
         "Save/load must restore the same saboteur target and raid state")
 
     restored_main.supply.set_process(false)
-    restored_main.supply._depot_connections[restored_outpost.get_instance_id()] = true
+    var restored_keep = null
+    for building in get_tree().get_nodes_in_group("buildings"):
+        if String(building.id) == "keep":
+            restored_keep = building
+            break
+    require(restored_keep != null, "Reload must retain the Keep for road reconnection")
+    var road_path := find_road_path(restored_main, restored_keep, restored_outpost)
+    require(not road_path.is_empty(), "A cardinal, buildable road route must exist between Keep and Outpost")
+    for road_cell in road_path:
+        if not restored_main.world.occupied.has(road_cell):
+            restored_main.build.place_raw("road", road_cell)
+    restored_main.supply.rebuild()
+    require(restored_main.supply.is_depot_connected(restored_outpost),
+        "The actual road graph must reconnect the remote Outpost to Keep")
     restored_main.supply.advance_supply_pressure(1.0)
     require(restored_main.supply.depot_pressure_state(restored_outpost)["status"] == "connected",
         "Reconnecting the depot to Keep must clear its vulnerability state")
