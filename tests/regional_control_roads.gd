@@ -107,9 +107,7 @@ func _initialize() -> void:
     for y in range(1, world_config_size() - 1):
         for x in range(1, world_config_size() - 1):
             var cell := Vector2i(x, y)
-            if world.is_bridgeable(cell) and territory.is_claimed(cell)
-                and not world.occupied.has(cell)
-                and main.build.check("bridge", cell) == "":
+            if world.is_bridgeable(cell) and territory.is_claimed(cell) and not world.occupied.has(cell) and main.build.check("bridge", cell) == "":
                 bridge_cell = cell
                 break
         if bridge_cell.x >= 0:
