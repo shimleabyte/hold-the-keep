@@ -8,6 +8,7 @@ const PLAYER_SCRIPT := preload("res://scripts/entities/player.gd")
 const BUILD_SCRIPT := preload("res://scripts/systems/build_system.gd")
 const FLOW_SCRIPT := preload("res://scripts/systems/flow_field.gd")
 const NAV_SCRIPT := preload("res://scripts/systems/nav_grid.gd")
+const SUPPLY_SCRIPT := preload("res://scripts/systems/supply_network.gd")
 const VILLAGE_SCRIPT := preload("res://scripts/systems/village.gd")
 const EVENT_SCRIPT := preload("res://scripts/systems/event_manager.gd")
 const SPAWNER_SCRIPT := preload("res://scripts/systems/wave_spawner.gd")
@@ -31,6 +32,7 @@ var build
 var flow
 var spawner
 var nav
+var supply
 var village
 var events
 
@@ -85,6 +87,10 @@ func _ready() -> void:
     build.player = player
     build.territory = territory
     add_child(build)
+
+    supply = SUPPLY_SCRIPT.new()
+    supply.world = world
+    add_child(supply)
 
     add_child(HUD_SCRIPT.new())
     add_child(TECH_PANEL_SCRIPT.new())
