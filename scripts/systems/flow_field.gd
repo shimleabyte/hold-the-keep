@@ -69,7 +69,7 @@ func _passable(c: Vector2i) -> bool:
 
 func _solid(c: Vector2i) -> bool:
     var occupant = world.occupied.get(c)
-    var blocks_path := occupant != null and not (is_instance_valid(occupant) and occupant.is_in_group("roads"))
+    var blocks_path: bool = occupant != null and not (is_instance_valid(occupant) and occupant.is_in_group("roads"))
     return not world.is_buildable(c) or blocks_path
 
 
