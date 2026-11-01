@@ -20,6 +20,9 @@ jalankan saat meninjau animasi, pertarungan, efek, ekonomi atau alur save/menu.
 GitHub Actions menjalankan kedua langkah tersebut pada Godot 4.3 dan 4.7 untuk setiap pull request
 ke `main`, push ke `main` atau branch `feat/**` / `fix/**`, serta workflow manual.
 
+Suite assertion juga menguji regional ownership, jalan yang dapat dilalui, depot yang terhubung ke Keep,
+dan pemutusan jaringan supply saat segmen jalan dihancurkan melalui `regional_control_roads.gd`.
+
 | Skrip | Menguji |
 |---|---|
 | tech_tree.gd | syarat riset, efek ke entitas yang ada, bangunan terkunci, bijih besi, HUD, panel, save/load |
