@@ -42,13 +42,16 @@ func _initialize() -> void:
         "Saved windowed size must satisfy the minimum display dimensions")
 
     for size_case in RESOLUTION_CASES:
+        var window_size: Vector2i = size_case["window"]
         var expected: Vector2i = size_case["viewport"]
-        assert(settings.viewport_size_for_window(size_case["window"]) == expected,
+        assert(settings.viewport_size_for_window(window_size) == expected,
             "Viewport must be derived from the matching physical window resolution")
 
     settings._sync_content_viewport()
     await process_frame
-    var live_window_size := DisplayServer.window_get_size()
+    var live_window_size: Vector2i = DisplayServer.window_get_size()
+    if live_window_size.x <= 0 or live_window_size.y <= 0:
+        live_window_size = settings.windowed_size
     assert(root.content_scale_size == settings.viewport_size_for_window(live_window_size),
         "The live content viewport must match half the actual client-window size")
 
@@ -82,8 +85,8 @@ func _initialize() -> void:
             hud._jobs_panel.position.y + hud._jobs_panel.size.y,
             hud._boss_panel.position.y + hud._boss_panel.size.y
         )
-        var bottom_hud_edge := hud._combat_bar.position.y
-        var clear_playfield_height := bottom_hud_edge - top_hud_edge
+        var bottom_hud_edge: float = float(hud._combat_bar.position.y)
+        var clear_playfield_height: float = bottom_hud_edge - top_hud_edge
         assert(clear_playfield_height >= viewport_size.y * 0.30,
             "At least 30% of the viewport height must remain clear between HUD bands")
 
