@@ -7,6 +7,8 @@ func ticks(count: int) -> void:
 
 
 func _initialize() -> void:
+    var game_clock = root.get_node("GameClock")
+    var save_system = root.get_node("SaveSystem")
     DirAccess.remove_absolute("user://save.json")
     DirAccess.remove_absolute("user://save.tmp")
     DirAccess.remove_absolute("user://save.bak")
@@ -14,7 +16,7 @@ func _initialize() -> void:
     root.add_child(main)
     current_scene = main
     await ticks(4)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
 
     var valid_shape := {
         "version": 2,
@@ -29,14 +31,14 @@ func _initialize() -> void:
         "tech": {},
         "resources": []
     }
-    assert(SaveSystem._valid_save(valid_shape), "A complete save structure should validate")
+    assert(save_system._valid_save(valid_shape), "A complete save structure should validate")
     var missing_carry := valid_shape.duplicate(true)
     missing_carry["villagers"][0].erase("carry")
-    assert(not SaveSystem._valid_save(missing_carry),
+    assert(not save_system._valid_save(missing_carry),
         "Save validation must reject villagers missing fields consumed by the loader")
     var invalid_resources := valid_shape.duplicate(true)
     invalid_resources["resources"] = [{"cx": 4, "cy": 5, "kind": "wood", "state": "not a dictionary"}]
-    assert(not SaveSystem._valid_save(invalid_resources),
+    assert(not save_system._valid_save(invalid_resources),
         "Save validation must reject malformed resource state")
 
     var nodes := {}
@@ -55,20 +57,20 @@ func _initialize() -> void:
     nodes["wood"].import_state({"hp": 0, "regrow": 17.5})
     nodes["stone"].import_state({"hp": 2, "regrow": 0.0})
     nodes["iron"].import_state({"hp": 0, "regrow": 54.0})
-    assert(SaveSystem.save_current(true), "Initial resource save must succeed")
+    assert(save_system.save_current(true), "Initial resource save must succeed")
 
     # Write another valid save so the first save becomes the rollback copy.
     nodes["wood"].import_state({"hp": 2, "regrow": 0.0})
     nodes["stone"].import_state({"hp": 0, "regrow": 31.0})
     nodes["iron"].import_state({"hp": 3, "regrow": 0.0})
-    assert(SaveSystem.save_current(true), "Second resource save must succeed")
+    assert(save_system.save_current(true), "Second resource save must succeed")
 
     var broken = FileAccess.open("user://save.json", FileAccess.WRITE)
     assert(broken != null, "Primary save should be writable for corruption test")
     broken.store_string("{broken json")
     broken.close()
 
-    assert(SaveSystem.request_load(), "Loader must recover from the valid backup")
+    assert(save_system.request_load(), "Loader must recover from the valid backup")
     await ticks(4)
     var restored = current_scene
     for kind in ["wood", "stone", "iron"]:
