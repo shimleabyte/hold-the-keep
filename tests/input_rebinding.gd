@@ -1,27 +1,47 @@
 extends SceneTree
 ## Checks persisted keyboard rebinding, duplicate rejection, and protected shortcuts.
 
+
+func check(condition: bool, message: String) -> bool:
+    if condition:
+        return true
+    push_error("FAIL: " + message)
+    quit(1)
+    return false
+
+
 func _initialize() -> void:
+    # SceneTree scripts begin before the project's autoload _ready callbacks.
+    await process_frame
     var settings = root.get_node("Settings")
+    if not check(InputMap.has_action("move_up"), "InputSetup must register actions before rebinding"):
+        return
+
     var previous_bindings: Dictionary = settings.custom_bindings.duplicate()
     var previous_events: Dictionary = {}
     for action in settings.BINDABLE_ACTIONS:
         previous_events[action] = InputMap.action_get_events(action).duplicate()
 
-    assert(settings.set_key_binding("move_up", KEY_I),
-        "A free key should be accepted")
-    assert(settings.get_key_binding("move_up") == KEY_I,
-        "InputMap should apply the new key immediately")
-    assert(not settings.set_key_binding("move_down", KEY_I),
-        "A key already used by another core action must be rejected")
-    assert(not settings.set_key_binding("move_up", KEY_P),
-        "Hardcoded menu shortcuts must be protected")
+    if not check(settings.set_key_binding("move_up", KEY_I),
+        "A free key should be accepted"):
+        return
+    if not check(settings.get_key_binding("move_up") == KEY_I,
+        "InputMap should apply the new key immediately"):
+        return
+    if not check(not settings.set_key_binding("move_down", KEY_I),
+        "A key already used by another core action must be rejected"):
+        return
+    if not check(not settings.set_key_binding("move_up", KEY_P),
+        "Hardcoded menu shortcuts must be protected"):
+        return
 
     var config := ConfigFile.new()
-    assert(config.load("user://settings.cfg") == OK,
-        "Settings file should exist after rebinding")
-    assert(int(config.get_value("input", "move_up", 0)) == KEY_I,
-        "New key should persist in settings.cfg")
+    if not check(config.load("user://settings.cfg") == OK,
+        "Settings file should exist after rebinding"):
+        return
+    if not check(int(config.get_value("input", "move_up", 0)) == KEY_I,
+        "New key should persist in settings.cfg"):
+        return
 
     settings.custom_bindings = previous_bindings
     for action in settings.BINDABLE_ACTIONS:
