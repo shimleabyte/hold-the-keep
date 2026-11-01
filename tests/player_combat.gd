@@ -61,6 +61,18 @@ func _initialize() -> void:
     assert(soldier._rally_damage_mult > 1.0 and soldier._rally_interval_mult < 1.0,
         "Rally must improve soldier damage and attack cadence")
 
+    var wolf = enemy_script.new()
+    wolf.setup(DataDB.enemies["wolf"], main.world, main.flow, player)
+    wolf.position = player.global_position + Vector2(20, 0)
+    main.world.entities.add_child(wolf)
+    wolf.set_physics_process(false)
+    assert(wolf.role == "pouncer", "Wolf must use its pounce role")
+    wolf._begin_attack(player, Vector2.LEFT)
+    assert(wolf._pounce_t > 0.0, "Wolf attack must launch a lunge")
+    wolf.apply_stagger(0.3)
+    assert(wolf._pounce_t == 0.0 and wolf._stagger_t > 0.0,
+        "Stagger must interrupt an active pounce")
+
     var archer = enemy_script.new()
     archer.setup(DataDB.enemies["archer"], main.world, main.flow, player)
     assert(archer.role == "ranged" and archer.preferred_range > 0.0,
@@ -80,6 +92,11 @@ func _initialize() -> void:
     var brute_hp := brute.hp
     brute.take_damage(20)
     assert(brute.hp == brute_hp - 16, "Brute armor must reduce incoming damage")
+
+    var xp_before_kill := player.experience
+    brute.take_damage(9999)
+    assert(player.experience == xp_before_kill + 32,
+        "Enemy kill signal must award the player's XP reward")
 
     var snapshot: Dictionary = SaveSystem.collect(main)
     assert(snapshot["player"]["combat"]["level"] == 3,
