@@ -15,7 +15,7 @@ func _initialize() -> void:
     root.add_child(main)
     current_scene = main
     await ticks(4)
-    GameClock.set_process(false)
+    root.get_node("GameClock").set_process(false)
 
     var stronghold = main.enemy_keep
     assert(stronghold != null and is_instance_valid(stronghold),
