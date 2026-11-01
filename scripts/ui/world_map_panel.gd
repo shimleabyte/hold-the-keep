@@ -286,12 +286,13 @@ func _draw_frontier_site_markers() -> void:
             "defend":
                 marker_color = Color("#84a9d2")
 
+        var is_locked := int(site.definition.get("act", 1)) > site.manager.unlocked_act
         if site.site_state == "failed":
             marker_color = Color("#765453")
-        elif int(site.definition.get("act", 1)) > site.manager.unlocked_act:
+        elif is_locked:
             marker_color = marker_color.darkened(0.55)
 
-        if site.site_state == "escorting" or site.site_state == "active":
+        if not is_locked and (site.site_state == "escorting" or site.site_state == "active"):
             draw_circle(marker_position, marker_size * 1.05, Color("#f4d08a"))
         if String(site.objective_type) in ["rescue", "escort"]:
             draw_circle(marker_position, marker_size * 0.58, marker_color)
