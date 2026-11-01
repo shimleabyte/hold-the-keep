@@ -1,7 +1,6 @@
 extends Node
-## Road-connected logistics. Roads are walkable infrastructure, not blockers.
-## A depot is connected when its footprint touches the Keep or a road component
-## that reaches the Keep footprint.
+## Road-connected logistics. Automatic transfers remain bounded; player orders
+## reserve cargo immediately and move it with visible, recoverable couriers.
 
 const DIRS4: Array[Vector2i] = [
     Vector2i(1, 0), Vector2i(-1, 0),
@@ -10,13 +9,22 @@ const DIRS4: Array[Vector2i] = [
 const TRANSFER_INTERVAL := 3.0
 const TRANSFER_BUDGET_PER_DEPOT := 6
 const TRANSFER_KINDS: Array[String] = ["wood", "stone", "food", "iron"]
+const MAX_SHIPMENT_AMOUNT := 60
+const MAX_SHIPMENT_HISTORY := 16
+const SHIPMENT_TICK := 0.2
+const CARRIER_SCRIPT := preload("res://scripts/entities/supply_carrier.gd")
 
 var world
+var nav
 var connected_road_cells: Dictionary = {}
 var _depot_connections: Dictionary = {}
 var _dirty := true
 var _transfer_timer := 0.0
 var _transfer_cursor := 0
+var _shipment_timer := 0.0
+var _next_shipment_id := 1
+var shipment_orders: Array[Dictionary] = []
+var _carriers: Dictionary = {}
 
 
 func _ready() -> void:
@@ -39,14 +47,17 @@ func _process(delta: float) -> void:
     if WorldConfig.profile_id != "frontier":
         return
     _transfer_timer += delta
-    if _transfer_timer < TRANSFER_INTERVAL:
-        return
-    _transfer_timer = 0.0
-    transfer_local_stockpiles()
+    if _transfer_timer >= TRANSFER_INTERVAL:
+        _transfer_timer = 0.0
+        transfer_local_stockpiles()
+    _shipment_timer += delta
+    if _shipment_timer >= SHIPMENT_TICK:
+        _shipment_timer = 0.0
+        advance_shipment_orders()
 
 
 ## Move a bounded amount from each connected remote depot into the Keep inventory.
-## This is an automatic road-network shipment; disconnected stock remains at its source.
+## This legacy automatic route remains separate from player-directed physical trips.
 func transfer_local_stockpiles() -> int:
     if WorldConfig.profile_id != "frontier":
         return 0
@@ -57,11 +68,7 @@ func transfer_local_stockpiles() -> int:
             return a.cell.x < b.cell.x
         return a.cell.y < b.cell.y
     )
-    var keep = null
-    for depot in depots:
-        if is_instance_valid(depot) and String(depot.id) == "keep":
-            keep = depot
-            break
+    var keep = _find_keep()
     if keep == null:
         return 0
 
@@ -85,6 +92,286 @@ func transfer_local_stockpiles() -> int:
                 break
     _transfer_cursor = (_transfer_cursor + 1) % TRANSFER_KINDS.size()
     return moved
+
+
+## Create a reserved shipment. Cargo leaves its source immediately and remains
+## owned by the order until delivery, cancellation/refund, or explicit recovery.
+## Returns the order ID, or -1 when any precondition fails.
+func create_shipment(source_cell: Vector2i, destination_cell: Vector2i, kind: String, amount: int) -> int:
+    if WorldConfig.profile_id != "frontier" or not TRANSFER_KINDS.has(kind):
+        return -1
+    if amount <= 0 or amount > MAX_SHIPMENT_AMOUNT or source_cell == destination_cell:
+        return -1
+    _ensure_current()
+    var source = _find_depot(source_cell)
+    var destination = _find_depot(destination_cell)
+    if source == null or destination == null or source == destination:
+        return -1
+    if not is_depot_connected(source) or not is_depot_connected(destination):
+        return -1
+    if destination.id != "keep":
+        var reserved := _reserved_capacity(destination_cell)
+        if destination.stockpile_total() + reserved + amount > destination.stockpile_capacity:
+            return -1
+
+    var withdrawn := Inventory.spend(kind, amount) if source.id == "keep" else source.take_resource(kind, amount)
+    if not withdrawn:
+        return -1
+
+    var order_id := _next_shipment_id
+    _next_shipment_id += 1
+    shipment_orders.append({
+        "id": order_id,
+        "source_x": source.cell.x,
+        "source_y": source.cell.y,
+        "destination_x": destination.cell.x,
+        "destination_y": destination.cell.y,
+        "kind": kind,
+        "amount": amount,
+        "cargo": amount,
+        "status": "queued",
+        "x": source.position.x,
+        "y": source.position.y
+    })
+    _trim_shipment_history()
+    advance_shipment_orders()
+    return order_id
+
+
+func cancel_shipment(order_id: int) -> bool:
+    var index := _order_index(order_id)
+    if index < 0:
+        return false
+    var order: Dictionary = shipment_orders[index]
+    if not _is_active_order(order):
+        return false
+    _remove_carrier(order_id)
+    _recover_cargo(order, "cancelled")
+    return true
+
+
+func get_shipment_orders() -> Array[Dictionary]:
+    return shipment_orders.duplicate(true)
+
+
+func get_shipment_status_label(status: String) -> String:
+    match status:
+        "queued":
+            return "ANTRE"
+        "in_transit":
+            return "DI JALAN"
+        "blocked":
+            return "TERPUTUS"
+        "delivered":
+            return "TIBA"
+        "cancelled":
+            return "DIBATALKAN"
+        "recovered":
+            return "DIPULIHKAN"
+    return "TIDAK DIKETAHUI"
+
+
+func advance_shipment_orders() -> void:
+    if WorldConfig.profile_id != "frontier":
+        return
+    _ensure_current()
+    for index in range(shipment_orders.size()):
+        var order: Dictionary = shipment_orders[index]
+        if not _is_active_order(order):
+            continue
+        var destination = _find_depot(Vector2i(int(order["destination_x"]), int(order["destination_y"])))
+        if destination == null:
+            _remove_carrier(int(order["id"]))
+            _recover_cargo(order, "recovered")
+            shipment_orders[index] = order
+            continue
+        if not shipment_route_available(int(order["id"])):
+            if String(order["status"]) == "in_transit":
+                _remove_carrier(int(order["id"]))
+            order["status"] = "blocked"
+            shipment_orders[index] = order
+            continue
+        var carrier = _carriers.get(int(order["id"]), null)
+        if is_instance_valid(carrier):
+            continue
+        var start := Vector2(float(order["x"]), float(order["y"]))
+        var courier = CARRIER_SCRIPT.new()
+        if not courier.configure(self, nav, int(order["id"]), destination, start):
+            order["status"] = "blocked"
+            shipment_orders[index] = order
+            continue
+        world.entities.add_child(courier)
+        _carriers[int(order["id"])] = courier
+        order["status"] = "in_transit"
+        shipment_orders[index] = order
+
+
+func shipment_route_available(order_id: int) -> bool:
+    var index := _order_index(order_id)
+    if index < 0:
+        return false
+    var order: Dictionary = shipment_orders[index]
+    var destination = _find_depot(Vector2i(int(order["destination_x"]), int(order["destination_y"])))
+    if destination == null or not is_depot_connected(destination):
+        return false
+    # Source stock was already withdrawn. A destroyed source no longer blocks delivery.
+    var source = _find_depot(Vector2i(int(order["source_x"]), int(order["source_y"])))
+    return source == null or is_depot_connected(source)
+
+
+func carrier_blocked(order_id: int, carrier_position: Vector2) -> void:
+    var index := _order_index(order_id)
+    if index < 0:
+        return
+    var order: Dictionary = shipment_orders[index]
+    if not _is_active_order(order):
+        return
+    order["status"] = "blocked"
+    order["x"] = carrier_position.x
+    order["y"] = carrier_position.y
+    shipment_orders[index] = order
+    _carriers.erase(order_id)
+
+
+func carrier_completed(order_id: int, carrier_position: Vector2) -> void:
+    var index := _order_index(order_id)
+    if index < 0:
+        return
+    var order: Dictionary = shipment_orders[index]
+    if not _is_active_order(order):
+        return
+    if not shipment_route_available(order_id):
+        carrier_blocked(order_id, carrier_position)
+        return
+    var destination = _find_depot(Vector2i(int(order["destination_x"]), int(order["destination_y"])))
+    if destination == null:
+        _recover_cargo(order, "recovered")
+        shipment_orders[index] = order
+        _carriers.erase(order_id)
+        return
+    var amount := int(order["cargo"])
+    var kind := String(order["kind"])
+    var delivered := false
+    if destination.id == "keep":
+        Inventory.add(kind, amount)
+        delivered = true
+    else:
+        delivered = destination.store_resource(kind, amount)
+    if not delivered:
+        _recover_cargo(order, "recovered")
+    else:
+        order["cargo"] = 0
+        order["status"] = "delivered"
+    order["x"] = carrier_position.x
+    order["y"] = carrier_position.y
+    shipment_orders[index] = order
+    _carriers.erase(order_id)
+    _trim_shipment_history()
+
+
+func _recover_cargo(order: Dictionary, final_status: String) -> void:
+    var amount := int(order.get("cargo", 0))
+    if amount > 0:
+        var kind := String(order.get("kind", ""))
+        var source = _find_depot(Vector2i(int(order.get("source_x", -1)), int(order.get("source_y", -1))))
+        if source == null or source.id == "keep":
+            Inventory.add(kind, amount)
+        else:
+            var room := maxi(0, source.stockpile_capacity - source.stockpile_total())
+            var returned := mini(room, amount)
+            if returned > 0:
+                source.store_resource(kind, returned)
+            if returned < amount:
+                Inventory.add(kind, amount - returned)
+    order["cargo"] = 0
+    order["status"] = final_status
+    var index := _order_index(int(order.get("id", -1)))
+    if index >= 0:
+        shipment_orders[index] = order
+    _trim_shipment_history()
+
+
+func _reserved_capacity(destination_cell: Vector2i) -> int:
+    var reserved := 0
+    for order in shipment_orders:
+        if not _is_active_order(order):
+            continue
+        if int(order["destination_x"]) == destination_cell.x and int(order["destination_y"]) == destination_cell.y:
+            reserved += int(order["cargo"])
+    return reserved
+
+
+func _find_depot(cell: Vector2i):
+    for depot in get_tree().get_nodes_in_group("depots"):
+        if is_instance_valid(depot) and depot.cell == cell:
+            return depot
+    return null
+
+
+func _find_keep():
+    for depot in get_tree().get_nodes_in_group("depots"):
+        if is_instance_valid(depot) and depot.id == "keep":
+            return depot
+    return null
+
+
+func _order_index(order_id: int) -> int:
+    for index in shipment_orders.size():
+        if int(shipment_orders[index].get("id", -1)) == order_id:
+            return index
+    return -1
+
+
+func _is_active_order(order: Dictionary) -> bool:
+    return ["queued", "in_transit", "blocked"].has(String(order.get("status", ""))) and int(order.get("cargo", 0)) > 0
+
+
+func _remove_carrier(order_id: int) -> void:
+    var carrier = _carriers.get(order_id, null)
+    if is_instance_valid(carrier):
+        carrier.queue_free()
+    _carriers.erase(order_id)
+
+
+func _trim_shipment_history() -> void:
+    while shipment_orders.size() > MAX_SHIPMENT_HISTORY:
+        var removable := -1
+        for index in shipment_orders.size():
+            if not _is_active_order(shipment_orders[index]):
+                removable = index
+                break
+        if removable < 0:
+            return
+        shipment_orders.remove_at(removable)
+
+
+func export_state() -> Dictionary:
+    var orders := shipment_orders.duplicate(true)
+    for order in orders:
+        if String(order.get("status", "")) == "in_transit":
+            order["status"] = "blocked"
+    return {"next_id": _next_shipment_id, "orders": orders}
+
+
+func import_state(value: Variant) -> void:
+    shipment_orders.clear()
+    _carriers.clear()
+    _next_shipment_id = 1
+    if not (value is Dictionary):
+        return
+    var orders: Variant = value.get("orders", [])
+    if not (orders is Array):
+        return
+    for order in orders:
+        if not (order is Dictionary):
+            continue
+        var restored: Dictionary = order.duplicate(true)
+        if String(restored.get("status", "")) == "in_transit":
+            restored["status"] = "blocked"
+        shipment_orders.append(restored)
+        _next_shipment_id = maxi(_next_shipment_id, int(restored.get("id", 0)) + 1)
+    _next_shipment_id = maxi(_next_shipment_id, int(value.get("next_id", 1)))
+    _trim_shipment_history()
 
 
 func rebuild() -> void:
