@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` at `6cde7b9`; Phase 02 local logistics, Outpost garrisons and physical shipments merged by PRs #31–#33; save schema v13. Mainline workflow [#41323473817](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323473817) passed 50/50 jobs. Branch `feat/phase-02-depot-cost-sources` implements a shared explicit Keep/Storage/Outpost cost source for construction, research and repair; its PR/CI are pending. See `ROADMAP_NEXT_LEVEL.md` and `docs/plans/` for current phase status.
+**Current source of truth:** default branch `main` after PR #34 merge at `67be2de`; Phase 02 local logistics, Outpost garrisons, physical shipments and explicit depot-funded costs are merged through PRs #31–#34; save schema v13. PR #34 workflow [#41325205416](https://github.com/shimleabyte/hold-the-keep/actions/runs/41325205416) passed 52/52 jobs on Godot 4.3/4.7. See `ROADMAP_NEXT_LEVEL.md` and `docs/plans/` for current phase status.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
