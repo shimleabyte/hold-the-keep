@@ -1,6 +1,6 @@
 # Phase 06 — Factions, Enemy Archetypes and Territorial AI
 
-**Status:** In progress — faction data/runtime foundation implemented; territorial director and camp/raid loop remain open.
+**Status:** In progress — faction data/runtime foundation implemented and Godot 4.3/4.7 CI passed 30/30 jobs; territorial director, camp/raid loop and manual playtest remain open.
 **Branch:** `feat/phase-06-factions-territorial-ai-rebased`
 **Base:** `feat/phase-05-resource-worksites` (stacked; Godot 4.3/4.7 CI passed 30/30 jobs; manual gameplay review remains).
 **Engine target:** Godot 4.3 and 4.7.
