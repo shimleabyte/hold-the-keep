@@ -61,6 +61,8 @@ func _run() -> void:
     var expected_stronghold_hp: int = int(next_stronghold.hp)
     var expected_escort_path_index: int = int(escort._path_index)
     var expected_escort_position: Vector2 = escort.position
+    # Keep the saved escort active but prevent it advancing during scene reload.
+    main.player.position += Vector2(500.0, 500.0)
 
     assert(save_system.save_current(true),
         "Frontier save must succeed with a partially damaged stronghold and active escort")
@@ -92,7 +94,7 @@ func _run() -> void:
         "The active escort route must be rebuilt after reload")
     assert(restored_escort._path_index == expected_escort_path_index,
         "Escort path progress must be preserved")
-    assert(restored_escort.position.distance_to(expected_escort_position) <= 8.0,
+    assert(restored_escort.position.distance_to(expected_escort_position) < 0.1,
         "Escort position must be preserved")
 
     var restored_target = restored.campaign.current_target_node()
