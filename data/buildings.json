@@ -132,7 +132,8 @@
     "repair_cost": {
       "wood": 1
     },
-    "stockpile_capacity": 120
+    "stockpile_capacity": 120,
+    "guard_slots": 2
   },
   {
     "id": "stone_wall",
