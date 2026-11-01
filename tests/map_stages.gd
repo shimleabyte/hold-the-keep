@@ -34,7 +34,7 @@ func _initialize() -> void:
         "The southern region must be Fenlands")
 
     for cell in [Vector2i(32, 32), Vector2i(32, 8), Vector2i(53, 32), Vector2i(20, 49)]:
-        var terrain_type := main.world.tile_type_at(cell)
+        var terrain_type: int = int(main.world.tile_type_at(cell))
         assert(terrain_type >= 0 and terrain_type <= 5,
             "Every generated map cell must use a registered terrain tile")
 
@@ -45,13 +45,13 @@ func _initialize() -> void:
     assert(main.spawner.stage_info(11)["id"] == "last_siege",
         "Days 11-15 must use the Last Siege act")
 
-    var act_one := main.spawner._pool_for(5)
+    var act_one: Array = main.spawner._pool_for(5)
     assert(enemy_entry(act_one, "archer").is_empty(),
         "Archers must not appear before their day-six unlock")
-    var act_two := main.spawner._pool_for(6)
+    var act_two: Array = main.spawner._pool_for(6)
     assert(int(enemy_entry(act_two, "archer").get("weight", 0)) == 3,
         "Act II must increase archer weight")
-    var act_three := main.spawner._pool_for(11)
+    var act_three: Array = main.spawner._pool_for(11)
     assert(int(enemy_entry(act_three, "archer").get("weight", 0)) == 3,
         "Act III must retain increased archer pressure")
     assert(int(enemy_entry(act_three, "brute").get("weight", 0)) == 3,
