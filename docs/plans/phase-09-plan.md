@@ -1,7 +1,7 @@
 # Phase 09 — Balance, Performance and Release Hardening
 
 **Status:** Automated regression, save recovery, CI profiling and template-backed desktop exports are implemented and have passed workflow run #271. Target-hardware profiling, full act-by-act combat outcome review and manual release acceptance remain open.
-**Branch:** `feat/phase-09-balance-performance-release-v4`
+**Branch:** `feat/phase-09-balance-performance-release-v5`
 **Base:** `feat/phase-07-conquest-objectives` (stacked so the test line includes the Frontier campaign and v11 save schema).
 **Engine targets:** Godot 4.3 and 4.7.
 
