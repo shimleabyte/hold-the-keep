@@ -81,6 +81,22 @@ func _run() -> void:
     assert(tech.is_done("tools_wood") and tech.is_done("masonry"), "Existing researched IDs must still resolve")
     assert(tech.has_flag("frontier_surveying"), "Surveying must activate its exploration flag")
     assert(not tech.is_done("cartography"), "New research must not unlock automatically")
+    tech.researched = ["surveying", "masonry", "cartography"]
+    tech._recompute()
+    assert(is_equal_approx(tech.stat("map.outpost_reveal", 144.0), 180.0),
+        "Cartography must expand Outpost map reveal in both profiles")
+    assert(is_equal_approx(tech.stat("campaign.discovery_reward", 1.0), 1.25),
+        "Cartography must improve Frontier discovery rewards")
+
+    tech.researched = ["siegecraft"]
+    tech._recompute()
+    var siege_target = main.campaign.current_target_node()
+    var stronghold_hp_before: int = siege_target.hp
+    main.player.position = siege_target.position + Vector2(0, 18)
+    var siege_damage := roundi(float(main.player._player_damage(main.player.ATTACK_DAMAGE)) * tech.stat("campaign.site_damage", 1.0))
+    main.player._apply_attack()
+    assert(siege_target.hp == stronghold_hp_before - siege_damage,
+        "Siegecraft must increase player damage against the active stronghold")
     tech.researched = old_done
     tech._recompute()
 
@@ -109,6 +125,21 @@ func _run() -> void:
         escort.interact()
         assert(escort.site_state == "escorting" and escort._path.size() > 1,
             "Rescue/escort must start a valid route back to the Keep")
+        if objective_id == "highland_survivors":
+            escort._tick_escort(1.0)
+            var saved_escort: Dictionary = escort.export_state()
+            var saved_definition: Dictionary = escort.definition.duplicate(true)
+            var saved_cell: Vector2i = main.frontier_campaign.objectives[objective_id]["cell"]
+            escort.queue_free()
+            await ticks(1)
+            var restored_escort = load("res://scripts/entities/frontier_site.gd").new()
+            restored_escort.setup(saved_definition, main.frontier_campaign, main.world,
+                main.nav, main.player, saved_cell, saved_escort)
+            main.world.entities.add_child(restored_escort)
+            main.frontier_campaign.sites[objective_id] = restored_escort
+            escort = restored_escort
+            assert(escort.site_state == "escorting" and (escort._path.size() <= 1 or escort._path_index == 1),
+                "Escort load must rebuild the route from its saved position, not reuse an old path index")
         for step in escort._path.size() + 2:
             if not is_instance_valid(escort) or escort.site_state != "escorting":
                 break
