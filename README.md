@@ -1,6 +1,6 @@
 # Hold the Keep
 
-> Status proyek: [CONTEXT.md](CONTEXT.md). Roadmap: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Implementation plans: [Phase 02](docs/plans/phase-02-plan.md), [Phase 04](docs/plans/phase-04-plan.md), [Phase 05](docs/plans/phase-05-plan.md), [Phase 06](docs/plans/phase-06-plan.md), [Phase 08](docs/plans/phase-08-plan.md), [Phase 09](docs/plans/phase-09-plan.md), [Phase 10](docs/plans/phase-10-plan.md). Test guide: [tests/README.md](tests/README.md).
+> Status proyek: [CONTEXT.md](CONTEXT.md). Design bible: [docs/WORLD_AND_GAMEPLAY_BIBLE.md](docs/WORLD_AND_GAMEPLAY_BIBLE.md). Roadmap: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Implementation plans: [Phase 02](docs/plans/phase-02-plan.md), [Phase 04](docs/plans/phase-04-plan.md), [Phase 05](docs/plans/phase-05-plan.md), [Phase 06](docs/plans/phase-06-plan.md), [Phase 08](docs/plans/phase-08-plan.md), [Phase 09](docs/plans/phase-09-plan.md), [Phase 10](docs/plans/phase-10-plan.md). Test guide: [tests/README.md](tests/README.md).
 
 Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (GDScript).
 
