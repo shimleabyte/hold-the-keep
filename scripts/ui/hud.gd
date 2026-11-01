@@ -355,6 +355,7 @@ func _build_map() -> void:
     _map_backdrop.color = Color(0.015, 0.02, 0.028, 0.78)
     _map_backdrop.size = Vector2(480, 270)
     _map_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+    _map_backdrop.gui_input.connect(_on_map_backdrop_input)
     _map_backdrop.visible = false
     add_child(_map_backdrop)
     _blockers.append(_map_backdrop)
@@ -363,8 +364,14 @@ func _build_map() -> void:
     _map_panel.position = Vector2(80, 14)
     _map_panel.size = Vector2(320, 242)
     _map_panel.visible = false
+    _map_panel.close_requested.connect(_toggle_map)
     add_child(_map_panel)
     _blockers.append(_map_panel)
+
+
+func _on_map_backdrop_input(event: InputEvent) -> void:
+    if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+        _toggle_map()
 
 
 func _toggle_map() -> void:
