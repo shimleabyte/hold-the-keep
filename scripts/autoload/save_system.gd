@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 9
+const VERSION := 10
 
 var pending: Dictionary = {}
 
@@ -115,7 +115,8 @@ func collect(main: Node) -> Dictionary:
             "id": enemy.id, "x": enemy.position.x, "y": enemy.position.y, "hp": enemy.hp,
             "garrison": enemy.is_garrison,
             "guard_x": enemy.guard_origin.x,
-            "guard_y": enemy.guard_origin.y
+            "guard_y": enemy.guard_origin.y,
+            "faction": enemy.faction_id
         })
 
     var resources: Array = []
