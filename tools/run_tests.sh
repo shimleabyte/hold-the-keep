@@ -43,6 +43,7 @@ tests=(
     regional_control_roads
     local_depot_stockpiles
     outpost_garrisons
+    physical_shipments
 )
 
 for test_name in "${tests[@]}"; do

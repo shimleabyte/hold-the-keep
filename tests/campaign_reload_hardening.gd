@@ -67,7 +67,7 @@ func _run() -> void:
     assert(save_system.save_current(true),
         "Frontier save must succeed with a partially damaged stronghold and active escort")
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 12 and snapshot["frontier_campaign"]["profile"] == "frontier",
+    assert(snapshot["version"] == 13 and snapshot["frontier_campaign"]["profile"] == "frontier",
         "The snapshot must use the current Frontier campaign schema")
 
     assert(save_system.request_load(),

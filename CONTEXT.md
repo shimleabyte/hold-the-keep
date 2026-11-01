@@ -329,3 +329,13 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Save v12 remains unchanged: an optional `guard_outpost` cell reference is written for assigned soldiers. Validation checks that the referenced Outpost exists, the soldier is not simultaneously expeditioning/recalling, and the post capacity is not exceeded. Older v12 files without this optional field remain valid.
 - Outpost local vision and observed-only strategic-map enemy markers were already implemented in `main`; the roadmap now reflects that instead of listing them as missing.
 - Regression suite: `tests/outpost_garrisons.gd` covers slot limits, death/reassignment, local combat radius, vision, panel presence, demolition release, and save compatibility/round-trip. It runs in the blocking test runner and passed on Godot 4.3 and 4.7.
+
+
+## 28. Phase 02.3 — Player-directed physical shipments (2026-11-01)
+- Active implementation branch: `feat/phase-02-physical-shipments`; PR and Godot 4.3/4.7 CI are pending.
+- The `JOBS → POS` panel now includes source/destination selectors for Keep, Storage and Outposts, a resource/amount selector, order history/status and cancel controls.
+- Creating an order immediately reserves the exact cargo at the source (Keep Inventory or local depot stock) and reserves capacity at remote destinations. Each active order owns its escrowed cargo; it is not counted twice in either inventory.
+- Visible courier entities walk along the navigation grid. On route disconnection, an order becomes blocked with its cargo and last carrier position preserved; it resumes when the route returns. Delivery credits local depot stock or Keep Inventory. Keep-bound deliveries support explicit local-stock withdrawals.
+- Active orders can be cancelled/refunded. If a depot disappears or cannot accept recovered stock, cargo is returned to Keep Inventory. Direct build/research spending from remote depots remains separate and is not implemented.
+- Save schema moves from v12 to v13: pending/history shipment records, reserved cargo and carrier position persist. Save v1–v12 remain compatible and load with an empty shipment ledger. Validator checks unique order IDs, resource kinds, amounts, statuses, cargo escrow, map cells and remote destination capacity reservations.
+- New regression: `tests/physical_shipments.gd` covers physical delivery, Keep withdrawal, cancellation/refund, capacity rejection, route interruption, save/load resume and invalid-cargo rejection. It is included in the blocking runner and both Godot CI matrices; result pending.

@@ -98,6 +98,7 @@ func _ready() -> void:
 
     supply = SUPPLY_SCRIPT.new()
     supply.world = world
+    supply.nav = nav
     add_child(supply)
 
     add_child(HUD_SCRIPT.new())
@@ -380,6 +381,10 @@ func _apply_save(d: Dictionary) -> void:
     for e in d["enemies"]:
         spawner.restore_enemy(e)
     village.assign_jobs()
+    nav.rebuild()
+    supply.rebuild()
+    supply.import_state(d.get("supply", {}))
+    supply.advance_shipment_orders()
     Events.build_feedback.emit("Game dimuat")
 
 

@@ -19,6 +19,8 @@ func _fixture_for_version(source: Dictionary, target_version: int) -> Dictionary
     if target_version < 12:
         for building in fixture["buildings"]:
             building.erase("stockpile")
+    if target_version < 13:
+        fixture.erase("supply")
     if target_version < 11:
         fixture.erase("frontier_campaign")
     if target_version < 10:
@@ -99,15 +101,15 @@ func _run() -> void:
     game_clock.set_process(false)
 
     var classic_snapshot: Dictionary = save_system.collect(classic_main)
-    assert(classic_snapshot["version"] == 12,
-        "Current release hardening must exercise the latest v12 schema")
-    for version in range(1, 13):
+    assert(classic_snapshot["version"] == 13,
+        "Current release hardening must exercise the latest v13 schema")
+    for version in range(1, 14):
         var fixture := _fixture_for_version(classic_snapshot, version)
         assert(save_system._valid_save(fixture),
             "Classic migration fixture v%d must remain structurally valid" % version)
 
     var unsupported := classic_snapshot.duplicate(true)
-    unsupported["version"] = 13
+    unsupported["version"] = 14
     assert(not save_system._valid_save(unsupported),
         "Unknown future save versions must be rejected")
     var invalid_index := classic_snapshot.duplicate(true)
@@ -152,7 +154,7 @@ func _run() -> void:
     var frontier_snapshot: Dictionary = save_system.collect(frontier_main)
     assert(frontier_snapshot["world"]["map_size"] == 128,
         "Frontier fixtures must use the 128x128 world")
-    for version in range(7, 13):
+    for version in range(7, 14):
         var fixture := _fixture_for_version(frontier_snapshot, version)
         assert(save_system._valid_save(fixture),
             "Frontier migration fixture v%d must remain structurally valid" % version)
@@ -172,7 +174,7 @@ func _run() -> void:
     assert(not save_system._valid_save(broken_campaign),
         "A truncated Frontier objective registry must be rejected")
 
-    print("PASS: Classic save schemas v1-v12, Frontier v7-v12, interrupted writes, backup recovery eligibility and Windows/Linux export presets")
+    print("PASS: Classic save schemas v1-v13, Frontier v7-v13, interrupted writes, backup recovery eligibility and Windows/Linux export presets")
     quit(0)
 
 
