@@ -34,6 +34,8 @@ const WORKER_HP := 20
 const SOLDIER_DAMAGE := 8
 const SOLDIER_INTERVAL := 0.8
 const SOLDIER_SEARCH := 300.0
+const OUTPOST_GUARD_RADIUS := 128.0
+const OUTPOST_GUARD_ARRIVAL_RADIUS := 45.0
 const REACH := 11.0
 const DEFAULT_WORK_RADIUS := 12.0
 const BUILDER_REPAIR_INTERVAL := 1.6
@@ -63,6 +65,8 @@ var world
 var target = null
 var _expedition_target = null
 var _expeditioning := false
+var guard_outpost = null
+var _guard_repath_t := 0.0
 
 var _depot = null
 var _path := PackedVector2Array()
@@ -147,6 +151,7 @@ func _mine_kind() -> String:
 func set_job(j: String) -> bool:
     if j == job:
         return true
+    release_outpost_guard()
     _release()
     _release_workplace()
     _expeditioning = false
@@ -246,6 +251,7 @@ func take_damage(amount: int) -> void:
 
 
 func leave() -> void:
+    release_outpost_guard()
     _release()
     _release_workplace()
     remove_from_group("villagers")
@@ -273,7 +279,7 @@ func _physics_process(delta: float) -> void:
     if GameClock.is_night and job != "soldier" and state != State.FLEEING:
         _begin_flee()
 
-    if nav.version != _path_ver and (state == State.TO_WORK or state == State.TO_DEPOT or state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING):
+    if nav.version != _path_ver and (state == State.TO_WORK or state == State.TO_DEPOT or state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or (state == State.IDLE and is_outpost_guard())):
         _repath()
 
     match state:
@@ -367,6 +373,9 @@ func _resolve_pending(delta: float) -> void:
 
 
 func _tick_idle(delta: float) -> void:
+    if job == "soldier" and is_outpost_guard():
+        _tick_outpost_guard(delta)
+        return
     if _pi < _path.size():
         _move_along(delta)
     if job == "soldier":
@@ -456,8 +465,116 @@ func is_recalling_expedition() -> bool:
     return state == State.RECALLING
 
 
+func is_outpost_guard() -> bool:
+    return guard_outpost != null and is_instance_valid(guard_outpost)
+
+
+func assign_outpost_guard(outpost) -> bool:
+    if job != "soldier" or not is_instance_valid(outpost) or String(outpost.id) != "outpost":
+        return false
+    if _expeditioning or state == State.RECALLING:
+        return false
+    if is_outpost_guard():
+        return guard_outpost == outpost
+    if not outpost.has_method("claim_guard"):
+        return false
+
+    var cells: Array[Vector2i] = outpost.cells()
+    var path: PackedVector2Array = nav.path_adjacent(position, cells)
+    if path.is_empty() and position.distance_to(outpost.position) > OUTPOST_GUARD_ARRIVAL_RADIUS:
+        return false
+    if not outpost.claim_guard(self):
+        return false
+
+    guard_outpost = outpost
+    _expeditioning = false
+    _expedition_target = null
+    _foe = null
+    _pending_foe = null
+    _pending_t = 0.0
+    _goal_cells = cells
+    _path = PackedVector2Array()
+    _pi = 0
+    if not path.is_empty():
+        _set_path(path)
+    _guard_repath_t = 0.0
+    _scan_t = 0.0
+    state = State.IDLE
+    queue_redraw()
+    return true
+
+
+func release_outpost_guard() -> void:
+    var previous = guard_outpost
+    guard_outpost = null
+    if previous != null and is_instance_valid(previous):
+        previous.release_guard(self)
+    _foe = null
+    _pending_foe = null
+    _pending_t = 0.0
+    _path = PackedVector2Array()
+    _pi = 0
+    _guard_repath_t = 0.0
+    if job == "soldier" and state != State.HIDDEN and state != State.FLEEING:
+        state = State.IDLE
+    queue_redraw()
+
+
+func on_guard_outpost_lost(outpost) -> void:
+    if guard_outpost != outpost:
+        return
+    guard_outpost = null
+    _foe = null
+    _pending_foe = null
+    _pending_t = 0.0
+    _path = PackedVector2Array()
+    _pi = 0
+    _guard_repath_t = 0.0
+    if job == "soldier" and state != State.HIDDEN and state != State.FLEEING:
+        state = State.IDLE
+    queue_redraw()
+
+
+func _tick_outpost_guard(delta: float) -> void:
+    if not is_outpost_guard() or String(guard_outpost.id) != "outpost" or int(guard_outpost.hp) <= 0:
+        if guard_outpost != null:
+            on_guard_outpost_lost(guard_outpost)
+        return
+
+    if nav.version != _path_ver:
+        _path = PackedVector2Array()
+        _pi = 0
+        _path_ver = nav.version
+        _guard_repath_t = 0.0
+
+    if position.distance_to(guard_outpost.position) > OUTPOST_GUARD_ARRIVAL_RADIUS:
+        if _pi < _path.size():
+            _move_along(delta)
+            return
+        _guard_repath_t -= delta
+        if _guard_repath_t <= 0.0:
+            _guard_repath_t = 1.0
+            _goal_cells = guard_outpost.cells()
+            var path: PackedVector2Array = nav.path_adjacent(position, _goal_cells)
+            if not path.is_empty():
+                _set_path(path)
+                _move_along(delta)
+        return
+
+    _path = PackedVector2Array()
+    _pi = 0
+    _scan_t -= delta
+    if _scan_t <= 0.0:
+        _scan_t = 0.3
+        _foe = _nearest_enemy()
+        if _foe != null:
+            state = State.FIGHT
+            _path = PackedVector2Array()
+            _pi = 0
+
+
 func start_expedition(stronghold) -> bool:
-    if job != "soldier" or not is_instance_valid(stronghold):
+    if job != "soldier" or is_outpost_guard() or not is_instance_valid(stronghold):
         return false
     _release()
     _foe = null
@@ -787,7 +904,10 @@ func _nearest_enemy():
     var best_d := SOLDIER_SEARCH
     var candidates := get_tree().get_nodes_in_group("enemy_garrison") if _expeditioning else get_tree().get_nodes_in_group("enemies")
     for e in candidates:
-        var d := position.distance_to((e as Node2D).position)
+        var enemy := e as Node2D
+        if is_outpost_guard() and enemy.position.distance_to(guard_outpost.position) > OUTPOST_GUARD_RADIUS:
+            continue
+        var d := position.distance_to(enemy.position)
         if d < best_d:
             best_d = d
             best = e
