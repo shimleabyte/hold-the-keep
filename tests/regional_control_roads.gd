@@ -11,6 +11,25 @@ func clear_claims(territory: Node) -> void:
     territory.enemy_claimed_cells.clear()
 
 
+func reachable_cells(nav: Node, start: Vector2i) -> Dictionary:
+    var visited: Dictionary = {}
+    if not nav.is_walkable(start):
+        return visited
+    var queue: Array[Vector2i] = [start]
+    visited[start] = true
+    var cursor := 0
+    while cursor < queue.size():
+        var current := queue[cursor]
+        cursor += 1
+        for direction in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+            var next := current + direction
+            if visited.has(next) or not nav.is_walkable(next):
+                continue
+            visited[next] = true
+            queue.append(next)
+    return visited
+
+
 func _initialize() -> void:
     var inventory = root.get_node("Inventory")
     var game_clock = root.get_node("GameClock")
@@ -145,6 +164,7 @@ func _initialize() -> void:
         "Forward Outposts must function as local depots")
 
     main.nav.rebuild()
+    var reachable := reachable_cells(main.nav, main.nav.cell_of(main.player.global_position))
     var remote_outpost_cell := Vector2i(-1, -1)
     for y in range(34, 44):
         for x in range(36, 48):
@@ -155,8 +175,7 @@ func _initialize() -> void:
                     var cell := anchor + Vector2i(dx, dy)
                     if not world.is_buildable(cell) or world.occupied.has(cell):
                         clear = false
-            var approach := Vector2(anchor) * 16.0 + Vector2(8.0, 8.0)
-            if clear and not main.nav.path_to(approach, world.starting_keep_cell()).is_empty():
+            if clear and reachable.has(anchor):
                 remote_outpost_cell = anchor
                 break
         if remote_outpost_cell.x >= 0:
