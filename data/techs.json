@@ -350,10 +350,11 @@
       "surveying",
       "masonry"
     ],
-    "desc": "Hadiah penemuan wilayah meningkat 25%.",
+    "desc": "Hadiah penemuan wilayah +25%; jangkauan peta Outpost +25%.",
     "effects": {
       "mult": {
-        "campaign.discovery_reward": 1.25
+        "campaign.discovery_reward": 1.25,
+        "map.outpost_reveal": 1.25
       },
       "flags": [
         "regional_cartography"
@@ -373,7 +374,7 @@
       "iron_weapons",
       "iron_mining"
     ],
-    "desc": "Damage pemain terhadap kamp dan situs objektif meningkat 50%.",
+    "desc": "Damage pemain terhadap stronghold, kamp, dan reruntuhan meningkat 50%.",
     "effects": {
       "mult": {
         "campaign.site_damage": 1.5
