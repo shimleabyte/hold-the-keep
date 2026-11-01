@@ -101,6 +101,7 @@ var _shipment_source: OptionButton
 var _shipment_destination: OptionButton
 var _shipment_kind: OptionButton
 var _shipment_amount: SpinBox
+var _shipment_send_button: Button
 var _shipment_orders_list: VBoxContainer
 var _shipment_refreshing := false
 var _outpost_refresh_t := 0.0
@@ -557,14 +558,14 @@ func _build_outpost_panel() -> void:
     _shipment_amount.add_theme_font_size_override("font_size", 7)
     _outpost_panel.add_child(_shipment_amount)
 
-    var send := Button.new()
-    send.text = "BUAT ORDER"
-    send.position = Vector2(212, 150)
-    send.size = Vector2(136, 19)
-    send.add_theme_font_override("font", _font)
-    send.add_theme_font_size_override("font_size", 7)
-    send.pressed.connect(_create_shipment_order)
-    _outpost_panel.add_child(send)
+    _shipment_send_button = Button.new()
+    _shipment_send_button.text = "BUAT ORDER"
+    _shipment_send_button.position = Vector2(212, 150)
+    _shipment_send_button.size = Vector2(136, 19)
+    _shipment_send_button.add_theme_font_override("font", _font)
+    _shipment_send_button.add_theme_font_size_override("font_size", 7)
+    _shipment_send_button.pressed.connect(_create_shipment_order)
+    _outpost_panel.add_child(_shipment_send_button)
 
     _label(_outpost_panel, "STATUS PENGIRIMAN", Vector2(10, 174), Color("#c9b99d")).add_theme_font_size_override("font_size", 6)
     var order_scroll := ScrollContainer.new()
@@ -709,6 +710,12 @@ func _refresh_shipment_controls() -> void:
     _shipment_refreshing = true
     _refresh_depot_option(_shipment_source, endpoints, previous_source, 0)
     _refresh_depot_option(_shipment_destination, endpoints, previous_destination, 1)
+    var frontier_enabled := WorldConfig.profile_id == "frontier" and endpoints.size() >= 2
+    _shipment_source.disabled = not frontier_enabled
+    _shipment_destination.disabled = not frontier_enabled
+    _shipment_kind.disabled = WorldConfig.profile_id != "frontier"
+    _shipment_amount.editable = WorldConfig.profile_id == "frontier"
+    _shipment_send_button.disabled = not frontier_enabled
     _shipment_refreshing = false
 
     for child in _shipment_orders_list.get_children():
