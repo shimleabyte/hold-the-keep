@@ -72,7 +72,7 @@ The benchmark is diagnostic by design. CI must validate bounded counts and funct
 
 ## Current blockers / honesty of verification
 
-The connected GitHub Actions runner executed the Godot 4.3/4.7 import/parse and configured regression matrix, produced Windows/Linux exports using matching Godot 4.3 templates, verified the PE format, and smoke-tested Linux. The first performance artifact was diagnostic only and reached 340 particles; the benchmark script has since been tightened to sustain the full 500-particle ceiling, so its updated report is pending a fresh run. No target-hardware frame-time result, Windows runtime test or manual playtest is claimed.
+The connected GitHub Actions runner executed the Godot 4.3/4.7 import/parse and configured regression matrix, produced Windows/Linux exports using matching Godot 4.3 templates, verified the PE format, and smoke-tested Linux. The updated workflow run #278 sustained the full 500-particle ceiling. No target-hardware frame-time result, Windows runtime test or manual playtest is claimed.
 
 
 ## CI evidence
@@ -80,3 +80,10 @@ The connected GitHub Actions runner executed the Godot 4.3/4.7 import/parse and 
 **Workflow run #271** completed successfully on the PR merge ref. It covered Godot 4.3 and 4.7 import/parse plus the configured regression jobs; the campaign balance matrix, Frontier reload, Frontier stress and save/release hardening checks passed. The stress job reported 64 registered enemies, 50 villagers (including the two initial villagers), one live projectile and exactly 500 particles.
 
 The Godot 4.3 export job generated both desktop binaries, validated the Windows PE format, smoke-launched Linux headlessly and uploaded the artifacts. The Godot 4.7 diagnostic job uploaded a `frontier-performance-godot-4.7` report. Its first report reached only 340 live particles, so the benchmark has been updated to sustain the full 500-particle ceiling; do not treat the older report as the final reference workload. A new workflow run is required to validate that change.
+
+
+## Latest CI evidence — workflow run #278
+
+All 30 jobs reported completed successfully on PR #26: Godot 4.3/4.7 import and parse, the configured regression matrix, the Frontier performance diagnostic and the Windows/Linux export job. The Frontier diagnostic recorded a 128×128 world, 119 active enemies, 82 villagers, six peak projectiles, 500 peak particles and about 62.7 MB static memory. Wall-frame samples were p50 4.27 ms, p95 10.45 ms and p99 13.55 ms. Godot process monitor p95 contained a 102.24 ms spike; treat the run as headless diagnostic evidence only, not an accepted target-machine frame-time budget.
+
+The Godot 4.3 export job produced both binaries, verified Windows PE format, passed the bounded Linux headless launch, and uploaded the release artifact. Manual campaign playtests, desktop hardware profiling, Windows runtime smoke and clean-machine save/settings upgrade tests remain open.
