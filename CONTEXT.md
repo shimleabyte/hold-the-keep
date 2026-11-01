@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` after PR #35 merge at `2ba5628`; Phase 02 local logistics, Outpost garrisons, physical shipments, depot-funded costs and contested-depot supply pressure are merged; save schema v13. PR #35 workflow [#41328005585](https://github.com/shimleabyte/hold-the-keep/actions/runs/41328005585) passed 54/54 jobs on Godot 4.3/4.7. Current development branch: `feat/phase-06-shieldbearer-brace` (pending CI). See `ROADMAP_NEXT_LEVEL.md` and `docs/plans/` for current phase status.
+**Current source of truth:** default branch `main` includes PR #36 (`b02aa60`), adding Shieldbearer directional brace without a save-schema change. Workflow #41329202804 completed successfully on Godot 4.3/4.7. Phase 02.5 supply pressure remains merged via PR #35; save schema v13. Next work is the Scout scouting/marking behavior slice. See `ROADMAP_NEXT_LEVEL.md` and `docs/plans/` for phase status.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -15,7 +15,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #35 (save schema v13; status per 1 November 2026). Shieldbearer brace sedang dikembangkan pada `feat/phase-06-shieldbearer-brace` dan belum masuk `main`.
+Ringkasan implementasi aktual pada `main` setelah PR #36 (save schema v13; status per 2 November 2026). Shieldbearer directional brace sudah masuk `main`; Scout behavior menjadi irisan Phase 06 berikutnya.
 
 | Area | Kondisi saat ini |
 |---|---|
@@ -26,7 +26,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #35 (save schema v13; statu
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
-| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman support berjalan; Shieldbearer directional brace sedang menunggu CI pada branch pengembangan; Scout/Siege Engine/Beast Rider policies, camps, patrols and broader counterattacks remain incomplete |
+| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman support berjalan; Shieldbearer directional brace is merged; Scout/Siege Engine/Beast Rider policies, camps, patrols and broader counterattacks remain incomplete |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
 | Save/load | v13 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo; Classic v1–v13 dan Frontier v7–v13 migration matrix dijaga. PR #34 adds optional cost-source preference without a save-version bump; earlier v13 snapshots without it remain valid |
@@ -35,7 +35,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #35 (save schema v13; statu
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 12 procedural SFX; musik belum ada |
 | Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | PR #35 workflow #41328005585: 54/54 jobs successful, including 25 assertion suites on each of Godot 4.3 and 4.7. Shieldbearer branch adds suite #26 per engine; CI pending |
+| CI | PR #35 workflow #41328005585 passed; PR #36 workflow #41329202804 completed successfully, including import/parse and the Shieldbearer regression on Godot 4.3/4.7. |
 
 ## 3. Struktur
 ```
@@ -368,8 +368,8 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Frontier-only pressure targets disconnected Storage/Outposts under enemy/contested control; warnings precede targeted Saboteur dispatch, raids are capped at two per isolation, and reconnection/reclaim recalls attackers.
 - Save v13 optionally preserves pressure timers and active Saboteur raid state. Manual rendered gameplay review remains open.
 
-## 32. Phase 06.2 — Shieldbearer directional brace (2026-11-01, branch pending CI)
+## 32. Phase 06.2 — Shieldbearer directional brace (2026-11-02, merged via PR #36)
 - Branch: `feat/phase-06-shieldbearer-brace`, based on main after PR #35.
 - Shieldbearer now uses a data-defined telegraphed brace, locks a facing direction during its active window, and mitigates frontal damage while leaving side/rear attacks more effective.
 - Player attacks, Dash, Cleave and tower arrows pass their source position. Stagger interrupts the brace; target disengagement cancels an unfinished wind-up.
-- New regression `tests/shieldbearer_behavior.gd` covers telegraph, facing, frontal mitigation, flank/rear damage, stagger interruption and disengage recovery. CI and merge remain pending.
+- New regression `tests/shieldbearer_behavior.gd` covers telegraph, facing, frontal mitigation, flank/rear damage, stagger interruption and disengage recovery. Workflow #41329202804 completed successfully on Godot 4.3/4.7. No save-schema migration was needed.
