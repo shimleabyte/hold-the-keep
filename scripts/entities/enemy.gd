@@ -421,8 +421,24 @@ func _draw() -> void:
     if _pounce_windup_t > 0.0:
         draw_line(Vector2(0, -6), Vector2(0, -6) + _pounce_dir * 14.0,
             Color("#ffb347"), 2.0)
-    if archetype == "war_shaman":
-        draw_arc(Vector2(0, -_fh * 0.55), 7.0, 0.0, TAU, 12, Color("#b9a4d8"), 1.0)
+    match archetype:
+        "scout":
+            draw_line(Vector2(-4, -15), Vector2(0, -19), color, 1.5)
+            draw_line(Vector2(0, -19), Vector2(4, -15), color, 1.5)
+        "shieldbearer":
+            draw_rect(Rect2(-11, -14, 5, 10), color, false, 1.5)
+            draw_line(Vector2(-11, -10), Vector2(-6, -10), color, 1.0)
+        "saboteur":
+            draw_circle(Vector2(7, -12), 2.5, color)
+            draw_line(Vector2(7, -15), Vector2(10, -18), color, 1.0)
+        "war_shaman":
+            draw_arc(Vector2(0, -_fh * 0.55), 7.0, 0.0, TAU, 12, color, 1.0)
+        "siege_engine":
+            draw_rect(Rect2(-9, -14, 5, 5), color)
+            draw_rect(Rect2(4, -14, 5, 5), color)
+        "beast_rider":
+            draw_line(Vector2(-5, -12), Vector2(-10, -17), color, 1.5)
+            draw_line(Vector2(5, -12), Vector2(10, -17), color, 1.5)
     if role == "ranged":
         draw_arc(Vector2(7, -11), 4.0, -PI * 0.55, PI * 0.55, 7, Color("#91c99a"), 1.0)
         draw_line(Vector2(7, -15), Vector2(7, -7), Color("#d9e7c8"), 1.0)
