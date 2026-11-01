@@ -64,7 +64,6 @@ func _ready() -> void:
         col.position = Vector2(0, -h / 2.0)
         add_child(col)
     else:
-        z_index = -1
         add_to_group("roads")
     add_to_group("buildings")
     Events.tech_researched.connect(_on_tech)
