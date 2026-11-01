@@ -32,6 +32,7 @@ var guards: Array = []
 var guard_capacity := 0
 var local_stockpile: Dictionary = {}
 var stockpile_capacity := 0
+var _sabotage_remaining := 0.0
 
 var _range := 0.0
 var _damage := 0
@@ -74,8 +75,40 @@ func stockpile_amount(kind: String) -> int:
     return int(local_stockpile.get(kind, 0))
 
 
+func is_sabotaged() -> bool:
+    return _sabotage_remaining > 0.0
+
+
+func sabotage_seconds_remaining() -> float:
+    return _sabotage_remaining
+
+
+func apply_sabotage(duration: float) -> bool:
+    if hp <= 0 or id in ["keep", "road", "bridge", "wall", "stone_wall"]:
+        return false
+    _sabotage_remaining = maxf(_sabotage_remaining, clampf(duration, 1.0, 12.0))
+    set_process(true)
+    queue_redraw()
+    Events.fx_burst.emit("debris", global_position + Vector2(0, -size.y * 6.0), Vector2.ZERO, 0.9)
+    Events.build_feedback.emit(
+        "SABOTASE: %s terganggu selama %d detik" % [String(id).to_upper(), ceili(_sabotage_remaining)]
+    )
+    return true
+
+
+func _process(delta: float) -> void:
+    if _sabotage_remaining <= 0.0:
+        set_process(false)
+        return
+    _sabotage_remaining = maxf(0.0, _sabotage_remaining - delta)
+    if _sabotage_remaining <= 0.0:
+        set_process(false)
+        queue_redraw()
+        Events.build_feedback.emit("%s kembali berfungsi" % String(id).to_upper())
+
+
 func can_store_resource(kind: String, amount: int) -> bool:
-    if amount <= 0 or stockpile_capacity <= 0:
+    if is_sabotaged() or amount <= 0 or stockpile_capacity <= 0:
         return false
     if not ["wood", "stone", "food", "iron"].has(kind):
         return false
@@ -91,7 +124,7 @@ func store_resource(kind: String, amount: int) -> bool:
 
 
 func take_resource(kind: String, amount: int) -> bool:
-    if amount <= 0 or stockpile_amount(kind) < amount:
+    if is_sabotaged() or amount <= 0 or stockpile_amount(kind) < amount:
         return false
     var remaining := stockpile_amount(kind) - amount
     if remaining == 0:
@@ -143,11 +176,14 @@ func _ready() -> void:
     if id == "farm":
         add_to_group("farms")
     set_physics_process(_range > 0.0)
+    set_process(false)
     if id == "keep":
         Events.keep_hp_changed.emit(hp, max_hp)
 
 
 func _physics_process(delta: float) -> void:
+    if is_sabotaged():
+        return
     _fire_cd -= delta
     if _fire_cd > 0.0:
         return
@@ -206,6 +242,8 @@ func _leave_groups() -> void:
 
 
 func free_slots(job: String = "farmer") -> int:
+    if is_sabotaged():
+        return 0
     workers = workers.filter(func(w): return is_instance_valid(w))
     var workplace_data: Dictionary = data.get("workplaces", {})
     var default_slots := int(data.get("workers", 0)) if job == "farmer" else 0
@@ -220,7 +258,7 @@ func free_slots(job: String = "farmer") -> int:
 
 
 func claim(v, job: String = "farmer") -> bool:
-    if free_slots(job) <= 0:
+    if is_sabotaged() or free_slots(job) <= 0:
         return false
     if not workers.has(v):
         workers.append(v)
@@ -237,6 +275,8 @@ func release(v) -> void:
 
 
 func can_assign_repairer(v) -> bool:
+    if is_sabotaged():
+        return false
     repairers = repairers.filter(func(worker): return is_instance_valid(worker))
     return hp > 0 and hp < max_hp and (repairers.is_empty() or repairers.has(v))
 
@@ -254,7 +294,7 @@ func release_repairer(v) -> void:
 
 
 func repair(amount: int) -> bool:
-    if amount <= 0 or hp <= 0 or hp >= max_hp:
+    if is_sabotaged() or amount <= 0 or hp <= 0 or hp >= max_hp:
         return false
     var cost: Dictionary = data.get("repair_cost", {})
     if cost.is_empty():
@@ -280,7 +320,7 @@ func free_guard_slots() -> int:
 
 
 func claim_guard(soldier) -> bool:
-    if id != "outpost" or guard_capacity <= 0 or not is_instance_valid(soldier):
+    if is_sabotaged() or id != "outpost" or guard_capacity <= 0 or not is_instance_valid(soldier):
         return false
     if guards.has(soldier):
         return true
@@ -349,3 +389,8 @@ func _draw() -> void:
         var by := -tex_h - 5.0
         draw_rect(Rect2(-w / 2, by, w, 3), Color(0, 0, 0, 0.7))
         draw_rect(Rect2(-w / 2, by, w * float(maxi(hp, 0)) / max_hp, 3), Color("#6fcf5a"))
+    if is_sabotaged():
+        var mark_y := -tex_h - 15.0
+        draw_rect(Rect2(-9.0, mark_y, 18.0, 7.0), Color("#5f2626"))
+        draw_line(Vector2(-6.0, mark_y + 1.0), Vector2(6.0, mark_y + 6.0), Color("#e8b76d"), 1.5)
+        draw_line(Vector2(6.0, mark_y + 1.0), Vector2(-6.0, mark_y + 6.0), Color("#e8b76d"), 1.5)
