@@ -1,6 +1,6 @@
 # Phase 02 — Local Logistics and Outpost Support
 
-**Status:** Partial implementation. Regional ownership, roads/bridges, Keep-rooted connectivity, local Storage/Outpost stockpiles, Frontier deposits and bounded automatic shipments to Keep are implemented on the audit branch with save v12. Stock inspection/withdrawal UI, player-directed shipment orders, Outpost garrisons and Outpost-local visibility remain open.
+**Status:** Partial implementation. Regional ownership, roads/bridges, Keep-rooted connectivity, local Storage/Outpost stockpiles, Frontier deposits and bounded automatic shipments to Keep are implemented merged into `main` through PR #31 with save v12. Stock inspection/withdrawal UI, player-directed shipment orders, Outpost garrisons and Outpost-local visibility remain open.
 **Dependency:** The existing Keep-connected supply graph and save v12.
 **Engine targets:** Godot 4.3 and 4.7.
 
@@ -12,7 +12,7 @@ Turn road connectivity into an actual logistics system without changing Classic 
 
 ### 02.2 — Local depot inventories
 
-**Delivered logistics slice (audit branch):** Storage and Outposts have bounded local stockpile capacity (180 and 120 units). Frontier workers deposit carried resources into connected remote depots; full/unsupported stockpiles reject deposits and workers retain cargo while rerouting. Every 3 seconds, each connected remote depot transfers at most 6 units to Keep Inventory, rotating resource-kind priority. Disconnected depots retain their local goods. These transfers are atomic on a bounded tick rather than physical carrier trips, so there is no in-flight cargo state. Save v12 persists per-building balances and validates resource kinds, non-negative quantities and capacity. Classic deposits remain on central Inventory.
+**Delivered logistics slice (PR #31, merged):** Storage and Outposts have bounded local stockpile capacity (180 and 120 units). Frontier workers deposit carried resources into connected remote depots; full/unsupported stockpiles reject deposits and workers retain cargo while rerouting. Every 3 seconds, each connected remote depot transfers at most 6 units to Keep Inventory, rotating resource-kind priority. Disconnected depots retain their local goods. These transfers are atomic on a bounded tick rather than physical carrier trips, so there is no in-flight cargo state. Save v12 persists per-building balances and validates resource kinds, non-negative quantities and capacity. Classic deposits remain on central Inventory.
 
 **Still open in 02.2:** player-facing local stock inspection/withdrawal, explicit source-depot spending/reservation, and player-directed shipment orders.
 - [x] Give Storage and Outposts a persisted resource ledger with explicit capacity and accepted resource types.
