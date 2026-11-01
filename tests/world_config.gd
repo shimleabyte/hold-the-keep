@@ -17,7 +17,7 @@ func _initialize() -> void:
         "World pixel dimensions must derive from tile count and tile size")
 
     var sample := Vector2i(17, 29)
-    var index := world_config.cell_index(sample)
+    var index: int = world_config.cell_index(sample)
     assert(index == sample.y * world_config.map_size + sample.x,
         "Tile coordinates must map to a stable row-major index")
     assert(world_config.cell_from_index(index) == sample,
@@ -27,7 +27,7 @@ func _initialize() -> void:
     assert(world_config.cell_from_index(world_config.map_cells) == Vector2i(-1, -1),
         "Out-of-bounds indices must not map to valid cells")
 
-    var frontier := world_config.profile_definition("frontier")
+    var frontier: Dictionary = world_config.profile_definition("frontier")
     assert(int(frontier.get("map_size", 0)) == 128,
         "The planned Frontier profile must define a 128x128 world")
     assert(is_equal_approx(float(frontier.get("starting_claim_radius", 0.0)), 15.0),
@@ -65,7 +65,7 @@ func _initialize() -> void:
     assert(not save_system._valid_save(incompatible_save),
         "A save from another profile or map size must be rejected")
 
-    var legacy_profile := world_config.profile_id
+    var legacy_profile: String = world_config.profile_id
     world_config.profile_id = "frontier"
     assert(not save_system._valid_save(legacy_save),
         "Legacy 64x64 saves must not load into the Frontier profile")
