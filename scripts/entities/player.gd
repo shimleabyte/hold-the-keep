@@ -224,9 +224,9 @@ func _click_on_hud() -> bool:
 
 
 func _regen(delta: float) -> void:
-    if hp >= MAX_HP or _since_hit < REGEN_DELAY:
+    if hp >= MAX_HP or _since_hit < Tech.stat("player.regen_delay", REGEN_DELAY):
         return
-    _regen_acc += REGEN_PER_SEC * delta
+    _regen_acc += Tech.stat("player.regen_rate", REGEN_PER_SEC) * delta
     if _regen_acc >= 1.0:
         var add := int(_regen_acc)
         _regen_acc -= add
@@ -267,6 +267,18 @@ func _apply_attack() -> void:
         var n := e as Node2D
         if origin.distance_to(n.global_position + Vector2(0, -4)) <= ATTACK_RANGE:
             n.take_damage(_player_damage(ATTACK_DAMAGE))
+    for target in get_tree().get_nodes_in_group("campaign_targets"):
+        if is_instance_valid(target) and origin.distance_to(target.global_position) <= ATTACK_RANGE:
+            var site_damage := roundi(float(_player_damage(ATTACK_DAMAGE)) * Tech.stat("campaign.site_damage", 1.0))
+            target.take_damage(maxi(1, site_damage))
+    var campaign = get_tree().get_first_node_in_group("campaign")
+    for stronghold in get_tree().get_nodes_in_group("enemy_strongholds"):
+        if not is_instance_valid(stronghold) or origin.distance_to(stronghold.global_position) > ATTACK_RANGE:
+            continue
+        if campaign != null and not campaign.is_current_objective(stronghold.stronghold_id):
+            continue
+        var stronghold_damage := roundi(float(_player_damage(ATTACK_DAMAGE)) * Tech.stat("campaign.site_damage", 1.0))
+        stronghold.take_damage(maxi(1, stronghold_damage))
     queue_redraw()
 
 
@@ -451,6 +463,19 @@ func _die() -> void:
 
 func _try_interact() -> void:
     var origin := global_position + Vector2(0, -4)
+    var nearest_site: Node2D = null
+    var site_distance := INTERACT_RANGE
+    for candidate in get_tree().get_nodes_in_group("frontier_sites"):
+        if not is_instance_valid(candidate):
+            continue
+        var distance := origin.distance_to(candidate.global_position + Vector2(0, -4))
+        if distance < site_distance:
+            nearest_site = candidate
+            site_distance = distance
+    if nearest_site != null and nearest_site.has_method("interact"):
+        _cooldown = 0.45
+        nearest_site.interact()
+        return
     var best: Node2D = null
     var best_dist := INTERACT_RANGE
     for n in get_tree().get_nodes_in_group("harvestable"):

@@ -175,11 +175,20 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** each archetype creates a distinct tactical response; AI remains bounded under stress tests; factions obey territory and campaign state; save/load and both engine CI versions pass.
 
 ### Phase 07 — Technology and campaign objectives
-- Expand the 17-node technology tree without invalidating existing unlocks.
-- Add regional discovery rewards, rescue, escort, ruin-clearing, camp-clearing and defense objectives.
-- Introduce the 20-day / 4-act Conquest Campaign while preserving 15-day Classic Mode.
+**Status:** Code review fixes are committed on `feat/phase-07-conquest-objectives`, stacked on Phase 06; final Godot 4.3 / 4.7 regression run is in progress.
 
-**Acceptance gate:** all objectives resolve, rewards persist, act transitions are tested and campaign completion cannot occur before the required objectives are met.
+- [x] Expand the technology tree from 17 to 20 nodes without changing existing technology IDs or prerequisites.
+- [x] Add a Frontier 20-day / 4-act ruleset while preserving Classic's 15-day / 3-stage rules.
+- [x] Add eleven ordered regional objectives: four biome discoveries, camp/ruin clearing, rescue, escort and night defense.
+- [x] Persist objective state, site health/location, escort progress and final-boss state in save v11; retain v1-v10 compatibility.
+- [x] Gate Frontier victory behind all required regional objectives, all four strongholds and the day-20 King; preserve Classic victory rules.
+- [x] Add the objective tracker (O), E interaction help, discovered objective markers on the TAB strategic map, and subdued visuals for locked acts.
+- [x] Fix escort reload path reconstruction; make Cartography improve Outpost reveal and Siegecraft improve player damage against active strongholds/sites across profiles.
+- [x] Add regression checks for objective locks, escort save/reload, Cartography, Siegecraft and the real day-20 King death path.
+- [x] Complete Godot 4.3 / 4.7 import/parse and regression matrix (30/30 jobs passed).
+- [ ] Perform rendered gameplay review at target desktop resolutions and tune difficulty from an actual playthrough.
+
+**Acceptance gate:** every objective type resolves, rewards/state survive save/load, act transitions follow the Frontier schedule, Classic remains unchanged, player-facing objective/map state is readable, and Frontier victory cannot occur before required objectives and the final encounter.
 
 ### Phase 08 — Visual and audio identity
 - Create distinct biome tiles, environmental props, landmarks and faction assets.

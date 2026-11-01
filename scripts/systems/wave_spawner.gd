@@ -27,12 +27,18 @@ func _on_day_changed(day: int) -> void:
     _sync_stage(day)
 
 
+func _campaign_rules() -> Dictionary:
+    var mode_id := "frontier" if WorldConfig.profile_id == "frontier" else "classic"
+    return DataDB.campaign_modes.get(mode_id, {}).duplicate(true)
+
+
 func stage_info(day: int) -> Dictionary:
-    var stages: Array = DataDB.waves.get("stages", [])
+    var rules := _campaign_rules()
+    var stages: Array = rules.get("stages", DataDB.waves.get("stages", []))
     for stage_value in stages:
         if not (stage_value is Dictionary):
             continue
-        if day >= int(stage_value.get("from_day", 1)) and day <= int(stage_value.get("to_day", 15)):
+        if day >= int(stage_value.get("from_day", 1)) and day <= int(stage_value.get("to_day", 20)):
             return stage_value.duplicate(true)
     return {
         "id": "frontier",
@@ -61,8 +67,10 @@ func _on_phase_changed(is_night: bool) -> void:
 
 
 func wave_size(day: int) -> int:
-    var cfg := DataDB.waves
-    return mini(int(cfg["base"]) + int(cfg["per_day"]) * (day - 1), int(cfg["max"]))
+    var cfg := _campaign_rules()
+    if cfg.is_empty():
+        cfg = DataDB.waves
+    return mini(int(cfg.get("base", 6)) + int(cfg.get("per_day", 3)) * (day - 1), int(cfg.get("max", 120)))
 
 
 func _pool_for(day: int) -> Array:
@@ -82,6 +90,16 @@ func _pool_for(day: int) -> Array:
             elif enemy_id == "brute":
                 entry["weight"] = int(entry["weight"]) + 2
         out.append(entry)
+
+    if WorldConfig.profile_id == "frontier":
+        var act_rosters := {
+            "act_2": ["enemy_scout", "enemy_shieldbearer"],
+            "act_3": ["enemy_saboteur", "enemy_war_shaman"],
+            "act_4": ["enemy_siege_engine", "enemy_beast_rider"]
+        }
+        for enemy_id in act_rosters.get(stage_id, []):
+            if DataDB.enemies.has(enemy_id):
+                out.append({"id": enemy_id, "from_day": day, "weight": 2})
     return out
 
 
@@ -110,6 +128,7 @@ func restore_enemy(d: Dictionary) -> void:
         e.setup(DataDB.enemies[d["id"]], world, flow, player, String(d.get("faction", "")))
     e.position = Vector2(float(d["x"]), float(d["y"]))
     e.hp = int(d["hp"])
+    e.campaign_site_id = String(d.get("site_id", ""))
     world.entities.add_child(e)
 
 
@@ -122,7 +141,8 @@ func start_wave(day: int) -> void:
     var night_secs := (GameClock.NIGHT_END - GameClock.NIGHT_START) * GameClock.DAY_LENGTH
     _interval = maxf(0.1, night_secs * SPAWN_WINDOW / count)
     Events.wave_started.emit(day, count)
-    if day == int(DataDB.waves.get("final_day", 0)):
+    var rules := _campaign_rules()
+    if day == int(rules.get("final_day", DataDB.waves.get("final_day", 15))):
         _boss_pending = true
         _boss_t = 4.0
         Events.build_feedback.emit("Malam terakhir! Raja lawan datang bersama %d prajurit" % count)

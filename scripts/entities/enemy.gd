@@ -35,6 +35,7 @@ var guard_origin := Vector2.ZERO
 var role := "melee"
 var archetype := "raider"
 var faction_id := ""
+var campaign_site_id := ""
 var _faction_tint := Color.WHITE
 var support_radius := 0.0
 var support_amount := 0
@@ -396,7 +397,10 @@ func take_damage(amount: int) -> void:
         remove_from_group("ranged_enemies")
         Events.enemy_killed.emit(id)
         if is_boss:
-            Events.game_won.emit(GameClock.day)
+            if WorldConfig.profile_id == "frontier":
+                Events.frontier_final_boss_defeated.emit(GameClock.day)
+            else:
+                Events.game_won.emit(GameClock.day)
         Events.fx_burst.emit("puff" if is_boss else "dust", position + Vector2(0, -2), Vector2.ZERO, 2.0 if is_boss else 1.5)
         if is_boss:
             Events.screen_shake.emit(3.0, 0.6)

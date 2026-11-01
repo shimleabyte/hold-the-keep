@@ -27,6 +27,7 @@ tests=(
     workplace_assignments
     production_worksites
     faction_registry
+    frontier_campaign
     input_rebinding
     map_stages
     player_combat
