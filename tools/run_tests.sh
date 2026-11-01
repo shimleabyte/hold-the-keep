@@ -47,6 +47,7 @@ tests=(
     depot_cost_sources
     supply_pressure
     shieldbearer_behavior
+    scout_marking
 )
 
 for test_name in "${tests[@]}"; do
