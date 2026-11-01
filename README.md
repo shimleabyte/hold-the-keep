@@ -20,6 +20,10 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - Klik kanan: batal / bongkar bangunan (refund 50%)
 - Esc: batal mode bangun
 - F / klik kiri (di luar mode bangun) / tombol X: serang sekitar pemain
+- Q / tombol B: Dash — burst cepat dengan jendela kebal singkat
+- C / tombol Y: Cleave — tebasan depan yang melukai dan membuat musuh limbung (level 2)
+- V / bumper kanan: Rally — memperkuat serangan pemain dan prajurit sekitar (level 3)
+- Kalahkan musuh untuk mendapat XP; level up memulihkan sebagian HP dan membuka skill
 - T / M / K / R: tambah penebang / penambang / petani (kebun) / prajurit (Shift = kurangi); atau klik tombol + / - di panel job
 - G: kirim seluruh prajurit untuk menyerbu benteng lawan yang sudah ditemukan; tekan lagi untuk menarik mereka kembali ke Keep
 - P / Esc (saat tidak membangun): menu jeda (simpan, muat, layar penuh, vsync, volume)
@@ -34,8 +38,14 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - Keep memiliki 1000 HP. Jika hancur, permainan berakhir.
 - Siang berlangsung 180 detik; malam berlangsung sekitar 54 detik.
 - Gelombang dimulai dari 6 musuh dan bertambah 3 per hari, hingga batas 120.
-- Bandit muncul sejak awal, serigala mulai hari 2, dan prajurit mulai hari 4.
-- Raja Lawan memiliki 1400 HP dan tidak mundur saat fajar.
+- Bandit muncul sejak awal, serigala hari 2, prajurit hari 4, pemanah hari 6, dan penghancur lapis baja hari 9.
+- Serigala menerjang setelah jeda serangan; pemanah menjaga jarak dan menembakkan proyektil; penghancur lebih tahan tetapi menghantam bangunan lebih keras.
+- Raja Lawan memiliki 1400 HP, armor, damage pengepungan, dan tidak mundur saat fajar.
+
+### Combat dan progression
+Pemain memperoleh XP saat musuh mati. Level 1 membuka Dash (Q), level 2 membuka Cleave (C), dan level 3 membuka Rally (V). Dash memberi perpindahan cepat serta invulnerability singkat; Cleave menyerang area depan dan memberi stagger; Rally memperkuat damage pemain dan prajurit dalam radius selama delapan detik. Level up memulihkan sebagian HP. Progress level/XP tersimpan.
+
+Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis pertahanan, serigala menerjang, pemanah menjaga jarak dan menembakkan proyektil, sedangkan penghancur berzirah bergerak lambat tetapi memberi damage pengepungan tinggi pada bangunan.
 
 ### Desa dan ekonomi
 - Penduduk awal: 2. Keep memberi kapasitas 2; setiap rumah menambah 2 kapasitas.
@@ -47,7 +57,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 
 ### Simpanan dan pengaturan
 - Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
-- Save versi 5 menyimpan inventori, jam, bangunan, penduduk, musuh, riset, pemain, status resource node, eksplorasi fog of war, benteng lawan, timer penguatan, serta status ekspedisi dan perjalanan pulang.
+- Save versi 6 menyimpan semua status versi sebelumnya plus level dan XP tempur pemain; save versi 1–5 dimigrasikan ke level awal.
 - Penulisan save memakai file sementara dan salinan pemulihan; loader mencoba salinan tersebut bila file utama rusak.
 - Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
