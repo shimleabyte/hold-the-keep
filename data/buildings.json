@@ -1,12 +1,148 @@
 [
-  {"id": "keep",    "name": "Keep",   "size": [3, 3], "cost": {},                        "hp": 1000, "color": "#9a9fa8", "buildable": false, "depot": true, "capacity": 2},
-  {"id": "house",   "name": "Rumah",  "size": [2, 2], "cost": {"wood": 12},              "hp": 150, "color": "#b08a5a", "capacity": 2},
-  {"id": "wall",    "name": "Tembok", "size": [1, 1], "cost": {"wood": 2},               "hp": 80,  "color": "#8b6b43"},
-  {"id": "tower",   "name": "Menara", "size": [2, 2], "cost": {"wood": 15, "stone": 8},  "hp": 200, "color": "#8a8f98",
-   "range": 96, "damage": 12, "fire_interval": 0.9},
-  {"id": "storage", "name": "Gudang", "size": [3, 2], "cost": {"wood": 10},              "hp": 120, "color": "#9c7a4a", "depot": true},
-  {"id": "farm",    "name": "Ladang", "size": [3, 2], "cost": {"wood": 8},               "hp": 100, "color": "#6a8f3a", "workers": 2},
-  {"id": "outpost", "name": "Pos Terdepan", "short": "POS", "size": [2, 2], "cost": {"wood": 30, "stone": 12}, "hp": 240, "color": "#a27a4d", "claim_radius": 9.0},
-  {"id": "stone_wall", "name": "Tembok Batu", "short": "T.BATU", "size": [1, 1], "cost": {"stone": 3}, "hp": 300, "color": "#8a8f98", "locked": true},
-  {"id": "forge",      "name": "Tempa",       "size": [2, 2], "cost": {"wood": 30, "stone": 40}, "hp": 200, "color": "#6e737b", "locked": true}
+  {
+    "id": "keep",
+    "name": "Keep",
+    "size": [
+      3,
+      3
+    ],
+    "cost": {},
+    "hp": 1000,
+    "color": "#9a9fa8",
+    "buildable": false,
+    "depot": true,
+    "capacity": 2
+  },
+  {
+    "id": "house",
+    "name": "Rumah",
+    "size": [
+      2,
+      2
+    ],
+    "cost": {
+      "wood": 12
+    },
+    "hp": 150,
+    "color": "#b08a5a",
+    "capacity": 2
+  },
+  {
+    "id": "wall",
+    "name": "Tembok",
+    "size": [
+      1,
+      1
+    ],
+    "cost": {
+      "wood": 2
+    },
+    "hp": 80,
+    "color": "#8b6b43"
+  },
+  {
+    "id": "tower",
+    "name": "Menara",
+    "size": [
+      2,
+      2
+    ],
+    "cost": {
+      "wood": 15,
+      "stone": 8
+    },
+    "hp": 200,
+    "color": "#8a8f98",
+    "range": 96,
+    "damage": 12,
+    "fire_interval": 0.9
+  },
+  {
+    "id": "storage",
+    "name": "Gudang",
+    "size": [
+      3,
+      2
+    ],
+    "cost": {
+      "wood": 10
+    },
+    "hp": 120,
+    "color": "#9c7a4a",
+    "depot": true
+  },
+  {
+    "id": "farm",
+    "name": "Ladang",
+    "size": [
+      3,
+      2
+    ],
+    "cost": {
+      "wood": 8
+    },
+    "hp": 100,
+    "color": "#6a8f3a",
+    "workers": 2
+  },
+  {
+    "id": "outpost",
+    "name": "Pos Terdepan",
+    "short": "POS",
+    "size": [
+      2,
+      2
+    ],
+    "cost": {
+      "wood": 30,
+      "stone": 12
+    },
+    "hp": 240,
+    "color": "#a27a4d",
+    "claim_radius": 9
+  },
+  {
+    "id": "stone_wall",
+    "name": "Tembok Batu",
+    "short": "T.BATU",
+    "size": [
+      1,
+      1
+    ],
+    "cost": {
+      "stone": 3
+    },
+    "hp": 300,
+    "color": "#8a8f98",
+    "locked": true
+  },
+  {
+    "id": "forge",
+    "name": "Tempa",
+    "size": [
+      2,
+      2
+    ],
+    "cost": {
+      "wood": 30,
+      "stone": 40
+    },
+    "hp": 200,
+    "color": "#6e737b",
+    "locked": true
+  },
+  {
+    "id": "road",
+    "name": "Jalan",
+    "short": "JLN",
+    "size": [
+      1,
+      1
+    ],
+    "cost": {
+      "wood": 1
+    },
+    "hp": 35,
+    "color": "#9c815d"
+  }
 ]
