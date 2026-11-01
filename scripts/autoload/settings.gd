@@ -9,7 +9,8 @@ const BINDABLE_ACTIONS := [
 const RESERVED_KEYS := [
     KEY_ESCAPE, KEY_P, KEY_Y, KEY_H, KEY_F1, KEY_F3, KEY_F5, KEY_F9,
     KEY_T, KEY_M, KEY_K, KEY_R, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6,
-    KEY_TAB, KEY_ENTER, KEY_KP_ENTER, KEY_G
+    KEY_TAB, KEY_ENTER, KEY_KP_ENTER, KEY_G,
+    KEY_Q, KEY_C, KEY_V
 ]
 
 var fullscreen := false
