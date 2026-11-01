@@ -389,7 +389,7 @@ func _find_supply_raid_spawn(depot: Node) -> Vector2i:
             for x in range(-radius, radius + 1):
                 if maxi(absi(x), absi(y)) != radius:
                     continue
-                var candidate := depot.cell + Vector2i(x, y)
+                var candidate: Vector2i = depot.cell + Vector2i(x, y)
                 if not world.is_buildable(candidate) or not nav.is_walkable(candidate):
                     continue
                 var owner: String = territory.owner_at(candidate)
