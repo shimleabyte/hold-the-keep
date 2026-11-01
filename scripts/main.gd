@@ -17,8 +17,6 @@ const TECH_PANEL_SCRIPT := preload("res://scripts/ui/tech_panel.gd")
 const MENU_SCRIPT := preload("res://scripts/ui/pause_menu.gd")
 
 const NIGHT_TINT := Color(0.45, 0.5, 0.75)
-const KEEP_CELL := Vector2i(31, 29)
-
 var world
 var territory
 var enemy_keep
@@ -93,11 +91,12 @@ func _ready() -> void:
     var save := SaveSystem.take_pending()
     if save.is_empty():
         Tech.reset()
-        build.place_raw("keep", KEEP_CELL)
+        build.place_raw("keep", world.starting_keep_cell())
         _spawn_enemy_keep()
-        # Dua penduduk awal
+        # Dua penduduk awal, relative to the configured Keep position.
+        var keep_position := world.keep_center_position()
         for i in 2:
-            village.spawn_villager(Vector2(520.0 + (i * 2 - 1) * 8.0, 522.0))
+            village.spawn_villager(keep_position + Vector2((i * 2 - 1) * 8.0, 10.0))
     else:
         _apply_save(save)
 
@@ -124,13 +123,16 @@ func _enemy_keep_cells(anchor: Vector2i) -> Array[Vector2i]:
 func _find_enemy_keep_cell() -> Vector2i:
     nav.rebuild()
     var candidates: Array[Dictionary] = []
-    var keep_center := Vector2(32.5, 30.5)
-    for y in range(5, 56):
-        for x in range(5, 56):
+    var keep_cell := world.starting_keep_cell()
+    var keep_center := Vector2(keep_cell) + Vector2(1.5, 1.5)
+    var map_size := WorldConfig.map_size
+    var min_stronghold_distance := float(map_size) * 0.34375
+    for y in range(5, map_size - 5):
+        for x in range(5, map_size - 5):
             var anchor := Vector2i(x, y)
             var center := Vector2(anchor) + Vector2(1.5, 1.5)
             var distance := center.distance_to(keep_center)
-            if distance < 22.0:
+            if distance < min_stronghold_distance:
                 continue
             var clear := true
             for cell in _enemy_keep_cells(anchor):
@@ -141,7 +143,8 @@ func _find_enemy_keep_cell() -> Vector2i:
                 candidates.append({"cell": anchor, "distance": distance})
     candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
         return float(a["distance"]) > float(b["distance"]))
-    for i in mini(candidates.size(), 160):
+    var candidate_limit := 160 * maxi(1, int(map_size * map_size / 4096))
+    for i in mini(candidates.size(), candidate_limit):
         var anchor: Vector2i = candidates[i]["cell"]
         if not nav.path_adjacent(player.position, _enemy_keep_cells(anchor)).is_empty():
             return anchor
