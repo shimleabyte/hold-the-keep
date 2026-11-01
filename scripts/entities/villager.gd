@@ -663,7 +663,13 @@ func _tick_fight(delta: float) -> void:
         _foe = _nearest_enemy()
     if _foe == null or not is_instance_valid(_foe):
         _foe = null
-        state = State.EXPEDITION if _expeditioning and is_instance_valid(_expedition_target) else State.IDLE
+        if is_outpost_guard():
+            _path = PackedVector2Array()
+            _pi = 0
+            _guard_repath_t = 0.0
+            state = State.IDLE
+        else:
+            state = State.EXPEDITION if _expeditioning and is_instance_valid(_expedition_target) else State.IDLE
         return
     var dist := position.distance_to(_foe.position)
     if dist < REACH:
