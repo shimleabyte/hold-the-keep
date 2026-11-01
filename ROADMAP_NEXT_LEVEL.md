@@ -96,11 +96,20 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable frontier, valid map bounds and 128×128 fog/index round-trip.
 
 ### Phase 02 — Territory, roads and supply
-- Add regional ownership records and neutral/player/enemy/contested states.
-- Make Outposts meaningful forward infrastructure with guard assignment and local visibility.
-- Add roads, bridges, local depots and supply-route connectivity.
-- Separate ownership from supply and line-of-sight.
-- Add supply attrition and raid vulnerability only after the basic route model is reliable.
+**Status:** Initial slice implemented on `feat/regional-control-roads` (draft PR #9); full phase gate pending.
+
+- [x] Aggregate land claims into neutral/player/enemy/contested regional control records.
+- [x] Emit region-control state changes independently from fog-of-war.
+- [x] Add a low-cost road construction tile with no physical collision.
+- [x] Keep roads walkable in villager A* and enemy flow-field routing.
+- [x] Build a cardinal road graph rooted at the Keep and expose connected road/depot state.
+- [x] Make Outposts local depots and restrict worker deposits to Keep-connected depots.
+- [x] Show explored roads and regional control state on the strategic map.
+- [x] Add regression coverage for ownership states, road traversability, depot connection/disconnection, isolated Outposts and save persistence.
+- [ ] Add bridge construction and water-crossing route rules.
+- [ ] Add outpost guard assignment and local garrison support.
+- [ ] Add local stockpile accounting and delivery/transfer semantics; current resources still enter the shared inventory once workers reach a connected depot.
+- [ ] Validate the full route and save/load acceptance gate on Godot 4.3 and 4.7.
 
 **Acceptance gate:** claim boundaries, outpost frontier rules, path connectivity, supply routing, local depot access and save/load all work across region boundaries.
 
@@ -183,4 +192,4 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - Frontier target size is 128×128; Classic remains 64×64.
 - The larger starting territory is a 15-tile Keep radius, not an unrestricted starting half-map.
 - Five terrain biomes are the initial target; Old Frontier is a ruin-rich subregion theme.
-- Phase 00 lives on `feat/kingdom-expansion-foundation`; Phase 01 is stacked on it in `feat/frontier-world-generation`.
+- Phase 00 lives on `feat/kingdom-expansion-foundation`; Phase 01 is stacked on it in `feat/frontier-world-generation`; Phase 02 is stacked on Phase 01 in `feat/regional-control-roads`.
