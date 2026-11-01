@@ -565,6 +565,11 @@ func _go_depot() -> void:
 
 func _deposit() -> void:
     if carry > 0 and carry_kind != "":
+        var supply = get_tree().get_first_node_in_group("supply_network")
+        if supply != null and _depot != null and is_instance_valid(_depot) and not supply.is_depot_connected(_depot):
+            _depot = null
+            _go_depot()
+            return
         Inventory.add(carry_kind, carry)
     carry = 0
     carry_kind = ""
