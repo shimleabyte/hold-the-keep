@@ -98,7 +98,7 @@ func _initialize() -> void:
 
     var radius_probe := Node2D.new()
     main.world.entities.add_child(radius_probe)
-    var away_from_keep := (camp.position - keep.position).normalized()
+    var away_from_keep: Vector2 = (camp.position - keep.position).normalized()
     if away_from_keep == Vector2.ZERO:
         away_from_keep = Vector2.RIGHT
     radius_probe.position = camp.position + away_from_keep * WorldConfig.tile_size * 17.0
