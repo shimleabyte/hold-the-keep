@@ -201,12 +201,13 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Replace the Classic-only micro-benchmark with a configurable Classic/Frontier diagnostic reporting frame-time percentiles, static memory, node count, projectiles and particle peaks.
 - [x] Add a bounded Frontier stress regression with all four factions, mixed rosters, 48 villagers, a live ranged projectile and the 500-particle ceiling.
 - [x] Add structural migration fixtures for Classic v1–v11 and Frontier v7–v11; test stale temporary saves, backup rotation and invalid campaign state.
+- [x] Add an end-to-end Frontier reload regression preserving completed objectives, unlocked Act II, an active escort/path index and partially damaged stronghold HP.
 - [x] Verify Windows/Linux export preset names, paths, resource filters and embedded PCK settings.
 - [x] Make both release build scripts fail if either export artifact is missing or empty.
 - [ ] Run and record the benchmark on target hardware at the reference workload; compare p50/p95/p99 results and OS/CPU/GPU/Godot version.
 - [ ] Add act-by-act Frontier balance cases, including day 20, and preserve Classic's 15-day behavior.
 - [ ] Perform human playtests across all acts and inspect navigation, combat readability, pacing and failure recovery.
-- [ ] Run the migration and campaign reload matrix on Godot 4.3 and 4.7.
+- [ ] Extend reload coverage through later acts/final-boss progression and run the migration/reload matrix on Godot 4.3 and 4.7.
 - [ ] Produce and smoke-test real Windows and Linux exports using installed export templates.
 
 **Provisional budget (not yet measured):** target 60 FPS at 1280×720 under Frontier 128×128 with 96 faction enemies, 80 villagers and up to 500 particles; p95 frame time ≤16.67 ms and p99 ≤33.3 ms. Do not treat these numbers as achieved until target-hardware results are attached.
