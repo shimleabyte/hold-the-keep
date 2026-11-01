@@ -249,6 +249,8 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         var supply_state = data.get("supply", null)
         if not (supply_state is Dictionary) or not supply_state.has("next_id") or not (supply_state.get("orders", null) is Array):
             return false
+        if supply_state["orders"].size() > 24 or int(supply_state["next_id"]) <= 0:
+            return false
         var seen_shipment_ids: Dictionary = {}
         var reserved_capacity: Dictionary = {}
         var max_shipment_id := 0
