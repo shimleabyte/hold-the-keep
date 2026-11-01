@@ -42,13 +42,13 @@ func _run() -> void:
     var expected_regions := ["GREENWOOD", "HIGHLANDS", "FENLANDS", "ASHEN_MARCH"]
     var expected_factions := ["greenwood_raiders", "iron_legion", "fen_cult", "ashen_host"]
     for index in expected_regions.size():
-        var faction_id := faction_registry.faction_for_region(expected_regions[index])
+        var faction_id: String = faction_registry.faction_for_region(expected_regions[index])
         assert(faction_id == expected_factions[index], "Region-to-faction mapping must be deterministic")
         var stronghold = main.campaign._nodes[faction_id]
         assert(is_instance_valid(stronghold), "Each faction must own its regional stronghold")
         var guards := guards_for(stronghold)
         assert(guards.size() == 3, "Each stronghold must spawn three guards")
-        var roster := faction_registry.roster_for(faction_id)
+        var roster: Array = faction_registry.roster_for(faction_id)
         for guard in guards:
             assert(guard.faction_id == faction_id, "Garrison must retain its faction identity")
             assert(roster.has(guard.id), "Garrison unit must belong to its faction roster")
