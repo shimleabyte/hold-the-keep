@@ -200,13 +200,24 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** screenshot passes at target desktop resolutions; visual readability under day/night, fog and combat load; no placeholder-only faction identity in release content.
 
 ### Phase 09 — Balance, performance and release hardening
-- Profile 128×128 worlds with larger populations, multiple factions, projectiles and effects.
-- Optimize only measured hotspots. Consider chunk streaming only if full-map loading causes real problems.
-- Simulate campaign difficulty and perform human playtests across all acts.
-- Test save migration, interrupted saves, campaign reload and export builds.
+**Status:** Rebased onto Phase 07 mainline as `feat/phase-09-balance-performance-release-mainline`; previous stacked workflow #282 passed 30/30 jobs. Fresh mainline CI and target-machine review are pending.
 
-**Acceptance gate:** full CI green, no known blocker bugs, performance budget documented, fresh and migrated saves tested, and release builds verified on target desktop platforms.
+- [x] Add configurable Classic/Frontier profiling for p50/p95/p99 process, physics and wall-frame timing, static memory, node count, projectiles and particles.
+- [x] Add bounded Frontier stress coverage for four factions, mixed rosters, villagers, ranged projectiles and the 500-particle ceiling.
+- [x] Add deterministic Classic/Frontier campaign balance matrix for stage/act transitions, wave budgets and final-boss gates.
+- [x] Add Frontier campaign reload coverage for completed objectives, unlocked acts, escort path progress and damaged strongholds.
+- [x] Add save migration/recovery tests for Classic v1–v11 and Frontier v7–v11, interrupted temporary writes, backup rotation and profile isolation.
+- [x] Run the Godot 4.3/4.7 import, parse and regression matrix on the original stacked branch.
+- [x] Export Windows/Linux in CI using Godot 4.3 templates; validate Windows PE output and smoke-test Linux.
+- [ ] Measure the reference workload on actual target desktop hardware before making performance optimization claims.
+- [ ] Add combat outcome simulations at the end of all four Frontier acts and on day 20.
+- [ ] Extend reload tests to later acts, conquered strongholds and the final-boss gate.
+- [ ] Complete human playtesting across all campaign acts.
+- [ ] Verify Windows runtime and clean-machine save/settings migration.
 
+**CI diagnostic (not target hardware):** Frontier 128×128, 119 active enemies, 82 villagers, six peak projectiles and 500 peak particles; wall-frame p50 4.27 ms / p95 10.45 ms / p99 13.55 ms. A process-monitor p95 outlier of 102.24 ms was also recorded; these figures are runner-specific, not an accepted target-hardware budget.
+
+**Acceptance gate:** fresh mainline CI green, measured target-hardware performance, no blocker bugs, multi-act human playtest completed, save migration/reload tested, and Windows/Linux exports verified.
 ## 5. First implementation priorities
 
 1. **Phase 00 is mandatory.** Do not add content on top of duplicated spatial constants and unverified scripts.

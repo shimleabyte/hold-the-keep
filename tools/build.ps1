@@ -7,4 +7,9 @@ New-Item -ItemType Directory -Force build/windows, build/linux | Out-Null
 & $godot --headless --import
 & $godot --headless --export-release "Windows Desktop" build/windows/HoldTheKeep.exe
 & $godot --headless --export-release "Linux" build/linux/HoldTheKeep.x86_64
+foreach ($artifact in @("build/windows/HoldTheKeep.exe", "build/linux/HoldTheKeep.x86_64")) {
+    if (-not (Test-Path $artifact) -or (Get-Item $artifact).Length -le 0) {
+        throw "Export did not produce a non-empty artifact: $artifact"
+    }
+}
 Write-Host "Selesai: build/windows/HoldTheKeep.exe  build/linux/HoldTheKeep.x86_64"

@@ -33,7 +33,7 @@ ke `main`, push ke `main` atau branch `feat/**` / `fix/**`, serta workflow manua
 | faction_registry.gd | four faction definitions, region mapping, roster membership, stronghold garrisons, War Shaman support and v11 faction save persistence |
 | frontier_campaign.gd | Classic/Frontier campaign calendars, act gates, all regional objectives, rewards, save/load and day-20 King victory |
 | campaign_multi_stronghold.gd | four Frontier strongholds, deterministic objective order, regional placement, independent garrisons, locked objectives, save/load and final conquest |
-| workplace_assignments.gd | Builder workplace capacity/radius, repair material consumption, reachable depot selection, job priority reassignment and v9 save validation |
+| workplace_assignments.gd | Builder workplace capacity/radius, repair material consumption, reachable depot selection, job priority reassignment and v11 save validation |
 | production_worksites.gd | Lumber Camp/Quarry workplace limits, specialist work radius, Classic fallback, cleanup and v11 save compatibility |
 | map_stages.gd | empat biome, fog map panel, batas tiga bab, bobot archer/brute per bab |
 | responsive_layout.gd | expanded integer-scaled viewport, HUD/map/hotbar bounds across five logical resolutions |
@@ -41,7 +41,11 @@ ke `main`, push ke `main` atau branch `feat/**` / `fix/**`, serta workflow manua
 | input_rebinding.gd | perubahan keybind, penolakan konflik/reserved key, persistensi settings |
 | restart_gameover.gd | layar game over dan restart (R) |
 | fx_shake_settings.gd | batas partikel, guncangan layar, tombol menu, performa dengan efek |
-| perf.gd | biaya per frame: 150 musuh + 42 villager |
+| perf.gd | configurable Classic/Frontier benchmark; `PROFILE=frontier ENEMIES=96 VILLAGERS=80 FRAMES=360` reports p50/p95/p99 frame time, nodes, static memory, projectiles and particles |
+| frontier_stress.gd | Frontier 128×128, faction rosters, 48 villagers, projectile and 500-particle ceiling |
+| campaign_reload_hardening.gd | Frontier reload with completed objectives, active escort/path progress and damaged stronghold |
+| campaign_balance_matrix.gd | Classic 15-day and Frontier 20-day schedules, act wave budgets, faction rosters and final-boss gate |
+| release_hardening.gd | Classic v1–v11 and Frontier v7–v11 save migration, interrupted writes, backup recovery and export presets |
 | anim_sync.gd | pukulan penebang jatuh di frame benturan; pelarian memakai klip lari |
 | animation_motion.gd | idle breathing, walk/run lift, directional attack/work lean, hurt recoil, stable death pose |
 | world_config.gd | profile dimensions, tile indexing, Keep placement, Classic/Frontier profile definitions |
@@ -53,7 +57,7 @@ Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; 
 Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan key dictionary inventori.
 
 ## Skrip yang dijalankan otomatis di CI
-Suite headless CI yang berbasis assertion mencakup: `animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `faction_registry`, `frontier_campaign`, `production_worksites`,
+Suite headless CI yang berbasis assertion mencakup: `animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `campaign_reload_hardening`, `campaign_balance_matrix`, `faction_registry`, `frontier_campaign`, `frontier_stress`, `release_hardening`, `production_worksites`,
 `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`,
 `territory_claims`, `world_config`, dan `frontier_world`.
 
@@ -62,7 +66,7 @@ Skrip observasi manual mencakup: `anim_sync`, `combat_tower_walls`, `events_boss
 `villagers_economy`.
 
 `perf.gd` dan `balance_final_night.gd` tetap berupa diagnostic/balance runs; jalankan terpisah saat
-mengukur performa atau mengubah komposisi gelombang. Screenshot, preview sprite dan klik HUD tetap
+mengukur performa atau mengubah komposisi gelombang. Benchmark default menjalankan Frontier 128×128; atur `PROFILE=classic` untuk pembanding 64×64. Contoh: `PROFILE=frontier ENEMIES=96 VILLAGERS=80 FRAMES=360 godot --headless --path . --script res://tests/perf.gd`. Screenshot, preview sprite dan klik HUD tetap
 memerlukan jalur render/manual yang dijelaskan di bawah.
 
 ## Skrip yang butuh layar (render sungguhan)
@@ -81,3 +85,8 @@ Dijalankan di layar virtual dengan OpenGL software, hasilnya PNG di /tmp/shots:
   posisi mouse viewport harus diset dengan `warp_mouse`)
 - preview_sprites.gd: `NAMES=player,enemy_wolf SCALE=3 godot --headless --path . --script tests/preview_sprites.gd`
   menulis /tmp/prev.png (pratinjau sprite sheet)
+
+
+Phase 09 CI runs the Frontier timing benchmark as a non-gating diagnostic and uploads a p50/p95/p99 artifact. These runner-specific measurements do not substitute for target-hardware profiling.
+
+The release-export workflow installs Godot 4.3-matching templates, builds Windows and Linux binaries, validates the Windows PE format and smoke-tests the Linux executable. These checks do not replace clean-machine user acceptance.
