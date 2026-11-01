@@ -13,6 +13,8 @@ const TEXTURES := {
     "outpost": preload("res://assets/sprites/outpost.svg"),
     "road": preload("res://assets/sprites/road.svg"),
     "bridge": preload("res://assets/sprites/bridge.svg"),
+    "lumber_camp": preload("res://assets/sprites/lumber_camp.svg"),
+    "quarry": preload("res://assets/sprites/quarry.svg"),
 }
 const ARROW_SCRIPT := preload("res://scripts/entities/arrow.gd")
 
