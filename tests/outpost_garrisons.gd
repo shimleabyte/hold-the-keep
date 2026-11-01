@@ -147,7 +147,7 @@ func _initialize() -> void:
     hud._toggle_outposts()
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 12, "Guard links must remain backward-compatible optional fields in save v12")
+    assert(snapshot["version"] == 13, "Guard links and shipment state must use save v13")
     var saved_guard_count := 0
     for saved_villager in snapshot["villagers"]:
         if saved_villager.get("guard_outpost", null) is Dictionary:
@@ -155,10 +155,12 @@ func _initialize() -> void:
     assert(saved_guard_count == 2, "Save snapshot must persist both Outpost guard assignments")
     assert(save_system._valid_save(snapshot), "Save v12 with valid guard links must pass validation")
     var legacy_snapshot := snapshot.duplicate(true)
+    legacy_snapshot["version"] = 12
+    legacy_snapshot.erase("supply")
     for saved_villager in legacy_snapshot["villagers"]:
         saved_villager.erase("guard_outpost")
     assert(save_system._valid_save(legacy_snapshot),
-        "Existing v12 saves without the optional guard field must remain valid")
+        "Existing v12 saves without shipment or guard fields must remain valid")
     var invalid_snapshot := snapshot.duplicate(true)
     for saved_villager in invalid_snapshot["villagers"]:
         if saved_villager.get("guard_outpost", null) is Dictionary:
