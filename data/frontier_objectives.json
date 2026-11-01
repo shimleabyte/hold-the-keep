@@ -28,6 +28,19 @@
     }
   },
   {
+    "id": "discover_highlands",
+    "type": "discovery",
+    "region": "HIGHLANDS",
+    "act": 2,
+    "required": true,
+    "name": "Jelajahi Highlands",
+    "description": "Petakan celah gunung dan jalur suplai Iron Legion.",
+    "reward": {
+      "stone": 25,
+      "iron": 3
+    }
+  },
+  {
     "id": "highland_survivors",
     "type": "rescue",
     "region": "HIGHLANDS",
@@ -53,6 +66,19 @@
     "reward": {
       "wood": 30,
       "stone": 35
+    }
+  },
+  {
+    "id": "discover_fenlands",
+    "type": "discovery",
+    "region": "FENLANDS",
+    "act": 3,
+    "required": true,
+    "name": "Jelajahi Fenlands",
+    "description": "Temukan jalur aman melewati rawa Fen Cult.",
+    "reward": {
+      "food": 25,
+      "stone": 15
     }
   },
   {
@@ -85,6 +111,19 @@
     }
   },
   {
+    "id": "discover_ashen_march",
+    "type": "discovery",
+    "region": "ASHEN_MARCH",
+    "act": 4,
+    "required": true,
+    "name": "Jelajahi Ashen March",
+    "description": "Kenali medan pengepungan terakhir sebelum menyerbu Ashen Host.",
+    "reward": {
+      "iron": 8,
+      "stone": 20
+    }
+  },
+  {
     "id": "ashen_refugees",
     "type": "rescue",
     "region": "ASHEN_MARCH",
@@ -111,45 +150,6 @@
     "reward": {
       "stone": 55,
       "iron": 20
-    }
-  },
-  {
-    "id": "discover_highlands",
-    "type": "discovery",
-    "region": "HIGHLANDS",
-    "act": 2,
-    "required": true,
-    "name": "Jelajahi Highlands",
-    "description": "Petakan celah gunung dan jalur suplai Iron Legion.",
-    "reward": {
-      "stone": 25,
-      "iron": 3
-    }
-  },
-  {
-    "id": "discover_fenlands",
-    "type": "discovery",
-    "region": "FENLANDS",
-    "act": 3,
-    "required": true,
-    "name": "Jelajahi Fenlands",
-    "description": "Temukan jalur aman melewati rawa Fen Cult.",
-    "reward": {
-      "food": 25,
-      "stone": 15
-    }
-  },
-  {
-    "id": "discover_ashen_march",
-    "type": "discovery",
-    "region": "ASHEN_MARCH",
-    "act": 4,
-    "required": true,
-    "name": "Jelajahi Ashen March",
-    "description": "Kenali medan pengepungan terakhir sebelum menyerbu Ashen Host.",
-    "reward": {
-      "iron": 8,
-      "stone": 20
     }
   }
 ]
