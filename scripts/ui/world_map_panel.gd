@@ -286,7 +286,7 @@ func _draw_frontier_site_markers() -> void:
             "defend":
                 marker_color = Color("#84a9d2")
 
-        var is_locked := int(site.definition.get("act", 1)) > site.manager.unlocked_act
+        var is_locked: bool = int(site.definition.get("act", 1)) > int(site.manager.unlocked_act)
         if site.site_state == "failed":
             marker_color = Color("#765453")
         elif is_locked:
