@@ -44,12 +44,13 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 20 assertion reg
 | frontier_stress.gd | Frontier 128×128, faction rosters, 48 villagers, projectile and 500-particle ceiling |
 | campaign_reload_hardening.gd | Frontier reload with completed objectives, active escort/path progress and damaged stronghold |
 | campaign_balance_matrix.gd | Classic 15-day and Frontier 20-day schedules, act wave budgets, faction rosters and final-boss gate |
-| release_hardening.gd | Classic v1–v11 and Frontier v7–v11 save migration, interrupted writes, backup recovery and export presets |
+| release_hardening.gd | Classic v1–v12 and Frontier v7–v12 save migration, interrupted writes, backup recovery and export presets |
 | anim_sync.gd | pukulan penebang jatuh di frame benturan; pelarian memakai klip lari |
 | animation_motion.gd | idle breathing, walk/run lift, directional attack/work lean, hurt recoil, stable death pose |
 | world_config.gd | profile dimensions, tile indexing, Keep placement, Classic/Frontier profile definitions |
 | frontier_world.gd | 128×128 terrain, five biomes, Ashen tile, regional resources, iron veins, Keep claims, reachability and deterministic generation |
 | regional_control_roads.gd | regional neutral/player/enemy/contested states, walkable roads/bridges, Keep-connected supply routes, depot isolation, rerouting and save persistence |
+| local_depot_stockpiles.gd | Frontier local depot balances, capacity rejection, worker cargo deposit, v12 migration and save/load round-trip |
 | balance_final_night.gd | `CASES="4,2;6,3"` = daftar "prajurit,menara"; `TECH=era2` atau `TECH=all` memberi teknologi; hasil MENANG/KALAH |
 
 Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; nilai sebenarnya 12).
@@ -59,7 +60,7 @@ Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan k
 
 Suite assertion yang dijalankan pada Godot 4.3 dan 4.7 masing-masing mencakup 20 skrip:
 
-`animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `production_worksites`, `faction_registry`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, dan `regional_control_roads`.
+`animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `production_worksites`, `faction_registry`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, dan `regional_control_roads`, `local_depot_stockpiles`.
 
 CI juga menjalankan import/parse pada kedua versi Godot, performance diagnostic Frontier pada Godot 4.7, serta template-backed Windows/Linux release export pada Godot 4.3. Pada 1 November 2026, mainline workflow #294 lulus 44/44 jobs.
 
