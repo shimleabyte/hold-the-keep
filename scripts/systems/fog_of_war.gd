@@ -19,6 +19,25 @@ func _ready() -> void:
     _scan_sources()
 
 
+func export_state() -> Dictionary:
+    var cells: Array[int] = []
+    for index in MAP_CELLS:
+        if discovered[index] != 0:
+            cells.append(index)
+    return {"cells": cells}
+
+
+func import_state(data: Dictionary) -> void:
+    discovered.fill(0)
+    var cells = data.get("cells", [])
+    if cells is Array:
+        for value in cells:
+            var index := int(value)
+            if index >= 0 and index < MAP_CELLS:
+                discovered[index] = 1
+    queue_redraw()
+
+
 func _process(delta: float) -> void:
     _scan_timer -= delta
     if _scan_timer > 0.0:

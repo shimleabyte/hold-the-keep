@@ -105,6 +105,8 @@ func _ready() -> void:
     fog.world = world
     fog.player = player
     world.add_child(fog)
+    if not save.is_empty():
+        fog.import_state(save.get("fog", {}))
 
 
 func _on_campaign_won(_day: int) -> void:
@@ -123,8 +125,8 @@ func _find_enemy_keep_cell() -> Vector2i:
     nav.rebuild()
     var candidates: Array[Dictionary] = []
     var keep_center := Vector2(32.5, 30.5)
-    for y in range(2, 59):
-        for x in range(2, 59):
+    for y in range(5, 56):
+        for x in range(5, 56):
             var anchor := Vector2i(x, y)
             var center := Vector2(anchor) + Vector2(1.5, 1.5)
             var distance := center.distance_to(keep_center)
@@ -160,6 +162,7 @@ func _spawn_enemy_keep(saved: Dictionary = {}, create_garrison := true) -> void:
 
     enemy_keep = ENEMY_KEEP_SCRIPT.new()
     enemy_keep.setup(world, flow, player, anchor, int(saved.get("hp", 900)))
+    enemy_keep.import_state(saved)
     world.entities.add_child(enemy_keep)
     for cell in enemy_keep.cells():
         world.occupied[cell] = enemy_keep

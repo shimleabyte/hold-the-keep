@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 3
+const VERSION := 4
 
 var pending: Dictionary = {}
 
@@ -136,6 +136,7 @@ func collect(main: Node) -> Dictionary:
     return {
         "version": VERSION,
         "stronghold": stronghold_state,
+        "fog": main.fog.export_state() if is_instance_valid(main.fog) else {},
         "inventory": Inventory.items,
         "clock": {"t": GameClock.time_of_day, "day": GameClock.day, "night": GameClock.is_night},
         "player": {"x": main.player.position.x, "y": main.player.position.y, "hp": main.player.hp},
@@ -167,6 +168,15 @@ func _valid_save(data: Variant) -> bool:
     var tech = data.get("tech", {})
     var resources = data.get("resources", [])
     var stronghold = data.get("stronghold", {})
+    var fog = data.get("fog", {})
+    if not (fog is Dictionary):
+        return false
+    var explored_cells = fog.get("cells", [])
+    if not (explored_cells is Array):
+        return false
+    for index in explored_cells:
+        if int(index) < 0 or int(index) >= 64 * 64:
+            return false
     if not (stronghold is Dictionary):
         return false
     if not stronghold.is_empty() and not bool(stronghold.get("destroyed", false)):

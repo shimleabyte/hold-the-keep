@@ -9,9 +9,12 @@ const MAX_HP := 900
 const CLAIM_RADIUS := 9.0
 const REINFORCE_INTERVAL := 105.0
 const GUARD_OFFSETS := [
-    Vector2(-36, -4), Vector2(36, -4),
-    Vector2(-42, 24), Vector2(42, 24),
-    Vector2(0, 42)
+    Vector2(-48, -24), Vector2(-48, 24),
+    Vector2(48, -24), Vector2(48, 24),
+    Vector2(-40, -40), Vector2(40, -40),
+    Vector2(-40, 40), Vector2(40, 40),
+    Vector2(0, -56), Vector2(0, 56),
+    Vector2(-64, 0), Vector2(64, 0)
 ]
 
 var world
@@ -51,7 +54,19 @@ func cells() -> Array[Vector2i]:
 
 
 func export_state() -> Dictionary:
-    return {"cx": cell.x, "cy": cell.y, "hp": hp, "destroyed": false}
+    return {
+        "cx": cell.x,
+        "cy": cell.y,
+        "hp": hp,
+        "destroyed": false,
+        "reinforce_timer": _reinforce_timer,
+        "spawn_index": _spawn_index
+    }
+
+
+func import_state(data: Dictionary) -> void:
+    _reinforce_timer = clampf(float(data.get("reinforce_timer", REINFORCE_INTERVAL)), 0.0, REINFORCE_INTERVAL)
+    _spawn_index = int(data.get("spawn_index", 0)) % GUARD_OFFSETS.size()
 
 
 func spawn_initial_garrison() -> void:
