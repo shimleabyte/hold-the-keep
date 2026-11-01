@@ -5,7 +5,6 @@ extends Node2D
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
 const ENEMY_BOLT := preload("res://scripts/entities/enemy_bolt.gd")
-const TILE := 16
 const TEXTURES := {
     "bandit": preload("res://assets/sprites/enemy_bandit.svg"),
     "wolf": preload("res://assets/sprites/enemy_wolf.svg"),
@@ -162,7 +161,7 @@ func _attack_reach() -> float:
 
 
 func _tick_flow(delta: float) -> void:
-    var cell := Vector2i((position / TILE).floor())
+    var cell := Vector2i((position / WorldConfig.tile_size).floor())
     var next: Vector2i = flow.next_cell(cell)
     if next == cell:
         _move_toward(flow.target_pos, delta)
@@ -174,7 +173,7 @@ func _tick_flow(delta: float) -> void:
         else:
             _begin_attack(occupied, occupied.position - position)
         return
-    _move_toward(Vector2(next) * TILE + Vector2(TILE / 2.0, TILE / 2.0) + _offset, delta)
+    _move_toward(Vector2(next) * WorldConfig.tile_size + Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0) + _offset, delta)
 
 
 func _tick_ranged(delta: float) -> void:
