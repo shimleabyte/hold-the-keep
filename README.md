@@ -12,7 +12,9 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 ## Kontrol
 - WASD / Panah / stick kiri: gerak
 - Tahan Shift / bumper kiri (gamepad): lari
-- Y atau tombol RISET di HUD: panel teknologi
+- Y atau tombol `Y` di HUD: panel teknologi
+- TAB atau tombol `MAP`: peta strategis (fog-of-war, biome, klaim, resource, Keep, pasukan yang sedang teramati)
+- Tombol `JOBS`: buka/tutup kuota penebang, penambang, petani, dan prajurit; Esc menutup panel
 - E / Spasi / tombol A (gamepad): tebang pohon, tambang batu
 - 1-6 atau klik slot di bar bawah: pilih bangunan (termasuk Pos Terdepan)
 - Klik kiri: pasang (tahan untuk melukis tembok)
@@ -38,6 +40,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - Keep memiliki 1000 HP. Jika hancur, permainan berakhir.
 - Siang berlangsung 180 detik; malam berlangsung sekitar 54 detik.
 - Gelombang dimulai dari 6 musuh dan bertambah 3 per hari, hingga batas 120.
+- Kampanye dibagi menjadi tiga bab: Hari 1–5 **Perbatasan**, Hari 6–10 **Pawai Hitam**, Hari 11–15 **Pengepungan Akhir**. Bab II menambah tekanan pemanah; Bab III memperbesar peluang pemanah dan penghancur lapis baja.
 - Bandit muncul sejak awal, serigala hari 2, prajurit hari 4, pemanah hari 6, dan penghancur lapis baja hari 9.
 - Serigala menerjang setelah jeda serangan; pemanah menjaga jarak dan menembakkan proyektil; penghancur lebih tahan tetapi menghantam bangunan lebih keras.
 - Raja Lawan memiliki 1400 HP, armor, damage pengepungan, dan tidak mundur saat fajar.
@@ -77,15 +80,16 @@ membuka Tempa dan membuat bijih besi (urat oranye, jauh dari keep) bisa ditamban
 memilih besi bila stoknya kurang dari separuh batu. Game di-pause saat panel terbuka.
 Efek berupa data (pengali, penambah, buka bangunan, bendera) lewat `Tech.stat(kunci, dasar)`.
 
+## Peta dan wilayah
+Peta strategis dibuka dengan TAB atau tombol MAP di HUD. Peta menampilkan hanya area yang sudah ditemukan; lokasi musuh bergerak hanya muncul saat berada dalam jangkauan pengamatan unit atau bangunan, bukan sekadar karena pernah dijelajahi. Warna terrain membedakan Hearthland, Greenwood (hutan lebih rapat), Highlands (batu lebih banyak), dan Fenlands (rawa). Klaim pemain dan musuh diberi tint berbeda, sedangkan Keep, Outpost, resource, villager, dan pemain punya marker masing-masing.
+
 ## Wilayah dan kampanye
 Keep mengklaim area awal dalam radius 10 tile. Pos Terdepan (hotkey 6) memperluas klaim dalam radius 9 tile dan hanya boleh dibangun di frontier sendiri. Benteng lawan ditempatkan pada lokasi yang dapat dicapai di peta yang sama, mengklaim radius 9 tile, dan dijaga oleh prajurit yang berpatroli serta menerima penguatan berkala. Garis emas menunjukkan wilayah pemain; garis merah menunjukkan wilayah lawan.
 
 Fog of war menutup peta yang belum dijelajahi. Player, Keep, Pos Terdepan, dan villager membuka area; wilayah yang sudah ditemukan tetap terlihat setelah disimpan dan dimuat. Setelah benteng lawan ditemukan, tekan G untuk mengirim semua villager dengan job prajurit. Prajurit menyerang penjaga dahulu, lalu menghancurkan benteng (900 HP). Tekan G lagi untuk menarik pasukan kembali ke Keep. Benteng hancur = kemenangan kampanye; kemenangan bertahan hari ke-15 melawan Raja Lawan tetap menjadi jalur kemenangan lain.
 
 ## HUD
-Panel atas: kayu, batu, makanan, hari + lintasan siang/malam (kuning = siang, biru = malam, oranye = fajar),
-jumlah musuh, penduduk. Kiri: bar HP pemain dan keep. Kanan: kuota job (klik + / -; oranye = belum terisi).
-Bawah: bar bangunan berikon dan biaya (redup = bahan kurang). Bar Raja Lawan muncul di malam terakhir; bar Benteng Lawan muncul setelah ditemukan.
+HUD permanen diringkas menjadi resource, jam, populasi, tombol MAP/JOBS/riset, vitals pemain dan Keep, indikator bab, serta bar bangunan. Kuota job berada di drawer JOBS dan tertutup secara default. XP dan Q/C/V tampil sebagai bar kompak di atas hotbar; detail bantuan tetap tersedia lewat H. Health bar Raja Lawan atau Benteng Lawan muncul saat relevan.
 
 ## Aset
 Semua visual berupa SVG pixel-art di `assets/sprites/` (karakter, musuh, pohon, batu,
