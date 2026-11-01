@@ -59,7 +59,7 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
 
 
 func _find_site_cell(region: String, used: Array[Vector2i]) -> Vector2i:
-    var reachable := main.nav.reachable_cells(main.nav.cell_of(main.player.global_position))
+    var reachable: Dictionary = main.nav.reachable_cells(main.nav.cell_of(main.player.global_position))
     var keep_cell := WorldConfig.starting_keep_cell()
     var best := Vector2i(-1, -1)
     var best_score := -INF
@@ -186,7 +186,7 @@ func _try_finish() -> void:
 func objective_summary() -> String:
     if WorldConfig.profile_id != "frontier":
         return "Objektif regional hanya tersedia pada Frontier / Conquest."
-    var stage := main.spawner.stage_info(GameClock.day)
+    var stage: Dictionary = main.spawner.stage_info(GameClock.day)
     var lines: Array[String] = [
         String(stage.get("label", "ACT")) + "  " + String(stage.get("name", "")),
         "HARI %02d / 20   ACT TERBUKA %d/4" % [GameClock.day, unlocked_act],
