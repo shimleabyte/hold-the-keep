@@ -217,10 +217,12 @@ func place_raw(id: String, c: Vector2i) -> Node:
 
 func demolish_at(cell: Vector2i) -> bool:
     var b = world.occupied.get(cell)
-    if b == null or not is_instance_valid(b) or not b.has_method("cells") or not b.has_method("demolish"):
+    if b == null or not is_instance_valid(b) or not b.has_method("cells"):
         return false
     if b.is_in_group("construction_sites"):
         return cancel_site(b)
+    if not b.has_method("demolish"):
+        return false
     if b.id == "keep":
         return false
     var cost := DataDB.cost_of(b.id)
