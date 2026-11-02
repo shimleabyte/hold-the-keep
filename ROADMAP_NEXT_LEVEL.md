@@ -159,8 +159,8 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Bind woodcutters/miners to matching worksites; retain connected-depot fallback only when no matching specialty site exists.
 - [x] Release worksite claims when workers leave or a worksite is removed; worksite buildings use the generic save payload and remain compatible with save v12.
 - [x] Add separate pixel-art buildings/icons, hotbar entries, numeric hotkeys, controls documentation and headless regression coverage.
-- [x] Add Builder-driven blueprint sites: pay once at placement, cap at two active Builders per site, advance only while Builders are working, convert atomically to a finished building and refund unconsumed materials on cancellation (PR #58; CI pending).
-- [x] Add a dedicated construction queue panel with explicit order, one-step reorder controls, cancellation and visible per-site costs/live progress; Builder selection follows the saved queue priority (stacked PR/CI pending).
+- [x] Add Builder-driven blueprint sites: pay once at placement, cap at two active Builders per site, advance only while Builders are working, convert atomically to a finished building and refund unconsumed materials on cancellation (PR #58 merged as `d3bba66`; workflow #41484825656 passed).
+- [x] Add a dedicated construction queue panel with explicit order, one-step reorder controls, cancellation and visible per-site costs/live progress; Builder selection follows saved queue priority (PR #59; CI pending).
 - [ ] Add remaining facilities according to dependency: Watchtower, Granary, Barracks, Archery Range, Hunting Lodge, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress and Signal Beacon.
 - Introduce leather and gold only when a building or campaign system consumes them.
 - Add construction/repair work, military training, trade and siege production as separate validated slices.
