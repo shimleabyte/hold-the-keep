@@ -27,6 +27,7 @@ tests=(
     workplace_assignments
     production_worksites
     construction_sites
+    watchtower_vision
     faction_registry
     faction_visual_identity
     building_visual_identity
