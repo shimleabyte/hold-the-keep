@@ -2,9 +2,13 @@ extends Node2D
 ## Deterministic Frontier faction camps with bounded local patrol reinforcement.
 
 const CAMP_SCRIPT := preload("res://scripts/entities/faction_camp.gd")
+const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
 const CAMP_SCAN_INTERVAL := 0.5
 const CAMP_SITE_CLEARANCE := 10.0
 const CAMP_SPACING := 12.0
+const MAX_ACTIVE_FACTION_RAIDERS := 4
+const MAX_RAID_TARGET_SCAN := 48
+const MAX_RAID_PATH_CHECKS := 8
 
 var main
 var camps: Dictionary = {}
@@ -50,6 +54,7 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
 
         used_cells.append(cell)
         var camp_definition: Dictionary = faction_data.get("camp", {})
+        var raid_definition: Dictionary = faction_data.get("raid", {})
         var patrol_radius := clampf(float(camp_definition.get("patrol_radius", 144.0)), 88.0, 190.0)
         var patrol_points := _build_patrol_points(cell, region_id, patrol_radius)
         if patrol_points.is_empty():
@@ -75,7 +80,12 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
             "initial_patrols": clampi(int(camp_definition.get("initial_patrols", 2)), 1, 3),
             "reinforcement_cooldown": clampf(float(camp_definition.get("reinforcement_cooldown", 30.0)), 12.0, 90.0),
             "patrol_unit": String(faction_data.get("patrol_unit", "")),
-            "patrol_points": patrol_points
+            "patrol_points": patrol_points,
+            "raid_unit": String(faction_data.get("raid_unit", "enemy_saboteur")),
+            "raid_budget": clampi(int(previous.get("raid_budget", raid_definition.get("budget", 2))), 0, 4),
+            "raid_timer": clampf(float(previous.get("raid_timer", raid_definition.get("cooldown", 90.0))), 0.0, 240.0),
+            "raid_cooldown": clampf(float(raid_definition.get("cooldown", 90.0)), 45.0, 180.0),
+            "raid_active_cap": 1
         }
         if not bool(camp["destroyed"]):
             var camp_target = CAMP_SCRIPT.new()
@@ -343,8 +353,10 @@ func destroy_camp(camp_id: String) -> void:
     camp["activated"] = false
     camp["suppressed"] = true
     camp["budget"] = 0
+    camp["raid_budget"] = 0
     camp["hp"] = 0
     _retreat_patrols(camp_id)
+    _retreat_faction_raiders(camp_id)
     var target = camp.get("target")
     if target != null and is_instance_valid(target):
         target.remove_from_group("campaign_targets")
@@ -353,6 +365,112 @@ func destroy_camp(camp_id: String) -> void:
     camps[camp_id] = camp
     Events.build_feedback.emit("Kamp %s dihancurkan. Reinforcement terhenti." % String(FactionRegistry.factions[camp_id]["name"]))
     queue_redraw()
+
+
+func _retreat_faction_raiders(camp_id: String) -> void:
+    for raider in get_tree().get_nodes_in_group("faction_raiders"):
+        if is_instance_valid(raider) and String(raider.faction_raid_camp_id) == camp_id:
+            raider.retreat()
+
+
+func _raid_target_exposed(target, camp: Dictionary) -> bool:
+    if target == null or not is_instance_valid(target) or int(target.hp) <= 0:
+        return false
+    var target_region := String(main.world.region_id(target.cell))
+    if target_region != String(camp["region_id"]):
+        return false
+    var owner := String(main.territory.owner_at(target.cell))
+    var region: Dictionary = main.territory.get_region_state(target_region)
+    var control := String(region.get("control", "neutral"))
+    return owner == "contested" or (owner == "player" and control in ["enemy", "contested"])
+
+
+func _find_raid_target(camp: Dictionary) -> Dictionary:
+    main.supply._ensure_current()
+    main.territory._ensure_current()
+    var candidates: Array[Dictionary] = []
+    var scanned := 0
+
+    for depot in get_tree().get_nodes_in_group("depots"):
+        if scanned >= MAX_RAID_TARGET_SCAN:
+            break
+        scanned += 1
+        if not is_instance_valid(depot) or not ["storage", "outpost"].has(String(depot.id)):
+            continue
+        if not main.supply.is_depot_connected(depot) or not _raid_target_exposed(depot, camp):
+            continue
+        var distance := Vector2(camp["position"]).distance_to(depot.position)
+        if distance > 760.0:
+            continue
+        var priority := 6 if String(depot.id) == "outpost" else 5
+        candidates.append({
+            "node": depot,
+            "kind": "depot",
+            "node_id": String(depot.id),
+            "cell": depot.cell,
+            "score": float(priority * 1000) - distance
+        })
+
+    for road in get_tree().get_nodes_in_group("roads"):
+        if scanned >= MAX_RAID_TARGET_SCAN:
+            break
+        scanned += 1
+        if not is_instance_valid(road) or not ["road", "bridge"].has(String(road.id)):
+            continue
+        var connected := false
+        for road_cell in road.cells():
+            if main.supply.connected_road_cells.has(road_cell):
+                connected = true
+                break
+        if not connected or not _raid_target_exposed(road, camp):
+            continue
+        var distance := Vector2(camp["position"]).distance_to(road.position)
+        if distance > 760.0:
+            continue
+        var priority := 3 if String(road.id) == "bridge" else 2
+        candidates.append({
+            "node": road,
+            "kind": "road",
+            "node_id": String(road.id),
+            "cell": road.cell,
+            "score": float(priority * 1000) - distance
+        })
+
+    candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+        return float(a["score"]) > float(b["score"])
+    )
+    var path_checks := mini(MAX_RAID_PATH_CHECKS, candidates.size())
+    for index in path_checks:
+        var candidate: Dictionary = candidates[index]
+        var target = candidate["node"]
+        var target_cells: Array[Vector2i] = target.cells()
+        var path: PackedVector2Array = main.nav.path_adjacent(camp["position"], target_cells)
+        if path.is_empty():
+            continue
+        return {
+            "cell": candidate["cell"],
+            "kind": candidate["kind"],
+            "node_id": candidate["node_id"]
+        }
+    return {}
+
+
+func _spawn_faction_raid(camp: Dictionary, target: Dictionary) -> bool:
+    if get_tree().get_nodes_in_group("faction_raiders").size() >= MAX_ACTIVE_FACTION_RAIDERS:
+        return false
+    var enemy_id := String(camp.get("raid_unit", "enemy_saboteur"))
+    if not DataDB.enemies.has(enemy_id):
+        push_warning("Faction camps: missing raid unit %s" % enemy_id)
+        return false
+    var raider = ENEMY_SCRIPT.new()
+    raider.setup(DataDB.enemies[enemy_id], main.world, main.flow, main.player, String(camp["faction_id"]))
+    raider.setup_faction_raid(
+        Vector2i(target["cell"]), String(target["kind"]), main.nav,
+        String(camp["id"]), String(camp["region_id"]), Vector2(camp["position"])
+    )
+    raider.position = Vector2(camp["position"])
+    main.world.entities.add_child(raider)
+    return true
 
 
 func _spawn_patrol(camp: Dictionary) -> bool:
@@ -395,6 +513,13 @@ func _process(delta: float) -> void:
         var camp_id := String(enemy.patrol_camp_id)
         patrol_counts[camp_id] = int(patrol_counts.get(camp_id, 0)) + 1
 
+    var raid_counts: Dictionary = {}
+    for raider in get_tree().get_nodes_in_group("faction_raiders"):
+        if not is_instance_valid(raider) or raider.is_queued_for_deletion():
+            continue
+        var camp_id := String(raider.faction_raid_camp_id)
+        raid_counts[camp_id] = int(raid_counts.get(camp_id, 0)) + 1
+
     for camp_id in camps:
         var camp: Dictionary = camps[camp_id]
         if bool(camp.get("destroyed", false)):
@@ -405,6 +530,7 @@ func _process(delta: float) -> void:
         if not enemy_controlled:
             if not bool(camp.get("suppressed", false)):
                 _retreat_patrols(String(camp_id))
+                _retreat_faction_raiders(String(camp_id))
             camp["suppressed"] = true
             var suppressed_target = camp.get("target")
             if suppressed_target != null and is_instance_valid(suppressed_target):
@@ -436,14 +562,32 @@ func _process(delta: float) -> void:
             continue
 
         var active_count := int(patrol_counts.get(camp_id, 0))
-        if active_count >= int(camp["patrol_cap"]) or int(camp["budget"]) <= 0:
-            continue
-        camp["timer"] = maxf(0.0, float(camp["timer"]) - elapsed)
-        if float(camp["timer"]) <= 0.0:
-            if _spawn_patrol(camp):
-                camp["budget"] = maxi(0, int(camp["budget"]) - 1)
-                camp["timer"] = float(camp["reinforcement_cooldown"])
-                patrol_counts[camp_id] = active_count + 1
+        if active_count < int(camp["patrol_cap"]) and int(camp["budget"]) > 0:
+            camp["timer"] = maxf(0.0, float(camp["timer"]) - elapsed)
+            if float(camp["timer"]) <= 0.0:
+                if _spawn_patrol(camp):
+                    camp["budget"] = maxi(0, int(camp["budget"]) - 1)
+                    camp["timer"] = float(camp["reinforcement_cooldown"])
+                    patrol_counts[camp_id] = active_count + 1
+
+        var active_raids := int(raid_counts.get(camp_id, 0))
+        if active_raids < int(camp["raid_active_cap"]) and int(camp["raid_budget"]) > 0:
+            camp["raid_timer"] = maxf(0.0, float(camp["raid_timer"]) - elapsed)
+            if float(camp["raid_timer"]) <= 0.0:
+                var raid_target := _find_raid_target(camp)
+                if not raid_target.is_empty() and _spawn_faction_raid(camp, raid_target):
+                    camp["raid_budget"] = maxi(0, int(camp["raid_budget"]) - 1)
+                    camp["raid_timer"] = float(camp["raid_cooldown"])
+                    raid_counts[camp_id] = active_raids + 1
+                    var faction_name := String(FactionRegistry.factions[camp_id].get("name", camp_id))
+                    var target_label := String(raid_target.get("node_id", "infrastruktur")).to_upper()
+                    Events.event_triggered.emit(
+                        "RAID PERBATASAN TERDETEKSI",
+                        "%s mengirim penyerbu ke %s di %d,%d. Hadang penyerbu atau rebut kembali kendali wilayah sebelum jalur logistik terputus."
+                        % [faction_name, target_label, raid_target["cell"].x, raid_target["cell"].y]
+                    )
+                else:
+                    camp["raid_timer"] = 12.0
         camps[camp_id] = camp
 
 
@@ -462,7 +606,9 @@ func export_state() -> Dictionary:
             "hp": int(camp["hp"]),
             "budget": int(camp["budget"]),
             "timer": float(camp["timer"]),
-            "spawn_index": int(camp["spawn_index"])
+            "spawn_index": int(camp["spawn_index"]),
+            "raid_budget": int(camp.get("raid_budget", 0)),
+            "raid_timer": float(camp.get("raid_timer", 0.0))
         })
     return {"records": records}
 
