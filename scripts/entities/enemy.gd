@@ -77,6 +77,10 @@ var _patrol_path_version := -1
 var _patrol_goal_cell := Vector2i(-1, -1)
 var _patrol_repath_timer := 0.0
 var is_supply_raider := false
+var is_faction_raider := false
+var faction_raid_target_kind := ""
+var faction_raid_camp_id := ""
+var faction_raid_region_id := ""
 var raid_target_cell := Vector2i(-1, -1)
 var supply_raid_hits := 0
 var raid_nav
@@ -308,6 +312,18 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     _brace_cd = 0.0
     _brace_dir = Vector2.ZERO
     is_patrol = false
+    is_supply_raider = false
+    is_faction_raider = false
+    faction_raid_target_kind = ""
+    faction_raid_camp_id = ""
+    faction_raid_region_id = ""
+    raid_target_cell = Vector2i(-1, -1)
+    supply_raid_hits = 0
+    raid_nav = null
+    _raid_path = PackedVector2Array()
+    _raid_path_index = 0
+    _raid_path_version = -1
+    _raid_repath_timer = 0.0
     patrol_camp_id = ""
     patrol_region_id = ""
     patrol_origin = Vector2.ZERO
@@ -405,6 +421,8 @@ func _ready() -> void:
             beast_nav = nav_grid
     if is_supply_raider:
         add_to_group("supply_raiders")
+    if is_faction_raider:
+        add_to_group("faction_raiders")
     if is_garrison:
         add_to_group("enemy_garrison")
     if role == "ranged":
@@ -463,6 +481,12 @@ func _physics_process(delta: float) -> void:
 
     if is_supply_raider:
         _tick_supply_raid(delta)
+        _update_anim(delta)
+        _footsteps(delta)
+        return
+
+    if is_faction_raider:
+        _tick_faction_raid(delta)
         _update_anim(delta)
         _footsteps(delta)
         return
@@ -556,6 +580,111 @@ func _find_raid_depot():
         if is_instance_valid(depot) and depot.cell == raid_target_cell and ["storage", "outpost"].has(String(depot.id)):
             return depot
     return null
+
+
+func setup_faction_raid(
+    target_cell: Vector2i,
+    target_kind: String,
+    navigation,
+    camp_id: String,
+    region_id: String,
+    camp_origin: Vector2
+) -> void:
+    is_supply_raider = false
+    is_faction_raider = true
+    is_garrison = true
+    faction_raid_target_kind = target_kind
+    faction_raid_camp_id = camp_id
+    faction_raid_region_id = region_id
+    raid_target_cell = target_cell
+    raid_nav = navigation
+    guard_origin = camp_origin
+    _raid_path = PackedVector2Array()
+    _raid_path_index = 0
+    _raid_path_version = -1
+    _raid_repath_timer = 0.0
+
+
+func _find_faction_raid_target():
+    var group_name := "depots" if faction_raid_target_kind == "depot" else "roads"
+    for candidate in get_tree().get_nodes_in_group(group_name):
+        if not is_instance_valid(candidate) or candidate.cell != raid_target_cell:
+            continue
+        var candidate_id := String(candidate.id)
+        if faction_raid_target_kind == "depot" and ["storage", "outpost"].has(candidate_id):
+            return candidate
+        if faction_raid_target_kind == "road" and ["road", "bridge"].has(candidate_id):
+            return candidate
+    return null
+
+
+func _faction_raid_target_valid(target, supply) -> bool:
+    if target == null or not is_instance_valid(target) or int(target.hp) <= 0:
+        return false
+    if supply == null or not is_instance_valid(supply) or supply.territory == null:
+        return false
+    if String(supply.world.region_id(target.cell)) != faction_raid_region_id:
+        return false
+
+    var owner := String(supply.territory.owner_at(target.cell))
+    var region: Dictionary = supply.territory.get_region_state(faction_raid_region_id)
+    var control := String(region.get("control", "neutral"))
+    var exposed := owner == "contested" or (owner == "player" and control in ["enemy", "contested"])
+    if not exposed:
+        return false
+
+    if faction_raid_target_kind == "depot":
+        return ["storage", "outpost"].has(String(target.id)) and supply.is_depot_connected(target)
+    if faction_raid_target_kind == "road":
+        if not ["road", "bridge"].has(String(target.id)):
+            return false
+        for cell in target.cells():
+            if supply.connected_road_cells.has(cell):
+                return true
+    return false
+
+
+func _tick_faction_raid(delta: float) -> void:
+    var target = _find_faction_raid_target()
+    var supply = get_tree().get_first_node_in_group("supply_network")
+    if not _faction_raid_target_valid(target, supply):
+        retreat()
+        return
+
+    var reach := maxf(_attack_reach(), 28.0)
+    if player != null and is_instance_valid(player) and position.distance_to(player.position) <= reach:
+        _begin_attack(player, player.position - position)
+        return
+    for defender in get_tree().get_nodes_in_group("defenders"):
+        if not is_instance_valid(defender) or not defender.visible:
+            continue
+        if position.distance_to(defender.position) <= reach:
+            _begin_attack(defender, defender.position - position)
+            return
+    if position.distance_to(target.position) <= reach:
+        if role == "ranged":
+            _begin_ranged_attack(target)
+        else:
+            _begin_attack(target, target.position - position)
+        return
+
+    if raid_nav == null:
+        retreat()
+        return
+    _raid_repath_timer = maxf(0.0, _raid_repath_timer - delta)
+    if _raid_path_version != raid_nav.version or _raid_path.is_empty() or _raid_repath_timer <= 0.0:
+        var target_cells: Array[Vector2i] = target.cells()
+        _raid_path = raid_nav.path_adjacent(position, target_cells)
+        _raid_path_index = 1 if _raid_path.size() > 1 else 0
+        _raid_path_version = raid_nav.version
+        _raid_repath_timer = 1.0
+        if _raid_path.is_empty():
+            retreat()
+            return
+    while _raid_path_index < _raid_path.size() and position.distance_to(_raid_path[_raid_path_index]) <= 3.0:
+        _raid_path_index += 1
+    if _raid_path_index < _raid_path.size():
+        _move_toward(_raid_path[_raid_path_index], delta)
 
 
 func _tick_supply_raid(delta: float) -> void:
@@ -1537,7 +1666,7 @@ func _resolve_pending(delta: float) -> void:
     _pending_is_projectile = false
     if role == "pouncer" and position.distance_to(target.position) > 36.0:
         return
-    if is_supply_raider and target.is_in_group("depots"):
+    if (is_supply_raider or is_faction_raider) and target.is_in_group("depots"):
         supply_raid_hits += 1
         if supply_raid_hits % 2 == 0:
             var supply = get_tree().get_first_node_in_group("supply_network")
@@ -1742,6 +1871,7 @@ func _take_damage_from(amount: int, source_position: Vector2) -> void:
         remove_from_group("enemy_patrols")
         remove_from_group("ranged_enemies")
         remove_from_group("supply_raiders")
+        remove_from_group("faction_raiders")
         Events.enemy_killed.emit(id)
         if is_boss:
             if WorldConfig.profile_id == "frontier":
@@ -1766,12 +1896,13 @@ func retreat() -> void:
     remove_from_group("enemy_patrols")
     remove_from_group("ranged_enemies")
     remove_from_group("supply_raiders")
+    remove_from_group("faction_raiders")
     queue_free()
 
 
 func _draw() -> void:
     anim.draw(self, _tex, _fw, _fh)
-    if is_supply_raider:
+    if is_supply_raider or is_faction_raider:
         draw_rect(Rect2(-3, -_fh - 8, 6, 3), Color("#f2b45f"))
         draw_line(Vector2(0, -_fh - 8), Vector2(0, -_fh - 12), Color("#f2b45f"), 1.0)
     if _pounce_windup_t > 0.0:
