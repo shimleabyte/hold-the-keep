@@ -50,6 +50,7 @@ tests=(
     scout_marking
     saboteur_disruption
     siege_engine_behavior
+    beast_rider_charge
 )
 
 for test_name in "${tests[@]}"; do
