@@ -1059,14 +1059,14 @@ func _refresh_construction_queue() -> void:
 
 func _on_queue_move_requested(site, direction: int) -> void:
     var main_node = get_tree().get_first_node_in_group("main")
-    if main_node != null and main_node.build.move_construction_site(site, direction):
-        _refresh_construction_queue()
+    if main_node != null:
+        main_node.build.move_construction_site(site, direction)
 
 
 func _on_queue_cancel_requested(site) -> void:
     var main_node = get_tree().get_first_node_in_group("main")
-    if main_node != null and main_node.build.cancel_site(site):
-        _refresh_construction_queue()
+    if main_node != null:
+        main_node.build.cancel_site(site)
 
 
 func _build_help() -> void:
