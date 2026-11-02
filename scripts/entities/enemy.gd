@@ -784,6 +784,7 @@ func apply_stagger(duration: float) -> void:
     _pending = null
     _pending_is_projectile = false
     _pending_t = 0.0
+    combat_feedback.end_windup()
     _pounce_windup_t = 0.0
     _pounce_t = 0.0
     if archetype == "shieldbearer":
