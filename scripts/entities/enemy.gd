@@ -170,6 +170,8 @@ var _beast_scan_t := 0.0
 var _beast_scan_cursor := 0
 var _beast_windup_t := 0.0
 var _beast_charge_t := 0.0
+var _beast_charge_distance := 0.0
+var _beast_hit_done := false
 var _beast_charge_direction := Vector2.ZERO
 var _beast_target_position := Vector2.ZERO
 var _beast_charge_path := PackedVector2Array()
@@ -246,10 +248,13 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     beast_charge_cooldown_duration = clampf(float(data.get("beast_charge_cooldown", 6.5)), 3.5, 12.0)
     beast_charge_damage_multiplier = clampf(float(data.get("beast_charge_damage_multiplier", 1.35)), 1.05, 2.0)
     _beast_target = null
+    _beast_cd = 0.0
     _beast_scan_t = 0.0
     _beast_scan_cursor = 0
     _beast_windup_t = 0.0
     _beast_charge_t = 0.0
+    _beast_charge_distance = 0.0
+    _beast_hit_done = false
     _beast_charge_direction = Vector2.ZERO
     _beast_target_position = Vector2.ZERO
     _beast_charge_path = PackedVector2Array()
@@ -665,6 +670,8 @@ func _tick_beast_rider(delta: float) -> void:
         _beast_windup_t = maxf(0.0, _beast_windup_t - delta)
         if _beast_windup_t <= 0.0:
             _beast_charge_t = 1.25
+            _beast_charge_distance = 0.0
+            _beast_hit_done = false
             _beast_cd = beast_charge_cooldown_duration
             _beast_target_position = _beast_target.global_position
             Events.fx_burst.emit("dust", position + Vector2(0, -5), -_beast_charge_direction, 1.1)
@@ -745,7 +752,8 @@ func _tick_beast_charge(delta: float) -> void:
         return
 
     _beast_charge_t = maxf(0.0, _beast_charge_t - delta)
-    var travel_left := speed * beast_charge_speed_multiplier * delta
+    var distance_remaining := maxf(0.0, beast_charge_max_distance - _beast_charge_distance)
+    var travel_left := minf(speed * beast_charge_speed_multiplier * delta, distance_remaining)
     while travel_left > 0.01:
         if _beast_charge_path_index >= _beast_charge_path.size():
             _finish_beast_charge(false)
@@ -776,11 +784,12 @@ func _tick_beast_charge(delta: float) -> void:
 
         global_position = next_position
         travel_left -= travel
+        _beast_charge_distance += travel
         if travel >= segment_length - 0.01:
             _beast_charge_path_index += 1
         _moving = true
 
-    if _beast_charge_t <= 0.0:
+    if _beast_charge_t <= 0.0 or _beast_charge_distance >= beast_charge_max_distance - 0.01:
         _finish_beast_charge(false)
     else:
         queue_redraw()
