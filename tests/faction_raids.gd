@@ -224,6 +224,7 @@ func _run() -> void:
     require(not raider._raid_path.is_empty() and raider._raid_path_version == main.nav.version,
         "A dispatched raider must build a current nav-grid route toward its explicit infrastructure target")
 
+    var original_player_position: Vector2 = main.player.position
     main.player.position = Vector2(-1000, -1000)
     raider.position = storage.position
     raider._atk_cd = 0.0
@@ -240,6 +241,7 @@ func _run() -> void:
     require(storage.stockpile_amount("food") == 1 and storage.hp < first_hit_hp,
         "Every second successful depot strike must steal one local resource")
 
+    main.player.position = original_player_position
     var snapshot: Dictionary = save_system.collect(main)
     var saved_camp_record: Dictionary = {}
     for record in snapshot["frontier_campaign"]["camps"]["records"]:
