@@ -79,7 +79,7 @@ func _run() -> void:
                 "Patrol waypoint must stay inside its faction region")
             require(main.territory.owner_at(point_cell) == "enemy",
                 "Patrol waypoint must stay inside enemy-claimed cells")
-            require(Vector2(point_cell - cell).length() * config.tile_size <= float(camp["patrol_radius"]) + WorldConfig.tile_size,
+            require(Vector2(point_cell - cell).length() * config.tile_size <= float(camp["patrol_radius"]) + config.tile_size,
                 "Patrol waypoint must stay inside its camp leash")
             var route: PackedVector2Array = main.nav.path_to(main.nav.center_of(cell), point_cell)
             require(not route.is_empty(), "Camp waypoints must have a reachable A* route")
@@ -136,8 +136,8 @@ func _run() -> void:
             "A* patrol route must stay inside its faction region")
         assert(main.territory.owner_at(route_cell) == "enemy",
             "A* patrol route must stay inside enemy-controlled territory")
-        assert(Vector2(route_cell - main.nav.cell_of(patrol.patrol_origin)).length() * WorldConfig.tile_size
-            <= patrol.patrol_radius + WorldConfig.tile_size,
+        assert(Vector2(route_cell - main.nav.cell_of(patrol.patrol_origin)).length() * config.tile_size
+            <= patrol.patrol_radius + config.tile_size,
             "A* patrol route must stay inside the camp's leash")
 
     # Leaving the radius must force a camp return; a returning patrol ignores bait targets.
