@@ -754,7 +754,7 @@ func _find_work() -> void:
                 return int(a.queue_order) < int(b.queue_order)
             )
             for site in construction_sites:
-                if site.has_method("can_claim") and site.can_claim(self) \
+                if site.has_method("can_claim") and site.can_claim(self) and not _bad.has(site) \
                         and workplace.position.distance_squared_to(site.position) <= radius * radius:
                     cands.append(site)
             for building in get_tree().get_nodes_in_group("buildings"):
@@ -791,9 +791,11 @@ func _find_work() -> void:
         target = n
         _goal_cells = cells
         _set_path(p)
+        _bad.clear()
         state = State.TO_WORK
         return
-    _bad.clear()
+    if cands.is_empty():
+        _bad.clear()
 
 
 func _cells_of(n) -> Array[Vector2i]:
