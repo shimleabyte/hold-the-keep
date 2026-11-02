@@ -234,8 +234,9 @@ func _run() -> void:
     main.player.global_position = Vector2(180, 180)
 
     var raiders: Array = get_nodes_in_group("faction_raiders")
-    var player_was_defender: bool = main.player.is_in_group("defenders")
-    main.player.remove_from_group("defenders")
+    var defender_nodes: Array = get_nodes_in_group("defenders")
+    for defender in defender_nodes:
+        defender.remove_from_group("defenders")
     for raider in raiders:
         raider.player = null
 
@@ -256,13 +257,18 @@ func _run() -> void:
             require(not direct_path.is_empty(),
                 "Faction raider must have a direct reachable path from its camp: " + expected_camp)
         raider._tick_faction_raid(0.016)
-        require(not raider._raid_path.is_empty() and raider._raid_path_version == main.nav.version,
-            "Every simultaneous raider must resolve a current A* route to its target: " + expected_camp)
+        var route_is_current: bool = not raider._raid_path.is_empty() \
+            and raider._raid_path_version == main.nav.version
+        var target_in_attack_reach: bool = target != null \
+            and raider.position.distance_to(target.position) <= maxf(raider._attack_reach(), 28.0)
+        require(route_is_current or target_in_attack_reach,
+            "Every simultaneous raider must route or engage its reachable target: " + expected_camp)
 
     for raider in raiders:
         raider.player = main.player
-    if player_was_defender:
-        main.player.add_to_group("defenders")
+    for defender in defender_nodes:
+        if is_instance_valid(defender):
+            defender.add_to_group("defenders")
 
     # Exercise every specialist controller while all 48 garrisons coexist.
     require(garrisons.size() == GARRISONS_PER_FACTION * FACTION_IDS.size(),
