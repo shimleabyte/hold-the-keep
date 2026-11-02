@@ -23,8 +23,8 @@ func first_reachable_cell_in_region(main: Node, region_id: String) -> Vector2i:
 
 
 func first_walkable_cell_in_region(main: Node, region_id: String) -> Vector2i:
-    for y in WorldConfig.map_size:
-        for x in WorldConfig.map_size:
+    for y in world_config.map_size:
+        for x in world_config.map_size:
             var cell := Vector2i(x, y)
             if String(main.world.region_id(cell)) == region_id and main.nav.is_walkable(cell):
                 return cell
