@@ -277,6 +277,16 @@ func _retreat_patrols(camp_id: String) -> void:
             enemy.retreat()
 
 
+func update_camp_hp(camp_id: String, hp: int) -> void:
+    if not camps.has(camp_id):
+        return
+    var camp: Dictionary = camps[camp_id]
+    if bool(camp.get("destroyed", false)):
+        return
+    camp["hp"] = clampi(hp, 1, 220)
+    camps[camp_id] = camp
+
+
 func destroy_camp(camp_id: String) -> void:
     if not camps.has(camp_id):
         return
