@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` includes PR #43 (`fa3a45a`), adding four Frontier faction camps and bounded patrols. Workflow #41377840888 passed 66/66 jobs on Godot 4.3/4.7, including 31 regression suites per engine, import/parse, Frontier performance and Windows/Linux export. Save schema remains v13; next Phase 06 work is raids and counterattacks.
+**Current source of truth:** default branch `main` includes PR #47 (`b06c355`), extracting Beast Rider, Shieldbearer, Scout, Saboteur, Siege Engine and War Shaman support behavior into dedicated components. Latest workflow #41394905158 passed 70/70 jobs on Godot 4.3/4.7, including all regressions, Frontier performance and Windows/Linux exports. Save schema remains v13; Phase 08 visual/audio identity is now in progress on `feat/phase-08-visual-audio-identity-mainline`.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -15,7 +15,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #45 (save schema v13; status per 2 November 2026). Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle, Beast Rider charge, faction camps/patrols dan faction infrastructure raids sudah masuk `main`. Combined warfare stress juga merged via PR #45; correction PR #46 pass 70/70 CI tetapi masih terbuka.
+Ringkasan implementasi aktual pada `main` setelah PR #47 (save schema v13; status per 2 November 2026). Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle, Beast Rider charge, faction camps/patrols, faction infrastructure raids, combined warfare stress, dan composable behavior extraction sudah masuk `main`. PR #46 syntax correction tercakup dalam branch PR #47 dan kini tersupersesi.
 
 | Area | Kondisi saat ini |
 |---|---|
@@ -499,3 +499,8 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - `scripts/entities/enemy.gd` delegates support timer advancement and the support tick to this component. The War Shaman's ranged attack remains on the shared ranged combat path; support is evaluated as a separate priority action and does not duplicate or replace projectile logic.
 - `tests/faction_registry.gd` now inspects the component directly and verifies allied healing, rival-faction exclusion and no repeated healing during cooldown.
 - Latest workflow [#41389866198](https://github.com/shimleabyte/hold-the-keep/actions/runs/41389866198) passed 70/70 jobs on Godot 4.3/4.7, including `faction_registry`, all behavior regressions, faction raids and warfare stress, Frontier performance and Windows/Linux export. The War Shaman support component is validated; PR #47 remains open and unmerged.
+
+
+## Riwayat terbaru
+- 2026-11-02: PR #47 merged (`b06c355`), extracting archetype-specific behavior into six dedicated components; latest workflow #41394905158 passed 70/70 jobs on Godot 4.3/4.7.
+- 2026-11-02: Started Phase 08 on `feat/phase-08-visual-audio-identity-mainline`. Added `assets/sprites/tiles_frontier.svg`, a weathered seven-cell Frontier terrain atlas. `world_map.gd` selects it only for Frontier; Classic keeps `tiles.svg`. Extended `frontier_world.gd` to assert the atlas resource and dimensions. Phase plan and roadmap updated; rendered screenshot review and further environment/faction/audio work remain pending.
