@@ -232,6 +232,7 @@ func _generate_frontier() -> void:
                 generated_resource_layout.append({"cell": cell, "kind": "wood"})
                 if generate_resource_nodes:
                     var tree := TREE_SCRIPT.new()
+                    tree.regional_style = _frontier_tree_style(region)
                     tree.position = foot
                     entities.add_child(tree)
                     occupied[cell] = tree
@@ -241,6 +242,7 @@ func _generate_frontier() -> void:
                 generated_resource_layout.append({"cell": cell, "kind": "stone"})
                 if generate_resource_nodes:
                     var rock := ROCK_SCRIPT.new()
+                    rock.regional_style = _frontier_rock_style(region)
                     rock.position = foot
                     entities.add_child(rock)
                     occupied[cell] = rock
@@ -263,9 +265,10 @@ func _spawn_frontier_decorations() -> void:
             var cell := Vector2i(x, y)
             if not is_buildable(cell) or occupied.has(cell):
                 continue
-            if Vector2(x, y).distance_to(center) < clearing_radius + 2.0:
-                continue
             var region := _frontier_region_at(cell)
+            var minimum_distance := safe_radius + 3.0 if region == REGION_HEARTHLAND else clearing_radius + 2.0
+            if Vector2(x, y).distance_to(center) < minimum_distance:
+                continue
             var density := _frontier_decoration_density(region)
             if rng.randf() >= density:
                 continue
@@ -288,7 +291,7 @@ func _frontier_decoration_density(region: int) -> float:
         REGION_ASHEN_MARCH:
             return 0.014
         REGION_HEARTHLAND:
-            return 0.009
+            return 0.045
     return 0.012
 
 
@@ -417,6 +420,26 @@ func _frontier_tree_density(region: int) -> float:
         REGION_ASHEN_MARCH:
             return 0.009
     return 0.025
+
+
+func _frontier_tree_style(region: int) -> String:
+    match region:
+        REGION_GREENWOOD:
+            return "greenwood"
+        REGION_FENLANDS:
+            return "fenlands"
+        REGION_ASHEN_MARCH:
+            return "ashen_march"
+    return "hearthland"
+
+
+func _frontier_rock_style(region: int) -> String:
+    match region:
+        REGION_HIGHLANDS:
+            return "highlands"
+        REGION_ASHEN_MARCH:
+            return "ashen_march"
+    return "hearthland"
 
 
 func _frontier_rock_density(region: int) -> float:
