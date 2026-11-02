@@ -228,6 +228,7 @@ func _generate_frontier() -> void:
                 generated_resource_layout.append({"cell": cell, "kind": "wood"})
                 if generate_resource_nodes:
                     var tree := TREE_SCRIPT.new()
+                    tree.regional_style = _frontier_tree_style(region)
                     tree.position = foot
                     entities.add_child(tree)
                     occupied[cell] = tree
@@ -237,6 +238,7 @@ func _generate_frontier() -> void:
                 generated_resource_layout.append({"cell": cell, "kind": "stone"})
                 if generate_resource_nodes:
                     var rock := ROCK_SCRIPT.new()
+                    rock.regional_style = _frontier_rock_style(region)
                     rock.position = foot
                     entities.add_child(rock)
                     occupied[cell] = rock
@@ -296,6 +298,26 @@ func _frontier_tree_density(region: int) -> float:
         REGION_ASHEN_MARCH:
             return 0.009
     return 0.025
+
+
+func _frontier_tree_style(region: int) -> String:
+    match region:
+        REGION_GREENWOOD:
+            return "greenwood"
+        REGION_FENLANDS:
+            return "fenlands"
+        REGION_ASHEN_MARCH:
+            return "ashen_march"
+    return "hearthland"
+
+
+func _frontier_rock_style(region: int) -> String:
+    match region:
+        REGION_HIGHLANDS:
+            return "highlands"
+        REGION_ASHEN_MARCH:
+            return "ashen_march"
+    return "hearthland"
 
 
 func _frontier_rock_density(region: int) -> float:
