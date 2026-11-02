@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience, original music and event-driven combat audio; workflow #477 passed 78/78 jobs on Godot 4.3/4.7, Frontier performance and Windows/Linux exports. PR #54 (`cf41982`) delivered Phase 08.6 with 76/76 jobs; PRs #50/#52/#53 delivered Phases 08.3–08.5 (`c8eed384`/`ce69391`/`3aaa37f`) with 30/30, 72/72 and 74/74 jobs passing. Save schema remains v13. Manual screenshot and audio-listening QA for Phase 08 remain outstanding.
+**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio and PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening. Workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 jobs on Godot 4.3/4.7, including both `campaign_reload_hardening` runs, Frontier performance diagnostic and Windows/Linux release exports. Save schema remains v13; PR #57 adds regression coverage only. Phase 08 rendered screenshot and human audio-listening QA, target-hardware profiling, multi-act human playtesting, native Windows runtime and clean-machine release acceptance remain outstanding.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -15,14 +15,14 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #47 (save schema v13; status per 2 November 2026). Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle, Beast Rider charge, faction camps/patrols, faction infrastructure raids, combined warfare stress, dan composable behavior extraction sudah masuk `main`. PR #46 syntax correction tercakup dalam branch PR #47 dan kini tersupersesi.
+Ringkasan implementasi aktual pada `main` setelah PR #57 (save schema v13; status per 2 November 2026). Perilaku Shieldbearer/Scout/Saboteur/Siege Engine/Beast Rider, faction camps/patrols/raids, combined warfare stress, Phase 08.3–08.7 visual/audio identity, dan Phase 09.3 late-act save/reload acceptance sudah tercakup. PR #57 menambah regression test end-to-end untuk Act I–IV, sebelas objective, empat stronghold, gate King hari ke-20 dan persistensi victory setelah reload; gameplay dan save schema tidak berubah.
 
 | Area | Kondisi saat ini |
 |---|---|
 | Dunia | Classic 64×64 / 15 hari tetap tersedia; Frontier 128×128 / 20 hari / 4 act dengan lima biome deterministik, 32 urat besi, dan starting Keep claim radius 15 |
 | Wilayah | Regional ownership neutral/player/enemy/contested; roads/bridges walkable; supply graph dari Keep; depot terputus tidak menerima deposit |
 | Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit Keep/Storage/Outpost cost source for construction/research/repair is merged; deterministic contested-depot warning and targeted Saboteur raids merged through PR #35 |
-| Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload |
+| Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload; Act I–IV + victory reload dilindungi `campaign_reload_hardening.gd` |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
@@ -33,9 +33,9 @@ Ringkasan implementasi aktual pada `main` setelah PR #47 (save schema v13; statu
 | Kontrol | Rebind gerak, interaksi, serang, lari; shortcut UI/job/build belum dapat di-rebind |
 | Tampilan | Adaptive logical viewport = setengah ukuran client window, minimum 480×270, pixel scale tepat 2×; physical-display/fullscreen review belum dilakukan |
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map, hotbar, objective tracker, tech panel, pause menu |
-| Audio | 12 procedural SFX; musik belum ada |
+| Audio | 10 procedural ambience loops (5 biome × siang/malam), 2 original music loops, 14 event cues; Master bus routing dan crossfade; human listening/level-balance QA masih terbuka |
 | Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | PR #35 workflow #41328005585 passed; PR #39 workflow #41354720293 passed 58/58; PR #40 workflow #41355982522 passed 60/60; PR #41 workflow #41356689758 passed 62/62 jobs: 29 assertion suites per Godot 4.3/4.7, import/parse, Frontier performance and Windows/Linux export. |
+| CI | PR #57 workflow #490 passed 78/78 jobs: 37 regression suites per Godot 4.3/4.7, import/parse, Frontier performance diagnostic, and Windows/Linux release exports. Previous milestones remain in Git history. |
 
 ## 3. Struktur
 ```
@@ -554,3 +554,10 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Fourteen event-driven cues cover combat anticipation/projectiles/block/stagger/abilities/charges/siege and campaign wave/camp/objective/act/victory events. All new players use Master bus and the existing persisted volume/mute control.
 - No external audio recordings/music samples or save schema changes. `tests/audio_identity.gd` validates buffers/loop boundaries, deterministic samples, cue coverage, Master bus routing and context selection.
 - Actual device listening, biome contrast, level balancing, loop seam and pause/resume audibility remain manual acceptance gates.
+
+
+## Phase 09.3 — Frontier late-act save/reload acceptance (2026-11-02, merged)
+- PR #57 merged into `main` as `a1ccebe`; workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 jobs on Godot 4.3/4.7, including Frontier performance and Windows/Linux exports.
+- `tests/campaign_reload_hardening.gd` now validates Act I–IV objective completion, the Act II active-escort checkpoint, three conquered strongholds, saved/reloaded damage to the Ashen Host, and the requirement to conquer the fourth stronghold before the day-20 King can finish Conquest.
+- The test also saves and reloads the completed victory, verifying all eleven objectives, all four conquered strongholds and the final-boss completion flag survive.
+- Escort path construction and restoration are asserted here; full path traversal remains exercised by `tests/frontier_campaign.gd`. No gameplay code or save schema v13 changes.
