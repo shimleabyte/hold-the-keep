@@ -99,6 +99,15 @@ func _initialize() -> void:
     assert(snapshot.has("construction_sites") and snapshot["construction_sites"].size() == 2,
         "Save v13 must persist every unfinished blueprint in queue order")
     assert(save_system._valid_save(snapshot), "A partially completed construction site must pass save validation")
+    var legacy_queue_snapshot: Dictionary = snapshot.duplicate(true)
+    for saved_site in legacy_queue_snapshot["construction_sites"]:
+        saved_site.erase("queue_order")
+    assert(save_system._valid_save(legacy_queue_snapshot),
+        "Legacy v13 blueprints without an explicit queue order must remain valid")
+    var duplicate_queue_order: Dictionary = snapshot.duplicate(true)
+    duplicate_queue_order["construction_sites"][1]["queue_order"] = duplicate_queue_order["construction_sites"][0]["queue_order"]
+    assert(not save_system._valid_save(duplicate_queue_order),
+        "Save validation must reject duplicate construction queue positions")
     var invalid_progress: Dictionary = snapshot.duplicate(true)
     invalid_progress["construction_sites"][0]["work_done"] = -1.0
     assert(not save_system._valid_save(invalid_progress), "Save validation must reject negative construction progress")
