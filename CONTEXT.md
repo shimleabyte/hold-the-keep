@@ -475,3 +475,9 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - `scripts/entities/enemy.gd` delegates Shieldbearer brace updates, cooldown advancement, damage mitigation and rendering to the behavior component; archetype-specific brace fields and the old inline state machine were removed from the host.
 - `tests/shieldbearer_behavior.gd` now inspects the component state and directly verifies the damage-origin gate while retaining front/side/rear damage, stagger and disengage cases.
 - Workflow [#41387134030](https://github.com/shimleabyte/hold-the-keep/actions/runs/41387134030) passed 70/70 jobs: both engine parse checks, all assertion suites on Godot 4.3/4.7 including `shieldbearer_behavior`, `beast_rider_charge` and `faction_warfare_stress`, Frontier performance and Windows/Linux export. PR #47 remains open and unmerged.
+
+## 46. Phase 06.2 — Scout composable marking extraction (2026-11-02, implementation branch)
+- Added `scripts/behaviors/scout_behavior.gd` for bounded defender selection, preferred-range positioning, telegraphed marking, bounded same-faction propagation, expiry, stagger interruption, target disengagement and marker rendering.
+- `scripts/entities/enemy.gd` now delegates Scout state/timers/mark publication to this component. Thin host adapters remain so Shieldbearer, ranged enemies and garrisons can consume valid shared marks without depending on Scout internals.
+- `tests/scout_marking.gd` now asserts component state directly while retaining same-faction sharing, rival-faction exclusion, marked-target priority, expiry, stagger interruption and target disengagement.
+- Latest-head workflow [#41387833455](https://github.com/shimleabyte/hold-the-keep/actions/runs/41387833455) passed 70/70 jobs on Godot 4.3/4.7, including both Scout regressions, both Shieldbearer regressions, Beast Rider, faction raids and combined warfare stress. PR #47 remains open and unmerged.
