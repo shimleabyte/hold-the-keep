@@ -1,6 +1,6 @@
 # Phase 08 — Visual and Audio Identity
 
-**Status:** In progress. PR #50 merged Phase 08.3 Frontier biome props and landmarks; PR #52 merged Phase 08.4 faction/archetype visual identity with 72/72 CI jobs passing. Phase 08.5 building material/detail and damage-state overlays are in implementation. Rendered screenshot review remains outstanding.
+**Status:** In progress. PR #50 (Phase 08.3), #52 (Phase 08.4), #53 (Phase 08.5) and #54 (Phase 08.6) are merged. Their latest workflows passed 30/30, 72/72, 74/74 and 76/76 jobs respectively. Phase 08.7 regional ambience, procedural menu/campaign music and event-driven combat audio are in implementation; listening QA remains outstanding.
 **Art direction:** [World & Gameplay Design Bible](../WORLD_AND_GAMEPLAY_BIBLE.md) — Grim Medieval Folklore Fantasy, weathered medieval pixel art and restrained folklore motifs.
 **Dependency:** Stable gameplay contracts from Phases 02, 04, 05, 06 and current UI layouts from Phase 10.
 **Engine targets:** Godot 4.3 and 4.7.
@@ -45,10 +45,12 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 - Keep player, villager and enemy sprite footprints consistent with Y-sort and collision origins.
 
 ## 08.7 — Audio
-- Add layered ambient loops per biome/day-night state.
-- Add readable combat cues for wind-up, projectile, block, charge, siege impact, camp alert and objective completion.
-- Add a restrained campaign/menu music set; keep volume controls and mute behavior integrated with existing settings.
-- Use original or properly licensed audio and document credits.
+- [x] Generate ten deterministic, loop-forward ambience streams for five Frontier biomes across day/night. Crossfade regions and day/night contexts without adding external audio assets.
+- [x] Add original low-level campaign and menu music loops with soft loop-edge envelopes and crossfade on pause/resume.
+- [x] Connect combat cues for melee/ranged wind-up, projectile release, block, stagger, Dash, Cleave, Rally, Beast Rider charge and Siege Engine wind-up/impact; connect wave/camp alarm, regional objective, act unlock and victory events.
+- [x] Route all new AudioStreamPlayers through the existing Master bus so the existing persisted volume setting and mute path remain authoritative.
+- [ ] Listen-test every biome/day-night pair, menu/campaign transitions, pause/resume and combat cues on actual speakers/headphones; review level balance and loop seams.
+- [x] All new loops and cues are synthesized from original in-repository signal generators at runtime; no external recordings or third-party music samples are used.
 
 ## Verification
 - Capture screenshots at 1280×720, 1600×900 and 1920×1080 for day/night, fog, combat, objective panel and strategic map.
