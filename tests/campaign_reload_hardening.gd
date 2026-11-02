@@ -245,7 +245,7 @@ func _run() -> void:
     assert(main.spawner._boss_pending,
         "The actual Frontier final wave must schedule the King on day 20")
     var king = load("res://scripts/entities/enemy.gd").new()
-    king.setup(DataDB.enemies["king"], main.world, main.flow, main.player, "ashen_host")
+    king.setup(root.get_node("DataDB").enemies["king"], main.world, main.flow, main.player, "ashen_host")
     king.position = main.player.position + Vector2(20, 0)
     main.world.entities.add_child(king)
     await ticks(1)
