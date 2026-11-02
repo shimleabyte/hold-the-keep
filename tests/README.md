@@ -31,7 +31,8 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 37 assertion reg
 | campaign_assault.gd | Classic single-stronghold compatibility, fog reveal/save, G assault/recall, garrison at dawn and conquest victory |
 | faction_visual_identity.gd | four distinct faction palettes/crests, six specialist equipment signatures, enemy visual assignment and Classic isolation |
 | building_visual_identity.gd | visual material/detail coverage for all 13 buildings, Frontier-only rendering, unique feature signatures and deterministic damage-state thresholds |
-| audio_identity.gd | ten biome/day-night ambience loops, two original music themes, deterministic sample buffers, 14 event cues, Master bus routing and menu/campaign crossfade selection |\n| combat_visual_feedback.gd | melee/ranged anticipation, directional impact, stagger and distinct Dash/Cleave/Rally cue lifetimes |
+| audio_identity.gd | ten biome/day-night ambience loops, two original music themes, deterministic sample buffers, 14 event cues, Master bus routing and menu/campaign crossfade selection |
+| combat_visual_feedback.gd | melee/ranged anticipation, directional impact, stagger and distinct Dash/Cleave/Rally cue lifetimes |
 | faction_registry.gd | four faction definitions, region mapping, roster membership, stronghold garrisons, component-backed War Shaman allied healing/cooldown and v11 faction save persistence |
 | frontier_campaign.gd | Classic/Frontier campaign calendars, act gates, all regional objectives, rewards, save/load and day-20 King victory |
 | campaign_multi_stronghold.gd | four Frontier strongholds, deterministic objective order, regional placement, independent garrisons, locked objectives, save/load and final conquest |
