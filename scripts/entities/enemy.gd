@@ -8,6 +8,7 @@ const ENEMY_BOLT := preload("res://scripts/entities/enemy_bolt.gd")
 const ENEMY_TARGETING := preload("res://scripts/systems/enemy_targeting.gd")
 const ENEMY_SUPPORT := preload("res://scripts/systems/enemy_support.gd")
 const BeastRiderBehavior := preload("res://scripts/behaviors/beast_rider_behavior.gd")
+const ShieldbearerBehavior := preload("res://scripts/behaviors/shieldbearer_behavior.gd")
 const TEXTURES := {
     "bandit": preload("res://assets/sprites/enemy_bandit.svg"),
     "wolf": preload("res://assets/sprites/enemy_wolf.svg"),
@@ -105,12 +106,7 @@ var projectile_speed := 120.0
 var armor := 0.0
 var stagger_resistance := 0.0
 var structure_damage_mult := 1.0
-var shield_brace_trigger_range := 64.0
-var shield_brace_windup_duration := 0.55
-var shield_brace_duration := 1.05
-var shield_brace_cooldown_duration := 4.2
-var shield_brace_damage_multiplier := 0.45
-var shield_brace_front_dot := 0.5
+var shield_behavior = ShieldbearerBehavior.new()
 var scout_mark_range := 142.0
 var scout_preferred_range := 96.0
 var scout_windup_duration := 0.68
@@ -147,10 +143,6 @@ var _pending_is_projectile := false
 var _pounce_windup_t := 0.0
 var _pounce_t := 0.0
 var _pounce_dir := Vector2.ZERO
-var _brace_windup_t := 0.0
-var _brace_t := 0.0
-var _brace_cd := 0.0
-var _brace_dir := Vector2.ZERO
 var _scout_windup_t := 0.0
 var _scout_windup_target: Node2D
 var _scout_mark_target: Node2D
@@ -210,12 +202,6 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     armor = clampf(float(data.get("armor", 0.0)), 0.0, 0.8)
     stagger_resistance = clampf(float(data.get("stagger_resistance", 0.0)), 0.0, 0.9)
     structure_damage_mult = maxf(1.0, float(data.get("structure_damage_mult", 1.0)))
-    shield_brace_trigger_range = clampf(float(data.get("brace_trigger_range", 64.0)), 24.0, 110.0)
-    shield_brace_windup_duration = clampf(float(data.get("brace_windup", 0.55)), 0.2, 1.5)
-    shield_brace_duration = clampf(float(data.get("brace_duration", 1.05)), 0.3, 2.0)
-    shield_brace_cooldown_duration = clampf(float(data.get("brace_cooldown", 4.2)), 1.0, 12.0)
-    shield_brace_damage_multiplier = clampf(float(data.get("brace_damage_multiplier", 0.45)), 0.1, 1.0)
-    shield_brace_front_dot = clampf(float(data.get("brace_front_dot", 0.5)), 0.1, 0.95)
     scout_mark_range = clampf(float(data.get("scout_mark_range", 142.0)), 80.0, 190.0)
     scout_preferred_range = clampf(float(data.get("scout_preferred_range", 96.0)), 56.0, 140.0)
     scout_windup_duration = clampf(float(data.get("scout_windup", 0.68)), 0.25, 1.5)
@@ -256,10 +242,6 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     _scout_mark_target = null
     _scout_mark_t = 0.0
     _scout_mark_cd = 0.0
-    _brace_windup_t = 0.0
-    _brace_t = 0.0
-    _brace_cd = 0.0
-    _brace_dir = Vector2.ZERO
     is_patrol = false
     is_supply_raider = false
     is_faction_raider = false
@@ -292,6 +274,7 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     flow = flow_ref
     player = player_ref
     beast_behavior.configure(self, data)
+    shield_behavior.configure(self, data)
     _offset = Vector2(randf_range(-4.0, 4.0), randf_range(-3.0, 3.0))
     _tex = TEXTURES.get(id, TEXTURES["bandit"])
     _fw = int(_tex.get_width() / float(SpriteAnim.FRAMES))
@@ -375,6 +358,8 @@ func _ready() -> void:
         add_to_group("faction_raiders")
     if is_garrison:
         add_to_group("enemy_garrison")
+    if archetype == "shieldbearer":
+        shield_behavior.draw_telegraph(self, _fh)
     if role == "ranged":
         add_to_group("ranged_enemies")
     anim.view = SpriteAnim.SIDE
@@ -385,7 +370,7 @@ func _physics_process(delta: float) -> void:
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _hurt_t = maxf(0.0, _hurt_t - delta)
     _support_cd = maxf(0.0, _support_cd - delta)
-    _brace_cd = maxf(0.0, _brace_cd - delta)
+    shield_behavior.advance_timers(delta)
     _saboteur_cd = maxf(0.0, _saboteur_cd - delta)
     _saboteur_scan_t = maxf(0.0, _saboteur_scan_t - delta)
     _saboteur_repath_t = maxf(0.0, _saboteur_repath_t - delta)
@@ -1162,64 +1147,7 @@ func _nearest_shield_target() -> Node2D:
 
 
 func _tick_shieldbearer(delta: float) -> void:
-    if _brace_t > 0.0:
-        _brace_t = maxf(0.0, _brace_t - delta)
-        _moving = false
-        if _brace_t <= 0.0:
-            _brace_dir = Vector2.ZERO
-        queue_redraw()
-        return
-
-    var target := _nearest_shield_target()
-    if _brace_windup_t > 0.0:
-        if target == null or position.distance_to(target.position) > shield_brace_trigger_range + 24.0:
-            _brace_windup_t = 0.0
-            _brace_cd = minf(_brace_cd, 0.8)
-            _brace_dir = Vector2.ZERO
-        else:
-            var windup_direction := target.position - position
-            if windup_direction.length_squared() > 0.01:
-                _brace_dir = windup_direction.normalized()
-                anim.face(_brace_dir)
-            _brace_windup_t = maxf(0.0, _brace_windup_t - delta)
-            if _brace_windup_t <= 0.0:
-                _brace_t = shield_brace_duration
-                Events.fx_burst.emit("stone", position + Vector2(0, -6), -_brace_dir, 0.55)
-            queue_redraw()
-            return
-
-    if target == null:
-        if is_garrison:
-            if position.distance_to(guard_origin) > 16.0:
-                _move_toward(guard_origin, delta)
-        else:
-            _tick_flow(delta)
-        return
-
-    var to_target := target.position - position
-    var distance := to_target.length()
-    if distance <= _attack_reach():
-        _begin_attack(target, to_target)
-        return
-
-    if distance <= shield_brace_trigger_range and _brace_cd <= 0.0:
-        _brace_dir = to_target.normalized() if distance > 0.01 else Vector2.DOWN
-        anim.face(_brace_dir)
-        _brace_windup_t = shield_brace_windup_duration
-        _brace_cd = shield_brace_cooldown_duration
-        Events.fx_burst.emit("dust", position + Vector2(0, -3), -_brace_dir, 0.55)
-        queue_redraw()
-        return
-
-    if is_garrison:
-        if position.distance_to(guard_origin) <= 150.0:
-            _move_toward(target.position, delta)
-        else:
-            _move_toward(guard_origin, delta)
-    elif distance <= SHIELD_TARGET_RANGE:
-        _move_toward(target.position, delta)
-    else:
-        _tick_flow(delta)
+    shield_behavior.tick(delta)
 
 
 func _tick_shaman_support() -> bool:
@@ -1371,10 +1299,7 @@ func apply_stagger(duration: float) -> void:
     _pounce_windup_t = 0.0
     _pounce_t = 0.0
     if archetype == "shieldbearer":
-        _brace_windup_t = 0.0
-        _brace_t = 0.0
-        _brace_cd = maxf(_brace_cd, 1.1)
-        _brace_dir = Vector2.ZERO
+        shield_behavior.interrupt()
     if archetype == "scout" and _scout_windup_t > 0.0:
         _scout_windup_t = 0.0
         _scout_windup_target = null
@@ -1530,16 +1455,13 @@ func _take_damage_from(amount: int, source_position: Vector2) -> void:
     if hp <= 0:
         return
     var damage_multiplier := 1.0 - armor
-    var blocked_by_shield := false
-    if archetype == "shieldbearer" and _brace_t > 0.0 and source_position != Vector2.ZERO:
-        var incoming_direction := (source_position - global_position).normalized()
-        blocked_by_shield = incoming_direction.dot(_brace_dir) >= shield_brace_front_dot
+    var blocked_by_shield := archetype == "shieldbearer" and shield_behavior.blocks_hit_from(source_position)
     if blocked_by_shield:
-        damage_multiplier *= shield_brace_damage_multiplier
+        damage_multiplier *= shield_behavior.block_damage_multiplier
     var applied := maxi(1, roundi(float(amount) * damage_multiplier))
     hp -= applied
     if blocked_by_shield:
-        Events.fx_burst.emit("stone", position + Vector2(0, -_fh * 0.4), -_brace_dir, 0.8)
+        Events.fx_burst.emit("stone", position + Vector2(0, -_fh * 0.4), -shield_behavior.brace_direction, 0.8)
     else:
         Events.fx_burst.emit("impact", position + Vector2(0, -_fh * 0.4), Vector2.ZERO, 2.0 if is_boss else 1.0)
     modulate = Color(1.8, 1.8, 1.8)
@@ -1629,18 +1551,6 @@ func _draw() -> void:
             draw_line(Vector2(-5, -12), Vector2(-10, -17), color, 1.5)
             draw_line(Vector2(5, -12), Vector2(10, -17), color, 1.5)
             beast_behavior.draw_telegraph(self, _fh)
-    if archetype == "shieldbearer" and (_brace_windup_t > 0.0 or _brace_t > 0.0):
-        var brace_center := Vector2(0, -_fh * 0.55)
-        var brace_angle := _brace_dir.angle()
-        if _brace_windup_t > 0.0:
-            draw_arc(brace_center, 17.0, brace_angle - 0.82, brace_angle + 0.82,
-                12, Color("#d8bd87"), 1.5)
-            draw_line(brace_center, brace_center + _brace_dir * 20.0, Color("#f0d7a5"), 2.0)
-        else:
-            draw_arc(brace_center, 18.0, brace_angle - 0.92, brace_angle + 0.92,
-                12, Color("#d8bd87"), 2.0)
-            draw_arc(brace_center, 22.0, brace_angle - 0.72, brace_angle + 0.72,
-                12, Color("#8795a5"), 1.0)
     if role == "ranged":
         draw_arc(Vector2(7, -11), 4.0, -PI * 0.55, PI * 0.55, 7, Color("#91c99a"), 1.0)
         draw_line(Vector2(7, -15), Vector2(7, -7), Color("#d9e7c8"), 1.0)
