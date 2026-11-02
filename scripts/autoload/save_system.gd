@@ -125,7 +125,8 @@ func collect(main: Node) -> Dictionary:
             "supply_raid": enemy.is_supply_raider,
             "raid_target": {"cx": enemy.raid_target_cell.x, "cy": enemy.raid_target_cell.y}
                 if enemy.is_supply_raider else null,
-            "raid_hits": enemy.supply_raid_hits
+            "raid_hits": enemy.supply_raid_hits,
+            "patrol": enemy.export_patrol_state()
         })
 
     var resources: Array = []
@@ -450,6 +451,19 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 return false
         if bool(enemy.get("garrison", false)) and (not enemy.has("guard_x") or not enemy.has("guard_y")):
             return false
+        if enemy.has("patrol"):
+            var patrol_state: Variant = enemy["patrol"]
+            if not (patrol_state is Dictionary):
+                return false
+            if not patrol_state.is_empty():
+                for key in ["camp_id", "waypoint_index", "returning"]:
+                    if not patrol_state.has(key):
+                        return false
+                var patrol_camp_id := String(patrol_state["camp_id"])
+                if not FactionRegistry.factions.has(patrol_camp_id) or not bool(enemy.get("garrison", false)):
+                    return false
+                if int(patrol_state["waypoint_index"]) < 0 or not (patrol_state["returning"] is bool):
+                    return false
         if bool(enemy.get("supply_raid", false)):
             if String(enemy["id"]) != "enemy_saboteur" or not (enemy.get("raid_target", null) is Dictionary):
                 return false
@@ -592,7 +606,44 @@ func _valid_frontier_campaign(value: Variant, expected_profile: String, map_size
             return false
         if int(record["hp"]) < 0 or int(record["hp"]) > 500 or int(record["path_index"]) < 0:
             return false
-    return seen.size() == expected_ids.size()
+    if seen.size() != expected_ids.size():
+        return false
+
+    if value.has("camps"):
+        var camp_state: Variant = value["camps"]
+        if not (camp_state is Dictionary) or not (camp_state.get("records", null) is Array):
+            return false
+        var camp_records: Array = camp_state["records"]
+        if camp_records.size() > FactionRegistry.factions.size():
+            return false
+        if expected_profile == "classic" and not camp_records.is_empty():
+            return false
+        var camp_ids: Dictionary = {}
+        for camp_record in camp_records:
+            if not (camp_record is Dictionary):
+                return false
+            for key in ["id", "cx", "cy", "activated", "budget", "timer", "spawn_index"]:
+                if not camp_record.has(key):
+                    return false
+            var camp_id := String(camp_record["id"])
+            if not FactionRegistry.factions.has(camp_id) or camp_ids.has(camp_id):
+                return false
+            camp_ids[camp_id] = true
+            var faction_region := String(FactionRegistry.factions[camp_id].get("region", ""))
+            var camp_cell := Vector2i(int(camp_record["cx"]), int(camp_record["cy"]))
+            if not WorldConfig.is_valid_cell(camp_cell):
+                return false
+            if String(camp_record.get("region", faction_region)) != faction_region:
+                return false
+            if not (camp_record["activated"] is bool):
+                return false
+            if int(camp_record["budget"]) < 0 or int(camp_record["budget"]) > 12:
+                return false
+            if float(camp_record["timer"]) < 0.0 or float(camp_record["timer"]) > 180.0:
+                return false
+            if int(camp_record["spawn_index"]) < 0:
+                return false
+    return true
 
 func _read_saved_data(path: String, enforce_world_compatibility := true) -> Variant:
     if not FileAccess.file_exists(path):
