@@ -139,6 +139,7 @@ var _pending_is_projectile := false
 var _pounce_windup_t := 0.0
 var _pounce_t := 0.0
 var _pounce_dir := Vector2.ZERO
+var saboteur_nav
 var _saboteur_target: Node2D
 var _saboteur_scan_t := 0.0
 var _saboteur_scan_cursor := 0
