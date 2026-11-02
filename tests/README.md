@@ -17,7 +17,7 @@ Dari akar proyek:
 Skrip observasi lama yang hanya mencetak hasil tanpa assertion dipisahkan ke `run_diagnostics.sh`;
 jalankan saat meninjau animasi, pertarungan, efek, ekonomi atau alur save/menu.
 
-GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 37 assertion regression tests per versi, Frontier performance diagnostic, serta Windows/Linux export. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Mainline workflow #41314731305 menyelesaikan 46/46 jobs setelah PR #31, termasuk test local depot stockpile pada kedua versi Godot.
+GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 37 assertion regression tests per versi, Frontier performance diagnostic, serta Windows/Linux export. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Validasi terbaru untuk perluasan late-act reload: PR #57, workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578), 78/78 jobs sukses; kedua engine lulus untuk `campaign_reload_hardening`, termasuk save/reload Act IV dan state victory hari ke-20.
 
 | Skrip | Menguji |
 |---|---|
