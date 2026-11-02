@@ -192,6 +192,7 @@ func _build_patrol_points(camp_cell: Vector2i, region_id: String, radius: float)
     var reachable: Dictionary = main.nav.reachable_cells(camp_cell)
     var max_tiles := int(floor(radius / float(WorldConfig.tile_size))) - 1
 
+    # Rank reachable cells first; defer expensive A* requests until a small candidate set is known.
     for candidate_value in reachable.keys():
         var candidate: Vector2i = candidate_value
         var offset := candidate - camp_cell
@@ -199,9 +200,6 @@ func _build_patrol_points(camp_cell: Vector2i, region_id: String, radius: float)
         if distance < 2.5 or distance > float(max_tiles):
             continue
         if not _patrol_cell_allowed(candidate, region_id, camp_cell, radius):
-            continue
-        var path: PackedVector2Array = main.nav.path_to(main.nav.center_of(camp_cell), candidate)
-        if not _path_stays_in_camp(path, region_id, camp_cell, radius):
             continue
 
         var quadrant := 0
@@ -226,10 +224,18 @@ func _build_patrol_points(camp_cell: Vector2i, region_id: String, radius: float)
         values.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
             return float(a["score"]) < float(b["score"])
         )
-        if not values.is_empty():
-            result.append(main.nav.center_of(values[0]["cell"]))
+        var attempts := 0
+        for entry in values:
+            if attempts >= 6:
+                break
+            attempts += 1
+            var candidate_cell: Vector2i = entry["cell"]
+            var path: PackedVector2Array = main.nav.path_to(main.nav.center_of(camp_cell), candidate_cell)
+            if _path_stays_in_camp(path, region_id, camp_cell, radius):
+                result.append(main.nav.center_of(candidate_cell))
+                break
+
     if result.size() < 2:
-        result.clear()
         var fallback: Array = []
         for quadrant_values in candidates_by_quadrant:
             for entry in quadrant_values:
@@ -237,14 +243,22 @@ func _build_patrol_points(camp_cell: Vector2i, region_id: String, radius: float)
         fallback.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
             return float(a["score"]) < float(b["score"])
         )
+        var fallback_attempts := 0
         for entry in fallback:
             var point: Vector2 = main.nav.center_of(entry["cell"])
-            if not result.has(point):
-                result.append(point)
+            if result.has(point):
+                continue
+            if fallback_attempts >= 12:
+                break
+            fallback_attempts += 1
+            var candidate_cell: Vector2i = entry["cell"]
+            var path: PackedVector2Array = main.nav.path_to(main.nav.center_of(camp_cell), candidate_cell)
+            if not _path_stays_in_camp(path, region_id, camp_cell, radius):
+                continue
+            result.append(point)
             if result.size() >= 3:
                 break
     return result
-
 
 func _camp_patrol_config(camp: Dictionary) -> Dictionary:
     return {
