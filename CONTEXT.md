@@ -511,3 +511,10 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Current implementation branch: `feat/phase-08.3-frontier-biome-props`.
 - Added deterministic non-blocking regional props and five biome landmarks through `scripts/entities/frontier_decoration.gd`; decoration placement is separate from terrain/resource RNG and avoids occupied cells.
 - Extended `tests/frontier_world.gd` for deterministic decoration layout, no resource overlap and one landmark per biome. CI and rendered screenshot review are pending.
+
+
+## Phase 08.3 — Frontier biome dressing (2026-11-02)
+- The regional decoration pass includes fern clusters, reeds, dead pines, standing stones, ash pillars and five biome landmarks. Placement is deterministic, non-colliding, independent of resource RNG and avoids resource cells.
+- Hearthland dressing uses a sparse ring beyond the Keep's protected core, because the original clearance threshold excluded the entire Hearthland region; the corrected density and placement rule preserve a usable starting area.
+- Resource node variants: Greenwood pine, Fenlands willow, Ashen deadwood, Highlands stone and Ashen rock. Classic sprite behavior remains unchanged.
+- `frontier_world.gd` verifies decoration coverage, five landmarks, deterministic placement, no resource overlap and regional resource sprite coverage. PR #50 CI rerun pending.
