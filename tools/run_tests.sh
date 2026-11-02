@@ -52,6 +52,7 @@ tests=(
     siege_engine_behavior
     beast_rider_charge
     faction_camps_patrols
+    faction_raids
 )
 
 for test_name in "${tests[@]}"; do
