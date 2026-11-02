@@ -130,6 +130,9 @@ func restore_enemy(d: Dictionary) -> void:
     e.position = Vector2(float(d["x"]), float(d["y"]))
     e.hp = int(d["hp"])
     e.campaign_site_id = String(d.get("site_id", ""))
+    var patrol_state: Variant = d.get("patrol", {})
+    if patrol_state is Dictionary and not patrol_state.is_empty():
+        e.pending_patrol_state = patrol_state.duplicate(true)
     var raid_target: Variant = d.get("raid_target", null)
     if bool(d.get("supply_raid", false)) and raid_target is Dictionary:
         e.setup_supply_raid(Vector2i(int(raid_target.get("cx", -1)), int(raid_target.get("cy", -1))), nav)
