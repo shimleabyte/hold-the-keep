@@ -57,8 +57,8 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
         sites[objective_id] = site
 
     faction_camps = FACTION_CAMPS_SCRIPT.new()
-    faction_camps.setup(main, saved.get("camps", {}))
     main.world.add_child(faction_camps)
+    faction_camps.setup(main, saved.get("camps", {}))
 
     _update_unlocked_acts()
     _try_finish()
