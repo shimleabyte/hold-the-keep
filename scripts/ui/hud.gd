@@ -1637,11 +1637,13 @@ class ConstructionQueueRow extends Control:
         var progress := site.progress_ratio()
         draw_rect(Rect2(6, 17, 72, 5), Color("#090b0b"))
         draw_rect(Rect2(7, 18, 70.0 * progress, 3), Color("#d6bc78"))
-        var cost_parts: Array[String] = []
+        var cost_text := ""
         for pair in [["wood", "W"], ["stone", "S"], ["iron", "I"], ["food", "F"]]:
             if site.paid_cost.has(pair[0]):
-                cost_parts.append("%s%d" % [String(pair[1]), int(site.paid_cost[pair[0]])])
-        var detail := "%d%%  %s" % [roundi(progress * 100.0), " ".join(cost_parts)]
+                if not cost_text.is_empty():
+                    cost_text += " "
+                cost_text += "%s%d" % [String(pair[1]), int(site.paid_cost[pair[0]])]
+        var detail := "%d%%  %s" % [roundi(progress * 100.0), cost_text]
         draw_string(font, Vector2(86, 22), detail, HORIZONTAL_ALIGNMENT_LEFT,
             maxf(70.0, size.x - 154.0), 6, Color("#c5b99f"))
         _draw_action_button(Rect2(size.x - 61.0, 1.0, 19.0, 14.0), "UP", can_move_up)
