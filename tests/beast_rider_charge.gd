@@ -31,6 +31,22 @@ func spawn_soldier(main, at: Vector2):
     return soldier
 
 
+func find_wall_cell(main, desired_position: Vector2) -> Vector2i:
+    var origin := main.nav.cell_of(desired_position)
+    for radius in range(0, 5):
+        for y in range(-radius, radius + 1):
+            for x in range(-radius, radius + 1):
+                if maxi(absi(x), absi(y)) != radius:
+                    continue
+                var cell := origin + Vector2i(x, y)
+                var center := main.nav.center_of(cell)
+                if absf(center.x - desired_position.x) > 32.0 or absf(center.y - desired_position.y) > 16.0:
+                    continue
+                if main.world.is_buildable(cell) and not main.world.occupied.has(cell):
+                    return cell
+    return Vector2i(-1, -1)
+
+
 func _initialize() -> void:
     call_deferred("_run")
 
@@ -67,9 +83,10 @@ func _run() -> void:
         "Target-priority fixture must contain a supported defender pair")
 
     # A building blocks the straight line. The charge must follow only walkable A* cells.
-    var blocker_cell := main.nav.cell_of(Vector2(820, 860))
+    var blocker_cell := find_wall_cell(main, Vector2(780, 900))
+    require(blocker_cell.x >= 0, "Test must find a buildable wall cell on the charge lane")
     var blocker = main.build.place_raw("stone_wall", blocker_cell)
-    require(blocker != null, "Test obstacle must be placed")
+    require(blocker != null, "Test obstacle must be placed on the charge lane")
     main.nav.rebuild()
 
     var rider = spawn_rider(main, data_db.enemies["enemy_beast_rider"], Vector2(720, 900))
@@ -90,6 +107,8 @@ func _run() -> void:
         assert(main.nav.is_walkable(route_cell), "Charge route must contain walkable cells only")
     assert(rider._beast_charge_path_version == main.nav.version,
         "Charge route must record the navigation version it was planned against")
+    assert(not rider._beast_charge_path.has(main.nav.center_of(blocker_cell)),
+        "Locked charge route must route around the blocking wall cell")
 
     rider._tick_beast_rider(rider.beast_charge_windup_duration + 0.02)
     assert(rider._beast_charge_t > 0.0, "Completed telegraph must enter a finite charge")
