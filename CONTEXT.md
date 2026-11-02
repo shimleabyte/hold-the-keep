@@ -518,3 +518,10 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Hearthland dressing uses a sparse ring beyond the Keep's protected core, because the original clearance threshold excluded the entire Hearthland region; the corrected density and placement rule preserve a usable starting area.
 - Resource node variants: Greenwood pine, Fenlands willow, Ashen deadwood, Highlands stone and Ashen rock. Classic sprite behavior remains unchanged.
 - `frontier_world.gd` verifies decoration coverage, five landmarks, deterministic placement, no resource overlap and regional resource sprite coverage. PR #50 CI rerun pending.
+
+
+## Phase 08.4 — Faction/archetype visual identity (2026-11-02, implementation branch)
+- PR #50 merged Phase 08.3 into main as `c8eed384`; workflow #471 passed 30/30 jobs on Godot 4.3/4.7.
+- Branch `feat/phase-08.4-faction-visual-identity` introduces distinct data-driven faction palettes and heraldic motifs plus specialist equipment silhouettes for all six enemy archetypes.
+- A modular draw helper keeps identity rendering separate from enemy AI/behavior components. No collision, combat timing or save-schema changes are intended.
+- New regression `tests/faction_visual_identity.gd` validates palette/motif uniqueness, enemy profile assignment across all 24 faction/archetype combinations and Classic isolation. CI and rendered screenshot review are pending.

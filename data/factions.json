@@ -25,6 +25,12 @@
       "budget": 2,
       "cooldown": 88,
       "active_cap": 1
+    },
+    "visual": {
+      "primary": "#d0c39a",
+      "secondary": "#879a64",
+      "emblem": "#e0d19b",
+      "motif": "thorn"
     }
   },
   {
@@ -52,6 +58,12 @@
       "budget": 2,
       "cooldown": 104,
       "active_cap": 1
+    },
+    "visual": {
+      "primary": "#c5cbd0",
+      "secondary": "#737f8c",
+      "emblem": "#d5b56e",
+      "motif": "chevron"
     }
   },
   {
@@ -80,6 +92,12 @@
       "budget": 2,
       "cooldown": 96,
       "active_cap": 1
+    },
+    "visual": {
+      "primary": "#aab08a",
+      "secondary": "#647a68",
+      "emblem": "#d7c59c",
+      "motif": "reed"
     }
   },
   {
@@ -108,6 +126,12 @@
       "budget": 2,
       "cooldown": 112,
       "active_cap": 1
+    },
+    "visual": {
+      "primary": "#c08b68",
+      "secondary": "#64463b",
+      "emblem": "#e1b16e",
+      "motif": "ember"
     }
   }
 ]

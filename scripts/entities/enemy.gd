@@ -3,6 +3,7 @@ extends Node2D
 ## Normal raiders follow the flow field; garrison units defend their stronghold radius.
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
+const FactionVisual := preload("res://scripts/entities/enemy_faction_visual.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
 const ENEMY_BOLT := preload("res://scripts/entities/enemy_bolt.gd")
 const ENEMY_TARGETING := preload("res://scripts/systems/enemy_targeting.gd")
@@ -72,6 +73,7 @@ var guard_origin := Vector2.ZERO
 var role := "melee"
 var archetype := "raider"
 var faction_id := ""
+var faction_visual: Dictionary = {}
 var campaign_site_id := ""
 var _faction_tint := Color.WHITE
 var support_behavior = WarShamanSupportBehavior.new()
@@ -123,11 +125,15 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     role = String(data.get("role", "pouncer" if id == "wolf" else "melee"))
     archetype = String(data.get("archetype", role))
     faction_id = faction_override
+    faction_visual.clear()
     _faction_tint = Color.WHITE
     if not faction_id.is_empty():
         var faction_data: Dictionary = FactionRegistry.faction_for_stronghold(faction_id)
         if not faction_data.is_empty():
             _faction_tint = Color(String(faction_data.get("color", "#ffffff")))
+            var visual_profile: Variant = faction_data.get("visual", {})
+            if visual_profile is Dictionary:
+                faction_visual = visual_profile.duplicate(true)
     attack_range = float(data.get("range", 30.0 if role == "pouncer" else PLAYER_REACH))
     preferred_range = float(data.get("preferred_range", 0.0))
     projectile_speed = float(data.get("projectile_speed", 120.0))
@@ -968,6 +974,7 @@ func retreat() -> void:
 
 func _draw() -> void:
     anim.draw(self, _tex, _fw, _fh)
+    FactionVisual.draw_identity(self, faction_visual, archetype)
     if is_supply_raider or is_faction_raider:
         draw_rect(Rect2(-3, -_fh - 8, 6, 3), Color("#f2b45f"))
         draw_line(Vector2(0, -_fh - 8), Vector2(0, -_fh - 12), Color("#f2b45f"), 1.0)
