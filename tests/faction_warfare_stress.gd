@@ -211,7 +211,8 @@ func _run() -> void:
         "All four factions must contribute their full garrison load")
     require(total_patrols == PATROLS_PER_CAMP * FACTION_IDS.size(),
         "All four camps must contribute their patrol load")
-    require(total_raiders == EXPECTED_RAIDERS and total_raiders == GLOBAL_RAID_CAP\n        and faction_raider_count(main) == EXPECTED_RAIDERS,
+    require(total_raiders == EXPECTED_RAIDERS and total_raiders == GLOBAL_RAID_CAP
+        and faction_raider_count(main) == EXPECTED_RAIDERS,
         "All four camps must run simultaneous faction raids")
 
     var first_camp: Dictionary = manager.camps[FACTION_IDS[0]]
