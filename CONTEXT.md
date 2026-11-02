@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio, PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening, PR #58 (`d3bba66`) for Phase 05.2a Builder-driven construction sites, and PR #59 (`6147cfc`) for Phase 05.2b construction queue, Builder priorities and HUD management. PR #59 workflow #509 passed 80/80 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux exports. Save schema remains v13; rendered HUD/gameplay acceptance remains open. Active follow-on slice: `feat/phase-05.3a-watchtower-vision` adds tower-based terrain discovery and live strategic-map observation without changing the building ID or save schema.
+**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio, PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening, PR #58 (`d3bba66`) for Phase 05.2a Builder-driven construction sites, PR #59 (`6147cfc`) for Phase 05.2b construction queue/Builder priorities/HUD, and PR #60 (`beef7b7`) for Phase 05.3a Watchtower vision. Workflow #515 passed 82/82 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release exports. Save schema remains v13; rendered HUD/gameplay and balance acceptance remain open.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -35,7 +35,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #59 (save schema v13; statu
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map with live tower sight, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 10 procedural ambience loops (5 biome × siang/malam), 2 original music loops, 14 event cues; Master bus routing dan crossfade; human listening/level-balance QA masih terbuka |
 | Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | PR #59 workflow #509 passed 80/80 jobs: Godot 4.3/4.7 parse, 38 regressions per engine, Frontier performance diagnostic and Windows/Linux release exports. |
+| CI | PR #60 workflow #515 passed 82/82 jobs: Godot 4.3/4.7 parse, 39 regressions per engine, Frontier performance diagnostic and Windows/Linux release exports. |
 
 ## 3. Struktur
 ```
@@ -580,8 +580,8 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 
 
 
-## Phase 05.3a — Watchtower vision (implementation branch)
-- Branch: `feat/phase-05.3a-watchtower-vision`, based on main after PR #59 and synchronized Phase 05 documentation.
-- Existing `tower` now displays as `Menara Pengawas` and declares `vision_radius: 128`; no extra building ID, art asset or save schema field.
-- Fog scanning uses the tower as a permanent discovery source. Strategic-map enemy observation uses the same radius; demolition stops live observation while explored terrain remains discovered.
-- Existing turret range/damage/fire interval remain unchanged. Regression `tests/watchtower_vision.gd` is registered in both Godot matrices and local runner; CI and rendered review pending.
+## Phase 05.3a — Watchtower vision (2026-11-03, merged via PR #60)
+- PR #60 squash-merged into `main` as `beef7b7`; workflow #515 passed 82/82 jobs on Godot 4.3/4.7.
+- Existing `tower` now displays as `Menara Pengawas` and declares `vision_radius: 128`; no duplicate building ID, art asset or save schema field.
+- Fog scanning permanently discovers terrain inside tower vision. Strategic-map enemy observation uses the same radius; demolishing a tower ends live observation but does not re-cover explored terrain.
+- Existing turret range, damage and fire interval remain unchanged. Regression `tests/watchtower_vision.gd` passes on both engine versions; rendered map-marker review remains manual.
