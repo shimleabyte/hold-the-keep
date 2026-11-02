@@ -446,3 +446,12 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Territorial loss suppresses camps and recalls patrols. Destruction permanently disables reinforcement and recalls linked patrols.
 - Camp HP/destruction/discovery/suppression and patrol waypoint/return assignments persist as optional v13 fields; no schema bump and legacy v13 saves remain valid.
 - Regression `tests/faction_camps_patrols.gd` passed on both Godot 4.3 and 4.7. Workflow #41377840888 completed successfully with 66/66 jobs, including 31 regression suites per engine, import/parse, Frontier performance diagnostic and Windows/Linux export.
+
+## 42. Phase 06.4 — Faction infrastructure raids (2026-11-02, implementation branch)
+- Branch: `feat/phase-06.4-faction-raids`, created from current `main` after PR #43.
+- Faction camps dispatch finite raiding parties against exposed, connected infrastructure in their own region. Candidate priority is Outpost, Storage, bridge, then road; candidates are bounded to 48 scanned nodes and eight A* path checks, roads rotate through the group with a scan cursor, and a global four-raider ceiling prevents unbounded spawning.
+- Faction-native raid units: Greenwood bandit, Iron Legion archer, Fen Cult wolf and Ashen Host brute. Each camp gets a finite two-raid budget, faction-specific cooldown (88–112 seconds) and configured active cap.
+- Raiders retain an explicit depot/road target, attack the player or visible defenders when intercepted, then damage the target through the standard building API. Every second successful depot hit steals one unit in the existing fixed resource priority.
+- A target is revalidated while the raider moves and attacks. Reconnection, reclamation, region mismatch, destruction, removal or loss of A* reachability aborts the raid. Camp destruction and loss of camp territory recall its active raiders.
+- Save v13 optionally stores camp raid budget/cooldown and active faction-raider target kind/cell, camp, region and hit count. The existing disconnected-depot supply-pressure mechanic remains independent.
+- Added `tests/faction_raids.gd` and registered it in `tools/run_tests.sh` plus both Godot 4.3/4.7 CI matrices. PR/CI and rendered Frontier playtest are pending.
