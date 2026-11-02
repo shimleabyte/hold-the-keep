@@ -89,6 +89,12 @@ func _initialize() -> void:
     assert(builder.target == third_site,
         "Builder target selection must honor queue priority instead of choosing the nearest blueprint")
     builder._release()
+    builder._bad.append(third_site)
+    builder._find_work()
+    assert(builder.target == second_site,
+        "A blocked or unreachable queued blueprint must not prevent fallback to the next project")
+    builder._release()
+    builder._bad.clear()
     var hud = get_first_node_in_group("hud")
     assert(hud != null, "The game HUD must expose construction queue controls")
     hud._toggle_construction_queue()
