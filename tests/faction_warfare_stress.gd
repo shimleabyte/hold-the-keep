@@ -180,7 +180,7 @@ func _run() -> void:
         require(not roster.is_empty(), "Faction roster must not be empty: " + faction_id)
         for index in GARRISONS_PER_FACTION:
             var enemy_id := roster[index % roster.size()]
-            require(DataDB.enemies.has(enemy_id),
+            require(data_db.enemies.has(enemy_id),
                 "Faction roster references missing enemy data: " + enemy_id)
             spawn_garrison(main, faction_id, enemy_id, cells[index], Vector2(camp["position"]))
             total_garrisons += 1
@@ -211,7 +211,7 @@ func _run() -> void:
         "All four factions must contribute their full garrison load")
     require(total_patrols == PATROLS_PER_CAMP * FACTION_IDS.size(),
         "All four camps must contribute their patrol load")
-    require(total_raiders == EXPECTED_RAIDERS and faction_raider_count(main) == EXPECTED_RAIDERS,
+    require(total_raiders == EXPECTED_RAIDERS and total_raiders == GLOBAL_RAID_CAP\n        and faction_raider_count(main) == EXPECTED_RAIDERS,
         "All four camps must run simultaneous faction raids")
 
     var first_camp: Dictionary = manager.camps[FACTION_IDS[0]]
