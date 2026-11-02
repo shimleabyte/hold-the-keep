@@ -1,7 +1,7 @@
 # Phase 06 — Factions, Enemy Archetypes and Territorial AI
 
 **Status:** Partially implemented. Faction foundations, Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle and Beast Rider charge are merged into `main`. PR #42 (`e6cf221`) merged Beast Rider; workflow #41366304675 passed 64/64 jobs on Godot 4.3/4.7.
-**Mainline:** `main`; next Phase 06 slice: deterministic faction camps and bounded patrols.
+**Mainline:** `main`; Phase 06.3 faction camps and patrols implemented on `feat/phase-06-faction-camps-patrols`; PR/CI pending.
 **Current save schema:** v13. Preserve Classic compatibility and validate legacy migrations through v13 plus v13 round-trip.
 **Engine target:** Godot 4.3 and 4.7.
 
@@ -33,10 +33,13 @@ Replace the single generic enemy identity with four regional powers whose units 
 - Keep War Shaman support separate from its ranged attack loop.
 
 ### 06.3 — Camps and patrols
-- Place deterministic camps in faction-owned territory using reachable, unoccupied cells.
-- Camps own a bounded spawn budget, patrol radius and reinforcement cooldown.
-- Patrol routes stay inside the faction's territory and return to camp when the leash is exceeded.
-- Camps are discoverable through existing fog-of-war; unseen enemies must not leak into the strategic map.
+- [x] Four deterministic faction camps placed on reachable, unoccupied enemy-owned cells in their region near regional strongholds; existing campaign `clear_camp` objectives remain separate.
+- [x] Camp targets stay hidden before fog reveal, appear on the strategic map after discovery, and can be inspected/destroyed by player melee attacks.
+- [x] Faction-specific patrol unit, radius, initial count, active cap, finite reinforcement budget and cooldown are data-driven in `data/factions.json`.
+- [x] Patrols use A* routes validated against faction region, enemy ownership and leash; patrols return to camp when the leash is crossed.
+- [x] Territorial loss suppresses camps and recalls linked patrols; camp destruction removes patrols and permanently disables reinforcement.
+- [x] Camp HP/destruction, activation/suppression, budget/timer/spawn index and patrol assignment are optional save-v13 fields; no schema bump.
+- [x] Regression `tests/faction_camps_patrols.gd` added to both Godot CI matrices; CI pending.
 
 ### 06.4 — Raids and counterattacks
 - Raid targets are selected from exposed player Outposts, connected roads and depots.
@@ -67,3 +70,14 @@ Replace the single generic enemy identity with four regional powers whose units 
 - A 0.82s telegraph locks a walkable route to the target's current tile. The charge does not steer mid-run; sidestepping can cause a miss. A changed nav version or stagger cancels the charge. Successful impact applies one bounded hit and a short push, then enters a 6.5s cooldown.
 - Charge tuning is data-driven in `data/enemy_archetypes.json`; ability state is transient and save schema v13 is unchanged.
 - Regression `tests/beast_rider_charge.gd` covers isolation priority, wall-aware route, telegraph timing, impact damage, sidestep miss and stagger interruption; it passed on Godot 4.3/4.7 in workflow #41366304675 (64/64 jobs).
+
+
+### Faction camp and patrol implementation (2026-11-02, review branch)
+- Branch: `feat/phase-06-faction-camps-patrols`, based on main `8a5c6e5` after PR #42.
+- New `scripts/systems/faction_camps.gd` owns one deterministic camp per Frontier faction. Sites are selected from reachable, unoccupied enemy-owned cells in their faction region near the regional stronghold, with clearance from campaign sites.
+- Camps are hidden until fog discovery. Discovery reveals the camp target, deploys its initial patrols and adds an observed-only strategic-map marker. Existing enemy unit markers retain the currently-observed rule.
+- Camp structures are destructible with player melee. Destruction recalls linked patrols, exhausts budget and stops future spawns. Losing enemy control suppresses the camp and recalls its patrols.
+- Patrols use A* and validate route cells against faction region, enemy ownership and camp leash. They only select targets inside the leash and return to camp when the leash is exceeded.
+- Per-faction tuning in `data/factions.json`: patrol archetype, radius, initial count, active cap, reinforcement budget and cooldown.
+- Camp health/destruction/activation/suppression and active patrol assignment persist as optional save-v13 data; old v13 saves remain valid without migration.
+- Regression `tests/faction_camps_patrols.gd` is registered in `tools/run_tests.sh` and both Godot CI matrices. PR/CI pending.
