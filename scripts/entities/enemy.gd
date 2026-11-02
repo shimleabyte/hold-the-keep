@@ -69,6 +69,7 @@ var patrol_points: Array[Vector2] = []
 var patrol_waypoint_index := 0
 var patrol_returning := false
 var patrol_nav
+var patrol_territory
 var pending_patrol_state: Dictionary = {}
 var _patrol_path := PackedVector2Array()
 var _patrol_path_index := 0
@@ -315,6 +316,7 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     patrol_waypoint_index = 0
     patrol_returning = false
     patrol_nav = null
+    patrol_territory = null
     pending_patrol_state.clear()
     _patrol_path = PackedVector2Array()
     _patrol_path_index = 0
@@ -367,6 +369,7 @@ func configure_patrol(camp_data: Dictionary, saved_patrol_state: Dictionary = {}
     guard_origin = patrol_origin if patrol_returning or patrol_points.is_empty() else patrol_points[patrol_waypoint_index]
     pending_patrol_state.clear()
     patrol_nav = get_tree().get_first_node_in_group("navigation_grid")
+    patrol_territory = camp_data.get("territory", null)
     _patrol_path = PackedVector2Array()
     _patrol_path_index = 0
     _patrol_path_version = -1
@@ -1648,6 +1651,8 @@ func _patrol_cell_allowed(cell: Vector2i) -> bool:
     if patrol_nav == null or not patrol_nav.is_walkable(cell):
         return false
     if String(world.region_id(cell)) != patrol_region_id:
+        return false
+    if patrol_territory != null and patrol_territory.owner_at(cell) != "enemy":
         return false
     return Vector2(patrol_nav.cell_of(patrol_origin) - cell).length() * WorldConfig.tile_size <= patrol_radius + WorldConfig.tile_size
 
