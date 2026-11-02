@@ -1,6 +1,6 @@
 # Phase 08 — Visual and Audio Identity
 
-**Status:** In progress. The dedicated weathered Frontier terrain atlas is merged into `main`; deterministic, non-blocking biome props and five regional landmarks are implemented, alongside biome-specific harvestable tree/rock silhouettes. Classic terrain and resource visuals remain unchanged. Rendered screenshot review is still outstanding.
+**Status:** In progress. PR #50 merged Phase 08.3 deterministic Frontier props, landmarks and resource silhouettes; Phase 08.4 faction/archetype visual identity is in implementation. The dedicated weathered Frontier terrain atlas is merged into `main`; deterministic, non-blocking biome props and five regional landmarks are implemented, alongside biome-specific harvestable tree/rock silhouettes. Classic terrain and resource visuals remain unchanged. Rendered screenshot review is still outstanding.
 **Art direction:** [World & Gameplay Design Bible](../WORLD_AND_GAMEPLAY_BIBLE.md) — Grim Medieval Folklore Fantasy, weathered medieval pixel art and restrained folklore motifs.
 **Dependency:** Stable gameplay contracts from Phases 02, 04, 05, 06 and current UI layouts from Phase 10.
 **Engine targets:** Godot 4.3 and 4.7.
@@ -11,7 +11,7 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 
 ## 08.1 — Art direction and asset pipeline
 - [x] Define and apply an earthy, weathered terrain palette for Hearthland, Greenwood, Highlands, Fenlands and Ashen March through a dedicated Frontier atlas; Classic retains its original atlas and no global dark filter is used.
-- [ ] Extend the palette/material contract to props, buildings, units and regional landmarks.
+- [x] Extend the Frontier material/crest contract to four faction visual kits; buildings remain a separate Phase 08.5 slice.
 - Add restrained regional folklore motifs through landmarks, boundary marks, burial customs and environmental storytelling. Keep overt supernatural visual effects rare and reserved for confirmed threats.
 - Define sprite scale, pivot, outline, contrast and animation-frame conventions before producing bulk assets.
 - Keep generated/procedural SVG assets reproducible; hand-authored replacements must preserve import paths or update references atomically.
@@ -27,8 +27,9 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 - Add visual cues for ownership, contested territory, supply routes, fog and regional objectives.
 
 ## 08.3 — Unit and faction identity
-- Give each faction recognizable unit silhouettes, equipment, palette accents and banner/marker language.
-- Ensure all six enemy archetypes remain identifiable at actual gameplay zoom and during night/combat effects.
+- [x] Give each faction a distinct three-color visual kit and unique thorn, chevron, reed or ember crest motif; retain the existing faction tint as a secondary recognition cue.
+- [x] Add specialist equipment silhouettes for Scout, Shieldbearer, Saboteur, War Shaman, Siege Engine and Beast Rider through a modular draw layer that does not modify AI, collision, attack timing or save data.
+- [ ] Validate readability with rendered screenshots at actual gameplay zoom and during night/combat effects.
 - Add anticipation, attack, hit, stagger, death and ability feedback that communicates counterplay rather than decoration only.
 - Keep player, villager and enemy sprite footprints consistent with Y-sort and collision origins.
 
