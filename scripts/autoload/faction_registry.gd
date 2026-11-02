@@ -69,6 +69,26 @@ func validate() -> Array[String]:
         var roster := roster_for(String(faction_id))
         if roster.is_empty():
             errors.append("%s has no valid roster" % faction_id)
+        var patrol_unit := String(faction.get("patrol_unit", ""))
+        if patrol_unit.is_empty() or not DataDB.enemies.has(patrol_unit):
+            errors.append("%s references a missing patrol unit" % faction_id)
+        var camp: Variant = faction.get("camp", null)
+        if not (camp is Dictionary):
+            errors.append("%s has no camp configuration" % faction_id)
+        else:
+            var patrol_radius := float(camp.get("patrol_radius", 0.0))
+            var initial_patrols := int(camp.get("initial_patrols", 0))
+            var active_cap := int(camp.get("active_patrol_cap", 0))
+            var reinforcement_budget := int(camp.get("reinforcement_budget", -1))
+            var reinforcement_cooldown := float(camp.get("reinforcement_cooldown", 0.0))
+            if patrol_radius < 88.0 or patrol_radius > 190.0:
+                errors.append("%s has an invalid patrol radius" % faction_id)
+            if initial_patrols < 1 or initial_patrols > active_cap or active_cap > 3:
+                errors.append("%s has an invalid initial patrol/cap" % faction_id)
+            if reinforcement_budget < 0 or reinforcement_budget > 12:
+                errors.append("%s has an invalid reinforcement budget" % faction_id)
+            if reinforcement_cooldown < 12.0 or reinforcement_cooldown > 90.0:
+                errors.append("%s has an invalid reinforcement cooldown" % faction_id)
     for enemy_id in archetypes:
         if not DataDB.enemies.has(enemy_id):
             errors.append("archetype %s is not registered in DataDB" % enemy_id)
