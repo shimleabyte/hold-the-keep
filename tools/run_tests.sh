@@ -51,6 +51,7 @@ tests=(
     saboteur_disruption
     siege_engine_behavior
     beast_rider_charge
+    faction_camps_patrols
 )
 
 for test_name in "${tests[@]}"; do
