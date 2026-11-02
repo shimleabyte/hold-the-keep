@@ -53,6 +53,7 @@ tests=(
     beast_rider_charge
     faction_camps_patrols
     faction_raids
+    faction_warfare_stress
 )
 
 for test_name in "${tests[@]}"; do

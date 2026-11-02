@@ -85,6 +85,7 @@ jobs:
           - beast_rider_charge
           - faction_camps_patrols
           - faction_raids
+          - faction_warfare_stress
     steps:
       - name: Checkout
         uses: actions/checkout@v7

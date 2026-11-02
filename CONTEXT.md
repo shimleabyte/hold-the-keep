@@ -455,3 +455,11 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - A target is revalidated while the raider moves and attacks. Reconnection, reclamation, region mismatch, destruction, removal or loss of A* reachability aborts the raid. Camp destruction and loss of camp territory recall its active raiders.
 - Save v13 optionally stores camp raid budget/cooldown and active faction-raider target kind/cell, camp, region and hit count. The existing disconnected-depot supply-pressure mechanic remains independent.
 - Added `tests/faction_raids.gd` and registered it in `tools/run_tests.sh` plus both Godot 4.3/4.7 CI matrices. PR/CI and rendered Frontier playtest are pending.
+
+## 43. Phase 06.5 — Combined faction warfare stress (2026-11-02, verification branch)
+- Phase 06.4 is merged via PR #44 (`5cc5084`); Godot workflow #41381487306 passed 68/68 jobs, including `faction_raids` on Godot 4.3 and 4.7, Frontier performance and Windows/Linux exports.
+- Branch: `feat/phase-06.5-faction-warfare-stress`, created from post-merge `main`.
+- New regression `tests/faction_warfare_stress.gd` builds a deterministic combined Frontier workload: 48 faction garrisons, eight camp patrols, four simultaneous faction infrastructure raids (one per faction), and 48 villagers.
+- The test creates exposed road targets inside each faction region, validates A* routes for all simultaneous raiders, asserts the global four-raider ceiling, and checks the complete population plus all camp/raid state against save-v13 validation.
+- Registered in `tools/run_tests.sh` and both Godot 4.3/4.7 CI matrices. The new regression and full matrix are pending.
+- `tests/release_hardening.gd` already validates Classic save fixtures v1–v13 and Frontier fixtures v7–v13; active faction raid state round-trip is covered separately by `tests/faction_raids.gd`.
