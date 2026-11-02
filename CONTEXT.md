@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio, PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening, PR #58 (`d3bba66`) for Phase 05.2a Builder-driven construction sites, and PR #59 (`6147cfc`) for Phase 05.2b construction queue, Builder priorities and HUD management. PR #59 workflow #509 passed 80/80 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux exports. Save schema remains v13; rendered HUD/gameplay acceptance remains open.
+**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio, PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening, PR #58 (`d3bba66`) for Phase 05.2a Builder-driven construction sites, and PR #59 (`6147cfc`) for Phase 05.2b construction queue, Builder priorities and HUD management. PR #59 workflow #509 passed 80/80 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux exports. Save schema remains v13; rendered HUD/gameplay acceptance remains open. Active follow-on slice: `feat/phase-05.3a-watchtower-vision` adds tower-based terrain discovery and live strategic-map observation without changing the building ID or save schema.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -24,7 +24,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #59 (save schema v13; statu
 | Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit Keep/Storage/Outpost cost source for construction/research/repair is merged; deterministic contested-depot warning and targeted Saboteur raids merged through PR #35 |
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload; Act I–IV + victory reload dilindungi `campaign_reload_hardening.gd` |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
-| Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; paid placement creates Builder-driven blueprint sites with queue priority, reorder/cancel controls, live progress and save-v13 persistence |
+| Bangunan | Keep, rumah, tembok, menara pengawas (existing turret plus 128px vision), gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; Builder-driven blueprint queue/reorder/cancel and v13 persistence |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
 | Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; connected infrastructure raids and bounded counterattacks merged via PR #44; manual Frontier balance/play review remains open |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
@@ -32,7 +32,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #59 (save schema v13; statu
 | Save/load | v13 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo; Classic v1–v13 dan Frontier v7–v13 migration matrix dijaga. PR #34 adds optional cost-source preference without a save-version bump; earlier v13 snapshots without it remain valid |
 | Kontrol | Rebind gerak, interaksi, serang, lari; shortcut UI/job/build belum dapat di-rebind |
 | Tampilan | Adaptive logical viewport = setengah ukuran client window, minimum 480×270, pixel scale tepat 2×; physical-display/fullscreen review belum dilakukan |
-| HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map, hotbar, objective tracker, tech panel, pause menu |
+| HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map with live tower sight, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 10 procedural ambience loops (5 biome × siang/malam), 2 original music loops, 14 event cues; Master bus routing dan crossfade; human listening/level-balance QA masih terbuka |
 | Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
 | CI | PR #59 workflow #509 passed 80/80 jobs: Godot 4.3/4.7 parse, 38 regressions per engine, Frontier performance diagnostic and Windows/Linux release exports. |
@@ -583,3 +583,10 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Builder target selection prioritizes queued construction before repairs, keeps bounded A* checks and skips previously unreachable candidates so later projects remain eligible.
 - HUD adds the always-visible QUEUE entry (`N`; `B` remains Builder job control), order, paid costs, live progress, UP/DN reorder and X cancellation.
 - Regression covers reorder, Builder priority/fallback, HUD rows, duplicate order rejection, legacy v13 compatibility and save/reload order. PR #59 CI and rendered UI review pending.
+
+
+## Phase 05.3a — Watchtower vision (implementation branch)
+- Branch: `feat/phase-05.3a-watchtower-vision`, based on main after PR #59 and synchronized Phase 05 documentation.
+- Existing `tower` data now declares `vision_radius: 128`; no extra building ID, art asset or save schema field.
+- Fog scanning uses the tower as a permanent discovery source. Strategic-map enemy observation uses the same radius; demolition stops live observation while explored terrain remains discovered.
+- Existing turret range/damage/fire interval remain unchanged. Regression `tests/watchtower_vision.gd` is registered in both Godot matrices and local runner; CI and rendered review pending.
