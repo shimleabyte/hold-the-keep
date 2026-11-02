@@ -88,6 +88,11 @@ func _initialize() -> void:
 
     require(settings.volume >= 0.0 and settings.volume <= 1.0,
         "The existing persisted master volume must remain normalized")
+    var master_index := AudioServer.get_bus_index("Master")
+    require(master_index >= 0, "The project must retain its master output bus")
+    var expected_master_db := linear_to_db(maxf(settings.volume, 0.0001))
+    require(is_equal_approx(AudioServer.get_bus_volume_db(master_index), expected_master_db),
+        "The persisted volume setting must continue to control the shared Master bus")
 
     audio.set_ambience_context("GREENWOOD", false)
     require(audio._ambient_key == "GREENWOOD_DAY" and audio._ambient_player_index >= 0,
