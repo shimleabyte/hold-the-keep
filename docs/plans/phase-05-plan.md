@@ -1,6 +1,6 @@
 # Phase 05 — Construction System and Building Production Chains
 
-**Status:** Lumber Camp and Quarry resource-worksite slice merged through PR #19. Phase 05.2a Builder-driven blueprint sites merged through PR #58 (`d3bba66`). Phase 05.2b construction queue, Builder priorities, save-v13 order persistence and HUD management merged through PR #59 (`6147cfc`); workflow #509 passed 80/80 jobs on Godot 4.3/4.7, Frontier diagnostic and Windows/Linux exports. Rendered HUD/gameplay review and remaining facility chain remain open.
+**Status:** Lumber Camp/Quarry worksite slice, Phase 05.2a Builder-driven blueprint sites (PR #58), Phase 05.2b queue/Builder priorities (PR #59), and Phase 05.3a Watchtower vision (PR #60, `beef7b7`) are merged. Workflow #515 passed 82/82 jobs on Godot 4.3/4.7, Frontier diagnostic and Windows/Linux exports. Rendered HUD/map-marker review and remaining facility chain remain open.
 **Dependency:** Phase 04 Builder occupation; Phase 02 depot/logistics rules.
 **Engine targets:** Godot 4.3 and 4.7.
 
@@ -32,7 +32,7 @@ Make building placement a managed construction process. Builder labor must matte
 - [x] Save/load persists queue order alongside footprint, progress and funding source; Builder claims are transient and safely re-discovered after load.
 - [x] Cancellation refunds only unconsumed materials according to a fixed documented rule; completed/cancelled sites release their queue slots without duplication.
 
-## 05.3a — Watchtower vision (implementation branch)
+## 05.3a — Watchtower vision (merged via PR #60)
 - The existing `tower` remains the defensive turret; no duplicate building ID or new save field is introduced.
 - Data definition adds a 128px `vision_radius`. The fog scanner permanently discovers terrain inside this radius.
 - The strategic map uses the same radius for current enemy observation, so enemy markers appear only while the tower remains alive and within sight range.
