@@ -38,7 +38,7 @@ func _initialize() -> void:
     assert(keep != null, "A Keep must exist as the starting construction depot")
     var house_cell := find_house_cell(main, keep.cell)
     assert(house_cell.x >= 0, "The test must find a valid house footprint inside player build range")
-    var wood_before := inventory.get_amount("wood")
+    var wood_before: int = inventory.get_amount("wood")
     assert(main.build.place("house", house_cell) == "", "A valid house order must be accepted")
     var site = main.world.occupied.get(house_cell)
     assert(site != null and site.is_in_group("construction_sites"),
@@ -97,7 +97,7 @@ func _initialize() -> void:
         and is_equal_approx(restored_site.work_required, 12.0),
         "Construction progress, work requirement and footprint must survive save/load")
     var expected_refund: int = int(restored_site.refundable_cost().get("wood", 0))
-    var refund_before := inventory.get_amount("wood")
+    var refund_before: int = inventory.get_amount("wood")
     assert(reloaded.build.demolish_at(second_cell), "Right-click demolition must cancel a blueprint")
     assert(inventory.get_amount("wood") == refund_before + expected_refund,
         "Cancellation must refund only the unconsumed portion to its original Keep source")

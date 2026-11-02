@@ -125,7 +125,7 @@ func place(id: String, c: Vector2i) -> String:
         return err
     var cost: Dictionary = DataDB.cost_of(id)
     var supply = get_tree().get_first_node_in_group("supply_network")
-    var source_cell := supply.get_cost_source_cell() if supply != null else Vector2i(-1, -1)
+    var source_cell: Vector2i = supply.get_cost_source_cell() if supply != null else Vector2i(-1, -1)
     var paid: bool = supply.pay_cost(cost) if supply != null else Inventory.spend_all(cost)
     if not paid:
         var cost_error: String = supply.cost_reason(cost) if supply != null else "Bahan kurang di KEEP"
