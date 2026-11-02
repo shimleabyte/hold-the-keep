@@ -176,7 +176,8 @@ func move_construction_site(site, direction: int) -> bool:
     var current_index := sites.find(site)
     if current_index < 0:
         return false
-    var target_index := clampi(current_index + signi(direction), 0, sites.size() - 1)
+    var step := 1 if direction > 0 else -1
+    var target_index := clampi(current_index + step, 0, sites.size() - 1)
     if target_index == current_index:
         return false
     var other = sites[target_index]
