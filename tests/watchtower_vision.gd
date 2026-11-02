@@ -49,7 +49,7 @@ func _initialize() -> void:
         var outside := candidate + Vector2i(11, 0)
         if not footprint_is_clear(main, config, candidate, tower_size):
             continue
-        if not WorldConfig.is_valid_cell(target) or not WorldConfig.is_valid_cell(outside):
+        if not config.is_valid_cell(target) or not config.is_valid_cell(outside):
             continue
         var target_position := world_cell_center(target, tile_size)
         var outside_position := world_cell_center(outside, tile_size)
