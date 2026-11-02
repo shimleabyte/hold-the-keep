@@ -1,6 +1,6 @@
 # Phase 08 — Visual and Audio Identity
 
-**Status:** In progress. The dedicated weathered Frontier terrain atlas is merged into `main`; the next slice adds deterministic, non-blocking biome props and five regional landmarks. Classic terrain and resource generation remain unchanged. Rendered screenshot review is still outstanding.
+**Status:** In progress. The dedicated weathered Frontier terrain atlas is merged into `main`; deterministic, non-blocking biome props and five regional landmarks are implemented, alongside biome-specific harvestable tree/rock silhouettes. Classic terrain and resource visuals remain unchanged. Rendered screenshot review is still outstanding.
 **Art direction:** [World & Gameplay Design Bible](../WORLD_AND_GAMEPLAY_BIBLE.md) — Grim Medieval Folklore Fantasy, weathered medieval pixel art and restrained folklore motifs.
 **Dependency:** Stable gameplay contracts from Phases 02, 04, 05, 06 and current UI layouts from Phase 10.
 **Engine targets:** Godot 4.3 and 4.7.
@@ -21,6 +21,7 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 - [x] Give Frontier biomes distinct ground textures in a dedicated seven-cell atlas (five land biomes, alternate Hearthland ground and water), preserving tile IDs, 16px tile size and water collision.
 - [x] Scatter deterministic, region-specific fern clusters, reeds, dead pines, standing stones and ash pillars; add Hearthland shrine and four regional ruin/stone/reed landmarks. Decorations are non-colliding and excluded from resource occupancy.
 - [x] Add deterministic biome-specific props and one regional landmark per core biome; props do not block movement or overlap resource nodes.
+- [x] Add Greenwood pine, Fenlands willow, Ashen deadwood, Highlands stone and Ashen rock resource silhouettes; preserve Classic sprite paths and resource behavior.
 - [ ] Add further resource-cluster dressing and restrained ambient animation while preserving tile readability.
 - Create a distinct Old Frontier/ruin subregion treatment without introducing an unsupported sixth core biome.
 - Add visual cues for ownership, contested territory, supply routes, fog and regional objectives.
