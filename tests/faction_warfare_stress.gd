@@ -1,0 +1,262 @@
+extends SceneTree
+## Phase 06.5: simultaneous faction garrisons, patrols and infrastructure raids under a populated Frontier workload.
+
+const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
+const FACTION_IDS: Array[String] = [
+    "greenwood_raiders",
+    "iron_legion",
+    "fen_cult",
+    "ashen_host"
+]
+const GARRISONS_PER_FACTION := 12
+const PATROLS_PER_CAMP := 3
+const VILLAGERS := 48
+const EXPECTED_RAIDERS := 4
+const GLOBAL_RAID_CAP := 4
+
+
+func ticks(count: int) -> void:
+    for _index in count:
+        await physics_frame
+
+
+func require(condition: bool, message: String) -> void:
+    if condition:
+        return
+    push_error("FAIL: " + message)
+    quit(1)
+
+
+func reachable_region_cells(main: Node, region_id: String, limit: int) -> Array[Vector2i]:
+    var reachable: Dictionary = main.nav.reachable_cells(
+        main.nav.cell_of(main.player.global_position)
+    )
+    var cells: Array[Vector2i] = []
+    for value in reachable.keys():
+        var cell: Vector2i = value
+        if String(main.world.region_id(cell)) != region_id:
+            continue
+        if main.world.occupied.has(cell):
+            continue
+        cells.append(cell)
+        if cells.size() >= limit:
+            break
+    return cells
+
+
+func find_raid_road_cell(main: Node, camp: Dictionary, used: Dictionary) -> Vector2i:
+    var camp_cell: Vector2i = camp["cell"]
+    var region_id := String(camp["region_id"])
+    for radius in range(5, 13):
+        for y in range(-radius, radius + 1):
+            for x in range(-radius, radius + 1):
+                if maxi(absi(x), absi(y)) != radius:
+                    continue
+                var cell := camp_cell + Vector2i(x, y)
+                if used.has(cell) or not WorldConfig.is_valid_cell(cell):
+                    continue
+                if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
+                    continue
+                if not main.nav.is_walkable(cell) or String(main.world.region_id(cell)) != region_id:
+                    continue
+                var target_cells: Array[Vector2i] = [cell]
+                if main.nav.path_adjacent(Vector2(camp["position"]), target_cells).is_empty():
+                    continue
+                return cell
+    return Vector2i(-1, -1)
+
+
+func expose_road(main: Node, cell: Vector2i) -> void:
+    var region_id := String(main.world.region_id(cell))
+    main.territory.claimed_cells[cell] = true
+    main.territory.enemy_claimed_cells[cell] = true
+    var region_state: Dictionary = main.territory.region_states.get(region_id, {})
+    region_state["control"] = "contested"
+    main.territory.region_states[region_id] = region_state
+
+
+func spawn_garrison(main: Node, faction_id: String, enemy_id: String, cell: Vector2i, camp_position: Vector2) -> Node:
+    var enemy = ENEMY_SCRIPT.new()
+    enemy.setup(DataDB.enemies[enemy_id], main.world, main.flow, main.player, faction_id)
+    enemy.is_garrison = true
+    enemy.guard_origin = camp_position
+    enemy.position = main.nav.center_of(cell)
+    main.world.entities.add_child(enemy)
+    return enemy
+
+
+func faction_raider_count(main: Node) -> int:
+    return main.get_tree().get_nodes_in_group("faction_raiders").size()
+
+
+func _initialize() -> void:
+    call_deferred("_run")
+
+
+func _run() -> void:
+    WorldConfig.apply_profile("frontier")
+    for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
+        DirAccess.remove_absolute(path)
+
+    var main = load("res://scenes/main.tscn").instantiate()
+    root.add_child(main)
+    current_scene = main
+    await ticks(10)
+
+    GameClock.set_process(false)
+    GameClock.set_physics_process(false)
+    Tech.set_process(false)
+    main.spawner.set_process(false)
+    main.spawner.set_physics_process(false)
+    main.village.set_process(false)
+    main.fog.set_process(false)
+    main.fog.set_physics_process(false)
+    main.supply.set_process(false)
+    main.supply.set_physics_process(false)
+    main.territory.set_physics_process(false)
+    main.frontier_campaign.faction_camps.set_process(false)
+    main.nav.set_physics_process(false)
+
+    var manager = main.frontier_campaign.faction_camps
+    require(manager != null and is_instance_valid(manager) and manager.camps.size() == 4,
+        "The stress workload must start with exactly four Frontier faction camps")
+
+    main.nav.rebuild()
+    main.territory.rebuild()
+    main.supply.rebuild()
+
+    var used_road_cells: Dictionary = {}
+    var road_targets: Dictionary = {}
+    for faction_id in FACTION_IDS:
+        require(manager.camps.has(faction_id),
+            "Missing faction camp for stress workload: " + faction_id)
+        var camp: Dictionary = manager.camps[faction_id]
+        require(not bool(camp.get("destroyed", false))
+            and main.territory.owner_at(camp["cell"]) == "enemy",
+            "Every active stress camp must remain in enemy-controlled territory")
+
+        var road_cell := find_raid_road_cell(main, camp, used_road_cells)
+        require(road_cell.x >= 0,
+            "Each faction region must provide a reachable free road target: " + faction_id)
+        used_road_cells[road_cell] = true
+        main.build.place_raw("road", road_cell)
+        road_targets[faction_id] = road_cell
+
+    main.nav.rebuild()
+    main.supply.rebuild()
+    main.territory.rebuild()
+
+    for faction_id in FACTION_IDS:
+        var road_cell: Vector2i = road_targets[faction_id]
+        expose_road(main, road_cell)
+        main.supply.connected_road_cells[road_cell] = true
+    main.territory._dirty = false
+    main.supply._dirty = false
+
+    var total_garrisons := 0
+    var total_patrols := 0
+    var total_raiders := 0
+    for faction_id in FACTION_IDS:
+        var camp: Dictionary = manager.camps[faction_id]
+        var region_id := String(camp["region_id"])
+        var cells := reachable_region_cells(main, region_id, GARRISONS_PER_FACTION)
+        require(cells.size() == GARRISONS_PER_FACTION,
+            "Each faction must provide enough reachable garrison cells: " + faction_id)
+
+        var roster: Array[String] = FactionRegistry.roster_for(faction_id)
+        require(not roster.is_empty(), "Faction roster must not be empty: " + faction_id)
+        for index in GARRISONS_PER_FACTION:
+            var enemy_id := roster[index % roster.size()]
+            require(DataDB.enemies.has(enemy_id),
+                "Faction roster references missing enemy data: " + enemy_id)
+            spawn_garrison(main, faction_id, enemy_id, cells[index], Vector2(camp["position"]))
+            total_garrisons += 1
+
+        for patrol_index in PATROLS_PER_CAMP:
+            require(manager._spawn_patrol(camp),
+                "Each camp must dispatch its bounded patrol fixture: " + faction_id)
+            total_patrols += 1
+
+        camp["activated"] = true
+        camp["raid_budget"] = 2
+        camp["raid_timer"] = 0.0
+        manager.camps[faction_id] = camp
+        var target: Dictionary = {
+            "cell": road_targets[faction_id],
+            "kind": "road"
+        }
+        require(manager._spawn_faction_raid(camp, target),
+            "Each faction must dispatch one infrastructure raider: " + faction_id)
+        total_raiders += 1
+
+        var raider = faction_raider_count(main)
+        require(raider == total_raiders,
+            "Raid dispatch count must increase by one per faction without skipping or duplicating units")
+
+    require(total_garrisons == GARRISONS_PER_FACTION * FACTION_IDS.size(),
+        "All four factions must contribute their full garrison load")
+    require(total_patrols == PATROLS_PER_CAMP * FACTION_IDS.size(),
+        "All four camps must contribute their patrol load")
+    require(total_raiders == EXPECTED_RAIDERS and faction_raider_count(main) == EXPECTED_RAIDERS,
+        "All four camps must run simultaneous faction raids")
+
+    var first_camp: Dictionary = manager.camps[FACTION_IDS[0]]
+    var extra_target: Dictionary = {
+        "cell": road_targets[FACTION_IDS[0]],
+        "kind": "road"
+    }
+    require(not manager._spawn_faction_raid(first_camp, extra_target),
+        "The global raid ceiling must reject a fifth active faction raider")
+
+    for raider in get_nodes_in_group("faction_raiders"):
+        require(is_instance_valid(raider) and raider.is_faction_raider and raider.is_garrison,
+            "Every active raid unit must retain garrison and faction-raid identity")
+        var expected_camp := String(raider.faction_raid_camp_id)
+        var expected_cell: Vector2i = road_targets[expected_camp]
+        require(raider.raid_target_cell == expected_cell and raider.faction_raid_target_kind == "road",
+            "Every active raider must retain its own faction-region target")
+        raider._tick_faction_raid(0.016)
+        require(not raider._raid_path.is_empty() and raider._raid_path_version == main.nav.version,
+            "Every simultaneous raider must resolve a current A* route to its target")
+
+    for index in VILLAGERS:
+        var column := (index % 8) - 4
+        var row := floori(float(index) / 8.0) - 3
+        main.village.spawn_villager(
+            main.world.keep_center_position() + Vector2(float(column * 5), float(row * 5))
+        )
+
+    var enemy_count := get_nodes_in_group("enemies").size()
+    var patrol_count := get_nodes_in_group("enemy_patrols").size()
+    var raider_count := faction_raider_count(main)
+    var villager_count := get_nodes_in_group("villagers").size()
+    require(patrol_count == total_patrols and raider_count == EXPECTED_RAIDERS,
+        "Faction patrol and raider group membership must remain consistent under load")
+    require(villager_count == VILLAGERS,
+        "The stress population must retain all spawned villagers")
+
+    var snapshot: Dictionary = SaveSystem.collect(main)
+    require(snapshot["world"]["profile"] == "frontier" and snapshot["world"]["map_size"] == 128,
+        "Stress snapshot must retain the Frontier world identity")
+    require(snapshot["frontier_campaign"]["camps"]["records"].size() == 4,
+        "Stress snapshot must persist all four faction camp records")
+    require(snapshot["enemies"].size() == enemy_count,
+        "Stress snapshot must include the full garrison, patrol and raid population")
+    require(save_system_valid(snapshot),
+        "The combined garrison/patrol/raid snapshot must pass save-v13 validation")
+
+    var saved_raids := 0
+    for enemy_state in snapshot["enemies"]:
+        if enemy_state is Dictionary and bool(enemy_state.get("faction_raid", false)):
+            saved_raids += 1
+    require(saved_raids == EXPECTED_RAIDERS,
+        "Save v13 must persist every simultaneous faction raid assignment")
+
+    print("PASS: Frontier warfare stress: %d garrisons, %d patrols, %d simultaneous raids, %d enemies, %d villagers" % [
+        total_garrisons, total_patrols, total_raiders, enemy_count, villager_count
+    ])
+    quit(0)
+
+
+func save_system_valid(snapshot: Dictionary) -> bool:
+    return SaveSystem._valid_save(snapshot)
