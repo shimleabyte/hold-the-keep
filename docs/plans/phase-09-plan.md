@@ -1,8 +1,8 @@
 # Phase 09 — Balance, Performance and Release Hardening
 
-**Status:** Automated regression, save recovery, CI profiling and template-backed desktop exports are merged through PR #29. Current `main` workflow #41314731305 passed 46/46 jobs after PR #31. Target-hardware profiling, full act-by-act combat outcome review, native Windows runtime and manual release acceptance remain open.
-**Mainline:** `main` (merged); run a focused release-acceptance branch for remaining gates.
-**Save schema:** v12 after the Phase 02 local-depot-stockpile slice in the current implementation PR.
+**Status:** Phase 09.3 late-act save/reload coverage is merged through PR #57 (`a1ccebe`); workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release export. Save schema remains v13. Target-hardware profiling, campaign balance simulations/human playtests, native Windows runtime and clean-machine release acceptance remain open.
+**Mainline:** `main` (PR #57 merged); continue with measured balance and manual release-acceptance gates.
+**Save schema:** v13 on `main`; PR #57 adds regression coverage only and does not change runtime save data.
 **Engine targets:** Godot 4.3 and 4.7.
 
 ## Goal
@@ -33,8 +33,8 @@ Make the expanded 128×128 Frontier campaign predictable under load and safe to 
 - [x] Add an end-to-end Frontier reload pass preserving completed objectives, unlocked act, an active escort/path index and damaged stronghold HP.
 - [x] Verify the next save removes stale temporary data, rotates a valid backup and leaves a valid primary.
 - [x] Verify corrupt-primary detection and backup eligibility.
-- [ ] Extend reload coverage to later acts, conquered strongholds and the final-boss gate.
-- [x] Run the migration and campaign regression matrix on Godot 4.3 and 4.7 (CI run #271).
+- [x] Extend reload coverage through Frontier Acts I–IV, completed regional objectives, conquered strongholds, damaged Ashen Host HP, the day-20 King gate and save/reload of the final victory (PR #57; workflow #490, 78/78).
+- [x] Run the migration and campaign regression matrix on Godot 4.3 and 4.7; late-act reload and persisted-victory coverage also passes on both engines (workflow #490).
 
 ### 09.4 — Release export hardening
 - [x] Add deterministic checks for the Windows Desktop and Linux export preset names, paths, resource filters and embedded PCK settings.
