@@ -7,10 +7,10 @@ func ticks(count: int) -> void:
 
 
 func require(condition: bool, message: String) -> void:
-    if not condition:
-        push_error("FAIL: " + message)
-        quit(1)
-    assert(condition, message)
+    if condition:
+        return
+    push_error("FAIL: " + message)
+    quit(1)
 
 
 func patrols_for(camp_id: String) -> Array:
@@ -104,9 +104,9 @@ func _run() -> void:
     var cell_index: int = config.cell_index(camp_cell)
     main.fog.discovered[cell_index] = 0
     manager._process(0.5)
-    assert(not bool(manager.camps[camp_id]["activated"]),
+    require(not bool(manager.camps[camp_id]["activated"]),
         "A camp must not activate while its map cell remains unexplored")
-    assert(patrols_for(camp_id).is_empty(),
+    require(patrols_for(camp_id).is_empty(),
         "An unexplored camp must not spawn patrols")
 
     main.fog.reveal_position(camp["position"], 32.0)
@@ -119,7 +119,7 @@ func _run() -> void:
     var patrols := patrols_for(camp_id)
     require(patrols.size() == int(camp["initial_patrols"]),
         "Discovery must deploy the configured initial patrol group")
-    assert(patrols.size() <= int(camp["patrol_cap"]),
+    require(patrols.size() <= int(camp["patrol_cap"]),
         "Initial patrols must never exceed the active patrol cap")
 
     # Verify the patrol uses an A* route to its next waypoint, not direct movement.
@@ -132,11 +132,11 @@ func _run() -> void:
         "Patrol movement must acquire a navigation-grid route")
     for route_point in patrol._patrol_path:
         var route_cell: Vector2i = main.nav.cell_of(route_point)
-        assert(String(main.world.region_id(route_cell)) == patrol.patrol_region_id,
+        require(String(main.world.region_id(route_cell)) == patrol.patrol_region_id,
             "A* patrol route must stay inside its faction region")
-        assert(main.territory.owner_at(route_cell) == "enemy",
+        require(main.territory.owner_at(route_cell) == "enemy",
             "A* patrol route must stay inside enemy-controlled territory")
-        assert(Vector2(route_cell - main.nav.cell_of(patrol.patrol_origin)).length() * config.tile_size
+        require(Vector2(route_cell - main.nav.cell_of(patrol.patrol_origin)).length() * config.tile_size
             <= patrol.patrol_radius + config.tile_size,
             "A* patrol route must stay inside the camp's leash")
 
@@ -146,16 +146,16 @@ func _run() -> void:
     patrol._tick_patrol_route()
     require(patrol.patrol_returning,
         "A patrol that crosses its leash must enter return mode")
-    assert(patrol.guard_origin.distance_to(patrol.patrol_origin) < 0.1,
+    require(patrol.guard_origin.distance_to(patrol.patrol_origin) < 0.1,
         "Return mode must set the camp as its movement goal")
-    assert(patrol._nearest_guard_target() == null,
+    require(patrol._nearest_guard_target() == null,
         "A returning patrol must stop pursuing player/defender bait")
     patrol._move_patrol_toward(patrol.patrol_origin, 0.016)
     require(not patrol._patrol_path.is_empty(),
         "A patrol outside its leash must be able to navigate back into the camp")
     for route_point in patrol._patrol_path:
         var return_cell: Vector2i = main.nav.cell_of(route_point)
-        assert(String(main.world.region_id(return_cell)) == patrol.patrol_region_id
+        require(String(main.world.region_id(return_cell)) == patrol.patrol_region_id
             and main.territory.owner_at(return_cell) == "enemy",
             "A return route may exit the radius but must remain inside faction territory")
 
@@ -167,10 +167,10 @@ func _run() -> void:
     patrol.retreat()
     manager._process(0.5)
     var reinforced := patrols_for(camp_id)
-    assert(reinforced.size() == int(camp_record["patrol_cap"]),
+    require(reinforced.size() == int(camp_record["patrol_cap"]),
         "An available vacancy must receive one reinforcement, up to the active cap")
     var after_reinforcement: Dictionary = manager.camps[camp_id]
-    assert(int(after_reinforcement["budget"]) == previous_budget - 1,
+    require(int(after_reinforcement["budget"]) == previous_budget - 1,
         "Each reinforcement spawn must consume exactly one budget unit")
 
     # A full patrol group cannot spawn past its cap or spend its budget.
@@ -178,9 +178,9 @@ func _run() -> void:
     manager.camps[camp_id] = after_reinforcement
     var full_budget: int = int(after_reinforcement["budget"])
     manager._process(0.5)
-    assert(patrols_for(camp_id).size() == int(after_reinforcement["patrol_cap"]),
+    require(patrols_for(camp_id).size() == int(after_reinforcement["patrol_cap"]),
         "Active patrol count must never exceed its camp cap")
-    assert(int(manager.camps[camp_id]["budget"]) == full_budget,
+    require(int(manager.camps[camp_id]["budget"]) == full_budget,
         "A full patrol group must not consume reinforcement budget")
 
     # Save v13 stores camp cooldown/budget and each patrol's assignment without a schema bump.
@@ -190,7 +190,7 @@ func _run() -> void:
     require(save_system._valid_save(snapshot),
         "Camp and patrol state must pass structural save validation")
     var saved_camp_records: Array = snapshot["frontier_campaign"]["camps"]["records"]
-    assert(saved_camp_records.size() == 4,
+    require(saved_camp_records.size() == 4,
         "Save must persist the four deterministic camp records")
     var found_saved_patrol := false
     var saved_patrol: Dictionary = {}
@@ -199,14 +199,14 @@ func _run() -> void:
         if not patrol_state.is_empty() and String(patrol_state.get("camp_id", "")) == camp_id:
             found_saved_patrol = true
             saved_patrol = saved_enemy
-            assert(bool(saved_enemy["garrison"]),
+            require(bool(saved_enemy["garrison"]),
                 "A saved patrol must remain marked as a garrison unit")
             break
     require(found_saved_patrol,
         "Save must persist active patrol camp assignment and waypoint")
     var invalid_snapshot := snapshot.duplicate(true)
     invalid_snapshot["frontier_campaign"]["camps"]["records"][0]["budget"] = 999
-    assert(not save_system._valid_save(invalid_snapshot),
+    require(not save_system._valid_save(invalid_snapshot),
         "Save validation must reject unbounded faction reinforcement budgets")
 
     # Restore one saved patrol assignment through the real enemy restore path.
@@ -224,31 +224,31 @@ func _run() -> void:
     require(not restored_patrols.is_empty(),
         "Restoring a saved enemy must rebind it to its owning faction camp")
     var restored_patrol = restored_patrols[0]
-    assert(restored_patrol.is_patrol and restored_patrol.is_garrison,
+    require(restored_patrol.is_patrol and restored_patrol.is_garrison,
         "Restored camp patrol must retain both patrol and garrison policies")
-    assert(restored_patrol.global_position.distance_to(restored_position) < 0.1,
+    require(restored_patrol.global_position.distance_to(restored_position) < 0.1,
         "Restored patrol position must remain unchanged")
-    assert(restored_patrol.patrol_origin.distance_to(camp["position"]) < 0.1,
+    require(restored_patrol.patrol_origin.distance_to(camp["position"]) < 0.1,
         "Restored patrol must return to its camp's deterministic position")
     var saved_patrol_state: Dictionary = saved_patrol["patrol"]
-    assert(restored_patrol.patrol_waypoint_index == int(saved_patrol_state["waypoint_index"]),
+    require(restored_patrol.patrol_waypoint_index == int(saved_patrol_state["waypoint_index"]),
         "Restored patrol must preserve its patrol waypoint assignment")
-    assert(restored_patrol.guard_origin.distance_to(saved_guard_origin) < 0.1
+    require(restored_patrol.guard_origin.distance_to(saved_guard_origin) < 0.1
         or restored_patrol.patrol_returning,
         "Restored patrol must restore its patrol/return movement goal")
-    assert(restored_patrol.patrol_camp_id == camp_id,
+    require(restored_patrol.patrol_camp_id == camp_id,
         "Restored patrol must retain its faction camp assignment")
 
     # Destroying the camp must permanently stop its reinforcement and recall every linked patrol.
     var camp_target = manager.camps[camp_id]["target"]
     camp_target.take_damage(9999)
     var destroyed_camp: Dictionary = manager.camps[camp_id]
-    assert(bool(destroyed_camp["destroyed"]) and int(destroyed_camp["budget"]) == 0,
+    require(bool(destroyed_camp["destroyed"]) and int(destroyed_camp["budget"]) == 0,
         "Destroying the camp must clear it and exhaust reinforcement budget")
-    assert(patrols_for(camp_id).is_empty(),
+    require(patrols_for(camp_id).is_empty(),
         "Destroying a camp must immediately recall all of its patrols")
     manager._process(0.5)
-    assert(patrols_for(camp_id).is_empty(),
+    require(patrols_for(camp_id).is_empty(),
         "A destroyed camp must never deploy another patrol")
 
     print("PASS: deterministic enemy-territory camps, fog discovery, A* bounded patrols, leash return, cap/budget reinforcement, v13 save/restore and camp destruction")
