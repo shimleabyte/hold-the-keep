@@ -226,7 +226,7 @@ func _build_patrol_points(camp_cell: Vector2i, region_id: String, radius: float)
         )
         var attempts := 0
         for entry in values:
-            if attempts >= 6:
+            if attempts >= 2:
                 break
             attempts += 1
             var candidate_cell: Vector2i = entry["cell"]
@@ -248,7 +248,7 @@ func _build_patrol_points(camp_cell: Vector2i, region_id: String, radius: float)
             var point: Vector2 = main.nav.center_of(entry["cell"])
             if result.has(point):
                 continue
-            if fallback_attempts >= 12:
+            if fallback_attempts >= 4:
                 break
             fallback_attempts += 1
             var candidate_cell: Vector2i = entry["cell"]
