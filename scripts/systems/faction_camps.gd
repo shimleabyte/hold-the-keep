@@ -86,7 +86,7 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
             "raid_budget": clampi(int(previous.get("raid_budget", raid_definition.get("budget", 2))), 0, 4),
             "raid_timer": clampf(float(previous.get("raid_timer", raid_definition.get("cooldown", 90.0))), 0.0, 240.0),
             "raid_cooldown": clampf(float(raid_definition.get("cooldown", 90.0)), 45.0, 180.0),
-            "raid_active_cap": 1
+            "raid_active_cap": clampi(int(raid_definition.get("active_cap", 1)), 1, 2)
         }
         if not bool(camp["destroyed"]):
             var camp_target = CAMP_SCRIPT.new()
