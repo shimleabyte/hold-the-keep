@@ -199,9 +199,10 @@ func _initialize() -> void:
         var region: String = world.region_id(cell)
         if regional_resources.has(region):
             regional_resources[region] += 1
-        var style := String(node.regional_style)
-        if regional_prop_styles.has(style):
-            regional_prop_styles[style] += 1
+        if kind != "iron":
+            var style := String(node.regional_style)
+            if regional_prop_styles.has(style):
+                regional_prop_styles[style] += 1
 
     assert(int(resource_counts["wood"]) >= 100,
         "Frontier must generate a substantial renewable wood supply")
