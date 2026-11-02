@@ -99,7 +99,8 @@
       "primary": "#9ca4a7",
       "accent": "#d0bd91",
       "shadow": "#41494d"
-    }
+    },
+    "vision_radius": 128
   },
   {
     "id": "storage",
