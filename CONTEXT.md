@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio and PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening. Workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 jobs on Godot 4.3/4.7, including both `campaign_reload_hardening` runs, Frontier performance diagnostic and Windows/Linux release exports. Save schema remains v13; PR #57 adds regression coverage only. Phase 08 rendered screenshot and human audio-listening QA, target-hardware profiling, multi-act human playtesting, native Windows runtime and clean-machine release acceptance remain outstanding.
+**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio and PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening. Workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 jobs on Godot 4.3/4.7, including both `campaign_reload_hardening` runs, Frontier performance diagnostic and Windows/Linux release exports. Save schema remains v13. Active follow-on branch: `feat/phase-05-builder-construction-sites` implements Builder-driven blueprint sites with two-worker throughput, proportional cancellation refunds and additive v13 persistence; PR/CI acceptance is pending. The explicit queue-management panel remains open.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -24,7 +24,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #57 (save schema v13; statu
 | Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit Keep/Storage/Outpost cost source for construction/research/repair is merged; deterministic contested-depot warning and targeted Saboteur raids merged through PR #35 |
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload; Act I–IV + victory reload dilindungi `campaign_reload_hardening.gd` |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
-| Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
+| Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; Builder-driven blueprint sites are on the active Phase 05.2a branch, while queue-management UI/reordering remains open |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
 | Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; connected infrastructure raids and bounded counterattacks merged via PR #44; manual Frontier balance/play review remains open |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
@@ -157,6 +157,14 @@ Batas sistem berikutnya:
 - Pertahankan Classic 64×64/15-day dan save compatibility pada setiap fase.
 
 Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardware nyata menunjukkan kebutuhan.
+
+## 9c. Phase 05.2a — Builder-driven construction sites (2026-11-02, implementation branch)
+- Branch `feat/phase-05-builder-construction-sites` starts from current `main`.
+- A valid placement pays the selected depot once and creates an unfinished blueprint; it is not registered as a functional building until Builder work completes.
+- Builders use their existing workplace assignment and bounded navigation to claim reachable blueprint sites. Maximum two Builders per site; additional work rate is capped at 1.65× one Builder.
+- Completion replaces the blueprint with the normal building. Right-click cancellation returns only unconsumed materials to the original depot, with Keep fallback if the source cannot accept them.
+- Save v13 receives an optional `construction_sites` array; older saves remain valid. Site progress, required work and source coordinates are validated and restored.
+- Automated acceptance is pending CI on Godot 4.3/4.7. Dedicated queue ordering/reorder UI remains a separate task.
 
 ## 10. Riwayat singkat
 1. Rencana game + pemilihan stack (Godot 4, native).

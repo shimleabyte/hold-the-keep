@@ -17,7 +17,7 @@ Dari akar proyek:
 Skrip observasi lama yang hanya mencetak hasil tanpa assertion dipisahkan ke `run_diagnostics.sh`;
 jalankan saat meninjau animasi, pertarungan, efek, ekonomi atau alur save/menu.
 
-GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 37 assertion regression tests per versi, Frontier performance diagnostic, serta Windows/Linux export. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Validasi terbaru untuk perluasan late-act reload: PR #57, workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578), 78/78 jobs sukses; kedua engine lulus untuk `campaign_reload_hardening`, termasuk save/reload Act IV dan state victory hari ke-20.
+GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 38 assertion regression tests per versi, Frontier performance diagnostic, serta Windows/Linux export. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Validasi terbaru untuk perluasan late-act reload: PR #57, workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578), 78/78 jobs sukses; kedua engine lulus untuk `campaign_reload_hardening`, termasuk save/reload Act IV dan state victory hari ke-20.
 
 | Skrip | Menguji |
 |---|---|
@@ -37,7 +37,8 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 37 assertion reg
 | frontier_campaign.gd | Classic/Frontier campaign calendars, act gates, all regional objectives, rewards, save/load and day-20 King victory |
 | campaign_multi_stronghold.gd | four Frontier strongholds, deterministic objective order, regional placement, independent garrisons, locked objectives, save/load and final conquest |
 | workplace_assignments.gd | Builder workplace capacity/radius, repair material consumption, reachable depot selection, job priority reassignment and v11 save validation |
-| production_worksites.gd | Lumber Camp/Quarry workplace limits, specialist work radius, Classic fallback, cleanup and v11 save compatibility |
+| production_worksites.gd | Lumber Camp/Quarry workplace limits, specialist work radius, Classic fallback, cleanup and v13 save compatibility |
+| construction_sites.gd | Builder discovery/pathing, two-worker site cap, once-only funding, functional completion, proportional cancellation refund, save validation and v13 reload |
 | map_stages.gd | empat biome Classic, fog map panel, batas tiga bab, bobot archer/brute per bab |
 | responsive_layout.gd | resolution-to-viewport mapping, exact 2× pixel scale, live synchronization, HUD safe playfield and map/hotbar bounds across six desktop resolutions |
 | player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, archer projectile, brute armor, combat save |
@@ -73,7 +74,7 @@ Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan k
 
 ## Skrip yang dijalankan otomatis di CI
 
-Suite assertion yang dijalankan pada Godot 4.3 dan 4.7 masing-masing mencakup 37 skrip:
+Suite assertion yang dijalankan pada Godot 4.3 dan 4.7 masing-masing mencakup 38 skrip:
 
 `animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `production_worksites`, `faction_registry`, `faction_visual_identity`, `building_visual_identity`, `combat_visual_feedback`, `audio_identity`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, `regional_control_roads`, `local_depot_stockpiles`, `outpost_garrisons`, `physical_shipments`, `depot_cost_sources`, `supply_pressure`, `shieldbearer_behavior`, `scout_marking`, `saboteur_disruption`, `siege_engine_behavior`, `beast_rider_charge`, `faction_camps_patrols`, `faction_raids`, serta `faction_warfare_stress`.
 

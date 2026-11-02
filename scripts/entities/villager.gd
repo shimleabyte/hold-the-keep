@@ -225,6 +225,17 @@ func on_repair_target_lost(building) -> void:
         state = State.IDLE
 
 
+func on_construction_site_lost(site) -> void:
+    if target != site:
+        return
+    target = null
+    _work_t = 0.0
+    _hit_done = false
+    _path = PackedVector2Array()
+    _pi = 0
+    state = State.IDLE
+
+
 ## Dipanggil pohon/batu saat dipukul oleh villager ini.
 func receive(kind: String, amount: int) -> void:
     if carry_kind != kind:
@@ -293,6 +304,8 @@ func _physics_process(delta: float) -> void:
                 state = State.WORKING
                 _work_t = 0.0
                 _hit_done = false
+                if job == "builder" and target.has_method("is_construction_site") and target.is_construction_site():
+                    target.worker_arrived(self)
         State.WORKING:
             _tick_working(delta)
         State.TO_DEPOT:
@@ -415,6 +428,9 @@ func _tick_working(delta: float) -> void:
         state = State.IDLE
         return
     if job == "builder":
+        if target.has_method("is_construction_site") and target.is_construction_site():
+            anim.face(target.position - position)
+            return
         if int(target.hp) <= 0 or int(target.hp) >= int(target.max_hp):
             _release()
             state = State.IDLE
@@ -733,6 +749,10 @@ func _find_work() -> void:
                 if not _claim_workplace("builder"):
                     return
             var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
+            for site in get_tree().get_nodes_in_group("construction_sites"):
+                if site.has_method("can_claim") and site.can_claim(self) \
+                        and workplace.position.distance_squared_to(site.position) <= radius * radius:
+                    cands.append(site)
             for building in get_tree().get_nodes_in_group("buildings"):
                 if building.hp <= 0 or building.hp >= building.max_hp or _bad.has(building):
                     continue
@@ -749,7 +769,10 @@ func _find_work() -> void:
             _bad.append(n)
             continue
         if job == "builder":
-            if not n.claim_repairer(self):
+            if n.has_method("is_construction_site") and n.is_construction_site():
+                if not n.claim(self):
+                    continue
+            elif not n.claim_repairer(self):
                 continue
         elif not _claim(n):
             continue
