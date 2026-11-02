@@ -235,6 +235,13 @@ func _run() -> void:
         and not main.campaign_conquered,
         "The day-20 victory gate must remain closed before the King is defeated")
 
+    # Conquering the last stronghold is necessary but not sufficient for Frontier victory.
+    restored_ashen.take_damage(999999)
+    assert(main.campaign.current_target_id().is_empty(),
+        "The final Ashen Host stronghold must be conquered before the King")
+    assert(not main.campaign_conquered,
+        "Conquering all four strongholds must not bypass the day-20 King gate")
+
     # The final boss cannot resolve the campaign before day 20.
     main.frontier_campaign._on_final_boss_defeated(19)
     assert(not main.frontier_campaign.final_boss_defeated,
