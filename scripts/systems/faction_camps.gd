@@ -13,6 +13,7 @@ const MAX_RAID_PATH_CHECKS := 8
 var main
 var camps: Dictionary = {}
 var _scan_timer := 0.0
+var _road_target_scan_cursor := 0
 
 
 func _ready() -> void:
@@ -411,9 +412,10 @@ func _find_raid_target(camp: Dictionary) -> Dictionary:
             "score": float(priority * 1000) - distance
         })
 
-    for road in get_tree().get_nodes_in_group("roads"):
-        if scanned >= MAX_RAID_TARGET_SCAN:
-            break
+    var road_nodes: Array = get_tree().get_nodes_in_group("roads")
+    var road_scan_count := mini(MAX_RAID_TARGET_SCAN - scanned, road_nodes.size())
+    for offset in road_scan_count:
+        var road = road_nodes[(_road_target_scan_cursor + offset) % road_nodes.size()]
         scanned += 1
         if not is_instance_valid(road) or not ["road", "bridge"].has(String(road.id)):
             continue
@@ -435,6 +437,8 @@ func _find_raid_target(camp: Dictionary) -> Dictionary:
             "cell": road.cell,
             "score": float(priority * 1000) - distance
         })
+    if not road_nodes.is_empty():
+        _road_target_scan_cursor = (_road_target_scan_cursor + road_scan_count) % road_nodes.size()
 
     candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
         return float(a["score"]) > float(b["score"])
