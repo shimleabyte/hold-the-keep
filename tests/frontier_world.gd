@@ -184,6 +184,12 @@ func _initialize() -> void:
         "HIGHLANDS": 0,
         "ASHEN_MARCH": 0
     }
+    var regional_prop_styles := {
+        "greenwood": 0,
+        "fenlands": 0,
+        "ashen_march": 0,
+        "highlands": 0
+    }
     for cell in world.occupied:
         var node = world.occupied[cell]
         if not is_instance_valid(node) or not node.is_in_group("resource_nodes"):
@@ -193,6 +199,9 @@ func _initialize() -> void:
         var region: String = world.region_id(cell)
         if regional_resources.has(region):
             regional_resources[region] += 1
+        var style := String(node.regional_style)
+        if regional_prop_styles.has(style):
+            regional_prop_styles[style] += 1
 
     assert(int(resource_counts["wood"]) >= 100,
         "Frontier must generate a substantial renewable wood supply")
@@ -206,6 +215,9 @@ func _initialize() -> void:
         "Highlands must contain a meaningful resource concentration")
     assert(int(regional_resources["ASHEN_MARCH"]) >= 30,
         "Ashen March must contain a meaningful resource concentration")
+    for style in regional_prop_styles:
+        assert(int(regional_prop_styles[style]) > 0,
+            "Frontier must generate resource props with the regional visual style: " + style)
 
     # Validate path connectivity from the Keep's spawn point into every biome.
     main.nav.rebuild()
