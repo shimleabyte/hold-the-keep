@@ -313,6 +313,7 @@ func _use_dash() -> bool:
     _dash_cd = DASH_COOLDOWN
     _dash_t = DASH_DURATION
     combat_feedback.register_ability("dash", _dash_dir, DASH_DURATION + 0.08)
+    Audio.play("dash", 1.0, -5.0)
     _invuln = maxf(_invuln, DASH_DURATION + 0.12)
     _pending_attack = -1.0
     combat_feedback.end_windup()
@@ -351,6 +352,7 @@ func _use_cleave() -> bool:
     _cleave_pending = 0.22
     _cleave_t = 0.42
     combat_feedback.register_ability("cleave", facing, _cleave_t)
+    Audio.play("cleave", 1.0, -5.0)
     _pending_attack = -1.0
     anim.play("attack", true)
     Events.player_attacked.emit()
@@ -385,6 +387,7 @@ func _use_rally() -> bool:
     _rally_cd = RALLY_COOLDOWN
     _rally_t = 8.0
     combat_feedback.register_ability("rally", Vector2.ZERO, 0.35)
+    Audio.play("rally", 1.0, -5.0)
     var affected := 0
     for defender in get_tree().get_nodes_in_group("defenders"):
         if not is_instance_valid(defender):
