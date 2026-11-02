@@ -161,6 +161,7 @@ func _run() -> void:
 
     # One vacancy plus an expired cooldown may consume exactly one bounded reinforcement.
     var camp_record: Dictionary = manager.camps[camp_id]
+    var previous_budget := int(camp_record["budget"])
     camp_record["timer"] = 0.0
     manager.camps[camp_id] = camp_record
     patrol.retreat()
@@ -169,7 +170,7 @@ func _run() -> void:
     assert(reinforced.size() == int(camp_record["patrol_cap"]),
         "An available vacancy must receive one reinforcement, up to the active cap")
     var after_reinforcement: Dictionary = manager.camps[camp_id]
-    assert(int(after_reinforcement["budget"]) == int(camp_record["budget"]) - 1,
+    assert(int(after_reinforcement["budget"]) == previous_budget - 1,
         "Each reinforcement spawn must consume exactly one budget unit")
 
     # A full patrol group cannot spawn past its cap or spend its budget.
