@@ -46,10 +46,8 @@ func take_damage(amount: int) -> void:
     hp = maxi(0, hp - maxi(1, amount))
     if hp <= 0:
         manager.destroy_camp(camp_id)
-        remove_from_group("campaign_targets")
-        remove_from_group("faction_camp_targets")
-        queue_free()
         return
+    manager.update_camp_hp(camp_id, hp)
     Events.fx_burst.emit("debris", global_position + Vector2(0, -7), Vector2.ZERO, 0.8)
     queue_redraw()
 
