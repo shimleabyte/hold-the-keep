@@ -109,6 +109,13 @@ func _initialize() -> void:
     assert(snapshot.has("construction_sites") and snapshot["construction_sites"].size() == 2,
         "Save v13 must persist every unfinished blueprint in queue order")
     assert(save_system._valid_save(snapshot), "A partially completed construction site must pass save validation")
+    var json_round_trip: Variant = JSON.parse_string(JSON.stringify(snapshot))
+    assert(json_round_trip is Dictionary and save_system._valid_save(json_round_trip),
+        "Queue order and construction state must remain valid after JSON serialization and parsing")
+    var non_integer_queue_order: Dictionary = snapshot.duplicate(true)
+    non_integer_queue_order["construction_sites"][0]["queue_order"] = 0.5
+    assert(not save_system._valid_save(non_integer_queue_order),
+        "Save validation must reject fractional queue positions")
     var legacy_queue_snapshot: Dictionary = snapshot.duplicate(true)
     for saved_site in legacy_queue_snapshot["construction_sites"]:
         saved_site.erase("queue_order")
