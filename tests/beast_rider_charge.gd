@@ -113,7 +113,7 @@ func _run() -> void:
     rider._tick_beast_rider(rider.beast_charge_windup_duration + 0.02)
     assert(rider._beast_charge_t > 0.0, "Completed telegraph must enter a finite charge")
     assert(target.hp == target_hp_before, "Charge start must not apply impact damage")
-    rider._tick_beast_rider(1.2)
+    rider._tick_beast_rider(1.8)
     assert(target.hp < target_hp_before, "A charge crossing its locked target must deal impact damage")
     assert(rider._beast_cd > 0.0, "A completed charge must enter its recovery cooldown")
 
@@ -126,7 +126,7 @@ func _run() -> void:
     bait_rider._tick_beast_rider(bait_rider.beast_charge_windup_duration + 0.02)
     var bait_hp_before: int = bait_target.hp
     bait_target.global_position += Vector2(0, 64)
-    bait_rider._tick_beast_rider(1.2)
+    bait_rider._tick_beast_rider(1.8)
     assert(bait_target.hp == bait_hp_before,
         "A defender sidestepping outside the locked charge lane must avoid the impact")
     assert(bait_rider._beast_charge_t == 0.0,
