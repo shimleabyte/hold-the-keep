@@ -1,7 +1,7 @@
 # Phase 06 — Factions, Enemy Archetypes and Territorial AI
 
 **Status:** Partially implemented. Faction foundations, all delivered combat archetype slices, Phase 06.3 camps/patrols and Phase 06.4 infrastructure raids are merged into `main`. PR #44 (`5cc5084`) merged raids; workflow #41381487306 passed 68/68 jobs on Godot 4.3/4.7.
-**Mainline:** `main`. Phase 06.4 is merged; Phase 06.5 combined warfare stress verification is on `feat/phase-06.5-faction-warfare-stress`.
+**Mainline:** `main`. Phase 06.4 and the Phase 06.5 stress workload are merged. PR #46 carries the GDScript syntax correction; its corrected Godot workflow #41385244114 passed 70/70 jobs, but the correction remains unmerged.
 **Current save schema:** v13. Preserve Classic compatibility and validate legacy migrations through v13 plus v13 round-trip.
 **Engine target:** Godot 4.3 and 4.7.
 
@@ -30,6 +30,7 @@ Replace the single generic enemy identity with four regional powers whose units 
 - [x] Saboteur building disruption merged through PR #40 (`8f1a914`): bounded rotating scans prioritize Tower/Outpost, then Storage, production and House, weighted against reachable nav paths. A telegraphed wind-up applies reversible temporary suppression and limited structure damage; interception/stagger can interrupt. Towers stop firing; depots reject transfers; workplaces pause tasks until recovery. `tests/saboteur_disruption.gd` passed on Godot 4.3/4.7; workflow #41355982522 passed 60/60 jobs.
 - [x] Siege Engine siege cycle merged through PR #41 (`58da7be`): bounded rotating scans prioritize stone/wood walls, then Tower/Outpost/Keep and Storage, weighted against reachable path length. It advances through flow-field cells, moves to adjacent target cells, telegraphs a heavy structure-only impact and enters recovery. Nearby defenders/player pressure or stagger interrupt the wind-up. `tests/siege_engine_behavior.gd` passed on Godot 4.3/4.7; workflow #41356689758 passed 62/62 jobs.
 - [x] Beast Rider telegraphed charge merged via PR #42 (`e6cf221`): bounded scan prefers isolated defenders; A* approach and locked walkable charge route; 0.82s tell; sidestep miss, nav-version/stagger cancellation, one impact and 6.5s recovery. `tests/beast_rider_charge.gd` passed on Godot 4.3/4.7; workflow #41366304675 passed 64/64 jobs.
+- [x] Extracted Beast Rider target scoring, route planning, charge state machine, interruption/recovery and telegraph drawing into `scripts/behaviors/beast_rider_behavior.gd`. `enemy.gd` now delegates the lifecycle through a behavior component; the existing charge regression exercises the component API.
 - Keep War Shaman support separate from its ranged attack loop.
 
 ### 06.3 — Camps and patrols
@@ -54,7 +55,7 @@ Replace the single generic enemy identity with four regional powers whose units 
 - [x] Persist camp state, patrol assignments, raid budgets/cooldowns, active raid target and faction identity as additive save-v13 fields.
 - [x] Validate Classic save migration fixtures v1–v13 and Frontier fixtures v7–v13 in `tests/release_hardening.gd`; active raid serialization/restoration is covered by `tests/faction_raids.gd`.
 - [x] Add combined stress coverage for large simultaneous garrisons, patrols and raids. Regression `tests/faction_warfare_stress.gd` was merged via PR #45 (`83dd633`): 48 garrisons, eight patrols, four concurrent faction raids and 48 villagers, with A* and save-v13 assertions. The first post-merge workflow failed at line 214 due to a literal escaped newline; corrective PR #46 fixes the syntax and is running CI.
-- [ ] Run the full assertion suite and parse checks on Godot 4.3 and 4.7 after the combined stress test is merged.
+- [x] Full corrected workflow #41385244114 passed 70/70 jobs on Godot 4.3/4.7, including import/parse, all 33 regression suites per engine, Frontier performance and Windows/Linux export. The correction is in open PR #46 and must reach `main` before the merged branch is considered fixed.
 - [ ] Review screenshots and play the Frontier campaign manually before calling Phase 06 complete.
 
 ## Invariants
