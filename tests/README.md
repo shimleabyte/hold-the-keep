@@ -56,8 +56,8 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 29 assertion reg
 | supply_pressure.gd | Contested disconnected-depot warning, targeted saboteur pathing, deterministic stock theft, bounded repeat raid, depot damage, HUD state, v13 persistence and recovery |
 | shieldbearer_behavior.gd | component-backed brace telegraph, frontal source-origin mitigation, side/rear counterplay, stagger interruption and disengage cancellation |
 | scout_marking.gd | component-backed Scout telegraph, same-faction-only bounded sharing, focus-target priority, mark expiry, stagger interruption and target disengage |
-| saboteur_disruption.gd | Saboteur priority target selection, nav reachability, telegraphed structure sabotage, tower/depot/workplace disable and recovery, stagger interruption |
-| siege_engine_behavior.gd | Siege Engine building target priorities, reachable path, telegraphed heavy impact, recovery cooldown, stagger interruption and building-only preference |
+| saboteur_disruption.gd | component-backed Saboteur priority scan, A* reachability, telegraphed disruption, structure damage, tower/depot/workplace suppression and recovery, stagger interruption |
+| siege_engine_behavior.gd | component-backed Siege Engine target priorities, A* pathing, telegraphed structural impact, recovery, defender interruption and building-only attack |
 | beast_rider_charge.gd | component-backed isolated defender target priority, A* locked charge route, telegraphed impact, sidestep miss and stagger interruption |
 | faction_camps_patrols.gd | deterministic enemy-territory camp placement, fog activation, A* patrol leash, bounded reinforcement, camp destruction and v13 save/restore |
 | faction_raids.gd | exposed connected depot/road target selection, finite camp dispatch, pathing, structure damage, depot theft, target abort, faction raid save/restore and cleanup |

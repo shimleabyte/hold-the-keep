@@ -481,3 +481,15 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - `scripts/entities/enemy.gd` now delegates Scout state/timers/mark publication to this component. Thin host adapters remain so Shieldbearer, ranged enemies and garrisons can consume valid shared marks without depending on Scout internals.
 - `tests/scout_marking.gd` now asserts component state directly while retaining same-faction sharing, rival-faction exclusion, marked-target priority, expiry, stagger interruption and target disengagement.
 - Latest-head workflow [#41387833455](https://github.com/shimleabyte/hold-the-keep/actions/runs/41387833455) passed 70/70 jobs on Godot 4.3/4.7, including both Scout regressions, both Shieldbearer regressions, Beast Rider, faction raids and combined warfare stress. PR #47 remains open and unmerged.
+
+## 47. Phase 06.2 — Saboteur composable disruption extraction (2026-11-02, implementation branch)
+- Added `scripts/behaviors/saboteur_behavior.gd` for bounded priority scoring, rotating building scan, reachable A* path selection, interception, wind-up, suppression/damage application, cooldown, stagger interruption and disruption telegraph.
+- `scripts/entities/enemy.gd` now delegates Saboteur navigation, target/path state, timers, impact/recovery and drawing to the component. The host retains only the archetype dispatch hook.
+- `tests/saboteur_disruption.gd` now asserts through component state while retaining building priority, reachability, suppression, recovery, interception and stagger coverage.
+- Workflow [#41388532624](https://github.com/shimleabyte/hold-the-keep/actions/runs/41388532624) passed 70/70 jobs on Godot 4.3/4.7.
+
+## 48. Phase 06.2 — Siege Engine composable structural attack extraction (2026-11-02, implementation branch)
+- Added `scripts/behaviors/siege_engine_behavior.gd` for bounded building-priority scanning, A* adjacent pathing, flow-field advance, defender interruption/retreat, telegraphed structural impact, recovery and marker rendering.
+- `scripts/entities/enemy.gd` delegates Siege Engine navigation, target/path state, timers, attack cycle, retreat and telegraph rendering to the component; the shared host retains only the archetype dispatch hook.
+- `tests/siege_engine_behavior.gd` now asserts through component state while retaining priority, reachable route, impact damage, cooldown, stagger interruption and building-only attack checks.
+- Latest workflow [#41389136213](https://github.com/shimleabyte/hold-the-keep/actions/runs/41389136213) passed 70/70 jobs on Godot 4.3/4.7. PR #47 remains open and unmerged.
