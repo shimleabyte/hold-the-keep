@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` includes PR #54 (`cf41982`) for Phase 08.6 combat visual feedback; workflow #476 passed 76/76 jobs on Godot 4.3/4.7, Frontier performance and Windows/Linux exports. Phases 08.3–08.5 are merged through PRs #50/#52/#53 (`c8eed384`/`ce69391`/`3aaa37f`) with workflows #471/#473/#475 passing 30/30, 72/72 and 74/74. Save schema remains v13. Phase 08.7 regional ambience/music/combat audio is in progress on `feat/phase-08.7-regional-audio-identity`.
+**Current source of truth:** default branch `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience, original music and event-driven combat audio; workflow #477 passed 78/78 jobs on Godot 4.3/4.7, Frontier performance and Windows/Linux exports. PR #54 (`cf41982`) delivered Phase 08.6 with 76/76 jobs; PRs #50/#52/#53 delivered Phases 08.3–08.5 (`c8eed384`/`ce69391`/`3aaa37f`) with 30/30, 72/72 and 74/74 jobs passing. Save schema remains v13. Manual screenshot and audio-listening QA for Phase 08 remain outstanding.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -546,3 +546,11 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Branch `feat/phase-08.7-regional-audio-identity` adds ten deterministic day/night ambience loops across five Frontier biomes, original procedural menu/campaign music, and 14 short event-driven combat/campaign cues.
 - Region/day-night and menu/campaign transitions use two-player crossfades. All new AudioStreamPlayers use the existing Master bus, preserving the persisted master volume and mute control.
 - Generated audio remains in code; no external recordings/music assets or save schema changes. Regression `tests/audio_identity.gd` validates stream format/loop boundaries, deterministic generation, cue availability and context routing. CI and human listening review pending.
+
+
+## Phase 08.7 — Regional ambience and audio identity (2026-11-02, merged)
+- PR #55 merged Phase 08.7 into main as `d933bb6`; workflow #41427499533 passed 78/78 jobs on Godot 4.3/4.7, including 37 assertion suites per engine, Frontier performance diagnostic and Windows/Linux release export.
+- Ten deterministic loop-forward ambience streams cover five Frontier biomes × day/night; two original procedural music loops cover campaign and paused/menu context with crossfades.
+- Fourteen event-driven cues cover combat anticipation/projectiles/block/stagger/abilities/charges/siege and campaign wave/camp/objective/act/victory events. All new players use Master bus and the existing persisted volume/mute control.
+- No external audio recordings/music samples or save schema changes. `tests/audio_identity.gd` validates buffers/loop boundaries, deterministic samples, cue coverage, Master bus routing and context selection.
+- Actual device listening, biome contrast, level balancing, loop seam and pause/resume audibility remain manual acceptance gates.
