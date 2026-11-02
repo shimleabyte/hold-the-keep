@@ -112,7 +112,7 @@ func interrupt() -> void:
 func blocks_hit_from(source_position: Vector2) -> bool:
     if active_timer <= 0.0 or source_position == Vector2.ZERO:
         return false
-    var incoming_direction := (source_position - actor.global_position).normalized()
+    var incoming_direction: Vector2 = (source_position - actor.global_position).normalized()
     return incoming_direction.dot(brace_direction) >= front_dot_threshold
 
 

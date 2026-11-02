@@ -48,7 +48,7 @@ func _run() -> void:
 
     # A front hit is mitigated; side and rear attacks bypass the directional guard.
     var starting_hp: int = shield.hp
-    var front_source := shield.global_position + shield.shield_behavior.brace_direction * 32.0
+    var front_source: Vector2 = shield.global_position + shield.shield_behavior.brace_direction * 32.0
     assert(shield.shield_behavior.blocks_hit_from(front_source),
         "Only an impact inside the frontal brace arc should be blocked")
     assert(not shield.shield_behavior.blocks_hit_from(Vector2.ZERO),
