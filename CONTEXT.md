@@ -575,5 +575,5 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Branch: `feat/phase-05-construction-queue-ui`, stacked on the Phase 05.2a head `4fa45f7` while PR #58 CI runs.
 - Added stable queue order to construction sites, queue reorder operations, save-v13 persistence and backward-compatible restoration for v13 records without the optional order field.
 - Builder target selection now prioritizes construction sites in queue order ahead of building repairs, while retaining bounded path checks and workplace-radius constraints.
-- HUD includes an always-visible QUEUE entry, B shortcut, current project order, paid costs, live progress, raise/lower controls and cancellation.
+- HUD includes an always-visible QUEUE entry (`N` shortcut, leaving `B` for Builder job control), current project order, paid costs, live progress, raise/lower controls and cancellation. Runtime queue size is capped at 64 so every valid queue state remains saveable under the v13 validator.
 - Regression coverage extends `tests/construction_sites.gd` for effective reorder, queue panel rows and v13 order round-trip. CI and rendered UI review pending.
