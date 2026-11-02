@@ -169,6 +169,7 @@ func begin_windup(candidate: Node2D) -> bool:
     actor._moving = false
     actor.anim.face(charge_direction)
     Events.fx_burst.emit("dust", actor.position + Vector2(0, -4), -charge_direction, 0.85)
+    Audio.play("charge", 1.0, -4.0)
     actor.queue_redraw()
     return true
 

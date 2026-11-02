@@ -30,6 +30,7 @@ tests=(
     faction_visual_identity
     building_visual_identity
     combat_visual_feedback
+    audio_identity
     frontier_campaign
     frontier_stress
     campaign_reload_hardening

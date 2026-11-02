@@ -725,6 +725,7 @@ func _begin_attack(target, direction: Vector2) -> void:
     else:
         _pending_t = ATTACK_HIT_DELAY
     combat_feedback.begin_windup(direction, _pending_t, false)
+    Audio.play("charge" if role == "pouncer" else "windup", 1.0, -9.0)
 
 
 func _begin_ranged_attack(target: Node2D) -> void:
@@ -738,6 +739,7 @@ func _begin_ranged_attack(target: Node2D) -> void:
         queue_redraw()
     anim.play("attack", true)
     combat_feedback.begin_windup(target.position - position, _pending_t, true)
+    Audio.play("projectile", 1.0, -9.0)
 
 
 func _resolve_pending(delta: float) -> void:
@@ -799,6 +801,7 @@ func apply_stagger(duration: float) -> void:
         beast_behavior.interrupt()
     _hurt_t = maxf(_hurt_t, duration * 0.5)
     anim.play("hurt", true)
+    Audio.play("stagger", 1.0, -8.0)
 
 
 func _footsteps(delta: float) -> void:
@@ -945,8 +948,10 @@ func _take_damage_from(amount: int, source_position: Vector2) -> void:
     hp -= applied
     if blocked_by_shield:
         Events.fx_burst.emit("stone", position + Vector2(0, -_fh * 0.4), -shield_behavior.brace_direction, 0.8)
+        Audio.play("block", 1.0, -5.0)
     else:
         Events.fx_burst.emit("impact", position + Vector2(0, -_fh * 0.4), Vector2.ZERO, 2.0 if is_boss else 1.0)
+        Audio.play("impact_hit", 1.0, -9.0)
     modulate = Color(1.8, 1.8, 1.8)
     combat_feedback.register_hit(source_position, global_position, 2.0 if is_boss else 1.0)
     create_tween().tween_property(self, "modulate", _faction_tint, 0.12)

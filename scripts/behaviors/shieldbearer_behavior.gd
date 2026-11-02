@@ -87,6 +87,7 @@ func tick(delta: float) -> void:
         windup_timer = windup_duration
         cooldown = cooldown_duration
         Events.fx_burst.emit("dust", actor.position + Vector2(0, -3), -brace_direction, 0.55)
+        Audio.play("shield_raise", 1.0, -7.0)
         actor.queue_redraw()
         return
 

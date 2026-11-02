@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` includes PR #52 (`ce69391`) for Phase 08.4 faction/archetype visual identity; its Godot 4.3/4.7 workflow #41422716411 passed 72/72 jobs, including Frontier performance and Windows/Linux exports. PR #50 merged Phase 08.3 terrain props and landmarks as `c8eed384`; save schema remains v13. Phase 08.5 building material/detail and damage-state overlays are in progress on `feat/phase-08.5-building-visual-identity`.
+**Current source of truth:** default branch `main` includes PR #54 (`cf41982`) for Phase 08.6 combat visual feedback; workflow #476 passed 76/76 jobs on Godot 4.3/4.7, Frontier performance and Windows/Linux exports. Phases 08.3–08.5 are merged through PRs #50/#52/#53 (`c8eed384`/`ce69391`/`3aaa37f`) with workflows #471/#473/#475 passing 30/30, 72/72 and 74/74. Save schema remains v13. Phase 08.7 regional ambience/music/combat audio is in progress on `feat/phase-08.7-regional-audio-identity`.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -539,3 +539,10 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Branch `feat/phase-08.6-combat-visual-feedback` adds a shared draw-only feedback helper for melee/ranged wind-up, directional impact, stagger and Dash/Cleave/Rally cue shapes.
 - Existing enemy archetype telegraphs, player slash/cleave arcs, particle caps and corpse/death animation are retained. The new layer does not change damage, timing, AI, collision or save schema v13.
 - New regression: `tests/combat_visual_feedback.gd`; CI and native-scale rendered screenshots pending.
+
+
+## Phase 08.7 — Regional ambience and audio identity (2026-11-02, implementation branch)
+- PR #54 merged Phase 08.6 combat visual feedback into main as `cf41982`; workflow #476 passed 76/76 jobs across Godot 4.3/4.7, Frontier performance and Windows/Linux exports.
+- Branch `feat/phase-08.7-regional-audio-identity` adds ten deterministic day/night ambience loops across five Frontier biomes, original procedural menu/campaign music, and 14 short event-driven combat/campaign cues.
+- Region/day-night and menu/campaign transitions use two-player crossfades. All new AudioStreamPlayers use the existing Master bus, preserving the persisted master volume and mute control.
+- Generated audio remains in code; no external recordings/music assets or save schema changes. Regression `tests/audio_identity.gd` validates stream format/loop boundaries, deterministic generation, cue availability and context routing. CI and human listening review pending.
