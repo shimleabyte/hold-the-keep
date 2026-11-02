@@ -1,6 +1,7 @@
 extends Node2D
 ## Deterministic Frontier faction camps with bounded local patrol reinforcement.
 
+const CAMP_SCRIPT := preload("res://scripts/entities/faction_camp.gd")
 const CAMP_SCAN_INTERVAL := 0.5
 const CAMP_SITE_CLEARANCE := 10.0
 const CAMP_SPACING := 12.0
@@ -18,6 +19,7 @@ func _ready() -> void:
 func setup(main_ref, saved: Dictionary = {}) -> void:
     main = main_ref
     camps.clear()
+    _scan_timer = CAMP_SCAN_INTERVAL
     if WorldConfig.profile_id != "frontier":
         return
 
@@ -60,6 +62,9 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
             "cell": cell,
             "position": main.nav.center_of(cell),
             "activated": bool(previous.get("activated", false)),
+            "destroyed": bool(previous.get("destroyed", false)),
+            "suppressed": bool(previous.get("suppressed", false)),
+            "hp": clampi(int(previous.get("hp", 220)), 1, 220),
             "budget": clampi(int(previous.get("budget", int(camp_definition.get("reinforcement_budget", 4)))), 0, 12),
             "timer": clampf(float(previous.get("timer", float(camp_definition.get("reinforcement_cooldown", 30.0)))), 0.0, 180.0),
             "spawn_index": maxi(0, int(previous.get("spawn_index", 0))),
@@ -70,6 +75,15 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
             "patrol_unit": String(faction_data.get("patrol_unit", "")),
             "patrol_points": patrol_points
         }
+        if not bool(camp["destroyed"]):
+            var camp_target = CAMP_SCRIPT.new()
+            camp_target.setup(faction_id, self, camp["position"], faction_data, {
+                "hp": camp["hp"],
+                "activated": camp["activated"],
+                "suppressed": camp["suppressed"]
+            })
+            main.world.entities.add_child(camp_target)
+            camp["target"] = camp_target
         camps[faction_id] = camp
 
     _bind_restored_patrols()
@@ -232,6 +246,7 @@ func _camp_patrol_config(camp: Dictionary) -> Dictionary:
         "camp_id": String(camp["id"]),
         "region_id": String(camp["region_id"]),
         "camp_position": camp["position"],
+        "territory": main.territory,
         "patrol_radius": float(camp["patrol_radius"]),
         "patrol_points": camp["patrol_points"]
     }
@@ -254,6 +269,34 @@ func _patrol_count(camp_id: String) -> int:
         if is_instance_valid(enemy) and not enemy.is_queued_for_deletion() and enemy.patrol_camp_id == camp_id:
             count += 1
     return count
+
+
+func _retreat_patrols(camp_id: String) -> void:
+    for enemy in get_tree().get_nodes_in_group("enemy_patrols"):
+        if is_instance_valid(enemy) and enemy.patrol_camp_id == camp_id:
+            enemy.retreat()
+
+
+func destroy_camp(camp_id: String) -> void:
+    if not camps.has(camp_id):
+        return
+    var camp: Dictionary = camps[camp_id]
+    if bool(camp.get("destroyed", false)):
+        return
+    camp["destroyed"] = true
+    camp["activated"] = false
+    camp["suppressed"] = true
+    camp["budget"] = 0
+    camp["hp"] = 0
+    _retreat_patrols(camp_id)
+    var target = camp.get("target")
+    if target != null and is_instance_valid(target):
+        target.remove_from_group("campaign_targets")
+        target.remove_from_group("faction_camp_targets")
+        target.queue_free()
+    camps[camp_id] = camp
+    Events.build_feedback.emit("Kamp %s dihancurkan. Reinforcement terhenti." % String(FactionRegistry.factions[camp_id]["name"]))
+    queue_redraw()
 
 
 func _spawn_patrol(camp: Dictionary) -> bool:
@@ -298,10 +341,33 @@ func _process(delta: float) -> void:
 
     for camp_id in camps:
         var camp: Dictionary = camps[camp_id]
+        if bool(camp.get("destroyed", false)):
+            continue
+
+        var cell: Vector2i = camp["cell"]
+        var enemy_controlled := main.territory.owner_at(cell) == "enemy"
+        if not enemy_controlled:
+            if not bool(camp.get("suppressed", false)):
+                _retreat_patrols(String(camp_id))
+            camp["suppressed"] = true
+            var suppressed_target = camp.get("target")
+            if suppressed_target != null and is_instance_valid(suppressed_target):
+                suppressed_target.set_suppressed(true)
+            camps[camp_id] = camp
+            continue
+
+        if bool(camp.get("suppressed", false)):
+            camp["suppressed"] = false
+            var restored_target = camp.get("target")
+            if restored_target != null and is_instance_valid(restored_target):
+                restored_target.set_suppressed(false)
+
         if not bool(camp["activated"]):
-            var cell: Vector2i = camp["cell"]
             if main.fog != null and main.fog.is_revealed_cell(cell):
                 camp["activated"] = true
+                var camp_target = camp.get("target")
+                if camp_target != null and is_instance_valid(camp_target):
+                    camp_target.set_discovered(true)
                 camps[camp_id] = camp
                 var initial_count := mini(int(camp["initial_patrols"]), int(camp["patrol_cap"]))
                 for index in initial_count:
@@ -335,6 +401,9 @@ func export_state() -> Dictionary:
             "cx": cell.x,
             "cy": cell.y,
             "activated": bool(camp["activated"]),
+            "destroyed": bool(camp["destroyed"]),
+            "suppressed": bool(camp["suppressed"]),
+            "hp": int(camp["hp"]),
             "budget": int(camp["budget"]),
             "timer": float(camp["timer"]),
             "spawn_index": int(camp["spawn_index"])
@@ -345,15 +414,10 @@ func export_state() -> Dictionary:
 func _draw() -> void:
     for camp_id in camps:
         var camp: Dictionary = camps[camp_id]
-        if not bool(camp["activated"]):
+        if not bool(camp["activated"]) or bool(camp.get("destroyed", false)):
             continue
         var center: Vector2 = camp["position"]
-        var faction_data: Dictionary = FactionRegistry.factions[String(camp["faction_id"])]
-        var color := Color(String(faction_data.get("color", "#c58b52")))
-        draw_circle(center, 12.0, Color("#191a19"))
-        draw_arc(center, 13.0, 0.0, TAU, 16, color, 1.5)
-        draw_colored_polygon(PackedVector2Array([
-            center + Vector2(-8, 2), center + Vector2(0, -8), center + Vector2(8, 2)
-        ]), color.darkened(0.28))
-        draw_line(center + Vector2(0, -8), center + Vector2(0, -16), color, 1.2)
-        draw_line(center + Vector2(0, -16), center + Vector2(6, -14), color, 1.2)
+        var color := Color(String(FactionRegistry.factions[String(camp["faction_id"])].get("color", "#c58b52")))
+        var radius := float(camp["patrol_radius"])
+        draw_arc(center, radius, 0.0, TAU, 48, Color(color, 0.22), 1.0)
+        draw_arc(center, radius + 3.0, 0.0, TAU, 48, Color(color, 0.08), 1.0)
