@@ -136,6 +136,7 @@ func _draw() -> void:
     _draw_building_markers()
     _draw_campaign_markers()
     _draw_frontier_site_markers()
+    _draw_faction_camp_markers()
     _draw_unit_markers()
     _draw_camera_window()
     _draw_player_marker()
@@ -307,6 +308,34 @@ func _draw_frontier_site_markers() -> void:
         else:
             draw_rect(Rect2(marker_position - Vector2.ONE * marker_size * 0.5,
                 Vector2.ONE * marker_size), marker_color)
+
+func _draw_faction_camp_markers() -> void:
+    if WorldConfig.profile_id != "frontier":
+        return
+    var manager = get_tree().get_first_node_in_group("faction_camp_manager")
+    if manager == null:
+        return
+    for camp_id in manager.camps:
+        var camp: Dictionary = manager.camps[camp_id]
+        if bool(camp.get("destroyed", false)) or not bool(camp.get("activated", false)):
+            continue
+        var cell: Vector2i = camp["cell"]
+        if not fog.is_revealed_cell(cell):
+            continue
+        var marker_position := _world_to_map(camp["position"])
+        var marker_size := maxf(2.5, 6.0 * _map_scale / 3.0)
+        var faction_data: Dictionary = FactionRegistry.factions[String(camp["faction_id"])]
+        var marker_color := Color(String(faction_data.get("color", "#c58b52")))
+        if bool(camp.get("suppressed", false)):
+            marker_color = marker_color.darkened(0.55)
+        draw_colored_polygon(PackedVector2Array([
+            marker_position + Vector2(0, -marker_size),
+            marker_position + Vector2(marker_size, marker_size * 0.65),
+            marker_position + Vector2(-marker_size, marker_size * 0.65)
+        ]), marker_color)
+        draw_rect(Rect2(marker_position + Vector2(-marker_size * 0.18, -marker_size * 0.12),
+            Vector2(marker_size * 0.36, marker_size * 0.9)), Color("#181918"))
+
 
 func _is_currently_observed(world_position: Vector2) -> bool:
     var player_node = get_tree().get_first_node_in_group("player")
