@@ -22,7 +22,7 @@ Replace the single generic enemy identity with four regional powers whose units 
 
 ## Remaining implementation sequence
 
-### 06.2 — Composable combat behaviors (partial; Shieldbearer, Scout, Saboteur and Siege Engine delivered)
+### 06.2 — Composable combat behaviors (archetype slices extracted; validation pending latest head)
 - Extract movement, attack-pattern and ability policies from the enemy controller.
 - [x] Scout scouting/marking merged through PR #39 (`11f3f13`): a telegraphed mark is shared only with same-faction enemies in a bounded radius, prioritizes the marked defender until expiry, and can be interrupted by stagger or target disengagement. `tests/scout_marking.gd` passed on Godot 4.3 and 4.7; workflow #41354720293 passed 58/58 jobs.
 - [x] Shieldbearer directional brace merged through PR #36 (`b02aa60`): data-defined wind-up, locked facing, finite active window and frontal damage mitigation; side/rear hits bypass the block. Player attacks, Cleave, Dash and tower arrows pass their impact origin. Stagger interrupts the brace; disengaging during wind-up cancels it. `tests/shieldbearer_behavior.gd` appeared in the available successful job list; the complete 4.3/4.7 matrix was not independently verifiable from that snapshot.
@@ -35,7 +35,7 @@ Replace the single generic enemy identity with four regional powers whose units 
 - [x] Extracted Scout marking and focus policy into `scripts/behaviors/scout_behavior.gd`: bounded target selection, preferred-range positioning, telegraph/wind-up, faction-only bounded mark sharing, mark expiry, interruption and marker drawing. Enemy host adapters preserve mark consumption in Shieldbearer, ranged and garrison policies. `tests/scout_marking.gd` passed on both Godot versions; latest-head workflow [#41387833455](https://github.com/shimleabyte/hold-the-keep/actions/runs/41387833455) passed 70/70 jobs.
 - [x] Extracted Saboteur building disruption into `scripts/behaviors/saboteur_behavior.gd`: bounded priority scan, rotating cursor, reachable A* approach, telegraphed application, structure damage, suppression recovery, defender interception and stagger interruption. `tests/saboteur_disruption.gd` passed on both engines; workflow [#41388532624](https://github.com/shimleabyte/hold-the-keep/actions/runs/41388532624) passed 70/70 jobs.
 - [x] Extracted Siege Engine structural attack into `scripts/behaviors/siege_engine_behavior.gd`: bounded building priority scan, A* pathing, flow-field advance, defender disruption/retreat, telegraphed impact, recovery and structural-only targeting. `tests/siege_engine_behavior.gd` passed on both engines; workflow [#41389136213](https://github.com/shimleabyte/hold-the-keep/actions/runs/41389136213) passed 70/70 jobs.
-- Keep War Shaman support separate from its ranged attack loop.
+- [x] Keep War Shaman support separate from ranged attacks: `scripts/behaviors/war_shaman_support_behavior.gd` owns faction-safe healing and its cooldown while the normal ranged attack loop remains shared. `tests/faction_registry.gd` now exercises component healing, rival-faction exclusion and cooldown. Latest full CI is pending.
 
 ### 06.3 — Camps and patrols
 - [x] Four deterministic faction camps placed on reachable, unoccupied enemy-owned cells in their region near regional strongholds; existing campaign `clear_camp` objectives remain separate.

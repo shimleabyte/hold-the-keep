@@ -493,3 +493,9 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - `scripts/entities/enemy.gd` delegates Siege Engine navigation, target/path state, timers, attack cycle, retreat and telegraph rendering to the component; the shared host retains only the archetype dispatch hook.
 - `tests/siege_engine_behavior.gd` now asserts through component state while retaining priority, reachable route, impact damage, cooldown, stagger interruption and building-only attack checks.
 - Latest workflow [#41389136213](https://github.com/shimleabyte/hold-the-keep/actions/runs/41389136213) passed 70/70 jobs on Godot 4.3/4.7. PR #47 remains open and unmerged.
+
+## 49. Phase 06.2 — War Shaman support component extraction (2026-11-02, implementation branch)
+- Added `scripts/behaviors/war_shaman_support_behavior.gd` to own support radius/amount, heal cooldown and the decision to heal the nearest injured same-faction ally through the shared `enemy_support.gd` targeting helper.
+- `scripts/entities/enemy.gd` delegates support timer advancement and the support tick to this component. The War Shaman's ranged attack remains on the shared ranged combat path; support is evaluated as a separate priority action and does not duplicate or replace projectile logic.
+- `tests/faction_registry.gd` now inspects the component directly and verifies allied healing, rival-faction exclusion and no repeated healing during cooldown.
+- Latest full CI for this change is pending; do not mark Phase 06.2 fully validated until the updated 70-job Godot 4.3/4.7 matrix passes.
