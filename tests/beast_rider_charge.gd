@@ -32,14 +32,14 @@ func spawn_soldier(main, at: Vector2):
 
 
 func find_wall_cell(main, desired_position: Vector2) -> Vector2i:
-    var origin := main.nav.cell_of(desired_position)
+    var origin: Vector2i = main.nav.cell_of(desired_position)
     for radius in range(0, 5):
         for y in range(-radius, radius + 1):
             for x in range(-radius, radius + 1):
                 if maxi(absi(x), absi(y)) != radius:
                     continue
-                var cell := origin + Vector2i(x, y)
-                var center := main.nav.center_of(cell)
+                var cell: Vector2i = origin + Vector2i(x, y)
+                var center: Vector2 = main.nav.center_of(cell)
                 if absf(center.x - desired_position.x) > 32.0 or absf(center.y - desired_position.y) > 16.0:
                     continue
                 if main.world.is_buildable(cell) and not main.world.occupied.has(cell):
