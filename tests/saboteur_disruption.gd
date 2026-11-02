@@ -97,22 +97,22 @@ func _run() -> void:
 
     var saboteur = spawn_saboteur(main, data_db.enemies["enemy_saboteur"],
         main.player.global_position + Vector2(0, 120))
-    require(saboteur.saboteur_nav == main.nav,
+    require(saboteur.saboteur_behavior.navigation == main.nav,
         "Saboteur must acquire the shared navigation grid when it enters the scene")
-    var selected = saboteur._select_saboteur_target()
+    var selected = saboteur.saboteur_behavior.select_target()
     require(selected == tower,
         "Saboteur must prioritize the reachable tower over closer Storage and production buildings")
-    require(not saboteur._saboteur_path.is_empty(),
+    require(not saboteur.saboteur_behavior.path.is_empty(),
         "Selected high-value building must have a reachable adjacent path")
 
     # Complete the telegraphed disruption against the selected tower.
     saboteur.global_position = tower.global_position + Vector2(18, 0)
     var tower_hp_before: int = tower.hp
-    saboteur._saboteur_cd = 0.0
-    saboteur._tick_saboteur(0.016)
-    require(saboteur._saboteur_windup_t > 0.0,
+    saboteur.saboteur_behavior.cooldown = 0.0
+    saboteur.saboteur_behavior.tick(0.016)
+    require(saboteur.saboteur_behavior.windup_timer > 0.0,
         "Saboteur must telegraph before disabling a structure")
-    saboteur._tick_saboteur(saboteur.saboteur_windup_duration + 0.02)
+    saboteur.saboteur_behavior.tick(saboteur.saboteur_behavior.windup_duration + 0.02)
     require(tower.is_sabotaged() and tower.sabotage_seconds_remaining() > 4.8,
         "Successful sabotage must apply a finite disruption window")
     require(tower.hp < tower_hp_before,
@@ -147,17 +147,17 @@ func _run() -> void:
     # A player stagger cancels an unfinished sabotage callout.
     var interrupted = spawn_saboteur(main, data_db.enemies["enemy_saboteur"],
         farm.global_position + Vector2(18, 0))
-    interrupted._saboteur_target = farm
-    interrupted._saboteur_cd = 0.0
-    interrupted._tick_saboteur(0.016)
-    require(interrupted._saboteur_windup_t > 0.0,
+    interrupted.saboteur_behavior.target = farm
+    interrupted.saboteur_behavior.cooldown = 0.0
+    interrupted.saboteur_behavior.tick(0.016)
+    require(interrupted.saboteur_behavior.windup_timer > 0.0,
         "Second Saboteur must enter a telegraphed wind-up")
     interrupted.apply_stagger(0.6)
-    assert(interrupted._saboteur_windup_t == 0.0,
+    assert(interrupted.saboteur_behavior.windup_timer == 0.0,
         "Stagger must interrupt the sabotage wind-up")
     assert(not farm.is_sabotaged(),
         "An interrupted callout must not disable the target")
-    assert(interrupted._saboteur_cd > 0.0,
+    assert(interrupted.saboteur_behavior.cooldown > 0.0,
         "An interrupted Saboteur must pay a short recovery cooldown")
 
     print("PASS: Saboteur priority selection, reachable target path, telegraphed disruption, tower/depot/workplace disable and recovery, stagger interruption")
