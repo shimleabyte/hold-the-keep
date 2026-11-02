@@ -749,7 +749,11 @@ func _find_work() -> void:
                 if not _claim_workplace("builder"):
                     return
             var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
-            for site in get_tree().get_nodes_in_group("construction_sites"):
+            var construction_sites: Array = get_tree().get_nodes_in_group("construction_sites")
+            construction_sites.sort_custom(func(a, b) -> bool:
+                return int(a.queue_order) < int(b.queue_order)
+            )
+            for site in construction_sites:
                 if site.has_method("can_claim") and site.can_claim(self) \
                         and workplace.position.distance_squared_to(site.position) <= radius * radius:
                     cands.append(site)
@@ -760,7 +764,15 @@ func _find_work() -> void:
                     continue
                 if building.can_assign_repairer(self):
                     cands.append(building)
-    cands.sort_custom(func(a, b) -> bool: return a.position.distance_squared_to(position) < b.position.distance_squared_to(position))
+    cands.sort_custom(func(a, b) -> bool:
+        var a_is_site: bool = a.has_method("is_construction_site") and a.is_construction_site()
+        var b_is_site: bool = b.has_method("is_construction_site") and b.is_construction_site()
+        if a_is_site != b_is_site:
+            return a_is_site
+        if a_is_site and b_is_site and int(a.queue_order) != int(b.queue_order):
+            return int(a.queue_order) < int(b.queue_order)
+        return a.position.distance_squared_to(position) < b.position.distance_squared_to(position)
+    )
     for i in mini(8, cands.size()):
         var n = cands[i]
         var cells := _cells_of(n)
