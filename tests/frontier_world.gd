@@ -152,6 +152,9 @@ func _initialize() -> void:
             landmark_regions[region] = true
     assert(landmark_regions.size() == 5,
         "Each Frontier biome must receive one deterministic regional landmark")
+    for region in decoration_regions:
+        assert(int(decoration_regions[region]) >= 5,
+            "Every Frontier biome must receive visible regional dressing: " + String(region))
     for region in landmark_regions:
         assert(bool(landmark_regions[region]),
             "Landmark placement must be recorded for " + String(region))
