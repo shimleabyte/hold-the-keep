@@ -242,7 +242,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 
 **Remaining acceptance work:** measured target-hardware performance, representative combat outcome simulations at each Frontier act boundary/day 20, full multi-act human playtest, Windows runtime on a real Windows machine, and clean-machine save/settings migration. Save/reload persistence through Act IV and final victory is now covered automatically by `campaign_reload_hardening.gd`.
 ### Phase 10 — Resolution-matched viewport and HUD safe area
-**Status:** Adaptive viewport implementation merged through PR #30. Current mainline workflow #41314731305 passed 46/46 jobs, including responsive layout tests. Physical-display screenshots and manual fullscreen review remain open.
+**Status:** Adaptive viewport implementation remains merged through PR #30; latest mainline workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 jobs, including responsive-layout regressions on Godot 4.3/4.7. Physical-display screenshots and manual fullscreen review remain open.
 
 - [x] Derive logical viewport dimensions from actual client-window size at exact 2× pixel scale, with a 480×270 minimum.
 - [x] Use 640×360 at 1280×720 and cover 960×540, 1280×800, 1366×768, 1600×900 and 1920×1080.
