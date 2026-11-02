@@ -185,7 +185,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Optional camp/patrol state added to save v13 with regression coverage for reload assignment; no schema bump. `faction_camps_patrols` passed on Godot 4.3/4.7.
 - [x] Phase 06.4 faction raids merged via PR #44 (`5cc5084`); workflow #41381487306 passed 68/68 jobs. Faction camps dispatch finite native-role raiders against exposed, connected Outposts/Storage and roads/bridges in their own region; bounded scans and A* checks, target revalidation/withdrawal, structure damage, second-hit depot theft and additive save-v13 persistence are covered by `tests/faction_raids.gd`.
 - [x] Merged through PR #21; Godot 4.3 / 4.7 CI passed (30/30 jobs).
-- [ ] Phase 06.5 combined warfare stress is being added on `feat/phase-06.5-faction-warfare-stress`: 48 garrisons, eight camp patrols, four simultaneous faction raids and 48 villagers, including A* routing and save-v13 validation.
+- [x] Phase 06.5 combined warfare stress workload merged via PR #45 (`83dd633`): 48 garrisons, eight camp patrols, four simultaneous faction raids and 48 villagers, including A* routing and save-v13 assertions. The first post-merge workflow failed on a literal escaped newline at line 214; corrective PR #46 fixes the GDScript parse error and full CI is running. The stress test is not accepted until that matrix passes.
 - [ ] Manual Frontier gameplay review.
 
 **Acceptance gate:** each archetype creates a distinct tactical response; AI remains bounded under stress tests; factions obey territory and campaign state; save/load and both engine CI versions pass.
