@@ -315,6 +315,7 @@ func _use_dash() -> bool:
     combat_feedback.register_ability("dash", _dash_dir, DASH_DURATION + 0.08)
     _invuln = maxf(_invuln, DASH_DURATION + 0.12)
     _pending_attack = -1.0
+    combat_feedback.end_windup()
     _pending_harvest = null
     facing = _dash_dir
     anim.face(_dash_dir)
@@ -461,7 +462,8 @@ func take_damage_from(amount: int, source_position: Vector2) -> void:
         return
     hp -= amount
     _since_hit = 0.0
-    combat_feedback.register_hit(source_position, global_position, 1.0)
+    if hp > 0:
+        combat_feedback.register_hit(source_position, global_position, 1.0)
     Events.fx_burst.emit("hurt", global_position + Vector2(0, -8), Vector2.ZERO, 1.0)
     Events.screen_shake.emit(1.0, 0.1)
     _hurt_t = HURT_TIME
