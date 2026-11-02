@@ -504,3 +504,9 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 ## Riwayat terbaru
 - 2026-11-02: PR #47 merged (`b06c355`), extracting archetype-specific behavior into six dedicated components; latest workflow #41394905158 passed 70/70 jobs on Godot 4.3/4.7.
 - 2026-11-02: Started Phase 08 on `feat/phase-08-visual-audio-identity-mainline`. Added `assets/sprites/tiles_frontier.svg`, a weathered seven-cell Frontier terrain atlas. `world_map.gd` selects it only for Frontier; Classic keeps `tiles.svg`. Extended `frontier_world.gd` to assert the atlas resource and dimensions. Phase plan and roadmap updated; rendered screenshot review and further environment/faction/audio work remain pending.
+
+
+## 2026-11-02 — Phase 08.3 Frontier regional resource props
+- Branch `feat/phase-08-biome-prop-identity` adds Greenwood pine, Fenlands willow and Ashen deadwood tree variants plus Highlands and Ashen rock variants.
+- `world_map.gd` assigns variants from deterministic Frontier region IDs. Classic remains on its original sprite path; harvesting, collision, yields, regrowth and save data are unchanged.
+- `tests/frontier_world.gd` asserts all expected regional prop styles are represented. Pull request and CI are pending.
