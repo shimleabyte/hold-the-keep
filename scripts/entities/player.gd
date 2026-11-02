@@ -480,6 +480,7 @@ func _die() -> void:
     velocity = Vector2.ZERO
     _invuln = RESPAWN_INVULN
     _pending_attack = -1.0
+    combat_feedback.end_windup()
     _pending_harvest = null
     _cleave_pending = -1.0
     _dash_t = 0.0
