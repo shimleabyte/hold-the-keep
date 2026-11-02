@@ -60,6 +60,7 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 29 assertion reg
 | siege_engine_behavior.gd | Siege Engine building target priorities, reachable path, telegraphed heavy impact, recovery cooldown, stagger interruption and building-only preference |
 | beast_rider_charge.gd | isolated defender target priority, walkable locked charge route, telegraphed impact, sidestep miss and stagger interruption |
 | faction_camps_patrols.gd | deterministic enemy-territory camp placement, fog activation, A* patrol leash, bounded reinforcement, camp destruction and v13 save/restore |
+| faction_raids.gd | exposed connected depot/road target selection, finite camp dispatch, pathing, structure damage, depot theft, target abort, faction raid save/restore and cleanup |
 | balance_final_night.gd | `CASES="4,2;6,3"` = daftar "prajurit,menara"; `TECH=era2` atau `TECH=all` memberi teknologi; hasil MENANG/KALAH |
 
 Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; nilai sebenarnya 12).
@@ -67,9 +68,9 @@ Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan k
 
 ## Skrip yang dijalankan otomatis di CI
 
-Suite assertion yang dijalankan pada Godot 4.3 dan 4.7 masing-masing mencakup 31 skrip:
+Suite assertion yang dijalankan pada Godot 4.3 dan 4.7 masing-masing mencakup 32 skrip:
 
-`animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `production_worksites`, `faction_registry`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, `regional_control_roads`, `local_depot_stockpiles`, `outpost_garrisons`, `physical_shipments`, `depot_cost_sources`, `supply_pressure`, `shieldbearer_behavior`, `scout_marking`, `saboteur_disruption`, `siege_engine_behavior`, `beast_rider_charge`, serta `faction_camps_patrols`.
+`animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `production_worksites`, `faction_registry`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, `regional_control_roads`, `local_depot_stockpiles`, `outpost_garrisons`, `physical_shipments`, `depot_cost_sources`, `supply_pressure`, `shieldbearer_behavior`, `scout_marking`, `saboteur_disruption`, `siege_engine_behavior`, `beast_rider_charge`, `faction_camps_patrols`, serta `faction_raids`.
 
 CI juga menjalankan import/parse pada kedua versi Godot, performance diagnostic Frontier pada Godot 4.7, serta template-backed Windows/Linux release export pada Godot 4.3. Pada 1 November 2026, PR #32 workflow #41318897606 lulus 48/48 jobs. Setelah Phase 02.3, PR #33 workflow #41323062111 lulus 50/50 jobs; 23 assertion suite berjalan pada masing-masing Godot 4.3 dan 4.7, bersama import/parse, performance diagnostic dan Windows/Linux export. PR #34 workflow #41325205416 completed successfully with 52/52 jobs: 24 assertion suites passed on each Godot 4.3 and 4.7, with import/parse, Frontier performance diagnostic and Windows/Linux release export.
 
