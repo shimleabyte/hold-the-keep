@@ -30,8 +30,11 @@ func _ready() -> void:
 
 
 func set_discovered(value: bool) -> void:
+    var was_discovered := discovered
     discovered = value
     visible = discovered
+    if discovered and not was_discovered:
+        Audio.play("camp_alarm", 1.0, -5.0)
     queue_redraw()
 
 
