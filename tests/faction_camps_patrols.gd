@@ -141,7 +141,8 @@ func _run() -> void:
             "A* patrol route must stay inside the camp's leash")
 
     # Leaving the radius must force a camp return; a returning patrol ignores bait targets.
-    patrol.global_position = patrol.patrol_origin + Vector2(patrol.patrol_radius + 40.0, 0.0)
+    patrol.patrol_radius = 24.0
+    patrol.global_position = patrol.patrol_origin + Vector2(40.0, 0.0)
     patrol._tick_patrol_route()
     require(patrol.patrol_returning,
         "A patrol that crosses its leash must enter return mode")
@@ -152,6 +153,11 @@ func _run() -> void:
     patrol._move_patrol_toward(patrol.patrol_origin, 0.016)
     require(not patrol._patrol_path.is_empty(),
         "A patrol outside its leash must be able to navigate back into the camp")
+    for route_point in patrol._patrol_path:
+        var return_cell: Vector2i = main.nav.cell_of(route_point)
+        assert(String(main.world.region_id(return_cell)) == patrol.patrol_region_id
+            and main.territory.owner_at(return_cell) == "enemy",
+            "A return route may exit the radius but must remain inside faction territory")
 
     # One vacancy plus an expired cooldown may consume exactly one bounded reinforcement.
     var camp_record: Dictionary = manager.camps[camp_id]
