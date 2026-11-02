@@ -368,7 +368,7 @@ func configure_patrol(camp_data: Dictionary, saved_patrol_state: Dictionary = {}
     patrol_returning = bool(saved_patrol_state.get("returning", false))
     guard_origin = patrol_origin if patrol_returning or patrol_points.is_empty() else patrol_points[patrol_waypoint_index]
     pending_patrol_state.clear()
-    patrol_nav = get_tree().get_first_node_in_group("navigation_grid")
+    patrol_nav = null
     patrol_territory = camp_data.get("territory", null)
     _patrol_path = PackedVector2Array()
     _patrol_path_index = 0
@@ -376,6 +376,7 @@ func configure_patrol(camp_data: Dictionary, saved_patrol_state: Dictionary = {}
     _patrol_goal_cell = Vector2i(-1, -1)
     _patrol_repath_timer = 0.0
     if is_inside_tree():
+        patrol_nav = get_tree().get_first_node_in_group("navigation_grid")
         add_to_group("enemy_patrols")
 
 
@@ -1647,12 +1648,18 @@ func _tick_patrol_route() -> void:
         guard_origin = patrol_points[patrol_waypoint_index]
 
 
-func _patrol_cell_allowed(cell: Vector2i) -> bool:
+func _patrol_cell_in_enemy_region(cell: Vector2i) -> bool:
     if patrol_nav == null or not patrol_nav.is_walkable(cell):
         return false
     if String(world.region_id(cell)) != patrol_region_id:
         return false
     if patrol_territory != null and patrol_territory.owner_at(cell) != "enemy":
+        return false
+    return true
+
+
+func _patrol_cell_allowed(cell: Vector2i) -> bool:
+    if not _patrol_cell_in_enemy_region(cell):
         return false
     return Vector2(patrol_nav.cell_of(patrol_origin) - cell).length() * WorldConfig.tile_size <= patrol_radius + WorldConfig.tile_size
 
@@ -1668,12 +1675,12 @@ func _move_patrol_toward(target: Vector2, delta: float) -> void:
         var candidate_path: PackedVector2Array = patrol_nav.path_to(global_position, goal_cell)
         var valid_path := not candidate_path.is_empty()
         if valid_path:
-            var entered_leash := not patrol_returning
-            for path_index in candidate_path.size():
-                var path_cell: Vector2i = patrol_nav.cell_of(candidate_path[path_index])
-                if _patrol_cell_allowed(path_cell):
-                    entered_leash = true
-                elif entered_leash:
+            for path_point in candidate_path:
+                var path_cell: Vector2i = patrol_nav.cell_of(path_point)
+                var cell_is_allowed := _patrol_cell_in_enemy_region(path_cell)
+                if not patrol_returning:
+                    cell_is_allowed = _patrol_cell_allowed(path_cell)
+                if not cell_is_allowed:
                     valid_path = false
                     break
         if not valid_path:
