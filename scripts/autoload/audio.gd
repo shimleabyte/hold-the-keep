@@ -224,6 +224,7 @@ func _build_sounds() -> void:
     _sounds["windup"] = _wav(_arp([196.0, 247.0], 0.065, "sine", 0.18))
     _sounds["projectile"] = _wav(_tone(0.19, 920.0, 470.0, "sine", 0.2, 0.0, 4.5))
     _sounds["block"] = _wav(_tone(0.17, 780.0, 170.0, "square", 0.22, 0.0, 7.0))
+    _sounds["impact_hit"] = _wav(_tone(0.105, 620.0, 230.0, "square", 0.13, 0.0, 8.0))
     _sounds["shield_raise"] = _wav(_tone(0.22, 260.0, 640.0, "sine", 0.17, 0.0, 3.5))
     _sounds["stagger"] = _wav(_arp([392.0, 293.66], 0.075, "saw", 0.14))
     _sounds["dash"] = _wav(_tone(0.16, 240.0, 740.0, "sine", 0.18, 0.0, 5.0))
