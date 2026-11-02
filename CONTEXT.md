@@ -525,3 +525,10 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Branch `feat/phase-08.4-faction-visual-identity` introduces distinct data-driven faction palettes and heraldic motifs plus specialist equipment silhouettes for all six enemy archetypes.
 - A modular draw helper keeps identity rendering separate from enemy AI/behavior components. No collision, combat timing or save-schema changes are intended.
 - New regression `tests/faction_visual_identity.gd` validates palette/motif uniqueness, enemy profile assignment across all 24 faction/archetype combinations and Classic isolation. CI and rendered screenshot review are pending.
+
+
+## Phase 08.5 — Frontier building visual identity (2026-11-02, implementation branch)
+- PR #52 merged Phase 08.4 into main as `ce69391`; workflow #41422716411 passed 72/72 jobs on Godot 4.3/4.7, Frontier performance, and Windows/Linux exports.
+- Branch `feat/phase-08.5-building-visual-identity` adds material/feature profiles to all 13 shipped building definitions and a draw-only visual helper for structure details plus four HP-scaled damage states.
+- Overlays are Frontier-only. Classic texture rendering, collision footprints, HP logic, AI/combat, and save schema v13 remain unchanged.
+- Construction-stage art remains deferred until Phase 05 has a real staged-construction state. New regression: `tests/building_visual_identity.gd`; CI and rendered screenshots pending.
