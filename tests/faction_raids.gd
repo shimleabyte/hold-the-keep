@@ -198,7 +198,7 @@ func _run() -> void:
     require(storage.store_resource("food", 2) and storage.store_resource("wood", 4),
         "The connected depot must contain local resources for raid-theft assertions")
 
-    var target := manager._find_raid_target(camp)
+    var target: Dictionary = manager._find_raid_target(camp)
     require(not target.is_empty() and String(target.get("kind", "")) == "depot"
         and Vector2i(target.get("cell", Vector2i(-1, -1))) == storage_cell,
         "A faction camp must prioritize reachable, exposed, connected depots")
