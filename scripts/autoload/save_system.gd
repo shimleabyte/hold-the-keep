@@ -700,6 +700,12 @@ func _valid_frontier_campaign(value: Variant, expected_profile: String, map_size
                 return false
             if float(camp_record["timer"]) < 0.0 or float(camp_record["timer"]) > 180.0:
                 return false
+            if camp_record.has("raid_budget") and (int(camp_record["raid_budget"]) < 0 or int(camp_record["raid_budget"]) > 4):
+                return false
+            if camp_record.has("raid_timer"):
+                var raid_timer := float(camp_record["raid_timer"])
+                if not is_finite(raid_timer) or raid_timer < 0.0 or raid_timer > 240.0:
+                    return false
             if int(camp_record["spawn_index"]) < 0:
                 return false
     return true
