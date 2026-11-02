@@ -4,6 +4,7 @@ extends Node2D
 
 const BUILD_RANGE := 120.0
 const REFUND_RATE := 0.5
+const MAX_CONSTRUCTION_SITES := 64
 const BUILDING_SCRIPT := preload("res://scripts/entities/building.gd")
 const CONSTRUCTION_SITE_SCRIPT := preload("res://scripts/entities/construction_site.gd")
 
@@ -88,6 +89,8 @@ func _anchor_for(id: String, world_pos: Vector2) -> Vector2i:
 
 ## Mengembalikan "" jika valid, selain itu pesan alasannya.
 func check(id: String, c: Vector2i) -> String:
+    if get_tree().get_nodes_in_group("construction_sites").size() >= MAX_CONSTRUCTION_SITES:
+        return "Antrean konstruksi penuh (maks. 64 proyek)"
     if not Tech.building_unlocked(id):
         return "Teknologi belum dibuka"
     var size := _size_of(id)
