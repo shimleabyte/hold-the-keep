@@ -78,9 +78,11 @@ func _run() -> void:
     rival.hp -= 12
     var rival_hp: int = int(rival.hp)
 
-    assert(shaman._tick_shaman_support(), "War Shaman must activate support when an ally is injured")
+    assert(shaman.support_behavior.tick(), "War Shaman support component must activate when an ally is injured")
     assert(ally.hp > ally_hp, "War Shaman must restore same-faction ally health")
     assert(rival.hp == rival_hp, "War Shaman must not heal a rival faction unit")
+    assert(shaman.support_behavior.cooldown > 0.0, "Successful support must start its configured cooldown")
+    assert(not shaman.support_behavior.tick(), "War Shaman must not heal repeatedly while support is cooling down")
 
     var snapshot: Dictionary = save_system.collect(main)
     assert(snapshot["version"] == 13, "Current campaign, depot and shipment state must use save format v13")
