@@ -103,7 +103,10 @@ func collect(main: Node) -> Dictionary:
         buildings.append({"id": building.id, "cx": building.cell.x, "cy": building.cell.y, "hp": building.hp, "stockpile": building.export_stockpile()})
 
     var construction_sites: Array = []
-    for site in get_tree().get_nodes_in_group("construction_sites"):
+    var queued_sites: Array = get_tree().get_nodes_in_group("construction_sites")
+    if main != null and main.build != null and main.build.has_method("construction_queue"):
+        queued_sites = main.build.construction_queue()
+    for site in queued_sites:
         if is_instance_valid(site):
             construction_sites.append(site.export_state())
 
@@ -423,6 +426,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         if saved_resource is Dictionary and saved_resource.has("cx") and saved_resource.has("cy"):
             occupied_cells[Vector2i(int(saved_resource["cx"]), int(saved_resource["cy"]))] = true
     var site_cells: Dictionary = {}
+    var queue_orders: Dictionary = {}
     for saved_site in construction_sites:
         if not (saved_site is Dictionary):
             return false
@@ -436,6 +440,17 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         var site_size: Array = site_definition.get("size", [0, 0])
         if site_size.size() != 2 or int(site_size[0]) <= 0 or int(site_size[1]) <= 0:
             return false
+        if saved_site.has("queue_order"):
+            var queue_order_value: Variant = saved_site["queue_order"]
+            if typeof(queue_order_value) != TYPE_INT and typeof(queue_order_value) != TYPE_FLOAT:
+                return false
+            var queue_order_number := float(queue_order_value)
+            if not is_finite(queue_order_number) or not is_equal_approx(queue_order_number, floorf(queue_order_number)):
+                return false
+            var queue_order := int(queue_order_number)
+            if queue_order < 0 or queue_order >= 64 or queue_orders.has(queue_order):
+                return false
+            queue_orders[queue_order] = true
         var work_done := float(saved_site["work_done"])
         var work_required := float(saved_site["work_required"])
         if not is_finite(work_done) or not is_finite(work_required) or work_done < 0.0 or work_required <= 0.0 or work_done >= work_required or work_required > 120.0:

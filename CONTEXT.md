@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio and PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening. Workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 jobs on Godot 4.3/4.7, including both `campaign_reload_hardening` runs, Frontier performance diagnostic and Windows/Linux release exports. Save schema remains v13. Active follow-on branch: `feat/phase-05-builder-construction-sites` implements Builder-driven blueprint sites with two-worker throughput, proportional cancellation refunds and additive v13 persistence; PR/CI acceptance is pending. The explicit queue-management panel remains open.
+**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio, PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening, and PR #58 (`d3bba66`) for Phase 05.2a Builder-driven construction sites. PR #58 workflow #500 passed on Godot 4.3/4.7, Frontier diagnostic and Windows/Linux exports. Save schema remains v13. Active follow-on branch: `feat/phase-05.2b-construction-queue` adds saved construction priority, Builder queue selection, and player queue management; CI and rendered UI acceptance are pending.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -15,7 +15,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #57 (save schema v13; status per 2 November 2026). Perilaku Shieldbearer/Scout/Saboteur/Siege Engine/Beast Rider, faction camps/patrols/raids, combined warfare stress, Phase 08.3–08.7 visual/audio identity, dan Phase 09.3 late-act save/reload acceptance sudah tercakup. PR #57 menambah regression test end-to-end untuk Act I–IV, sebelas objective, empat stronghold, gate King hari ke-20 dan persistensi victory setelah reload; gameplay dan save schema tidak berubah.
+Ringkasan implementasi aktual pada `main` setelah PR #58 (save schema v13; status per 2 November 2026). Perilaku Shieldbearer/Scout/Saboteur/Siege Engine/Beast Rider, faction camps/patrols/raids, combined warfare stress, Phase 08.3–08.7 visual/audio identity, dan Phase 09.3 late-act save/reload acceptance sudah tercakup. PR #57 menambah regression test end-to-end untuk Act I–IV, sebelas objective, empat stronghold, gate King hari ke-20 dan persistensi victory setelah reload; gameplay dan save schema tidak berubah.
 
 | Area | Kondisi saat ini |
 |---|---|
@@ -24,7 +24,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #57 (save schema v13; statu
 | Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit Keep/Storage/Outpost cost source for construction/research/repair is merged; deterministic contested-depot warning and targeted Saboteur raids merged through PR #35 |
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload; Act I–IV + victory reload dilindungi `campaign_reload_hardening.gd` |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
-| Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; Builder-driven blueprint sites are on the active Phase 05.2a branch, while queue-management UI/reordering remains open |
+| Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; paid placement now creates Builder-driven blueprint sites. Phase 05.2b queue ordering/UI is under review |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
 | Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; connected infrastructure raids and bounded counterattacks merged via PR #44; manual Frontier balance/play review remains open |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
@@ -35,7 +35,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #57 (save schema v13; statu
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 10 procedural ambience loops (5 biome × siang/malam), 2 original music loops, 14 event cues; Master bus routing dan crossfade; human listening/level-balance QA masih terbuka |
 | Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | PR #57 workflow #490 passed 78/78 jobs: 37 regression suites per Godot 4.3/4.7, import/parse, Frontier performance diagnostic, and Windows/Linux release exports. Previous milestones remain in Git history. |
+| CI | PR #58 workflow #500 passed; Godot 4.3/4.7 parse, regression matrix, Frontier performance diagnostic, and Windows/Linux release exports succeeded. Phase 05.2b CI pending. |
 
 ## 3. Struktur
 ```
@@ -158,13 +158,13 @@ Batas sistem berikutnya:
 
 Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardware nyata menunjukkan kebutuhan.
 
-## 9c. Phase 05.2a — Builder-driven construction sites (2026-11-02, implementation branch)
-- Branch `feat/phase-05-builder-construction-sites` starts from current `main`.
+## 9c. Phase 05.2a — Builder-driven construction sites (2026-11-02, merged via PR #58)
+- Branch `feat/phase-05-builder-construction-sites` was squash-merged into `main` as `d3bba66` after workflow #41484825656 passed.
 - A valid placement pays the selected depot once and creates an unfinished blueprint; it is not registered as a functional building until Builder work completes.
 - Builders use their existing workplace assignment and bounded navigation to claim reachable blueprint sites. Maximum two Builders per site; additional work rate is capped at 1.65× one Builder.
 - Completion replaces the blueprint with the normal building. Right-click cancellation returns only unconsumed materials to the original depot, with Keep fallback if the source cannot accept them.
 - Save v13 receives an optional `construction_sites` array; older saves remain valid. Site progress, required work and source coordinates are validated and restored.
-- Automated acceptance is pending CI on Godot 4.3/4.7. Dedicated queue ordering/reorder UI remains a separate task.
+- Automated acceptance passed on Godot 4.3/4.7, including construction-site regression, Frontier diagnostic and Windows/Linux exports. Queue ordering/reorder UI moved to Phase 05.2b.
 
 ## 10. Riwayat singkat
 1. Rencana game + pemilihan stack (Godot 4, native).
@@ -569,3 +569,11 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - `tests/campaign_reload_hardening.gd` now validates Act I–IV objective completion, the Act II active-escort checkpoint, three conquered strongholds, saved/reloaded damage to the Ashen Host, and the requirement to conquer the fourth stronghold before the day-20 King can finish Conquest.
 - The test also saves and reloads the completed victory, verifying all eleven objectives, all four conquered strongholds and the final-boss completion flag survive.
 - Escort path construction and restoration are asserted here; full path traversal remains exercised by `tests/frontier_campaign.gd`. No gameplay code or save schema v13 changes.
+
+
+## Phase 05.2b — Construction queue implementation branch
+- Branch: `feat/phase-05.2b-construction-queue`, created from main after PR #58 merged as `d3bba66`; PR #59 is open.
+- Added stable queue order, one-step reorder operations, v13 persistence and backward-compatible restoration for records without the optional order field. Runtime accepts at most 64 unfinished projects, matching the save validator.
+- Builder target selection prioritizes queued construction before repairs, keeps bounded A* checks and skips previously unreachable candidates so later projects remain eligible.
+- HUD adds the always-visible QUEUE entry (`N`; `B` remains Builder job control), order, paid costs, live progress, UP/DN reorder and X cancellation.
+- Regression covers reorder, Builder priority/fallback, HUD rows, duplicate order rejection, legacy v13 compatibility and save/reload order. PR #59 CI and rendered UI review pending.

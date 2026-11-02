@@ -52,6 +52,7 @@ const HELP_ROWS := [
     ["C", "TEBAS (LEVEL 2)"],
     ["V", "SERUAN (LEVEL 3)"],
     ["1-9 / 0", "PILIH BANGUNAN"],
+    ["N / QUEUE", "ANTREAN KONSTRUKSI"],
     ["KLIK KIRI", "PASANG BANGUNAN"],
     ["KLIK KANAN", "BATAL / BONGKAR"],
     ["T M K R B", "TAMBAH JOB"],
@@ -78,6 +79,11 @@ var _vitals_panel: Panel
 var _stage_panel: Panel
 var _build_left_hint: Label
 var _build_right_hint: Label
+var _queue_button: HudChip
+var _queue_backdrop: ColorRect
+var _queue_panel: Panel
+var _queue_count_label: Label
+var _queue_list: VBoxContainer
 var _blockers: Array[Control] = []
 
 var _wood: Label
@@ -153,12 +159,14 @@ func _ready() -> void:
     _build_overlay()
     _build_map()
     _build_outpost_panel()
+    _build_construction_queue_panel()
 
     Events.resource_changed.connect(_on_resource_changed)
     Events.supply_cost_source_changed.connect(_on_supply_state_changed)
     Events.supply_stock_changed.connect(_on_supply_state_changed)
     Events.supply_pressure_changed.connect(_on_supply_state_changed)
     Events.build_selected.connect(_on_build_selected)
+    Events.construction_queue_changed.connect(_on_construction_queue_changed)
     Events.build_feedback.connect(_show_message)
     Events.player_hp_changed.connect(_on_player_hp)
     Events.keep_hp_changed.connect(_on_keep_hp)
@@ -381,7 +389,16 @@ func _build_boss_bar() -> void:
 
 
 func _build_build_bar() -> void:
-    _build_left_hint = _label(self, "BANGUNAN 1-8", Vector2(4, 225), Color(1, 1, 1, 0.78))
+    _queue_button = HudChip.new()
+    _queue_button.label = "QUEUE"
+    _queue_button.font = _font
+    _queue_button.position = Vector2(4, 211)
+    _queue_button.size = Vector2(38, 12)
+    _queue_button.tooltip_text = "Buka antrean konstruksi (B)"
+    _queue_button.pressed.connect(_toggle_construction_queue)
+    add_child(_queue_button)
+    _blockers.append(_queue_button)
+    _build_left_hint = _label(self, "BANGUNAN 1-8", Vector2(46, 225), Color(1, 1, 1, 0.78))
     _build_right_hint = _label(self, "TAB PETA  ·  H BANTUAN", Vector2(360, 225), Color(1, 1, 1, 0.78))
     _build_right_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     _rebuild_build_bar()
@@ -451,6 +468,8 @@ func _on_map_backdrop_input(event: InputEvent) -> void:
 
 func _toggle_map() -> void:
     var opening: bool = not _map_panel.visible
+    if opening:
+        _close_construction_queue()
     if opening and _outpost_panel.visible:
         _outpost_panel.visible = false
         _outpost_backdrop.visible = false
@@ -468,6 +487,8 @@ func _toggle_map() -> void:
 
 func _toggle_jobs() -> void:
     var opening := not _jobs_panel.visible
+    if opening:
+        _close_construction_queue()
     if opening and _outpost_panel.visible:
         _outpost_panel.visible = false
         _outpost_backdrop.visible = false
@@ -907,6 +928,8 @@ func _release_outpost_guard(outpost) -> void:
 
 func _toggle_outposts() -> void:
     var opening: bool = not _outpost_panel.visible
+    if opening:
+        _close_construction_queue()
     _outpost_panel.visible = opening
     _outpost_backdrop.visible = opening
     _outpost_button.active = opening
@@ -922,6 +945,128 @@ func _toggle_outposts() -> void:
             _map_button.queue_redraw()
         _outpost_refresh_t = 0.0
         _refresh_outpost_panel()
+
+
+func _build_construction_queue_panel() -> void:
+    _queue_backdrop = ColorRect.new()
+    _queue_backdrop.color = Color(0.015, 0.02, 0.028, 0.86)
+    _queue_backdrop.size = _viewport_size
+    _queue_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+    _queue_backdrop.gui_input.connect(_on_queue_backdrop_input)
+    _queue_backdrop.visible = false
+    add_child(_queue_backdrop)
+    _blockers.append(_queue_backdrop)
+
+    _queue_panel = _panel(Vector2.ZERO, Vector2(356, 220))
+    _queue_panel.visible = false
+    var title := _label(_queue_panel, "ANTREAN KONSTRUKSI", Vector2(10, 7), GOLD)
+    title.add_theme_font_size_override("font_size", 9)
+    _queue_count_label = _label(_queue_panel, "0 PROYEK", Vector2(10, 22), Color("#c9b99d"))
+    _queue_count_label.add_theme_font_size_override("font_size", 6)
+
+    var close := HudChip.new()
+    close.label = "X"
+    close.font = _font
+    close.position = Vector2(330, 4)
+    close.size = Vector2(19, 15)
+    close.pressed.connect(_toggle_construction_queue)
+    _queue_panel.add_child(close)
+
+    var scroll := ScrollContainer.new()
+    scroll.position = Vector2(8, 36)
+    scroll.size = Vector2(340, 176)
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    scroll.mouse_filter = Control.MOUSE_FILTER_STOP
+    _queue_panel.add_child(scroll)
+
+    _queue_list = VBoxContainer.new()
+    _queue_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _queue_list.add_theme_constant_override("separation", 3)
+    scroll.add_child(_queue_list)
+
+
+func _on_queue_backdrop_input(event: InputEvent) -> void:
+    if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+        _close_construction_queue()
+
+
+func _toggle_construction_queue() -> void:
+    var opening: bool = not _queue_panel.visible
+    if opening:
+        _map_panel.visible = false
+        _map_backdrop.visible = false
+        _map_button.active = false
+        _map_button.queue_redraw()
+        _jobs_panel.visible = false
+        _jobs_button.active = false
+        _jobs_button.queue_redraw()
+        _outpost_panel.visible = false
+        _outpost_backdrop.visible = false
+        _outpost_button.active = false
+        _outpost_button.queue_redraw()
+        _help.visible = false
+        _refresh_construction_queue()
+    _queue_panel.visible = opening
+    _queue_backdrop.visible = opening
+    _queue_button.active = opening
+    _queue_button.queue_redraw()
+
+
+func _close_construction_queue() -> void:
+    _queue_panel.visible = false
+    _queue_backdrop.visible = false
+    _queue_button.active = false
+    _queue_button.queue_redraw()
+
+
+func _on_construction_queue_changed() -> void:
+    if _queue_panel.visible:
+        _refresh_construction_queue()
+
+
+func _refresh_construction_queue() -> void:
+    if _queue_list == null:
+        return
+    for child in _queue_list.get_children():
+        child.queue_free()
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node == null or main_node.build == null:
+        _queue_count_label.text = "GAME BELUM SIAP"
+        return
+    var sites: Array = main_node.build.construction_queue()
+    _queue_count_label.text = "%d PROYEK AKTIF" % sites.size()
+    if sites.is_empty():
+        var empty := _label(_queue_list, "BELUM ADA BLUEPRINT. PILIH BANGUNAN DAN TEMPATKAN DI PETA.", Vector2.ZERO, Color("#c9b99d"))
+        empty.add_theme_font_size_override("font_size", 7)
+        empty.custom_minimum_size = Vector2(320, 28)
+        return
+    for index in sites.size():
+        var site = sites[index]
+        if not is_instance_valid(site):
+            continue
+        var row := ConstructionQueueRow.new()
+        row.site = site
+        row.font = _font
+        row.order_index = index
+        row.can_move_up = index > 0
+        row.can_move_down = index < sites.size() - 1
+        row.custom_minimum_size = Vector2(328, 32)
+        row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        row.move_requested.connect(_on_queue_move_requested)
+        row.cancel_requested.connect(_on_queue_cancel_requested)
+        _queue_list.add_child(row)
+
+
+func _on_queue_move_requested(site, direction: int) -> void:
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node != null:
+        main_node.build.move_construction_site(site, direction)
+
+
+func _on_queue_cancel_requested(site) -> void:
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node != null:
+        main_node.build.cancel_site(site)
 
 
 func _build_help() -> void:
@@ -1001,13 +1146,16 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _outpost_backdrop.size = _viewport_size
     _outpost_panel.position = (_viewport_size - _outpost_panel.size) * 0.5
     _map_panel.position = (_viewport_size - _map_panel.size) * 0.5
+    _queue_backdrop.size = _viewport_size
+    _queue_panel.position = (_viewport_size - _queue_panel.size) * 0.5
 
     var help_height := _help.size.y
     _help.position = Vector2((_viewport_size.x - _help.size.x) * 0.5, (_viewport_size.y - help_height) * 0.5)
 
     var build_y := _viewport_size.y - SLOT_H - 2.0
     var hint_y := build_y - 14.0
-    _build_left_hint.position = Vector2(5, hint_y)
+    _queue_button.position = Vector2(5, hint_y - 1.0)
+    _build_left_hint.position = Vector2(46, hint_y)
     _build_right_hint.position = Vector2(_viewport_size.x - 132.0, hint_y)
     _build_right_hint.size = Vector2(127.0, 10)
     _build_right_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -1122,7 +1270,13 @@ func _unhandled_input(event: InputEvent) -> void:
             get_tree().paused = false
             get_tree().reload_current_scene()
         return
-    if event.keycode == KEY_ESCAPE and _map_panel.visible:
+    if event.keycode == KEY_N:
+        _toggle_construction_queue()
+        get_viewport().set_input_as_handled()
+    elif event.keycode == KEY_ESCAPE and _queue_panel.visible:
+        _toggle_construction_queue()
+        get_viewport().set_input_as_handled()
+    elif event.keycode == KEY_ESCAPE and _map_panel.visible:
         _toggle_map()
         get_viewport().set_input_as_handled()
     elif event.keycode == KEY_ESCAPE and _jobs_panel.visible:
@@ -1262,6 +1416,7 @@ func _close_secondary_panels() -> void:
     _outpost_backdrop.visible = false
     _outpost_button.active = false
     _outpost_button.queue_redraw()
+    _close_construction_queue()
     _help.visible = false
 
 
@@ -1430,6 +1585,76 @@ class CombatBar extends Control:
             var status := "OK" if ready else ("--" if not unlocked else "%.0f" % cooldown)
             draw_string(font, Vector2(x + 3, 10), String(item[0]) + " " + status,
                 HORIZONTAL_ALIGNMENT_LEFT, -1, 7, tint)
+
+
+## Slot bar bangunan: ikon, nomor + nama, biaya. Bisa diklik.
+class ConstructionQueueRow extends Control:
+    signal move_requested(site, direction: int)
+    signal cancel_requested(site)
+    var site: Node
+    var font: Font
+    var order_index := 0
+    var can_move_up := false
+    var can_move_down := false
+    var _last_progress := -1.0
+
+    func _ready() -> void:
+        mouse_filter = Control.MOUSE_FILTER_STOP
+        tooltip_text = "UP: dahulukan  ·  DN: tunda  ·  X: batalkan dan kembalikan biaya belum terpakai"
+
+    func _process(_delta: float) -> void:
+        if site == null or not is_instance_valid(site):
+            return
+        var progress: float = site.progress_ratio()
+        if absf(progress - _last_progress) >= 0.002:
+            _last_progress = progress
+            queue_redraw()
+
+    func _gui_input(event: InputEvent) -> void:
+        if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
+            return
+        var x := size.x
+        if Rect2(x - 61.0, 1.0, 19.0, 14.0).has_point(event.position):
+            if can_move_up:
+                move_requested.emit(site, -1)
+            accept_event()
+        elif Rect2(x - 40.0, 1.0, 19.0, 14.0).has_point(event.position):
+            if can_move_down:
+                move_requested.emit(site, 1)
+            accept_event()
+        elif Rect2(x - 19.0, 1.0, 18.0, 14.0).has_point(event.position):
+            cancel_requested.emit(site)
+            accept_event()
+
+    func _draw() -> void:
+        if site == null or not is_instance_valid(site):
+            return
+        draw_rect(Rect2(Vector2.ZERO, size), Color("#191a18"))
+        draw_rect(Rect2(Vector2.ZERO, size), Color("#554a37"), false, 1.0)
+        var building_name := String(site.data.get("short", site.data.get("name", site.id)))
+        draw_string(font, Vector2(6, 10), "%02d  %s" % [order_index + 1, building_name],
+            HORIZONTAL_ALIGNMENT_LEFT, maxf(80.0, size.x - 72.0), 7, Color("#e5d7bb"))
+        var progress: float = float(site.progress_ratio())
+        draw_rect(Rect2(6, 17, 72, 5), Color("#090b0b"))
+        draw_rect(Rect2(7, 18, 70.0 * progress, 3), Color("#d6bc78"))
+        var cost_text := ""
+        for pair in [["wood", "W"], ["stone", "S"], ["iron", "I"], ["food", "F"]]:
+            if site.paid_cost.has(pair[0]):
+                if not cost_text.is_empty():
+                    cost_text += " "
+                cost_text += "%s%d" % [String(pair[1]), int(site.paid_cost[pair[0]])]
+        var detail := "%d%%  %s" % [roundi(progress * 100.0), cost_text]
+        draw_string(font, Vector2(86, 22), detail, HORIZONTAL_ALIGNMENT_LEFT,
+            maxf(70.0, size.x - 154.0), 6, Color("#c5b99f"))
+        _draw_action_button(Rect2(size.x - 61.0, 1.0, 19.0, 14.0), "UP", can_move_up)
+        _draw_action_button(Rect2(size.x - 40.0, 1.0, 19.0, 14.0), "DN", can_move_down)
+        _draw_action_button(Rect2(size.x - 19.0, 1.0, 18.0, 14.0), "X", true)
+
+    func _draw_action_button(rect: Rect2, caption: String, enabled: bool) -> void:
+        draw_rect(rect, Color("#373126") if enabled else Color("#242321"))
+        draw_rect(rect, Color("#88734d") if enabled else Color("#49443b"), false, 1.0)
+        draw_string(font, rect.position + Vector2(3, 10), caption, HORIZONTAL_ALIGNMENT_LEFT,
+            rect.size.x - 3.0, 6, Color("#ead7ae") if enabled else Color("#777064"))
 
 
 ## Slot bar bangunan: ikon, nomor + nama, biaya. Bisa diklik.

@@ -320,7 +320,8 @@ func _apply_save(d: Dictionary) -> void:
             Vector2i(int(saved_site["cx"]), int(saved_site["cy"])),
             float(saved_site["work_done"]),
             float(saved_site["work_required"]),
-            Vector2i(int(saved_site["source_x"]), int(saved_site["source_y"]))
+            Vector2i(int(saved_site["source_x"]), int(saved_site["source_y"])),
+            int(saved_site.get("queue_order", -1))
         )
         if site == null:
             push_warning("Save: could not restore a construction site at %d,%d" % [int(saved_site["cx"]), int(saved_site["cy"])])

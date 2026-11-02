@@ -10,6 +10,7 @@ signal day_changed(day: int)
 signal build_selected(id: String)  # "" = mode bangun mati
 signal building_placed(id: String, cell: Vector2i)
 signal building_removed(id: String, cell: Vector2i)
+signal construction_queue_changed()
 signal building_destroyed(id: String, cell: Vector2i)
 signal territory_changed(claimed_tiles: int)
 signal region_control_changed(region_id: String, control: String)
