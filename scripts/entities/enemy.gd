@@ -6,7 +6,7 @@ const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
 const ENEMY_BOLT := preload("res://scripts/entities/enemy_bolt.gd")
 const ENEMY_TARGETING := preload("res://scripts/systems/enemy_targeting.gd")
-const ENEMY_SUPPORT := preload("res://scripts/systems/enemy_support.gd")
+const WarShamanSupportBehavior := preload("res://scripts/behaviors/war_shaman_support_behavior.gd")
 const BeastRiderBehavior := preload("res://scripts/behaviors/beast_rider_behavior.gd")
 const ShieldbearerBehavior := preload("res://scripts/behaviors/shieldbearer_behavior.gd")
 const ScoutBehavior := preload("res://scripts/behaviors/scout_behavior.gd")
@@ -74,10 +74,7 @@ var archetype := "raider"
 var faction_id := ""
 var campaign_site_id := ""
 var _faction_tint := Color.WHITE
-var support_radius := 0.0
-var support_amount := 0
-var support_interval := 0.0
-var _support_cd := 0.0
+var support_behavior = WarShamanSupportBehavior.new()
 var attack_range := PLAYER_REACH
 var preferred_range := 0.0
 var projectile_speed := 120.0
@@ -131,10 +128,6 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
         var faction_data: Dictionary = FactionRegistry.faction_for_stronghold(faction_id)
         if not faction_data.is_empty():
             _faction_tint = Color(String(faction_data.get("color", "#ffffff")))
-    support_radius = maxf(0.0, float(data.get("support_radius", 0.0)))
-    support_amount = maxi(0, int(data.get("support_amount", 0)))
-    support_interval = maxf(0.0, float(data.get("support_interval", 0.0)))
-    _support_cd = 0.0
     attack_range = float(data.get("range", 30.0 if role == "pouncer" else PLAYER_REACH))
     preferred_range = float(data.get("preferred_range", 0.0))
     projectile_speed = float(data.get("projectile_speed", 120.0))
@@ -172,6 +165,7 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     world = world_ref
     flow = flow_ref
     player = player_ref
+    support_behavior.configure(self, data)
     beast_behavior.configure(self, data)
     shield_behavior.configure(self, data, SHIELD_TARGET_RANGE)
     scout_behavior.configure(self, data)
@@ -271,7 +265,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _hurt_t = maxf(0.0, _hurt_t - delta)
-    _support_cd = maxf(0.0, _support_cd - delta)
+    support_behavior.advance_timers(delta)
     shield_behavior.advance_timers(delta)
     saboteur_behavior.advance_timers(delta)
     siege_behavior.advance_timers(delta)
@@ -632,12 +626,7 @@ func _tick_shieldbearer(delta: float) -> void:
 
 
 func _tick_shaman_support() -> bool:
-    if support_amount <= 0 or support_radius <= 0.0 or _support_cd > 0.0:
-        return false
-    if not ENEMY_SUPPORT.heal_nearest_ally(self, support_radius, support_amount):
-        return false
-    _support_cd = maxf(0.5, support_interval)
-    return true
+    return support_behavior.tick()
 
 
 func _tick_ranged(delta: float) -> void:
