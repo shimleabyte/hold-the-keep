@@ -4,6 +4,9 @@ extends StaticBody2D
 
 const TREE_TEX := preload("res://assets/sprites/tree.svg")
 const STUMP_TEX := preload("res://assets/sprites/stump.svg")
+const GREENWOOD_TEX := preload("res://assets/sprites/tree_frontier_greenwood.svg")
+const FENLANDS_TEX := preload("res://assets/sprites/tree_frontier_fenlands.svg")
+const ASHEN_TEX := preload("res://assets/sprites/tree_frontier_ashen.svg")
 
 const MAX_HP := 3
 const WOOD_PER_HIT := 1
@@ -11,6 +14,7 @@ const WOOD_BONUS := 2
 const REGROW_SECONDS := 45.0
 
 var yield_kind := "wood"
+var regional_style := "classic"
 var worker = null  # villager yang sedang mengklaim pohon ini
 
 var _hp := MAX_HP
@@ -94,6 +98,11 @@ func _flash() -> void:
 
 func _draw() -> void:
     if _hp > 0:
-        draw_texture(TREE_TEX, Vector2(-TREE_TEX.get_width() / 2.0, -TREE_TEX.get_height()))
+        var texture: Texture2D = TREE_TEX
+        match regional_style:
+            "greenwood": texture = GREENWOOD_TEX
+            "fenlands": texture = FENLANDS_TEX
+            "ashen_march": texture = ASHEN_TEX
+        draw_texture(texture, Vector2(-texture.get_width() / 2.0, -texture.get_height()))
     else:
         draw_texture(STUMP_TEX, Vector2(-STUMP_TEX.get_width() / 2.0, -STUMP_TEX.get_height()))
