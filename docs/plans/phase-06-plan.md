@@ -1,7 +1,7 @@
 # Phase 06 — Factions, Enemy Archetypes and Territorial AI
 
 **Status:** Partially implemented. Faction foundations, Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle, Beast Rider charge and Phase 06.3 faction camps/patrols are merged into `main`. PR #43 (`fa3a45a`) merged the camp/patrol slice; workflow #41377840888 passed 66/66 jobs on Godot 4.3/4.7.
-**Mainline:** `main`; next Phase 06 slice: raids and counterattacks against exposed Outposts, roads and depots.
+**Mainline:** `main`. Phase 06.4 implementation is on `feat/phase-06.4-faction-raids`; CI and manual Frontier verification are pending.
 **Current save schema:** v13. Preserve Classic compatibility and validate legacy migrations through v13 plus v13 round-trip.
 **Engine target:** Godot 4.3 and 4.7.
 
@@ -46,6 +46,15 @@ Replace the single generic enemy identity with four regional powers whose units 
 - Use bounded target scans, cooldowns, unit caps and path-reachability checks.
 - Abort or retarget when the target is conquered, removed, unreachable or no longer vulnerable.
 - Do not add supply attrition until local stockpiles/inter-depot transfers exist.
+
+### 06.4 — Faction raids and infrastructure counterattacks (implementation branch; CI pending)
+- Frontier faction camps now dispatch finite, faction-native raid squads at exposed infrastructure in their own region: connected Outposts/Storage first, then connected roads/bridges.
+- Each camp has a data-driven raid unit, finite budget, cooldown and active cap. A global cap, 48-node candidate scan, rotating road cursor, top-eight A* reachability checks and 760-pixel origin range bound the workload.
+- Raids use explicit target identity and nav-adjacent paths. Raiders defend themselves against the player and visible defenders, damage structures through the normal building API, and steal one local depot resource every second successful depot hit.
+- Targets are revalidated while moving and attacking. Reconnection, territorial reclamation, region change, destruction, removal or loss of path causes withdrawal. Camp destruction or territorial suppression also recalls that camp's raiders.
+- Faction raid unit roles use the faction's native patrol identity (bandit, archer, wolf, brute), so the raid controller does not silently bypass a specialist archetype's signature AI.
+- Raid budget/cooldown and active raider target kind, camp, region and hit progress are optional v13 fields; existing disconnected-depot pressure raids remain separate and unchanged.
+- Regression `tests/faction_raids.gd` covers connected depot selection, finite dispatch, structure damage, deterministic theft, save validation/restoration, territory reclaim, road targeting and removal cleanup. Godot 4.3/4.7 CI has not yet completed.
 
 ### 06.5 — Persistence, balance and verification
 - Persist camp state, raid cooldowns, patrol assignments and enemy faction identity.

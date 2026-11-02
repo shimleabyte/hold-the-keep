@@ -137,6 +137,14 @@ func restore_enemy(d: Dictionary) -> void:
     if bool(d.get("supply_raid", false)) and raid_target is Dictionary:
         e.setup_supply_raid(Vector2i(int(raid_target.get("cx", -1)), int(raid_target.get("cy", -1))), nav)
         e.supply_raid_hits = int(d.get("raid_hits", 0))
+    elif bool(d.get("faction_raid", false)) and raid_target is Dictionary:
+        var camp_origin := Vector2(float(d.get("guard_x", d["x"])), float(d.get("guard_y", d["y"])))
+        e.setup_faction_raid(
+            Vector2i(int(raid_target.get("cx", -1)), int(raid_target.get("cy", -1))),
+            String(d.get("raid_kind", "")), nav, String(d.get("raid_camp", "")),
+            String(d.get("raid_region", "")), camp_origin
+        )
+        e.supply_raid_hits = int(d.get("raid_hits", 0))
     world.entities.add_child(e)
 
 

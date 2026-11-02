@@ -123,8 +123,12 @@ func collect(main: Node) -> Dictionary:
             "faction": enemy.faction_id,
             "site_id": enemy.campaign_site_id,
             "supply_raid": enemy.is_supply_raider,
+            "faction_raid": enemy.is_faction_raider,
+            "raid_kind": enemy.faction_raid_target_kind if enemy.is_faction_raider else "",
+            "raid_camp": enemy.faction_raid_camp_id if enemy.is_faction_raider else "",
+            "raid_region": enemy.faction_raid_region_id if enemy.is_faction_raider else "",
             "raid_target": {"cx": enemy.raid_target_cell.x, "cy": enemy.raid_target_cell.y}
-                if enemy.is_supply_raider else null,
+                if enemy.is_supply_raider or enemy.is_faction_raider else null,
             "raid_hits": enemy.supply_raid_hits,
             "patrol": enemy.export_patrol_state()
         })
@@ -492,6 +496,48 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                     break
             if not raid_target_exists:
                 return false
+        if bool(enemy.get("faction_raid", false)):
+            if String(campaign_world_data.get("profile", "")) != "frontier":
+                return false
+            if not bool(enemy.get("garrison", false)) or not (enemy.get("raid_target", null) is Dictionary):
+                return false
+            var faction_raid_kind := String(enemy.get("raid_kind", ""))
+            var faction_raid_camp := String(enemy.get("raid_camp", ""))
+            var faction_raid_region := String(enemy.get("raid_region", ""))
+            if not ["depot", "road"].has(faction_raid_kind) or not FactionRegistry.factions.has(faction_raid_camp):
+                return false
+            if String(enemy.get("faction", "")) != faction_raid_camp:
+                return false
+            var faction_definition: Dictionary = FactionRegistry.factions[faction_raid_camp]
+            if faction_raid_region != String(faction_definition.get("region", "")):
+                return false
+            if String(enemy.get("id", "")) != String(faction_definition.get("raid_unit", "")):
+                return false
+            var faction_raid_target: Dictionary = enemy["raid_target"]
+            if not faction_raid_target.has("cx") or not faction_raid_target.has("cy") or int(enemy.get("raid_hits", 0)) < 0:
+                return false
+            var faction_raid_cell := Vector2i(int(faction_raid_target["cx"]), int(faction_raid_target["cy"]))
+            if not WorldConfig.is_valid_cell(faction_raid_cell):
+                return false
+            var target_ids: Array = ["storage", "outpost"] if faction_raid_kind == "depot" else ["road", "bridge"]
+            var faction_target_exists := false
+            for saved_building in buildings:
+                var saved_cell := Vector2i(int(saved_building.get("cx", -1)), int(saved_building.get("cy", -1)))
+                if saved_cell == faction_raid_cell and target_ids.has(String(saved_building.get("id", ""))):
+                    faction_target_exists = true
+                    break
+            if not faction_target_exists:
+                return false
+            var frontier_state: Dictionary = data.get("frontier_campaign", {})
+            var camp_state: Dictionary = frontier_state.get("camps", {})
+            var camp_records: Array = camp_state.get("records", [])
+            var active_camp_found := false
+            for camp_record in camp_records:
+                if camp_record is Dictionary and String(camp_record.get("id", "")) == faction_raid_camp:
+                    active_camp_found = not bool(camp_record.get("destroyed", false))
+                    break
+            if not active_camp_found:
+                return false
     for job in quota:
         var allowed_jobs := ["woodcutter", "miner", "farmer", "soldier"]
         if version >= 9:
@@ -656,6 +702,12 @@ func _valid_frontier_campaign(value: Variant, expected_profile: String, map_size
                 return false
             if float(camp_record["timer"]) < 0.0 or float(camp_record["timer"]) > 180.0:
                 return false
+            if camp_record.has("raid_budget") and (int(camp_record["raid_budget"]) < 0 or int(camp_record["raid_budget"]) > 4):
+                return false
+            if camp_record.has("raid_timer"):
+                var raid_timer := float(camp_record["raid_timer"])
+                if not is_finite(raid_timer) or raid_timer < 0.0 or raid_timer > 240.0:
+                    return false
             if int(camp_record["spawn_index"]) < 0:
                 return false
     return true
