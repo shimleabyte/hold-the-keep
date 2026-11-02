@@ -6,7 +6,20 @@
     "color": "#4f8b54",
     "doctrine": "ambush",
     "garrison": "enemy_scout",
-    "roster": ["bandit", "enemy_scout", "enemy_saboteur", "enemy_beast_rider"]
+    "roster": [
+      "bandit",
+      "enemy_scout",
+      "enemy_saboteur",
+      "enemy_beast_rider"
+    ],
+    "patrol_unit": "bandit",
+    "camp": {
+      "patrol_radius": 150,
+      "initial_patrols": 2,
+      "active_patrol_cap": 2,
+      "reinforcement_budget": 4,
+      "reinforcement_cooldown": 26
+    }
   },
   {
     "id": "iron_legion",
@@ -15,7 +28,19 @@
     "color": "#8795a5",
     "doctrine": "fortress",
     "garrison": "enemy_shieldbearer",
-    "roster": ["enemy_shieldbearer", "archer", "enemy_siege_engine"]
+    "roster": [
+      "enemy_shieldbearer",
+      "archer",
+      "enemy_siege_engine"
+    ],
+    "patrol_unit": "archer",
+    "camp": {
+      "patrol_radius": 138,
+      "initial_patrols": 2,
+      "active_patrol_cap": 2,
+      "reinforcement_budget": 4,
+      "reinforcement_cooldown": 34
+    }
   },
   {
     "id": "fen_cult",
@@ -24,7 +49,20 @@
     "color": "#8d9b55",
     "doctrine": "attrition",
     "garrison": "enemy_war_shaman",
-    "roster": ["wolf", "enemy_war_shaman", "enemy_scout", "enemy_beast_rider"]
+    "roster": [
+      "wolf",
+      "enemy_war_shaman",
+      "enemy_scout",
+      "enemy_beast_rider"
+    ],
+    "patrol_unit": "wolf",
+    "camp": {
+      "patrol_radius": 144,
+      "initial_patrols": 2,
+      "active_patrol_cap": 2,
+      "reinforcement_budget": 5,
+      "reinforcement_cooldown": 30
+    }
   },
   {
     "id": "ashen_host",
@@ -33,6 +71,19 @@
     "color": "#b46b4c",
     "doctrine": "siege",
     "garrison": "enemy_siege_engine",
-    "roster": ["enemy_siege_engine", "enemy_shieldbearer", "enemy_war_shaman", "enemy_saboteur"]
+    "roster": [
+      "enemy_siege_engine",
+      "enemy_shieldbearer",
+      "enemy_war_shaman",
+      "enemy_saboteur"
+    ],
+    "patrol_unit": "brute",
+    "camp": {
+      "patrol_radius": 160,
+      "initial_patrols": 2,
+      "active_patrol_cap": 2,
+      "reinforcement_budget": 5,
+      "reinforcement_cooldown": 38
+    }
   }
 ]
