@@ -22,6 +22,7 @@ var faction_registry
 var game_clock
 var tech
 var save_system
+var failures: Array[String] = []
 
 
 func ticks(count: int) -> void:
@@ -30,7 +31,10 @@ func ticks(count: int) -> void:
 
 
 func require(condition: bool, message: String) -> void:
-    assert(condition, message)
+    if condition:
+        return
+    failures.append(message)
+    push_error("FAIL: " + message)
 
 
 func reachable_region_cells(main: Node, region_id: String, limit: int) -> Array[Vector2i]:
@@ -229,16 +233,36 @@ func _run() -> void:
     # not the separate player-interception branch covered by faction_raids.gd.
     main.player.global_position = Vector2(180, 180)
 
-    for raider in get_nodes_in_group("faction_raiders"):
+    var raiders: Array = get_nodes_in_group("faction_raiders")
+    var player_was_defender: bool = main.player.is_in_group("defenders")
+    main.player.remove_from_group("defenders")
+    for raider in raiders:
+        raider.player = null
+
+    for raider in raiders:
         require(is_instance_valid(raider) and raider.is_faction_raider and raider.is_garrison,
             "Every active raid unit must retain garrison and faction-raid identity")
         var expected_camp := String(raider.faction_raid_camp_id)
         var expected_cell: Vector2i = road_targets[expected_camp]
         require(raider.raid_target_cell == expected_cell and raider.faction_raid_target_kind == "road",
             "Every active raider must retain its own faction-region target")
+        var target = raider._find_faction_raid_target()
+        require(target != null,
+            "Faction raider must resolve the road node assigned to its target cell: " + expected_camp)
+        if target != null:
+            require(raider._faction_raid_target_valid(target, main.supply),
+                "Faction raider target must remain exposed, connected and inside its camp region: " + expected_camp)
+            var direct_path: PackedVector2Array = main.nav.path_adjacent(raider.position, target.cells())
+            require(not direct_path.is_empty(),
+                "Faction raider must have a direct reachable path from its camp: " + expected_camp)
         raider._tick_faction_raid(0.016)
         require(not raider._raid_path.is_empty() and raider._raid_path_version == main.nav.version,
-            "Every simultaneous raider must resolve a current A* route to its target")
+            "Every simultaneous raider must resolve a current A* route to its target: " + expected_camp)
+
+    for raider in raiders:
+        raider.player = main.player
+    if player_was_defender:
+        main.player.add_to_group("defenders")
 
     # Exercise every specialist controller while all 48 garrisons coexist.
     require(garrisons.size() == GARRISONS_PER_FACTION * FACTION_IDS.size(),
@@ -331,6 +355,13 @@ func _run() -> void:
             saved_raids += 1
     require(saved_raids == EXPECTED_RAIDERS,
         "Save v13 must persist every simultaneous faction raid assignment")
+
+    if not failures.is_empty():
+        push_error("FAIL: Frontier warfare stress collected %d failed assertions: %s" % [
+            failures.size(), "; ".join(failures)
+        ])
+        quit(1)
+        return
 
     print("PASS: Frontier warfare stress: %d garrison AI ticks across six archetypes, %d patrols, %d simultaneous raids, %d enemies, %d additional villagers (%d total)" % [
         garrison_ai_ticks, total_patrols, total_raiders, enemy_count, VILLAGERS, villager_count
