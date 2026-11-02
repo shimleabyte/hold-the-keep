@@ -654,13 +654,19 @@ func _tick_faction_raid(delta: float) -> void:
 
     var reach := maxf(_attack_reach(), 28.0)
     if player != null and is_instance_valid(player) and position.distance_to(player.position) <= reach:
-        _begin_attack(player, player.position - position)
+        if role == "ranged":
+            _begin_ranged_attack(player)
+        else:
+            _begin_attack(player, player.position - position)
         return
     for defender in get_tree().get_nodes_in_group("defenders"):
         if not is_instance_valid(defender) or not defender.visible:
             continue
         if position.distance_to(defender.position) <= reach:
-            _begin_attack(defender, defender.position - position)
+            if role == "ranged":
+                _begin_ranged_attack(defender)
+            else:
+                _begin_attack(defender, defender.position - position)
             return
     if position.distance_to(target.position) <= reach:
         if role == "ranged":
