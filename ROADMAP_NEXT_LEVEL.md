@@ -36,7 +36,7 @@ Classic Mode remains available. The expanded campaign must not silently reinterp
 | Factions | 4: Greenwood Raiders, Iron Legion, Fen Cult, Ashen Host |
 | New enemy archetypes | 6 initial designs: scout, shieldbearer, saboteur, war shaman, siege engine, beast rider |
 | Added villager roles | Builder, hunter, scout, healer, blacksmith |
-| New building concepts | Lumber Camp, Watchtower, Granary, Barracks, Quarry, Archery Range, Hunting Lodge, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress, Signal Beacon |
+| New building concepts | Lumber Camp, Granary, Barracks, Quarry, Archery Range, Hunting Lodge, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress, Signal Beacon; existing Tower fulfils Watchtower role through expanded vision |
 | Conquest campaign | 20 days, 4 acts, multiple regional strongholds |
 | Classic Mode | Preserve the current 64×64 / 15-day experience |
 
@@ -161,7 +161,8 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add separate pixel-art buildings/icons, hotbar entries, numeric hotkeys, controls documentation and headless regression coverage.
 - [x] Add Builder-driven blueprint sites: pay once at placement, cap at two active Builders per site, advance only while Builders are working, convert atomically to a finished building and refund unconsumed materials on cancellation (PR #58 merged as `d3bba66`; workflow #41484825656 passed).
 - [x] Add a dedicated construction queue panel with explicit order, one-step reorder controls, cancellation and visible per-site costs/live progress; Builder selection follows saved queue priority (PR #59 merged as `6147cfc`; workflow #509 passed 80/80).
-- [ ] Add remaining facilities according to dependency: Watchtower, Granary, Barracks, Archery Range, Hunting Lodge, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress and Signal Beacon.
+- [x] Extend the existing defensive tower into the Watchtower role with permanent 128px terrain discovery and live strategic-map enemy observation; keep its existing turret behavior.
+- [ ] Add remaining facilities according to dependency: Granary, Barracks, Archery Range, Hunting Lodge, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress and Signal Beacon.
 - Introduce leather and gold only when a building or campaign system consumes them.
 - Add construction/repair work, military training, trade and siege production as separate validated slices.
 

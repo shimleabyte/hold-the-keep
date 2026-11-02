@@ -347,7 +347,13 @@ func _is_currently_observed(world_position: Vector2) -> bool:
     for building in get_tree().get_nodes_in_group("buildings"):
         if not is_instance_valid(building):
             continue
-        var radius := 160.0 if String(building.id) == "keep" else (144.0 if String(building.id) == "outpost" else 0.0)
+        var radius := 0.0
+        if String(building.id) == "keep":
+            radius = 160.0
+        elif String(building.id) == "outpost":
+            radius = 144.0 * Tech.stat("map.outpost_reveal", 1.0)
+        elif String(building.id) == "tower":
+            radius = float(building.data.get("vision_radius", 128.0)) * Tech.stat("map.tower_reveal", 1.0)
         if radius > 0.0 and building.global_position.distance_to(world_position) <= radius:
             return true
     return false

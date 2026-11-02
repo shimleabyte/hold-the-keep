@@ -13,8 +13,10 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - WASD / Panah / stick kiri: gerak
 - Tahan Shift / bumper kiri (gamepad): lari
 - Y / chip `Y` di HUD: panel teknologi
-- TAB atau tombol `MAP`: peta strategis (fog-of-war, biome, klaim, resource, Keep, pasukan yang sedang teramati)
-- Tombol `JOBS`: buka/tutup kuota penebang, penambang, petani, dan prajurit; Esc menutup panel
+- TAB atau tombol `MAP`: peta strategis (fog-of-war, biome, klaim, resource, Keep, dan musuh yang sedang teramati; Menara Pengawas memberi penglihatan lokal 128px)
+- Tombol `JOBS`: buka/tutup kuota penebang, penambang, petani, Builder, dan prajurit; Esc menutup panel
+- `B` / `Shift+B`: tambah/kurangi kuota Builder
+- `N` / `QUEUE`: buka/tutup antrean konstruksi; tampilkan progres, biaya proyek, dahulukan/tunda, dan batalkan blueprint
 - E / Spasi / tombol A (gamepad): tebang pohon, tambang batu
 - 1-9 / 0 atau klik slot di bar bawah: pilih hingga 10 bangunan pertama (termasuk Pos Terdepan, Kamp Penebang, dan Kuari)
 - Klik kiri: pasang (tahan untuk melukis tembok)
@@ -60,7 +62,7 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 - Penduduk baru membutuhkan 8 makanan dan hanya muncul pada siang hari ketika kapasitas cukup.
 - Atur penebang, penambang, petani, dan prajurit melalui T/M/K/R atau tombol kuota di HUD.
 - Setiap penduduk mengonsumsi 2 makanan per hari. Kekurangan makanan membuat satu penduduk pergi.
-- Bangunan: rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Pos Terdepan, Kamp Penebang, Kuari, jalan, dan jembatan.
+- Bangunan: rumah, tembok, Menara Pengawas (turret + vision 128px), gudang, ladang, tembok batu, tempa, Pos Terdepan, Kamp Penebang, Kuari, jalan, dan jembatan.
 - Kamp Penebang menyediakan dua workplace woodcutter dengan radius kerja 18 tile; Kuari menyediakan dua workplace miner dengan radius 16 tile. Jika belum ada fasilitas khusus, pekerja tetap memakai radius depot seperti pada Classic lama. Jika semua slot fasilitas penuh, pekerja tambahan tidak mengambil alih area kerja fasilitas tersebut.
 - Pada Frontier, Gudang menampung 180 unit dan Outpost 120 unit resource lokal. Worker menyetor ke depot terhubung; tiap 3 detik depot terhubung mengirim maksimal 6 unit ke Keep secara otomatis. Depot yang terputus menyimpan stok sampai jalurnya tersambung. Buka `JOBS → POS` untuk melihat saldo, memilih **satu sumber biaya** (Keep/Gudang/Outpost), dan membuat perintah angkut manual. Konstruksi, riset, dan perbaikan mendebit depot yang dipilih saja; saldo beberapa depot tidak digabung. Depot remote harus tetap terhubung ke Keep. Depot yang terputus di wilayah enemy/contested mendapat peringatan 30 detik sebelum saboteur pertama tiba pada detik ke-60; maksimal dua gelombang per isolasi. Saboteur menyerang depot dan mencuri satu resource setiap dua hit dengan urutan food, iron, wood, stone. Hubungkan jalan kembali atau amankan wilayah untuk menghentikan raid; Outpost guards dan prajurit dapat melawan saboteur. Carrier shipment terlihat berjalan di peta; cargo dicadangkan saat order dibuat, status order terlihat di panel, dan order aktif bisa dibatalkan untuk mengembalikan cargo. Pengiriman menuju Keep memasukkan stok ke inventori pusat.
 - Teknologi 20-node dalam 3 era memperkuat ekonomi, pertahanan, eksplorasi, dan pengepungan.
