@@ -13,6 +13,9 @@ const PATROLS_PER_CAMP := 2
 const VILLAGERS := 48
 const EXPECTED_RAIDERS := 4
 const GLOBAL_RAID_CAP := 4
+const EXPECTED_ARCHETYPES: Array[String] = [
+    "scout", "shieldbearer", "saboteur", "war_shaman", "siege_engine", "beast_rider"
+]
 
 var world_config
 var data_db
@@ -167,6 +170,7 @@ func _run() -> void:
     main.supply._dirty = false
 
     var total_garrisons := 0
+    var garrisons: Array[Node] = []
     var total_patrols := 0
     var total_raiders := 0
     for faction_id in FACTION_IDS:
@@ -182,7 +186,8 @@ func _run() -> void:
             var enemy_id := roster[index % roster.size()]
             require(data_db.enemies.has(enemy_id),
                 "Faction roster references missing enemy data: " + enemy_id)
-            spawn_garrison(main, faction_id, enemy_id, cells[index], Vector2(camp["position"]))
+            var garrison := spawn_garrison(main, faction_id, enemy_id, cells[index], Vector2(camp["position"]))
+            garrisons.append(garrison)
             total_garrisons += 1
 
         for patrol_index in PATROLS_PER_CAMP:
@@ -234,6 +239,64 @@ func _run() -> void:
         require(not raider._raid_path.is_empty() and raider._raid_path_version == main.nav.version,
             "Every simultaneous raider must resolve a current A* route to its target")
 
+    # Exercise every specialist controller while all 48 garrisons coexist.
+    require(garrisons.size() == GARRISONS_PER_FACTION * FACTION_IDS.size(),
+        "The integrated AI tick must include all 48 specialist and baseline garrisons")
+
+    var observed_archetypes: Dictionary = {}
+    var fen_shaman: Node2D
+    var fen_ally: Node2D
+    for garrison in garrisons:
+        var archetype_id := String(garrison.archetype)
+        if EXPECTED_ARCHETYPES.has(archetype_id):
+            observed_archetypes[archetype_id] = true
+        match archetype_id:
+            "scout":
+                require(garrison.scout_behavior.actor == garrison,
+                    "Every Scout garrison must have its own configured marking component")
+            "shieldbearer":
+                require(garrison.shield_behavior.actor == garrison,
+                    "Every Shieldbearer garrison must have its own configured brace component")
+            "saboteur":
+                require(garrison.saboteur_behavior.actor == garrison
+                    and garrison.saboteur_behavior.navigation == main.nav,
+                    "Every Saboteur garrison must have configured disruption and navigation state")
+            "war_shaman":
+                require(garrison.support_behavior.actor == garrison,
+                    "Every War Shaman garrison must have its own configured support component")
+                if String(garrison.faction_id) == "fen_cult" and fen_shaman == null:
+                    fen_shaman = garrison
+            "siege_engine":
+                require(garrison.siege_behavior.actor == garrison
+                    and garrison.siege_behavior.navigation == main.nav,
+                    "Every Siege Engine garrison must have configured siege and navigation state")
+            "beast_rider":
+                require(garrison.beast_behavior.actor == garrison
+                    and garrison.beast_behavior.navigation == main.nav,
+                    "Every Beast Rider garrison must have configured charge and navigation state")
+        if String(garrison.faction_id) == "fen_cult" and archetype_id == "scout" and fen_ally == null:
+            fen_ally = garrison
+
+    for archetype_id in EXPECTED_ARCHETYPES:
+        require(observed_archetypes.has(archetype_id),
+            "Combined faction rosters must contain the " + archetype_id + " behavior")
+
+    require(fen_shaman != null and fen_ally != null,
+        "Fen Cult stress roster must contain both a War Shaman and a same-faction ally")
+    fen_shaman.position = Vector2(manager.camps["fen_cult"]["position"])
+    fen_ally.position = fen_shaman.position + Vector2(12.0, 0.0)
+    fen_ally.hp = maxi(1, fen_ally.hp - 5)
+    var fen_ally_hp_before: int = fen_ally.hp
+
+    var garrison_ai_ticks := 0
+    for garrison in garrisons:
+        garrison._physics_process(0.016)
+        garrison_ai_ticks += 1
+    require(garrison_ai_ticks == total_garrisons,
+        "All garrison AI policies must execute once in the concurrent battlefield fixture")
+    require(fen_ally.hp > fen_ally_hp_before,
+        "War Shaman support must heal a same-faction ally while all six archetypes coexist")
+
     for index in VILLAGERS:
         var column := (index % 8) - 4
         var row := floori(float(index) / 8.0) - 3
@@ -267,7 +330,7 @@ func _run() -> void:
     require(saved_raids == EXPECTED_RAIDERS,
         "Save v13 must persist every simultaneous faction raid assignment")
 
-    print("PASS: Frontier warfare stress: %d garrisons, %d patrols, %d simultaneous raids, %d enemies, %d villagers" % [
-        total_garrisons, total_patrols, total_raiders, enemy_count, villager_count
+    print("PASS: Frontier warfare stress: %d garrison AI ticks across six archetypes, %d patrols, %d simultaneous raids, %d enemies, %d villagers" % [
+        garrison_ai_ticks, total_patrols, total_raiders, enemy_count, villager_count
     ])
     quit(0)
