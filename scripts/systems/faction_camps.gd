@@ -55,6 +55,8 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
         if patrol_points.is_empty():
             patrol_points.append(main.nav.center_of(cell))
 
+        var camp_destroyed := bool(previous.get("destroyed", false))
+        var camp_hp := 0 if camp_destroyed else clampi(int(previous.get("hp", 220)), 1, 220)
         var camp := {
             "id": faction_id,
             "faction_id": faction_id,
@@ -62,9 +64,9 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
             "cell": cell,
             "position": main.nav.center_of(cell),
             "activated": bool(previous.get("activated", false)),
-            "destroyed": bool(previous.get("destroyed", false)),
+            "destroyed": camp_destroyed,
             "suppressed": bool(previous.get("suppressed", false)),
-            "hp": clampi(int(previous.get("hp", 220)), 1, 220),
+            "hp": camp_hp,
             "budget": clampi(int(previous.get("budget", int(camp_definition.get("reinforcement_budget", 4)))), 0, 12),
             "timer": clampf(float(previous.get("timer", float(camp_definition.get("reinforcement_cooldown", 30.0)))), 0.0, 180.0),
             "spawn_index": maxi(0, int(previous.get("spawn_index", 0))),
@@ -151,8 +153,11 @@ func _find_camp_cell(
             if not site_clearance:
                 continue
 
+            var sorted_factions: Array = FactionRegistry.factions.keys()
+            sorted_factions.sort()
+            var faction_salt := (sorted_factions.find(faction_id) + 1) * 997
             var noise := float(posmod(
-                x * 92821 + y * 68917 + WorldConfig.world_seed * 17 + faction_id.hash(),
+                x * 92821 + y * 68917 + WorldConfig.world_seed * 17 + faction_salt,
                 10007
             )) / 10007.0
             var score := absf(stronghold_distance - 5.6) * 4.0 - noise
