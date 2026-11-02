@@ -26,20 +26,22 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 - Create a distinct Old Frontier/ruin subregion treatment without introducing an unsupported sixth core biome.
 - Add visual cues for ownership, contested territory, supply routes, fog and regional objectives.
 
-## 08.3 — Unit and faction identity
+## 08.4 — Unit and faction identity
 - [x] Give each faction a distinct three-color visual kit and unique thorn, chevron, reed or ember crest motif; retain the existing faction tint as a secondary recognition cue.
 - [x] Add specialist equipment silhouettes for Scout, Shieldbearer, Saboteur, War Shaman, Siege Engine and Beast Rider through a modular draw layer that does not modify AI, collision, attack timing or save data.
 - [ ] Validate readability with rendered screenshots at actual gameplay zoom and during night/combat effects.
-- Add anticipation, attack, hit, stagger, death and ability feedback that communicates counterplay rather than decoration only.
-- Keep player, villager and enemy sprite footprints consistent with Y-sort and collision origins.
 
-## 08.4 — Building identity
+## 08.5 — Building identity
 - [x] Add distinct material palettes and unique structural details for all 13 shipped building types in Frontier, layered over their existing dedicated sprite assets.
 - [x] Add four deterministic health-scaled damage states using material-aware cracks and missing-edge marks; retain the existing HP bar and sabotage indicator.
 - [ ] Add visual construction stages when Phase 05's actual staged-construction state exists; do not fake progress with timers or HP.
 - [ ] Review map and HUD icons at native UI scale and ensure every shipped structure remains distinct.
 
-## 08.5 — Audio
+## 08.6 — Combat visual feedback
+- Add anticipation, attack, hit, stagger, death and ability feedback that communicates counterplay rather than decoration only.
+- Keep player, villager and enemy sprite footprints consistent with Y-sort and collision origins.
+
+## 08.7 — Audio
 - Add layered ambient loops per biome/day-night state.
 - Add readable combat cues for wind-up, projectile, block, charge, siege impact, camp alert and objective completion.
 - Add a restrained campaign/menu music set; keep volume controls and mute behavior integrated with existing settings.
