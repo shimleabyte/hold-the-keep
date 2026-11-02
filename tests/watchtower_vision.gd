@@ -6,23 +6,24 @@ func ticks(count: int) -> void:
         await physics_frame
 
 
-func footprint_is_clear(main, anchor: Vector2i, size: Vector2i) -> bool:
+func footprint_is_clear(main, config, anchor: Vector2i, size: Vector2i) -> bool:
     for y in size.y:
         for x in size.x:
             var cell := anchor + Vector2i(x, y)
-            if not WorldConfig.is_valid_cell(cell):
+            if not config.is_valid_cell(cell):
                 return false
             if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
                 return false
     return true
 
 
-func world_cell_center(cell: Vector2i) -> Vector2:
-    return (Vector2(cell) + Vector2(0.5, 0.5)) * WorldConfig.tile_size
+func world_cell_center(cell: Vector2i, tile_size: int) -> Vector2:
+    return (Vector2(cell) + Vector2(0.5, 0.5)) * tile_size
 
 
 func _initialize() -> void:
     var config = root.get_node("WorldConfig")
+    var tile_size: int = int(config.tile_size)
     var game_clock = root.get_node("GameClock")
     assert(config.apply_profile("classic"), "Watchtower regression must start in Classic")
 
@@ -46,12 +47,12 @@ func _initialize() -> void:
         var candidate := keep_cell + Vector2i(radius, 0)
         var target := candidate + Vector2i(7, 0)
         var outside := candidate + Vector2i(11, 0)
-        if not footprint_is_clear(main, candidate, tower_size):
+        if not footprint_is_clear(main, config, candidate, tower_size):
             continue
         if not WorldConfig.is_valid_cell(target) or not WorldConfig.is_valid_cell(outside):
             continue
-        var target_position := world_cell_center(target)
-        var outside_position := world_cell_center(outside)
+        var target_position := world_cell_center(target, tile_size)
+        var outside_position := world_cell_center(outside, tile_size)
         if target_position.distance_to(main.player.global_position) <= 112.0:
             continue
         if target_position.distance_to(main.world.occupied[keep_cell].global_position) <= 160.0:
@@ -63,8 +64,8 @@ func _initialize() -> void:
 
     assert(tower_cell.x >= 0,
         "The generated Classic map must contain an open tower footprint beyond Keep/player vision")
-    var target_position := world_cell_center(observed_cell)
-    var outside_position := world_cell_center(outside_cell)
+    var target_position := world_cell_center(observed_cell, tile_size)
+    var outside_position := world_cell_center(outside_cell, tile_size)
 
     main.fog.discovered.fill(0)
     main.fog._scan_sources()
