@@ -669,7 +669,8 @@ func _tick_beast_rider(delta: float) -> void:
         anim.face(_beast_charge_direction)
         _beast_windup_t = maxf(0.0, _beast_windup_t - delta)
         if _beast_windup_t <= 0.0:
-            _beast_charge_t = 1.25
+            var charge_speed := maxf(1.0, speed * beast_charge_speed_multiplier)
+            _beast_charge_t = clampf(beast_charge_max_distance / charge_speed + 0.2, 0.35, 1.8)
             _beast_charge_distance = 0.0
             _beast_hit_done = false
             _beast_cd = beast_charge_cooldown_duration
@@ -768,6 +769,8 @@ func _tick_beast_charge(delta: float) -> void:
 
         var travel := minf(travel_left, segment_length)
         var next_position := global_position + toward_waypoint / segment_length * travel
+        if anim.face(next_position - global_position):
+            queue_redraw()
         var next_cell: Vector2i = beast_nav.cell_of(next_position)
         if not beast_nav.is_walkable(next_cell):
             _finish_beast_charge(false)
