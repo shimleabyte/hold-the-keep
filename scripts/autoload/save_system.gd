@@ -441,9 +441,13 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         if site_size.size() != 2 or int(site_size[0]) <= 0 or int(site_size[1]) <= 0:
             return false
         if saved_site.has("queue_order"):
-            if typeof(saved_site["queue_order"]) != TYPE_INT:
+            var queue_order_value: Variant = saved_site["queue_order"]
+            if typeof(queue_order_value) != TYPE_INT and typeof(queue_order_value) != TYPE_FLOAT:
                 return false
-            var queue_order := int(saved_site["queue_order"])
+            var queue_order_number := float(queue_order_value)
+            if not is_finite(queue_order_number) or not is_equal_approx(queue_order_number, floorf(queue_order_number)):
+                return false
+            var queue_order := int(queue_order_number)
             if queue_order < 0 or queue_order >= 64 or queue_orders.has(queue_order):
                 return false
             queue_orders[queue_order] = true
