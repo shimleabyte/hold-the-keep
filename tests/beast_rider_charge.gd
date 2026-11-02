@@ -75,9 +75,9 @@ func _run() -> void:
     var clustered_guard = spawn_soldier(main, Vector2(842, 820))
     var isolated = spawn_soldier(main, Vector2(920, 820))
     var selector = spawn_rider(main, data_db.enemies["enemy_beast_rider"], Vector2(720, 820))
-    require(selector.beast_nav == main.nav, "Beast Rider must bind the shared navigation grid")
-    selector._beast_target = selector._select_beast_target()
-    assert(selector._beast_target == isolated,
+    require(selector.beast_behavior.navigation == main.nav, "Beast Rider must bind the shared navigation grid")
+    selector.beast_behavior.target = selector.beast_behavior.select_target()
+    assert(selector.beast_behavior.target == isolated,
         "Beast Rider must prefer an isolated defender over a nearby supported defender")
     assert(clustered_guard.global_position.distance_to(clustered.global_position) < 76.0,
         "Target-priority fixture must contain a supported defender pair")
@@ -96,61 +96,61 @@ func _run() -> void:
     clustered_guard.global_position = Vector2(180, 180)
     isolated.global_position = Vector2(180, 180)
 
-    rider._beast_target = target
+    rider.beast_behavior.target = target
     var target_hp_before: int = target.hp
     rider._tick_beast_rider(0.016)
-    require(rider._beast_windup_t > 0.0, "Rider must expose a wind-up before charging")
+    require(rider.beast_behavior.windup_timer > 0.0, "Rider must expose a wind-up before charging")
     assert(target.hp == target_hp_before, "Wind-up must not damage its target")
-    assert(not rider._beast_charge_path.is_empty(), "Wind-up must cache a route to the locked target")
-    for path_index in rider._beast_charge_path.size():
-        var route_cell: Vector2i = main.nav.cell_of(rider._beast_charge_path[path_index])
+    assert(not rider.beast_behavior.charge_path.is_empty(), "Wind-up must cache a route to the locked target")
+    for path_index in rider.beast_behavior.charge_path.size():
+        var route_cell: Vector2i = main.nav.cell_of(rider.beast_behavior.charge_path[path_index])
         assert(main.nav.is_walkable(route_cell), "Charge route must contain walkable cells only")
-    assert(rider._beast_charge_path_version == main.nav.version,
+    assert(rider.beast_behavior.charge_path_version == main.nav.version,
         "Charge route must record the navigation version it was planned against")
-    assert(not rider._beast_charge_path.has(main.nav.center_of(blocker_cell)),
+    assert(not rider.beast_behavior.charge_path.has(main.nav.center_of(blocker_cell)),
         "Locked charge route must route around the blocking wall cell")
 
-    rider._tick_beast_rider(rider.beast_charge_windup_duration + 0.02)
-    assert(rider._beast_charge_t > 0.0, "Completed telegraph must enter a finite charge")
+    rider._tick_beast_rider(rider.beast_behavior.charge_windup_duration + 0.02)
+    assert(rider.beast_behavior.charge_timer > 0.0, "Completed telegraph must enter a finite charge")
     assert(target.hp == target_hp_before, "Charge start must not apply impact damage")
     rider._tick_beast_rider(1.8)
     assert(target.hp < target_hp_before, "A charge crossing its locked target must deal impact damage")
-    assert(rider._beast_cd > 0.0, "A completed charge must enter its recovery cooldown")
+    assert(rider.beast_behavior.cooldown > 0.0, "A completed charge must enter its recovery cooldown")
 
     # A target that sidesteps the locked route during the tell should be missed, not chased mid-charge.
     var bait_rider = spawn_rider(main, data_db.enemies["enemy_beast_rider"], Vector2(720, 980))
     var bait_target = spawn_soldier(main, Vector2(840, 980))
-    bait_rider._beast_target = bait_target
+    bait_rider.beast_behavior.target = bait_target
     bait_rider._tick_beast_rider(0.016)
-    require(bait_rider._beast_windup_t > 0.0, "Sidestep fixture must enter wind-up")
-    bait_rider._tick_beast_rider(bait_rider.beast_charge_windup_duration + 0.02)
+    require(bait_rider.beast_behavior.windup_timer > 0.0, "Sidestep fixture must enter wind-up")
+    bait_rider._tick_beast_rider(bait_rider.beast_behavior.charge_windup_duration + 0.02)
     var bait_hp_before: int = bait_target.hp
     bait_target.global_position += Vector2(0, 64)
     bait_rider._tick_beast_rider(1.8)
     assert(bait_target.hp == bait_hp_before,
         "A defender sidestepping outside the locked charge lane must avoid the impact")
-    assert(bait_rider._beast_charge_t == 0.0,
+    assert(bait_rider.beast_behavior.charge_timer == 0.0,
         "A missed charge must end instead of tracking its target")
 
     # Stagger cancels both the tell and the active charge.
     var interrupted = spawn_rider(main, data_db.enemies["enemy_beast_rider"], Vector2(720, 1060))
     var interrupted_target = spawn_soldier(main, Vector2(840, 1060))
-    interrupted._beast_target = interrupted_target
+    interrupted.beast_behavior.target = interrupted_target
     interrupted._tick_beast_rider(0.016)
-    require(interrupted._beast_windup_t > 0.0, "Interrupt fixture must enter wind-up")
+    require(interrupted.beast_behavior.windup_timer > 0.0, "Interrupt fixture must enter wind-up")
     interrupted.apply_stagger(0.8)
-    assert(interrupted._beast_windup_t == 0.0 and interrupted._beast_charge_t == 0.0,
+    assert(interrupted.beast_behavior.windup_timer == 0.0 and interrupted.beast_behavior.charge_timer == 0.0,
         "Stagger must cancel the Beast Rider tell")
-    assert(interrupted._beast_cd > 0.0, "Interrupted Beast Rider must receive a recovery window")
+    assert(interrupted.beast_behavior.cooldown > 0.0, "Interrupted Beast Rider must receive a recovery window")
 
     var active_interrupt = spawn_rider(main, data_db.enemies["enemy_beast_rider"], Vector2(720, 1140))
     var active_target = spawn_soldier(main, Vector2(840, 1140))
-    active_interrupt._beast_target = active_target
+    active_interrupt.beast_behavior.target = active_target
     active_interrupt._tick_beast_rider(0.016)
-    active_interrupt._tick_beast_rider(active_interrupt.beast_charge_windup_duration + 0.02)
-    require(active_interrupt._beast_charge_t > 0.0, "Active-interrupt fixture must start charging")
+    active_interrupt._tick_beast_rider(active_interrupt.beast_behavior.charge_windup_duration + 0.02)
+    require(active_interrupt.beast_behavior.charge_timer > 0.0, "Active-interrupt fixture must start charging")
     active_interrupt.apply_stagger(0.8)
-    assert(active_interrupt._beast_charge_t == 0.0 and active_interrupt._beast_charge_path.is_empty(),
+    assert(active_interrupt.beast_behavior.charge_timer == 0.0 and active_interrupt.beast_behavior.charge_path.is_empty(),
         "Stagger must stop an active charge before it can connect")
 
     print("PASS: Beast Rider isolated target priority, walkable locked route, telegraphed impact, sidestep miss and stagger interruption")
