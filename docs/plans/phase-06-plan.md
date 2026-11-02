@@ -1,7 +1,7 @@
 # Phase 06 — Factions, Enemy Archetypes and Territorial AI
 
-**Status:** Partially implemented. Faction foundations, Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle and Beast Rider charge are merged into `main`. PR #42 (`e6cf221`) merged Beast Rider; workflow #41366304675 passed 64/64 jobs on Godot 4.3/4.7.
-**Mainline:** `main`; Phase 06.3 faction camps and patrols implemented on `feat/phase-06-faction-camps-patrols`; PR/CI pending.
+**Status:** Partially implemented. Faction foundations, Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle, Beast Rider charge and Phase 06.3 faction camps/patrols are merged into `main`. PR #43 (`fa3a45a`) merged the camp/patrol slice; workflow #41377840888 passed 66/66 jobs on Godot 4.3/4.7.
+**Mainline:** `main`; next Phase 06 slice: raids and counterattacks against exposed Outposts, roads and depots.
 **Current save schema:** v13. Preserve Classic compatibility and validate legacy migrations through v13 plus v13 round-trip.
 **Engine target:** Godot 4.3 and 4.7.
 
@@ -39,7 +39,7 @@ Replace the single generic enemy identity with four regional powers whose units 
 - [x] Patrols use A* routes validated against faction region, enemy ownership and leash; patrols return to camp when the leash is crossed.
 - [x] Territorial loss suppresses camps and recalls linked patrols; camp destruction removes patrols and permanently disables reinforcement.
 - [x] Camp HP/destruction, activation/suppression, budget/timer/spawn index and patrol assignment are optional save-v13 fields; no schema bump.
-- [x] Regression `tests/faction_camps_patrols.gd` added to both Godot CI matrices; CI pending.
+- [x] Regression `tests/faction_camps_patrols.gd` passed on Godot 4.3/4.7; PR #43 (`fa3a45a`) merged and workflow #41377840888 passed 66/66 jobs.
 
 ### 06.4 — Raids and counterattacks
 - Raid targets are selected from exposed player Outposts, connected roads and depots.
@@ -81,3 +81,12 @@ Replace the single generic enemy identity with four regional powers whose units 
 - Per-faction tuning in `data/factions.json`: patrol archetype, radius, initial count, active cap, reinforcement budget and cooldown.
 - Camp health/destruction/activation/suppression and active patrol assignment persist as optional save-v13 data; old v13 saves remain valid without migration.
 - Regression `tests/faction_camps_patrols.gd` is registered in `tools/run_tests.sh` and both Godot CI matrices. PR/CI pending.
+
+
+### Faction camp and patrol implementation (2026-11-02, merged via PR #43)
+- Branch: `feat/phase-06-faction-camps-patrols`, based on main `8a5c6e5` after PR #42; squash merge commit: `fa3a45a`.
+- One deterministic camp per Frontier faction is placed on reachable, unoccupied enemy-owned cells near its regional stronghold. Camps are hidden until fog discovery, then become destructible player targets and appear on the strategic map.
+- Each faction defines patrol archetype, radius, initial patrol count, active cap, finite reinforcement budget and cooldown. Patrols use bounded A* routes constrained by region, enemy territory and leash; after leash breach they stop pursuing and return to camp.
+- Territorial loss suppresses camps and recalls patrols. Destroying a camp recalls its patrols, exhausts the budget and permanently prevents new reinforcement.
+- Camp health/destruction/discovery/suppression and patrol assignment persist as optional save-v13 fields; no schema bump and old v13 saves remain valid.
+- Regression `tests/faction_camps_patrols.gd` passed on both engines. Workflow [#41377840888](https://github.com/shimleabyte/hold-the-keep/actions/runs/41377840888) passed 66/66 jobs: 31 regression suites per engine, import/parse, Frontier performance diagnostic and Windows/Linux export.
