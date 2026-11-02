@@ -181,7 +181,7 @@ func _path_stays_in_camp(path: PackedVector2Array, region_id: String, camp_cell:
     if path.is_empty():
         return false
     for point in path:
-        var cell := main.nav.cell_of(point)
+        var cell: Vector2i = main.nav.cell_of(point)
         if not _patrol_cell_allowed(cell, region_id, camp_cell, radius):
             return false
     return true
@@ -189,7 +189,7 @@ func _path_stays_in_camp(path: PackedVector2Array, region_id: String, camp_cell:
 
 func _build_patrol_points(camp_cell: Vector2i, region_id: String, radius: float) -> Array[Vector2]:
     var candidates_by_quadrant: Array[Array] = [[], [], [], []]
-    var reachable := main.nav.reachable_cells(camp_cell)
+    var reachable: Dictionary = main.nav.reachable_cells(camp_cell)
     var max_tiles := int(floor(radius / float(WorldConfig.tile_size))) - 1
 
     for candidate_value in reachable.keys():
@@ -200,7 +200,7 @@ func _build_patrol_points(camp_cell: Vector2i, region_id: String, radius: float)
             continue
         if not _patrol_cell_allowed(candidate, region_id, camp_cell, radius):
             continue
-        var path := main.nav.path_to(main.nav.center_of(camp_cell), candidate)
+        var path: PackedVector2Array = main.nav.path_to(main.nav.center_of(camp_cell), candidate)
         if not _path_stays_in_camp(path, region_id, camp_cell, radius):
             continue
 
@@ -360,7 +360,7 @@ func _process(delta: float) -> void:
             continue
 
         var cell: Vector2i = camp["cell"]
-        var enemy_controlled := main.territory.owner_at(cell) == "enemy"
+        var enemy_controlled: bool = main.territory.owner_at(cell) == "enemy"
         if not enemy_controlled:
             if not bool(camp.get("suppressed", false)):
                 _retreat_patrols(String(camp_id))
