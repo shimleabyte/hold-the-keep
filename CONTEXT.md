@@ -569,3 +569,11 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - `tests/campaign_reload_hardening.gd` now validates Act I–IV objective completion, the Act II active-escort checkpoint, three conquered strongholds, saved/reloaded damage to the Ashen Host, and the requirement to conquer the fourth stronghold before the day-20 King can finish Conquest.
 - The test also saves and reloads the completed victory, verifying all eleven objectives, all four conquered strongholds and the final-boss completion flag survive.
 - Escort path construction and restoration are asserted here; full path traversal remains exercised by `tests/frontier_campaign.gd`. No gameplay code or save schema v13 changes.
+
+
+## Phase 05.2b — Construction queue implementation branch
+- Branch: `feat/phase-05-construction-queue-ui`, stacked on the Phase 05.2a head `4fa45f7` while PR #58 CI runs.
+- Added stable queue order to construction sites, queue reorder operations, save-v13 persistence and backward-compatible restoration for v13 records without the optional order field.
+- Builder target selection now prioritizes construction sites in queue order ahead of building repairs, while retaining bounded path checks and workplace-radius constraints.
+- HUD includes an always-visible QUEUE entry, B shortcut, current project order, paid costs, live progress, raise/lower controls and cancellation.
+- Regression coverage extends `tests/construction_sites.gd` for effective reorder, queue panel rows and v13 order round-trip. CI and rendered UI review pending.
