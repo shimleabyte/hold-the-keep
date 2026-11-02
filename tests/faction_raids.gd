@@ -224,6 +224,11 @@ func _run() -> void:
         and int(manager.camps[camp_id]["raid_budget"]) == 1,
         "A camp must not exceed one active raider or consume budget while its raider is alive")
 
+    var raid_spawn_position: Vector2 = raider.position
+    raider._tick_faction_raid(0.1)
+    require(not raider._raid_path.is_empty() and raider._raid_path_version == main.nav.version,
+        "A dispatched raider must build a current nav-grid route toward its explicit infrastructure target")
+
     main.player.position = Vector2(-1000, -1000)
     raider.position = storage.position
     raider._atk_cd = 0.0
@@ -241,6 +246,15 @@ func _run() -> void:
         "Every second successful depot strike must steal one local resource")
 
     var snapshot: Dictionary = save_system.collect(main)
+    var saved_camp_record: Dictionary = {}
+    for record in snapshot["frontier_campaign"]["camps"]["records"]:
+        if String(record.get("id", "")) == camp_id:
+            saved_camp_record = record
+            break
+    require(not saved_camp_record.is_empty()
+        and int(saved_camp_record.get("raid_budget", -1)) == 1
+        and float(saved_camp_record.get("raid_timer", -1.0)) >= 0.0,
+        "Save v13 must preserve the finite camp raid budget and cooldown")
     var saved_raider := saved_faction_raid(snapshot["enemies"])
     require(not saved_raider.is_empty()
         and String(saved_raider.get("raid_kind", "")) == "depot"
