@@ -2,10 +2,17 @@ extends RefCounted
 ## Frontier-only building material, silhouette detail and deterministic damage marks.
 ## This layer is decorative: it never changes footprint, collision, HP or construction logic.
 
+const SUPPORTED_FEATURES := [
+    "keep_banner", "house_gable", "wall_stakes", "tower_battlements",
+    "storage_shutters", "farm_crop_rows", "stone_mortar", "forge_embers",
+    "outpost_signal", "road_ruts", "bridge_planks", "lumber_logs", "quarry_cart"
+]
+
+
 static func signature(building_id: String, visual: Dictionary) -> Array[String]:
     var material := String(visual.get("material", ""))
     var feature := String(visual.get("feature", ""))
-    if material.is_empty() or feature.is_empty():
+    if material.is_empty() or feature.is_empty() or not SUPPORTED_FEATURES.has(feature):
         return []
     return [building_id, material, feature]
 
