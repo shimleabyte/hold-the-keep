@@ -53,7 +53,7 @@ Replace the single generic enemy identity with four regional powers whose units 
 ### 06.5 — Persistence, balance and verification
 - [x] Persist camp state, patrol assignments, raid budgets/cooldowns, active raid target and faction identity as additive save-v13 fields.
 - [x] Validate Classic save migration fixtures v1–v13 and Frontier fixtures v7–v13 in `tests/release_hardening.gd`; active raid serialization/restoration is covered by `tests/faction_raids.gd`.
-- [ ] Add combined stress coverage for large simultaneous garrisons, patrols and raids. Regression `tests/faction_warfare_stress.gd` is on `feat/phase-06.5-faction-warfare-stress`; CI pending.
+- [x] Add combined stress coverage for large simultaneous garrisons, patrols and raids. Regression `tests/faction_warfare_stress.gd` was merged via PR #45 (`83dd633`): 48 garrisons, eight patrols, four concurrent faction raids and 48 villagers, with A* and save-v13 assertions. The first post-merge workflow failed at line 214 due to a literal escaped newline; corrective PR #46 fixes the syntax and is running CI.
 - [ ] Run the full assertion suite and parse checks on Godot 4.3 and 4.7 after the combined stress test is merged.
 - [ ] Review screenshots and play the Frontier campaign manually before calling Phase 06 complete.
 
