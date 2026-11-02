@@ -176,7 +176,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add faction registry validation and regression coverage for region mapping, rosters, garrisons, support and save validation.
 - [ ] Extract movement, attack-pattern and ability policies into composable modules; give each archetype its own counterable behavior.
 - [x] Beast Rider telegraphed charge merged via PR #42 (`e6cf221`); isolated-target scoring, A* approach, locked route, sidestep counterplay, nav/stagger cancellation. Workflow #41366304675 passed 64/64 jobs.
-- [x] Extracted Beast Rider target/charge policy into `scripts/behaviors/beast_rider_behavior.gd`: bounded isolation-aware target scan, A* approach, locked-path traversal, damage/knockback, cancellation, recovery and telegraph drawing. `enemy.gd` retains host combat/movement hooks.
+- [x] Extracted Beast Rider target/charge policy into `scripts/behaviors/beast_rider_behavior.gd`: bounded isolation-aware target scan, A* approach, locked-path traversal, damage/knockback, cancellation, recovery and telegraph drawing. `enemy.gd` retains host combat/movement hooks. `tests/beast_rider_charge.gd` passed on both Godot versions; PR #47 workflow [#41386046423](https://github.com/shimleabyte/hold-the-keep/actions/runs/41386046423) passed 70/70 jobs.
 - [x] Siege Engine siege cycle merged via PR #41 (`58da7be`); workflow #41356689758 passed 62/62 jobs on Godot 4.3/4.7.
 - [x] Saboteur building disruption merged via PR #40 (`8f1a914`); workflow #41355982522 passed 60/60 jobs on Godot 4.3/4.7.
 - [x] Scout scouting/marking merged via PR #39 (`11f3f13`); workflow #41354720293 passed 58/58 jobs on Godot 4.3/4.7.
