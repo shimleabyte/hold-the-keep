@@ -82,6 +82,7 @@ jobs:
           - scout_marking
           - saboteur_disruption
           - siege_engine_behavior
+          - beast_rider_charge
     steps:
       - name: Checkout
         uses: actions/checkout@v7
