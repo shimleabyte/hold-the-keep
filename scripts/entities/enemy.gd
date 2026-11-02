@@ -1668,8 +1668,12 @@ func _move_patrol_toward(target: Vector2, delta: float) -> void:
         var candidate_path: PackedVector2Array = patrol_nav.path_to(global_position, goal_cell)
         var valid_path := not candidate_path.is_empty()
         if valid_path:
-            for point in candidate_path:
-                if not _patrol_cell_allowed(patrol_nav.cell_of(point)):
+            var entered_leash := not patrol_returning
+            for path_index in candidate_path.size():
+                var path_cell: Vector2i = patrol_nav.cell_of(candidate_path[path_index])
+                if _patrol_cell_allowed(path_cell):
+                    entered_leash = true
+                elif entered_leash:
                     valid_path = false
                     break
         if not valid_path:
