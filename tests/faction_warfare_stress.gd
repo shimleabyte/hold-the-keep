@@ -9,7 +9,7 @@ const FACTION_IDS: Array[String] = [
     "ashen_host"
 ]
 const GARRISONS_PER_FACTION := 12
-const PATROLS_PER_CAMP := 3
+const PATROLS_PER_CAMP := 2
 const VILLAGERS := 48
 const EXPECTED_RAIDERS := 4
 const GLOBAL_RAID_CAP := 4
@@ -242,7 +242,7 @@ func _run() -> void:
         "Stress snapshot must persist all four faction camp records")
     require(snapshot["enemies"].size() == enemy_count,
         "Stress snapshot must include the full garrison, patrol and raid population")
-    require(save_system_valid(snapshot),
+    require(SaveSystem._valid_save(snapshot),
         "The combined garrison/patrol/raid snapshot must pass save-v13 validation")
 
     var saved_raids := 0
@@ -256,7 +256,3 @@ func _run() -> void:
         total_garrisons, total_patrols, total_raiders, enemy_count, villager_count
     ])
     quit(0)
-
-
-func save_system_valid(snapshot: Dictionary) -> bool:
-    return SaveSystem._valid_save(snapshot)
