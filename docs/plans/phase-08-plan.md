@@ -1,6 +1,6 @@
 # Phase 08 — Visual and Audio Identity
 
-**Status:** Not yet delivered as a dedicated implementation phase. Existing SVG/procedural assets and procedural SFX are foundations, not final faction/biome identity.
+**Status:** In progress on `feat/phase-08-visual-audio-identity-mainline`. First environment slice adds a dedicated weathered Frontier terrain atlas while preserving the original Classic atlas; `frontier_world.gd` now asserts the atlas contract. This is a foundation, not completion of biome identity.
 **Art direction:** [World & Gameplay Design Bible](../WORLD_AND_GAMEPLAY_BIBLE.md) — Grim Medieval Folklore Fantasy, weathered medieval pixel art and restrained folklore motifs.
 **Dependency:** Stable gameplay contracts from Phases 02, 04, 05, 06 and current UI layouts from Phase 10.
 **Engine targets:** Godot 4.3 and 4.7.
@@ -10,14 +10,16 @@
 Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual language: weathered medieval material surfaces, grounded biome identity and restrained regional folklore. Preserve readable silhouettes, pixel-art scaling, runtime performance and Classic readability.
 
 ## 08.1 — Art direction and asset pipeline
-- Define an earthy, weathered palette and material language for Hearthland, Greenwood, Highlands, Fenlands and Ashen March; avoid relying on a global dark filter to create atmosphere.
+- [x] Define and apply an earthy, weathered terrain palette for Hearthland, Greenwood, Highlands, Fenlands and Ashen March through a dedicated Frontier atlas; Classic retains its original atlas and no global dark filter is used.
+- [ ] Extend the palette/material contract to props, buildings, units and regional landmarks.
 - Add restrained regional folklore motifs through landmarks, boundary marks, burial customs and environmental storytelling. Keep overt supernatural visual effects rare and reserved for confirmed threats.
 - Define sprite scale, pivot, outline, contrast and animation-frame conventions before producing bulk assets.
 - Keep generated/procedural SVG assets reproducible; hand-authored replacements must preserve import paths or update references atomically.
 - Establish preview sheets and in-engine screenshot baselines so visual changes are reviewed rather than inferred from source files.
 
 ## 08.2 — Environment and regional identity
-- Give each biome distinct ground variation, props, landmarks, resource clusters and ambient animation while preserving tile readability.
+- [x] Give Frontier biomes distinct ground textures in a dedicated seven-cell atlas (five land biomes, alternate Hearthland ground and water), preserving tile IDs, 16px tile size and water collision.
+- [ ] Add biome-specific props, landmarks, resource clusters and ambient animation while preserving tile readability.
 - Create a distinct Old Frontier/ruin subregion treatment without introducing an unsupported sixth core biome.
 - Add visual cues for ownership, contested territory, supply routes, fog and regional objectives.
 

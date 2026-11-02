@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="112" height="16" viewBox="0 0 112 16" shape-rendering="crispEdges">
+<!-- Hearthland: worn pasture and trampled earth -->
+<g>
+<rect width="16" height="16" fill="#65734a"/>
+<path d="M1 3h3v1H1zM9 2h2v1H9zM5 8h1v2H5zM12 11h3v1h-3zM2 13h2v1H2z" fill="#7f895b"/>
+<path d="M6 2h1v1H6zM13 5h1v2h-1zM3 9h2v1H3zM8 14h2v1H8z" fill="#4f5c3d"/>
+<path d="M0 6h2v1H0zM10 7h2v1h-2zM5 12h1v1H5z" fill="#8d8059"/>
+</g>
+<!-- Hearthland alternate: compacted soil and sparse grass -->
+<g>
+<rect x="16" width="16" height="16" fill="#706b4c"/>
+<path d="M18 2h3v1h-3zM25 4h2v1h-2zM21 9h1v2h-1zM28 12h2v1h-2zM17 14h3v1h-3z" fill="#8b8058"/>
+<path d="M23 1h1v2h-1zM29 6h1v2h-1zM19 7h2v1h-2zM25 13h1v2h-1z" fill="#55563e"/>
+<path d="M22 5h2v1h-2zM30 10h1v1h-1zM17 4h1v1h-1z" fill="#a09163"/>
+</g>
+<!-- Water: cold, opaque slate water -->
+<g>
+<rect x="32" width="16" height="16" fill="#344e5a"/>
+<path d="M34 3h5v1h-5zM41 7h5v1h-5zM33 11h4v1h-4zM40 14h5v1h-5z" fill="#4b6970"/>
+<path d="M37 2h2v1h-2zM43 10h2v1h-2zM35 8h1v1h-1zM39 12h2v1h-2z" fill="#78908a"/>
+<path d="M34 5h2v1h-2zM42 3h1v1h-1zM37 14h1v1h-1z" fill="#263c48"/>
+</g>
+<!-- Greenwood: damp pine floor, needles and leaf litter -->
+<g>
+<rect x="48" width="16" height="16" fill="#354b38"/>
+<path d="M50 2h3v1h-3zM57 4h2v1h-2zM61 9h2v1h-2zM52 13h3v1h-3z" fill="#526348"/>
+<path d="M49 7h2v1h-2zM55 10h1v2h-1zM59 2h1v2h-1zM62 14h1v1h-1z" fill="#283c31"/>
+<path d="M53 5h1v2h-1zM60 6h2v1h-2zM50 11h2v1h-2z" fill="#71805a"/>
+<path d="M56 1h1v1h-1zM49 14h1v1h-1z" fill="#9a8a60"/>
+</g>
+<!-- Highlands: fractured shale and exposed stone -->
+<g>
+<rect x="64" width="16" height="16" fill="#686c68"/>
+<path d="M66 2h4v1h-4zM74 4h3v1h-3zM68 9h2v1h-2zM75 13h4v1h-4z" fill="#85877d"/>
+<path d="M65 6h2v2h-2zM72 7h1v2h-1zM77 2h1v1h-1zM70 13h2v1h-2z" fill="#4d5353"/>
+<path d="M68 4h1v1h-1zM74 10h2v1h-2zM66 14h2v1h-2z" fill="#a2a08f"/>
+<path d="M71 2h1v1h-1zM78 8h1v2h-1z" fill="#77796f"/>
+</g>
+<!-- Fenlands: peat, shallow pools and reed traces -->
+<g>
+<rect x="80" width="16" height="16" fill="#5b6045"/>
+<path d="M82 2h3v1h-3zM89 5h2v1h-2zM84 11h4v1h-4zM92 13h3v1h-3z" fill="#747653"/>
+<path d="M81 7h2v1h-2zM88 2h1v2h-1zM94 8h1v2h-1zM86 14h2v1h-2z" fill="#414d3d"/>
+<path d="M83 4h1v3h-1zM91 9h1v4h-1zM95 2h1v3h-1z" fill="#9a9566"/>
+<path d="M85 8h2v1h-2zM90 3h2v1h-2z" fill="#858b68"/>
+</g>
+<!-- Ashen March: burnt earth, soot and pale ash -->
+<g>
+<rect x="96" width="16" height="16" fill="#514b45"/>
+<path d="M98 2h3v1h-3zM105 4h3v1h-3zM100 9h2v1h-2zM108 13h3v1h-3z" fill="#6d6255"/>
+<path d="M97 7h2v1h-2zM103 12h3v1h-3zM109 2h1v2h-1zM101 14h1v1h-1z" fill="#383a38"/>
+<path d="M99 5h1v2h-1zM106 8h2v1h-2zM110 10h1v2h-1z" fill="#8a7964"/>
+<path d="M104 2h1v1h-1zM97 13h1v1h-1zM107 15h2v1h-2z" fill="#b0a18a"/>
+</g>
+</svg>

@@ -82,6 +82,11 @@ func _initialize() -> void:
         "Main world must use the Frontier dimensions and existing tile size")
     assert(world.pixel_size == Vector2i(2048, 2048),
         "Frontier camera/world bounds must cover 2048x2048 pixels")
+    var terrain_source := world._layer.tile_set.get_source(0) as TileSetAtlasSource
+    assert(terrain_source != null
+        and terrain_source.texture.resource_path.ends_with("tiles_frontier.svg")
+        and terrain_source.texture.get_size() == Vector2(112, 16),
+        "Frontier must use the dedicated seven-cell weathered biome atlas")
     assert(world.starting_keep_cell() == Vector2i(63, 61),
         "Keep placement must remain centered relative to the expanded map")
 
