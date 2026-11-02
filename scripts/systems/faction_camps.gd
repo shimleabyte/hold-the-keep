@@ -187,9 +187,31 @@ func _path_stays_in_camp(path: PackedVector2Array, region_id: String, camp_cell:
     return true
 
 
+func _reachable_patrol_cells(camp_cell: Vector2i, region_id: String, radius: float) -> Dictionary:
+    var reachable: Dictionary = {}
+    if not _patrol_cell_allowed(camp_cell, region_id, camp_cell, radius):
+        return reachable
+    var queue: Array[Vector2i] = [camp_cell]
+    reachable[camp_cell] = true
+    var cursor := 0
+    var directions: Array[Vector2i] = [
+        Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)
+    ]
+    while cursor < queue.size():
+        var current: Vector2i = queue[cursor]
+        cursor += 1
+        for direction in directions:
+            var next_cell: Vector2i = current + direction
+            if reachable.has(next_cell) or not _patrol_cell_allowed(next_cell, region_id, camp_cell, radius):
+                continue
+            reachable[next_cell] = true
+            queue.append(next_cell)
+    return reachable
+
+
 func _build_patrol_points(camp_cell: Vector2i, region_id: String, radius: float) -> Array[Vector2]:
     var candidates_by_quadrant: Array[Array] = [[], [], [], []]
-    var reachable: Dictionary = main.nav.reachable_cells(camp_cell)
+    var reachable: Dictionary = _reachable_patrol_cells(camp_cell, region_id, radius)
     var max_tiles := int(floor(radius / float(WorldConfig.tile_size))) - 1
 
     # Rank reachable cells first; defer expensive A* requests until a small candidate set is known.
@@ -219,6 +241,7 @@ func _build_patrol_points(camp_cell: Vector2i, region_id: String, radius: float)
         candidates_by_quadrant[quadrant].append({"cell": candidate, "score": score})
 
     var result: Array[Vector2] = []
+    var path_checked: Dictionary = {}
     for quadrant in 4:
         var values: Array = candidates_by_quadrant[quadrant]
         values.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
@@ -230,6 +253,7 @@ func _build_patrol_points(camp_cell: Vector2i, region_id: String, radius: float)
                 break
             attempts += 1
             var candidate_cell: Vector2i = entry["cell"]
+            path_checked[candidate_cell] = true
             var path: PackedVector2Array = main.nav.path_to(main.nav.center_of(camp_cell), candidate_cell)
             if _path_stays_in_camp(path, region_id, camp_cell, radius):
                 result.append(main.nav.center_of(candidate_cell))
@@ -248,10 +272,13 @@ func _build_patrol_points(camp_cell: Vector2i, region_id: String, radius: float)
             var point: Vector2 = main.nav.center_of(entry["cell"])
             if result.has(point):
                 continue
-            if fallback_attempts >= 4:
+            if fallback_attempts >= 2:
                 break
-            fallback_attempts += 1
             var candidate_cell: Vector2i = entry["cell"]
+            if path_checked.has(candidate_cell):
+                continue
+            fallback_attempts += 1
+            path_checked[candidate_cell] = true
             var path: PackedVector2Array = main.nav.path_to(main.nav.center_of(camp_cell), candidate_cell)
             if not _path_stays_in_camp(path, region_id, camp_cell, radius):
                 continue
