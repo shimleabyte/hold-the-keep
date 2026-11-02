@@ -177,6 +177,7 @@ func _run() -> void:
                 "Each camp must dispatch its bounded patrol fixture: " + faction_id)
             total_patrols += 1
 
+        camp = manager.camps[faction_id]
         camp["activated"] = true
         camp["raid_budget"] = 2
         camp["raid_timer"] = 0.0
