@@ -156,16 +156,12 @@ func _run() -> void:
             break
     require(keep != null, "Frontier campaign must provide a Keep")
 
-    var camp_id := ""
-    var camp: Dictionary = {}
-    for faction_id_value in manager.camps.keys():
-        var candidate_id := String(faction_id_value)
-        var candidate: Dictionary = manager.camps[candidate_id]
-        if main.territory.owner_at(candidate["cell"]) == "enemy":
-            camp_id = candidate_id
-            camp = candidate
-            break
-    require(not camp_id.is_empty(), "At least one faction camp must remain in enemy-controlled territory")
+    var camp_id := "greenwood_raiders"
+    require(manager.camps.has(camp_id),
+        "The deterministic Greenwood raid fixture must have a registered faction camp")
+    var camp: Dictionary = manager.camps[camp_id]
+    require(main.territory.owner_at(camp["cell"]) == "enemy",
+        "The Greenwood raid fixture must remain in enemy-controlled territory")
 
     var storage_cell := find_storage_cell(main, camp)
     require(storage_cell.x >= 0, "A walkable storage site inside the camp's faction region must be available")
@@ -213,9 +209,9 @@ func _run() -> void:
     var raider = faction_raider_for(raiders, camp_id)
     require(raider != null and raiders.size() == 1,
         "A ready camp must dispatch one targeted raider within the global active cap")
-    require(raider.is_faction_raider and raider.is_garrison
+    require(raider.is_faction_raider and raider.is_garrison and raider.id == "bandit"
         and raider.raid_target_cell == storage_cell and raider.faction_raid_target_kind == "depot",
-        "The raider must preserve its camp, depot target, and garrison assignment")
+        "The Greenwood raider must preserve its faction-native unit, camp, depot target and garrison assignment")
     require(int(manager.camps[camp_id]["raid_budget"]) == 1,
         "A successful dispatch must consume exactly one finite raid-budget charge")
 
