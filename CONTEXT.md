@@ -469,3 +469,9 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Extracted the Beast Rider target scan/scoring, A* approach and locked charge route, telegraph/wind-up, impact/knockback, miss handling, cooldown and stagger interruption into `scripts/behaviors/beast_rider_behavior.gd`.
 - `scripts/entities/enemy.gd` now owns the shared enemy host and delegates Beast Rider lifecycle/timers/rendering to the component. The charge regression now reads/asserts component state directly.
 - PR #47 workflow [#41386046423](https://github.com/shimleabyte/hold-the-keep/actions/runs/41386046423) passed 70/70 jobs: Godot 4.3/4.7 parse, all 33 assertion suites per version (including `beast_rider_charge` and `faction_warfare_stress`), Frontier performance and Windows/Linux export. PR #47 remains open and unmerged.
+
+## 45. Phase 06.2 — Shieldbearer composable brace extraction (2026-11-02, implementation branch)
+- Added `scripts/behaviors/shieldbearer_behavior.gd` for brace targeting response, wind-up/active timing, cooldown, disengage cancellation, stagger interruption, directional hit checks and telegraph drawing.
+- `scripts/entities/enemy.gd` delegates Shieldbearer brace updates, cooldown advancement, damage mitigation and rendering to the behavior component; archetype-specific brace fields and the old inline state machine were removed from the host.
+- `tests/shieldbearer_behavior.gd` now inspects the component state and directly verifies the damage-origin gate while retaining front/side/rear damage, stagger and disengage cases.
+- Full CI for the updated PR #47 head is pending. Do not mark this extraction accepted until both Godot versions and the full regression matrix pass.

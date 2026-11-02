@@ -54,7 +54,7 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 29 assertion reg
 | physical_shipments.gd | Player-directed depot orders, visible carriers, Keep withdrawals, capacity reservations, cancellation/refund, route interruption recovery and v13 persistence |
 | depot_cost_sources.gd | Explicit Keep/Storage/Outpost cost source, construction/research debit, no cross-depot pooling, disconnected-source rejection, atomic payment and v13 preference persistence |
 | supply_pressure.gd | Contested disconnected-depot warning, targeted saboteur pathing, deterministic stock theft, bounded repeat raid, depot damage, HUD state, v13 persistence and recovery |
-| shieldbearer_behavior.gd | Shield brace telegraph, frontal damage mitigation, side/rear counterplay, stagger interruption and disengage cancellation |
+| shieldbearer_behavior.gd | component-backed brace telegraph, frontal source-origin mitigation, side/rear counterplay, stagger interruption and disengage cancellation |
 | scout_marking.gd | Scout marking telegraph, same-faction propagation, focus-target priority, mark expiry, stagger interruption and target disengage |
 | saboteur_disruption.gd | Saboteur priority target selection, nav reachability, telegraphed structure sabotage, tower/depot/workplace disable and recovery, stagger interruption |
 | siege_engine_behavior.gd | Siege Engine building target priorities, reachable path, telegraphed heavy impact, recovery cooldown, stagger interruption and building-only preference |
