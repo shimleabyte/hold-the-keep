@@ -112,8 +112,8 @@ static func draw_identity(
             for plank in 3:
                 var y := top + 5.0 + float(plank) * 4.0
                 canvas.draw_line(Vector2(-half_width + 1.0, y), Vector2(half_width - 1.0, y), accent, 1.0)
-            canvas.draw_line(Vector2(-half_width + 2.0, top + 3.0), Vector2(-half_width + 2.0, 14.0), shadow, 1.0)
-            canvas.draw_line(Vector2(half_width - 2.0, top + 3.0), Vector2(half_width - 2.0, 14.0), shadow, 1.0)
+            canvas.draw_line(Vector2(-half_width + 2.0, top + 3.0), Vector2(-half_width + 2.0, top + sprite_size.y - 2.0), shadow, 1.0)
+            canvas.draw_line(Vector2(half_width - 2.0, top + 3.0), Vector2(half_width - 2.0, top + sprite_size.y - 2.0), shadow, 1.0)
         "lumber_logs":
             for index in 4:
                 var x := -half_width + 8.0 + float(index) * 5.0
