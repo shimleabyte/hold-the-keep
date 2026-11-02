@@ -71,6 +71,12 @@ func _initialize() -> void:
 
     var result: String = main.build.place("outpost", outpost_cell)
     assert(result == "", "Outpost placement failed: " + result)
+    var outpost_site = main.world.occupied.get(outpost_cell)
+    assert(outpost_site != null and outpost_site.is_in_group("construction_sites"),
+        "Outpost placement must create a blueprint rather than instant infrastructure")
+    var outpost = main.build.complete_site(outpost_site)
+    assert(outpost != null and outpost.is_in_group("buildings"),
+        "A completed Outpost blueprint must become functional infrastructure")
     main.territory.rebuild()
     assert(main.territory.is_claimed(expansion_target),
         "Outpost must claim tiles beyond the Keep frontier")

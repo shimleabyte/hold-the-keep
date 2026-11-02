@@ -1,6 +1,6 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
-**Status (2026-11-02):** The mainline contains the completed Frontier expansion slices through Phase 08.7 and Phase 09.3. PR #55 merged regional ambience/music/event audio (`d933bb6`); workflow #477 passed 78/78. PR #57 merged four-act Frontier save/reload and final-victory persistence coverage (`a1ccebe`); workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 on Godot 4.3/4.7, Frontier performance diagnostic, and Windows/Linux release exports. Save schema remains v13. Manual visual/audio review, target-hardware profiling, full campaign balance/playtesting, native Windows runtime and clean-machine acceptance remain open.
+**Status (2026-11-02):** The mainline contains the completed Frontier expansion slices through Phase 08.7 and Phase 09.3. Active follow-on work: Phase 05.2a Builder-driven construction sites on `feat/phase-05-builder-construction-sites`; explicit queue UI remains a separate follow-up. PR #55 merged regional ambience/music/event audio (`d933bb6`); workflow #477 passed 78/78. PR #57 merged four-act Frontier save/reload and final-victory persistence coverage (`a1ccebe`); workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 on Godot 4.3/4.7, Frontier performance diagnostic, and Windows/Linux release exports. Save schema remains v13. Manual visual/audio review, target-hardware profiling, full campaign balance/playtesting, native Windows runtime and clean-machine acceptance remain open.
 **Phase 02 merge commits:** PR #31 (`6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`) delivered local depot storage/transfers; PR #32 (`2f94959b497677eae49d4303f72322650fb591c2`) delivered garrisons/inspection; PR #33 (`5d7db56b3a51a25541f541bb46c19b26996d22be`) delivered player-directed physical shipments and save v13. PR #33 validation: [workflow #41323062111](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323062111), 50/50 jobs successful on Godot 4.3/4.7, including 23 regressions per engine, Frontier diagnostic and Windows/Linux export.  
 **Baseline:** Godot 4.3+ / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, mainline save format v13 with backward compatibility for save versions v1–v12.
 
@@ -152,14 +152,15 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** workers select valid tasks, avoid cross-map wandering, recover from blocked paths, deposit at reachable storage and retain their state through saves.
 
 ### Phase 05 — Buildings and production chains
-**Status:** Initial resource-worksite slice merged through PR #19; the full buildings/production phase remains in progress. Latest main CI passes; construction queue and manual economy/pathing review remain.
+**Status:** Lumber Camp/Quarry worksite slice is merged. Phase 05.2a Builder-driven blueprint sites are implemented on `feat/phase-05-builder-construction-sites`; PR/CI acceptance is pending. The dedicated queue UI/reordering, additional facilities and manual economy/pathing review remain open.
 
 - [x] Add a Lumber Camp with two woodcutter workplace slots and an 18-tile resource work radius.
 - [x] Add a Quarry with two miner workplace slots and a 16-tile resource work radius.
 - [x] Bind woodcutters/miners to matching worksites; retain connected-depot fallback only when no matching specialty site exists.
 - [x] Release worksite claims when workers leave or a worksite is removed; worksite buildings use the generic save payload and remain compatible with save v12.
 - [x] Add separate pixel-art buildings/icons, hotbar entries, numeric hotkeys, controls documentation and headless regression coverage.
-- [ ] Add construction work queues and staged building completion with Builder labor.
+- [x] Add Builder-driven blueprint sites: pay once at placement, cap at two active Builders per site, advance only while Builders are working, convert atomically to a finished building and refund unconsumed materials on cancellation (implementation branch; CI/PR pending).
+- [ ] Add a dedicated construction queue panel with project order, reorder controls, explicit cancellation and visible per-site costs/progress.
 - [ ] Add remaining facilities according to dependency: Watchtower, Granary, Barracks, Archery Range, Hunting Lodge, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress and Signal Beacon.
 - Introduce leather and gold only when a building or campaign system consumes them.
 - Add construction/repair work, military training, trade and siege production as separate validated slices.

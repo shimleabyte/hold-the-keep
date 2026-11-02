@@ -1,6 +1,6 @@
 # Phase 05 — Construction System and Building Production Chains
 
-**Status:** Lumber Camp and Quarry resource-worksite slice merged through PR #19. Construction queue, staged completion and additional facilities remain open.
+**Status:** Lumber Camp and Quarry resource-worksite slice merged through PR #19. Phase 05.2a Builder-driven blueprint sites are implemented on `feat/phase-05-builder-construction-sites`; PR/CI acceptance is pending. The explicit queue-management panel, reorder controls and remaining facility chain are still open.
 **Dependency:** Phase 04 Builder occupation; Phase 02 depot/logistics rules.
 **Engine targets:** Godot 4.3 and 4.7.
 
@@ -8,10 +8,20 @@
 
 Make building placement a managed construction process. Builder labor must matter, construction sites must be readable, and each facility must have a distinct production, defense or campaign function.
 
-## 05.2 — Construction queue
+## 05.2a — Builder-driven blueprint sites (implementation branch)
+- Clicking a valid building footprint debits the currently selected depot once and creates a non-functional blueprint site.
+- Builder workers claim reachable sites within their assigned Keep/Outpost workplace radius, travel to the footprint and contribute active work.
+- A maximum of two Builders can work one site; the second worker contributes 65% additional throughput. Idle, travelling, invalid or absent workers do not advance progress.
+- Completion atomically replaces the site with the normal building and registers its footprint, collision, groups and existing building events.
+- Right-click cancellation refunds the unconsumed cost to the original depot; missing/full remote depots fall back to Keep Inventory.
+- Save v13 stores site ID, footprint, progress, required work and funding source as an optional additive field. Older v13 saves without construction-site records remain valid.
+- Regression `tests/construction_sites.gd` covers Builder pathing/work, the worker cap, one-time payment, completion, proportional cancellation, save validation and reload. It is registered in both engine matrices.
+- This slice does not yet provide a dedicated queue panel, manual reordering or multiple project priority controls.
+
+## 05.2b — Construction queue
 - Add a player-facing queue with explicit order, cost, placement validation and cancel/reorder behavior.
 - Reserving a project must reserve its materials exactly once from an allowed connected/local depot; failed placement must not consume resources.
-- Valid placement creates a construction site/blueprint with incomplete progress rather than an immediately functional finished building.
+- [x] Valid placement creates a construction site/blueprint with incomplete progress rather than an immediately functional finished building (Phase 05.2a; explicit queue UI remains open).
 - Builders claim one active site at a time, work only within their workplace radius and use bounded pathfinding.
 - Multiple Builders may accelerate one site only with a documented diminishing-return/cap rule; they must not duplicate progress.
 - Construction advances on valid work ticks, not every idle frame, and pauses cleanly when blocked, starved or outside working conditions.

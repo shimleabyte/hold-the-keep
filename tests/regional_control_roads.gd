@@ -117,6 +117,11 @@ func _initialize() -> void:
     require(main.build.place("road", road_a) == "", "First road placement must succeed")
     require(main.build.place("road", road_b) == "", "Second road placement must succeed")
     require(main.build.place("road", road_c) == "", "Third road placement must succeed")
+    for road_cell in [road_a, road_b, road_c]:
+        var road_site = world.occupied[road_cell]
+        require(road_site != null and road_site.is_in_group("construction_sites"),
+            "Road orders must first create explicit blueprints")
+        main.build.complete_site(road_site)
     await ticks(2)
 
     var road = world.occupied[road_a]
@@ -165,6 +170,10 @@ func _initialize() -> void:
     main.flow.rebuild()
     require(main.build.place("bridge", bridge_cell) == "",
         "A bridge must be constructible over claimed water")
+    var bridge_site = world.occupied[bridge_cell]
+    require(bridge_site != null and bridge_site.is_in_group("construction_sites"),
+        "Bridge placement must create a blueprint before the bridge becomes traversable")
+    main.build.complete_site(bridge_site)
     await ticks(2)
     main.nav.rebuild()
     require(main.nav.is_walkable(bridge_cell),

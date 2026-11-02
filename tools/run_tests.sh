@@ -26,6 +26,7 @@ tests=(
     campaign_multi_stronghold
     workplace_assignments
     production_worksites
+    construction_sites
     faction_registry
     faction_visual_identity
     building_visual_identity

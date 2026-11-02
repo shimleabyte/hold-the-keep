@@ -85,6 +85,9 @@ func _initialize() -> void:
         "The test must find a valid buildable house footprint inside Keep territory")
     require(main.build.place("house", house_cell) == "",
         "Construction must accept a cost funded by the selected Storage")
+    var house_site = main.world.occupied.get(house_cell)
+    require(house_site != null and house_site.is_in_group("construction_sites"),
+        "Paid building placement must remain a blueprint until Builder labor finishes it")
     require(first.stockpile_amount("wood") == 0 and inventory.get_amount("wood") == 0,
         "Construction must debit the selected depot directly without crediting/debiting Keep Inventory")
 
