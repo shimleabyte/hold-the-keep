@@ -468,4 +468,4 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Branch: `feat/phase-06.2-composable-behaviors`, based on the corrected Phase 06.5 verification head from PR #46.
 - Extracted the Beast Rider target scan/scoring, A* approach and locked charge route, telegraph/wind-up, impact/knockback, miss handling, cooldown and stagger interruption into `scripts/behaviors/beast_rider_behavior.gd`.
 - `scripts/entities/enemy.gd` now owns the shared enemy host and delegates Beast Rider lifecycle/timers/rendering to the component. The charge regression now reads/asserts component state directly.
-- CI for this refactor is pending; do not merge before Godot 4.3/4.7 parsing and the full assertion matrix pass.
+- PR #47 workflow [#41386046423](https://github.com/shimleabyte/hold-the-keep/actions/runs/41386046423) passed 70/70 jobs: Godot 4.3/4.7 parse, all 33 assertion suites per version (including `beast_rider_charge` and `faction_warfare_stress`), Frontier performance and Windows/Linux export. PR #47 remains open and unmerged.
