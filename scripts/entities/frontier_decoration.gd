@@ -35,13 +35,13 @@ func _draw() -> void:
 
 
 func _draw_fern() -> void:
-    var greens := [Color("#405b43"), Color("#52684a"), Color("#344b3c")]
-    var leaf := greens[variant]
+    var greens: Array[Color] = [Color("#405b43"), Color("#52684a"), Color("#344b3c")]
+    var leaf: Color = greens[variant]
     draw_line(Vector2(0, 0), Vector2(0, -8), Color("#26372e"), 1.2)
     for side in [-1.0, 1.0]:
         for level in 3:
             var y := -3.0 - float(level) * 2.0
-            var x := side * (3.0 - float(level) * 0.6)
+            var x: float = float(side) * (3.0 - float(level) * 0.6)
             draw_colored_polygon(PackedVector2Array([
                 Vector2(0, y + 1), Vector2(x, y - 2), Vector2(x * 1.7, y - 3),
                 Vector2(x * 1.1, y), Vector2(0, y + 1)
@@ -70,7 +70,7 @@ func _draw_dead_pine() -> void:
 
 
 func _draw_standing_stone() -> void:
-    var stone := [Color("#777b70"), Color("#8b8170"), Color("#626c68")][variant]
+    var stone: Color = [Color("#777b70"), Color("#8b8170"), Color("#626c68")][variant]
     draw_colored_polygon(PackedVector2Array([
         Vector2(-5, 0), Vector2(-6, -9), Vector2(-3, -15),
         Vector2(3, -14), Vector2(6, -7), Vector2(5, 0)
