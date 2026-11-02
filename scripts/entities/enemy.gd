@@ -623,6 +623,7 @@ func _faction_raid_target_valid(target, supply) -> bool:
         return false
     if supply == null or not is_instance_valid(supply) or supply.territory == null:
         return false
+    supply._ensure_current()
     if String(supply.world.region_id(target.cell)) != faction_raid_region_id:
         return false
 
