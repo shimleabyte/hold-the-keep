@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` includes PR #42 (`e6cf221`), adding Beast Rider telegraphed charge. Workflow #41366304675 passed 64/64 jobs on Godot 4.3/4.7. Branch `feat/phase-06-faction-camps-patrols` implements the next Phase 06.3 slice; PR/CI pending. Save schema remains v13.
+**Current source of truth:** default branch `main` includes PR #43 (`fa3a45a`), adding four Frontier faction camps and bounded patrols. Workflow #41377840888 passed 66/66 jobs on Godot 4.3/4.7, including 31 regression suites per engine, import/parse, Frontier performance and Windows/Linux export. Save schema remains v13; next Phase 06 work is raids and counterattacks.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -15,7 +15,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #42 (save schema v13; status per 2 November 2026). Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle dan Beast Rider charge sudah masuk `main`.
+Ringkasan implementasi aktual pada `main` setelah PR #43 (save schema v13; status per 2 November 2026). Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle, Beast Rider charge, faction camps dan bounded patrols sudah masuk `main`.
 
 | Area | Kondisi saat ini |
 |---|---|
@@ -26,7 +26,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #42 (save schema v13; statu
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
-| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded patrols and finite reinforcement budgets implemented on a review branch (PR/CI pending); raids and broader counterattacks remain incomplete |
+| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; raids and broader counterattacks remain incomplete |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
 | Save/load | v13 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo; Classic v1–v13 dan Frontier v7–v13 migration matrix dijaga. PR #34 adds optional cost-source preference without a save-version bump; earlier v13 snapshots without it remain valid |
@@ -437,3 +437,12 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Patrols stop pursuing targets and return when they exceed their leash. Losing enemy control suppresses the camp and recalls its patrols; destroying the camp exhausts its budget and ends reinforcement permanently.
 - Camp HP/destruction, activation/suppression, budget/timer/spawn index and patrol assignment are optional save-v13 state. No save schema bump; legacy v13 data without camp records remains valid.
 - Regression `tests/faction_camps_patrols.gd` is registered on Godot 4.3 and 4.7. PR/CI pending.
+
+
+## 41. Phase 06.3 — Faction camps and bounded patrols (2026-11-02, merged via PR #43)
+- Squash merge: `fa3a45a`; branch `feat/phase-06-faction-camps-patrols`, based on main `8a5c6e5` after PR #42.
+- Four deterministic Frontier faction camps are placed on reachable, unoccupied enemy-owned cells near their regional strongholds. Camps remain hidden until fog reveal, then appear as strategic-map markers and destructible player targets.
+- Each faction defines its patrol archetype, radius, initial count, active cap, finite reinforcement budget and cooldown. Patrols use A* paths constrained to faction region, enemy territory and camp leash; they stop pursuit and return after leash breach.
+- Territorial loss suppresses camps and recalls patrols. Destruction permanently disables reinforcement and recalls linked patrols.
+- Camp HP/destruction/discovery/suppression and patrol waypoint/return assignments persist as optional v13 fields; no schema bump and legacy v13 saves remain valid.
+- Regression `tests/faction_camps_patrols.gd` passed on both Godot 4.3 and 4.7. Workflow #41377840888 completed successfully with 66/66 jobs, including 31 regression suites per engine, import/parse, Frontier performance diagnostic and Windows/Linux export.
