@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** default branch `main` includes PR #41 (`58da7be`), adding the Siege Engine structural siege cycle. Workflow #41356689758 passed 62/62 jobs on Godot 4.3/4.7, including 29 regression suites per engine, import/parse, Frontier performance and Windows/Linux export. Saboteur, Scout, Shieldbearer and Phase 02.5 supply pressure are also merged. Save schema remains v13. Next Phase 06 work: Beast Rider telegraphed charge behavior, then camps, patrols and expanded counterattacks.
+**Current source of truth:** default branch `main` includes PR #41 (`58da7be`), adding the Siege Engine structural siege cycle. Branch `feat/phase-06-beast-rider-charge` implements the next Beast Rider ability slice; PR/CI pending. Save schema remains v13. After merge, next Phase 06 work is deterministic faction camps and bounded patrols.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -26,7 +26,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #41 (save schema v13; statu
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
-| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur dan Siege Engine behaviors merged; Beast Rider charge policy, camps, patrols and broader counterattacks remain incomplete |
+| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur dan Siege Engine behaviors merged; Beast Rider charge implemented on a review branch (PR/CI pending); camps, patrols and broader counterattacks remain incomplete |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
 | Save/load | v13 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo; Classic v1–v13 dan Frontier v7–v13 migration matrix dijaga. PR #34 adds optional cost-source preference without a save-version bump; earlier v13 snapshots without it remain valid |
@@ -421,3 +421,10 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - It follows adjacent navigation paths and advances through flow-field cells when no target is in scan range. A visible long wind-up precedes heavy structure-only damage and recovery cooldown.
 - Nearby player/defender pressure interrupts and repositions the unit; stagger cancels an active siege wind-up. No heavy siege strike is applied to player/defender targets.
 - Regression `tests/siege_engine_behavior.gd` passes on Godot 4.3 and 4.7. State is transient; save schema v13 remains unchanged.
+
+
+## 39. Phase 06.2 — Beast Rider telegraphed charge (2026-11-02, implementation branch)
+- Branch: `feat/phase-06-beast-rider-charge`, based on main `666b9fc` after PR #41.
+- Beast Rider scores visible player/defender candidates in a bounded scan, preferring isolated soldiers. It approaches with A*, telegraphs for 0.82 seconds and locks a walkable route to the defender's current tile.
+- The target can sidestep out of the route; the charge does not steer mid-run. A nav-grid version change or stagger cancels the charge. A successful impact deals one data-tuned hit, applies a short push and enters recovery.
+- New regression: `tests/beast_rider_charge.gd`. Added to `tools/run_tests.sh` and both Godot CI matrices. PR and CI outcome not yet verified. Save schema v13 unchanged.
