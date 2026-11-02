@@ -39,7 +39,9 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 - [ ] Review map and HUD icons at native UI scale and ensure every shipped structure remains distinct.
 
 ## 08.6 — Combat visual feedback
-- Add anticipation, attack, hit, stagger, death and ability feedback that communicates counterplay rather than decoration only.
+- [x] Add short directional melee/ranged anticipation marks that clear when attacks resolve or are cancelled; existing archetype-specific telegraphs remain authoritative.
+- [x] Add a transient directional impact burst, stagger marker and distinct Dash/Cleave/Rally shapes through one shared draw-only helper. Existing corpse/death animation and particle caps remain in place.
+- [ ] Capture screenshots at native gameplay scale to verify cues remain readable without hiding sprite silhouettes or telegraphs.
 - Keep player, villager and enemy sprite footprints consistent with Y-sort and collision origins.
 
 ## 08.7 — Audio
