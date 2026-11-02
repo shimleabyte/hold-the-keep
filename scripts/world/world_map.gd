@@ -8,6 +8,7 @@ const TREE_SCRIPT := preload("res://scripts/entities/resource_tree.gd")
 const ROCK_SCRIPT := preload("res://scripts/entities/rock.gd")
 const ROCK_CHANCE := 0.02
 const IRON_SCRIPT := preload("res://scripts/entities/iron_ore.gd")
+const FRONTIER_DECORATION_SCRIPT := preload("res://scripts/entities/frontier_decoration.gd")
 
 const TILES_TEX := preload("res://assets/sprites/tiles.svg")
 const TILES_FRONTIER_TEX := preload("res://assets/sprites/tiles_frontier.svg")
@@ -28,6 +29,7 @@ const REGION_ASHEN_MARCH := 4
 
 var _frontier_regions := PackedByteArray()
 var generated_resource_layout: Array[Dictionary] = []
+var generated_decoration_layout: Array[Dictionary] = []
 var generate_resource_nodes := true
 
 var map_seed := 1337
@@ -62,6 +64,8 @@ func _ready() -> void:
     else:
         _generate_classic()
     _spawn_iron()
+    if WorldConfig.profile_id == "frontier":
+        _spawn_frontier_decorations()
 
 
 func is_buildable(cell: Vector2i) -> bool:
@@ -242,6 +246,123 @@ func _generate_frontier() -> void:
                     occupied[cell] = rock
                 else:
                     occupied[cell] = true
+
+
+## Scatter non-blocking regional props after resource placement so the two never overlap.
+## The decoration RNG is independent of terrain/resource RNG to preserve existing generation.
+func _spawn_frontier_decorations() -> void:
+    generated_decoration_layout.clear()
+    var rng := RandomNumberGenerator.new()
+    rng.seed = map_seed + 8813
+    var center := Vector2(map_size, map_size) * 0.5
+    var clearing_radius := maxf(safe_radius + 7.0, float(map_size) * 0.15)
+    var decoration_cells: Dictionary = {}
+
+    for y in map_size:
+        for x in map_size:
+            var cell := Vector2i(x, y)
+            if not is_buildable(cell) or occupied.has(cell):
+                continue
+            if Vector2(x, y).distance_to(center) < clearing_radius + 2.0:
+                continue
+            var region := _frontier_region_at(cell)
+            var density := _frontier_decoration_density(region)
+            if rng.randf() >= density:
+                continue
+            var kind := _frontier_prop_kind(region, rng)
+            var variation := rng.randi_range(0, 2)
+            _record_frontier_decoration(cell, kind, variation, false)
+            decoration_cells[cell] = true
+
+    _place_frontier_landmarks(decoration_cells, center, clearing_radius)
+
+
+func _frontier_decoration_density(region: int) -> float:
+    match region:
+        REGION_GREENWOOD:
+            return 0.026
+        REGION_FENLANDS:
+            return 0.023
+        REGION_HIGHLANDS:
+            return 0.016
+        REGION_ASHEN_MARCH:
+            return 0.014
+        REGION_HEARTHLAND:
+            return 0.009
+    return 0.012
+
+
+func _frontier_prop_kind(region: int, rng: RandomNumberGenerator) -> String:
+    match region:
+        REGION_GREENWOOD:
+            return "dead_pine" if rng.randf() < 0.24 else "fern_cluster"
+        REGION_HIGHLANDS:
+            return "standing_stone" if rng.randf() < 0.72 else "dead_pine"
+        REGION_FENLANDS:
+            return "fen_reeds" if rng.randf() < 0.78 else "standing_stone"
+        REGION_ASHEN_MARCH:
+            return "ash_pillar" if rng.randf() < 0.72 else "standing_stone"
+        REGION_HEARTHLAND:
+            return "ruin_marker" if rng.randf() < 0.45 else "fern_cluster"
+    return "fern_cluster"
+
+
+func _place_frontier_landmarks(used_cells: Dictionary, center: Vector2, clearing_radius: float) -> void:
+    var regions: Array[int] = [
+        REGION_HEARTHLAND, REGION_GREENWOOD, REGION_HIGHLANDS,
+        REGION_FENLANDS, REGION_ASHEN_MARCH
+    ]
+    var targets: Array[Vector2] = [
+        center + Vector2(0, -15),
+        Vector2(map_size * 0.19, map_size * 0.20),
+        Vector2(map_size * 0.81, map_size * 0.20),
+        Vector2(map_size * 0.19, map_size * 0.80),
+        Vector2(map_size * 0.81, map_size * 0.80)
+    ]
+    var kinds: Array[String] = [
+        "hearth_shrine", "ruin_marker", "standing_stone", "fen_reeds", "ash_pillar"
+    ]
+
+    for index in regions.size():
+        var best_cell := Vector2i(-1, -1)
+        var best_distance := INF
+        for y in map_size:
+            for x in map_size:
+                var cell := Vector2i(x, y)
+                if _frontier_region_at(cell) != regions[index] or not is_buildable(cell):
+                    continue
+                if occupied.has(cell) or used_cells.has(cell):
+                    continue
+                var distance_from_home := Vector2(cell).distance_to(center)
+                var minimum_home_distance := safe_radius + 3.0 if regions[index] == REGION_HEARTHLAND else clearing_radius + 4.0
+                if distance_from_home < minimum_home_distance:
+                    continue
+                var distance_to_target := Vector2(cell).distance_squared_to(targets[index])
+                if distance_to_target < best_distance:
+                    best_distance = distance_to_target
+                    best_cell = cell
+        if best_cell.x < 0:
+            continue
+        used_cells[best_cell] = true
+        _record_frontier_decoration(best_cell, kinds[index], index, true)
+
+
+func _record_frontier_decoration(cell: Vector2i, kind: String, variation: int, landmark: bool) -> void:
+    generated_decoration_layout.append({
+        "cell": cell,
+        "kind": kind,
+        "variant": variation,
+        "landmark": landmark
+    })
+    if not generate_resource_nodes:
+        return
+    var prop = FRONTIER_DECORATION_SCRIPT.new()
+    prop.setup(kind, variation, landmark)
+    prop.position = Vector2(
+        cell.x * tile_size + tile_size / 2.0,
+        cell.y * tile_size + tile_size
+    )
+    entities.add_child(prop)
 
 
 func _build_frontier_regions() -> void:
