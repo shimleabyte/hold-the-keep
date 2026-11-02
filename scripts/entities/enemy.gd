@@ -60,6 +60,22 @@ var scale_f := 1.0
 var is_boss := false
 var runs := false
 var is_garrison := false
+var is_patrol := false
+var patrol_camp_id := ""
+var patrol_region_id := ""
+var patrol_origin := Vector2.ZERO
+var patrol_radius := 144.0
+var patrol_points: Array[Vector2] = []
+var patrol_waypoint_index := 0
+var patrol_returning := false
+var patrol_nav
+var patrol_territory
+var pending_patrol_state: Dictionary = {}
+var _patrol_path := PackedVector2Array()
+var _patrol_path_index := 0
+var _patrol_path_version := -1
+var _patrol_goal_cell := Vector2i(-1, -1)
+var _patrol_repath_timer := 0.0
 var is_supply_raider := false
 var raid_target_cell := Vector2i(-1, -1)
 var supply_raid_hits := 0
@@ -291,6 +307,22 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     _brace_t = 0.0
     _brace_cd = 0.0
     _brace_dir = Vector2.ZERO
+    is_patrol = false
+    patrol_camp_id = ""
+    patrol_region_id = ""
+    patrol_origin = Vector2.ZERO
+    patrol_radius = 144.0
+    patrol_points.clear()
+    patrol_waypoint_index = 0
+    patrol_returning = false
+    patrol_nav = null
+    patrol_territory = null
+    pending_patrol_state.clear()
+    _patrol_path = PackedVector2Array()
+    _patrol_path_index = 0
+    _patrol_path_version = -1
+    _patrol_goal_cell = Vector2i(-1, -1)
+    _patrol_repath_timer = 0.0
     world = world_ref
     flow = flow_ref
     player = player_ref
@@ -306,8 +338,63 @@ func setup_guard(data: Dictionary, world_ref, flow_ref, player_ref, origin: Vect
     guard_origin = origin
 
 
+func setup_patrol(
+    data: Dictionary,
+    world_ref,
+    flow_ref,
+    player_ref,
+    faction_override: String,
+    camp_data: Dictionary,
+    saved_patrol_state: Dictionary = {}
+) -> void:
+    setup_guard(data, world_ref, flow_ref, player_ref, Vector2.ZERO, faction_override)
+    configure_patrol(camp_data, saved_patrol_state)
+
+
+func configure_patrol(camp_data: Dictionary, saved_patrol_state: Dictionary = {}) -> void:
+    is_garrison = true
+    is_patrol = true
+    patrol_camp_id = String(camp_data.get("camp_id", ""))
+    patrol_region_id = String(camp_data.get("region_id", ""))
+    var saved_origin: Variant = camp_data.get("camp_position", Vector2.ZERO)
+    patrol_origin = Vector2(saved_origin)
+    patrol_radius = clampf(float(camp_data.get("patrol_radius", 144.0)), 80.0, 220.0)
+    patrol_points.clear()
+    var raw_points: Array = camp_data.get("patrol_points", [])
+    for point_value in raw_points:
+        if point_value is Vector2:
+            patrol_points.append(point_value)
+    patrol_waypoint_index = posmod(int(saved_patrol_state.get("waypoint_index", 0)), maxi(1, patrol_points.size()))
+    patrol_returning = bool(saved_patrol_state.get("returning", false))
+    guard_origin = patrol_origin if patrol_returning or patrol_points.is_empty() else patrol_points[patrol_waypoint_index]
+    pending_patrol_state.clear()
+    patrol_nav = null
+    patrol_territory = camp_data.get("territory", null)
+    _patrol_path = PackedVector2Array()
+    _patrol_path_index = 0
+    _patrol_path_version = -1
+    _patrol_goal_cell = Vector2i(-1, -1)
+    _patrol_repath_timer = 0.0
+    if is_inside_tree():
+        patrol_nav = get_tree().get_first_node_in_group("navigation_grid")
+        add_to_group("enemy_patrols")
+
+
+func export_patrol_state() -> Dictionary:
+    if not is_patrol:
+        return {}
+    return {
+        "camp_id": patrol_camp_id,
+        "waypoint_index": patrol_waypoint_index,
+        "returning": patrol_returning
+    }
+
+
 func _ready() -> void:
     add_to_group("enemies")
+    if is_patrol:
+        add_to_group("enemy_patrols")
+        patrol_nav = get_tree().get_first_node_in_group("navigation_grid")
     if archetype in ["saboteur", "siege_engine", "beast_rider"]:
         var nav_grid := get_tree().get_first_node_in_group("navigation_grid")
         if archetype == "saboteur":
@@ -357,6 +444,9 @@ func _physics_process(delta: float) -> void:
         _update_anim(delta)
         queue_redraw()
         return
+
+    if is_patrol:
+        _tick_patrol_route()
 
     if _pounce_windup_t > 0.0:
         _pounce_windup_t = maxf(0.0, _pounce_windup_t - delta)
@@ -1353,13 +1443,17 @@ func _tick_ranged(delta: float) -> void:
 
 
 func _nearest_ranged_target() -> Node2D:
+    if is_patrol and patrol_returning:
+        return null
     var marked := _valid_scout_mark(165.0)
     if marked != null:
         return marked
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
         candidates.append(player)
-    return ENEMY_TARGETING.nearest(self, candidates, 165.0, guard_origin if is_garrison else Vector2.ZERO, 175.0 if is_garrison else 0.0)
+    var leash_center := patrol_origin if is_patrol else guard_origin
+    var leash_radius := patrol_radius if is_patrol else (175.0 if is_garrison else 0.0)
+    return ENEMY_TARGETING.nearest(self, candidates, 165.0, leash_center, leash_radius)
 
 
 func _tick_garrison(delta: float) -> void:
@@ -1378,13 +1472,17 @@ func _tick_garrison(delta: float) -> void:
 
 
 func _nearest_guard_target() -> Node2D:
+    if is_patrol and patrol_returning:
+        return null
     var marked := _valid_scout_mark(150.0)
     if marked != null:
         return marked
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
         candidates.append(player)
-    return ENEMY_TARGETING.nearest(self, candidates, 150.0, guard_origin, 175.0)
+    var leash_center := patrol_origin if is_patrol else guard_origin
+    var leash_radius := patrol_radius if is_patrol else 175.0
+    return ENEMY_TARGETING.nearest(self, candidates, 150.0, leash_center, leash_radius)
 
 
 func _begin_attack(target, direction: Vector2) -> void:
@@ -1514,6 +1612,13 @@ func _update_anim(delta: float) -> void:
 
 
 func _move_toward(target: Vector2, delta: float) -> void:
+    if is_patrol:
+        _move_patrol_toward(target, delta)
+        return
+    _move_toward_direct(target, delta)
+
+
+func _move_toward_direct(target: Vector2, delta: float) -> void:
     var to := target - position
     var distance := to.length()
     if anim.face(to):
@@ -1521,6 +1626,78 @@ func _move_toward(target: Vector2, delta: float) -> void:
     if distance > 0.5:
         _moving = true
         position += to / distance * minf(speed * delta, distance)
+
+
+func _tick_patrol_route() -> void:
+    if patrol_points.is_empty():
+        guard_origin = patrol_origin
+        return
+    if position.distance_to(patrol_origin) > patrol_radius:
+        patrol_returning = true
+    if patrol_returning:
+        guard_origin = patrol_origin
+        if position.distance_to(patrol_origin) <= 14.0:
+            patrol_returning = false
+            patrol_waypoint_index = posmod(patrol_waypoint_index, patrol_points.size())
+            guard_origin = patrol_points[patrol_waypoint_index]
+        return
+    var waypoint: Vector2 = patrol_points[patrol_waypoint_index]
+    guard_origin = waypoint
+    if position.distance_to(waypoint) <= 12.0:
+        patrol_waypoint_index = (patrol_waypoint_index + 1) % patrol_points.size()
+        guard_origin = patrol_points[patrol_waypoint_index]
+
+
+func _patrol_cell_in_enemy_region(cell: Vector2i) -> bool:
+    if patrol_nav == null or not patrol_nav.is_walkable(cell):
+        return false
+    if String(world.region_id(cell)) != patrol_region_id:
+        return false
+    if patrol_territory != null and patrol_territory.owner_at(cell) != "enemy":
+        return false
+    return true
+
+
+func _patrol_cell_allowed(cell: Vector2i) -> bool:
+    if not _patrol_cell_in_enemy_region(cell):
+        return false
+    return Vector2(patrol_nav.cell_of(patrol_origin) - cell).length() * WorldConfig.tile_size <= patrol_radius + WorldConfig.tile_size
+
+
+func _move_patrol_toward(target: Vector2, delta: float) -> void:
+    if patrol_nav == null:
+        return
+    var goal_cell: Vector2i = patrol_nav.cell_of(target)
+    if not WorldConfig.is_valid_cell(goal_cell) or not _patrol_cell_allowed(goal_cell):
+        return
+    _patrol_repath_timer = maxf(0.0, _patrol_repath_timer - delta)
+    if _patrol_path_version != patrol_nav.version or _patrol_goal_cell != goal_cell or _patrol_path.is_empty() or _patrol_repath_timer <= 0.0:
+        var candidate_path: PackedVector2Array = patrol_nav.path_to(global_position, goal_cell)
+        var valid_path := not candidate_path.is_empty()
+        if valid_path:
+            for path_point in candidate_path:
+                var path_cell: Vector2i = patrol_nav.cell_of(path_point)
+                var cell_is_allowed := _patrol_cell_in_enemy_region(path_cell)
+                if not patrol_returning:
+                    cell_is_allowed = _patrol_cell_allowed(path_cell)
+                if not cell_is_allowed:
+                    valid_path = false
+                    break
+        if not valid_path:
+            _patrol_path = PackedVector2Array()
+            return
+        _patrol_path = candidate_path
+        _patrol_path_index = 1 if candidate_path.size() > 1 else 0
+        _patrol_path_version = patrol_nav.version
+        _patrol_goal_cell = goal_cell
+        _patrol_repath_timer = 0.55
+
+    while _patrol_path_index < _patrol_path.size() and global_position.distance_to(_patrol_path[_patrol_path_index]) <= 3.0:
+        _patrol_path_index += 1
+    if _patrol_path_index < _patrol_path.size():
+        _move_toward_direct(_patrol_path[_patrol_path_index], delta)
+    elif global_position.distance_to(target) <= float(WorldConfig.tile_size):
+        _move_toward_direct(target, delta)
 
 
 func receive_healing(amount: int) -> void:
@@ -1562,6 +1739,7 @@ func _take_damage_from(amount: int, source_position: Vector2) -> void:
     if hp <= 0:
         remove_from_group("enemies")
         remove_from_group("enemy_garrison")
+        remove_from_group("enemy_patrols")
         remove_from_group("ranged_enemies")
         remove_from_group("supply_raiders")
         Events.enemy_killed.emit(id)
@@ -1585,6 +1763,7 @@ func retreat() -> void:
     is_garrison = false
     remove_from_group("enemies")
     remove_from_group("enemy_garrison")
+    remove_from_group("enemy_patrols")
     remove_from_group("ranged_enemies")
     remove_from_group("supply_raiders")
     queue_free()

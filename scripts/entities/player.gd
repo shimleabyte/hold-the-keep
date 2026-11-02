@@ -488,6 +488,19 @@ func _try_interact() -> void:
         _cooldown = 0.45
         nearest_site.interact()
         return
+    var nearest_camp: Node2D = null
+    var camp_distance := INTERACT_RANGE
+    for candidate in get_tree().get_nodes_in_group("faction_camp_targets"):
+        if not is_instance_valid(candidate) or not candidate.visible:
+            continue
+        var distance := origin.distance_to(candidate.global_position + Vector2(0, -4))
+        if distance < camp_distance:
+            nearest_camp = candidate
+            camp_distance = distance
+    if nearest_camp != null and nearest_camp.has_method("interact"):
+        _cooldown = 0.45
+        nearest_camp.interact()
+        return
     var best: Node2D = null
     var best_dist := INTERACT_RANGE
     for n in get_tree().get_nodes_in_group("harvestable"):

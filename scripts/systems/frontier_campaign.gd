@@ -1,7 +1,9 @@
 extends Node
 
 const SITE_SCRIPT := preload("res://scripts/entities/frontier_site.gd")
+const FACTION_CAMPS_SCRIPT := preload("res://scripts/systems/faction_camps.gd")
 
+var faction_camps
 var main
 var objectives: Dictionary = {}
 var sites: Dictionary = {}
@@ -53,6 +55,10 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
         site.setup(definition, self, main.world, main.nav, main.player, cell, previous)
         main.world.entities.add_child(site)
         sites[objective_id] = site
+
+    faction_camps = FACTION_CAMPS_SCRIPT.new()
+    main.world.add_child(faction_camps)
+    faction_camps.setup(main, saved.get("camps", {}))
 
     _update_unlocked_acts()
     _try_finish()
@@ -214,7 +220,7 @@ func objective_summary() -> String:
 
 func export_state() -> Dictionary:
     if WorldConfig.profile_id != "frontier":
-        return {"profile":"classic","objectives":[],"final_boss_defeated":false,"unlocked_act":1}
+        return {"profile":"classic","objectives":[],"final_boss_defeated":false,"unlocked_act":1,"camps":{"records":[]}}
     var records: Array[Dictionary] = []
     for objective_id in objectives:
         var record: Dictionary = objectives[objective_id]
@@ -233,5 +239,6 @@ func export_state() -> Dictionary:
         })
     return {
         "profile":"frontier", "objectives":records,
-        "final_boss_defeated":final_boss_defeated, "unlocked_act":unlocked_act
+        "final_boss_defeated":final_boss_defeated, "unlocked_act":unlocked_act,
+        "camps": faction_camps.export_state() if is_instance_valid(faction_camps) else {"records":[]}
     }

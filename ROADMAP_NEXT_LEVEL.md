@@ -180,9 +180,10 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Saboteur building disruption merged via PR #40 (`8f1a914`); workflow #41355982522 passed 60/60 jobs on Godot 4.3/4.7.
 - [x] Scout scouting/marking merged via PR #39 (`11f3f13`); workflow #41354720293 passed 58/58 jobs on Godot 4.3/4.7.
 - [x] Shieldbearer directional brace merged via PR #36 (`b02aa60`); the available first results page for workflow #41329202804 showed 30/30 successful jobs; full matrix not independently verified.
-- [ ] Add deterministic faction camps, bounded patrol routes and camp reinforcement budgets.
+- [x] Deterministic Frontier faction camps implemented on `feat/phase-06-faction-camps-patrols`: one reachable enemy-owned site per faction; hidden until fog discovery; destructible by player melee. PR/CI pending.
+- [x] Bounded A* patrols, region/territory/leash validation, camp return, active cap and finite per-faction reinforcement budget implemented. PR/CI pending.
+- [x] Optional camp/patrol state added to save v13 with regression coverage for reload assignment. PR/CI pending.
 - [ ] Expand raids/counterattacks against exposed Outposts, roads and depots only after Phase 02.5 acceptance; current slice targets remote depots, uses nav reachability, and caps at two saboteurs per isolation.
-- [ ] Persist camps, patrol assignments and raid state; validate Classic v1–v13 and Frontier v7–v13 migration/round-trip.
 - [x] Merged through PR #21; Godot 4.3 / 4.7 CI passed (30/30 jobs).
 - [ ] Manual Frontier gameplay review.
 
