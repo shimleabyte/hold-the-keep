@@ -29,7 +29,7 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 29 assertion reg
 | save_load_audio_menu.gd | round-trip save/load, autosave, save rusak, audio, menu, pengaturan |
 | resource_save_state.gd | status pohon/batu/bijih besi dan timer tumbuh ulang, rollback ke backup save |
 | campaign_assault.gd | Classic single-stronghold compatibility, fog reveal/save, G assault/recall, garrison at dawn and conquest victory |
-| faction_registry.gd | four faction definitions, region mapping, roster membership, stronghold garrisons, component-backed War Shaman allied healing/cooldown and v11 faction save persistence |
+| faction_visual_identity.gd | four distinct faction palettes/crests, six specialist equipment signatures, enemy visual assignment and Classic isolation |\n| faction_registry.gd | four faction definitions, region mapping, roster membership, stronghold garrisons, component-backed War Shaman allied healing/cooldown and v11 faction save persistence |
 | frontier_campaign.gd | Classic/Frontier campaign calendars, act gates, all regional objectives, rewards, save/load and day-20 King victory |
 | campaign_multi_stronghold.gd | four Frontier strongholds, deterministic objective order, regional placement, independent garrisons, locked objectives, save/load and final conquest |
 | workplace_assignments.gd | Builder workplace capacity/radius, repair material consumption, reachable depot selection, job priority reassignment and v11 save validation |
