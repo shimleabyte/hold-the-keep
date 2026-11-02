@@ -21,6 +21,19 @@ func resource_signature(world: Node) -> Array[String]:
     return signature
 
 
+
+func decoration_signature(world: Node) -> Array[String]:
+    var signature: Array[String] = []
+    for entry in world.generated_decoration_layout:
+        var cell: Vector2i = entry["cell"]
+        signature.append("%d,%d:%s:%d:%s" % [
+            cell.x, cell.y, String(entry["kind"]),
+            int(entry["variant"]), str(bool(entry["landmark"]))
+        ])
+    signature.sort()
+    return signature
+
+
 func reachable_cells(nav: Node, start: Vector2i) -> Dictionary:
     var visited: Dictionary = {}
     if not nav.is_walkable(start):
@@ -118,6 +131,37 @@ func _initialize() -> void:
     assert(tile_types.has(2) and int(tile_types[2]) > 100,
         "The Frontier must retain natural water obstacles")
 
+
+    var decoration_regions := {
+        "HEARTHLAND": 0,
+        "GREENWOOD": 0,
+        "HIGHLANDS": 0,
+        "FENLANDS": 0,
+        "ASHEN_MARCH": 0
+    }
+    var landmark_regions := {}
+    assert(world.generated_decoration_layout.size() >= 100,
+        "Frontier must receive a meaningful amount of non-blocking regional dressing")
+    var resource_cells: Dictionary = {}
+    for resource_entry in world.generated_resource_layout:
+        resource_cells[resource_entry["cell"]] = true
+    for entry in world.generated_decoration_layout:
+        var cell: Vector2i = entry["cell"]
+        assert(not resource_cells.has(cell),
+            "Decorative props must not overlap generated harvestable or iron resource cells")
+        var region: String = world.region_id(cell)
+        decoration_regions[region] += 1
+        if bool(entry["landmark"]):
+            landmark_regions[region] = true
+    assert(landmark_regions.size() == 5,
+        "Each Frontier biome must receive one deterministic regional landmark")
+    for region in decoration_regions:
+        assert(int(decoration_regions[region]) >= 5,
+            "Every Frontier biome must receive visible regional dressing: " + String(region))
+    for region in landmark_regions:
+        assert(bool(landmark_regions[region]),
+            "Landmark placement must be recorded for " + String(region))
+
     # The entire initial Keep footprint must be inside the generated home clearing.
     var keep_cell: Vector2i = world.starting_keep_cell()
     for y in 3:
@@ -184,6 +228,12 @@ func _initialize() -> void:
         "HIGHLANDS": 0,
         "ASHEN_MARCH": 0
     }
+    var regional_prop_styles := {
+        "greenwood": 0,
+        "fenlands": 0,
+        "ashen_march": 0,
+        "highlands": 0
+    }
     for cell in world.occupied:
         var node = world.occupied[cell]
         if not is_instance_valid(node) or not node.is_in_group("resource_nodes"):
@@ -193,6 +243,10 @@ func _initialize() -> void:
         var region: String = world.region_id(cell)
         if regional_resources.has(region):
             regional_resources[region] += 1
+        if kind != "iron":
+            var style := String(node.regional_style)
+            if regional_prop_styles.has(style):
+                regional_prop_styles[style] += 1
 
     assert(int(resource_counts["wood"]) >= 100,
         "Frontier must generate a substantial renewable wood supply")
@@ -206,6 +260,9 @@ func _initialize() -> void:
         "Highlands must contain a meaningful resource concentration")
     assert(int(regional_resources["ASHEN_MARCH"]) >= 30,
         "Ashen March must contain a meaningful resource concentration")
+    for style in regional_prop_styles:
+        assert(int(regional_prop_styles[style]) > 0,
+            "Frontier must generate resource props with the regional visual style: " + style)
 
     # Validate path connectivity from the Keep's spawn point into every biome.
     main.nav.rebuild()
@@ -247,8 +304,10 @@ func _initialize() -> void:
                 "Biome assignment must be deterministic at %s" % cell)
     assert(resource_signature(mirror) == resource_signature(world),
         "Resource placement must be deterministic for a matching seed/profile")
+    assert(decoration_signature(mirror) == decoration_signature(world),
+        "Biome decoration and landmark placement must be deterministic for a matching seed/profile")
 
-    print("PASS: Frontier dimensions, five regions, Ashen terrain, resources, iron veins, Keep claim, reachability and deterministic generation")
+    print("PASS: Frontier dimensions, five regions, biome dressing, five landmarks, resources, iron veins, Keep claim, reachability and deterministic generation")
     mirror.queue_free()
     main.queue_free()
     quit()

@@ -3,6 +3,8 @@ extends StaticBody2D
 
 const ROCK_TEX := preload("res://assets/sprites/rock.svg")
 const DEPLETED_TEX := preload("res://assets/sprites/rock_depleted.svg")
+const HIGHLANDS_TEX := preload("res://assets/sprites/rock_frontier_highlands.svg")
+const ASHEN_TEX := preload("res://assets/sprites/rock_frontier_ashen.svg")
 
 const MAX_HP := 4
 const STONE_PER_HIT := 1
@@ -10,6 +12,7 @@ const STONE_BONUS := 2
 const REGROW_SECONDS := 90.0
 
 var yield_kind := "stone"
+var regional_style := "classic"
 var worker = null
 
 var _hp := MAX_HP
@@ -88,4 +91,8 @@ func _regrow() -> void:
 
 func _draw() -> void:
     var tex: Texture2D = ROCK_TEX if _hp > 0 else DEPLETED_TEX
+    if _hp > 0:
+        match regional_style:
+            "highlands": tex = HIGHLANDS_TEX
+            "ashen_march": tex = ASHEN_TEX
     draw_texture(tex, Vector2(-tex.get_width() / 2.0, -tex.get_height()))

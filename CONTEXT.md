@@ -504,3 +504,17 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 ## Riwayat terbaru
 - 2026-11-02: PR #47 merged (`b06c355`), extracting archetype-specific behavior into six dedicated components; latest workflow #41394905158 passed 70/70 jobs on Godot 4.3/4.7.
 - 2026-11-02: Started Phase 08 on `feat/phase-08-visual-audio-identity-mainline`. Added `assets/sprites/tiles_frontier.svg`, a weathered seven-cell Frontier terrain atlas. `world_map.gd` selects it only for Frontier; Classic keeps `tiles.svg`. Extended `frontier_world.gd` to assert the atlas resource and dimensions. Phase plan and roadmap updated; rendered screenshot review and further environment/faction/audio work remain pending.
+
+
+## Phase 08.3 — Frontier biome dressing (2026-11-02)
+- PR #48 merged the seven-cell weathered Frontier terrain atlas into main at `9a2a849`; CI run #41395636707 passed 70/70 jobs on Godot 4.3/4.7.
+- Current implementation branch: `feat/phase-08.3-frontier-biome-props`.
+- Added deterministic non-blocking regional props and five biome landmarks through `scripts/entities/frontier_decoration.gd`; decoration placement is separate from terrain/resource RNG and avoids occupied cells.
+- Extended `tests/frontier_world.gd` for deterministic decoration layout, no resource overlap and one landmark per biome. CI and rendered screenshot review are pending.
+
+
+## Phase 08.3 — Frontier biome dressing (2026-11-02)
+- The regional decoration pass includes fern clusters, reeds, dead pines, standing stones, ash pillars and five biome landmarks. Placement is deterministic, non-colliding, independent of resource RNG and avoids resource cells.
+- Hearthland dressing uses a sparse ring beyond the Keep's protected core, because the original clearance threshold excluded the entire Hearthland region; the corrected density and placement rule preserve a usable starting area.
+- Resource node variants: Greenwood pine, Fenlands willow, Ashen deadwood, Highlands stone and Ashen rock. Classic sprite behavior remains unchanged.
+- `frontier_world.gd` verifies decoration coverage, five landmarks, deterministic placement, no resource overlap and regional resource sprite coverage. PR #50 CI rerun pending.
