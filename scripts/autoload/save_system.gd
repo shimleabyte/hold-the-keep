@@ -622,7 +622,7 @@ func _valid_frontier_campaign(value: Variant, expected_profile: String, map_size
         for camp_record in camp_records:
             if not (camp_record is Dictionary):
                 return false
-            for key in ["id", "cx", "cy", "activated", "budget", "timer", "spawn_index"]:
+            for key in ["id", "cx", "cy", "activated", "destroyed", "suppressed", "hp", "budget", "timer", "spawn_index"]:
                 if not camp_record.has(key):
                     return false
             var camp_id := String(camp_record["id"])
@@ -635,7 +635,11 @@ func _valid_frontier_campaign(value: Variant, expected_profile: String, map_size
                 return false
             if String(camp_record.get("region", faction_region)) != faction_region:
                 return false
-            if not (camp_record["activated"] is bool):
+            if not (camp_record["activated"] is bool) or not (camp_record["destroyed"] is bool) or not (camp_record["suppressed"] is bool):
+                return false
+            if int(camp_record["hp"]) < 0 or int(camp_record["hp"]) > 220:
+                return false
+            if bool(camp_record["destroyed"]) and (int(camp_record["hp"]) != 0 or int(camp_record["budget"]) != 0):
                 return false
             if int(camp_record["budget"]) < 0 or int(camp_record["budget"]) > 12:
                 return false
