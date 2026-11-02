@@ -19,6 +19,12 @@
       "active_patrol_cap": 2,
       "reinforcement_budget": 4,
       "reinforcement_cooldown": 26
+    },
+    "raid_unit": "enemy_saboteur",
+    "raid": {
+      "budget": 2,
+      "cooldown": 88,
+      "active_cap": 1
     }
   },
   {
@@ -40,6 +46,12 @@
       "active_patrol_cap": 2,
       "reinforcement_budget": 4,
       "reinforcement_cooldown": 34
+    },
+    "raid_unit": "enemy_siege_engine",
+    "raid": {
+      "budget": 2,
+      "cooldown": 104,
+      "active_cap": 1
     }
   },
   {
@@ -62,6 +74,12 @@
       "active_patrol_cap": 2,
       "reinforcement_budget": 5,
       "reinforcement_cooldown": 30
+    },
+    "raid_unit": "enemy_beast_rider",
+    "raid": {
+      "budget": 2,
+      "cooldown": 96,
+      "active_cap": 1
     }
   },
   {
@@ -84,6 +102,12 @@
       "active_patrol_cap": 2,
       "reinforcement_budget": 5,
       "reinforcement_cooldown": 38
+    },
+    "raid_unit": "enemy_siege_engine",
+    "raid": {
+      "budget": 2,
+      "cooldown": 112,
+      "active_cap": 1
     }
   }
 ]
