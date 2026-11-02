@@ -1,6 +1,6 @@
 extends Node2D
 ## Profile-scaled world terrain, collision water and harvestable resource nodes.
-## Semua visual masih placeholder prosedural; ganti dengan tileset asli nanti.
+## Classic keeps its original atlas; Frontier uses a dedicated weathered regional palette.
 
 const TREE_CHANCE := 0.07
 
@@ -10,6 +10,7 @@ const ROCK_CHANCE := 0.02
 const IRON_SCRIPT := preload("res://scripts/entities/iron_ore.gd")
 
 const TILES_TEX := preload("res://assets/sprites/tiles.svg")
+const TILES_FRONTIER_TEX := preload("res://assets/sprites/tiles_frontier.svg")
 
 const T_GRASS := 0
 const T_GRASS_ALT := 1
@@ -112,7 +113,7 @@ func _build_tileset() -> TileSet:
     ts.set_physics_layer_collision_layer(0, 1)
 
     var src := TileSetAtlasSource.new()
-    src.texture = TILES_TEX
+    src.texture = TILES_FRONTIER_TEX if WorldConfig.profile_id == "frontier" else TILES_TEX
     src.texture_region_size = Vector2i(tile_size, tile_size)
     ts.add_source(src, 0)
     for i in 7:
