@@ -354,7 +354,8 @@ func configure_patrol(camp_data: Dictionary, saved_patrol_state: Dictionary = {}
     is_patrol = true
     patrol_camp_id = String(camp_data.get("camp_id", ""))
     patrol_region_id = String(camp_data.get("region_id", ""))
-    patrol_origin = camp_data.get("camp_position", Vector2.ZERO) as Vector2
+    var saved_origin: Variant = camp_data.get("camp_position", Vector2.ZERO)
+    patrol_origin = Vector2(saved_origin)
     patrol_radius = clampf(float(camp_data.get("patrol_radius", 144.0)), 80.0, 220.0)
     patrol_points.clear()
     var raw_points: Array = camp_data.get("patrol_points", [])
@@ -1438,6 +1439,8 @@ func _tick_ranged(delta: float) -> void:
 
 
 func _nearest_ranged_target() -> Node2D:
+    if is_patrol and patrol_returning:
+        return null
     var marked := _valid_scout_mark(165.0)
     if marked != null:
         return marked
@@ -1465,6 +1468,8 @@ func _tick_garrison(delta: float) -> void:
 
 
 func _nearest_guard_target() -> Node2D:
+    if is_patrol and patrol_returning:
+        return null
     var marked := _valid_scout_mark(150.0)
     if marked != null:
         return marked
