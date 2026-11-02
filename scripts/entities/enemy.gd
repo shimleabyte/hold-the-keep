@@ -9,6 +9,7 @@ const ENEMY_TARGETING := preload("res://scripts/systems/enemy_targeting.gd")
 const ENEMY_SUPPORT := preload("res://scripts/systems/enemy_support.gd")
 const BeastRiderBehavior := preload("res://scripts/behaviors/beast_rider_behavior.gd")
 const ShieldbearerBehavior := preload("res://scripts/behaviors/shieldbearer_behavior.gd")
+const ScoutBehavior := preload("res://scripts/behaviors/scout_behavior.gd")
 const TEXTURES := {
     "bandit": preload("res://assets/sprites/enemy_bandit.svg"),
     "wolf": preload("res://assets/sprites/enemy_wolf.svg"),
@@ -107,12 +108,7 @@ var armor := 0.0
 var stagger_resistance := 0.0
 var structure_damage_mult := 1.0
 var shield_behavior = ShieldbearerBehavior.new()
-var scout_mark_range := 142.0
-var scout_preferred_range := 96.0
-var scout_windup_duration := 0.68
-var scout_mark_duration := 5.4
-var scout_mark_cooldown_duration := 8.4
-var scout_share_radius := 190.0
+var scout_behavior = ScoutBehavior.new()
 var saboteur_scan_range := 460.0
 var saboteur_scan_interval := 1.25
 var saboteur_windup_duration := 0.85
@@ -143,12 +139,6 @@ var _pending_is_projectile := false
 var _pounce_windup_t := 0.0
 var _pounce_t := 0.0
 var _pounce_dir := Vector2.ZERO
-var _scout_windup_t := 0.0
-var _scout_windup_target: Node2D
-var _scout_mark_target: Node2D
-var _scout_mark_t := 0.0
-var _scout_mark_cd := 0.0
-var saboteur_nav
 var _saboteur_target: Node2D
 var _saboteur_scan_t := 0.0
 var _saboteur_scan_cursor := 0
@@ -202,12 +192,6 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     armor = clampf(float(data.get("armor", 0.0)), 0.0, 0.8)
     stagger_resistance = clampf(float(data.get("stagger_resistance", 0.0)), 0.0, 0.9)
     structure_damage_mult = maxf(1.0, float(data.get("structure_damage_mult", 1.0)))
-    scout_mark_range = clampf(float(data.get("scout_mark_range", 142.0)), 80.0, 190.0)
-    scout_preferred_range = clampf(float(data.get("scout_preferred_range", 96.0)), 56.0, 140.0)
-    scout_windup_duration = clampf(float(data.get("scout_windup", 0.68)), 0.25, 1.5)
-    scout_mark_duration = clampf(float(data.get("scout_mark_duration", 5.4)), 2.5, 10.0)
-    scout_mark_cooldown_duration = clampf(float(data.get("scout_mark_cooldown", 8.4)), 4.0, 18.0)
-    scout_share_radius = clampf(float(data.get("scout_share_radius", 190.0)), 80.0, 280.0)
     saboteur_scan_range = clampf(float(data.get("saboteur_scan_range", 460.0)), 160.0, 720.0)
     saboteur_scan_interval = clampf(float(data.get("saboteur_scan_interval", 1.25)), 0.4, 4.0)
     saboteur_windup_duration = clampf(float(data.get("saboteur_windup", 0.85)), 0.35, 1.8)
@@ -237,11 +221,6 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     _saboteur_path_index = 0
     _saboteur_path_version = -1
     _saboteur_repath_t = 0.0
-    _scout_windup_t = 0.0
-    _scout_windup_target = null
-    _scout_mark_target = null
-    _scout_mark_t = 0.0
-    _scout_mark_cd = 0.0
     is_patrol = false
     is_supply_raider = false
     is_faction_raider = false
@@ -275,6 +254,7 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     player = player_ref
     beast_behavior.configure(self, data)
     shield_behavior.configure(self, data, SHIELD_TARGET_RANGE)
+    scout_behavior.configure(self, data)
     _offset = Vector2(randf_range(-4.0, 4.0), randf_range(-3.0, 3.0))
     _tex = TEXTURES.get(id, TEXTURES["bandit"])
     _fw = int(_tex.get_width() / float(SpriteAnim.FRAMES))
@@ -378,19 +358,13 @@ func _physics_process(delta: float) -> void:
     _siege_cd = maxf(0.0, _siege_cd - delta)
     _siege_repath_t = maxf(0.0, _siege_repath_t - delta)
     beast_behavior.advance_timers(delta)
-    _scout_mark_t = maxf(0.0, _scout_mark_t - delta)
-    _scout_mark_cd = maxf(0.0, _scout_mark_cd - delta)
-    if _scout_mark_t <= 0.0 or not is_instance_valid(_scout_mark_target):
-        _scout_mark_t = 0.0
-        _scout_mark_target = null
+    scout_behavior.advance_timers(delta)
     _resolve_pending(delta)
     _moving = false
 
     if _stagger_t > 0.0:
-        if archetype == "scout" and _scout_windup_t > 0.0:
-            _scout_windup_t = 0.0
-            _scout_windup_target = null
-            _scout_mark_cd = maxf(_scout_mark_cd, 1.2)
+        if archetype == "scout":
+            scout_behavior.interrupt()
         _stagger_t = maxf(0.0, _stagger_t - delta)
         _update_anim(delta)
         queue_redraw()
@@ -1009,117 +983,19 @@ func _tick_saboteur(delta: float) -> void:
 
 
 func _nearest_scout_target() -> Node2D:
-    var candidates := get_tree().get_nodes_in_group("defenders")
-    if player != null and is_instance_valid(player):
-        candidates.append(player)
-    return ENEMY_TARGETING.nearest(
-        self,
-        candidates,
-        scout_mark_range,
-        guard_origin if is_garrison else Vector2.ZERO,
-        175.0 if is_garrison else 0.0
-    )
+    return scout_behavior.nearest_target()
 
 
 func _tick_scout(delta: float) -> void:
-    if _scout_windup_t > 0.0:
-        var windup_target := _scout_windup_target
-        if windup_target == null or not is_instance_valid(windup_target) or not windup_target.visible or position.distance_to(windup_target.position) > scout_mark_range + 24.0:
-            _scout_windup_t = 0.0
-            _scout_windup_target = null
-            _scout_mark_cd = minf(_scout_mark_cd, 0.8)
-            queue_redraw()
-        else:
-            var windup_direction := windup_target.position - position
-            if windup_direction.length_squared() > 0.01:
-                anim.face(windup_direction)
-            _moving = false
-            _scout_windup_t = maxf(0.0, _scout_windup_t - delta)
-            if _scout_windup_t <= 0.0:
-                _release_scout_mark(windup_target)
-            queue_redraw()
-            return
-
-    var target: Node2D = null
-    if _scout_mark_t > 0.0 and is_instance_valid(_scout_mark_target):
-        target = _scout_mark_target
-    else:
-        target = _nearest_scout_target()
-
-    if target == null:
-        if is_garrison:
-            if position.distance_to(guard_origin) > 16.0:
-                _move_toward(guard_origin, delta)
-        else:
-            _tick_flow(delta)
-        return
-
-    var to_target := target.position - position
-    var distance := to_target.length()
-    var direction := to_target.normalized() if distance > 0.01 else Vector2.DOWN
-
-    if _scout_mark_t <= 0.0 and _scout_mark_cd <= 0.0 and distance <= scout_mark_range:
-        _scout_windup_target = target
-        _scout_windup_t = scout_windup_duration
-        anim.face(direction)
-        Events.fx_burst.emit("dust", position + Vector2(0, -3), -direction, 0.65)
-        queue_redraw()
-        return
-
-    if distance < scout_preferred_range - 14.0:
-        _move_toward(position - direction * 36.0, delta)
-    elif distance > scout_preferred_range + 18.0:
-        _move_toward(target.position - direction * scout_preferred_range, delta)
-    else:
-        _moving = false
-
-
-func _release_scout_mark(target: Node2D) -> void:
-    if target == null or not is_instance_valid(target) or not target.visible:
-        _scout_windup_t = 0.0
-        _scout_windup_target = null
-        return
-    _scout_windup_t = 0.0
-    _scout_windup_target = null
-    _scout_mark_target = target
-    _scout_mark_t = scout_mark_duration
-    _scout_mark_cd = scout_mark_cooldown_duration
-    var target_position := target.global_position + Vector2(0, -8)
-    Events.fx_burst.emit("rally", target_position, Vector2.ZERO, 1.0)
-
-    for ally in get_tree().get_nodes_in_group("enemies"):
-        if ally == self or not is_instance_valid(ally) or not (ally is Node2D):
-            continue
-        var enemy_ally := ally as Node2D
-        if String(enemy_ally.get("faction_id")) != faction_id:
-            continue
-        if global_position.distance_to(enemy_ally.global_position) > scout_share_radius:
-            continue
-        if enemy_ally.has_method("apply_scout_mark"):
-            enemy_ally.apply_scout_mark(target, scout_mark_duration)
-    queue_redraw()
+    scout_behavior.tick(delta)
 
 
 func apply_scout_mark(target: Node2D, duration: float) -> void:
-    if target == null or not is_instance_valid(target) or not target.visible or duration <= 0.0:
-        return
-    if _scout_mark_t > 0.0 and is_instance_valid(_scout_mark_target) and _scout_mark_target != target:
-        return
-    _scout_mark_target = target
-    _scout_mark_t = maxf(_scout_mark_t, minf(duration, 10.0))
-    queue_redraw()
+    scout_behavior.apply_mark(target, duration)
 
 
 func _valid_scout_mark(max_distance: float) -> Node2D:
-    if _scout_mark_t <= 0.0 or _scout_mark_target == null or not is_instance_valid(_scout_mark_target):
-        return null
-    if not _scout_mark_target.visible:
-        return null
-    if position.distance_to(_scout_mark_target.position) > max_distance:
-        return null
-    if is_garrison and _scout_mark_target.position.distance_to(guard_origin) > 175.0:
-        return null
-    return _scout_mark_target
+    return scout_behavior.valid_mark(max_distance)
 
 
 func _tick_marked_target(delta: float) -> bool:
@@ -1300,10 +1176,8 @@ func apply_stagger(duration: float) -> void:
     _pounce_t = 0.0
     if archetype == "shieldbearer":
         shield_behavior.interrupt()
-    if archetype == "scout" and _scout_windup_t > 0.0:
-        _scout_windup_t = 0.0
-        _scout_windup_target = null
-        _scout_mark_cd = maxf(_scout_mark_cd, 1.2)
+    if archetype == "scout":
+        scout_behavior.interrupt()
     if archetype == "saboteur" and _saboteur_windup_t > 0.0:
         _saboteur_windup_t = 0.0
         _saboteur_target = null
@@ -1512,16 +1386,7 @@ func _draw() -> void:
             Color("#ffb347"), 2.0)
     match archetype:
         "scout":
-            draw_line(Vector2(-4, -15), Vector2(0, -19), color, 1.5)
-            draw_line(Vector2(0, -19), Vector2(4, -15), color, 1.5)
-            var scout_target: Node2D = _scout_windup_target if _scout_windup_t > 0.0 else _scout_mark_target
-            if scout_target != null and is_instance_valid(scout_target):
-                var marker_center := scout_target.global_position - global_position + Vector2(0, -8)
-                var marker_color := Color("#efca78") if _scout_windup_t > 0.0 else Color("#d99b45")
-                draw_line(Vector2(0, -_fh - 5), marker_center, marker_color, 1.0)
-                draw_arc(marker_center, 10.0, 0.0, TAU, 12, marker_color, 1.5)
-            if _scout_windup_t > 0.0:
-                draw_arc(Vector2(0, -_fh - 8), 5.0, 0.0, TAU, 8, Color("#efca78"), 1.5)
+            scout_behavior.draw_telegraph(self, _fh, color)
         "shieldbearer":
             draw_rect(Rect2(-11, -14, 5, 10), color, false, 1.5)
             draw_line(Vector2(-11, -10), Vector2(-6, -10), color, 1.0)
