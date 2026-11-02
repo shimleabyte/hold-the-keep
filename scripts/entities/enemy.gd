@@ -44,6 +44,8 @@ const SIEGE_TARGET_PRIORITIES := {
     "farm": 1
 }
 const SIEGE_TARGET_SCAN_LIMIT := 32
+const BEAST_TARGET_SCAN_LIMIT := 24
+const BEAST_TARGET_ISOLATION_RADIUS := 76.0
 const WALK_BASE_SPEED := 32.0
 const RUN_BASE_SPEED := 58.0
 
@@ -152,6 +154,31 @@ var _siege_path := PackedVector2Array()
 var _siege_path_index := 0
 var _siege_path_version := -1
 var _siege_repath_t := 0.0
+var beast_nav
+var beast_target_scan_range := 235.0
+var beast_charge_min_range := 54.0
+var beast_charge_max_range := 162.0
+var beast_charge_windup_duration := 0.82
+var beast_charge_speed_multiplier := 2.8
+var beast_charge_max_distance := 156.0
+var beast_charge_hit_radius := 18.0
+var beast_charge_cooldown_duration := 6.5
+var beast_charge_damage_multiplier := 1.35
+var _beast_target: Node2D
+var _beast_cd := 0.0
+var _beast_scan_t := 0.0
+var _beast_scan_cursor := 0
+var _beast_windup_t := 0.0
+var _beast_charge_t := 0.0
+var _beast_charge_direction := Vector2.ZERO
+var _beast_target_position := Vector2.ZERO
+var _beast_charge_path := PackedVector2Array()
+var _beast_charge_path_index := 0
+var _beast_charge_path_version := -1
+var _beast_approach_path := PackedVector2Array()
+var _beast_approach_path_index := 0
+var _beast_approach_path_version := -1
+var _beast_approach_repath_t := 0.0
 var _tex: Texture2D
 var _fw := 20
 var _fh := 20
@@ -209,6 +236,29 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     siege_windup_duration = clampf(float(data.get("siege_windup", 1.1)), 0.45, 2.0)
     siege_cooldown_duration = clampf(float(data.get("siege_cooldown", 2.6)), 1.2, 8.0)
     siege_damage_multiplier = clampf(float(data.get("siege_structure_damage_mult", 2.4)), 1.2, 4.0)
+    beast_target_scan_range = clampf(float(data.get("beast_target_scan_range", 235.0)), 140.0, 340.0)
+    beast_charge_min_range = clampf(float(data.get("beast_charge_min_range", 54.0)), 36.0, 90.0)
+    beast_charge_max_range = clampf(float(data.get("beast_charge_max_range", 162.0)), 110.0, 220.0)
+    beast_charge_windup_duration = clampf(float(data.get("beast_charge_windup", 0.82)), 0.4, 1.4)
+    beast_charge_speed_multiplier = clampf(float(data.get("beast_charge_speed_multiplier", 2.8)), 2.0, 4.0)
+    beast_charge_max_distance = clampf(float(data.get("beast_charge_max_distance", 156.0)), 90.0, 210.0)
+    beast_charge_hit_radius = clampf(float(data.get("beast_charge_hit_radius", 18.0)), 12.0, 30.0)
+    beast_charge_cooldown_duration = clampf(float(data.get("beast_charge_cooldown", 6.5)), 3.5, 12.0)
+    beast_charge_damage_multiplier = clampf(float(data.get("beast_charge_damage_multiplier", 1.35)), 1.05, 2.0)
+    _beast_target = null
+    _beast_scan_t = 0.0
+    _beast_scan_cursor = 0
+    _beast_windup_t = 0.0
+    _beast_charge_t = 0.0
+    _beast_charge_direction = Vector2.ZERO
+    _beast_target_position = Vector2.ZERO
+    _beast_charge_path = PackedVector2Array()
+    _beast_charge_path_index = 0
+    _beast_charge_path_version = -1
+    _beast_approach_path = PackedVector2Array()
+    _beast_approach_path_index = 0
+    _beast_approach_path_version = -1
+    _beast_approach_repath_t = 0.0
     _siege_target = null
     _siege_scan_t = 0.0
     _siege_scan_cursor = 0
@@ -253,12 +303,14 @@ func setup_guard(data: Dictionary, world_ref, flow_ref, player_ref, origin: Vect
 
 func _ready() -> void:
     add_to_group("enemies")
-    if archetype in ["saboteur", "siege_engine"]:
+    if archetype in ["saboteur", "siege_engine", "beast_rider"]:
         var nav_grid := get_tree().get_first_node_in_group("navigation_grid")
         if archetype == "saboteur":
             saboteur_nav = nav_grid
-        else:
+        elif archetype == "siege_engine":
             siege_nav = nav_grid
+        else:
+            beast_nav = nav_grid
     if is_supply_raider:
         add_to_group("supply_raiders")
     if is_garrison:
@@ -280,6 +332,9 @@ func _physics_process(delta: float) -> void:
     _siege_scan_t = maxf(0.0, _siege_scan_t - delta)
     _siege_cd = maxf(0.0, _siege_cd - delta)
     _siege_repath_t = maxf(0.0, _siege_repath_t - delta)
+    _beast_scan_t = maxf(0.0, _beast_scan_t - delta)
+    _beast_cd = maxf(0.0, _beast_cd - delta)
+    _beast_approach_repath_t = maxf(0.0, _beast_approach_repath_t - delta)
     _scout_mark_t = maxf(0.0, _scout_mark_t - delta)
     _scout_mark_cd = maxf(0.0, _scout_mark_cd - delta)
     if _scout_mark_t <= 0.0 or not is_instance_valid(_scout_mark_target):
@@ -313,6 +368,12 @@ func _physics_process(delta: float) -> void:
 
     if is_supply_raider:
         _tick_supply_raid(delta)
+        _update_anim(delta)
+        _footsteps(delta)
+        return
+
+    if archetype == "beast_rider":
+        _tick_beast_rider(delta)
         _update_anim(delta)
         _footsteps(delta)
         return
@@ -455,6 +516,274 @@ func _tick_flow(delta: float) -> void:
             _begin_attack(occupied, occupied.position - position)
         return
     _move_toward(Vector2(next) * WorldConfig.tile_size + Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0) + _offset, delta)
+
+
+
+func _beast_target_valid(target: Node2D) -> bool:
+    if target == null or not is_instance_valid(target) or not target.visible:
+        return false
+    if target != player and not target.is_in_group("defenders"):
+        return false
+    if int(target.get("hp")) <= 0:
+        return false
+    if is_garrison and target.global_position.distance_to(guard_origin) > 175.0:
+        return false
+    return true
+
+
+func _beast_target_score(candidate: Node2D, defenders: Array) -> float:
+    var distance := global_position.distance_to(candidate.global_position)
+    var score := 180.0 - distance * 0.4
+    if candidate == player:
+        return score + 16.0
+
+    var nearby_support := 0
+    for ally in defenders:
+        if ally == candidate or not is_instance_valid(ally) or not (ally is Node2D):
+            continue
+        var defender := ally as Node2D
+        if defender.visible and defender.global_position.distance_to(candidate.global_position) <= BEAST_TARGET_ISOLATION_RADIUS:
+            nearby_support += 1
+    if nearby_support == 0:
+        score += 72.0
+    elif nearby_support == 1:
+        score += 26.0
+
+    var target_job := String(candidate.get("job"))
+    if target_job in ["archer", "ranged"]:
+        score += 42.0
+    return score
+
+
+func _select_beast_target() -> Node2D:
+    var defenders: Array = get_tree().get_nodes_in_group("defenders")
+    var best_target: Node2D = null
+    var best_score := -INF
+
+    var player_target := player as Node2D
+    if _beast_target_valid(player_target):
+        var player_distance := global_position.distance_to(player_target.global_position)
+        if player_distance <= beast_target_scan_range:
+            best_target = player_target
+            best_score = _beast_target_score(player_target, defenders)
+
+    var defender_count := defenders.size()
+    var scan_count := mini(BEAST_TARGET_SCAN_LIMIT, defender_count)
+    for offset in scan_count:
+        var candidate = defenders[(_beast_scan_cursor + offset) % defender_count]
+        if not (candidate is Node2D):
+            continue
+        var defender := candidate as Node2D
+        if not _beast_target_valid(defender):
+            continue
+        if global_position.distance_to(defender.global_position) > beast_target_scan_range:
+            continue
+        var score := _beast_target_score(defender, defenders)
+        if score > best_score:
+            best_score = score
+            best_target = defender
+
+    if defender_count > 0:
+        _beast_scan_cursor = (_beast_scan_cursor + scan_count) % defender_count
+    return best_target
+
+
+func _begin_beast_windup(target: Node2D) -> bool:
+    if beast_nav == null or not _beast_target_valid(target):
+        return false
+    var target_cell: Vector2i = beast_nav.cell_of(target.global_position)
+    var path: PackedVector2Array = beast_nav.path_to(global_position, target_cell)
+    if path.is_empty():
+        return false
+
+    _beast_target = target
+    _beast_charge_path = path
+    _beast_charge_path_index = 0
+    _beast_charge_path_version = beast_nav.version
+    _beast_target_position = target.global_position
+    var direction := _beast_target_position - global_position
+    _beast_charge_direction = direction.normalized() if direction.length_squared() > 0.01 else Vector2.DOWN
+    _beast_windup_t = beast_charge_windup_duration
+    _moving = false
+    anim.face(_beast_charge_direction)
+    Events.fx_burst.emit("dust", position + Vector2(0, -4), -_beast_charge_direction, 0.85)
+    queue_redraw()
+    return true
+
+
+func _move_beast_toward_target(target: Node2D, delta: float) -> void:
+    if beast_nav == null:
+        _tick_flow(delta)
+        return
+    if _beast_approach_path_version != beast_nav.version or _beast_approach_path.is_empty() or _beast_approach_repath_t <= 0.0:
+        var target_cell: Vector2i = beast_nav.cell_of(target.global_position)
+        _beast_approach_path = beast_nav.path_to(global_position, target_cell)
+        _beast_approach_path_index = 0
+        _beast_approach_path_version = beast_nav.version
+        _beast_approach_repath_t = 0.7
+
+    while _beast_approach_path_index < _beast_approach_path.size() and global_position.distance_to(_beast_approach_path[_beast_approach_path_index]) <= 3.0:
+        _beast_approach_path_index += 1
+    if _beast_approach_path_index < _beast_approach_path.size():
+        _move_toward(_beast_approach_path[_beast_approach_path_index], delta)
+    else:
+        _move_toward(target.global_position, delta)
+
+
+func _cancel_beast_windup(recovery: float, clear_target: bool = false) -> void:
+    _beast_windup_t = 0.0
+    _beast_charge_path = PackedVector2Array()
+    _beast_charge_path_index = 0
+    _beast_charge_path_version = -1
+    _beast_cd = maxf(_beast_cd, recovery)
+    if clear_target:
+        _beast_target = null
+    queue_redraw()
+
+
+func _tick_beast_rider(delta: float) -> void:
+    if _beast_charge_t > 0.0:
+        _tick_beast_charge(delta)
+        return
+
+    if _beast_windup_t > 0.0:
+        if not _beast_target_valid(_beast_target) or beast_nav == null or _beast_charge_path_version != beast_nav.version:
+            _cancel_beast_windup(1.0, true)
+            return
+        var windup_distance := global_position.distance_to(_beast_target.global_position)
+        if windup_distance > beast_charge_max_range + 34.0:
+            _cancel_beast_windup(1.0, true)
+            return
+        if windup_distance <= _attack_reach():
+            var close_target := _beast_target
+            _cancel_beast_windup(0.7)
+            _begin_attack(close_target, close_target.global_position - global_position)
+            return
+
+        _moving = false
+        anim.face(_beast_charge_direction)
+        _beast_windup_t = maxf(0.0, _beast_windup_t - delta)
+        if _beast_windup_t <= 0.0:
+            _beast_charge_t = 1.25
+            _beast_cd = beast_charge_cooldown_duration
+            _beast_target_position = _beast_target.global_position
+            Events.fx_burst.emit("dust", position + Vector2(0, -5), -_beast_charge_direction, 1.1)
+        queue_redraw()
+        return
+
+    if not _beast_target_valid(_beast_target):
+        _beast_target = null
+        _beast_approach_path = PackedVector2Array()
+        _beast_approach_path_index = 0
+        _beast_approach_path_version = -1
+        _beast_scan_t = 0.0
+
+    if _beast_target == null and _beast_scan_t <= 0.0:
+        _beast_target = _select_beast_target()
+        _beast_scan_t = 0.75
+
+    if _beast_target == null:
+        if is_garrison:
+            if global_position.distance_to(guard_origin) > 16.0:
+                _move_toward(guard_origin, delta)
+        else:
+            _tick_flow(delta)
+        return
+
+    var to_target := _beast_target.global_position - global_position
+    var distance := to_target.length()
+    if distance <= _attack_reach():
+        _begin_attack(_beast_target, to_target)
+        return
+
+    if _beast_cd <= 0.0 and distance >= beast_charge_min_range and distance <= beast_charge_max_range:
+        if _begin_beast_windup(_beast_target):
+            return
+
+    _move_beast_toward_target(_beast_target, delta)
+
+
+func _distance_squared_to_segment(point: Vector2, segment_start: Vector2, segment_end: Vector2) -> float:
+    var segment := segment_end - segment_start
+    var length_squared := segment.length_squared()
+    if length_squared <= 0.001:
+        return point.distance_squared_to(segment_start)
+    var along := clampf((point - segment_start).dot(segment) / length_squared, 0.0, 1.0)
+    var closest := segment_start + segment * along
+    return point.distance_squared_to(closest)
+
+
+func _apply_beast_charge_impact(target: Node2D) -> void:
+    if target == null or not is_instance_valid(target) or _beast_hit_done:
+        return
+    _beast_hit_done = true
+    var impact_damage := maxi(1, roundi(float(damage) * beast_charge_damage_multiplier))
+    if target.has_method("take_damage"):
+        target.call("take_damage", impact_damage)
+
+    var pushed_position := target.global_position + _beast_charge_direction * 10.0
+    if beast_nav != null and beast_nav.is_walkable(beast_nav.cell_of(pushed_position)):
+        target.global_position = pushed_position
+    Events.fx_burst.emit("impact", target.global_position + Vector2(0, -8), _beast_charge_direction, 1.45)
+    Events.screen_shake.emit(0.75, 0.1)
+
+
+func _finish_beast_charge(hit: bool) -> void:
+    _beast_charge_t = 0.0
+    _beast_charge_path = PackedVector2Array()
+    _beast_charge_path_index = 0
+    _beast_charge_path_version = -1
+    _beast_approach_repath_t = 0.0
+    if not hit:
+        Events.fx_burst.emit("dust", position + Vector2(0, -3), _beast_charge_direction, 0.75)
+    queue_redraw()
+
+
+func _tick_beast_charge(delta: float) -> void:
+    if beast_nav == null or _beast_charge_path_version != beast_nav.version or not _beast_target_valid(_beast_target):
+        _finish_beast_charge(false)
+        return
+
+    _beast_charge_t = maxf(0.0, _beast_charge_t - delta)
+    var travel_left := speed * beast_charge_speed_multiplier * delta
+    while travel_left > 0.01:
+        if _beast_charge_path_index >= _beast_charge_path.size():
+            _finish_beast_charge(false)
+            return
+
+        var waypoint := _beast_charge_path[_beast_charge_path_index]
+        var toward_waypoint := waypoint - global_position
+        var segment_length := toward_waypoint.length()
+        if segment_length <= 1.0:
+            _beast_charge_path_index += 1
+            continue
+
+        var travel := minf(travel_left, segment_length)
+        var next_position := global_position + toward_waypoint / segment_length * travel
+        var next_cell: Vector2i = beast_nav.cell_of(next_position)
+        if not beast_nav.is_walkable(next_cell):
+            _finish_beast_charge(false)
+            return
+
+        if not _beast_hit_done and _beast_target_valid(_beast_target):
+            var hit_distance_squared := _distance_squared_to_segment(
+                _beast_target.global_position, global_position, next_position)
+            if hit_distance_squared <= beast_charge_hit_radius * beast_charge_hit_radius:
+                global_position = next_position
+                _apply_beast_charge_impact(_beast_target)
+                _finish_beast_charge(true)
+                return
+
+        global_position = next_position
+        travel_left -= travel
+        if travel >= segment_length - 0.01:
+            _beast_charge_path_index += 1
+        _moving = true
+
+    if _beast_charge_t <= 0.0:
+        _finish_beast_charge(false)
+    else:
+        queue_redraw()
 
 
 func _siege_target_valid(target: Node2D) -> bool:
@@ -1134,6 +1463,13 @@ func apply_stagger(duration: float) -> void:
     if archetype == "siege_engine" and _siege_windup_t > 0.0:
         _siege_windup_t = 0.0
         _siege_cd = maxf(_siege_cd, 1.1)
+    if archetype == "beast_rider" and (_beast_windup_t > 0.0 or _beast_charge_t > 0.0):
+        _beast_windup_t = 0.0
+        _beast_charge_t = 0.0
+        _beast_charge_path = PackedVector2Array()
+        _beast_charge_path_index = 0
+        _beast_charge_path_version = -1
+        _beast_cd = maxf(_beast_cd, 1.4)
     _hurt_t = maxf(_hurt_t, duration * 0.5)
     anim.play("hurt", true)
 
@@ -1290,6 +1626,19 @@ func _draw() -> void:
         "beast_rider":
             draw_line(Vector2(-5, -12), Vector2(-10, -17), color, 1.5)
             draw_line(Vector2(5, -12), Vector2(10, -17), color, 1.5)
+            if _beast_windup_t > 0.0 or _beast_charge_t > 0.0:
+                var route_color := Color("#f0c078") if _beast_windup_t > 0.0 else Color("#d77e45")
+                var route_start := Vector2(0, -_fh - 5)
+                var route_previous := Vector2.ZERO
+                for route_index in range(_beast_charge_path_index, _beast_charge_path.size()):
+                    var route_point := _beast_charge_path[route_index] - global_position + Vector2(0, -4)
+                    draw_line(route_previous if route_index > _beast_charge_path_index else route_start,
+                        route_point, route_color, 1.5)
+                    route_previous = route_point
+                var aim_center := _beast_target_position - global_position + Vector2(0, -8)
+                draw_arc(aim_center, 10.0, 0.0, TAU, 12, route_color, 1.5)
+                if _beast_windup_t > 0.0:
+                    draw_arc(Vector2(0, -_fh - 7), 7.0, 0.0, TAU, 10, Color("#f3d39a"), 1.8)
     if archetype == "shieldbearer" and (_brace_windup_t > 0.0 or _brace_t > 0.0):
         var brace_center := Vector2(0, -_fh * 0.55)
         var brace_angle := _brace_dir.angle()
