@@ -6,7 +6,12 @@ const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
 const ENEMY_BOLT := preload("res://scripts/entities/enemy_bolt.gd")
 const ENEMY_TARGETING := preload("res://scripts/systems/enemy_targeting.gd")
-const ENEMY_SUPPORT := preload("res://scripts/systems/enemy_support.gd")
+const WarShamanSupportBehavior := preload("res://scripts/behaviors/war_shaman_support_behavior.gd")
+const BeastRiderBehavior := preload("res://scripts/behaviors/beast_rider_behavior.gd")
+const ShieldbearerBehavior := preload("res://scripts/behaviors/shieldbearer_behavior.gd")
+const ScoutBehavior := preload("res://scripts/behaviors/scout_behavior.gd")
+const SaboteurBehavior := preload("res://scripts/behaviors/saboteur_behavior.gd")
+const SiegeEngineBehavior := preload("res://scripts/behaviors/siege_engine_behavior.gd")
 const TEXTURES := {
     "bandit": preload("res://assets/sprites/enemy_bandit.svg"),
     "wolf": preload("res://assets/sprites/enemy_wolf.svg"),
@@ -19,31 +24,6 @@ const PLAYER_REACH := 12.0
 const ATTACK_HIT_DELAY := 0.14
 const SHIELD_TARGET_RANGE := 96.0
 const SCOUT_FOCUS_RANGE := 220.0
-const SABOTEUR_TARGET_PRIORITIES := {
-    "tower": 6,
-    "outpost": 6,
-    "storage": 5,
-    "lumber_camp": 4,
-    "quarry": 4,
-    "forge": 4,
-    "farm": 3,
-    "house": 2
-}
-const SABOTEUR_TARGET_SCAN_LIMIT := 32
-const SIEGE_TARGET_PRIORITIES := {
-    "stone_wall": 9,
-    "wall": 8,
-    "tower": 6,
-    "outpost": 5,
-    "keep": 4,
-    "storage": 3,
-    "forge": 3,
-    "lumber_camp": 2,
-    "quarry": 2,
-    "house": 1,
-    "farm": 1
-}
-const SIEGE_TARGET_SCAN_LIMIT := 32
 const BEAST_TARGET_SCAN_LIMIT := 24
 const BEAST_TARGET_ISOLATION_RADIUS := 76.0
 const WALK_BASE_SPEED := 32.0
@@ -94,39 +74,18 @@ var archetype := "raider"
 var faction_id := ""
 var campaign_site_id := ""
 var _faction_tint := Color.WHITE
-var support_radius := 0.0
-var support_amount := 0
-var support_interval := 0.0
-var _support_cd := 0.0
+var support_behavior = WarShamanSupportBehavior.new()
 var attack_range := PLAYER_REACH
 var preferred_range := 0.0
 var projectile_speed := 120.0
 var armor := 0.0
 var stagger_resistance := 0.0
 var structure_damage_mult := 1.0
-var shield_brace_trigger_range := 64.0
-var shield_brace_windup_duration := 0.55
-var shield_brace_duration := 1.05
-var shield_brace_cooldown_duration := 4.2
-var shield_brace_damage_multiplier := 0.45
-var shield_brace_front_dot := 0.5
-var scout_mark_range := 142.0
-var scout_preferred_range := 96.0
-var scout_windup_duration := 0.68
-var scout_mark_duration := 5.4
-var scout_mark_cooldown_duration := 8.4
-var scout_share_radius := 190.0
-var saboteur_scan_range := 460.0
-var saboteur_scan_interval := 1.25
-var saboteur_windup_duration := 0.85
-var saboteur_disruption_duration := 5.0
-var saboteur_cooldown_duration := 8.5
-var saboteur_damage_multiplier := 1.5
-var siege_scan_range := 400.0
-var siege_scan_interval := 1.35
-var siege_windup_duration := 1.1
-var siege_cooldown_duration := 2.6
-var siege_damage_multiplier := 2.4
+var shield_behavior = ShieldbearerBehavior.new()
+var scout_behavior = ScoutBehavior.new()
+var saboteur_behavior = SaboteurBehavior.new()
+var siege_behavior = SiegeEngineBehavior.new()
+var beast_behavior = BeastRiderBehavior.new()
 
 var world
 var flow
@@ -145,62 +104,6 @@ var _pending_is_projectile := false
 var _pounce_windup_t := 0.0
 var _pounce_t := 0.0
 var _pounce_dir := Vector2.ZERO
-var _brace_windup_t := 0.0
-var _brace_t := 0.0
-var _brace_cd := 0.0
-var _brace_dir := Vector2.ZERO
-var _scout_windup_t := 0.0
-var _scout_windup_target: Node2D
-var _scout_mark_target: Node2D
-var _scout_mark_t := 0.0
-var _scout_mark_cd := 0.0
-var saboteur_nav
-var _saboteur_target: Node2D
-var _saboteur_scan_t := 0.0
-var _saboteur_scan_cursor := 0
-var _saboteur_windup_t := 0.0
-var _saboteur_cd := 0.0
-var _saboteur_path := PackedVector2Array()
-var _saboteur_path_index := 0
-var _saboteur_path_version := -1
-var _saboteur_repath_t := 0.0
-var siege_nav
-var _siege_target: Node2D
-var _siege_scan_t := 0.0
-var _siege_scan_cursor := 0
-var _siege_windup_t := 0.0
-var _siege_cd := 0.0
-var _siege_path := PackedVector2Array()
-var _siege_path_index := 0
-var _siege_path_version := -1
-var _siege_repath_t := 0.0
-var beast_nav
-var beast_target_scan_range := 235.0
-var beast_charge_min_range := 54.0
-var beast_charge_max_range := 162.0
-var beast_charge_windup_duration := 0.82
-var beast_charge_speed_multiplier := 2.8
-var beast_charge_max_distance := 156.0
-var beast_charge_hit_radius := 18.0
-var beast_charge_cooldown_duration := 6.5
-var beast_charge_damage_multiplier := 1.35
-var _beast_target: Node2D
-var _beast_cd := 0.0
-var _beast_scan_t := 0.0
-var _beast_scan_cursor := 0
-var _beast_windup_t := 0.0
-var _beast_charge_t := 0.0
-var _beast_charge_distance := 0.0
-var _beast_hit_done := false
-var _beast_charge_direction := Vector2.ZERO
-var _beast_target_position := Vector2.ZERO
-var _beast_charge_path := PackedVector2Array()
-var _beast_charge_path_index := 0
-var _beast_charge_path_version := -1
-var _beast_approach_path := PackedVector2Array()
-var _beast_approach_path_index := 0
-var _beast_approach_path_version := -1
-var _beast_approach_repath_t := 0.0
 var _tex: Texture2D
 var _fw := 20
 var _fh := 20
@@ -225,92 +128,12 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
         var faction_data: Dictionary = FactionRegistry.faction_for_stronghold(faction_id)
         if not faction_data.is_empty():
             _faction_tint = Color(String(faction_data.get("color", "#ffffff")))
-    support_radius = maxf(0.0, float(data.get("support_radius", 0.0)))
-    support_amount = maxi(0, int(data.get("support_amount", 0)))
-    support_interval = maxf(0.0, float(data.get("support_interval", 0.0)))
-    _support_cd = 0.0
     attack_range = float(data.get("range", 30.0 if role == "pouncer" else PLAYER_REACH))
     preferred_range = float(data.get("preferred_range", 0.0))
     projectile_speed = float(data.get("projectile_speed", 120.0))
     armor = clampf(float(data.get("armor", 0.0)), 0.0, 0.8)
     stagger_resistance = clampf(float(data.get("stagger_resistance", 0.0)), 0.0, 0.9)
     structure_damage_mult = maxf(1.0, float(data.get("structure_damage_mult", 1.0)))
-    shield_brace_trigger_range = clampf(float(data.get("brace_trigger_range", 64.0)), 24.0, 110.0)
-    shield_brace_windup_duration = clampf(float(data.get("brace_windup", 0.55)), 0.2, 1.5)
-    shield_brace_duration = clampf(float(data.get("brace_duration", 1.05)), 0.3, 2.0)
-    shield_brace_cooldown_duration = clampf(float(data.get("brace_cooldown", 4.2)), 1.0, 12.0)
-    shield_brace_damage_multiplier = clampf(float(data.get("brace_damage_multiplier", 0.45)), 0.1, 1.0)
-    shield_brace_front_dot = clampf(float(data.get("brace_front_dot", 0.5)), 0.1, 0.95)
-    scout_mark_range = clampf(float(data.get("scout_mark_range", 142.0)), 80.0, 190.0)
-    scout_preferred_range = clampf(float(data.get("scout_preferred_range", 96.0)), 56.0, 140.0)
-    scout_windup_duration = clampf(float(data.get("scout_windup", 0.68)), 0.25, 1.5)
-    scout_mark_duration = clampf(float(data.get("scout_mark_duration", 5.4)), 2.5, 10.0)
-    scout_mark_cooldown_duration = clampf(float(data.get("scout_mark_cooldown", 8.4)), 4.0, 18.0)
-    scout_share_radius = clampf(float(data.get("scout_share_radius", 190.0)), 80.0, 280.0)
-    saboteur_scan_range = clampf(float(data.get("saboteur_scan_range", 460.0)), 160.0, 720.0)
-    saboteur_scan_interval = clampf(float(data.get("saboteur_scan_interval", 1.25)), 0.4, 4.0)
-    saboteur_windup_duration = clampf(float(data.get("saboteur_windup", 0.85)), 0.35, 1.8)
-    saboteur_disruption_duration = clampf(float(data.get("saboteur_disruption_duration", 5.0)), 2.0, 10.0)
-    saboteur_cooldown_duration = clampf(float(data.get("saboteur_cooldown", 8.5)), 4.0, 18.0)
-    saboteur_damage_multiplier = clampf(float(data.get("saboteur_damage_multiplier", 1.5)), 1.0, 2.5)
-    siege_scan_range = clampf(float(data.get("siege_scan_range", 400.0)), 180.0, 650.0)
-    siege_scan_interval = clampf(float(data.get("siege_scan_interval", 1.35)), 0.4, 4.0)
-    siege_windup_duration = clampf(float(data.get("siege_windup", 1.1)), 0.45, 2.0)
-    siege_cooldown_duration = clampf(float(data.get("siege_cooldown", 2.6)), 1.2, 8.0)
-    siege_damage_multiplier = clampf(float(data.get("siege_structure_damage_mult", 2.4)), 1.2, 4.0)
-    beast_target_scan_range = clampf(float(data.get("beast_target_scan_range", 235.0)), 140.0, 340.0)
-    beast_charge_min_range = clampf(float(data.get("beast_charge_min_range", 54.0)), 36.0, 90.0)
-    beast_charge_max_range = clampf(float(data.get("beast_charge_max_range", 162.0)), 110.0, 220.0)
-    beast_charge_windup_duration = clampf(float(data.get("beast_charge_windup", 0.82)), 0.4, 1.4)
-    beast_charge_speed_multiplier = clampf(float(data.get("beast_charge_speed_multiplier", 2.8)), 2.0, 4.0)
-    beast_charge_max_distance = clampf(float(data.get("beast_charge_max_distance", 156.0)), 90.0, 210.0)
-    beast_charge_hit_radius = clampf(float(data.get("beast_charge_hit_radius", 18.0)), 12.0, 30.0)
-    beast_charge_cooldown_duration = clampf(float(data.get("beast_charge_cooldown", 6.5)), 3.5, 12.0)
-    beast_charge_damage_multiplier = clampf(float(data.get("beast_charge_damage_multiplier", 1.35)), 1.05, 2.0)
-    _beast_target = null
-    _beast_cd = 0.0
-    _beast_scan_t = 0.0
-    _beast_scan_cursor = 0
-    _beast_windup_t = 0.0
-    _beast_charge_t = 0.0
-    _beast_charge_distance = 0.0
-    _beast_hit_done = false
-    _beast_charge_direction = Vector2.ZERO
-    _beast_target_position = Vector2.ZERO
-    _beast_charge_path = PackedVector2Array()
-    _beast_charge_path_index = 0
-    _beast_charge_path_version = -1
-    _beast_approach_path = PackedVector2Array()
-    _beast_approach_path_index = 0
-    _beast_approach_path_version = -1
-    _beast_approach_repath_t = 0.0
-    _siege_target = null
-    _siege_scan_t = 0.0
-    _siege_scan_cursor = 0
-    _siege_windup_t = 0.0
-    _siege_cd = 0.0
-    _siege_path = PackedVector2Array()
-    _siege_path_index = 0
-    _siege_path_version = -1
-    _siege_repath_t = 0.0
-    _saboteur_target = null
-    _saboteur_scan_t = 0.0
-    _saboteur_scan_cursor = 0
-    _saboteur_windup_t = 0.0
-    _saboteur_cd = 0.0
-    _saboteur_path = PackedVector2Array()
-    _saboteur_path_index = 0
-    _saboteur_path_version = -1
-    _saboteur_repath_t = 0.0
-    _scout_windup_t = 0.0
-    _scout_windup_target = null
-    _scout_mark_target = null
-    _scout_mark_t = 0.0
-    _scout_mark_cd = 0.0
-    _brace_windup_t = 0.0
-    _brace_t = 0.0
-    _brace_cd = 0.0
-    _brace_dir = Vector2.ZERO
     is_patrol = false
     is_supply_raider = false
     is_faction_raider = false
@@ -342,6 +165,12 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     world = world_ref
     flow = flow_ref
     player = player_ref
+    support_behavior.configure(self, data)
+    beast_behavior.configure(self, data)
+    shield_behavior.configure(self, data, SHIELD_TARGET_RANGE)
+    scout_behavior.configure(self, data)
+    saboteur_behavior.configure(self, data)
+    siege_behavior.configure(self, data)
     _offset = Vector2(randf_range(-4.0, 4.0), randf_range(-3.0, 3.0))
     _tex = TEXTURES.get(id, TEXTURES["bandit"])
     _fw = int(_tex.get_width() / float(SpriteAnim.FRAMES))
@@ -414,17 +243,19 @@ func _ready() -> void:
     if archetype in ["saboteur", "siege_engine", "beast_rider"]:
         var nav_grid := get_tree().get_first_node_in_group("navigation_grid")
         if archetype == "saboteur":
-            saboteur_nav = nav_grid
+            saboteur_behavior.set_navigation(nav_grid)
         elif archetype == "siege_engine":
-            siege_nav = nav_grid
-        else:
-            beast_nav = nav_grid
+            siege_behavior.set_navigation(nav_grid)
+        elif archetype == "beast_rider":
+            beast_behavior.set_navigation(nav_grid)
     if is_supply_raider:
         add_to_group("supply_raiders")
     if is_faction_raider:
         add_to_group("faction_raiders")
     if is_garrison:
         add_to_group("enemy_garrison")
+    if archetype == "shieldbearer":
+        shield_behavior.draw_telegraph(self, _fh)
     if role == "ranged":
         add_to_group("ranged_enemies")
     anim.view = SpriteAnim.SIDE
@@ -434,30 +265,18 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _hurt_t = maxf(0.0, _hurt_t - delta)
-    _support_cd = maxf(0.0, _support_cd - delta)
-    _brace_cd = maxf(0.0, _brace_cd - delta)
-    _saboteur_cd = maxf(0.0, _saboteur_cd - delta)
-    _saboteur_scan_t = maxf(0.0, _saboteur_scan_t - delta)
-    _saboteur_repath_t = maxf(0.0, _saboteur_repath_t - delta)
-    _siege_scan_t = maxf(0.0, _siege_scan_t - delta)
-    _siege_cd = maxf(0.0, _siege_cd - delta)
-    _siege_repath_t = maxf(0.0, _siege_repath_t - delta)
-    _beast_scan_t = maxf(0.0, _beast_scan_t - delta)
-    _beast_cd = maxf(0.0, _beast_cd - delta)
-    _beast_approach_repath_t = maxf(0.0, _beast_approach_repath_t - delta)
-    _scout_mark_t = maxf(0.0, _scout_mark_t - delta)
-    _scout_mark_cd = maxf(0.0, _scout_mark_cd - delta)
-    if _scout_mark_t <= 0.0 or not is_instance_valid(_scout_mark_target):
-        _scout_mark_t = 0.0
-        _scout_mark_target = null
+    support_behavior.advance_timers(delta)
+    shield_behavior.advance_timers(delta)
+    saboteur_behavior.advance_timers(delta)
+    siege_behavior.advance_timers(delta)
+    beast_behavior.advance_timers(delta)
+    scout_behavior.advance_timers(delta)
     _resolve_pending(delta)
     _moving = false
 
     if _stagger_t > 0.0:
-        if archetype == "scout" and _scout_windup_t > 0.0:
-            _scout_windup_t = 0.0
-            _scout_windup_target = null
-            _scout_mark_cd = maxf(_scout_mark_cd, 1.2)
+        if archetype == "scout":
+            scout_behavior.interrupt()
         _stagger_t = maxf(0.0, _stagger_t - delta)
         _update_anim(delta)
         queue_redraw()
@@ -750,713 +569,32 @@ func _tick_flow(delta: float) -> void:
 
 
 
-func _beast_target_valid(target: Node2D) -> bool:
-    if target == null or not is_instance_valid(target) or not target.visible:
-        return false
-    if target != player and not target.is_in_group("defenders"):
-        return false
-    if int(target.get("hp")) <= 0:
-        return false
-    if is_garrison and target.global_position.distance_to(guard_origin) > 175.0:
-        return false
-    return true
-
-
-func _beast_target_score(candidate: Node2D, defenders: Array) -> float:
-    var distance := global_position.distance_to(candidate.global_position)
-    var score := 180.0 - distance * 0.4
-    if candidate == player:
-        return score + 16.0
-
-    var nearby_support := 0
-    for ally in defenders:
-        if ally == candidate or not is_instance_valid(ally) or not (ally is Node2D):
-            continue
-        var defender := ally as Node2D
-        if defender.visible and defender.global_position.distance_to(candidate.global_position) <= BEAST_TARGET_ISOLATION_RADIUS:
-            nearby_support += 1
-    if nearby_support == 0:
-        score += 72.0
-    elif nearby_support == 1:
-        score += 26.0
-
-    var target_job := String(candidate.get("job"))
-    if target_job in ["archer", "ranged"]:
-        score += 42.0
-    return score
-
-
-func _select_beast_target() -> Node2D:
-    var defenders: Array = get_tree().get_nodes_in_group("defenders")
-    var best_target: Node2D = null
-    var best_score := -INF
-
-    var player_target := player as Node2D
-    if _beast_target_valid(player_target):
-        var player_distance := global_position.distance_to(player_target.global_position)
-        if player_distance <= beast_target_scan_range:
-            best_target = player_target
-            best_score = _beast_target_score(player_target, defenders)
-
-    var defender_count := defenders.size()
-    var scan_count := mini(BEAST_TARGET_SCAN_LIMIT, defender_count)
-    for offset in scan_count:
-        var candidate = defenders[(_beast_scan_cursor + offset) % defender_count]
-        if not (candidate is Node2D):
-            continue
-        var defender := candidate as Node2D
-        if not _beast_target_valid(defender):
-            continue
-        if global_position.distance_to(defender.global_position) > beast_target_scan_range:
-            continue
-        var score := _beast_target_score(defender, defenders)
-        if score > best_score:
-            best_score = score
-            best_target = defender
-
-    if defender_count > 0:
-        _beast_scan_cursor = (_beast_scan_cursor + scan_count) % defender_count
-    return best_target
-
-
-func _begin_beast_windup(target: Node2D) -> bool:
-    if beast_nav == null or not _beast_target_valid(target):
-        return false
-    var target_cell: Vector2i = beast_nav.cell_of(target.global_position)
-    var path: PackedVector2Array = beast_nav.path_to(global_position, target_cell)
-    if path.is_empty():
-        return false
-
-    _beast_target = target
-    _beast_charge_path = path
-    _beast_charge_path_index = 0
-    _beast_charge_path_version = beast_nav.version
-    _beast_target_position = target.global_position
-    var direction := _beast_target_position - global_position
-    _beast_charge_direction = direction.normalized() if direction.length_squared() > 0.01 else Vector2.DOWN
-    _beast_windup_t = beast_charge_windup_duration
-    _moving = false
-    anim.face(_beast_charge_direction)
-    Events.fx_burst.emit("dust", position + Vector2(0, -4), -_beast_charge_direction, 0.85)
-    queue_redraw()
-    return true
-
-
-func _move_beast_toward_target(target: Node2D, delta: float) -> void:
-    if beast_nav == null:
-        _tick_flow(delta)
-        return
-    if _beast_approach_path_version != beast_nav.version or _beast_approach_path.is_empty() or _beast_approach_repath_t <= 0.0:
-        var target_cell: Vector2i = beast_nav.cell_of(target.global_position)
-        _beast_approach_path = beast_nav.path_to(global_position, target_cell)
-        _beast_approach_path_index = 0
-        _beast_approach_path_version = beast_nav.version
-        _beast_approach_repath_t = 0.7
-
-    while _beast_approach_path_index < _beast_approach_path.size() and global_position.distance_to(_beast_approach_path[_beast_approach_path_index]) <= 3.0:
-        _beast_approach_path_index += 1
-    if _beast_approach_path_index < _beast_approach_path.size():
-        _move_toward(_beast_approach_path[_beast_approach_path_index], delta)
-    else:
-        _move_toward(target.global_position, delta)
-
-
-func _cancel_beast_windup(recovery: float, clear_target: bool = false) -> void:
-    _beast_windup_t = 0.0
-    _beast_charge_path = PackedVector2Array()
-    _beast_charge_path_index = 0
-    _beast_charge_path_version = -1
-    _beast_cd = maxf(_beast_cd, recovery)
-    if clear_target:
-        _beast_target = null
-    queue_redraw()
-
-
 func _tick_beast_rider(delta: float) -> void:
-    if _beast_charge_t > 0.0:
-        _tick_beast_charge(delta)
-        return
-
-    if _beast_windup_t > 0.0:
-        if not _beast_target_valid(_beast_target) or beast_nav == null or _beast_charge_path_version != beast_nav.version:
-            _cancel_beast_windup(1.0, true)
-            return
-        var windup_distance := global_position.distance_to(_beast_target.global_position)
-        if windup_distance > beast_charge_max_range + 34.0:
-            _cancel_beast_windup(1.0, true)
-            return
-        if windup_distance <= _attack_reach():
-            var close_target := _beast_target
-            _cancel_beast_windup(0.7)
-            _begin_attack(close_target, close_target.global_position - global_position)
-            return
-
-        _moving = false
-        anim.face(_beast_charge_direction)
-        _beast_windup_t = maxf(0.0, _beast_windup_t - delta)
-        if _beast_windup_t <= 0.0:
-            var charge_speed := maxf(1.0, speed * beast_charge_speed_multiplier)
-            _beast_charge_t = clampf(beast_charge_max_distance / charge_speed + 0.2, 0.35, 1.8)
-            _beast_charge_distance = 0.0
-            _beast_hit_done = false
-            _beast_cd = beast_charge_cooldown_duration
-            _beast_target_position = _beast_target.global_position
-            Events.fx_burst.emit("dust", position + Vector2(0, -5), -_beast_charge_direction, 1.1)
-        queue_redraw()
-        return
-
-    if not _beast_target_valid(_beast_target):
-        _beast_target = null
-        _beast_approach_path = PackedVector2Array()
-        _beast_approach_path_index = 0
-        _beast_approach_path_version = -1
-        _beast_scan_t = 0.0
-
-    if _beast_target == null and _beast_scan_t <= 0.0:
-        _beast_target = _select_beast_target()
-        _beast_scan_t = 0.75
-
-    if _beast_target == null:
-        if is_garrison:
-            if global_position.distance_to(guard_origin) > 16.0:
-                _move_toward(guard_origin, delta)
-        else:
-            _tick_flow(delta)
-        return
-
-    var to_target := _beast_target.global_position - global_position
-    var distance := to_target.length()
-    if distance <= _attack_reach():
-        _begin_attack(_beast_target, to_target)
-        return
-
-    if _beast_cd <= 0.0 and distance >= beast_charge_min_range and distance <= beast_charge_max_range:
-        if _begin_beast_windup(_beast_target):
-            return
-
-    _move_beast_toward_target(_beast_target, delta)
-
-
-func _distance_squared_to_segment(point: Vector2, segment_start: Vector2, segment_end: Vector2) -> float:
-    var segment := segment_end - segment_start
-    var length_squared := segment.length_squared()
-    if length_squared <= 0.001:
-        return point.distance_squared_to(segment_start)
-    var along := clampf((point - segment_start).dot(segment) / length_squared, 0.0, 1.0)
-    var closest := segment_start + segment * along
-    return point.distance_squared_to(closest)
-
-
-func _apply_beast_charge_impact(target: Node2D) -> void:
-    if target == null or not is_instance_valid(target) or _beast_hit_done:
-        return
-    _beast_hit_done = true
-    var impact_damage := maxi(1, roundi(float(damage) * beast_charge_damage_multiplier))
-    if target.has_method("take_damage"):
-        target.call("take_damage", impact_damage)
-
-    var pushed_position := target.global_position + _beast_charge_direction * 10.0
-    if beast_nav != null and beast_nav.is_walkable(beast_nav.cell_of(pushed_position)):
-        target.global_position = pushed_position
-    Events.fx_burst.emit("impact", target.global_position + Vector2(0, -8), _beast_charge_direction, 1.45)
-    Events.screen_shake.emit(0.75, 0.1)
-
-
-func _finish_beast_charge(hit: bool) -> void:
-    _beast_charge_t = 0.0
-    _beast_charge_path = PackedVector2Array()
-    _beast_charge_path_index = 0
-    _beast_charge_path_version = -1
-    _beast_approach_repath_t = 0.0
-    if not hit:
-        Events.fx_burst.emit("dust", position + Vector2(0, -3), _beast_charge_direction, 0.75)
-    queue_redraw()
-
-
-func _tick_beast_charge(delta: float) -> void:
-    if beast_nav == null or _beast_charge_path_version != beast_nav.version or not _beast_target_valid(_beast_target):
-        _finish_beast_charge(false)
-        return
-
-    _beast_charge_t = maxf(0.0, _beast_charge_t - delta)
-    var distance_remaining := maxf(0.0, beast_charge_max_distance - _beast_charge_distance)
-    var travel_left := minf(speed * beast_charge_speed_multiplier * delta, distance_remaining)
-    while travel_left > 0.01:
-        if _beast_charge_path_index >= _beast_charge_path.size():
-            _finish_beast_charge(false)
-            return
-
-        var waypoint := _beast_charge_path[_beast_charge_path_index]
-        var toward_waypoint := waypoint - global_position
-        var segment_length := toward_waypoint.length()
-        if segment_length <= 1.0:
-            _beast_charge_path_index += 1
-            continue
-
-        var travel := minf(travel_left, segment_length)
-        var next_position := global_position + toward_waypoint / segment_length * travel
-        if anim.face(next_position - global_position):
-            queue_redraw()
-        var next_cell: Vector2i = beast_nav.cell_of(next_position)
-        if not beast_nav.is_walkable(next_cell):
-            _finish_beast_charge(false)
-            return
-
-        if not _beast_hit_done and _beast_target_valid(_beast_target):
-            var hit_distance_squared := _distance_squared_to_segment(
-                _beast_target.global_position, global_position, next_position)
-            if hit_distance_squared <= beast_charge_hit_radius * beast_charge_hit_radius:
-                global_position = next_position
-                _apply_beast_charge_impact(_beast_target)
-                _finish_beast_charge(true)
-                return
-
-        global_position = next_position
-        travel_left -= travel
-        _beast_charge_distance += travel
-        if travel >= segment_length - 0.01:
-            _beast_charge_path_index += 1
-        _moving = true
-
-    if _beast_charge_t <= 0.0 or _beast_charge_distance >= beast_charge_max_distance - 0.01:
-        _finish_beast_charge(false)
-    else:
-        queue_redraw()
-
-
-func _siege_target_valid(target: Node2D) -> bool:
-    if target == null or not is_instance_valid(target) or not target.is_in_group("buildings"):
-        return false
-    if int(target.get("hp")) <= 0 or not target.has_method("take_damage") or not target.has_method("cells"):
-        return false
-    return SIEGE_TARGET_PRIORITIES.has(String(target.get("id")))
-
-
-func _select_siege_target() -> Node2D:
-    if siege_nav == null:
-        return null
-
-    var buildings: Array = get_tree().get_nodes_in_group("buildings")
-    var building_count := buildings.size()
-    if building_count <= 0:
-        return null
-    var scan_count := mini(SIEGE_TARGET_SCAN_LIMIT, building_count)
-    var best_target: Node2D
-    var best_path := PackedVector2Array()
-    var best_score := -INF
-
-    for offset in scan_count:
-        var candidate = buildings[(_siege_scan_cursor + offset) % building_count]
-        if not (candidate is Node2D):
-            continue
-        var building := candidate as Node2D
-        var priority := int(SIEGE_TARGET_PRIORITIES.get(String(building.get("id")), 0))
-        if priority <= 0 or not _siege_target_valid(building):
-            continue
-        if position.distance_to(building.position) > siege_scan_range:
-            continue
-        if is_garrison and building.position.distance_to(guard_origin) > 175.0:
-            continue
-
-        var cells: Array[Vector2i] = building.call("cells")
-        var candidate_path: PackedVector2Array = siege_nav.path_adjacent(position, cells)
-        if candidate_path.is_empty():
-            continue
-        var score := float(priority * 160) - float(maxi(0, candidate_path.size() - 1)) * 6.0
-        if score > best_score:
-            best_score = score
-            best_target = building
-            best_path = candidate_path
-
-    _siege_scan_cursor = (_siege_scan_cursor + scan_count) % building_count
-    _siege_target = best_target
-    _siege_path = best_path
-    _siege_path_index = 1 if best_path.size() > 1 else 0
-    _siege_path_version = siege_nav.version
-    _siege_repath_t = 0.9
-    return best_target
-
-
-func _nearest_siege_disruptor() -> Node2D:
-    var nearest: Node2D
-    var nearest_distance := 36.0
-    if player != null and is_instance_valid(player):
-        var player_distance := position.distance_to(player.position)
-        if player_distance <= nearest_distance:
-            nearest = player
-            nearest_distance = player_distance
-    for defender in get_tree().get_nodes_in_group("defenders"):
-        if not is_instance_valid(defender) or not defender.visible:
-            continue
-        var candidate := defender as Node2D
-        var distance := position.distance_to(candidate.position)
-        if distance <= nearest_distance:
-            nearest = candidate
-            nearest_distance = distance
-    return nearest
-
-
-func _tick_siege_advance(delta: float) -> void:
-    if flow == null:
-        return
-    var cell := Vector2i((position / WorldConfig.tile_size).floor())
-    var next: Vector2i = flow.next_cell(cell)
-    if next == cell:
-        _move_toward(flow.target_pos, delta)
-        return
-    var occupied = world.occupied.get(next)
-    if occupied != null and is_instance_valid(occupied) and occupied.is_in_group("buildings"):
-        var structure := occupied as Node2D
-        if _siege_target_valid(structure):
-            _siege_target = structure
-            _siege_path = PackedVector2Array()
-            _siege_path_index = 0
-            _siege_path_version = -1
-            _siege_scan_t = 0.0
-            return
-    var next_position := Vector2(next) * WorldConfig.tile_size + Vector2(
-        WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0
-    ) + _offset
-    _move_toward(next_position, delta)
+    beast_behavior.tick(delta)
 
 
 func _tick_siege_engine(delta: float) -> void:
-    var disruptor := _nearest_siege_disruptor()
-    if disruptor != null:
-        if _siege_windup_t > 0.0:
-            _siege_windup_t = 0.0
-            _siege_cd = maxf(_siege_cd, 1.1)
-            Events.fx_burst.emit("dust", position + Vector2(0, -3), Vector2.ZERO, 0.7)
-            queue_redraw()
-        _moving = false
-        var retreat_direction := position - disruptor.position
-        if retreat_direction.length_squared() > 0.01:
-            _move_toward(position + retreat_direction.normalized() * 26.0, delta)
-        return
-
-    if _siege_windup_t > 0.0:
-        if not _siege_target_valid(_siege_target) or position.distance_to(_siege_target.position) > 52.0:
-            _siege_windup_t = 0.0
-            _siege_cd = maxf(_siege_cd, 1.0)
-            queue_redraw()
-            return
-        var aim := _siege_target.position - position
-        if aim.length_squared() > 0.01:
-            anim.face(aim)
-        _moving = false
-        _siege_windup_t = maxf(0.0, _siege_windup_t - delta)
-        if _siege_windup_t <= 0.0:
-            var target := _siege_target
-            var impact_damage := maxi(1, roundi(float(damage) * siege_damage_multiplier))
-            target.call("take_damage", impact_damage)
-            Events.fx_burst.emit("debris", target.global_position + Vector2(0, -8), -aim.normalized(), 1.5)
-            Events.screen_shake.emit(1.0, 0.16)
-            _siege_cd = siege_cooldown_duration
-            queue_redraw()
-        return
-
-    if not _siege_target_valid(_siege_target):
-        _siege_target = null
-        _siege_path = PackedVector2Array()
-        _siege_path_index = 0
-        _siege_path_version = -1
-        _siege_scan_t = 0.0
-
-    if _siege_target == null and _siege_scan_t <= 0.0:
-        _select_siege_target()
-        _siege_scan_t = siege_scan_interval
-
-    if _siege_target == null:
-        if is_garrison:
-            if position.distance_to(guard_origin) > 16.0:
-                _move_toward(guard_origin, delta)
-        else:
-            _tick_siege_advance(delta)
-        return
-
-    var distance := position.distance_to(_siege_target.position)
-    if distance <= maxf(24.0, _attack_reach() + 10.0):
-        _moving = false
-        if _siege_cd <= 0.0:
-            _siege_windup_t = siege_windup_duration
-            anim.face(_siege_target.position - position)
-            Events.fx_burst.emit("dust", position + Vector2(0, -4), Vector2.ZERO, 0.9)
-            queue_redraw()
-        return
-
-    if siege_nav == null:
-        if not is_garrison:
-            _tick_flow(delta)
-        return
-    if _siege_path_version != siege_nav.version or _siege_path.is_empty() or _siege_repath_t <= 0.0:
-        var target_cells: Array[Vector2i] = _siege_target.call("cells")
-        _siege_path = siege_nav.path_adjacent(position, target_cells)
-        _siege_path_index = 1 if _siege_path.size() > 1 else 0
-        _siege_path_version = siege_nav.version
-        _siege_repath_t = 0.9
-    while _siege_path_index < _siege_path.size() and position.distance_to(_siege_path[_siege_path_index]) <= 3.0:
-        _siege_path_index += 1
-    if _siege_path_index < _siege_path.size():
-        _move_toward(_siege_path[_siege_path_index], delta)
-    else:
-        _siege_target = null
-        _siege_scan_t = 0.0
-
-
-func _saboteur_target_valid(target: Node2D) -> bool:
-    if target == null or not is_instance_valid(target) or not target.is_in_group("buildings"):
-        return false
-    if int(target.get("hp")) <= 0 or not target.has_method("apply_sabotage"):
-        return false
-    return not bool(target.call("is_sabotaged"))
-
-
-func _select_saboteur_target() -> Node2D:
-    if saboteur_nav == null:
-        return null
-
-    var buildings: Array = get_tree().get_nodes_in_group("buildings")
-    var building_count := buildings.size()
-    if building_count <= 0:
-        return null
-    var scan_count := mini(SABOTEUR_TARGET_SCAN_LIMIT, building_count)
-    var best_target: Node2D
-    var best_path := PackedVector2Array()
-    var best_score := -INF
-    for offset in scan_count:
-        var candidate = buildings[(_saboteur_scan_cursor + offset) % building_count]
-        if not (candidate is Node2D):
-            continue
-        var building := candidate as Node2D
-        var priority := int(SABOTEUR_TARGET_PRIORITIES.get(String(building.get("id")), 0))
-        if priority <= 0 or not _saboteur_target_valid(building):
-            continue
-        if position.distance_to(building.position) > saboteur_scan_range:
-            continue
-        if is_garrison and building.position.distance_to(guard_origin) > 175.0:
-            continue
-        var cells: Array[Vector2i] = building.call("cells")
-        var candidate_path: PackedVector2Array = saboteur_nav.path_adjacent(position, cells)
-        if candidate_path.is_empty():
-            continue
-        var score := float(priority * 120) - float(maxi(0, candidate_path.size() - 1)) * 8.0
-        if score > best_score:
-            best_score = score
-            best_target = building
-            best_path = candidate_path
-
-    _saboteur_scan_cursor = (_saboteur_scan_cursor + scan_count) % building_count
-    _saboteur_target = best_target
-    _saboteur_path = best_path
-    _saboteur_path_index = 1 if best_path.size() > 1 else 0
-    _saboteur_path_version = saboteur_nav.version
-    _saboteur_repath_t = 0.9
-    return best_target
-
-
-func _nearest_saboteur_interceptor() -> Node2D:
-    if player != null and is_instance_valid(player) and position.distance_to(player.position) <= _attack_reach() + 4.0:
-        return player
-    for defender in get_tree().get_nodes_in_group("defenders"):
-        if not is_instance_valid(defender) or not defender.visible:
-            continue
-        if position.distance_to(defender.position) <= _attack_reach() + 4.0:
-            return defender as Node2D
-    return null
+    siege_behavior.tick(delta)
 
 
 func _tick_saboteur(delta: float) -> void:
-    if _saboteur_windup_t > 0.0:
-        if not _saboteur_target_valid(_saboteur_target) or position.distance_to(_saboteur_target.position) > 48.0:
-            _saboteur_windup_t = 0.0
-            _saboteur_target = null
-            _saboteur_cd = maxf(_saboteur_cd, 1.0)
-            queue_redraw()
-            return
-
-        var windup_direction := _saboteur_target.position - position
-        if windup_direction.length_squared() > 0.01:
-            anim.face(windup_direction)
-        _moving = false
-        _saboteur_windup_t = maxf(0.0, _saboteur_windup_t - delta)
-        if _saboteur_windup_t <= 0.0:
-            var target := _saboteur_target
-            if bool(target.call("apply_sabotage", saboteur_disruption_duration)):
-                var sabotage_damage := maxi(1, roundi(float(damage) * saboteur_damage_multiplier))
-                target.call("take_damage", sabotage_damage)
-                Events.fx_burst.emit("debris", target.global_position + Vector2(0, -8), Vector2.ZERO, 1.2)
-                _saboteur_cd = saboteur_cooldown_duration
-            else:
-                _saboteur_cd = maxf(_saboteur_cd, 1.0)
-            _saboteur_target = null
-            _saboteur_path = PackedVector2Array()
-            _saboteur_path_index = 0
-            _saboteur_path_version = -1
-            queue_redraw()
-        return
-
-    var interceptor := _nearest_saboteur_interceptor()
-    if interceptor != null:
-        _saboteur_target = null
-        _saboteur_path = PackedVector2Array()
-        _begin_attack(interceptor, interceptor.position - position)
-        return
-
-    if not _saboteur_target_valid(_saboteur_target):
-        _saboteur_target = null
-        _saboteur_path = PackedVector2Array()
-        _saboteur_path_index = 0
-        _saboteur_path_version = -1
-        _saboteur_scan_t = 0.0
-
-    if _saboteur_target == null and _saboteur_scan_t <= 0.0:
-        _select_saboteur_target()
-        _saboteur_scan_t = saboteur_scan_interval
-
-    if _saboteur_target == null:
-        _tick_flow(delta)
-        return
-
-    var distance := position.distance_to(_saboteur_target.position)
-    if distance <= maxf(22.0, _attack_reach() + 8.0):
-        _moving = false
-        if _saboteur_cd <= 0.0:
-            _saboteur_windup_t = saboteur_windup_duration
-            anim.face(_saboteur_target.position - position)
-            Events.fx_burst.emit("dust", position + Vector2(0, -3), Vector2.ZERO, 0.6)
-            queue_redraw()
-        return
-
-    if saboteur_nav == null:
-        _tick_flow(delta)
-        return
-    if _saboteur_path_version != saboteur_nav.version or _saboteur_path.is_empty() or _saboteur_repath_t <= 0.0:
-        var target_cells: Array[Vector2i] = _saboteur_target.call("cells")
-        _saboteur_path = saboteur_nav.path_adjacent(position, target_cells)
-        _saboteur_path_index = 1 if _saboteur_path.size() > 1 else 0
-        _saboteur_path_version = saboteur_nav.version
-        _saboteur_repath_t = 0.9
-    while _saboteur_path_index < _saboteur_path.size() and position.distance_to(_saboteur_path[_saboteur_path_index]) <= 3.0:
-        _saboteur_path_index += 1
-    if _saboteur_path_index < _saboteur_path.size():
-        _move_toward(_saboteur_path[_saboteur_path_index], delta)
-    else:
-        _saboteur_target = null
-        _saboteur_scan_t = 0.0
+    saboteur_behavior.tick(delta)
 
 
 func _nearest_scout_target() -> Node2D:
-    var candidates := get_tree().get_nodes_in_group("defenders")
-    if player != null and is_instance_valid(player):
-        candidates.append(player)
-    return ENEMY_TARGETING.nearest(
-        self,
-        candidates,
-        scout_mark_range,
-        guard_origin if is_garrison else Vector2.ZERO,
-        175.0 if is_garrison else 0.0
-    )
+    return scout_behavior.nearest_target()
 
 
 func _tick_scout(delta: float) -> void:
-    if _scout_windup_t > 0.0:
-        var windup_target := _scout_windup_target
-        if windup_target == null or not is_instance_valid(windup_target) or not windup_target.visible or position.distance_to(windup_target.position) > scout_mark_range + 24.0:
-            _scout_windup_t = 0.0
-            _scout_windup_target = null
-            _scout_mark_cd = minf(_scout_mark_cd, 0.8)
-            queue_redraw()
-        else:
-            var windup_direction := windup_target.position - position
-            if windup_direction.length_squared() > 0.01:
-                anim.face(windup_direction)
-            _moving = false
-            _scout_windup_t = maxf(0.0, _scout_windup_t - delta)
-            if _scout_windup_t <= 0.0:
-                _release_scout_mark(windup_target)
-            queue_redraw()
-            return
-
-    var target: Node2D = null
-    if _scout_mark_t > 0.0 and is_instance_valid(_scout_mark_target):
-        target = _scout_mark_target
-    else:
-        target = _nearest_scout_target()
-
-    if target == null:
-        if is_garrison:
-            if position.distance_to(guard_origin) > 16.0:
-                _move_toward(guard_origin, delta)
-        else:
-            _tick_flow(delta)
-        return
-
-    var to_target := target.position - position
-    var distance := to_target.length()
-    var direction := to_target.normalized() if distance > 0.01 else Vector2.DOWN
-
-    if _scout_mark_t <= 0.0 and _scout_mark_cd <= 0.0 and distance <= scout_mark_range:
-        _scout_windup_target = target
-        _scout_windup_t = scout_windup_duration
-        anim.face(direction)
-        Events.fx_burst.emit("dust", position + Vector2(0, -3), -direction, 0.65)
-        queue_redraw()
-        return
-
-    if distance < scout_preferred_range - 14.0:
-        _move_toward(position - direction * 36.0, delta)
-    elif distance > scout_preferred_range + 18.0:
-        _move_toward(target.position - direction * scout_preferred_range, delta)
-    else:
-        _moving = false
-
-
-func _release_scout_mark(target: Node2D) -> void:
-    if target == null or not is_instance_valid(target) or not target.visible:
-        _scout_windup_t = 0.0
-        _scout_windup_target = null
-        return
-    _scout_windup_t = 0.0
-    _scout_windup_target = null
-    _scout_mark_target = target
-    _scout_mark_t = scout_mark_duration
-    _scout_mark_cd = scout_mark_cooldown_duration
-    var target_position := target.global_position + Vector2(0, -8)
-    Events.fx_burst.emit("rally", target_position, Vector2.ZERO, 1.0)
-
-    for ally in get_tree().get_nodes_in_group("enemies"):
-        if ally == self or not is_instance_valid(ally) or not (ally is Node2D):
-            continue
-        var enemy_ally := ally as Node2D
-        if String(enemy_ally.get("faction_id")) != faction_id:
-            continue
-        if global_position.distance_to(enemy_ally.global_position) > scout_share_radius:
-            continue
-        if enemy_ally.has_method("apply_scout_mark"):
-            enemy_ally.apply_scout_mark(target, scout_mark_duration)
-    queue_redraw()
+    scout_behavior.tick(delta)
 
 
 func apply_scout_mark(target: Node2D, duration: float) -> void:
-    if target == null or not is_instance_valid(target) or not target.visible or duration <= 0.0:
-        return
-    if _scout_mark_t > 0.0 and is_instance_valid(_scout_mark_target) and _scout_mark_target != target:
-        return
-    _scout_mark_target = target
-    _scout_mark_t = maxf(_scout_mark_t, minf(duration, 10.0))
-    queue_redraw()
+    scout_behavior.apply_mark(target, duration)
 
 
 func _valid_scout_mark(max_distance: float) -> Node2D:
-    if _scout_mark_t <= 0.0 or _scout_mark_target == null or not is_instance_valid(_scout_mark_target):
-        return null
-    if not _scout_mark_target.visible:
-        return null
-    if position.distance_to(_scout_mark_target.position) > max_distance:
-        return null
-    if is_garrison and _scout_mark_target.position.distance_to(guard_origin) > 175.0:
-        return null
-    return _scout_mark_target
+    return scout_behavior.valid_mark(max_distance)
 
 
 func _tick_marked_target(delta: float) -> bool:
@@ -1484,73 +622,11 @@ func _nearest_shield_target() -> Node2D:
 
 
 func _tick_shieldbearer(delta: float) -> void:
-    if _brace_t > 0.0:
-        _brace_t = maxf(0.0, _brace_t - delta)
-        _moving = false
-        if _brace_t <= 0.0:
-            _brace_dir = Vector2.ZERO
-        queue_redraw()
-        return
-
-    var target := _nearest_shield_target()
-    if _brace_windup_t > 0.0:
-        if target == null or position.distance_to(target.position) > shield_brace_trigger_range + 24.0:
-            _brace_windup_t = 0.0
-            _brace_cd = minf(_brace_cd, 0.8)
-            _brace_dir = Vector2.ZERO
-        else:
-            var windup_direction := target.position - position
-            if windup_direction.length_squared() > 0.01:
-                _brace_dir = windup_direction.normalized()
-                anim.face(_brace_dir)
-            _brace_windup_t = maxf(0.0, _brace_windup_t - delta)
-            if _brace_windup_t <= 0.0:
-                _brace_t = shield_brace_duration
-                Events.fx_burst.emit("stone", position + Vector2(0, -6), -_brace_dir, 0.55)
-            queue_redraw()
-            return
-
-    if target == null:
-        if is_garrison:
-            if position.distance_to(guard_origin) > 16.0:
-                _move_toward(guard_origin, delta)
-        else:
-            _tick_flow(delta)
-        return
-
-    var to_target := target.position - position
-    var distance := to_target.length()
-    if distance <= _attack_reach():
-        _begin_attack(target, to_target)
-        return
-
-    if distance <= shield_brace_trigger_range and _brace_cd <= 0.0:
-        _brace_dir = to_target.normalized() if distance > 0.01 else Vector2.DOWN
-        anim.face(_brace_dir)
-        _brace_windup_t = shield_brace_windup_duration
-        _brace_cd = shield_brace_cooldown_duration
-        Events.fx_burst.emit("dust", position + Vector2(0, -3), -_brace_dir, 0.55)
-        queue_redraw()
-        return
-
-    if is_garrison:
-        if position.distance_to(guard_origin) <= 150.0:
-            _move_toward(target.position, delta)
-        else:
-            _move_toward(guard_origin, delta)
-    elif distance <= SHIELD_TARGET_RANGE:
-        _move_toward(target.position, delta)
-    else:
-        _tick_flow(delta)
+    shield_behavior.tick(delta)
 
 
 func _tick_shaman_support() -> bool:
-    if support_amount <= 0 or support_radius <= 0.0 or _support_cd > 0.0:
-        return false
-    if not ENEMY_SUPPORT.heal_nearest_ally(self, support_radius, support_amount):
-        return false
-    _support_cd = maxf(0.5, support_interval)
-    return true
+    return support_behavior.tick()
 
 
 func _tick_ranged(delta: float) -> void:
@@ -1693,29 +769,15 @@ func apply_stagger(duration: float) -> void:
     _pounce_windup_t = 0.0
     _pounce_t = 0.0
     if archetype == "shieldbearer":
-        _brace_windup_t = 0.0
-        _brace_t = 0.0
-        _brace_cd = maxf(_brace_cd, 1.1)
-        _brace_dir = Vector2.ZERO
-    if archetype == "scout" and _scout_windup_t > 0.0:
-        _scout_windup_t = 0.0
-        _scout_windup_target = null
-        _scout_mark_cd = maxf(_scout_mark_cd, 1.2)
-    if archetype == "saboteur" and _saboteur_windup_t > 0.0:
-        _saboteur_windup_t = 0.0
-        _saboteur_target = null
-        _saboteur_cd = maxf(_saboteur_cd, 1.2)
-        _saboteur_path = PackedVector2Array()
-    if archetype == "siege_engine" and _siege_windup_t > 0.0:
-        _siege_windup_t = 0.0
-        _siege_cd = maxf(_siege_cd, 1.1)
-    if archetype == "beast_rider" and (_beast_windup_t > 0.0 or _beast_charge_t > 0.0):
-        _beast_windup_t = 0.0
-        _beast_charge_t = 0.0
-        _beast_charge_path = PackedVector2Array()
-        _beast_charge_path_index = 0
-        _beast_charge_path_version = -1
-        _beast_cd = maxf(_beast_cd, 1.4)
+        shield_behavior.interrupt()
+    if archetype == "scout":
+        scout_behavior.interrupt()
+    if archetype == "saboteur":
+        saboteur_behavior.interrupt()
+    if archetype == "siege_engine":
+        siege_behavior.interrupt()
+    if archetype == "beast_rider":
+        beast_behavior.interrupt()
     _hurt_t = maxf(_hurt_t, duration * 0.5)
     anim.play("hurt", true)
 
@@ -1857,16 +919,13 @@ func _take_damage_from(amount: int, source_position: Vector2) -> void:
     if hp <= 0:
         return
     var damage_multiplier := 1.0 - armor
-    var blocked_by_shield := false
-    if archetype == "shieldbearer" and _brace_t > 0.0 and source_position != Vector2.ZERO:
-        var incoming_direction := (source_position - global_position).normalized()
-        blocked_by_shield = incoming_direction.dot(_brace_dir) >= shield_brace_front_dot
+    var blocked_by_shield := archetype == "shieldbearer" and shield_behavior.blocks_hit_from(source_position)
     if blocked_by_shield:
-        damage_multiplier *= shield_brace_damage_multiplier
+        damage_multiplier *= shield_behavior.block_damage_multiplier
     var applied := maxi(1, roundi(float(amount) * damage_multiplier))
     hp -= applied
     if blocked_by_shield:
-        Events.fx_burst.emit("stone", position + Vector2(0, -_fh * 0.4), -_brace_dir, 0.8)
+        Events.fx_burst.emit("stone", position + Vector2(0, -_fh * 0.4), -shield_behavior.brace_direction, 0.8)
     else:
         Events.fx_burst.emit("impact", position + Vector2(0, -_fh * 0.4), Vector2.ZERO, 2.0 if is_boss else 1.0)
     modulate = Color(1.8, 1.8, 1.8)
@@ -1917,69 +976,24 @@ func _draw() -> void:
             Color("#ffb347"), 2.0)
     match archetype:
         "scout":
-            draw_line(Vector2(-4, -15), Vector2(0, -19), color, 1.5)
-            draw_line(Vector2(0, -19), Vector2(4, -15), color, 1.5)
-            var scout_target: Node2D = _scout_windup_target if _scout_windup_t > 0.0 else _scout_mark_target
-            if scout_target != null and is_instance_valid(scout_target):
-                var marker_center := scout_target.global_position - global_position + Vector2(0, -8)
-                var marker_color := Color("#efca78") if _scout_windup_t > 0.0 else Color("#d99b45")
-                draw_line(Vector2(0, -_fh - 5), marker_center, marker_color, 1.0)
-                draw_arc(marker_center, 10.0, 0.0, TAU, 12, marker_color, 1.5)
-            if _scout_windup_t > 0.0:
-                draw_arc(Vector2(0, -_fh - 8), 5.0, 0.0, TAU, 8, Color("#efca78"), 1.5)
+            scout_behavior.draw_telegraph(self, _fh, color)
         "shieldbearer":
             draw_rect(Rect2(-11, -14, 5, 10), color, false, 1.5)
             draw_line(Vector2(-11, -10), Vector2(-6, -10), color, 1.0)
         "saboteur":
             draw_circle(Vector2(7, -12), 2.5, color)
             draw_line(Vector2(7, -15), Vector2(10, -18), color, 1.0)
-            if _saboteur_target != null and is_instance_valid(_saboteur_target):
-                var sabotage_center := _saboteur_target.global_position - global_position + Vector2(0, -8)
-                var sabotage_color := Color("#efb45d") if _saboteur_windup_t > 0.0 else Color("#b85e48")
-                draw_line(Vector2(0, -_fh - 5), sabotage_center, sabotage_color, 1.2)
-                draw_arc(sabotage_center, 11.0, 0.0, TAU, 12, sabotage_color, 1.5)
-            if _saboteur_windup_t > 0.0:
-                draw_arc(Vector2(0, -_fh - 8), 6.0, 0.0, TAU, 10, Color("#efb45d"), 1.5)
+            saboteur_behavior.draw_telegraph(self, _fh)
         "war_shaman":
             draw_arc(Vector2(0, -_fh * 0.55), 7.0, 0.0, TAU, 12, color, 1.0)
         "siege_engine":
             draw_rect(Rect2(-9, -14, 5, 5), color)
             draw_rect(Rect2(4, -14, 5, 5), color)
-            if _siege_target != null and is_instance_valid(_siege_target):
-                var siege_center := _siege_target.global_position - global_position + Vector2(0, -8)
-                var siege_color := Color("#e1a45d") if _siege_windup_t > 0.0 else Color("#9a6b4c")
-                draw_line(Vector2(0, -_fh - 5), siege_center, siege_color, 1.5)
-                draw_arc(siege_center, 13.0, 0.0, TAU, 12, siege_color, 1.5)
-            if _siege_windup_t > 0.0:
-                draw_arc(Vector2(0, -_fh - 8), 8.0, 0.0, TAU, 12, Color("#f1c67b"), 2.0)
+            siege_behavior.draw_telegraph(self, _fh)
         "beast_rider":
             draw_line(Vector2(-5, -12), Vector2(-10, -17), color, 1.5)
             draw_line(Vector2(5, -12), Vector2(10, -17), color, 1.5)
-            if _beast_windup_t > 0.0 or _beast_charge_t > 0.0:
-                var route_color := Color("#f0c078") if _beast_windup_t > 0.0 else Color("#d77e45")
-                var route_start := Vector2(0, -_fh - 5)
-                var route_previous := Vector2.ZERO
-                for route_index in range(_beast_charge_path_index, _beast_charge_path.size()):
-                    var route_point := _beast_charge_path[route_index] - global_position + Vector2(0, -4)
-                    draw_line(route_previous if route_index > _beast_charge_path_index else route_start,
-                        route_point, route_color, 1.5)
-                    route_previous = route_point
-                var aim_center := _beast_target_position - global_position + Vector2(0, -8)
-                draw_arc(aim_center, 10.0, 0.0, TAU, 12, route_color, 1.5)
-                if _beast_windup_t > 0.0:
-                    draw_arc(Vector2(0, -_fh - 7), 7.0, 0.0, TAU, 10, Color("#f3d39a"), 1.8)
-    if archetype == "shieldbearer" and (_brace_windup_t > 0.0 or _brace_t > 0.0):
-        var brace_center := Vector2(0, -_fh * 0.55)
-        var brace_angle := _brace_dir.angle()
-        if _brace_windup_t > 0.0:
-            draw_arc(brace_center, 17.0, brace_angle - 0.82, brace_angle + 0.82,
-                12, Color("#d8bd87"), 1.5)
-            draw_line(brace_center, brace_center + _brace_dir * 20.0, Color("#f0d7a5"), 2.0)
-        else:
-            draw_arc(brace_center, 18.0, brace_angle - 0.92, brace_angle + 0.92,
-                12, Color("#d8bd87"), 2.0)
-            draw_arc(brace_center, 22.0, brace_angle - 0.72, brace_angle + 0.72,
-                12, Color("#8795a5"), 1.0)
+            beast_behavior.draw_telegraph(self, _fh)
     if role == "ranged":
         draw_arc(Vector2(7, -11), 4.0, -PI * 0.55, PI * 0.55, 7, Color("#91c99a"), 1.0)
         draw_line(Vector2(7, -15), Vector2(7, -7), Color("#d9e7c8"), 1.0)

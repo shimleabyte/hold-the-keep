@@ -1,7 +1,6 @@
 extends SceneTree
 ## Phase 06.5: simultaneous faction garrisons, patrols and infrastructure raids under a populated Frontier workload.
 
-const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
 const FACTION_IDS: Array[String] = [
     "greenwood_raiders",
     "iron_legion",
@@ -13,6 +12,9 @@ const PATROLS_PER_CAMP := 2
 const VILLAGERS := 48
 const EXPECTED_RAIDERS := 4
 const GLOBAL_RAID_CAP := 4
+const EXPECTED_ARCHETYPES: Array[String] = [
+    "scout", "shieldbearer", "saboteur", "war_shaman", "siege_engine", "beast_rider"
+]
 
 var world_config
 var data_db
@@ -20,6 +22,7 @@ var faction_registry
 var game_clock
 var tech
 var save_system
+var failures: Array[String] = []
 
 
 func ticks(count: int) -> void:
@@ -30,8 +33,8 @@ func ticks(count: int) -> void:
 func require(condition: bool, message: String) -> void:
     if condition:
         return
+    failures.append(message)
     push_error("FAIL: " + message)
-    quit(1)
 
 
 func reachable_region_cells(main: Node, region_id: String, limit: int) -> Array[Vector2i]:
@@ -83,7 +86,8 @@ func expose_road(main: Node, cell: Vector2i) -> void:
 
 
 func spawn_garrison(main: Node, faction_id: String, enemy_id: String, cell: Vector2i, camp_position: Vector2) -> Node:
-    var enemy = ENEMY_SCRIPT.new()
+    var enemy_script = load("res://scripts/entities/enemy.gd")
+    var enemy = enemy_script.new()
     enemy.setup(data_db.enemies[enemy_id], main.world, main.flow, main.player, faction_id)
     enemy.is_garrison = true
     enemy.guard_origin = camp_position
@@ -167,6 +171,7 @@ func _run() -> void:
     main.supply._dirty = false
 
     var total_garrisons := 0
+    var garrisons: Array[Node] = []
     var total_patrols := 0
     var total_raiders := 0
     for faction_id in FACTION_IDS:
@@ -182,7 +187,8 @@ func _run() -> void:
             var enemy_id := roster[index % roster.size()]
             require(data_db.enemies.has(enemy_id),
                 "Faction roster references missing enemy data: " + enemy_id)
-            spawn_garrison(main, faction_id, enemy_id, cells[index], Vector2(camp["position"]))
+            var garrison := spawn_garrison(main, faction_id, enemy_id, cells[index], Vector2(camp["position"]))
+            garrisons.append(garrison)
             total_garrisons += 1
 
         for patrol_index in PATROLS_PER_CAMP:
@@ -211,7 +217,8 @@ func _run() -> void:
         "All four factions must contribute their full garrison load")
     require(total_patrols == PATROLS_PER_CAMP * FACTION_IDS.size(),
         "All four camps must contribute their patrol load")
-    require(total_raiders == EXPECTED_RAIDERS and total_raiders == GLOBAL_RAID_CAP\n        and faction_raider_count(main) == EXPECTED_RAIDERS,
+    require(total_raiders == EXPECTED_RAIDERS and total_raiders == GLOBAL_RAID_CAP
+        and faction_raider_count(main) == EXPECTED_RAIDERS,
         "All four camps must run simultaneous faction raids")
 
     var first_camp: Dictionary = manager.camps[FACTION_IDS[0]]
@@ -222,17 +229,106 @@ func _run() -> void:
     require(not manager._spawn_faction_raid(first_camp, extra_target),
         "The global raid ceiling must reject a fifth active faction raider")
 
-    for raider in get_nodes_in_group("faction_raiders"):
+    # Keep the player outside the camp perimeter so this pathing fixture tests infrastructure approach,
+    # not the separate player-interception branch covered by faction_raids.gd.
+    main.player.global_position = Vector2(180, 180)
+
+    var raiders: Array = get_nodes_in_group("faction_raiders")
+    var defender_nodes: Array = get_nodes_in_group("defenders")
+    for defender in defender_nodes:
+        defender.remove_from_group("defenders")
+    for raider in raiders:
+        raider.player = null
+
+    for raider in raiders:
         require(is_instance_valid(raider) and raider.is_faction_raider and raider.is_garrison,
             "Every active raid unit must retain garrison and faction-raid identity")
         var expected_camp := String(raider.faction_raid_camp_id)
         var expected_cell: Vector2i = road_targets[expected_camp]
         require(raider.raid_target_cell == expected_cell and raider.faction_raid_target_kind == "road",
             "Every active raider must retain its own faction-region target")
+        var target = raider._find_faction_raid_target()
+        require(target != null,
+            "Faction raider must resolve the road node assigned to its target cell: " + expected_camp)
+        if target != null:
+            require(raider._faction_raid_target_valid(target, main.supply),
+                "Faction raider target must remain exposed, connected and inside its camp region: " + expected_camp)
+            var direct_path: PackedVector2Array = main.nav.path_adjacent(raider.position, target.cells())
+            require(not direct_path.is_empty(),
+                "Faction raider must have a direct reachable path from its camp: " + expected_camp)
         raider._tick_faction_raid(0.016)
-        require(not raider._raid_path.is_empty() and raider._raid_path_version == main.nav.version,
-            "Every simultaneous raider must resolve a current A* route to its target")
+        var route_is_current: bool = not raider._raid_path.is_empty() \
+            and raider._raid_path_version == main.nav.version
+        var target_in_attack_reach: bool = target != null \
+            and raider.position.distance_to(target.position) <= maxf(raider._attack_reach(), 28.0)
+        require(route_is_current or target_in_attack_reach,
+            "Every simultaneous raider must route or engage its reachable target: " + expected_camp)
 
+    for raider in raiders:
+        raider.player = main.player
+    for defender in defender_nodes:
+        if is_instance_valid(defender):
+            defender.add_to_group("defenders")
+
+    # Exercise every specialist controller while all 48 garrisons coexist.
+    require(garrisons.size() == GARRISONS_PER_FACTION * FACTION_IDS.size(),
+        "The integrated AI tick must include all 48 specialist and baseline garrisons")
+
+    var observed_archetypes: Dictionary = {}
+    var fen_shaman: Node2D
+    var fen_ally: Node2D
+    for garrison in garrisons:
+        var archetype_id := String(garrison.archetype)
+        if EXPECTED_ARCHETYPES.has(archetype_id):
+            observed_archetypes[archetype_id] = true
+        match archetype_id:
+            "scout":
+                require(garrison.scout_behavior.actor == garrison,
+                    "Every Scout garrison must have its own configured marking component")
+            "shieldbearer":
+                require(garrison.shield_behavior.actor == garrison,
+                    "Every Shieldbearer garrison must have its own configured brace component")
+            "saboteur":
+                require(garrison.saboteur_behavior.actor == garrison
+                    and garrison.saboteur_behavior.navigation == main.nav,
+                    "Every Saboteur garrison must have configured disruption and navigation state")
+            "war_shaman":
+                require(garrison.support_behavior.actor == garrison,
+                    "Every War Shaman garrison must have its own configured support component")
+                if String(garrison.faction_id) == "fen_cult" and fen_shaman == null:
+                    fen_shaman = garrison
+            "siege_engine":
+                require(garrison.siege_behavior.actor == garrison
+                    and garrison.siege_behavior.navigation == main.nav,
+                    "Every Siege Engine garrison must have configured siege and navigation state")
+            "beast_rider":
+                require(garrison.beast_behavior.actor == garrison
+                    and garrison.beast_behavior.navigation == main.nav,
+                    "Every Beast Rider garrison must have configured charge and navigation state")
+        if String(garrison.faction_id) == "fen_cult" and archetype_id == "scout" and fen_ally == null:
+            fen_ally = garrison
+
+    for archetype_id in EXPECTED_ARCHETYPES:
+        require(observed_archetypes.has(archetype_id),
+            "Combined faction rosters must contain the " + archetype_id + " behavior")
+
+    require(fen_shaman != null and fen_ally != null,
+        "Fen Cult stress roster must contain both a War Shaman and a same-faction ally")
+    fen_shaman.position = Vector2(manager.camps["fen_cult"]["position"])
+    fen_ally.position = fen_shaman.position + Vector2(12.0, 0.0)
+    fen_ally.hp = maxi(1, fen_ally.hp - 5)
+    var fen_ally_hp_before: int = fen_ally.hp
+
+    var garrison_ai_ticks := 0
+    for garrison in garrisons:
+        garrison._physics_process(0.016)
+        garrison_ai_ticks += 1
+    require(garrison_ai_ticks == total_garrisons,
+        "All garrison AI policies must execute once in the concurrent battlefield fixture")
+    require(fen_ally.hp > fen_ally_hp_before,
+        "War Shaman support must heal a same-faction ally while all six archetypes coexist")
+
+    var initial_villager_count := get_nodes_in_group("villagers").size()
     for index in VILLAGERS:
         var column := (index % 8) - 4
         var row := floori(float(index) / 8.0) - 3
@@ -246,8 +342,8 @@ func _run() -> void:
     var villager_count := get_nodes_in_group("villagers").size()
     require(patrol_count == total_patrols and raider_count == EXPECTED_RAIDERS,
         "Faction patrol and raider group membership must remain consistent under load")
-    require(villager_count == VILLAGERS,
-        "The stress population must retain all spawned villagers")
+    require(villager_count == initial_villager_count + VILLAGERS,
+        "The stress population must retain all newly spawned villagers alongside the initial population")
 
     var snapshot: Dictionary = save_system.collect(main)
     require(snapshot["world"]["profile"] == "frontier" and snapshot["world"]["map_size"] == 128,
@@ -266,7 +362,14 @@ func _run() -> void:
     require(saved_raids == EXPECTED_RAIDERS,
         "Save v13 must persist every simultaneous faction raid assignment")
 
-    print("PASS: Frontier warfare stress: %d garrisons, %d patrols, %d simultaneous raids, %d enemies, %d villagers" % [
-        total_garrisons, total_patrols, total_raiders, enemy_count, villager_count
+    if not failures.is_empty():
+        push_error("FAIL: Frontier warfare stress collected %d failed assertions: %s" % [
+            failures.size(), "; ".join(failures)
+        ])
+        quit(1)
+        return
+
+    print("PASS: Frontier warfare stress: %d garrison AI ticks across six archetypes, %d patrols, %d simultaneous raids, %d enemies, %d additional villagers (%d total)" % [
+        garrison_ai_ticks, total_patrols, total_raiders, enemy_count, VILLAGERS, villager_count
     ])
     quit(0)

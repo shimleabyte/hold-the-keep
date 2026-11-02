@@ -29,7 +29,7 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 29 assertion reg
 | save_load_audio_menu.gd | round-trip save/load, autosave, save rusak, audio, menu, pengaturan |
 | resource_save_state.gd | status pohon/batu/bijih besi dan timer tumbuh ulang, rollback ke backup save |
 | campaign_assault.gd | Classic single-stronghold compatibility, fog reveal/save, G assault/recall, garrison at dawn and conquest victory |
-| faction_registry.gd | four faction definitions, region mapping, roster membership, stronghold garrisons, War Shaman support and v11 faction save persistence |
+| faction_registry.gd | four faction definitions, region mapping, roster membership, stronghold garrisons, component-backed War Shaman allied healing/cooldown and v11 faction save persistence |
 | frontier_campaign.gd | Classic/Frontier campaign calendars, act gates, all regional objectives, rewards, save/load and day-20 King victory |
 | campaign_multi_stronghold.gd | four Frontier strongholds, deterministic objective order, regional placement, independent garrisons, locked objectives, save/load and final conquest |
 | workplace_assignments.gd | Builder workplace capacity/radius, repair material consumption, reachable depot selection, job priority reassignment and v11 save validation |
@@ -54,11 +54,11 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 29 assertion reg
 | physical_shipments.gd | Player-directed depot orders, visible carriers, Keep withdrawals, capacity reservations, cancellation/refund, route interruption recovery and v13 persistence |
 | depot_cost_sources.gd | Explicit Keep/Storage/Outpost cost source, construction/research debit, no cross-depot pooling, disconnected-source rejection, atomic payment and v13 preference persistence |
 | supply_pressure.gd | Contested disconnected-depot warning, targeted saboteur pathing, deterministic stock theft, bounded repeat raid, depot damage, HUD state, v13 persistence and recovery |
-| shieldbearer_behavior.gd | Shield brace telegraph, frontal damage mitigation, side/rear counterplay, stagger interruption and disengage cancellation |
-| scout_marking.gd | Scout marking telegraph, same-faction propagation, focus-target priority, mark expiry, stagger interruption and target disengage |
-| saboteur_disruption.gd | Saboteur priority target selection, nav reachability, telegraphed structure sabotage, tower/depot/workplace disable and recovery, stagger interruption |
-| siege_engine_behavior.gd | Siege Engine building target priorities, reachable path, telegraphed heavy impact, recovery cooldown, stagger interruption and building-only preference |
-| beast_rider_charge.gd | isolated defender target priority, walkable locked charge route, telegraphed impact, sidestep miss and stagger interruption |
+| shieldbearer_behavior.gd | component-backed brace telegraph, frontal source-origin mitigation, side/rear counterplay, stagger interruption and disengage cancellation |
+| scout_marking.gd | component-backed Scout telegraph, same-faction-only bounded sharing, focus-target priority, mark expiry, stagger interruption and target disengage |
+| saboteur_disruption.gd | component-backed Saboteur priority scan, A* reachability, telegraphed disruption, structure damage, tower/depot/workplace suppression and recovery, stagger interruption |
+| siege_engine_behavior.gd | component-backed Siege Engine target priorities, A* pathing, telegraphed structural impact, recovery, defender interruption and building-only attack |
+| beast_rider_charge.gd | component-backed isolated defender target priority, A* locked charge route, telegraphed impact, sidestep miss and stagger interruption |
 | faction_camps_patrols.gd | deterministic enemy-territory camp placement, fog activation, A* patrol leash, bounded reinforcement, camp destruction and v13 save/restore |
 | faction_raids.gd | exposed connected depot/road target selection, finite camp dispatch, pathing, structure damage, depot theft, target abort, faction raid save/restore and cleanup |
 | faction_warfare_stress.gd | simultaneous 48 faction garrisons, eight patrols, four raids, 48 villagers, per-raider A* routing, global raid cap and v13 snapshot validation |

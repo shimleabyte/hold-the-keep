@@ -15,7 +15,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #43 (save schema v13; status per 2 November 2026). Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle, Beast Rider charge, faction camps dan bounded patrols sudah masuk `main`.
+Ringkasan implementasi aktual pada `main` setelah PR #45 (save schema v13; status per 2 November 2026). Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle, Beast Rider charge, faction camps/patrols dan faction infrastructure raids sudah masuk `main`. Combined warfare stress juga merged via PR #45; correction PR #46 pass 70/70 CI tetapi masih terbuka.
 
 | Area | Kondisi saat ini |
 |---|---|
@@ -26,7 +26,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #43 (save schema v13; statu
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
-| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; raids and broader counterattacks remain incomplete |
+| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; connected infrastructure raids and bounded counterattacks merged via PR #44; manual Frontier balance/play review remains open |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
 | Save/load | v13 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo; Classic v1–v13 dan Frontier v7–v13 migration matrix dijaga. PR #34 adds optional cost-source preference without a save-version bump; earlier v13 snapshots without it remain valid |
@@ -456,10 +456,46 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Save v13 optionally stores camp raid budget/cooldown and active faction-raider target kind/cell, camp, region and hit count. The existing disconnected-depot supply-pressure mechanic remains independent.
 - Added `tests/faction_raids.gd` and registered it in `tools/run_tests.sh` plus both Godot 4.3/4.7 CI matrices. PR/CI and rendered Frontier playtest are pending.
 
-## 43. Phase 06.5 — Combined faction warfare stress (2026-11-02, verification branch)
-- Phase 06.4 is merged via PR #44 (`5cc5084`); Godot workflow #41381487306 passed 68/68 jobs, including `faction_raids` on Godot 4.3 and 4.7, Frontier performance and Windows/Linux exports.
-- Branch: `feat/phase-06.5-faction-warfare-stress`, created from post-merge `main`.
-- New regression `tests/faction_warfare_stress.gd` builds a deterministic combined Frontier workload: 48 faction garrisons, eight camp patrols, four simultaneous faction infrastructure raids (one per faction), and 48 villagers.
-- The test creates exposed road targets inside each faction region, validates A* routes for all simultaneous raiders, asserts the global four-raider ceiling, and checks the complete population plus all camp/raid state against save-v13 validation.
-- Registered in `tools/run_tests.sh` and both Godot 4.3/4.7 CI matrices. The new regression and full matrix are pending.
-- `tests/release_hardening.gd` already validates Classic save fixtures v1–v13 and Frontier fixtures v7–v13; active faction raid state round-trip is covered separately by `tests/faction_raids.gd`.
+## 43. Phase 06.5 — Combined faction warfare stress (2026-11-02, merged; correction verified, awaiting merge)
+- Phase 06.4 is merged via PR #44 (`5cc5084`); workflow #41381487306 passed 68/68 jobs, including `faction_raids` on Godot 4.3 and 4.7, Frontier performance and Windows/Linux exports.
+- The combined stress workload was merged through PR #45 (`83dd633`) from `feat/phase-06.5-faction-warfare-stress`.
+- Regression `tests/faction_warfare_stress.gd` builds a deterministic Frontier workload: 48 faction garrisons, eight camp patrols, four simultaneous faction infrastructure raids (one per faction), and 48 villagers.
+- The test creates exposed road targets inside each faction region, validates A* routes for all simultaneous raiders, asserts the global four-raider ceiling, and checks population plus camp/raid state against save-v13 validation.
+- Registered in `tools/run_tests.sh` and both Godot 4.3/4.7 CI matrices. The first post-merge run #41384940850 failed at GDScript parsing on line 214 because a literal escaped newline was committed; PR #46 replaces it with a real line break. Corrected workflow #41385244114 passed 70/70 jobs, including `faction_warfare_stress` on both engines; PR #46 remains open and unmerged.
+- `tests/release_hardening.gd` validates Classic save fixtures v1–v13 and Frontier fixtures v7–v13; active faction raid state round-trip is separately covered by `tests/faction_raids.gd`.
+
+## 44. Phase 06.2 — Beast Rider composable behavior extraction (2026-11-02, implementation branch)
+- Branch: `feat/phase-06.2-composable-behaviors`, based on the corrected Phase 06.5 verification head from PR #46.
+- Extracted the Beast Rider target scan/scoring, A* approach and locked charge route, telegraph/wind-up, impact/knockback, miss handling, cooldown and stagger interruption into `scripts/behaviors/beast_rider_behavior.gd`.
+- `scripts/entities/enemy.gd` now owns the shared enemy host and delegates Beast Rider lifecycle/timers/rendering to the component. The charge regression now reads/asserts component state directly.
+- PR #47 workflow [#41386046423](https://github.com/shimleabyte/hold-the-keep/actions/runs/41386046423) passed 70/70 jobs: Godot 4.3/4.7 parse, all 33 assertion suites per version (including `beast_rider_charge` and `faction_warfare_stress`), Frontier performance and Windows/Linux export. PR #47 remains open and unmerged.
+
+## 45. Phase 06.2 — Shieldbearer composable brace extraction (2026-11-02, implementation branch)
+- Added `scripts/behaviors/shieldbearer_behavior.gd` for brace targeting response, wind-up/active timing, cooldown, disengage cancellation, stagger interruption, directional hit checks and telegraph drawing.
+- `scripts/entities/enemy.gd` delegates Shieldbearer brace updates, cooldown advancement, damage mitigation and rendering to the behavior component; archetype-specific brace fields and the old inline state machine were removed from the host.
+- `tests/shieldbearer_behavior.gd` now inspects the component state and directly verifies the damage-origin gate while retaining front/side/rear damage, stagger and disengage cases.
+- Workflow [#41387134030](https://github.com/shimleabyte/hold-the-keep/actions/runs/41387134030) passed 70/70 jobs: both engine parse checks, all assertion suites on Godot 4.3/4.7 including `shieldbearer_behavior`, `beast_rider_charge` and `faction_warfare_stress`, Frontier performance and Windows/Linux export. PR #47 remains open and unmerged.
+
+## 46. Phase 06.2 — Scout composable marking extraction (2026-11-02, implementation branch)
+- Added `scripts/behaviors/scout_behavior.gd` for bounded defender selection, preferred-range positioning, telegraphed marking, bounded same-faction propagation, expiry, stagger interruption, target disengagement and marker rendering.
+- `scripts/entities/enemy.gd` now delegates Scout state/timers/mark publication to this component. Thin host adapters remain so Shieldbearer, ranged enemies and garrisons can consume valid shared marks without depending on Scout internals.
+- `tests/scout_marking.gd` now asserts component state directly while retaining same-faction sharing, rival-faction exclusion, marked-target priority, expiry, stagger interruption and target disengagement.
+- Latest-head workflow [#41387833455](https://github.com/shimleabyte/hold-the-keep/actions/runs/41387833455) passed 70/70 jobs on Godot 4.3/4.7, including both Scout regressions, both Shieldbearer regressions, Beast Rider, faction raids and combined warfare stress. PR #47 remains open and unmerged.
+
+## 47. Phase 06.2 — Saboteur composable disruption extraction (2026-11-02, implementation branch)
+- Added `scripts/behaviors/saboteur_behavior.gd` for bounded priority scoring, rotating building scan, reachable A* path selection, interception, wind-up, suppression/damage application, cooldown, stagger interruption and disruption telegraph.
+- `scripts/entities/enemy.gd` now delegates Saboteur navigation, target/path state, timers, impact/recovery and drawing to the component. The host retains only the archetype dispatch hook.
+- `tests/saboteur_disruption.gd` now asserts through component state while retaining building priority, reachability, suppression, recovery, interception and stagger coverage.
+- Workflow [#41388532624](https://github.com/shimleabyte/hold-the-keep/actions/runs/41388532624) passed 70/70 jobs on Godot 4.3/4.7.
+
+## 48. Phase 06.2 — Siege Engine composable structural attack extraction (2026-11-02, implementation branch)
+- Added `scripts/behaviors/siege_engine_behavior.gd` for bounded building-priority scanning, A* adjacent pathing, flow-field advance, defender interruption/retreat, telegraphed structural impact, recovery and marker rendering.
+- `scripts/entities/enemy.gd` delegates Siege Engine navigation, target/path state, timers, attack cycle, retreat and telegraph rendering to the component; the shared host retains only the archetype dispatch hook.
+- `tests/siege_engine_behavior.gd` now asserts through component state while retaining priority, reachable route, impact damage, cooldown, stagger interruption and building-only attack checks.
+- Latest workflow [#41389136213](https://github.com/shimleabyte/hold-the-keep/actions/runs/41389136213) passed 70/70 jobs on Godot 4.3/4.7. PR #47 remains open and unmerged.
+
+## 49. Phase 06.2 — War Shaman support component extraction (2026-11-02, implementation branch)
+- Added `scripts/behaviors/war_shaman_support_behavior.gd` to own support radius/amount, heal cooldown and the decision to heal the nearest injured same-faction ally through the shared `enemy_support.gd` targeting helper.
+- `scripts/entities/enemy.gd` delegates support timer advancement and the support tick to this component. The War Shaman's ranged attack remains on the shared ranged combat path; support is evaluated as a separate priority action and does not duplicate or replace projectile logic.
+- `tests/faction_registry.gd` now inspects the component directly and verifies allied healing, rival-faction exclusion and no repeated healing during cooldown.
+- Latest workflow [#41389866198](https://github.com/shimleabyte/hold-the-keep/actions/runs/41389866198) passed 70/70 jobs on Godot 4.3/4.7, including `faction_registry`, all behavior regressions, faction raids and warfare stress, Frontier performance and Windows/Linux export. The War Shaman support component is validated; PR #47 remains open and unmerged.
