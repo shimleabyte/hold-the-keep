@@ -52,7 +52,7 @@ const HELP_ROWS := [
     ["C", "TEBAS (LEVEL 2)"],
     ["V", "SERUAN (LEVEL 3)"],
     ["1-9 / 0", "PILIH BANGUNAN"],
-    ["B / QUEUE", "ANTREAN KONSTRUKSI"],
+    ["N / QUEUE", "ANTREAN KONSTRUKSI"],
     ["KLIK KIRI", "PASANG BANGUNAN"],
     ["KLIK KANAN", "BATAL / BONGKAR"],
     ["T M K R B", "TAMBAH JOB"],
@@ -1270,7 +1270,7 @@ func _unhandled_input(event: InputEvent) -> void:
             get_tree().paused = false
             get_tree().reload_current_scene()
         return
-    if event.keycode == KEY_B:
+    if event.keycode == KEY_N:
         _toggle_construction_queue()
         get_viewport().set_input_as_handled()
     elif event.keycode == KEY_ESCAPE and _queue_panel.visible:
