@@ -45,7 +45,7 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 37 assertion reg
 | fx_shake_settings.gd | batas partikel, guncangan layar, tombol menu, performa dengan efek |
 | perf.gd | configurable Classic/Frontier benchmark; `PROFILE=frontier ENEMIES=96 VILLAGERS=80 FRAMES=360` reports p50/p95/p99 frame time, nodes, static memory, projectiles and particles |
 | frontier_stress.gd | Frontier 128×128, faction rosters, 48 villagers, projectile and 500-particle ceiling |
-| campaign_reload_hardening.gd | Frontier reload with completed objectives, active escort/path progress and damaged stronghold |
+| campaign_reload_hardening.gd | Act I–IV Frontier reloads, completed regional objectives, active escort recovery, three conquered strongholds, damaged final stronghold, day-20 King gate and persisted victory reload |
 | campaign_balance_matrix.gd | Classic 15-day and Frontier 20-day schedules, act wave budgets, faction rosters and final-boss gate |
 | release_hardening.gd | Classic v1–v12 and Frontier v7–v12 save migration, interrupted writes, backup recovery and export presets |
 | anim_sync.gd | pukulan penebang jatuh di frame benturan; pelarian memakai klip lari |
