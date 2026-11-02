@@ -70,12 +70,48 @@ func _initialize() -> void:
     var second_site = main.world.occupied.get(second_cell)
     assert(second_site != null and second_site.is_in_group("construction_sites"),
         "A second order must enter the construction queue as a funded blueprint")
+    var third_cell := find_house_cell(main, keep.cell)
+    assert(third_cell.x >= 0 and third_cell != second_cell,
+        "A third valid footprint must exist to exercise queue reordering")
+    assert(main.build.place("house", third_cell) == "", "A third house order must be accepted")
+    var third_site = main.world.occupied.get(third_cell)
+    var queue_before: Array = main.build.construction_queue()
+    assert(queue_before.size() == 2 and queue_before[0] == second_site and queue_before[1] == third_site,
+        "New blueprints must append to the explicit construction order")
+    assert(main.build.move_construction_site(third_site, -1),
+        "The player must be able to promote a later project")
+    var reordered_queue: Array = main.build.construction_queue()
+    assert(reordered_queue[0] == third_site and reordered_queue[1] == second_site,
+        "Reordering must change the effective Builder project priority")
+    assert(not main.build.move_construction_site(third_site, -1),
+        "A project at the front cannot move further upward")
+    builder._find_work()
+    assert(builder.target == third_site,
+        "Builder target selection must honor queue priority instead of choosing the nearest blueprint")
+    builder._release()
+    var hud = get_first_node_in_group("hud")
+    assert(hud != null, "The game HUD must expose construction queue controls")
+    hud._toggle_construction_queue()
+    assert(hud._queue_panel.visible and hud._queue_list.get_child_count() == 2,
+        "The queue panel must list every active blueprint")
+    hud._toggle_construction_queue()
     second_site.work_required = 12.0
     second_site.work_done = 3.0
+    third_site.work_required = 10.0
+    third_site.work_done = 2.0
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot.has("construction_sites") and snapshot["construction_sites"].size() == 1,
-        "Save v13 must persist unfinished blueprint sites as additive state")
+    assert(snapshot.has("construction_sites") and snapshot["construction_sites"].size() == 2,
+        "Save v13 must persist every unfinished blueprint in queue order")
     assert(save_system._valid_save(snapshot), "A partially completed construction site must pass save validation")
+    var legacy_queue_snapshot: Dictionary = snapshot.duplicate(true)
+    for saved_site in legacy_queue_snapshot["construction_sites"]:
+        saved_site.erase("queue_order")
+    assert(save_system._valid_save(legacy_queue_snapshot),
+        "Legacy v13 blueprints without an explicit queue order must remain valid")
+    var duplicate_queue_order: Dictionary = snapshot.duplicate(true)
+    duplicate_queue_order["construction_sites"][1]["queue_order"] = duplicate_queue_order["construction_sites"][0]["queue_order"]
+    assert(not save_system._valid_save(duplicate_queue_order),
+        "Save validation must reject duplicate construction queue positions")
     var invalid_progress: Dictionary = snapshot.duplicate(true)
     invalid_progress["construction_sites"][0]["work_done"] = -1.0
     assert(not save_system._valid_save(invalid_progress), "Save validation must reject negative construction progress")
@@ -91,11 +127,18 @@ func _initialize() -> void:
     current_scene = reloaded
     await ticks(12)
     var restored_sites := get_nodes_in_group("construction_sites")
-    assert(restored_sites.size() == 1, "Loading a v13 save must restore unfinished construction sites")
-    var restored_site = restored_sites[0]
-    assert(restored_site.cell == second_cell and is_equal_approx(restored_site.work_done, 3.0)
+    assert(restored_sites.size() == 2, "Loading a v13 save must restore all unfinished construction sites")
+    var restored_site = null
+    for candidate in restored_sites:
+        if candidate.cell == second_cell:
+            restored_site = candidate
+    assert(restored_site != null and is_equal_approx(restored_site.work_done, 3.0)
         and is_equal_approx(restored_site.work_required, 12.0),
         "Construction progress, work requirement and footprint must survive save/load")
+    var restored_queue: Array = reloaded.build.construction_queue()
+    assert(restored_queue.size() == 2 and restored_queue[0].cell == third_cell
+        and restored_queue[1].cell == second_cell,
+        "Explicit project priority must survive v13 save/load")
     var expected_refund: int = int(restored_site.refundable_cost().get("wood", 0))
     var refund_before: int = inventory.get_amount("wood")
     assert(reloaded.build.demolish_at(second_cell), "Right-click demolition must cancel a blueprint")
