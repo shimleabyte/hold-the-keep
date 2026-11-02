@@ -29,6 +29,7 @@ func _run() -> void:
     var config = root.get_node("WorldConfig")
     var clock = root.get_node("GameClock")
     var save_system = root.get_node("SaveSystem")
+    var faction_registry = root.get_node("FactionRegistry")
     config.apply_profile("frontier")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
@@ -51,13 +52,13 @@ func _run() -> void:
         "Frontier must place exactly one deterministic camp for each faction")
 
     var reachable: Dictionary = main.nav.reachable_cells(main.nav.cell_of(main.player.global_position))
-    var faction_ids: Array = FactionRegistry.factions.keys()
+    var faction_ids: Array = faction_registry.factions.keys()
     faction_ids.sort()
     for faction_id_value in faction_ids:
         var faction_id := String(faction_id_value)
         var camp: Dictionary = manager.camps[faction_id]
         var cell: Vector2i = camp["cell"]
-        var faction_data: Dictionary = FactionRegistry.factions[faction_id]
+        var faction_data: Dictionary = faction_registry.factions[faction_id]
         var region_id := String(faction_data["region"])
         require(String(main.world.region_id(cell)) == region_id,
             "Camp %s must be placed inside its faction region" % faction_id)
@@ -78,7 +79,7 @@ func _run() -> void:
                 "Patrol waypoint must stay inside its faction region")
             require(main.territory.owner_at(point_cell) == "enemy",
                 "Patrol waypoint must stay inside enemy-claimed cells")
-            require(Vector2(point_cell - cell).length() * WorldConfig.tile_size <= float(camp["patrol_radius"]) + WorldConfig.tile_size,
+            require(Vector2(point_cell - cell).length() * config.tile_size <= float(camp["patrol_radius"]) + WorldConfig.tile_size,
                 "Patrol waypoint must stay inside its camp leash")
             var route: PackedVector2Array = main.nav.path_to(main.nav.center_of(cell), point_cell)
             require(not route.is_empty(), "Camp waypoints must have a reachable A* route")
