@@ -135,20 +135,68 @@ func place(id: String, c: Vector2i) -> String:
 
 
 func create_construction_site(id: String, c: Vector2i, source_cell: Vector2i,
-        work_done := 0.0, work_required := -1.0) -> Node:
+        work_done := 0.0, work_required := -1.0, queue_order := -1) -> Node:
     var site = CONSTRUCTION_SITE_SCRIPT.new()
     site.setup(DataDB.buildings[id], c, source_cell, DataDB.cost_of(id), work_done, work_required)
+    site.queue_order = queue_order if queue_order >= 0 else _next_queue_order()
     site.world = world
     site.build_system = self
     world.entities.add_child(site)
     for occupied_cell in site.cells():
         world.occupied[occupied_cell] = site
     Events.building_placed.emit(id, c)
+    Events.construction_queue_changed.emit()
     return site
 
 
+func _next_queue_order() -> int:
+    var next_order := 0
+    for existing in get_tree().get_nodes_in_group("construction_sites"):
+        if is_instance_valid(existing):
+            next_order = maxi(next_order, int(existing.queue_order) + 1)
+    return next_order
+
+
+func construction_queue() -> Array:
+    var sites: Array = get_tree().get_nodes_in_group("construction_sites")
+    sites.sort_custom(func(a, b) -> bool:
+        if int(a.queue_order) != int(b.queue_order):
+            return int(a.queue_order) < int(b.queue_order)
+        if a.cell.y != b.cell.y:
+            return a.cell.y < b.cell.y
+        return a.cell.x < b.cell.x
+    )
+    return sites
+
+
+func move_construction_site(site, direction: int) -> bool:
+    if not is_instance_valid(site) or not site.is_in_group("construction_sites") or direction == 0:
+        return false
+    var sites := construction_queue()
+    var current_index := sites.find(site)
+    if current_index < 0:
+        return false
+    var step := 1 if direction > 0 else -1
+    var target_index := clampi(current_index + step, 0, sites.size() - 1)
+    if target_index == current_index:
+        return false
+    var other = sites[target_index]
+    var previous_order := int(site.queue_order)
+    site.queue_order = int(other.queue_order)
+    other.queue_order = previous_order
+    _normalize_construction_queue()
+    Events.construction_queue_changed.emit()
+    return true
+
+
+func _normalize_construction_queue() -> void:
+    var sites := construction_queue()
+    for index in sites.size():
+        sites[index].queue_order = index
+
+
 func restore_site(id: String, c: Vector2i, work_done: float, work_required: float,
-        source_cell: Vector2i) -> Node:
+        source_cell: Vector2i, queue_order := -1) -> Node:
     if not DataDB.buildings.has(id) or id == "keep":
         return null
     var size := _size_of(id)
@@ -159,7 +207,7 @@ func restore_site(id: String, c: Vector2i, work_done: float, work_required: floa
                 return null
             if not world.is_buildable(cell) and not (id == "bridge" and world.is_bridgeable(cell)):
                 return null
-    return create_construction_site(id, c, source_cell, work_done, work_required)
+    return create_construction_site(id, c, source_cell, work_done, work_required, queue_order)
 
 
 func complete_site(site) -> Node:
@@ -172,8 +220,10 @@ func complete_site(site) -> Node:
         if world.occupied.get(occupied_cell) == site:
             world.occupied.erase(occupied_cell)
     site.remove_from_group("construction_sites")
+    _normalize_construction_queue()
     Events.building_removed.emit(id, anchor)
     site.queue_free()
+    Events.construction_queue_changed.emit()
     var completed = place_raw(id, anchor)
     Events.build_feedback.emit("%s selesai dibangun" % String(DataDB.buildings[id].get("name", id)))
     return completed
@@ -191,8 +241,10 @@ func cancel_site(site) -> bool:
         if world.occupied.get(occupied_cell) == site:
             world.occupied.erase(occupied_cell)
     site.remove_from_group("construction_sites")
+    _normalize_construction_queue()
     Events.building_removed.emit(id, anchor)
     site.queue_free()
+    Events.construction_queue_changed.emit()
     var supply = get_tree().get_first_node_in_group("supply_network")
     if supply != null and supply.has_method("refund_cost_to_source"):
         supply.refund_cost_to_source(source_cell, refund)
