@@ -142,10 +142,13 @@ func _initialize() -> void:
     var landmark_regions := {}
     assert(world.generated_decoration_layout.size() >= 100,
         "Frontier must receive a meaningful amount of non-blocking regional dressing")
+    var resource_cells: Dictionary = {}
+    for resource_entry in world.generated_resource_layout:
+        resource_cells[resource_entry["cell"]] = true
     for entry in world.generated_decoration_layout:
         var cell: Vector2i = entry["cell"]
-        assert(not world.occupied.has(cell),
-            "Decorative props must not overlap harvestable or iron resource cells")
+        assert(not resource_cells.has(cell),
+            "Decorative props must not overlap generated harvestable or iron resource cells")
         var region: String = world.region_id(cell)
         decoration_regions[region] += 1
         if bool(entry["landmark"]):
