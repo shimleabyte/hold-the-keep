@@ -92,31 +92,31 @@ func _run() -> void:
 
     var siege = spawn_siege_engine(main, data_db.enemies["enemy_siege_engine"],
         main.player.global_position + Vector2(0, 110))
-    require(siege.siege_nav == main.nav,
+    require(siege.siege_behavior.navigation == main.nav,
         "Siege Engine must acquire the shared navigation grid")
-    var selected = siege._select_siege_target()
+    var selected = siege.siege_behavior.select_target()
     require(selected == wall,
         "Siege Engine must prioritize a reachable stone wall over Storage, House and the Keep")
-    require(not siege._siege_path.is_empty(),
+    require(not siege.siege_behavior.path.is_empty(),
         "Selected siege target must have a reachable adjacent path")
     main.player.global_position = Vector2(180, 180)
 
     # The wind-up must be readable and cause no immediate damage.
     siege.global_position = wall.global_position + Vector2(18, 0)
     var wall_hp_before: int = wall.hp
-    siege._siege_cd = 0.0
-    siege._tick_siege_engine(0.016)
-    require(siege._siege_windup_t > 0.0,
+    siege.siege_behavior.cooldown = 0.0
+    siege.siege_behavior.tick(0.016)
+    require(siege.siege_behavior.windup_timer > 0.0,
         "Siege Engine must telegraph before its heavy impact")
     assert(wall.hp == wall_hp_before,
         "Siege target must not take damage during the wind-up")
-    siege._tick_siege_engine(siege.siege_windup_duration + 0.02)
+    siege.siege_behavior.tick(siege.siege_behavior.windup_duration + 0.02)
     assert(wall.hp == wall_hp_before - 72,
         "Siege impact must apply the configured heavy structure damage")
-    assert(siege._siege_cd > 0.0,
+    assert(siege.siege_behavior.cooldown > 0.0,
         "Successful impact must enter a recovery cooldown")
-    siege._tick_siege_engine(0.016)
-    assert(siege._siege_windup_t == 0.0,
+    siege.siege_behavior.tick(0.016)
+    assert(siege.siege_behavior.windup_timer == 0.0,
         "Siege Engine must not chain impacts without recovery")
 
     # Stagger interrupts a second siege wind-up before it damages the target.
@@ -126,24 +126,24 @@ func _run() -> void:
     main.nav.rebuild()
     var interrupted = spawn_siege_engine(main, data_db.enemies["enemy_siege_engine"],
         tower.global_position + Vector2(18, 0))
-    interrupted._siege_target = tower
-    interrupted._siege_cd = 0.0
+    interrupted.siege_behavior.target = tower
+    interrupted.siege_behavior.cooldown = 0.0
     var tower_hp_before: int = tower.hp
-    interrupted._tick_siege_engine(0.016)
-    require(interrupted._siege_windup_t > 0.0,
+    interrupted.siege_behavior.tick(0.016)
+    require(interrupted.siege_behavior.windup_timer > 0.0,
         "Second Siege Engine must enter its wind-up")
     interrupted.apply_stagger(0.6)
-    assert(interrupted._siege_windup_t == 0.0,
+    assert(interrupted.siege_behavior.windup_timer == 0.0,
         "Stagger must cancel the active siege wind-up")
     assert(tower.hp == tower_hp_before,
         "Interrupted siege strike must not deal structural damage")
-    assert(interrupted._siege_cd > 0.0,
+    assert(interrupted.siege_behavior.cooldown > 0.0,
         "Interrupted Siege Engine must enter a brief recovery window")
 
     # The Siege Engine never retaliates with its structure strike against nearby people.
     interrupted.global_position = main.player.global_position + Vector2(12, 0)
     var player_hp_before: int = main.player.hp
-    interrupted._tick_siege_engine(0.016)
+    interrupted.siege_behavior.tick(0.016)
     assert(main.player.hp == player_hp_before,
         "Siege Engine must not use its heavy structure impact against the player")
 
