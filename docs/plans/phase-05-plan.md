@@ -21,7 +21,7 @@ Make building placement a managed construction process. Builder labor must matte
 ## 05.2b — Construction queue (implementation branch: `feat/phase-05.2b-construction-queue`)
 - Add a player-facing queue with explicit order, cost, placement validation and cancel/reorder behavior.
 - [x] Every accepted project pays its full cost once from the selected allowed depot; invalid placement is rejected before payment and does not reserve materials.
-- [x] Queue panel displays all funded blueprints, current order, paid material costs, live work progress and one-step raise/lower controls.
+- [x] Queue panel displays up to 64 funded blueprints, current order, paid material costs, live work progress and one-step raise/lower controls.
 - [x] Reordering changes actual Builder target priority; reachable projects are considered in queue order before repair work.
 - [x] Cancel control and right-click both release the footprint and refund only unconsumed materials to the source depot/Keep fallback.
 - [x] Queue order is persisted in save v13; legacy v13 site records without `queue_order` keep their saved array order.
