@@ -1634,7 +1634,7 @@ class ConstructionQueueRow extends Control:
         var building_name := String(site.data.get("short", site.data.get("name", site.id)))
         draw_string(font, Vector2(6, 10), "%02d  %s" % [order_index + 1, building_name],
             HORIZONTAL_ALIGNMENT_LEFT, maxf(80.0, size.x - 72.0), 7, Color("#e5d7bb"))
-        var progress := site.progress_ratio()
+        var progress: float = float(site.progress_ratio())
         draw_rect(Rect2(6, 17, 72, 5), Color("#090b0b"))
         draw_rect(Rect2(7, 18, 70.0 * progress, 3), Color("#d6bc78"))
         var cost_text := ""
