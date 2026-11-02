@@ -76,7 +76,7 @@
   },
   {
     "id": "tower",
-    "name": "Menara",
+    "name": "Menara Pengawas",
     "size": [
       2,
       2
@@ -100,7 +100,8 @@
       "accent": "#d0bd91",
       "shadow": "#41494d"
     },
-    "vision_radius": 128
+    "vision_radius": 128,
+    "short": "PENGAWAS"
   },
   {
     "id": "storage",
