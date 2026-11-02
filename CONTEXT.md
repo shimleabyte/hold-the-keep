@@ -158,13 +158,13 @@ Batas sistem berikutnya:
 
 Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardware nyata menunjukkan kebutuhan.
 
-## 9c. Phase 05.2a — Builder-driven construction sites (2026-11-02, implementation branch)
-- Branch `feat/phase-05-builder-construction-sites` starts from current `main`.
+## 9c. Phase 05.2a — Builder-driven construction sites (2026-11-02, merged via PR #58)
+- Branch `feat/phase-05-builder-construction-sites` was squash-merged into `main` as `d3bba66` after workflow #41484825656 passed.
 - A valid placement pays the selected depot once and creates an unfinished blueprint; it is not registered as a functional building until Builder work completes.
 - Builders use their existing workplace assignment and bounded navigation to claim reachable blueprint sites. Maximum two Builders per site; additional work rate is capped at 1.65× one Builder.
 - Completion replaces the blueprint with the normal building. Right-click cancellation returns only unconsumed materials to the original depot, with Keep fallback if the source cannot accept them.
 - Save v13 receives an optional `construction_sites` array; older saves remain valid. Site progress, required work and source coordinates are validated and restored.
-- Automated acceptance is pending CI on Godot 4.3/4.7. Dedicated queue ordering/reorder UI remains a separate task.
+- Automated acceptance passed on Godot 4.3/4.7, including construction-site regression, Frontier diagnostic and Windows/Linux exports. Queue ordering/reorder UI moved to Phase 05.2b.
 
 ## 10. Riwayat singkat
 1. Rencana game + pemilihan stack (Godot 4, native).
@@ -572,8 +572,8 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 
 
 ## Phase 05.2b — Construction queue implementation branch
-- Branch: `feat/phase-05-construction-queue-ui`, stacked on the Phase 05.2a head `4fa45f7` while PR #58 CI runs.
-- Added stable queue order to construction sites, queue reorder operations, save-v13 persistence and backward-compatible restoration for v13 records without the optional order field.
-- Builder target selection now prioritizes construction sites in queue order ahead of building repairs, while retaining bounded path checks and workplace-radius constraints.
-- HUD includes an always-visible QUEUE entry (`N` shortcut, leaving `B` for Builder job control), current project order, paid costs, live progress, raise/lower controls and cancellation. Runtime queue size is capped at 64 so every valid queue state remains saveable under the v13 validator.
-- Regression coverage extends `tests/construction_sites.gd` for effective reorder, queue panel rows and v13 order round-trip. CI and rendered UI review pending.
+- Branch: `feat/phase-05.2b-construction-queue`, created from main after PR #58 merged as `d3bba66`; PR #59 is open.
+- Added stable queue order, one-step reorder operations, v13 persistence and backward-compatible restoration for records without the optional order field. Runtime accepts at most 64 unfinished projects, matching the save validator.
+- Builder target selection prioritizes queued construction before repairs, keeps bounded A* checks and skips previously unreachable candidates so later projects remain eligible.
+- HUD adds the always-visible QUEUE entry (`N`; `B` remains Builder job control), order, paid costs, live progress, UP/DN reorder and X cancellation.
+- Regression covers reorder, Builder priority/fallback, HUD rows, duplicate order rejection, legacy v13 compatibility and save/reload order. PR #59 CI and rendered UI review pending.
