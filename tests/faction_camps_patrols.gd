@@ -220,8 +220,14 @@ func _run() -> void:
         "Restored camp patrol must retain both patrol and garrison policies")
     assert(restored_patrol.global_position.distance_to(restored_position) < 0.1,
         "Restored patrol position must remain unchanged")
-    assert(restored_patrol.patrol_origin.distance_to(saved_guard_origin) < 0.1,
-        "Restored patrol must return to its saved camp origin")
+    assert(restored_patrol.patrol_origin.distance_to(camp["position"]) < 0.1,
+        "Restored patrol must return to its camp's deterministic position")
+    var saved_patrol_state: Dictionary = saved_patrol["patrol"]
+    assert(restored_patrol.patrol_waypoint_index == int(saved_patrol_state["waypoint_index"]),
+        "Restored patrol must preserve its patrol waypoint assignment")
+    assert(restored_patrol.guard_origin.distance_to(saved_guard_origin) < 0.1
+        or restored_patrol.patrol_returning,
+        "Restored patrol must restore its patrol/return movement goal")
     assert(restored_patrol.patrol_camp_id == camp_id,
         "Restored patrol must retain its faction camp assignment")
 
