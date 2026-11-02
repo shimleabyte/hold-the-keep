@@ -1,6 +1,6 @@
 # Phase 05 — Construction System and Building Production Chains
 
-**Status:** Lumber Camp and Quarry resource-worksite slice merged through PR #19. Phase 05.2a Builder-driven blueprint sites merged through PR #58 (`d3bba66`); CI passed. Phase 05.2b queue ordering, persistence and player-facing management UI are implemented on `feat/phase-05.2b-construction-queue`; PR/CI and rendered UI acceptance are pending. Remaining facility chain is open.
+**Status:** Lumber Camp and Quarry resource-worksite slice merged through PR #19. Phase 05.2a Builder-driven blueprint sites merged through PR #58 (`d3bba66`). Phase 05.2b construction queue, Builder priorities, save-v13 order persistence and HUD management merged through PR #59 (`6147cfc`); workflow #509 passed 80/80 jobs on Godot 4.3/4.7, Frontier diagnostic and Windows/Linux exports. Rendered HUD/gameplay review and remaining facility chain remain open.
 **Dependency:** Phase 04 Builder occupation; Phase 02 depot/logistics rules.
 **Engine targets:** Godot 4.3 and 4.7.
 
@@ -18,7 +18,7 @@ Make building placement a managed construction process. Builder labor must matte
 - Regression `tests/construction_sites.gd` covers Builder pathing/work, the worker cap, one-time payment, completion, proportional cancellation, save validation and reload. It is registered in both engine matrices.
 - This slice does not yet provide a dedicated queue panel, manual reordering or multiple project priority controls.
 
-## 05.2b — Construction queue (implementation branch: `feat/phase-05.2b-construction-queue`)
+## 05.2b — Construction queue (merged via PR #59)
 - Add a player-facing queue with explicit order, cost, placement validation and cancel/reorder behavior.
 - [x] Every accepted project pays its full cost once from the selected allowed depot; invalid placement is rejected before payment and does not reserve materials.
 - [x] Queue panel displays up to 64 funded blueprints, current order, paid material costs, live work progress and one-step raise/lower controls.
