@@ -85,6 +85,10 @@ func _initialize() -> void:
         "Reordering must change the effective Builder project priority")
     assert(not main.build.move_construction_site(third_site, -1),
         "A project at the front cannot move further upward")
+    builder._find_work()
+    assert(builder.target == third_site,
+        "Builder target selection must honor queue priority instead of choosing the nearest blueprint")
+    builder._release()
     var hud = get_first_node_in_group("hud")
     assert(hud != null, "The game HUD must expose construction queue controls")
     hud._toggle_construction_queue()
