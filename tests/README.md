@@ -99,10 +99,7 @@ Phase 09 CI runs the Frontier timing benchmark as a non-gating diagnostic and up
 The release-export workflow installs Godot 4.3-matching templates, builds Windows and Linux binaries, validates the Windows PE format and smoke-tests the Linux executable. These checks do not replace clean-machine user acceptance.
 
 
-PR #35 merged Phase 02.5 at `2ba5628`; workflow #41328005585 passed. PR #36 merged Shieldbearer directional brace at `b02aa60`; PR #39 merged Scout faction-aware marking at `11f3f13`; PR #40 merged Saboteur building disruption at `8f1a914`. PR #41 merged Siege Engine structural siege cycle at `58da7be`; workflow #41356689758 passed 62/62 jobs, including 29 assertion suites on each of Godot 4.3 and 4.7, import/parse, Frontier performance diagnostic and Windows/Linux release export.
+PR #35 merged Phase 02.5 at `2ba5628`; workflow #41328005585 passed. PR #36 merged Shieldbearer directional brace at `b02aa60`; PR #39 merged Scout faction-aware marking at `11f3f13`; PR #40 merged Saboteur building disruption at `8f1a914`. PR #41 merged Siege Engine structural siege cycle at `58da7be`; workflow #41356689758 passed 62/62 jobs, including 29 assertion suites on each of Godot 4.3 and 4.7. PR #42 merged Beast Rider charge at `e6cf221`; workflow [#41366304675](https://github.com/shimleabyte/hold-the-keep/actions/runs/41366304675) passed 64/64 jobs, including 30 assertion suites per engine, import/parse, Frontier performance diagnostic and Windows/Linux release export.
 
 
-Beast Rider charge coverage is registered in the blocking test runner and both Godot CI matrices. The test covers isolated-defender selection, walkable locked routing around a wall, telegraph/impact timing, sidestep avoidance and stagger interruption. The ability is transient; save schema v13 is unchanged.
-
-
-Branch `feat/phase-06-beast-rider-charge` adds the Beast Rider regression to the blocking runner and both Godot CI matrices. Coverage includes isolated-defender selection, route avoidance around a wall, telegraph/impact timing, sidestep avoidance and stagger interruption. CI is pending; save schema v13 is unchanged.
+PR #42 merged the Beast Rider charge and its regression coverage. The test verifies isolated-defender selection, a walkable route around a wall, telegraph/impact timing, sidestep avoidance, stagger interruption and the cooldown window. The ability is transient; save schema v13 is unchanged.

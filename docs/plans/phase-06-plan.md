@@ -1,7 +1,7 @@
 # Phase 06 — Factions, Enemy Archetypes and Territorial AI
 
-**Status:** Partially implemented. Faction foundations, Shieldbearer brace, Scout marking, Saboteur disruption and Siege Engine siege cycle are merged into `main`. Beast Rider charge is implemented on `feat/phase-06-beast-rider-charge`; PR/CI review pending.
-**Mainline:** `main`; next Phase 06 slice after Beast Rider merge: deterministic faction camps and bounded patrols.
+**Status:** Partially implemented. Faction foundations, Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle and Beast Rider charge are merged into `main`. PR #42 (`e6cf221`) merged Beast Rider; workflow #41366304675 passed 64/64 jobs on Godot 4.3/4.7.
+**Mainline:** `main`; next Phase 06 slice: deterministic faction camps and bounded patrols.
 **Current save schema:** v13. Preserve Classic compatibility and validate legacy migrations through v13 plus v13 round-trip.
 **Engine target:** Godot 4.3 and 4.7.
 
@@ -29,7 +29,7 @@ Replace the single generic enemy identity with four regional powers whose units 
 - Shieldbearer, Scout and Saboteur behavior state is transient; no save-schema bump is required.
 - [x] Saboteur building disruption merged through PR #40 (`8f1a914`): bounded rotating scans prioritize Tower/Outpost, then Storage, production and House, weighted against reachable nav paths. A telegraphed wind-up applies reversible temporary suppression and limited structure damage; interception/stagger can interrupt. Towers stop firing; depots reject transfers; workplaces pause tasks until recovery. `tests/saboteur_disruption.gd` passed on Godot 4.3/4.7; workflow #41355982522 passed 60/60 jobs.
 - [x] Siege Engine siege cycle merged through PR #41 (`58da7be`): bounded rotating scans prioritize stone/wood walls, then Tower/Outpost/Keep and Storage, weighted against reachable path length. It advances through flow-field cells, moves to adjacent target cells, telegraphs a heavy structure-only impact and enters recovery. Nearby defenders/player pressure or stagger interrupt the wind-up. `tests/siege_engine_behavior.gd` passed on Godot 4.3/4.7; workflow #41356689758 passed 62/62 jobs.
-- [x] Beast Rider telegraphed charge implemented on `feat/phase-06-beast-rider-charge`: prefers isolated defenders, approaches with A*, locks a walkable route during its wind-up, can miss a sidestepping target, stops on navigation changes and is cancelled by stagger. Regression `tests/beast_rider_charge.gd` added; CI pending.
+- [x] Beast Rider telegraphed charge merged via PR #42 (`e6cf221`): bounded scan prefers isolated defenders; A* approach and locked walkable charge route; 0.82s tell; sidestep miss, nav-version/stagger cancellation, one impact and 6.5s recovery. `tests/beast_rider_charge.gd` passed on Godot 4.3/4.7; workflow #41366304675 passed 64/64 jobs.
 - Keep War Shaman support separate from its ranged attack loop.
 
 ### 06.3 — Camps and patrols
@@ -66,4 +66,4 @@ Replace the single generic enemy identity with four regional powers whose units 
 - Beast Rider scores visible player/defender candidates in a bounded scan, preferring isolated soldiers over supported clusters. Its approach and charge route use the shared A* navigation grid.
 - A 0.82s telegraph locks a walkable route to the target's current tile. The charge does not steer mid-run; sidestepping can cause a miss. A changed nav version or stagger cancels the charge. Successful impact applies one bounded hit and a short push, then enters a 6.5s cooldown.
 - Charge tuning is data-driven in `data/enemy_archetypes.json`; ability state is transient and save schema v13 is unchanged.
-- Regression `tests/beast_rider_charge.gd` covers isolation priority, wall-aware route, telegraph timing, impact damage, sidestep miss and stagger interruption. CI pending.
+- Regression `tests/beast_rider_charge.gd` covers isolation priority, wall-aware route, telegraph timing, impact damage, sidestep miss and stagger interruption; it passed on Godot 4.3/4.7 in workflow #41366304675 (64/64 jobs).
