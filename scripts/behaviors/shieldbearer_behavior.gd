@@ -2,6 +2,7 @@ extends RefCounted
 ## Shieldbearer directional brace policy: target response, telegraph, mitigation and interruption.
 
 var actor
+var target_chase_range := 96.0
 
 var trigger_range := 64.0
 var windup_duration := 0.55
@@ -16,8 +17,9 @@ var cooldown := 0.0
 var brace_direction := Vector2.ZERO
 
 
-func configure(owner, data: Dictionary) -> void:
+func configure(owner, data: Dictionary, chase_range: float = 96.0) -> void:
     actor = owner
+    target_chase_range = maxf(1.0, chase_range)
     trigger_range = clampf(float(data.get("brace_trigger_range", 64.0)), 24.0, 110.0)
     windup_duration = clampf(float(data.get("brace_windup", 0.55)), 0.2, 1.5)
     active_duration = clampf(float(data.get("brace_duration", 1.05)), 0.3, 2.0)
@@ -93,7 +95,7 @@ func tick(delta: float) -> void:
             actor._move_toward(target.position, delta)
         else:
             actor._move_toward(actor.guard_origin, delta)
-    elif distance <= actor.SHIELD_TARGET_RANGE:
+    elif distance <= target_chase_range:
         actor._move_toward(target.position, delta)
     else:
         actor._tick_flow(delta)
