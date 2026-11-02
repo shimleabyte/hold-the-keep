@@ -90,5 +90,14 @@ func _initialize() -> void:
 
     assert(float(tower._range) > 0.0 and int(tower._damage) > 0,
         "Watchtower vision must preserve the existing defensive turret behavior")
-    print("PASS: tower exploration radius, live strategic-map observation, out-of-range concealment and turret compatibility")
+
+    assert(main.build.demolish_at(tower_cell),
+        "The test tower must be removable through the existing building lifecycle")
+    await ticks(2)
+    assert(main.fog.is_revealed_cell(observed_cell),
+        "Explored Watchtower terrain must remain permanently discovered after demolition")
+    assert(not hud._map_panel._is_currently_observed(target_position),
+        "Destroying a Watchtower must remove its live enemy-observation coverage")
+
+    print("PASS: tower exploration radius, live strategic-map observation, out-of-range concealment, persistent discovery and turret compatibility")
     quit()
