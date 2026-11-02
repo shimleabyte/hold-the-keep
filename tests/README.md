@@ -58,7 +58,7 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 29 assertion reg
 | scout_marking.gd | Scout marking telegraph, same-faction propagation, focus-target priority, mark expiry, stagger interruption and target disengage |
 | saboteur_disruption.gd | Saboteur priority target selection, nav reachability, telegraphed structure sabotage, tower/depot/workplace disable and recovery, stagger interruption |
 | siege_engine_behavior.gd | Siege Engine building target priorities, reachable path, telegraphed heavy impact, recovery cooldown, stagger interruption and building-only preference |
-| beast_rider_charge.gd | isolated defender target priority, walkable locked charge route, telegraphed impact, sidestep miss and stagger interruption |
+| beast_rider_charge.gd | component-backed isolated defender target priority, A* locked charge route, telegraphed impact, sidestep miss and stagger interruption |
 | faction_camps_patrols.gd | deterministic enemy-territory camp placement, fog activation, A* patrol leash, bounded reinforcement, camp destruction and v13 save/restore |
 | faction_raids.gd | exposed connected depot/road target selection, finite camp dispatch, pathing, structure damage, depot theft, target abort, faction raid save/restore and cleanup |
 | faction_warfare_stress.gd | simultaneous 48 faction garrisons, eight patrols, four raids, 48 villagers, per-raider A* routing, global raid cap and v13 snapshot validation |
