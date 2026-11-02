@@ -32,8 +32,15 @@ Make building placement a managed construction process. Builder labor must matte
 - [x] Save/load persists queue order alongside footprint, progress and funding source; Builder claims are transient and safely re-discovered after load.
 - [x] Cancellation refunds only unconsumed materials according to a fixed documented rule; completed/cancelled sites release their queue slots without duplication.
 
+## 05.3a — Watchtower vision (implementation branch)
+- The existing `tower` remains the defensive turret; no duplicate building ID or new save field is introduced.
+- Data definition adds a 128px `vision_radius`. The fog scanner permanently discovers terrain inside this radius.
+- The strategic map uses the same radius for current enemy observation, so enemy markers appear only while the tower remains alive and within sight range.
+- Keep and Outpost reveal behavior is preserved. Discovered terrain remains mapped after tower demolition, while live observation immediately ends.
+- Regression `tests/watchtower_vision.gd` covers unseen-before/build, inner/outer radius, strategic-map observation, permanent discovery after demolition and unchanged turret stats.
+
 ## 05.3 — Facility dependency order
-1. Watchtower: extends local vision and provides limited defensive coverage.
+1. [x] Watchtower vision: the existing tower gains local vision and retains its defensive coverage; no duplicate structure is shipped.
 2. Granary: increases food storage and supports food-preservation/upkeep improvements.
 3. Barracks: recruits/trains soldiers through time and resource costs; must respect population and capacity.
 4. Hunting Lodge: provides Hunter workplace slots and access to wildlife harvest.
