@@ -166,7 +166,7 @@ func _tick_advance(delta: float) -> void:
             path_version = -1
             scan_timer = 0.0
             return
-    var next_position := Vector2(next) * WorldConfig.tile_size + Vector2(
+    var next_position: Vector2 = Vector2(next) * WorldConfig.tile_size + Vector2(
         WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0
     ) + actor._offset
     actor._move_toward(next_position, delta)
