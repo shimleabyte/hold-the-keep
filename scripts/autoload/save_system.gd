@@ -511,6 +511,8 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             var faction_definition: Dictionary = FactionRegistry.factions[faction_raid_camp]
             if faction_raid_region != String(faction_definition.get("region", "")):
                 return false
+            if String(enemy.get("id", "")) != String(faction_definition.get("raid_unit", "")):
+                return false
             var faction_raid_target: Dictionary = enemy["raid_target"]
             if not faction_raid_target.has("cx") or not faction_raid_target.has("cy") or int(enemy.get("raid_hits", 0)) < 0:
                 return false
