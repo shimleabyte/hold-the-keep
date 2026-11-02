@@ -17,14 +17,15 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 - Keep generated/procedural SVG assets reproducible; hand-authored replacements must preserve import paths or update references atomically.
 - Establish preview sheets and in-engine screenshot baselines so visual changes are reviewed rather than inferred from source files.
 
-## 08.2 — Environment and regional identity
+## 08.2 — Terrain and regional identity
 - [x] Give Frontier biomes distinct ground textures in a dedicated seven-cell atlas (five land biomes, alternate Hearthland ground and water), preserving tile IDs, 16px tile size and water collision.
-- [x] Scatter deterministic, region-specific fern clusters, reeds, dead pines, standing stones and ash pillars; add Hearthland shrine and four regional ruin/stone/reed landmarks. Decorations are non-colliding and excluded from resource occupancy.
-- [x] Add deterministic biome-specific props and one regional landmark per core biome; props do not block movement or overlap resource nodes.
-- [x] Add Greenwood pine, Fenlands willow, Ashen deadwood, Highlands stone and Ashen rock resource silhouettes; preserve Classic sprite paths and resource behavior.
-- [ ] Add further resource-cluster dressing and restrained ambient animation while preserving tile readability.
 - Create a distinct Old Frontier/ruin subregion treatment without introducing an unsupported sixth core biome.
 - Add visual cues for ownership, contested territory, supply routes, fog and regional objectives.
+
+## 08.3 — Biome props, landmarks and resource silhouettes
+- [x] Scatter deterministic, region-specific fern clusters, reeds, dead pines, standing stones and ash pillars; add one landmark in each core biome. Decorations are non-colliding and excluded from resource occupancy.
+- [x] Add Greenwood pine, Fenlands willow, Ashen deadwood, Highlands stone and Ashen rock resource silhouettes; preserve Classic sprite paths and resource behavior.
+- [ ] Add further resource-cluster dressing and restrained ambient animation while preserving tile readability.
 
 ## 08.4 — Unit and faction identity
 - [x] Give each faction a distinct three-color visual kit and unique thorn, chevron, reed or ember crest motif; retain the existing faction tint as a secondary recognition cue.
