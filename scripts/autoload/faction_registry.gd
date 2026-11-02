@@ -60,10 +60,26 @@ func roster_for(faction_id: String) -> Array[String]:
 
 func validate() -> Array[String]:
     var errors: Array[String] = []
+    var visual_motifs: Dictionary = {}
     for faction_id in factions:
         var faction: Dictionary = factions[faction_id]
         if String(faction.get("region", "")).is_empty():
             errors.append("%s has no region" % faction_id)
+        var visual: Variant = faction.get("visual", null)
+        if not (visual is Dictionary):
+            errors.append("%s has no visual identity profile" % faction_id)
+        else:
+            for palette_key in ["primary", "secondary", "emblem"]:
+                var palette_value := String(visual.get(palette_key, ""))
+                if not palette_value.begins_with("#") or palette_value.length() not in [7, 9]:
+                    errors.append("%s has an invalid visual color: %s" % [faction_id, palette_key])
+            var motif := String(visual.get("motif", ""))
+            if motif.is_empty():
+                errors.append("%s has no visual motif" % faction_id)
+            elif visual_motifs.has(motif):
+                errors.append("%s shares visual motif '%s' with %s" % [faction_id, motif, visual_motifs[motif]])
+            else:
+                visual_motifs[motif] = faction_id
         if not DataDB.enemies.has(String(faction.get("garrison", ""))):
             errors.append("%s references a missing garrison enemy" % faction_id)
         var roster := roster_for(String(faction_id))
