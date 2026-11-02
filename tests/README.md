@@ -67,7 +67,7 @@ Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan k
 
 ## Skrip yang dijalankan otomatis di CI
 
-Suite assertion yang dijalankan pada Godot 4.3 dan 4.7 masing-masing mencakup 30 skrip:
+Suite assertion yang dijalankan pada Godot 4.3 dan 4.7 masing-masing mencakup 31 skrip:
 
 `animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `production_worksites`, `faction_registry`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, `regional_control_roads`, `local_depot_stockpiles`, `outpost_garrisons`, `physical_shipments`, `depot_cost_sources`, `supply_pressure`, `shieldbearer_behavior`, `scout_marking`, `saboteur_disruption`, `siege_engine_behavior`, `beast_rider_charge`, serta `faction_camps_patrols`.
 
@@ -100,10 +100,10 @@ Phase 09 CI runs the Frontier timing benchmark as a non-gating diagnostic and up
 The release-export workflow installs Godot 4.3-matching templates, builds Windows and Linux binaries, validates the Windows PE format and smoke-tests the Linux executable. These checks do not replace clean-machine user acceptance.
 
 
-PR #35 merged Phase 02.5 at `2ba5628`; workflow #41328005585 passed. PR #36 merged Shieldbearer directional brace at `b02aa60`; PR #39 merged Scout faction-aware marking at `11f3f13`; PR #40 merged Saboteur building disruption at `8f1a914`. PR #41 merged Siege Engine structural siege cycle at `58da7be`; workflow #41356689758 passed 62/62 jobs, including 29 assertion suites on each of Godot 4.3 and 4.7. PR #42 merged Beast Rider charge at `e6cf221`; workflow [#41366304675](https://github.com/shimleabyte/hold-the-keep/actions/runs/41366304675) passed 64/64 jobs, including 30 assertion suites per engine, import/parse, Frontier performance diagnostic and Windows/Linux release export.
+PR #35 merged Phase 02.5 at `2ba5628`; workflow #41328005585 passed. PR #36 merged Shieldbearer directional brace at `b02aa60`; PR #39 merged Scout faction-aware marking at `11f3f13`; PR #40 merged Saboteur building disruption at `8f1a914`. PR #41 merged Siege Engine structural siege cycle at `58da7be`; workflow #41356689758 passed 62/62 jobs, including 29 assertion suites on each of Godot 4.3 and 4.7. PR #42 merged Beast Rider charge at `e6cf221`; workflow [#41366304675](https://github.com/shimleabyte/hold-the-keep/actions/runs/41366304675) passed 64/64 jobs. PR #43 merged Phase 06.3 faction camps and bounded patrols at `fa3a45a`; workflow [#41377840888](https://github.com/shimleabyte/hold-the-keep/actions/runs/41377840888) passed 66/66 jobs, including 31 assertion suites per engine, import/parse, Frontier performance diagnostic and Windows/Linux release export.
 
 
 PR #42 merged the Beast Rider charge and its regression coverage. The test verifies isolated-defender selection, a walkable route around a wall, telegraph/impact timing, sidestep avoidance, stagger interruption and the cooldown window. The ability is transient; save schema v13 is unchanged.
 
 
-Phase 06.3 camp/patrol coverage is registered as `faction_camps_patrols` on both Godot CI versions. The test checks deterministic placement in enemy-controlled region cells, fog-of-war activation, path/leash bounds, return behavior, active cap and finite reinforcement budget, destructible camp cleanup, plus v13 camp/patrol persistence. CI is pending review on `feat/phase-06-faction-camps-patrols`.
+PR #43 merged Phase 06.3 camp/patrol coverage. `faction_camps_patrols` passed on Godot 4.3 and 4.7. It checks deterministic placement in enemy territory, fog-gated activation, A* path/leash bounds, return behavior, active cap and finite reinforcement budget, camp destruction cleanup, and v13 save/restore persistence.
