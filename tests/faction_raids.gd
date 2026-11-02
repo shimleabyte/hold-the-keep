@@ -224,7 +224,6 @@ func _run() -> void:
         and int(manager.camps[camp_id]["raid_budget"]) == 1,
         "A camp must not exceed one active raider or consume budget while its raider is alive")
 
-    var raid_spawn_position: Vector2 = raider.position
     raider._tick_faction_raid(0.1)
     require(not raider._raid_path.is_empty() and raider._raid_path_version == main.nav.version,
         "A dispatched raider must build a current nav-grid route toward its explicit infrastructure target")
