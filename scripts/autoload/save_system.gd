@@ -497,7 +497,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             if not raid_target_exists:
                 return false
         if bool(enemy.get("faction_raid", false)):
-            if String(world.get("profile", "")) != "frontier":
+            if String(campaign_world_data.get("profile", "")) != "frontier":
                 return false
             if not bool(enemy.get("garrison", false)) or not (enemy.get("raid_target", null) is Dictionary):
                 return false
