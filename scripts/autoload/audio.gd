@@ -221,20 +221,20 @@ func _build_sounds() -> void:
     _sounds["win"] = _wav(_arp([523.0, 659.0, 784.0, 1047.0], 0.16, "square", 0.25))
     _sounds["lose"] = _wav(_arp([392.0, 330.0, 262.0, 196.0], 0.22, "saw", 0.3))
     _sounds["event"] = _wav(_tone(0.25, 880, 880, "sine", 0.4, 0.0, 6.0))
-    _sounds["windup"] = _wav(_arp([196.0, 247.0], 0.065, "sine", 0.18))
-    _sounds["projectile"] = _wav(_tone(0.19, 920.0, 470.0, "sine", 0.2, 0.0, 4.5))
-    _sounds["block"] = _wav(_tone(0.17, 780.0, 170.0, "square", 0.22, 0.0, 7.0))
-    _sounds["impact_hit"] = _wav(_tone(0.105, 620.0, 230.0, "square", 0.13, 0.0, 8.0))
-    _sounds["shield_raise"] = _wav(_tone(0.22, 260.0, 640.0, "sine", 0.17, 0.0, 3.5))
-    _sounds["stagger"] = _wav(_arp([392.0, 293.66], 0.075, "saw", 0.14))
-    _sounds["dash"] = _wav(_tone(0.16, 240.0, 740.0, "sine", 0.18, 0.0, 5.0))
-    _sounds["cleave"] = _wav(_tone(0.23, 540.0, 125.0, "saw", 0.16, 0.0, 5.0))
-    _sounds["rally"] = _wav(_arp([392.0, 523.25, 659.25], 0.11, "sine", 0.16))
-    _sounds["charge"] = _wav(_tone(0.28, 155.0, 68.0, "saw", 0.2, 0.0, 3.5))
-    _sounds["siege_windup"] = _wav(_tone(0.42, 72.0, 50.0, "sine", 0.24, 0.0, 2.0))
-    _sounds["siege_impact"] = _wav(_tone(0.55, 110.0, 32.0, "saw", 0.34, 0.0, 3.2))
-    _sounds["camp_alarm"] = _wav(_arp([220.0, 311.13, 220.0], 0.15, "saw", 0.17))
-    _sounds["objective"] = _wav(_arp([523.25, 659.25, 783.99, 1046.5], 0.13, "sine", 0.2))
+    _sounds["windup"] = _wav(_arp_deterministic([196.0, 247.0], 0.065, "sine", 0.18))
+    _sounds["projectile"] = _wav(_tone_deterministic(0.19, 920.0, 470.0, "sine", 0.2, 0.0, 4.5))
+    _sounds["block"] = _wav(_tone_deterministic(0.17, 780.0, 170.0, "square", 0.22, 0.0, 7.0))
+    _sounds["impact_hit"] = _wav(_tone_deterministic(0.105, 620.0, 230.0, "square", 0.13, 0.0, 8.0))
+    _sounds["shield_raise"] = _wav(_tone_deterministic(0.22, 260.0, 640.0, "sine", 0.17, 0.0, 3.5))
+    _sounds["stagger"] = _wav(_arp_deterministic([392.0, 293.66], 0.075, "saw", 0.14))
+    _sounds["dash"] = _wav(_tone_deterministic(0.16, 240.0, 740.0, "sine", 0.18, 0.0, 5.0))
+    _sounds["cleave"] = _wav(_tone_deterministic(0.23, 540.0, 125.0, "saw", 0.16, 0.0, 5.0))
+    _sounds["rally"] = _wav(_arp_deterministic([392.0, 523.25, 659.25], 0.11, "sine", 0.16))
+    _sounds["charge"] = _wav(_tone_deterministic(0.28, 155.0, 68.0, "saw", 0.2, 0.0, 3.5))
+    _sounds["siege_windup"] = _wav(_tone_deterministic(0.42, 72.0, 50.0, "sine", 0.24, 0.0, 2.0))
+    _sounds["siege_impact"] = _wav(_tone_deterministic(0.55, 110.0, 32.0, "saw", 0.34, 0.0, 3.2))
+    _sounds["camp_alarm"] = _wav(_arp_deterministic([220.0, 311.13, 220.0], 0.15, "saw", 0.17))
+    _sounds["objective"] = _wav(_arp_deterministic([523.25, 659.25, 783.99, 1046.5], 0.13, "sine", 0.2))
 
 
 func _build_ambient_streams() -> void:
@@ -264,17 +264,17 @@ func _ambient_samples(region: String, night: bool) -> PackedFloat32Array:
                 value += sin(TAU * 1870.0 * t) * pow(maxf(0.0, sin(TAU * 0.375 * t + 1.4)), 24.0) * 0.018
                 value += sin(TAU * 3100.0 * t) * (0.35 + breath * 0.65) * 0.006
             "HIGHLANDS":
-                value += sin(TAU * 164.81 * t) * 0.018
-                value += sin(TAU * 246.94 * t) * 0.014
-                value += sin(TAU * 493.88 * t) * (0.35 + breath * 0.65) * 0.009
+                value += sin(TAU * 164.75 * t) * 0.018
+                value += sin(TAU * 247.0 * t) * 0.014
+                value += sin(TAU * 493.875 * t) * (0.35 + breath * 0.65) * 0.009
             "FENLANDS":
                 var bubble := pow(maxf(0.0, sin(TAU * 0.5 * t + 0.3)), 16.0)
                 value += sin(TAU * 92.5 * t) * 0.025
-                value += sin(TAU * 138.59 * t) * bubble * 0.035
+                value += sin(TAU * 138.625 * t) * bubble * 0.035
                 value += sin(TAU * 520.0 * t) * pow(maxf(0.0, sin(TAU * 0.375 * t)), 12.0) * 0.018
             "ASHEN_MARCH":
                 value += sin(TAU * 55.0 * t) * 0.032
-                value += sin(TAU * 82.41 * t) * 0.02
+                value += sin(TAU * 82.375 * t) * 0.02
                 value += sin(TAU * 270.0 * t) * (0.3 + breath * 0.7) * 0.012
                 value += sin(TAU * 1700.0 * t) * pow(maxf(0.0, sin(TAU * 0.125 * t + 1.0)), 8.0) * 0.008
 
@@ -315,9 +315,10 @@ func _music_samples(menu_theme: bool) -> PackedFloat32Array:
         var tone := sin(TAU * frequency * t) * 0.62
         tone += sin(TAU * frequency * 1.5 * t) * 0.18
         tone += sin(TAU * frequency * 0.5 * t) * 0.2
-        var drone := sin(TAU * 73.42 * t) * 0.018
+        var loop_fade := minf(1.0, minf(t / 0.6, (MUSIC_SECONDS - t) / 0.6))
+        var drone := sin(TAU * 73.42 * t) * 0.018 * loop_fade
         var volume := 0.062 if menu_theme else 0.082
-        samples[i] = clampf(tone * envelope * volume + drone, -0.2, 0.2)
+        samples[i] = clampf(tone * envelope * volume * loop_fade + drone, -0.2, 0.2)
     return samples
 
 
@@ -328,6 +329,35 @@ func _loop_stream(samples: PackedFloat32Array, rate: int) -> AudioStreamWAV:
     stream.loop_begin = 0
     stream.loop_end = samples.size()
     return stream
+
+
+func _tone_deterministic(dur: float, f0: float, f1: float, wave: String, vol: float, noise: float, decay: float) -> PackedFloat32Array:
+    var n := int(dur * RATE)
+    var out := PackedFloat32Array()
+    out.resize(n)
+    var phase := 0.0
+    var local_rng := RandomNumberGenerator.new()
+    local_rng.seed = roundi(f0 * 31.0 + f1 * 17.0 + dur * 10000.0)
+    for i in n:
+        var t := float(i) / float(n)
+        phase += lerpf(f0, f1, t) / float(RATE)
+        var ph := fposmod(phase, 1.0)
+        var sample := sin(ph * TAU)
+        if wave == "square":
+            sample = 1.0 if ph < 0.5 else -1.0
+        elif wave == "saw":
+            sample = ph * 2.0 - 1.0
+        if noise > 0.0:
+            sample = sample * (1.0 - noise) + local_rng.randf_range(-1.0, 1.0) * noise
+        out[i] = sample * exp(-decay * t) * minf(1.0, float(i) / 200.0) * vol
+    return out
+
+
+func _arp_deterministic(freqs: Array, note_len: float, wave: String, vol: float) -> PackedFloat32Array:
+    var parts: Array = []
+    for frequency in freqs:
+        parts.append(_tone_deterministic(note_len, float(frequency), float(frequency), wave, vol, 0.0, 4.0))
+    return _cat(parts)
 
 
 func _tone(dur: float, f0: float, f1: float, wave: String, vol: float, noise: float, decay: float) -> PackedFloat32Array:
