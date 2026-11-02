@@ -120,10 +120,19 @@
     "color": "#ad7148",
     "scale": 1.25,
     "run": true,
-    "role": "pouncer",
-    "range": 34.0,
+    "role": "melee",
+    "range": 22.0,
     "armor": 0.12,
     "stagger_resistance": 0.35,
-    "structure_damage_mult": 1.2
+    "structure_damage_mult": 1.2,
+    "beast_target_scan_range": 235.0,
+    "beast_charge_min_range": 54.0,
+    "beast_charge_max_range": 162.0,
+    "beast_charge_windup": 0.82,
+    "beast_charge_speed_multiplier": 2.8,
+    "beast_charge_max_distance": 156.0,
+    "beast_charge_hit_radius": 18.0,
+    "beast_charge_cooldown": 6.5,
+    "beast_charge_damage_multiplier": 1.35
   }
 ]
