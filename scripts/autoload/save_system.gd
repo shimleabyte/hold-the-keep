@@ -462,7 +462,18 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 var patrol_camp_id := String(patrol_state["camp_id"])
                 if not FactionRegistry.factions.has(patrol_camp_id) or not bool(enemy.get("garrison", false)):
                     return false
-                if int(patrol_state["waypoint_index"]) < 0 or not (patrol_state["returning"] is bool):
+                var waypoint_index := int(patrol_state["waypoint_index"])
+                if waypoint_index < 0 or waypoint_index > 3 or not (patrol_state["returning"] is bool):
+                    return false
+                var camp_state: Dictionary = data.get("frontier_campaign", {})
+                var camps_state: Dictionary = camp_state.get("camps", {})
+                var camp_records: Array = camps_state.get("records", [])
+                var matching_camp := false
+                for camp_record in camp_records:
+                    if camp_record is Dictionary and String(camp_record.get("id", "")) == patrol_camp_id:
+                        matching_camp = not bool(camp_record.get("destroyed", false))
+                        break
+                if not matching_camp:
                     return false
         if bool(enemy.get("supply_raid", false)):
             if String(enemy["id"]) != "enemy_saboteur" or not (enemy.get("raid_target", null) is Dictionary):
