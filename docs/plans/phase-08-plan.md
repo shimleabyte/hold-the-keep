@@ -1,6 +1,6 @@
 # Phase 08 — Visual and Audio Identity
 
-**Status:** In progress on `feat/phase-08-visual-audio-identity-mainline`. First environment slice adds a dedicated weathered Frontier terrain atlas while preserving the original Classic atlas; `frontier_world.gd` now asserts the atlas contract. This is a foundation, not completion of biome identity.
+**Status:** In progress. The Frontier terrain atlas is merged; the next slice adds biome-specific resource prop silhouettes and regression coverage. Classic resource visuals remain unchanged. This is a foundation, not completion of biome identity.
 **Art direction:** [World & Gameplay Design Bible](../WORLD_AND_GAMEPLAY_BIBLE.md) — Grim Medieval Folklore Fantasy, weathered medieval pixel art and restrained folklore motifs.
 **Dependency:** Stable gameplay contracts from Phases 02, 04, 05, 06 and current UI layouts from Phase 10.
 **Engine targets:** Godot 4.3 and 4.7.
@@ -19,7 +19,8 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 
 ## 08.2 — Environment and regional identity
 - [x] Give Frontier biomes distinct ground textures in a dedicated seven-cell atlas (five land biomes, alternate Hearthland ground and water), preserving tile IDs, 16px tile size and water collision.
-- [ ] Add biome-specific props, landmarks, resource clusters and ambient animation while preserving tile readability.
+- [x] Add first biome-specific resource prop variants: Greenwood pine, Fenlands willow, Ashen deadwood, Highlands stone and Ashen rock; preserve Classic sprites and resource behavior.
+- [ ] Expand into non-harvestable landmarks, resource clusters and ambient animation while preserving tile readability.
 - Create a distinct Old Frontier/ruin subregion treatment without introducing an unsupported sixth core biome.
 - Add visual cues for ownership, contested territory, supply routes, fog and regional objectives.
 
