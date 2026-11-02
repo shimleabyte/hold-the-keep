@@ -200,6 +200,23 @@ func cost_reason(cost: Dictionary) -> String:
     return ""
 
 
+## Return unfinished construction materials to their original depot when possible.
+## A missing or full remote depot falls back to the central Keep inventory.
+func refund_cost_to_source(source_cell: Vector2i, refund: Dictionary) -> void:
+    var source = _find_depot(source_cell)
+    if source == null or not ["keep", "storage", "outpost"].has(String(source.id)):
+        source = _find_keep()
+    for kind in refund:
+        var amount := int(refund[kind])
+        if amount <= 0:
+            continue
+        if source != null and String(source.id) != "keep":
+            if source.store_resource(String(kind), amount):
+                continue
+        Inventory.add(String(kind), amount)
+    Events.supply_stock_changed.emit()
+
+
 func can_pay_cost(cost: Dictionary) -> bool:
     return cost_reason(cost) == ""
 

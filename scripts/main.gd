@@ -314,7 +314,16 @@ func _apply_save(d: Dictionary) -> void:
         node.queue_redraw()
         if node.id == "keep":
             Events.keep_hp_changed.emit(node.hp, node.max_hp)
-
+    for saved_site in d.get("construction_sites", []):
+        var site = build.restore_site(
+            String(saved_site["id"]),
+            Vector2i(int(saved_site["cx"]), int(saved_site["cy"])),
+            float(saved_site["work_done"]),
+            float(saved_site["work_required"]),
+            Vector2i(int(saved_site["source_x"]), int(saved_site["source_y"]))
+        )
+        if site == null:
+            push_warning("Save: could not restore a construction site at %d,%d" % [int(saved_site["cx"]), int(saved_site["cy"])])
     var save_version := int(d.get("version", 0))
     if save_version >= 8 and d.get("campaign", {}) is Dictionary:
         campaign.import_state(d["campaign"])

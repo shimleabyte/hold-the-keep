@@ -102,6 +102,11 @@ func collect(main: Node) -> Dictionary:
     for building in get_tree().get_nodes_in_group("buildings"):
         buildings.append({"id": building.id, "cx": building.cell.x, "cy": building.cell.y, "hp": building.hp, "stockpile": building.export_stockpile()})
 
+    var construction_sites: Array = []
+    for site in get_tree().get_nodes_in_group("construction_sites"):
+        if is_instance_valid(site):
+            construction_sites.append(site.export_state())
+
     var villagers: Array = []
     for villager in get_tree().get_nodes_in_group("villagers"):
         var guard_outpost: Variant = null
@@ -167,6 +172,7 @@ func collect(main: Node) -> Dictionary:
             "combat": main.player.export_combat_state()
         },
         "buildings": buildings,
+        "construction_sites": construction_sites,
         "villagers": villagers,
         "enemies": enemies,
         "resources": resources,
@@ -196,6 +202,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
     var spawner = data.get("spawner", {})
     var tech = data.get("tech", {})
     var resources = data.get("resources", [])
+    var construction_sites = data.get("construction_sites", [])
     var stronghold = data.get("stronghold", {})
     var fog = data.get("fog", {})
     var save_map_cells := 64 * 64
@@ -247,7 +254,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         return false
     if not (quota is Dictionary) or not (spawner is Dictionary) or not (tech is Dictionary):
         return false
-    if not (resources is Array):
+    if not (resources is Array) or not (construction_sites is Array) or construction_sites.size() > 64:
         return false
     var campaign_world_data: Dictionary = data.get("world", {})
     if version >= 8 and not _valid_campaign_state(data.get("campaign", {}), String(campaign_world_data.get("profile", "")), int(campaign_world_data.get("map_size", 0))):
@@ -404,6 +411,45 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 stockpile_total += amount
             if stockpile_total > stockpile_limit or (stockpile_total > 0 and stockpile_limit <= 0):
                 return false
+    var occupied_cells: Dictionary = {}
+    for saved_building in buildings:
+        var building_id := String(saved_building.get("id", ""))
+        var building_definition: Dictionary = DataDB.buildings.get(building_id, {})
+        var footprint: Array = building_definition.get("size", [1, 1])
+        for y in int(footprint[1]):
+            for x in int(footprint[0]):
+                occupied_cells[Vector2i(int(saved_building["cx"]) + x, int(saved_building["cy"]) + y)] = true
+    for saved_resource in resources:
+        if saved_resource is Dictionary and saved_resource.has("cx") and saved_resource.has("cy"):
+            occupied_cells[Vector2i(int(saved_resource["cx"]), int(saved_resource["cy"]))] = true
+    var site_cells: Dictionary = {}
+    for saved_site in construction_sites:
+        if not (saved_site is Dictionary):
+            return false
+        for key in ["id", "cx", "cy", "work_done", "work_required", "source_x", "source_y"]:
+            if not saved_site.has(key):
+                return false
+        var site_id := String(saved_site["id"])
+        if not DataDB.buildings.has(site_id) or site_id == "keep":
+            return false
+        var site_definition: Dictionary = DataDB.buildings[site_id]
+        var site_size: Array = site_definition.get("size", [0, 0])
+        if site_size.size() != 2 or int(site_size[0]) <= 0 or int(site_size[1]) <= 0:
+            return false
+        var work_done := float(saved_site["work_done"])
+        var work_required := float(saved_site["work_required"])
+        if not is_finite(work_done) or not is_finite(work_required) or work_done < 0.0 or work_required <= 0.0 or work_done >= work_required or work_required > 120.0:
+            return false
+        var source_cell := Vector2i(int(saved_site["source_x"]), int(saved_site["source_y"]))
+        if source_cell != Vector2i(-1, -1) and not WorldConfig.is_valid_cell(source_cell):
+            return false
+        var site_anchor := Vector2i(int(saved_site["cx"]), int(saved_site["cy"]))
+        for y in int(site_size[1]):
+            for x in int(site_size[0]):
+                var cell := site_anchor + Vector2i(x, y)
+                if not WorldConfig.is_valid_cell(cell) or occupied_cells.has(cell) or site_cells.has(cell):
+                    return false
+                site_cells[cell] = true
     var outpost_guard_counts: Dictionary = {}
     for villager in villagers:
         if not (villager is Dictionary):

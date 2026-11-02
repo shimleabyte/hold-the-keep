@@ -5,6 +5,7 @@ extends Node2D
 const BUILD_RANGE := 120.0
 const REFUND_RATE := 0.5
 const BUILDING_SCRIPT := preload("res://scripts/entities/building.gd")
+const CONSTRUCTION_SITE_SCRIPT := preload("res://scripts/entities/construction_site.gd")
 
 var world  # world_map.gd
 var player: Node2D
@@ -124,12 +125,82 @@ func place(id: String, c: Vector2i) -> String:
         return err
     var cost: Dictionary = DataDB.cost_of(id)
     var supply = get_tree().get_first_node_in_group("supply_network")
+    var source_cell := supply.get_cost_source_cell() if supply != null else Vector2i(-1, -1)
     var paid: bool = supply.pay_cost(cost) if supply != null else Inventory.spend_all(cost)
     if not paid:
         var cost_error: String = supply.cost_reason(cost) if supply != null else "Bahan kurang di KEEP"
         return cost_error if cost_error != "" else "Stok sumber biaya berubah"
-    place_raw(id, c)
+    create_construction_site(id, c, source_cell)
     return ""
+
+
+func create_construction_site(id: String, c: Vector2i, source_cell: Vector2i,
+        work_done := 0.0, work_required := -1.0) -> Node:
+    var site = CONSTRUCTION_SITE_SCRIPT.new()
+    site.setup(DataDB.buildings[id], c, source_cell, DataDB.cost_of(id), work_done, work_required)
+    site.world = world
+    site.build_system = self
+    world.entities.add_child(site)
+    for occupied_cell in site.cells():
+        world.occupied[occupied_cell] = site
+    Events.building_placed.emit(id, c)
+    return site
+
+
+func restore_site(id: String, c: Vector2i, work_done: float, work_required: float,
+        source_cell: Vector2i) -> Node:
+    if not DataDB.buildings.has(id) or id == "keep":
+        return null
+    var size := _size_of(id)
+    for y in size.y:
+        for x in size.x:
+            var cell := c + Vector2i(x, y)
+            if world.occupied.has(cell):
+                return null
+            if not world.is_buildable(cell) and not (id == "bridge" and world.is_bridgeable(cell)):
+                return null
+    return create_construction_site(id, c, source_cell, work_done, work_required)
+
+
+func complete_site(site) -> Node:
+    if not is_instance_valid(site) or not site.is_in_group("construction_sites"):
+        return null
+    var id := String(site.id)
+    var anchor: Vector2i = site.cell
+    site.release_all_workers()
+    for occupied_cell in site.cells():
+        if world.occupied.get(occupied_cell) == site:
+            world.occupied.erase(occupied_cell)
+    site.remove_from_group("construction_sites")
+    Events.building_removed.emit(id, anchor)
+    site.queue_free()
+    var completed = place_raw(id, anchor)
+    Events.build_feedback.emit("%s selesai dibangun" % String(DataDB.buildings[id].get("name", id)))
+    return completed
+
+
+func cancel_site(site) -> bool:
+    if not is_instance_valid(site) or not site.is_in_group("construction_sites"):
+        return false
+    var id := String(site.id)
+    var anchor: Vector2i = site.cell
+    var refund: Dictionary = site.refundable_cost()
+    var source_cell: Vector2i = site.source_cell
+    site.release_all_workers()
+    for occupied_cell in site.cells():
+        if world.occupied.get(occupied_cell) == site:
+            world.occupied.erase(occupied_cell)
+    site.remove_from_group("construction_sites")
+    Events.building_removed.emit(id, anchor)
+    site.queue_free()
+    var supply = get_tree().get_first_node_in_group("supply_network")
+    if supply != null and supply.has_method("refund_cost_to_source"):
+        supply.refund_cost_to_source(source_cell, refund)
+    else:
+        for kind in refund:
+            Inventory.add(String(kind), int(refund[kind]))
+    Events.build_feedback.emit("Blueprint dibatalkan; bahan yang belum dipakai dikembalikan")
+    return true
 
 
 ## Pasang tanpa cek/biaya (dipakai untuk keep di awal game).
@@ -148,6 +219,8 @@ func demolish_at(cell: Vector2i) -> bool:
     var b = world.occupied.get(cell)
     if b == null or not is_instance_valid(b) or not b.has_method("cells") or not b.has_method("demolish"):
         return false
+    if b.is_in_group("construction_sites"):
+        return cancel_site(b)
     if b.id == "keep":
         return false
     var cost := DataDB.cost_of(b.id)
