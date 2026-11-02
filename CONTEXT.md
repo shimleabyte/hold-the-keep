@@ -15,7 +15,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #43 (save schema v13; status per 2 November 2026). Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle, Beast Rider charge, faction camps dan bounded patrols sudah masuk `main`.
+Ringkasan implementasi aktual pada `main` setelah PR #45 (save schema v13; status per 2 November 2026). Shieldbearer brace, Scout marking, Saboteur disruption, Siege Engine siege cycle, Beast Rider charge, faction camps/patrols dan faction infrastructure raids sudah masuk `main`. Combined warfare stress juga merged via PR #45; correction PR #46 pass 70/70 CI tetapi masih terbuka.
 
 | Area | Kondisi saat ini |
 |---|---|
@@ -26,7 +26,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #43 (save schema v13; statu
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara, gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; construction queue belum ada |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
-| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; raids and broader counterattacks remain incomplete |
+| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; connected infrastructure raids and bounded counterattacks merged via PR #44; manual Frontier balance/play review remains open |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
 | Save/load | v13 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo; Classic v1–v13 dan Frontier v7–v13 migration matrix dijaga. PR #34 adds optional cost-source preference without a save-version bump; earlier v13 snapshots without it remain valid |
@@ -456,10 +456,16 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Save v13 optionally stores camp raid budget/cooldown and active faction-raider target kind/cell, camp, region and hit count. The existing disconnected-depot supply-pressure mechanic remains independent.
 - Added `tests/faction_raids.gd` and registered it in `tools/run_tests.sh` plus both Godot 4.3/4.7 CI matrices. PR/CI and rendered Frontier playtest are pending.
 
-## 43. Phase 06.5 — Combined faction warfare stress (2026-11-02, merged; correction under verification)
+## 43. Phase 06.5 — Combined faction warfare stress (2026-11-02, merged; correction verified, awaiting merge)
 - Phase 06.4 is merged via PR #44 (`5cc5084`); workflow #41381487306 passed 68/68 jobs, including `faction_raids` on Godot 4.3 and 4.7, Frontier performance and Windows/Linux exports.
 - The combined stress workload was merged through PR #45 (`83dd633`) from `feat/phase-06.5-faction-warfare-stress`.
 - Regression `tests/faction_warfare_stress.gd` builds a deterministic Frontier workload: 48 faction garrisons, eight camp patrols, four simultaneous faction infrastructure raids (one per faction), and 48 villagers.
 - The test creates exposed road targets inside each faction region, validates A* routes for all simultaneous raiders, asserts the global four-raider ceiling, and checks population plus camp/raid state against save-v13 validation.
-- Registered in `tools/run_tests.sh` and both Godot 4.3/4.7 CI matrices. The first post-merge run #41384940850 failed at GDScript parsing on line 214 because a literal escaped newline was committed; PR #46 replaces it with a real line break. The first corrected run passed both engine parse jobs but was superseded before regression jobs completed. Full CI remains pending; do not mark the stress test accepted until the complete matrix passes.
+- Registered in `tools/run_tests.sh` and both Godot 4.3/4.7 CI matrices. The first post-merge run #41384940850 failed at GDScript parsing on line 214 because a literal escaped newline was committed; PR #46 replaces it with a real line break. Corrected workflow #41385244114 passed 70/70 jobs, including `faction_warfare_stress` on both engines; PR #46 remains open and unmerged.
 - `tests/release_hardening.gd` validates Classic save fixtures v1–v13 and Frontier fixtures v7–v13; active faction raid state round-trip is separately covered by `tests/faction_raids.gd`.
+
+## 44. Phase 06.2 — Beast Rider composable behavior extraction (2026-11-02, implementation branch)
+- Branch: `feat/phase-06.2-composable-behaviors`, based on the corrected Phase 06.5 verification head from PR #46.
+- Extracted the Beast Rider target scan/scoring, A* approach and locked charge route, telegraph/wind-up, impact/knockback, miss handling, cooldown and stagger interruption into `scripts/behaviors/beast_rider_behavior.gd`.
+- `scripts/entities/enemy.gd` now owns the shared enemy host and delegates Beast Rider lifecycle/timers/rendering to the component. The charge regression now reads/asserts component state directly.
+- CI for this refactor is pending; do not merge before Godot 4.3/4.7 parsing and the full assertion matrix pass.
