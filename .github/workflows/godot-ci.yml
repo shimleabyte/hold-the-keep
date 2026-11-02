@@ -83,6 +83,7 @@ jobs:
           - saboteur_disruption
           - siege_engine_behavior
           - beast_rider_charge
+          - faction_camps_patrols
     steps:
       - name: Checkout
         uses: actions/checkout@v7
