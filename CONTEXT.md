@@ -578,15 +578,10 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - HUD uses `N` for queue panel; `B` remains Builder job control. Panel displays project order, paid resource costs and live progress with UP/DN reorder and X cancellation. Active blueprint count is capped at 64 to match save validation.
 - Regression covers JSON round-trip, queue order, Builder priority/fallback, HUD listing, legacy save compatibility, duplicate/fractional index rejection, and Storage cost-source save/reload.
 
-- Branch: `feat/phase-05.2b-construction-queue`, created from main after PR #58 merged as `d3bba66`; PR #59 is open.
-- Added stable queue order, one-step reorder operations, v13 persistence and backward-compatible restoration for records without the optional order field. Runtime accepts at most 64 unfinished projects, matching the save validator.
-- Builder target selection prioritizes queued construction before repairs, keeps bounded A* checks and skips previously unreachable candidates so later projects remain eligible.
-- HUD adds the always-visible QUEUE entry (`N`; `B` remains Builder job control), order, paid costs, live progress, UP/DN reorder and X cancellation.
-- Regression covers reorder, Builder priority/fallback, HUD rows, duplicate order rejection, legacy v13 compatibility and save/reload order. PR #59 CI and rendered UI review pending.
 
 
 ## Phase 05.3a — Watchtower vision (implementation branch)
 - Branch: `feat/phase-05.3a-watchtower-vision`, based on main after PR #59 and synchronized Phase 05 documentation.
-- Existing `tower` data now declares `vision_radius: 128`; no extra building ID, art asset or save schema field.
+- Existing `tower` now displays as `Menara Pengawas` and declares `vision_radius: 128`; no extra building ID, art asset or save schema field.
 - Fog scanning uses the tower as a permanent discovery source. Strategic-map enemy observation uses the same radius; demolition stops live observation while explored terrain remains discovered.
 - Existing turret range/damage/fire interval remain unchanged. Regression `tests/watchtower_vision.gd` is registered in both Godot matrices and local runner; CI and rendered review pending.
