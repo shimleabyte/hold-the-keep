@@ -4,6 +4,7 @@ extends Node2D
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const FactionVisual := preload("res://scripts/entities/enemy_faction_visual.gd")
+const CombatVisualFeedback := preload("res://scripts/entities/combat_visual_feedback.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
 const ENEMY_BOLT := preload("res://scripts/entities/enemy_bolt.gd")
 const ENEMY_TARGETING := preload("res://scripts/systems/enemy_targeting.gd")
@@ -93,6 +94,7 @@ var world
 var flow
 var player
 var anim := SpriteAnim.new()
+var combat_feedback = CombatVisualFeedback.new()
 
 var _offset := Vector2.ZERO
 var _atk_cd := 0.0
@@ -269,6 +271,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+    if combat_feedback.advance(delta):
+        queue_redraw()
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _hurt_t = maxf(0.0, _hurt_t - delta)
     support_behavior.advance_timers(delta)
@@ -720,6 +724,7 @@ func _begin_attack(target, direction: Vector2) -> void:
         Events.fx_burst.emit("dust", position + Vector2(0, -2), -_pounce_dir, 1.3)
     else:
         _pending_t = ATTACK_HIT_DELAY
+    combat_feedback.begin_windup(direction, _pending_t, false)
 
 
 func _begin_ranged_attack(target: Node2D) -> void:
@@ -732,6 +737,7 @@ func _begin_ranged_attack(target: Node2D) -> void:
     if anim.face(target.position - position):
         queue_redraw()
     anim.play("attack", true)
+    combat_feedback.begin_windup(target.position - position, _pending_t, true)
 
 
 func _resolve_pending(delta: float) -> void:
@@ -742,6 +748,7 @@ func _resolve_pending(delta: float) -> void:
         return
     var target = _pending
     _pending = null
+    combat_feedback.end_windup()
     if not is_instance_valid(target):
         _pending_is_projectile = false
         return
@@ -764,11 +771,16 @@ func _resolve_pending(delta: float) -> void:
     var final_damage := damage
     if target.is_in_group("buildings"):
         final_damage = roundi(float(damage) * structure_damage_mult)
-    target.take_damage(final_damage)
+    if target.has_method("take_damage_from"):
+        target.take_damage_from(final_damage, global_position)
+    else:
+        target.take_damage(final_damage)
 
 
 func apply_stagger(duration: float) -> void:
-    _stagger_t = maxf(_stagger_t, duration * (1.0 - stagger_resistance))
+    var effective_duration := duration * (1.0 - stagger_resistance)
+    _stagger_t = maxf(_stagger_t, effective_duration)
+    combat_feedback.register_stagger(effective_duration)
     _pending = null
     _pending_is_projectile = false
     _pending_t = 0.0
@@ -935,6 +947,7 @@ func _take_damage_from(amount: int, source_position: Vector2) -> void:
     else:
         Events.fx_burst.emit("impact", position + Vector2(0, -_fh * 0.4), Vector2.ZERO, 2.0 if is_boss else 1.0)
     modulate = Color(1.8, 1.8, 1.8)
+    combat_feedback.register_hit(source_position, global_position, 2.0 if is_boss else 1.0)
     create_tween().tween_property(self, "modulate", _faction_tint, 0.12)
     queue_redraw()
     if hp <= 0:
@@ -975,6 +988,7 @@ func retreat() -> void:
 func _draw() -> void:
     anim.draw(self, _tex, _fw, _fh)
     FactionVisual.draw_identity(self, faction_visual, archetype)
+    combat_feedback.draw(self, _fh, _faction_tint)
     if is_supply_raider or is_faction_raider:
         draw_rect(Rect2(-3, -_fh - 8, 6, 3), Color("#f2b45f"))
         draw_line(Vector2(0, -_fh - 8), Vector2(0, -_fh - 12), Color("#f2b45f"), 1.0)
