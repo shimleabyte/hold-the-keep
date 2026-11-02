@@ -1,6 +1,6 @@
 # Phase 08 — Visual and Audio Identity
 
-**Status:** In progress. PR #50 merged Phase 08.3 deterministic Frontier props, landmarks and resource silhouettes; Phase 08.4 faction/archetype visual identity is in implementation. The dedicated weathered Frontier terrain atlas is merged into `main`; deterministic, non-blocking biome props and five regional landmarks are implemented, alongside biome-specific harvestable tree/rock silhouettes. Classic terrain and resource visuals remain unchanged. Rendered screenshot review is still outstanding.
+**Status:** In progress. PR #50 merged Phase 08.3 Frontier biome props and landmarks; PR #52 merged Phase 08.4 faction/archetype visual identity with 72/72 CI jobs passing. Phase 08.5 building material/detail and damage-state overlays are in implementation. Rendered screenshot review remains outstanding.
 **Art direction:** [World & Gameplay Design Bible](../WORLD_AND_GAMEPLAY_BIBLE.md) — Grim Medieval Folklore Fantasy, weathered medieval pixel art and restrained folklore motifs.
 **Dependency:** Stable gameplay contracts from Phases 02, 04, 05, 06 and current UI layouts from Phase 10.
 **Engine targets:** Godot 4.3 and 4.7.
@@ -11,34 +11,38 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 
 ## 08.1 — Art direction and asset pipeline
 - [x] Define and apply an earthy, weathered terrain palette for Hearthland, Greenwood, Highlands, Fenlands and Ashen March through a dedicated Frontier atlas; Classic retains its original atlas and no global dark filter is used.
-- [x] Extend the Frontier material/crest contract to four faction visual kits; buildings remain a separate Phase 08.5 slice.
+- [x] Extend the Frontier material/crest contract to four faction visual kits and the shipped building set; Phase 08.5 adds structure-specific detail and damage marks.
 - Add restrained regional folklore motifs through landmarks, boundary marks, burial customs and environmental storytelling. Keep overt supernatural visual effects rare and reserved for confirmed threats.
 - Define sprite scale, pivot, outline, contrast and animation-frame conventions before producing bulk assets.
 - Keep generated/procedural SVG assets reproducible; hand-authored replacements must preserve import paths or update references atomically.
 - Establish preview sheets and in-engine screenshot baselines so visual changes are reviewed rather than inferred from source files.
 
-## 08.2 — Environment and regional identity
+## 08.2 — Terrain and regional identity
 - [x] Give Frontier biomes distinct ground textures in a dedicated seven-cell atlas (five land biomes, alternate Hearthland ground and water), preserving tile IDs, 16px tile size and water collision.
-- [x] Scatter deterministic, region-specific fern clusters, reeds, dead pines, standing stones and ash pillars; add Hearthland shrine and four regional ruin/stone/reed landmarks. Decorations are non-colliding and excluded from resource occupancy.
-- [x] Add deterministic biome-specific props and one regional landmark per core biome; props do not block movement or overlap resource nodes.
-- [x] Add Greenwood pine, Fenlands willow, Ashen deadwood, Highlands stone and Ashen rock resource silhouettes; preserve Classic sprite paths and resource behavior.
-- [ ] Add further resource-cluster dressing and restrained ambient animation while preserving tile readability.
 - Create a distinct Old Frontier/ruin subregion treatment without introducing an unsupported sixth core biome.
 - Add visual cues for ownership, contested territory, supply routes, fog and regional objectives.
 
-## 08.3 — Unit and faction identity
+## 08.3 — Biome props, landmarks and resource silhouettes
+- [x] Scatter deterministic, region-specific fern clusters, reeds, dead pines, standing stones and ash pillars; add one landmark in each core biome. Decorations are non-colliding and excluded from resource occupancy.
+- [x] Add Greenwood pine, Fenlands willow, Ashen deadwood, Highlands stone and Ashen rock resource silhouettes; preserve Classic sprite paths and resource behavior.
+- [ ] Add further resource-cluster dressing and restrained ambient animation while preserving tile readability.
+
+## 08.4 — Unit and faction identity
 - [x] Give each faction a distinct three-color visual kit and unique thorn, chevron, reed or ember crest motif; retain the existing faction tint as a secondary recognition cue.
 - [x] Add specialist equipment silhouettes for Scout, Shieldbearer, Saboteur, War Shaman, Siege Engine and Beast Rider through a modular draw layer that does not modify AI, collision, attack timing or save data.
 - [ ] Validate readability with rendered screenshots at actual gameplay zoom and during night/combat effects.
+
+## 08.5 — Building identity
+- [x] Add distinct material palettes and unique structural details for all 13 shipped building types in Frontier, layered over their existing dedicated sprite assets.
+- [x] Add four deterministic health-scaled damage states using material-aware cracks and missing-edge marks; retain the existing HP bar and sabotage indicator.
+- [ ] Add visual construction stages when Phase 05's actual staged-construction state exists; do not fake progress with timers or HP.
+- [ ] Review map and HUD icons at native UI scale and ensure every shipped structure remains distinct.
+
+## 08.6 — Combat visual feedback
 - Add anticipation, attack, hit, stagger, death and ability feedback that communicates counterplay rather than decoration only.
 - Keep player, villager and enemy sprite footprints consistent with Y-sort and collision origins.
 
-## 08.4 — Building identity
-- Replace generic/placeholder appearance with unique silhouettes for each shipped structure.
-- Match visual construction stages, damage states and completed-building states to Phase 05 construction contracts.
-- Add map and HUD icons that remain distinct at small pixel sizes.
-
-## 08.5 — Audio
+## 08.7 — Audio
 - Add layered ambient loops per biome/day-night state.
 - Add readable combat cues for wind-up, projectile, block, charge, siege impact, camp alert and objective completion.
 - Add a restrained campaign/menu music set; keep volume controls and mute behavior integrated with existing settings.

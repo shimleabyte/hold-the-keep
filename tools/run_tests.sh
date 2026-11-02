@@ -28,6 +28,7 @@ tests=(
     production_worksites
     faction_registry
     faction_visual_identity
+    building_visual_identity
     frontier_campaign
     frontier_stress
     campaign_reload_hardening

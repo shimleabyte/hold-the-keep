@@ -17,6 +17,7 @@ const TEXTURES := {
     "quarry": preload("res://assets/sprites/quarry.svg"),
 }
 const ARROW_SCRIPT := preload("res://scripts/entities/arrow.gd")
+const BuildingVisual := preload("res://scripts/entities/building_visual_identity.gd")
 
 var id := ""
 var cell := Vector2i.ZERO  # tile kiri-atas footprint
@@ -379,12 +380,22 @@ func _draw() -> void:
     var w := float(size.x * WorldConfig.tile_size)
     var h := float(size.y * WorldConfig.tile_size)
     var tex_h := h
+    var visual_size := Vector2(w, h)
     if TEXTURES.has(id):
         var tex: Texture2D = TEXTURES[id]
         tex_h = float(tex.get_height())
+        visual_size = Vector2(tex.get_width(), tex.get_height())
         draw_texture(tex, Vector2(-tex.get_width() / 2.0, -tex_h))
     else:
         draw_rect(Rect2(-w / 2, -h, w, h), color)
+
+    var visual_profile: Variant = data.get("visual", {})
+    if visual_profile is Dictionary and BuildingVisual.enabled(WorldConfig.profile_id, visual_profile):
+        BuildingVisual.draw_identity(
+            self, id, visual_profile, visual_size,
+            float(hp) / float(maxi(1, max_hp))
+        )
+
     if hp < max_hp:
         var by := -tex_h - 5.0
         draw_rect(Rect2(-w / 2, by, w, 3), Color(0, 0, 0, 0.7))

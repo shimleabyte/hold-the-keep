@@ -18,6 +18,13 @@
     "work_radius": 14,
     "repair_cost": {
       "wood": 1
+    },
+    "visual": {
+      "material": "stone",
+      "feature": "keep_banner",
+      "primary": "#8b949b",
+      "accent": "#d7bd78",
+      "shadow": "#3d454a"
     }
   },
   {
@@ -35,6 +42,13 @@
     "capacity": 2,
     "repair_cost": {
       "wood": 1
+    },
+    "visual": {
+      "material": "timber",
+      "feature": "house_gable",
+      "primary": "#8c6240",
+      "accent": "#d2ab70",
+      "shadow": "#433024"
     }
   },
   {
@@ -51,6 +65,13 @@
     "color": "#8b6b43",
     "repair_cost": {
       "wood": 1
+    },
+    "visual": {
+      "material": "timber",
+      "feature": "wall_stakes",
+      "primary": "#8b6943",
+      "accent": "#c5a06b",
+      "shadow": "#3a2b1f"
     }
   },
   {
@@ -71,6 +92,13 @@
     "fire_interval": 0.9,
     "repair_cost": {
       "stone": 1
+    },
+    "visual": {
+      "material": "stone",
+      "feature": "tower_battlements",
+      "primary": "#9ca4a7",
+      "accent": "#d0bd91",
+      "shadow": "#41494d"
     }
   },
   {
@@ -90,7 +118,14 @@
     "repair_cost": {
       "wood": 1
     },
-    "stockpile_capacity": 180
+    "stockpile_capacity": 180,
+    "visual": {
+      "material": "timber",
+      "feature": "storage_shutters",
+      "primary": "#9a7148",
+      "accent": "#d6b27a",
+      "shadow": "#493323"
+    }
   },
   {
     "id": "farm",
@@ -107,6 +142,13 @@
     "workers": 2,
     "repair_cost": {
       "wood": 1
+    },
+    "visual": {
+      "material": "earth",
+      "feature": "farm_crop_rows",
+      "primary": "#75894a",
+      "accent": "#b1ae69",
+      "shadow": "#3e3926"
     }
   },
   {
@@ -133,7 +175,14 @@
       "wood": 1
     },
     "stockpile_capacity": 120,
-    "guard_slots": 2
+    "guard_slots": 2,
+    "visual": {
+      "material": "timber",
+      "feature": "outpost_signal",
+      "primary": "#916847",
+      "accent": "#d9b875",
+      "shadow": "#443024"
+    }
   },
   {
     "id": "stone_wall",
@@ -151,6 +200,13 @@
     "locked": true,
     "repair_cost": {
       "stone": 1
+    },
+    "visual": {
+      "material": "stone",
+      "feature": "stone_mortar",
+      "primary": "#9ba0a0",
+      "accent": "#c9c4ad",
+      "shadow": "#454c50"
     }
   },
   {
@@ -169,6 +225,13 @@
     "locked": true,
     "repair_cost": {
       "stone": 1
+    },
+    "visual": {
+      "material": "masonry",
+      "feature": "forge_embers",
+      "primary": "#777e82",
+      "accent": "#e8a04e",
+      "shadow": "#302f2d"
     }
   },
   {
@@ -191,6 +254,13 @@
     "work_radius": 18,
     "repair_cost": {
       "wood": 1
+    },
+    "visual": {
+      "material": "timber",
+      "feature": "lumber_logs",
+      "primary": "#8c623c",
+      "accent": "#d2aa70",
+      "shadow": "#433025"
     }
   },
   {
@@ -213,6 +283,13 @@
     "work_radius": 16,
     "repair_cost": {
       "stone": 1
+    },
+    "visual": {
+      "material": "stone",
+      "feature": "quarry_cart",
+      "primary": "#92938e",
+      "accent": "#d0bd97",
+      "shadow": "#454743"
     }
   },
   {
@@ -230,6 +307,13 @@
     "color": "#9c815d",
     "repair_cost": {
       "wood": 1
+    },
+    "visual": {
+      "material": "packed_earth",
+      "feature": "road_ruts",
+      "primary": "#9b805d",
+      "accent": "#d1b17a",
+      "shadow": "#51402e"
     }
   },
   {
@@ -248,6 +332,13 @@
     "color": "#98734d",
     "repair_cost": {
       "wood": 1
+    },
+    "visual": {
+      "material": "timber",
+      "feature": "bridge_planks",
+      "primary": "#9a714b",
+      "accent": "#d4ad73",
+      "shadow": "#463222"
     }
   }
 ]
