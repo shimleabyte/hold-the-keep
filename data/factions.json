@@ -20,7 +20,7 @@
       "reinforcement_budget": 4,
       "reinforcement_cooldown": 26
     },
-    "raid_unit": "enemy_saboteur",
+    "raid_unit": "bandit",
     "raid": {
       "budget": 2,
       "cooldown": 88,
@@ -47,7 +47,7 @@
       "reinforcement_budget": 4,
       "reinforcement_cooldown": 34
     },
-    "raid_unit": "enemy_siege_engine",
+    "raid_unit": "archer",
     "raid": {
       "budget": 2,
       "cooldown": 104,
@@ -75,7 +75,7 @@
       "reinforcement_budget": 5,
       "reinforcement_cooldown": 30
     },
-    "raid_unit": "enemy_beast_rider",
+    "raid_unit": "wolf",
     "raid": {
       "budget": 2,
       "cooldown": 96,
@@ -103,7 +103,7 @@
       "reinforcement_budget": 5,
       "reinforcement_cooldown": 38
     },
-    "raid_unit": "enemy_siege_engine",
+    "raid_unit": "brute",
     "raid": {
       "budget": 2,
       "cooldown": 112,
