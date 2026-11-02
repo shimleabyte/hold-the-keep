@@ -64,6 +64,7 @@ func _ready() -> void:
     Events.phase_changed.connect(func(night: bool) -> void: play("horn" if night else "dawn"))
     Events.wave_started.connect(func(_day: int, _count: int) -> void: play("camp_alarm", 1.0, -7.0))
     Events.campaign_objective_completed.connect(func(_id: String, _region: String) -> void: play("objective", 1.0, -3.0))
+    Events.frontier_objective_changed.connect(func(_id: String, completed: bool) -> void: if completed: play("objective", 0.96, -5.0))
     Events.frontier_act_unlocked.connect(func(_act: int) -> void: play("objective", 1.12, -1.0))
     Events.frontier_final_boss_defeated.connect(func(_day: int) -> void: play("win"))
     Events.game_over.connect(func(_d: int) -> void: play("lose"))
