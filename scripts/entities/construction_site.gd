@@ -13,6 +13,7 @@ var source_cell := Vector2i(-1, -1)
 var paid_cost: Dictionary = {}
 var work_done := 0.0
 var work_required := 8.0
+var queue_order := 0
 var workers: Array = []
 var _active_workers: Dictionary = {}
 var _completing := false
@@ -116,7 +117,8 @@ func refundable_cost() -> Dictionary:
 
 func export_state() -> Dictionary:
     return {"id": id, "cx": cell.x, "cy": cell.y, "work_done": work_done,
-        "work_required": work_required, "source_x": source_cell.x, "source_y": source_cell.y}
+        "work_required": work_required, "source_x": source_cell.x, "source_y": source_cell.y,
+        "queue_order": queue_order}
 
 func release_all_workers() -> void:
     for worker in workers.duplicate():
