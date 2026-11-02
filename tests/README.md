@@ -48,7 +48,7 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 29 assertion reg
 | anim_sync.gd | pukulan penebang jatuh di frame benturan; pelarian memakai klip lari |
 | animation_motion.gd | idle breathing, walk/run lift, directional attack/work lean, hurt recoil, stable death pose |
 | world_config.gd | profile dimensions, tile indexing, Keep placement, Classic/Frontier profile definitions |
-| frontier_world.gd | 128×128 terrain, five biomes, Ashen tile, regional resources, iron veins, Keep claims, reachability and deterministic generation |
+| frontier_world.gd | 128×128 terrain, five biomes, dedicated Frontier terrain atlas contract, regional resources, iron veins, Keep claims, reachability and deterministic generation |
 | regional_control_roads.gd | regional neutral/player/enemy/contested states, walkable roads/bridges, Keep-connected supply routes, depot isolation, rerouting and save persistence |
 | local_depot_stockpiles.gd | Frontier local depot balances, capacity rejection, worker cargo deposit, bounded connected-depot shipments, v13 migration and save/load round-trip |
 | physical_shipments.gd | Player-directed depot orders, visible carriers, Keep withdrawals, capacity reservations, cancellation/refund, route interruption recovery and v13 persistence |
