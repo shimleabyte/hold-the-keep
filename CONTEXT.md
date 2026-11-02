@@ -532,3 +532,10 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Branch `feat/phase-08.5-building-visual-identity` adds material/feature profiles to all 13 shipped building definitions and a draw-only visual helper for structure details plus four HP-scaled damage states.
 - Overlays are Frontier-only. Classic texture rendering, collision footprints, HP logic, AI/combat, and save schema v13 remain unchanged.
 - Construction-stage art remains deferred until Phase 05 has a real staged-construction state. New regression: `tests/building_visual_identity.gd`; CI and rendered screenshots pending.
+
+
+## Phase 08.6 — Combat visual feedback (2026-11-02, implementation branch)
+- PR #53 merged Phase 08.5 into main as `3aaa37f`; workflow #475 passed 74/74 jobs on Godot 4.3/4.7, including 35 regression suites per engine, Frontier performance diagnostic and Windows/Linux exports.
+- Branch `feat/phase-08.6-combat-visual-feedback` adds a shared draw-only feedback helper for melee/ranged wind-up, directional impact, stagger and Dash/Cleave/Rally cue shapes.
+- Existing enemy archetype telegraphs, player slash/cleave arcs, particle caps and corpse/death animation are retained. The new layer does not change damage, timing, AI, collision or save schema v13.
+- New regression: `tests/combat_visual_feedback.gd`; CI and native-scale rendered screenshots pending.

@@ -4,6 +4,7 @@ extends CharacterBody2D
 ## jatuh di frame benturan (bukan saat tombol ditekan).
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
+const CombatVisualFeedback := preload("res://scripts/entities/combat_visual_feedback.gd")
 const SPRITE := preload("res://assets/sprites/player.svg")
 const FW := 20
 const FH := 20
@@ -39,6 +40,7 @@ var facing := Vector2.DOWN
 var hp := MAX_HP
 var spawn_pos := Vector2.ZERO
 var anim := SpriteAnim.new()
+var combat_feedback = CombatVisualFeedback.new()
 
 var _cooldown := 0.0
 var _atk_cd := 0.0
@@ -122,6 +124,8 @@ func set_camera_limits(rect: Rect2i) -> void:
 
 
 func _physics_process(delta: float) -> void:
+    if combat_feedback.advance(delta):
+        queue_redraw()
     _cooldown = maxf(0.0, _cooldown - delta)
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _dash_cd = maxf(0.0, _dash_cd - delta)
@@ -255,6 +259,7 @@ func _attack() -> void:
         anim.face(foe.global_position - global_position)
     anim.play("attack", true)
     _pending_attack = HIT_DELAY
+    combat_feedback.begin_windup(facing, HIT_DELAY, false)
     _swing = SWING_TIME
     Events.player_attacked.emit()
     queue_redraw()
@@ -262,6 +267,7 @@ func _attack() -> void:
 
 ## Dipanggil di frame benturan: kena semua musuh dalam jangkauan.
 func _apply_attack() -> void:
+    combat_feedback.end_windup()
     var origin := global_position + Vector2(0, -6)
     for e in get_tree().get_nodes_in_group("enemies"):
         var n := e as Node2D
@@ -306,8 +312,10 @@ func _use_dash() -> bool:
         _dash_dir = Vector2.DOWN
     _dash_cd = DASH_COOLDOWN
     _dash_t = DASH_DURATION
+    combat_feedback.register_ability("dash", _dash_dir, DASH_DURATION + 0.08)
     _invuln = maxf(_invuln, DASH_DURATION + 0.12)
     _pending_attack = -1.0
+    combat_feedback.end_windup()
     _pending_harvest = null
     facing = _dash_dir
     anim.face(_dash_dir)
@@ -342,6 +350,7 @@ func _use_cleave() -> bool:
     _cleave_cd = CLEAVE_COOLDOWN
     _cleave_pending = 0.22
     _cleave_t = 0.42
+    combat_feedback.register_ability("cleave", facing, _cleave_t)
     _pending_attack = -1.0
     anim.play("attack", true)
     Events.player_attacked.emit()
@@ -375,6 +384,7 @@ func _use_rally() -> bool:
         return false
     _rally_cd = RALLY_COOLDOWN
     _rally_t = 8.0
+    combat_feedback.register_ability("rally", Vector2.ZERO, 0.35)
     var affected := 0
     for defender in get_tree().get_nodes_in_group("defenders"):
         if not is_instance_valid(defender):
@@ -444,10 +454,16 @@ func import_combat_state(data: Dictionary) -> void:
 
 
 func take_damage(amount: int) -> void:
+    take_damage_from(amount, Vector2.ZERO)
+
+
+func take_damage_from(amount: int, source_position: Vector2) -> void:
     if _invuln > 0.0 or hp <= 0:
         return
     hp -= amount
     _since_hit = 0.0
+    if hp > 0:
+        combat_feedback.register_hit(source_position, global_position, 1.0)
     Events.fx_burst.emit("hurt", global_position + Vector2(0, -8), Vector2.ZERO, 1.0)
     Events.screen_shake.emit(1.0, 0.1)
     _hurt_t = HURT_TIME
@@ -464,6 +480,7 @@ func _die() -> void:
     velocity = Vector2.ZERO
     _invuln = RESPAWN_INVULN
     _pending_attack = -1.0
+    combat_feedback.end_windup()
     _pending_harvest = null
     _cleave_pending = -1.0
     _dash_t = 0.0
@@ -527,6 +544,7 @@ func _try_interact() -> void:
 
 func _draw() -> void:
     anim.draw(self, SPRITE, FW, FH)
+    combat_feedback.draw(self, FH, Color("#c8caa0"))
     if _swing > 0.0:
         _draw_slash()
     if _cleave_t > 0.0:
