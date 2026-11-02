@@ -14,6 +14,13 @@ const VILLAGERS := 48
 const EXPECTED_RAIDERS := 4
 const GLOBAL_RAID_CAP := 4
 
+var world_config
+var data_db
+var faction_registry
+var game_clock
+var tech
+var save_system
+
 
 func ticks(count: int) -> void:
     for _index in count:
@@ -53,7 +60,7 @@ func find_raid_road_cell(main: Node, camp: Dictionary, used: Dictionary) -> Vect
                 if maxi(absi(x), absi(y)) != radius:
                     continue
                 var cell := camp_cell + Vector2i(x, y)
-                if used.has(cell) or not WorldConfig.is_valid_cell(cell):
+                if used.has(cell) or not world_config.is_valid_cell(cell):
                     continue
                 if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
                     continue
@@ -77,7 +84,7 @@ func expose_road(main: Node, cell: Vector2i) -> void:
 
 func spawn_garrison(main: Node, faction_id: String, enemy_id: String, cell: Vector2i, camp_position: Vector2) -> Node:
     var enemy = ENEMY_SCRIPT.new()
-    enemy.setup(DataDB.enemies[enemy_id], main.world, main.flow, main.player, faction_id)
+    enemy.setup(data_db.enemies[enemy_id], main.world, main.flow, main.player, faction_id)
     enemy.is_garrison = true
     enemy.guard_origin = camp_position
     enemy.position = main.nav.center_of(cell)
@@ -90,11 +97,17 @@ func faction_raider_count(main: Node) -> int:
 
 
 func _initialize() -> void:
+    world_config = root.get_node("WorldConfig")
+    data_db = root.get_node("DataDB")
+    faction_registry = root.get_node("FactionRegistry")
+    game_clock = root.get_node("GameClock")
+    tech = root.get_node("Tech")
+    save_system = root.get_node("SaveSystem")
     call_deferred("_run")
 
 
 func _run() -> void:
-    WorldConfig.apply_profile("frontier")
+    world_config.apply_profile("frontier")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
 
@@ -103,9 +116,9 @@ func _run() -> void:
     current_scene = main
     await ticks(10)
 
-    GameClock.set_process(false)
-    GameClock.set_physics_process(false)
-    Tech.set_process(false)
+    game_clock.set_process(false)
+    game_clock.set_physics_process(false)
+    tech.set_process(false)
     main.spawner.set_process(false)
     main.spawner.set_physics_process(false)
     main.village.set_process(false)
@@ -163,7 +176,7 @@ func _run() -> void:
         require(cells.size() == GARRISONS_PER_FACTION,
             "Each faction must provide enough reachable garrison cells: " + faction_id)
 
-        var roster: Array[String] = FactionRegistry.roster_for(faction_id)
+        var roster: Array[String] = faction_registry.roster_for(faction_id)
         require(not roster.is_empty(), "Faction roster must not be empty: " + faction_id)
         for index in GARRISONS_PER_FACTION:
             var enemy_id := roster[index % roster.size()]
@@ -236,14 +249,14 @@ func _run() -> void:
     require(villager_count == VILLAGERS,
         "The stress population must retain all spawned villagers")
 
-    var snapshot: Dictionary = SaveSystem.collect(main)
+    var snapshot: Dictionary = save_system.collect(main)
     require(snapshot["world"]["profile"] == "frontier" and snapshot["world"]["map_size"] == 128,
         "Stress snapshot must retain the Frontier world identity")
     require(snapshot["frontier_campaign"]["camps"]["records"].size() == 4,
         "Stress snapshot must persist all four faction camp records")
     require(snapshot["enemies"].size() == enemy_count,
         "Stress snapshot must include the full garrison, patrol and raid population")
-    require(SaveSystem._valid_save(snapshot),
+    require(save_system._valid_save(snapshot),
         "The combined garrison/patrol/raid snapshot must pass save-v13 validation")
 
     var saved_raids := 0
