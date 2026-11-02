@@ -274,7 +274,7 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     flow = flow_ref
     player = player_ref
     beast_behavior.configure(self, data)
-    shield_behavior.configure(self, data)
+    shield_behavior.configure(self, data, SHIELD_TARGET_RANGE)
     _offset = Vector2(randf_range(-4.0, 4.0), randf_range(-3.0, 3.0))
     _tex = TEXTURES.get(id, TEXTURES["bandit"])
     _fw = int(_tex.get_width() / float(SpriteAnim.FRAMES))
