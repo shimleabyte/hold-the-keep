@@ -1,8 +1,8 @@
 # Phase 04 — Specialist Jobs and Workplace Completion
 
-**Status:** Builder is merged into `main`; Hunter + Hunting Lodge is implemented on `feat/hunter-hunting-lodge` pending CI/PR acceptance. Scout, Healer and Blacksmith remain open.
+**Status:** Builder and first workplace/repair slice merged into `main`. Hunter is implemented in open PR #64; Scout is implemented in open stacked PR #65. Both require final Godot 4.7 CI and in-game acceptance before integration. Healer and Blacksmith remain unimplemented.
 **Dependency:** Phase 02 connected depots; Phase 05 worksites and construction foundations.
-**Engine targets:** Godot 4.3 and 4.7.
+**Engine target:** Godot 4.7 only.
 
 ## Goal
 
@@ -10,16 +10,10 @@ Expand labor roles only when they create a distinct economic or tactical output.
 
 ## Specialist slices
 
-### Hunter — implemented on `feat/hunter-hunting-lodge`
-- [x] Require a free Hunter slot in a Hunting Lodge; reject assignment when no matching workplace is available.
-- [x] Generate finite, deterministic wildlife nodes outside the protected clearing; Frontier herds favour Greenwood and Fenlands.
-- [x] Enforce the Lodge work radius and reserve each wildlife target to one worker.
-- [x] Deliver food through connected depot rules, with Granary priority and local stockpile validation preserved.
-- [x] Harvest three strikes per animal for five food, then regrow the node after 105 seconds.
-- [x] Persist Hunter occupation and wildlife HP/regrowth in additive save v14; retain v1–v13 validation.
-- [x] Add a sixth job row, J hotkey, priority control, job icon, Hunter sprite and Hunting Lodge art.
-- [x] Add focused workplace/food/save tests and deterministic Frontier wildlife placement coverage.
-- [ ] Review rendered art, pathing and hunting/farming balance in a real playthrough.
+### Hunter
+- Hunt designated wildlife/resource nodes within an assigned work radius; do not add an unbounded animal population simulation.
+- Deliver food to a reachable depot and respect local storage capacity once Phase 02 local stockpiles are enabled.
+- Use bounded spawn/respawn rules and clear depletion/return behavior.
 
 ### Scout
 - Reveal fog within a bounded observation radius and optionally mark discovered hostile sites/camps.
