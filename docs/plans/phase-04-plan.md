@@ -1,6 +1,6 @@
 # Phase 04 — Specialist Jobs and Workplace Completion
 
-**Status:** Builder is merged into `main`. Hunter PR #64 passed 45/45, Scout PR #65 passed 46/46, and Healer PR #67 passed 47/47 jobs on Godot 4.7. Blacksmith is being implemented on `feat/blacksmith-forge` after Healer; its fresh full CI and rendered in-game acceptance remain pending.
+**Status:** Builder is merged into `main`. Hunter PR #64 passed 45/45, Scout PR #65 passed 46/46, Healer PR #67 passed 47/47, and Blacksmith PR #68 passed 48/48 jobs on Godot 4.7 (run #634). Rendered gameplay and balance acceptance remain manual; the stacked PRs remain unmerged.
 **Dependency:** Phase 02 connected depots; Phase 05 worksites and construction foundations.
 **Engine target:** Godot 4.7 only.
 
@@ -41,7 +41,7 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - [x] Use a 16-tile service radius, one-Healer-per-patient reservation, 10 HP per 3.2 seconds, and stop at full HP or on patient/workplace loss.
 
 - [x] Add Healer occupation, I quota/priority shortcut, sprite/HUD, Infirmary artwork and save schema v16.
-- [x] Add `tests/healer_infirmary.gd` for tech unlock, capacity, targeting, unique reservation, healing clamp, teardown and v15 migration; full suite CI remains pending.
+- [x] Add `tests/healer_infirmary.gd` for tech unlock, capacity, targeting, unique reservation, healing clamp, teardown and v15 migration; CI #626 passed 47/47 jobs.
 
 ### Blacksmith — implemented on `feat/blacksmith-forge` (stacked PR #68)
 - [x] Use the existing Era III Forge as the workplace with two Blacksmith slots and an 18-tile service radius; no duplicate building or resource is introduced.
@@ -52,7 +52,8 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - [x] Add a Blacksmith job row in JOBS without consuming an existing keyboard shortcut; use the Forge icon and a distinct role sprite.
 - [x] Persist equipment flags and Blacksmith occupation in save v17, including restoration of armored soldier HP caps; retain v1–v16 Classic and v7–v16 Frontier migration.
 - [x] Add `tests/blacksmith_forge.gd` covering two-slot capacity, unique reservations, recipe costs/effects, save migration and workplace teardown.
-- [ ] Validate full Godot 4.7 CI and review rendered equipment visibility, combat balance and economic pacing in an actual playthrough.
+- [x] Validate full Godot 4.7 CI: run #634 passed 48/48 jobs, including the dedicated Blacksmith regression and v1–v17/v7–v17 migration coverage.
+- [ ] Review rendered equipment visibility, combat balance and economic pacing in an actual playthrough.
 
 ## Shared requirements
 - Keep labor occupation separate from military specialization; soldier assignment must not be overwritten by a labor job change.

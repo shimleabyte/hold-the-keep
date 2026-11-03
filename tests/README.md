@@ -37,7 +37,7 @@ GitHub Actions menjalankan import/parse on Godot 4.7 only, 46 assertion regressi
 | frontier_campaign.gd | Classic/Frontier campaign calendars, act gates, all regional objectives, rewards, save/load and day-20 King victory |
 | campaign_multi_stronghold.gd | four Frontier strongholds, deterministic objective order, regional placement, independent garrisons, locked objectives, save/load and final conquest |
 | workplace_assignments.gd | Builder workplace capacity/radius, repair material consumption, reachable depot selection and priority reassignment |
-| hunting_lodge.gd | Hunter workplace capacity/radius, wildlife reservations, food yield/depot delivery, v16 save validation and teardown |
+| hunting_lodge.gd | Hunter workplace capacity/radius, wildlife reservations, food yield/depot delivery, v17 save validation and teardown |
 | healer_infirmary.gd | Infirmary workplace requirement/capacity, wounded-soldier selection, patient reservation, bounded healing, teardown and v15 migration compatibility on current v17 schema |
 | blacksmith_forge.gd | Forge two-slot capacity, unique soldier reservations, weapon/armor costs and effects, v16 migration and workplace teardown |
 | scout_specialist.gd | Scout Post capacity, bounded reachable A* survey, 144px local fog revelation, target separation, return-to-post behavior and v15 migration |
@@ -63,7 +63,7 @@ GitHub Actions menjalankan import/parse on Godot 4.7 only, 46 assertion regressi
 | frontier_world.gd | 128×128 terrain, five biomes, dedicated Frontier terrain atlas contract, regional resources, iron veins, Keep claims, reachability and deterministic generation |
 | frontier_expedition.gd | 192×192 Expedition map, four sealed outer marches, discovery-gated crossings, bridge/path blocking, permanent fog reveal, v17 save persistence and minimum-viewport map bounds |
 | regional_control_roads.gd | regional neutral/player/enemy/contested states, walkable roads/bridges, Keep-connected supply routes, depot isolation, rerouting and save persistence |
-| local_depot_stockpiles.gd | Frontier local depot balances, capacity rejection, worker cargo deposit, bounded connected-depot shipments, v15 save state, v13 migration and save/load round-trip |
+| local_depot_stockpiles.gd | Frontier local depot balances, capacity rejection, worker cargo deposit, bounded connected-depot shipments, v17 save state, v11 migration and save/load round-trip |
 | physical_shipments.gd | Player-directed depot orders, visible carriers, Keep withdrawals, capacity reservations, cancellation/refund, route interruption recovery and v15 persistence and v12 migration |
 | depot_cost_sources.gd | Explicit Keep/Storage/Outpost cost source, construction/research debit, no cross-depot pooling, disconnected-source rejection, atomic payment and v15 preference persistence and v13 compatibility |
 | supply_pressure.gd | Contested disconnected-depot warning, targeted saboteur pathing, deterministic stock theft, bounded repeat raid, depot damage, HUD state, v15 persistence, v13 legacy compatibility and recovery |

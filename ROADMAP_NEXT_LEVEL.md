@@ -153,7 +153,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** multiple strongholds can be found, attacked, destroyed, restored from saves and completed in a deterministic objective sequence.
 
 ### Phase 04 — Jobs and workplaces
-**Status:** Builder is merged into `main`. Hunter PR #64 passed 45/45, Scout PR #65 passed 46/46, and Healer PR #67 passed 47/47 jobs on Godot 4.7. Blacksmith/Forge is in progress on `feat/blacksmith-forge`, stacked after Healer; its current branch validation is pending.
+**Status:** Builder is merged into `main`. Hunter PR #64 passed 45/45, Scout PR #65 passed 46/46, Healer PR #67 passed 47/47, and Blacksmith/Forge PR #68 passed 48/48 jobs on Godot 4.7 (run #634). The specialist stack remains open for rendered gameplay acceptance and ordered integration.
 
 - [x] Introduce Builder as a real labor occupation; soldier is stored separately as a military specialization, with a compatibility `job` alias.
 - [x] Add Builder workplace capacity on Keeps and Outposts, plus data-driven work radii.
@@ -162,10 +162,11 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Select the nearest reachable connected depot rather than stopping at an unreachable nearest depot.
 - [x] Add configurable job priority order, reassignment, Alt+job hotkeys and right-click controls in the job panel.
 - [x] Persist occupation, military specialization and priority order in save format v9; older saves still load through the compatibility job field.
-- [x] Add Hunter as a two-slot Hunting Lodge occupation with deterministic wildlife harvest, food delivery, J hotkey/UI, target reservation, work-radius enforcement and v14 save migration (implementation branch `feat/hunter-hunting-lodge`; CI/PR pending).
-- [x] Add Scout as a two-slot Scout Post occupation with bounded A* exploration, local permanent-fog revelation, sector rotation, return-to-post when exhausted, U hotkey/UI and v15 save migration (`feat/scout-specialist`, PR #65); final 4.7 CI and manual map-scale acceptance remain.
+- [x] Add Hunter as a two-slot Hunting Lodge occupation with deterministic wildlife harvest, food delivery, J hotkey/UI, target reservation, work-radius enforcement and v14 save migration (PR #64; CI #620 passed 45/45; manual gameplay acceptance remains).
+- [x] Add Scout as a two-slot Scout Post occupation with bounded A* exploration, local permanent-fog revelation, sector rotation, return-to-post when exhausted, U hotkey/UI and v15 save migration (PR #65; CI #621 passed 46/46; manual map-scale acceptance remains).
 - [x] Add Hunter, Scout and Healer as stacked workplace-specialist slices; their pull requests remain unmerged pending integration review.
-- [ ] Complete Blacksmith/Forge CI and rendered gameplay/balance acceptance on the stacked v17 branch.
+- [x] Complete Blacksmith/Forge implementation, v17 migration coverage and Godot 4.7 CI #634 (48/48 jobs).
+- [ ] Review rendered equipment visibility, combat balance and economic pacing in an actual playthrough; integrate the open specialist PR stack in order.
 - [x] Complete Godot 4.3 / 4.7 CI regression matrix; real gameplay pathing still needs a manual playtest.
 
 **Acceptance gate:** workers select valid tasks, avoid cross-map wandering, recover from blocked paths, deposit at reachable storage and retain their state through saves.
