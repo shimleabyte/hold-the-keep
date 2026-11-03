@@ -309,7 +309,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 var pressure_depot_exists := false
                 for saved_building in buildings:
                     var saved_cell := Vector2i(int(saved_building.get("cx", -1)), int(saved_building.get("cy", -1)))
-                    if saved_cell == pressure_cell and ["storage", "outpost"].has(String(saved_building.get("id", ""))):
+                    if saved_cell == pressure_cell and ["storage", "outpost", "granary"].has(String(saved_building.get("id", ""))):
                         pressure_depot_exists = true
                         break
                 var contested_seconds := float(pressure_record["contested_seconds"])
@@ -362,7 +362,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             for saved_building in buildings:
                 var saved_cell := Vector2i(int(saved_building["cx"]), int(saved_building["cy"]))
                 var saved_id := String(saved_building["id"])
-                if saved_cell == destination_cell and ["keep", "storage", "outpost"].has(saved_id):
+                if saved_cell == destination_cell and ["keep", "storage", "outpost", "granary"].has(saved_id):
                     destination_building = saved_building
             # Cargo is escrowed in the order; the source can be destroyed before delivery.
             if status in ["queued", "in_transit", "blocked"] and not destination_building.is_empty() and String(destination_building["id"]) != "keep":
@@ -407,9 +407,12 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 return false
             var stockpile_total := 0
             var stockpile_limit := int(DataDB.buildings[String(building["id"])].get("stockpile_capacity", 0))
+            var allowed_stockpile_kinds: Array = DataDB.buildings[String(building["id"])].get(
+                "accepted_resources", ["wood", "stone", "food", "iron"]
+            )
             for kind in stockpile:
                 var amount := int(stockpile[kind])
-                if not ["wood", "stone", "food", "iron"].has(String(kind)) or amount < 0:
+                if not allowed_stockpile_kinds.has(String(kind)) or amount < 0:
                     return false
                 stockpile_total += amount
             if stockpile_total > stockpile_limit or (stockpile_total > 0 and stockpile_limit <= 0):
@@ -552,7 +555,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             var raid_target_exists := false
             for saved_building in buildings:
                 var saved_cell := Vector2i(int(saved_building.get("cx", -1)), int(saved_building.get("cy", -1)))
-                if saved_cell == raid_cell and ["storage", "outpost"].has(String(saved_building.get("id", ""))):
+                if saved_cell == raid_cell and ["storage", "outpost", "granary"].has(String(saved_building.get("id", ""))):
                     raid_target_exists = true
                     break
             if not raid_target_exists:
