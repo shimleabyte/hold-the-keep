@@ -58,7 +58,11 @@ func _run() -> void:
     _require(_inventory.get_amount("food") == 15, "Trade reward must be granted exactly once")
     _require(manager.scheduled_consequences.size() == 1,
         "A selected trade must schedule exactly one delayed supplier delivery")
-    var scheduled_delivery: Dictionary = manager.scheduled_consequences[0]
+    var scheduled_delivery: Dictionary = {}
+    if not manager.scheduled_consequences.is_empty():
+        scheduled_delivery = manager.scheduled_consequences[0]
+    else:
+        _require(false, "A valid delayed consequence must be present before inspecting its fields")
     var expected_delivery_day := int(_clock.day) + 2
     _require(int(scheduled_delivery.get("due_day", -1)) == expected_delivery_day,
         "Delayed delivery must use an absolute campaign day, not a frame timer")
@@ -73,9 +77,16 @@ func _run() -> void:
         "Save collection must persist the unresolved delayed consequence")
     _require(_save_system._valid_save(consequence_snapshot),
         "A save containing a valid delayed consequence must pass validation")
+
+    var json_snapshot: Variant = JSON.parse_string(JSON.stringify(consequence_snapshot))
+    _require(json_snapshot is Dictionary and _save_system._valid_save(json_snapshot),
+        "JSON round-trip must preserve valid delayed consequence numbers for save validation")
     var exported_event_state: Dictionary = manager.export_state()
+    var json_event_state: Variant = JSON.parse_string(JSON.stringify(exported_event_state))
+    _require(json_event_state is Dictionary,
+        "Exported event state must survive JSON serialization")
     manager.scheduled_consequences.clear()
-    manager.import_state(exported_event_state)
+    manager.import_state(json_event_state if json_event_state is Dictionary else {})
     _require(manager.scheduled_consequences.size() == 1,
         "Import must restore a delayed consequence by resolving its static event reference")
 
