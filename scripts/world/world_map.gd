@@ -710,8 +710,14 @@ func _build_expedition_outer_reachability() -> void:
 func is_expedition_outer_cell(cell: Vector2i, region: String) -> bool:
     if not WorldConfig.is_frontier_expedition() or not WorldConfig.is_valid_cell(cell):
         return false
+    if _expedition_reserved_cells.has(cell):
+        return false
     var reachable: Dictionary = _expedition_outer_reachable.get(region, {})
     return reachable.has(cell)
+
+
+func is_expedition_reserved_cell(cell: Vector2i) -> bool:
+    return WorldConfig.is_frontier_expedition() and _expedition_reserved_cells.has(cell)
 
 
 func _find_expedition_gate_cell(
