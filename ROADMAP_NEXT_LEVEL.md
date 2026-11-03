@@ -226,7 +226,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** screenshot passes at target desktop resolutions; visual readability under day/night, fog and combat load; no placeholder-only faction identity in release content.
 
 ### Phase 09 — Balance, performance and release hardening
-**Status:** Phase 09.2 scripted combat-budget probes now cover curated encounters at the end of Frontier Acts I–IV and the day-20 King assault; Phase 09.3 late-act reload coverage is merged through PR #57 (`a1ccebe`). The probe reports damage/population/time outcomes but does not simulate full waves or autonomous AI. Workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux exports. Save schema v13 is unchanged. Target-hardware profiling, human playtesting, native Windows runtime and clean-machine verification remain open.
+**Status:** Phase 09.2 scripted campaign combat-budget probes merged through PR #62 (`4cc0420`); workflow [#41564491766](https://github.com/shimleabyte/hold-the-keep/actions/runs/41564491766) passed 86/86 jobs on Godot 4.3/4.7, including Frontier performance diagnostic and Windows/Linux exports. Phase 09.3 late-act reload coverage remains merged through PR #57 (`a1ccebe`). The new probe covers curated samples at Frontier Acts I–IV and the day-20 King encounter using real damage/cooldown transactions, but it does not simulate full waves or autonomous AI. Save schema v13 is unchanged. Target-hardware profiling, full-wave balance validation, human playtesting, native Windows runtime and clean-machine verification remain open.
 
 - [x] Add configurable Classic/Frontier profiling for p50/p95/p99 process, physics and wall-frame timing, static memory, node count, projectiles and particles.
 - [x] Add bounded Frontier stress coverage for four factions, mixed rosters, villagers, ranged projectiles and the 500-particle ceiling.
@@ -236,14 +236,14 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Run the Godot 4.3/4.7 import, parse and regression matrix on the original stacked branch.
 - [x] Export Windows/Linux in CI using Godot 4.3 templates; validate Windows PE output and smoke-test Linux.
 - [ ] Measure the reference workload on actual target desktop hardware before making performance optimization claims.
-- [ ] Add combat outcome simulations at the end of all four Frontier acts and on day 20.
+- [x] Add bounded scripted combat-budget probes at the end of Frontier Acts I–IV and the day-20 King encounter (`tests/campaign_combat_simulation.gd`; PR #62, workflow #41564491766 passed 86/86). Curated sample only; full-wave AI balance validation remains open.
 - [x] Extend Frontier reload coverage through Acts I–IV, completed regional objectives, conquered strongholds, damaged final stronghold HP, the day-20 King gate and persisted victory reload (PR #57; workflow #490, 78/78).
 - [ ] Complete human playtesting across all campaign acts.
 - [ ] Verify Windows runtime and clean-machine save/settings migration.
 
 **CI diagnostic (not target hardware):** Frontier 128×128, 119 active enemies, 82 villagers, six peak projectiles and 500 peak particles; wall-frame p50 4.27 ms / p95 10.45 ms / p99 13.55 ms. A process-monitor p95 outlier of 102.24 ms was also recorded; these figures are runner-specific, not an accepted target-hardware budget.
 
-**Remaining acceptance work:** measured target-hardware performance, representative combat outcome simulations at each Frontier act boundary/day 20, full multi-act human playtest, Windows runtime on a real Windows machine, and clean-machine save/settings migration. Save/reload persistence through Act IV and final victory is now covered automatically by `campaign_reload_hardening.gd`.
+**Remaining acceptance work:** measured target-hardware performance, full-wave/AI-informed balance validation, full multi-act human playtest, Windows runtime on a real Windows machine, and clean-machine save/settings migration. Save/reload persistence through Act IV and final victory is now covered automatically by `campaign_reload_hardening.gd`.
 ### Phase 10 — Resolution-matched viewport and HUD safe area
 **Status:** Adaptive viewport implementation remains merged through PR #30; latest mainline workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 jobs, including responsive-layout regressions on Godot 4.3/4.7. Physical-display screenshots and manual fullscreen review remain open.
 
