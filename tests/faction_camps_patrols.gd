@@ -185,8 +185,8 @@ func _run() -> void:
 
     # Save v13 stores camp cooldown/budget and each patrol's assignment without a schema bump.
     var snapshot: Dictionary = save_system.collect(main)
-    require(int(snapshot["version"]) == 13,
-        "Faction camps and patrols must remain compatible with save schema v13")
+    require(int(snapshot["version"]) == 14,
+        "Faction camps, patrols and Hunter state must use save schema v14")
     require(save_system._valid_save(snapshot),
         "Camp and patrol state must pass structural save validation")
     var saved_camp_records: Array = snapshot["frontier_campaign"]["camps"]["records"]
@@ -251,6 +251,6 @@ func _run() -> void:
     require(patrols_for(camp_id).is_empty(),
         "A destroyed camp must never deploy another patrol")
 
-    print("PASS: deterministic enemy-territory camps, fog discovery, A* bounded patrols, leash return, cap/budget reinforcement, v13 save/restore and camp destruction")
+    print("PASS: deterministic enemy-territory camps, fog discovery, A* bounded patrols, leash return, cap/budget reinforcement, v14 save/restore and camp destruction")
     main.queue_free()
     quit(0)
