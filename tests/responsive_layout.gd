@@ -82,9 +82,13 @@ func _initialize() -> void:
 
         # Static HUD belongs to the top/bottom bands, leaving a clear central playfield.
         var top_hud_edge := maxf(
-            hud._jobs_panel.position.y + hud._jobs_panel.size.y,
-            hud._boss_panel.position.y + hud._boss_panel.size.y
+            hud._vitals_panel.position.y + hud._vitals_panel.size.y,
+            hud._stage_panel.position.y + hud._stage_panel.size.y
         )
+        if hud._jobs_panel.visible:
+            top_hud_edge = maxf(top_hud_edge, hud._jobs_panel.position.y + hud._jobs_panel.size.y)
+        if hud._boss_panel.visible:
+            top_hud_edge = maxf(top_hud_edge, hud._boss_panel.position.y + hud._boss_panel.size.y)
         var bottom_hud_edge: float = float(hud._combat_bar.position.y)
         var clear_playfield_height: float = bottom_hud_edge - top_hud_edge
         assert(clear_playfield_height >= viewport_size.y * 0.30,
