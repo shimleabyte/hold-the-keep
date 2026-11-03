@@ -87,14 +87,14 @@ func _run() -> void:
     require(forge.free_slots("soldier") == 0 and forge.free_slots("healer") == 0,
         "Forge must reject unrelated workplace roles")
 
-    var soldier_a = main.village.spawn_villager(forge.position + Vector2(-16, 30))
-    var soldier_b = main.village.spawn_villager(forge.position + Vector2(16, 30))
+    var soldier_a = main.village.spawn_villager(forge.position + Vector2(-40, 30))
+    var soldier_b = main.village.spawn_villager(forge.position + Vector2(40, 30))
     require(soldier_a.set_job("soldier") and soldier_b.set_job("soldier"),
         "Forge equipment targets must be active friendly soldiers")
 
-    var smith_a = main.village.spawn_villager(forge.position + Vector2(-10, 34))
-    var smith_b = main.village.spawn_villager(forge.position + Vector2(10, 34))
-    var smith_c = main.village.spawn_villager(forge.position + Vector2(0, 38))
+    var smith_a = main.village.spawn_villager(forge.position + Vector2(-10, 46))
+    var smith_b = main.village.spawn_villager(forge.position + Vector2(10, 46))
+    var smith_c = main.village.spawn_villager(forge.position + Vector2(0, 58))
     require(smith_a.set_job("blacksmith") and smith_b.set_job("blacksmith"),
         "Two Blacksmiths must claim Forge workplaces")
     require(not smith_c.set_job("blacksmith"),
