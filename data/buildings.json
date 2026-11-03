@@ -327,6 +327,35 @@
     }
   },
   {
+    "id": "hunting_lodge",
+    "name": "Pondok Pemburu",
+    "short": "BURU",
+    "size": [
+      3,
+      2
+    ],
+    "cost": {
+      "wood": 26,
+      "stone": 8
+    },
+    "hp": 180,
+    "color": "#8c6948",
+    "workplaces": {
+      "hunter": 2
+    },
+    "work_radius": 18,
+    "repair_cost": {
+      "wood": 1
+    },
+    "visual": {
+      "material": "weathered timber and hide",
+      "feature": "hunting_lodge_trophy_rack",
+      "primary": "#896747",
+      "accent": "#c69a60",
+      "shadow": "#3a2a20"
+    }
+  },
+  {
     "id": "road",
     "name": "Jalan",
     "short": "JLN",

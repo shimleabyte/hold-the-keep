@@ -15,6 +15,7 @@ const TEXTURES := {
     "miner": preload("res://assets/sprites/villager_miner.svg"),
     "farmer": preload("res://assets/sprites/villager_farmer.svg"),
     "builder": preload("res://assets/sprites/villager_miner.svg"),
+    "hunter": preload("res://assets/sprites/villager_hunter.svg"),
     "soldier": preload("res://assets/sprites/villager_soldier.svg"),
 }
 
@@ -158,8 +159,11 @@ func set_job(j: String) -> bool:
     _expedition_target = null
     var old_max := max_hp
     job = j
-    if job == "builder" and not _claim_workplace("builder"):
+    if job in ["builder", "hunter"] and not _claim_workplace(job):
         job = ""
+        remove_from_group("defenders")
+        max_hp = _hp_cap_for("")
+        hp = clampi(roundi(float(hp) * max_hp / maxi(1, old_max)), 1, max_hp)
         state = State.IDLE
         return false
     if job == "soldier":
@@ -739,6 +743,15 @@ func _find_work() -> void:
                 var in_work_area := _is_in_workplace_radius(n) if has_valid_workplace() else _is_in_work_radius(n)
                 if n.yield_kind == kind and n.is_available(self) and in_work_area and not _bad.has(n):
                     cands.append(n)
+        "hunter":
+            if not has_valid_workplace():
+                _release_workplace()
+                if not _claim_workplace("hunter"):
+                    return
+            for wildlife in get_tree().get_nodes_in_group("wildlife"):
+                if wildlife.yield_kind == "food" and wildlife.is_available(self) \
+                        and _is_in_workplace_radius(wildlife) and not _bad.has(wildlife):
+                    cands.append(wildlife)
         "farmer":
             for f in get_tree().get_nodes_in_group("farms"):
                 if f.free_slots("farmer") > 0 and _is_in_work_radius(f) and not _bad.has(f):
@@ -1048,6 +1061,8 @@ func _job_color() -> Color:
             return Color("#8a8f98")
         "farmer":
             return Color("#d6b13c")
+        "hunter":
+            return Color("#b77c43")
         "soldier":
             return Color("#3f6fb5")
     return Color("#d9d2c3")

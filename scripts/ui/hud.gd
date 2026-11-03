@@ -34,9 +34,11 @@ const ICONS := {
     "lumber_camp": preload("res://assets/sprites/icon_lumber_camp.svg"),
     "quarry": preload("res://assets/sprites/icon_quarry.svg"),
     "granary": preload("res://assets/sprites/icon_granary.svg"),
+    "hunting_lodge": preload("res://assets/sprites/icon_hunting_lodge.svg"),
+    "bow": preload("res://assets/sprites/icon_bow.svg"),
 }
-const JOBS := ["woodcutter", "miner", "farmer", "builder", "soldier"]
-const JOB_ICONS := {"woodcutter": "axe", "miner": "pick", "farmer": "wheat", "builder": "hammer", "soldier": "sword"}
+const JOBS := ["woodcutter", "miner", "farmer", "builder", "hunter", "soldier"]
+const JOB_ICONS := {"woodcutter": "axe", "miner": "pick", "farmer": "wheat", "builder": "hammer", "hunter": "bow", "soldier": "sword"}
 const PANEL_BG := Color(0.09, 0.08, 0.11, 0.82)
 const PANEL_BORDER := Color("#6b5a40")
 const GOLD := Color("#ffd23f")
@@ -56,10 +58,10 @@ const HELP_ROWS := [
     ["N / QUEUE", "ANTREAN KONSTRUKSI"],
     ["KLIK KIRI", "PASANG BANGUNAN"],
     ["KLIK KANAN", "BATAL / BONGKAR"],
-    ["T M K R B", "TAMBAH JOB"],
+    ["T M K B J R", "TAMBAH JOB"],
     ["G", "SERBU / TARIK PRAJURIT"],
-    ["SHIFT + T M K R B", "KURANGI JOB"],
-    ["ALT + T/M/K/R/B", "NAIKKAN PRIORITAS"],
+    ["SHIFT + T M K B J R", "KURANGI JOB"],
+    ["ALT + T/M/K/B/J/R", "NAIKKAN PRIORITAS"],
     ["ALT + SHIFT + KEY", "TURUNKAN PRIORITAS"],
     ["KLIK + / -", "UBAH KUOTA JOB"],
     ["P / ESC", "MENU"],
@@ -355,7 +357,7 @@ func _build_combat_bar() -> void:
     add_child(_combat_bar)
 
 func _build_jobs() -> void:
-    _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 84))
+    _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 96))
     for i in JOBS.size():
         var row := JobRow.new()
         row.job = JOBS[i]
@@ -370,7 +372,7 @@ func _build_jobs() -> void:
     _outpost_button = HudChip.new()
     _outpost_button.label = "POS"
     _outpost_button.font = _font
-    _outpost_button.position = Vector2(2, 67)
+    _outpost_button.position = Vector2(2, 80)
     _outpost_button.size = Vector2(72, 13)
     _outpost_button.pressed.connect(_toggle_outposts)
     _jobs_panel.add_child(_outpost_button)
