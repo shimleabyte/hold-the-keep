@@ -176,6 +176,7 @@ func _run() -> void:
         "Existing v13 saves must remain valid after the v14 Hunter migration")
 
     lodge.demolish()
+    main.village.assign_jobs() # mirror the next one-second workplace reconciliation pass
     await ticks(2)
     require(hunter_a.workplace == null and hunter_b.workplace == null,
         "Removing the Lodge must release all Hunter workplace claims")
