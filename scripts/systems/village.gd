@@ -81,7 +81,7 @@ func spawn_position() -> Vector2:
 
 func food_available() -> int:
     var amount := Inventory.get_amount("food")
-    if WorldConfig.profile_id != "classic":
+    if WorldConfig.is_frontier_profile():
         return amount
     for granary in get_tree().get_nodes_in_group("granaries"):
         if is_instance_valid(granary):
