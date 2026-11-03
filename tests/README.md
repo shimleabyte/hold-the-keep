@@ -40,9 +40,9 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 43 assertion reg
 | hunting_lodge.gd | Hunter workplace capacity/radius, wildlife reservations, food yield/depot delivery, v15 save validation and teardown |
 | scout_specialist.gd | Scout Post capacity, bounded reachable A* survey, 144px local fog revelation, target separation, return-to-post behavior and v15 migration |
 | production_worksites.gd | Lumber Camp/Quarry workplace limits, specialist work radius, Classic fallback, cleanup and v13 save compatibility |
-| construction_sites.gd | Builder discovery/pathing, two-worker site cap, once-only funding, functional completion, proportional cancellation refund, save validation and v13 reload |
+| construction_sites.gd | Builder discovery/pathing, two-worker site cap, once-only funding, functional completion, proportional cancellation refund, save validation and v15 reload |
 | watchtower_vision.gd | Existing tower's 128px permanent exploration radius, live strategic-map enemy observation, out-of-range concealment and turret compatibility |
-| granary_food_storage.gd | Classic food reserve/upkeep, Frontier food-only storage, connected depot transfers, shipment rejection/refund, raid theft and save-v13 reload |
+| granary_food_storage.gd | Classic food reserve/upkeep, Frontier food-only storage, connected depot transfers, shipment rejection/refund, raid theft and save-v15 reload plus v13 legacy migration |
 | map_stages.gd | empat biome Classic, fog map panel, batas tiga bab, bobot archer/brute per bab |
 | responsive_layout.gd | resolution-to-viewport mapping, exact 2× pixel scale, live synchronization, HUD safe playfield and map/hotbar bounds across six desktop resolutions |
 | player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, archer projectile, brute armor, combat save |
@@ -64,7 +64,7 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 43 assertion reg
 | local_depot_stockpiles.gd | Frontier local depot balances, capacity rejection, worker cargo deposit, bounded connected-depot shipments, v15 save state, v13 migration and save/load round-trip |
 | physical_shipments.gd | Player-directed depot orders, visible carriers, Keep withdrawals, capacity reservations, cancellation/refund, route interruption recovery and v15 persistence and v12 migration |
 | depot_cost_sources.gd | Explicit Keep/Storage/Outpost cost source, construction/research debit, no cross-depot pooling, disconnected-source rejection, atomic payment and v15 preference persistence and v13 compatibility |
-| supply_pressure.gd | Contested disconnected-depot warning, targeted saboteur pathing, deterministic stock theft, bounded repeat raid, depot damage, HUD state, v13 persistence and recovery |
+| supply_pressure.gd | Contested disconnected-depot warning, targeted saboteur pathing, deterministic stock theft, bounded repeat raid, depot damage, HUD state, v15 persistence, v13 legacy compatibility and recovery |
 | shieldbearer_behavior.gd | component-backed brace telegraph, frontal source-origin mitigation, side/rear counterplay, stagger interruption and disengage cancellation |
 | scout_marking.gd | component-backed Scout telegraph, same-faction-only bounded sharing, focus-target priority, mark expiry, stagger interruption and target disengage |
 | saboteur_disruption.gd | component-backed Saboteur priority scan, A* reachability, telegraphed disruption, structure damage, tower/depot/workplace suppression and recovery, stagger interruption |
