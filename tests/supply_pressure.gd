@@ -213,8 +213,8 @@ func _initialize() -> void:
         "The depot panel state must remain accurate for the repeat wave")
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 13,
-        "Supply pressure must remain an additive save-v13 extension")
+    require(snapshot["version"] == 14,
+        "Supply pressure and Hunter state must use save schema v14")
     require(snapshot["supply"]["pressure"].size() == 1,
         "The isolated Outpost pressure timer must be persisted")
     var saved_raider := saved_raider_for(snapshot["enemies"])
@@ -287,5 +287,5 @@ func _initialize() -> void:
         "Restoring the road connection must recall the active saboteur")
 
     events.event_triggered.disconnect(warning_hook)
-    print("PASS: contested isolation warning, targeted saboteur path/attack, deterministic depot stock attrition, HUD status, v13 persistence, legacy compatibility and recovery by reconnecting roads")
+    print("PASS: contested isolation warning, targeted saboteur path/attack, deterministic depot stock attrition, HUD status, v14 persistence, v13 legacy compatibility and recovery by reconnecting roads")
     quit(0)
