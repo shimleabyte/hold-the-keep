@@ -4,7 +4,7 @@ extends SceneTree
 const BuildingVisual := preload("res://scripts/entities/building_visual_identity.gd")
 
 const EXPECTED_BUILDINGS := [
-    "keep", "house", "wall", "tower", "storage", "farm", "outpost",
+    "keep", "house", "wall", "tower", "granary", "storage", "farm", "outpost",
     "stone_wall", "forge", "lumber_camp", "quarry", "road", "bridge"
 ]
 
