@@ -402,6 +402,7 @@ func _apply_save(d: Dictionary) -> void:
             n.weapon_equipped = bool(v.get("weapon_equipped", false))
             n.armor_equipped = bool(v.get("armor_equipped", false))
             n.max_hp = n._hp_cap_for(n.job)
+            n.queue_redraw()
         n.hp = clampi(int(v["hp"]), 1, n.max_hp)
         if int(v["carry"]) > 0:
             n.receive(String(v["kind"]), int(v["carry"]))
