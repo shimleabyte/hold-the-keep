@@ -432,5 +432,35 @@
       "accent": "#c6b17b",
       "shadow": "#39382b"
     }
+  },
+  {
+    "id": "infirmary",
+    "name": "Balai Perawatan",
+    "short": "RAWAT",
+    "size": [
+      3,
+      2
+    ],
+    "cost": {
+      "wood": 34,
+      "stone": 24
+    },
+    "hp": 190,
+    "color": "#879080",
+    "locked": true,
+    "workplaces": {
+      "healer": 2
+    },
+    "work_radius": 16,
+    "repair_cost": {
+      "stone": 1
+    },
+    "visual": {
+      "material": "weathered stone and timber",
+      "feature": "infirmary_medicine_rack",
+      "primary": "#8c9884",
+      "accent": "#d3c69c",
+      "shadow": "#3c453d"
+    }
   }
 ]

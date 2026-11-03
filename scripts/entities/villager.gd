@@ -17,6 +17,7 @@ const TEXTURES := {
     "builder": preload("res://assets/sprites/villager_miner.svg"),
     "hunter": preload("res://assets/sprites/villager_hunter.svg"),
     "scout": preload("res://assets/sprites/villager_scout.svg"),
+    "healer": preload("res://assets/sprites/villager_healer.svg"),
     "soldier": preload("res://assets/sprites/villager_soldier.svg"),
 }
 
@@ -42,6 +43,8 @@ const REACH := 11.0
 const DEFAULT_WORK_RADIUS := 12.0
 const BUILDER_REPAIR_INTERVAL := 1.6
 const BUILDER_REPAIR_AMOUNT := 12
+const HEAL_INTERVAL := 3.2
+const HEAL_AMOUNT := 10
 const SCOUT_REVEAL_RADIUS := 144.0
 const SCOUT_MAX_PATH_CELLS := 64
 const SCOUT_SURVEY_SECONDS := 1.4
@@ -176,7 +179,7 @@ func set_job(j: String) -> bool:
     _scout_revealed_at_target = false
     var old_max := max_hp
     job = j
-    if job in ["builder", "hunter", "scout"] and not _claim_workplace(job):
+    if job in ["builder", "hunter", "scout", "healer"] and not _claim_workplace(job):
         job = ""
         remove_from_group("defenders")
         max_hp = _hp_cap_for("")
@@ -234,9 +237,9 @@ func _release_workplace() -> void:
 func on_workplace_lost(building) -> void:
     if workplace != building:
         return
+    _release()
     workplace = null
     workplace_job = ""
-    _release()
     _scout_target_cell = Vector2i(-1, -1)
     _scout_survey_t = 0.0
     _scout_revealed_at_target = false
@@ -271,6 +274,17 @@ func receive(kind: String, amount: int) -> void:
     carry_kind = kind
     carry += amount
     queue_redraw()
+
+
+func heal(amount: int) -> int:
+    if hp <= 0 or amount <= 0 or hp >= max_hp:
+        return 0
+    var restored := mini(amount, max_hp - hp)
+    hp += restored
+    queue_redraw()
+    modulate = Color(0.72, 1.15, 0.78)
+    create_tween().tween_property(self, "modulate", Color.WHITE, 0.35)
+    return restored
 
 
 func take_damage(amount: int) -> void:
@@ -326,8 +340,17 @@ func _physics_process(delta: float) -> void:
             _tick_idle(delta)
         State.TO_WORK:
             if target == null or not is_instance_valid(target):
-                target = null
+                _release()
                 state = State.IDLE
+                _decide_t = 0.15
+            elif job == "healer" and (String(target.job) != "soldier"
+                    or int(target.hp) <= 0 or int(target.hp) >= int(target.max_hp)
+                    or target.is_expeditioning() or target.is_recalling_expedition()
+                    or target.state in [State.HIDDEN, State.FLEEING]
+                    or not _is_in_workplace_radius(target)):
+                _release()
+                state = State.IDLE
+                _decide_t = 0.15
             elif _move_along(delta):
                 state = State.WORKING
                 _work_t = 0.0
@@ -459,8 +482,27 @@ func _tick_working(delta: float) -> void:
         anim.play("idle")
         return
     if target == null or not is_instance_valid(target):
-        target = null
+        _release()
         state = State.IDLE
+        _decide_t = 0.15
+        return
+    if job == "healer":
+        if not has_valid_workplace() or String(target.job) != "soldier" or int(target.hp) <= 0 \
+                or int(target.hp) >= int(target.max_hp) or target.is_expeditioning() \
+                or target.is_recalling_expedition() or target.state in [State.HIDDEN, State.FLEEING] \
+                or not _is_in_workplace_radius(target):
+            _release()
+            state = State.IDLE
+            _decide_t = 0.15
+            return
+        anim.face(target.position - position)
+        _work_t += delta
+        if _work_t >= HEAL_INTERVAL:
+            _work_t = 0.0
+            if target.heal(HEAL_AMOUNT) <= 0 or int(target.hp) >= int(target.max_hp):
+                _release()
+                state = State.IDLE
+                _decide_t = 0.15
         return
     if job == "builder":
         if target.has_method("is_construction_site") and target.is_construction_site():
@@ -790,6 +832,22 @@ func _find_work() -> void:
             for f in get_tree().get_nodes_in_group("farms"):
                 if f.free_slots("farmer") > 0 and _is_in_work_radius(f) and not _bad.has(f):
                     cands.append(f)
+        "healer":
+            if not has_valid_workplace():
+                _release_workplace()
+                if not _claim_workplace("healer"):
+                    return
+            for patient in get_tree().get_nodes_in_group("villagers"):
+                if patient == self or not is_instance_valid(patient) or String(patient.job) != "soldier":
+                    continue
+                if int(patient.hp) <= 0 or int(patient.hp) >= int(patient.max_hp):
+                    continue
+                if patient.is_expeditioning() or patient.is_recalling_expedition() \
+                        or patient.state in [State.HIDDEN, State.FLEEING]:
+                    continue
+                if not _is_in_workplace_radius(patient) or workplace.is_heal_target_reserved(patient, self):
+                    continue
+                cands.append(patient)
         "builder":
             if not has_valid_workplace():
                 _release_workplace()
@@ -814,6 +872,11 @@ func _find_work() -> void:
     cands.sort_custom(func(a, b) -> bool:
         var a_is_site: bool = a.has_method("is_construction_site") and a.is_construction_site()
         var b_is_site: bool = b.has_method("is_construction_site") and b.is_construction_site()
+        if job == "healer":
+            var a_ratio := float(a.hp) / float(maxi(1, a.max_hp))
+            var b_ratio := float(b.hp) / float(maxi(1, b.max_hp))
+            if not is_equal_approx(a_ratio, b_ratio):
+                return a_ratio < b_ratio
         if a_is_site != b_is_site:
             return a_is_site
         if a_is_site and b_is_site and int(a.queue_order) != int(b.queue_order):
@@ -832,6 +895,9 @@ func _find_work() -> void:
                 if not n.claim(self):
                     continue
             elif not n.claim_repairer(self):
+                continue
+        elif job == "healer":
+            if not workplace.claim_heal_target(self, n):
                 continue
         elif not _claim(n):
             continue
@@ -984,7 +1050,9 @@ func _claim(n) -> bool:
 
 
 func _release() -> void:
-    if target != null and is_instance_valid(target):
+    if job == "healer":
+        _release_heal_target()
+    elif target != null and is_instance_valid(target):
         if target.has_method("release_repairer") and job == "builder":
             target.release_repairer(self)
         elif target.has_method("release"):
@@ -994,6 +1062,11 @@ func _release() -> void:
     target = null
     _work_t = 0.0
     _hit_done = false
+
+
+func _release_heal_target() -> void:
+    if workplace != null and is_instance_valid(workplace) and workplace.has_method("release_heal_target"):
+        workplace.release_heal_target(self)
 
 
 func _has_specialized_workplace(job_name: String) -> bool:
