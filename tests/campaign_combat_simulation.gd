@@ -76,9 +76,13 @@ func _find_keep():
 
 
 func _run_case(case_data: Dictionary) -> Dictionary:
-    WorldConfig.apply_profile("frontier")
-    GameClock.day = int(case_data["day"])
-    Tech.reset()
+    var world_config = root.get_node("WorldConfig")
+    var game_clock = root.get_node("GameClock")
+    var tech = root.get_node("Tech")
+    var data_db = root.get_node("DataDB")
+    world_config.apply_profile("frontier")
+    game_clock.day = int(case_data["day"])
+    tech.reset()
     seed(int(case_data["day"]) * 7919 + int(case_data["level"]) * 104729)
 
     var main = load("res://scenes/main.tscn").instantiate()
@@ -86,9 +90,9 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     current_scene = main
     await ticks(10)
 
-    GameClock.set_process(false)
-    GameClock.set_physics_process(false)
-    Tech.set_process(false)
+    game_clock.set_process(false)
+    game_clock.set_physics_process(false)
+    tech.set_process(false)
     main.spawner.set_process(false)
     main.spawner.set_physics_process(false)
     main.village.set_process(false)
@@ -154,9 +158,9 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     ]
     for index in range(roster.size()):
         var enemy_id := String(roster[index])
-        assert(DataDB.enemies.has(enemy_id), "Missing combat simulation enemy data: " + enemy_id)
+        assert(data_db.enemies.has(enemy_id), "Missing combat simulation enemy data: " + enemy_id)
         var enemy = ENEMY_SCRIPT.new()
-        enemy.setup(DataDB.enemies[enemy_id], main.world, main.flow, player, String(case_data["faction"]))
+        enemy.setup(data_db.enemies[enemy_id], main.world, main.flow, player, String(case_data["faction"]))
         enemy.position = player.global_position + offsets[index % offsets.size()]
         main.world.entities.add_child(enemy)
         enemy.set_process(false)
@@ -259,8 +263,9 @@ func _run_case(case_data: Dictionary) -> Dictionary:
 
 
 func _run() -> void:
-    Events.build_feedback.connect(_on_build_feedback)
-    Events.villager_died.connect(_on_villager_died)
+    var events = root.get_node("Events")
+    events.build_feedback.connect(_on_build_feedback)
+    events.villager_died.connect(_on_villager_died)
 
     var reports: Array[Dictionary] = []
     for case_data in CASES:
@@ -270,8 +275,8 @@ func _run() -> void:
         reports.append(report)
         print("COMBAT_CASE " + JSON.stringify(report))
 
-    Events.build_feedback.disconnect(_on_build_feedback)
-    Events.villager_died.disconnect(_on_villager_died)
+    events.build_feedback.disconnect(_on_build_feedback)
+    events.villager_died.disconnect(_on_villager_died)
     print("COMBAT_SIMULATION_REPORT " + JSON.stringify({
         "profile": "frontier",
         "step_seconds": STEP_SECONDS,
