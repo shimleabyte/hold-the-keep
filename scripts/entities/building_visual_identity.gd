@@ -18,7 +18,7 @@ static func signature(building_id: String, visual: Dictionary) -> Array[String]:
 
 
 static func enabled(profile_id: String, visual: Dictionary) -> bool:
-    return WorldConfig.is_frontier_profile(profile_id) and not signature("", visual).is_empty()
+    return ["frontier", "frontier_expedition"].has(profile_id) and not signature("", visual).is_empty()
 
 
 static func damage_stage(hp: int, max_hp: int) -> int:
