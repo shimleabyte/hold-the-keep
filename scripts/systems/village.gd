@@ -146,7 +146,7 @@ func assign_jobs() -> void:
 
     for job_name in JOBS:
         var members: Array = vs.filter(func(v) -> bool: return v.job == job_name)
-        while members.size() > int(quota[job_name]):
+        while members.size() > int(quota.get(job_name, 0)):
             members.pop_back().set_job("")
 
     for villager in vs:
