@@ -94,6 +94,11 @@ func _run() -> void:
         "Infirmary must use its own player-facing building definition")
     require(tech.building_unlocked("infirmary") == false,
         "Infirmary must remain locked before Field Medicine is researched")
+    tech.import_state({"done": ["masonry", "leather"]})
+    require(tech.era == 2, "Masonry must unlock the Era II research tier")
+    require(tech.start("field_medicine"), "Field Medicine must be researchable after Leather Armor")
+    tech._process(35.1)
+    require(tech.building_unlocked("infirmary"), "Completing Field Medicine must unlock Infirmary placement")
 
     var patient_a = main.village.spawn_villager(keep.position + Vector2(-8, 22))
     var patient_b = main.village.spawn_villager(keep.position + Vector2(8, 22))
