@@ -143,8 +143,8 @@ func _run() -> void:
 
     main.village.quota["hunter"] = 2
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 14,
-        "Hunter occupation and wildlife state must use additive save version 14")
+    require(snapshot["version"] == 15,
+        "Hunter occupation and wildlife state must use additive save version 15")
     require(save_system._valid_save(snapshot),
         "A live Hunting Lodge and Hunter snapshot must validate")
     var has_hunter := false
@@ -160,7 +160,12 @@ func _run() -> void:
     legacy_v13["version"] = 13
     legacy_v13["quota"].erase("hunter")
     legacy_v13["job_priority"].erase("hunter")
+    legacy_v13["quota"].erase("scout")
+    legacy_v13["job_priority"].erase("scout")
     for saved_villager in legacy_v13["villagers"]:
+        if String(saved_villager.get("occupation", "")) == "scout":
+            saved_villager["occupation"] = ""
+            saved_villager["job"] = ""
         if String(saved_villager.get("occupation", "")) == "hunter":
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
@@ -172,8 +177,11 @@ func _run() -> void:
     for index in range(legacy_v13["buildings"].size() - 1, -1, -1):
         if String(legacy_v13["buildings"][index].get("id", "")) == "hunting_lodge":
             legacy_v13["buildings"].remove_at(index)
+    for index in range(legacy_v13["buildings"].size() - 1, -1, -1):
+        if String(legacy_v13["buildings"][index].get("id", "")) == "scout_post":
+            legacy_v13["buildings"].remove_at(index)
     require(save_system._valid_save(legacy_v13),
-        "Existing v13 saves must remain valid after the v14 Hunter migration")
+        "Existing v13 saves must remain valid after the v15 Scout migration preserving Hunter")
 
     lodge.demolish()
     main.village.assign_jobs() # mirror the next one-second workplace reconciliation pass
@@ -183,5 +191,5 @@ func _run() -> void:
     require(hunter_a.job.is_empty() and hunter_b.job.is_empty(),
         "Hunters must return to unassigned status when their workplace is removed")
 
-    print("PASS: Hunter assignment, Lodge capacity/radius, wildlife reservation/yield, food delivery, v14 save migration and teardown")
+    print("PASS: Hunter assignment, Lodge capacity/radius, wildlife reservation/yield, food delivery, v15 save migration and teardown")
     quit(0)
