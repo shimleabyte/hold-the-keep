@@ -311,7 +311,7 @@ func _run() -> void:
 
     var frontier_food_before_save: int = granary.stockpile_amount("food")
     var frontier_snapshot: Dictionary = save_system.collect(frontier)
-    require(frontier_snapshot["version"] == 13 and save_system._valid_save(frontier_snapshot),
+    require(frontier_snapshot["version"] == 14 and save_system._valid_save(frontier_snapshot),
         "Frontier Granary stockpile and isolated-depot pressure must pass v14 validation")
     var invalid_shipment := frontier_snapshot.duplicate(true)
     invalid_shipment["supply"]["orders"].append({
@@ -333,7 +333,7 @@ func _run() -> void:
     require(loaded_granary != null and loaded_granary.stockpile_amount("food") == frontier_food_before_save,
         "Frontier reload must preserve Granary food without duplication or loss")
     require(restored_frontier.supply._pressure_records.has(pressure_key),
-        "Save v13 must restore isolated Granary pressure state")
+        "Save v14 must restore isolated Granary pressure state")
 
     print("PASS: Classic food reserve/upkeep, Frontier food-only depot transfers/shipments/raids and v13 migration compatibility")
     quit(0)
