@@ -266,7 +266,7 @@ func export_state() -> Dictionary:
             "path_index": int(state["path_index"]), "saw_night": bool(state["saw_night"])
         })
     return {
-        "profile":"frontier", "objectives":records,
+        "profile":WorldConfig.profile_id, "objectives":records,
         "final_boss_defeated":final_boss_defeated, "unlocked_act":unlocked_act,
         "camps": faction_camps.export_state() if is_instance_valid(faction_camps) else {"records":[]}
     }
