@@ -1,6 +1,6 @@
 # Phase 09 — Balance, Performance and Release Hardening
 
-**Status:** Phase 09.3 late-act save/reload coverage is merged through PR #57 (`a1ccebe`); workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release export. Save schema remains v13. Target-hardware profiling, campaign balance simulations/human playtests, native Windows runtime and clean-machine release acceptance remain open.
+**Status:** Phase 09.2 now has deterministic scripted combat-budget probes for Frontier Act I–IV and the day-20 King assault (`tests/campaign_combat_simulation.gd`). The report records Keep damage, population loss, player downs, surviving enemies and simulated time using actual damage/cooldown transactions. It does not simulate full waves, autonomous AI/pathfinding or replace human playtesting. Phase 09.3 late-act save/reload coverage is merged through PR #57 (`a1ccebe`); workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release export. Save schema remains v13. Target-hardware profiling, human playtests, native Windows runtime and clean-machine release acceptance remain open.
 **Mainline:** `main` (PR #57 merged); continue with measured balance and manual release-acceptance gates.
 **Save schema:** v13 on `main`; PR #57 adds regression coverage only and does not change runtime save data.
 **Engine targets:** Godot 4.3 and 4.7.
@@ -22,9 +22,9 @@ Make the expanded 128×128 Frontier campaign predictable under load and safe to 
 ### 09.2 — Bounded stress and tactical balance
 - [x] Add a CI stress scenario that instantiates a 128×128 world, all four factions, mixed faction rosters, a ranged projectile, 48 villagers and the 500-particle ceiling.
 - [x] Add a deterministic Classic/Frontier campaign matrix for stage transitions, day-by-day wave budgets, act-specific faction rosters and final-boss timing.
-- [ ] Add representative campaign balance cases for the ends of all four Frontier acts and the final day-20 encounter.
+- [x] Add scripted representative campaign combat-budget cases for the ends of all four Frontier acts and the final day-20 King assault; see `tests/campaign_combat_simulation.gd`.
 - [x] Check that Classic remains a 15-day campaign with its original rules (15-day / 3-stage assertions in the campaign matrix).
-- [ ] Record faction-specific failure modes, Keep damage, surviving population, remaining enemy count and elapsed simulated time.
+- [x] Emit a per-faction JSON diagnostic with failure modes, Keep damage, surviving population, remaining enemy count and elapsed simulated time. The curated roster/target schedule is a bounded damage-budget probe, not a full-wave AI balance verdict.
 - [ ] Perform human playtests across all four acts; automated simulations are not a substitute for pathing, readability and pacing review.
 
 ### 09.3 — Save and recovery hardening
