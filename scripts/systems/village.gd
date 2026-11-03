@@ -9,7 +9,7 @@ const SPAWN_FOOD := 8
 const UPKEEP := 2  # makanan per penduduk per hari
 const MAX_QUOTA := 20
 const JOBS := ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "soldier"]
-const KEY_TO_JOB := {KEY_T: "woodcutter", KEY_M: "miner", KEY_K: "farmer", KEY_B: "builder", KEY_J: "hunter", KEY_S: "scout", KEY_R: "soldier"}
+const KEY_TO_JOB := {KEY_T: "woodcutter", KEY_M: "miner", KEY_K: "farmer", KEY_B: "builder", KEY_J: "hunter", KEY_U: "scout", KEY_R: "soldier"}
 
 var world
 var nav
