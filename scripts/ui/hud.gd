@@ -782,7 +782,7 @@ func _refresh_cost_source_controls(depots: Array) -> void:
                 break
     if selected_index >= 0:
         _cost_source_option.select(selected_index)
-    _cost_source_option.disabled = WorldConfig.profile_id != "frontier" or depots.size() < 2
+    _cost_source_option.disabled = WorldConfig.profile_id != "frontier" or _cost_source_option.item_count < 2
 
 
 func _on_cost_source_selected(index: int) -> void:
@@ -802,6 +802,7 @@ func _on_cost_source_selected(index: int) -> void:
 
 
 func _on_supply_state_changed() -> void:
+    _refresh_resources()
     _refresh_slots()
     _refresh_outpost_panel()
 
@@ -813,7 +814,7 @@ func _refresh_shipment_controls() -> void:
     var previous_destination := _depot_option_cell(_shipment_destination)
     var endpoints: Array = []
     for depot in get_tree().get_nodes_in_group("depots"):
-        if is_instance_valid(depot) and ["keep", "storage", "outpost"].has(String(depot.id)):
+        if is_instance_valid(depot) and ["keep", "storage", "outpost", "granary"].has(String(depot.id)):
             endpoints.append(depot)
     endpoints.sort_custom(func(a, b) -> bool:
         if String(a.id) == "keep" or String(b.id) == "keep":
