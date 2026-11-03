@@ -566,7 +566,7 @@ func _tick_working(delta: float) -> void:
                 _decide_t = 4.0
                 Events.build_feedback.emit("Bahan tempa tidak cukup")
                 return
-            var equipped := target.equip_weapon() if recipe == "weapon" else target.equip_armor()
+            var equipped: bool = target.equip_weapon() if recipe == "weapon" else target.equip_armor()
             if equipped:
                 Events.build_feedback.emit("Senjata besi selesai: damage prajurit +20%" if recipe == "weapon"
                     else "Zirah besi selesai: HP maksimum prajurit +20%")
