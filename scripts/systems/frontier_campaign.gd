@@ -68,7 +68,7 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
 func _find_site_cell(region: String, used: Array[Vector2i]) -> Vector2i:
     var reachable: Dictionary = main.nav.reachable_cells(main.nav.cell_of(main.player.global_position))
     var keep_cell := WorldConfig.starting_keep_cell()
-    var expedition_landing := main.world.expedition_outer_landing_cell(region) if WorldConfig.is_frontier_expedition() else Vector2i(-1, -1)
+    var expedition_landing: Vector2i = main.world.expedition_outer_landing_cell(region) if WorldConfig.is_frontier_expedition() else Vector2i(-1, -1)
     var best := Vector2i(-1, -1)
     var best_score := -INF
     for y in WorldConfig.map_size:
