@@ -128,6 +128,17 @@ func _initialize() -> void:
         "Save export must turn a moving courier into a resumable blocked shipment")
     var legacy_v12 := snapshot.duplicate(true)
     legacy_v12["version"] = 12
+    legacy_v12["quota"].erase("hunter")
+    legacy_v12["job_priority"].erase("hunter")
+    for saved_villager in legacy_v12["villagers"]:
+        if String(saved_villager.get("occupation", "")) == "hunter":
+            saved_villager["occupation"] = ""
+            saved_villager["job"] = ""
+    var legacy_resources: Array = []
+    for resource in legacy_v12["resources"]:
+        if String(resource.get("kind", "")) != "food":
+            legacy_resources.append(resource)
+    legacy_v12["resources"] = legacy_resources
     legacy_v12.erase("supply")
     require(save_system._valid_save(legacy_v12),
         "Legacy v12 saves without shipment records must remain loadable")
