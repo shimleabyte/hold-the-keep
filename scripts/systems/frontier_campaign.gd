@@ -73,7 +73,12 @@ func _find_site_cell(region: String, used: Array[Vector2i]) -> Vector2i:
     for y in WorldConfig.map_size:
         for x in WorldConfig.map_size:
             var cell := Vector2i(x, y)
-            if String(main.world.region_id(cell)) != region or not reachable.has(cell):
+            if String(main.world.region_id(cell)) != region:
+                continue
+            if WorldConfig.is_frontier_expedition():
+                if not main.world.is_expedition_outer_cell(cell, region):
+                    continue
+            elif not reachable.has(cell):
                 continue
             if not main.nav.is_walkable(cell) or main.world.occupied.has(cell):
                 continue
