@@ -97,6 +97,8 @@ func check(id: String, c: Vector2i) -> String:
     for y in size.y:
         for x in size.x:
             var cell := c + Vector2i(x, y)
+            if world.has_method("is_expedition_reserved_cell") and world.is_expedition_reserved_cell(cell):
+                return "Jalur survei harus tetap kosong"
             if not world.is_buildable(cell) and not (id == "bridge" and world.is_bridgeable(cell)):
                 return "Tidak bisa dibangun di sini"
             if world.occupied.has(cell):
