@@ -177,7 +177,7 @@ func _enemy_keep_cells(anchor: Vector2i) -> Array[Vector2i]:
 
 func _find_enemy_keep_cell(target_region := "") -> Vector2i:
     nav.rebuild()
-    if WorldConfig.profile_id == "frontier":
+    if WorldConfig.is_frontier_profile():
         return _find_frontier_enemy_keep_cell(target_region)
     var candidates: Array[Dictionary] = []
     var keep_cell: Vector2i = world.starting_keep_cell()
