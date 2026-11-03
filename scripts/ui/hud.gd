@@ -33,6 +33,7 @@ const ICONS := {
     "bridge": preload("res://assets/sprites/icon_bridge.svg"),
     "lumber_camp": preload("res://assets/sprites/icon_lumber_camp.svg"),
     "quarry": preload("res://assets/sprites/icon_quarry.svg"),
+    "granary": preload("res://assets/sprites/icon_granary.svg"),
 }
 const JOBS := ["woodcutter", "miner", "farmer", "builder", "soldier"]
 const JOB_ICONS := {"woodcutter": "axe", "miner": "pick", "farmer": "wheat", "builder": "hammer", "soldier": "sword"}
@@ -516,7 +517,7 @@ func _build_outpost_panel() -> void:
 
     _outpost_panel = _panel(Vector2.ZERO, Vector2(356, 238))
     _outpost_panel.visible = false
-    var title := _label(_outpost_panel, "LOGISTIK & PERTAHANAN POS", Vector2(10, 7), GOLD)
+    var title := _label(_outpost_panel, "LOGISTIK & PENYIMPANAN", Vector2(10, 7), GOLD)
     title.add_theme_font_size_override("font_size", 9)
 
     var close := HudChip.new()
@@ -629,18 +630,19 @@ func _refresh_outpost_panel() -> void:
 
     var depots: Array = []
     for depot in get_tree().get_nodes_in_group("depots"):
-        if is_instance_valid(depot) and ["outpost", "storage"].has(String(depot.id)):
+        if is_instance_valid(depot) and ["outpost", "storage", "granary"].has(String(depot.id)):
             depots.append(depot)
     depots.sort_custom(func(a, b) -> bool:
+        var priority := {"outpost": 0, "storage": 1, "granary": 2}
         if String(a.id) != String(b.id):
-            return String(a.id) == "outpost"
+            return int(priority.get(String(a.id), 3)) < int(priority.get(String(b.id), 3))
         if a.cell.y != b.cell.y:
             return a.cell.y < b.cell.y
         return a.cell.x < b.cell.x
     )
 
     if depots.is_empty():
-        var empty := _label(_outpost_list, "Belum ada Outpost atau Storage.", Vector2.ZERO, Color("#c9b99d"))
+        var empty := _label(_outpost_list, "Belum ada Outpost, Storage, atau Lumbung.", Vector2.ZERO, Color("#c9b99d"))
         empty.add_theme_font_size_override("font_size", 8)
     else:
         for depot in depots:
@@ -660,6 +662,8 @@ func _refresh_outpost_panel() -> void:
             heading.add_theme_color_override("font_color", Color("#f0d39a"))
             if String(depot.id) == "outpost":
                 heading.text = "POS %d,%d  ·  PENJAGA %d/%d" % [depot.cell.x, depot.cell.y, depot.guard_count(), depot.guard_capacity]
+            elif String(depot.id) == "granary":
+                heading.text = "LUMBUNG %d,%d" % [depot.cell.x, depot.cell.y]
             else:
                 heading.text = "GUDANG %d,%d" % [depot.cell.x, depot.cell.y]
             var main_node = get_tree().get_first_node_in_group("main")
@@ -677,11 +681,14 @@ func _refresh_outpost_panel() -> void:
             stock.add_theme_font_override("font", _font)
             stock.add_theme_font_size_override("font_size", 6)
             stock.add_theme_color_override("font_color", Color("#c4c0b5"))
-            stock.text = "KAYU %d  BATU %d  PANGAN %d  BESI %d  / %d" % [
-                depot.stockpile_amount("wood"), depot.stockpile_amount("stone"),
-                depot.stockpile_amount("food"), depot.stockpile_amount("iron"),
-                depot.stockpile_capacity
-            ]
+            if String(depot.id) == "granary":
+                stock.text = "PANGAN %d / %d" % [depot.stockpile_amount("food"), depot.stockpile_capacity]
+            else:
+                stock.text = "KAYU %d  BATU %d  PANGAN %d  BESI %d  / %d" % [
+                    depot.stockpile_amount("wood"), depot.stockpile_amount("stone"),
+                    depot.stockpile_amount("food"), depot.stockpile_amount("iron"),
+                    depot.stockpile_capacity
+                ]
             details.add_child(stock)
     
             if String(depot.id) == "outpost":
@@ -748,6 +755,8 @@ func _refresh_cost_source_controls(depots: Array) -> void:
     var keep_index := -1
     _cost_source_option.clear()
     for depot in depots:
+        if not ["keep", "storage", "outpost"].has(String(depot.id)):
+            continue
         var cell: Vector2i = depot.cell
         var connected: bool = main_node.supply.is_depot_connected(depot)
         var label := "KEEP" if String(depot.id) == "keep" else (
@@ -1373,7 +1382,8 @@ func _on_village_changed(pop: int, cap: int, quota: Dictionary, assigned: Dictio
 func _refresh_resources() -> void:
     _wood.text = str(Inventory.get_amount("wood"))
     _stone.text = str(Inventory.get_amount("stone"))
-    _food.text = str(Inventory.get_amount("food"))
+    var village = get_tree().get_first_node_in_group("village")
+    _food.text = str(village.food_available() if village != null else Inventory.get_amount("food"))
     _iron.text = str(Inventory.get_amount("iron"))
     var show_iron := Tech.has_flag("iron_mining") or Inventory.get_amount("iron") > 0
     _iron.visible = show_iron
