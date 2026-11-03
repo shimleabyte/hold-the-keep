@@ -147,6 +147,8 @@ func _run() -> void:
     var manager = main.frontier_campaign.faction_camps
     require(manager != null and is_instance_valid(manager) and manager.camps.size() == 4,
         "Frontier must provide one live camp manager for each faction")
+    require(manager._raid_selector != null and manager._raid_selector.main == main,
+        "The manager must configure its isolated raid selector against the active world")
     manager.set_process(false)
 
     var keep = null

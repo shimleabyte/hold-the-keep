@@ -50,6 +50,8 @@ func _run() -> void:
     manager.set_process(false)
     require(manager.camps.size() == 4,
         "Frontier must place exactly one deterministic camp for each faction")
+    require(manager._patrol_planner != null and manager._patrol_planner.main == main,
+        "The manager must configure its isolated patrol planner against the active world")
 
     var reachable: Dictionary = main.nav.reachable_cells(main.nav.cell_of(main.player.global_position))
     var faction_ids: Array = faction_registry.factions.keys()
