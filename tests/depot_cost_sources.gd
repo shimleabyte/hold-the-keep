@@ -118,8 +118,8 @@ func _initialize() -> void:
     main.supply._depot_connections[first.get_instance_id()] = true
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 13,
-        "The cost-source preference must remain an additive v13 supply field")
+    require(snapshot["version"] == 14,
+        "The cost-source preference must persist alongside the v14 supply schema")
     require(snapshot["supply"]["cost_source"] == {"cx": first_cell.x, "cy": first_cell.y},
         "The selected cost depot must persist in the supply save state")
     require(save_system._valid_save(snapshot),
@@ -148,5 +148,5 @@ func _initialize() -> void:
     require(restored_main.supply.get_cost_source_cell() == first_cell,
         "Save/load must restore the explicitly selected cost source")
 
-    print("PASS: explicit Keep/Storage/Outpost payment source, atomic local spending, no cross-depot pooling, disconnection rejection, UI selection and v13 persistence")
+    print("PASS: explicit Keep/Storage/Outpost payment source, atomic local spending, no cross-depot pooling, disconnection rejection, UI selection and v14 persistence")
     quit(0)
