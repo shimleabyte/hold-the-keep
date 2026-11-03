@@ -192,15 +192,13 @@ func collect(main: Node) -> Dictionary:
         "tech": Tech.export_state(),
         "supply": main.supply.export_state(),
         "events": main.events.export_state() if main.events != null else {"pending_event_id": "", "scheduled_consequences": []},
-        "frontier_campaign": main.frontier_campaign.efunc _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
+        "frontier_campaign": main.frontier_campaign.export_state() if main.frontier_campaign != null else {"profile": WorldConfig.profile_id, "objectives": [], "final_boss_defeated": false, "unlocked_act": 1},
+    }
+
+
+func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
     return _validator.is_valid_save(data, enforce_world_compatibility)
 
-
-imer < 0.0 or raid_timer > 240.0:
-                    return false
-            if int(camp_record["spawn_index"]) < 0:
-                return false
-    return true
 
 func _read_saved_data(path: String, enforce_world_compatibility := true) -> Variant:
     if not FileAccess.file_exists(path):
