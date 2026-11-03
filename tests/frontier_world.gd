@@ -197,7 +197,7 @@ func _initialize() -> void:
                 "Resource nodes must not clutter the protected starting clearing")
 
     var campaign_menu := get_first_node_in_group("pause_menu")
-    assert(campaign_menu != null and campaign_menu._campaign_profile.get_item_count() == 2,
+    assert(campaign_menu != null and campaign_menu._campaign_profile.get_item_count() == 3,
         "The pause menu must expose Classic and Frontier as separate new-campaign choices")
     assert(campaign_menu._campaign_profile.selected == 1,
         "New-campaign selector must reflect the currently active Frontier profile")
