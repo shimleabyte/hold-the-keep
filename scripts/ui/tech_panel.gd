@@ -159,10 +159,13 @@ func _toggle() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-    if event is InputEventKey and event.pressed and not event.echo:
-        if event.keycode == KEY_Y or (event.keycode == KEY_ESCAPE and _root.visible):
-            _toggle()
-            get_viewport().set_input_as_handled()
+    if not (event is InputEventKey and event.pressed and not event.echo):
+        return
+    if Input.is_action_just_pressed("toggle_technology") or (
+        Input.is_action_just_pressed("game_cancel") and _root.visible
+    ):
+        _toggle()
+        get_viewport().set_input_as_handled()
 
 
 func _process(delta: float) -> void:

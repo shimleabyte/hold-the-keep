@@ -1,6 +1,6 @@
 extends Node
 ## Population, labor occupations, military specializations and workplace assignment.
-## T/M/K/B/J/U/I/R change job quotas; Alt + job key raises priority, Alt + Shift + key lowers it.
+## Named InputMap job actions change quotas; Alt raises priority and Alt + Shift lowers it.
 
 const VILLAGER_SCRIPT := preload("res://scripts/entities/villager.gd")
 
@@ -9,7 +9,17 @@ const SPAWN_FOOD := 8
 const UPKEEP := 2  # makanan per penduduk per hari
 const MAX_QUOTA := 20
 const JOBS := ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "healer", "blacksmith", "soldier"]
-const KEY_TO_JOB := {KEY_T: "woodcutter", KEY_M: "miner", KEY_K: "farmer", KEY_B: "builder", KEY_J: "hunter", KEY_U: "scout", KEY_I: "healer", KEY_R: "soldier"}
+const JOB_INPUT_ACTIONS := {
+    "woodcutter": "job_woodcutter",
+    "miner": "job_miner",
+    "farmer": "job_farmer",
+    "builder": "job_builder",
+    "hunter": "job_hunter",
+    "scout": "job_scout",
+    "healer": "job_healer",
+    "blacksmith": "job_blacksmith",
+    "soldier": "job_soldier"
+}
 
 var world
 var nav
@@ -296,15 +306,24 @@ func _on_campaign_objective_completed(_stronghold_id: String, _region_id: String
 
 
 func _unhandled_input(event: InputEvent) -> void:
-    if event is InputEventKey and event.pressed and not event.echo:
-        if event.keycode == KEY_G:
-            command_expedition()
-            get_viewport().set_input_as_handled()
-        elif KEY_TO_JOB.has(event.keycode):
-            if event.alt_pressed:
-                adjust_job_priority(KEY_TO_JOB[event.keycode], 1 if event.shift_pressed else -1)
-            else:
-                adjust_quota(KEY_TO_JOB[event.keycode], -1 if event.shift_pressed else 1)
+    if not (event is InputEventKey and event.pressed and not event.echo):
+        return
+    if Input.is_action_just_pressed("command_expedition"):
+        command_expedition()
+        get_viewport().set_input_as_handled()
+        return
+    var alt_held := Input.is_action_pressed("modifier_alt")
+    var shift_held := Input.is_action_pressed("modifier_shift")
+    for job in JOBS:
+        var action := String(JOB_INPUT_ACTIONS.get(job, ""))
+        if action.is_empty() or not Input.is_action_just_pressed(action):
+            continue
+        if alt_held:
+            adjust_job_priority(job, -1 if shift_held else 1)
+        else:
+            adjust_quota(job, -1 if shift_held else 1)
+        get_viewport().set_input_as_handled()
+        return
 
 
 ## Dipanggil tiap hari baru: makan. Kekurangan makanan = satu penduduk pergi.
