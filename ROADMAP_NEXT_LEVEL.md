@@ -100,7 +100,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate — passed:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable stronghold approach, valid map bounds, viewport fit and 128×128 fog/index round-trip.
 
 ### Phase 01.2 — Progressive Frontier Expedition
-**Status:** Implemented on `feat/frontier-expedition-192x192`, PR #63. The latest implementation and regression commit is queued in workflow #41579040554; the full Godot 4.3/4.7 assertion, stress/performance and export matrix is pending. Not merged into `main`.
+**Status:** Merged into `main` through PR #63 (`a594069`). PR workflow [#41580977570](https://github.com/shimleabyte/hold-the-keep/actions/runs/41580977570) passed 88/88 jobs: Godot 4.3/4.7 import/parse, 42 assertion suites per engine, Frontier/Expedition performance diagnostics, and Windows/Linux release export. Mainline push workflow #41581523207 is pending at the time of this update.
 
 - [x] Add an independent 192×192 profile without changing Classic 64×64 or standard Frontier 128×128.
 - [x] Keep a 128×128 walkable heartland at the start; generate four sealed outer marches around it.
@@ -109,9 +109,9 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Reuse permanent fog-of-war; reveal the strategic-map survey marker only after its approach is normally explored.
 - [x] Persist opened marches through the existing discovery objective records; keep save schema v13 unchanged.
 - [x] Add regression coverage and a separate Frontier Expedition performance diagnostic.
-- [ ] Pass the complete Godot 4.3/4.7 assertion matrix, Frontier Expedition diagnostic, and Windows/Linux exports.
+- [x] Pass the complete Godot 4.3/4.7 assertion matrix, Frontier Expedition diagnostic, and Windows/Linux exports (PR workflow #41580977570, 88/88).
 
-**Acceptance gate — pending:** deterministic 192×192 generation; all four inner approaches and outer landings walkable; closed gates cannot be bridged or pathfinded through; each gate opens only at its survey threshold; fog, map bounds and saved unlocks survive reload; existing Classic/Frontier regressions pass.
+**Acceptance gate — automated pass:** deterministic 192×192 generation; all four inner approaches and outer landings walkable; closed gates cannot be bridged or pathfinded through; each gate opens only at its survey threshold; fog, map bounds and saved unlocks validate; Classic/Frontier/Expedition assertion suites pass on Godot 4.3/4.7. Manual playthrough, save/load through every march, and real target-hardware profiling remain open.
 
 ### Phase 02 — Territory, roads and supply
 **Status:** Regional control/road/connected-depot foundation merged into `main`. PR #31 adds bounded local stockpiles and automatic Keep-bound shipments under save v12. PR #32 is merged and adds read-only Storage/Outpost stock inspection and local Outpost garrisons (two slots, assignment UI, 128-pixel defense leash, lifecycle/save integration); its 48/48 Godot CI gate passed. Local Outpost vision and observed-only enemy markers already exist on `main`. PR #33 merged player-directed physical orders, escrowed cargo, route recovery and save v13; Godot 4.3/4.7 CI passed 50/50. PR #34 merged direct source-depot spending for construction/research/repair. Payments are isolated to one selected connected depot, never pooled, and the optional source preference is persisted additively in save v13. Workflow #41325205416 passed 52/52 jobs. Phase 02.5 supply pressure is implemented on `feat/phase-02-supply-pressure`; warning/raid/attrition and persistence regression is added, PR/CI pending.
