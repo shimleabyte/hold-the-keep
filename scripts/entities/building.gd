@@ -308,7 +308,7 @@ func claim_heal_target(healer, patient) -> bool:
 func is_heal_target_reserved(patient, except_healer = null) -> bool:
     if not is_instance_valid(patient):
         return false
-    var patient_id := patient.get_instance_id()
+    var patient_id: int = patient.get_instance_id()
     var current = _healer_targets.get(patient_id, null)
     if current == null or not is_instance_valid(current):
         _healer_targets.erase(patient_id)
