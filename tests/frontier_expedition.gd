@@ -111,6 +111,13 @@ func _initialize() -> void:
             and not main.world.is_bridgeable(gate_cell)
             and not main.nav.is_walkable(gate_cell),
             "Roads, bridges and pathfinding must not bypass the sealed crossing: " + region)
+        var inward := Vector2i(0, 1) if gate_cell.y < world_config.map_size / 2 else Vector2i(0, -1)
+        var approach_cell := gate_cell + inward
+        var landing_cell := gate_cell - inward
+        assert(main.world.is_expedition_reserved_cell(approach_cell)
+            and main.world.is_expedition_reserved_cell(landing_cell)
+            and not main.world.is_expedition_outer_cell(landing_cell, region),
+            "Inner approach and outer landing must be reserved for traversal: " + region)
 
     var hud = get_first_node_in_group("hud")
     assert(hud != null, "Expedition must create the normal HUD")
@@ -153,6 +160,8 @@ func _initialize() -> void:
             and main.world.is_buildable(gate_cell)
             and main.nav.is_walkable(gate_cell),
             "An opened crossing must restore terrain collision and navigation: " + region)
+        assert(main.world.is_expedition_reserved_cell(landing_cell),
+            "The opened crossing must retain a clear outer landing: " + region)
         var outward := Vector2i(0, -1) if gate_cell.y < world_config.map_size / 2 else Vector2i(0, 1)
         var landing_cell := gate_cell + outward
         assert(main.world.is_buildable(landing_cell) and main.nav.is_walkable(landing_cell),
