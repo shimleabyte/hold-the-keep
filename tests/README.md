@@ -77,7 +77,7 @@ Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan k
 
 ## Skrip yang dijalankan otomatis di CI
 
-Suite assertion yang dijalankan pada Godot 4.3 dan 4.7 masing-masing mencakup 40 skrip:
+Suite assertion yang dijalankan pada Godot 4.3 dan 4.7 masing-masing mencakup 41 skrip:
 
 `animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `production_worksites`, `construction_sites`, `watchtower_vision`, `granary_food_storage`, `faction_registry`, `faction_visual_identity`, `building_visual_identity`, `combat_visual_feedback`, `audio_identity`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `campaign_combat_simulation`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, `regional_control_roads`, `local_depot_stockpiles`, `outpost_garrisons`, `physical_shipments`, `depot_cost_sources`, `supply_pressure`, `shieldbearer_behavior`, `scout_marking`, `saboteur_disruption`, `siege_engine_behavior`, `beast_rider_charge`, `faction_camps_patrols`, `faction_raids`, serta `faction_warfare_stress`.
 
