@@ -124,7 +124,7 @@ func _run() -> void:
     classic.village._on_day_changed(1)
     require(classic.village.population() == population_before,
         "Daily upkeep must be able to feed Classic villagers from the Granary")
-    require(granary.stockpile_amount("food") == 6 - population_before * classic.village.UPKEEP,
+    require(granary.stockpile_amount("food") == 6 - population_before * 2,
         "Daily upkeep must debit exactly two food per villager from the reserve")
 
     var farmer = classic.village.villagers()[0]
@@ -132,7 +132,7 @@ func _run() -> void:
     farmer.carry_kind = "food"
     farmer._depot = granary
     farmer._deposit()
-    require(granary.stockpile_amount("food") == 10 - population_before * classic.village.UPKEEP,
+    require(granary.stockpile_amount("food") == 10 - population_before * 2,
         "Farmer deliveries to a Granary must remain local in Classic")
     require(classic.village.food_available() == granary.stockpile_amount("food"),
         "HUD food availability must reflect the Granary reserve after central food reaches zero")
@@ -200,6 +200,9 @@ func _run() -> void:
     require(granary_cell.x >= 0 and storage_cell.x >= 0,
         "Frontier map must provide adjacent Granary and Storage sites")
     granary = frontier.build.place_raw("granary", granary_cell)
+    storage_cell = find_adjacent_site(frontier, keep, Vector2i(3, 2))
+    require(storage_cell.x >= 0 and storage_cell != granary_cell,
+        "Frontier must reserve a distinct adjacent footprint for Storage")
     var storage = frontier.build.place_raw("storage", storage_cell)
     await ticks(3)
     frontier.supply.rebuild()
