@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio, PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening, PR #58 (`d3bba66`) for Phase 05.2a Builder-driven construction sites, PR #59 (`6147cfc`) for Phase 05.2b construction queue/Builder priorities/HUD, PR #60 (`beef7b7`) for Phase 05.3a Watchtower vision, and PR #61 (`d9b87b1`) for Phase 05.3b Granary food reserve. Workflow #41558978053 passed 84/84 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release exports. Save schema remains v13; rendered building/HUD and balance acceptance remain open.
+**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio, PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening, PR #58 (`d3bba66`) for Phase 05.2a Builder-driven construction sites, PR #59 (`6147cfc`) for Phase 05.2b construction queue/Builder priorities/HUD, PR #60 (`beef7b7`) for Phase 05.3a Watchtower vision, PR #61 (`d9b87b1`) for Phase 05.3b Granary food reserve, and PR #62 (`4cc0420`) for Phase 09.2 scripted campaign combat-budget probes. PR #62 workflow #41564491766 passed 86/86 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release exports. Save schema remains v13; rendered building/HUD, full-wave balance and human playtest acceptance remain open.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -15,7 +15,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #61 (save schema v13; status per 3 November 2026). PR #62 pada branch `test/phase-09-campaign-combat-simulation` menambahkan scripted combat-budget probe Phase 09.2; validasi Godot 4.3/4.7 masih berjalan dan belum menjadi bagian `main`. Perilaku Shieldbearer/Scout/Saboteur/Siege Engine/Beast Rider, faction camps/patrols/raids, combined warfare stress, Phase 08.3–08.7 visual/audio identity, dan Phase 09.3 late-act save/reload acceptance sudah tercakup. PR #57 menambah regression test end-to-end untuk Act I–IV, sebelas objective, empat stronghold, gate King hari ke-20 dan persistensi victory setelah reload; gameplay dan save schema tidak berubah.
+Ringkasan implementasi aktual pada `main` setelah PR #62 (save schema v13; status per 3 November 2026). PR #62 (`4cc0420`) menggabungkan scripted combat-budget probe Phase 09.2 ke `main`; workflow #41564491766 lulus 86/86 jobs pada Godot 4.3/4.7. Perilaku Shieldbearer/Scout/Saboteur/Siege Engine/Beast Rider, faction camps/patrols/raids, combined warfare stress, Phase 08.3–08.7 visual/audio identity, dan Phase 09.3 late-act save/reload acceptance sudah tercakup. PR #57 menambah regression test end-to-end untuk Act I–IV, sebelas objective, empat stronghold, gate King hari ke-20 dan persistensi victory setelah reload; gameplay dan save schema tidak berubah.
 
 | Area | Kondisi saat ini |
 |---|---|
@@ -594,9 +594,10 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Save schema stays v13 with per-building accepted-resource validation; legacy v13 saves without Granaries remain valid. Regression covers Classic/Frontier behavior and save/load on both Godot engines.
 
 
-## Phase 09.2 — scripted campaign combat-budget probes (2026-11-03, PR #62)
+## Phase 09.2 — scripted campaign combat-budget probes (2026-11-03, merged via PR #62)
+- PR #62 squash-merged into `main` as `4cc0420`; workflow #41564491766 passed 86/86 jobs on Godot 4.3/4.7, including the Frontier performance diagnostic and Windows/Linux exports.
 - Menambahkan `tests/campaign_combat_simulation.gd`: lima encounter terkurasi untuk ujung Act I–IV dan serangan King pada hari ke-20.
 - Menggunakan transaksi damage player/enemy, armor, structure multiplier, cooldown, Cleave dan Rally yang sudah ada; target schedule dibuat deterministik.
 - Output JSON per kasus: wave budget vs sample count, Keep HP/damage, populasi tersisa/hilang, player downs, musuh dikalahkan/tersisa, waktu simulasi dan failure modes.
 - Batas validitas: bukan simulasi seluruh wave 20–65 musuh, pathfinding, autonomous AI, ekonomi pekerja atau pengganti human playtest. Tidak mengubah angka balance runtime atau save schema v13.
-- PR #62 memasukkan test ke CI Godot 4.3/4.7 dan runner lokal; hasil CI final harus diperbarui setelah seluruh job selesai.
+- Test terdaftar di CI Godot 4.3/4.7 dan runner lokal. Probe ini menandai indikator untuk human follow-up: King case menghabiskan 345 Keep HP, menewaskan satu villager dan menjatuhkan player 10 kali dalam 75.1 detik simulasi; angka ini berasal dari roster terkurasi, bukan full-wave balance verdict.
