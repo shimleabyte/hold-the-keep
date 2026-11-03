@@ -6,9 +6,9 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** `main` contains PRs #55–#63 through Frontier Expedition and remains at save schema v13. The active engine target is Godot 4.7 only. Development CI runs 4.7 import/parse, regression suites and Frontier/Expedition performance diagnostics; Windows/Linux exports are deferred until release. Hunter PR #64 passed 45/45 jobs (#620); Scout PR #65 passed 46/46 jobs (#621); Healer PR #67 passed 47/47 jobs (#626); Blacksmith PR #68 passed 48/48 jobs on Godot 4.7 (#634).
+**Current source of truth:** `main` includes Frontier Expedition and the ordered specialist integration PRs #64 Hunter, #65 Scout, #67 Healer and #68 Blacksmith; the current save schema is v17. The active engine target is Godot 4.7 only. Development CI runs 4.7 import/parse, regression suites and Frontier/Expedition performance diagnostics; Windows/Linux exports are deferred until release. Specialist branch validation passed sequentially: #64 45/45 (#620), #65 46/46 (#621), #67 47/47 (#626), and #68 48/48 (#635). The four PRs are merged; rendered gameplay acceptance remains open.
 
-**Active implementation branches:** PR #64 (`feat/hunter-hunting-lodge`) adds Hunter, renewable wildlife and the two-slot Hunting Lodge; CI #620 passed 45/45. PR #65 (`feat/scout-specialist`) adds the two-slot Scout Post and bounded A* exploration; CI #621 passed 46/46. PR #67 (`feat/healer-infirmary`) adds Field Medicine, the two-slot Infirmary and reserved treatment; CI #626 passed 47/47. PR #68 (`feat/blacksmith-forge`) adds two Forge Blacksmith slots, individual soldier weapon/armor upgrades and save v17; CI #634 passed 48/48 on Godot 4.7. All PRs remain open; rendered gameplay acceptance and ordered integration remain.
+**Recent mainline integration:** PR #64 merged Hunter/Hunting Lodge (`e59864d`); PR #65 merged Scout/Scout Post (`ea9a63c`); PR #67 merged Healer/Infirmary (`bf44703`); PR #68 merged Blacksmith/Forge and save v17 (`1b15f37`). Their Godot 4.7 branch workflows passed 45/45, 46/46, 47/47 and 48/48 respectively (#620, #621, #626, #635). The stack is integrated in dependency order. Rendered gameplay, equipment visibility, treatment/combat readability, economic pacing and balance still require manual acceptance.
 
 **Merged into `main`:** PR #63 (`a594069`) adds the optional 192×192 Frontier Expedition profile. It preserves Classic 64×64 and standard Frontier 128×128, begins in a 128×128 connected heartland, and opens each of four outer marches only after the player reaches its survey crossing. Four strongholds, seven regional objective sites and four faction camps are placed in their sealed outer marches; permanent fog reveals them as they are explored. Crossing state is derived from existing discovery objectives; save schema remains v13. PR workflow #41580977570 passed 88/88 jobs across Godot 4.3/4.7, both performance diagnostics, and Windows/Linux export checks. Main push workflow #41581523207 was pending at the time of this update. PR #63 is merged; Frontier Expedition is part of `main`.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
@@ -19,7 +19,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #62 (save schema v13; status per 3 November 2026). PR #62 (`4cc0420`) menggabungkan scripted combat-budget probe Phase 09.2 ke `main`; workflow #41564491766 lulus 86/86 jobs pada Godot 4.3/4.7. Perilaku Shieldbearer/Scout/Saboteur/Siege Engine/Beast Rider, faction camps/patrols/raids, combined warfare stress, Phase 08.3–08.7 visual/audio identity, dan Phase 09.3 late-act save/reload acceptance sudah tercakup. PR #57 menambah regression test end-to-end untuk Act I–IV, sebelas objective, empat stronghold, gate King hari ke-20 dan persistensi victory setelah reload; gameplay dan save schema tidak berubah.
+Ringkasan implementasi aktual pada `main` setelah PR #68 (save schema v17; status per 3 November 2026). PR #62 (`4cc0420`) menggabungkan scripted combat-budget probe Phase 09.2; PR #63 menambahkan Frontier Expedition. PR #64/#65/#67/#68 kemudian mengintegrasikan Hunter, Scout, Healer dan Blacksmith secara berurutan, dengan migrasi save v14–v17. Godot 4.7 remains the only active development CI target; rendered gameplay acceptance and target-hardware balance/performance review remain manual.
 
 | Area | Kondisi saat ini |
 |---|---|
@@ -28,12 +28,12 @@ Ringkasan implementasi aktual pada `main` setelah PR #62 (save schema v13; statu
 | Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit Keep/Storage/Outpost cost source for construction/research/repair is merged; deterministic contested-depot warning and targeted Saboteur raids merged through PR #35 |
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload; Act I–IV + victory reload dilindungi `campaign_reload_hardening.gd` |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
-| Bangunan | Keep, rumah, tembok, menara pengawas (turret + 128px vision), Lumbung 240 pangan, Gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge pada `main`; PR #64 branch menambah Pondok Pemburu; `feat/scout-specialist` menambah Pondok Pengintai. |
-| Villager | On `main`: woodcutter, miner, farmer, soldier and Builder. Hunter (#64), Scout (#65), Healer (#67) and Blacksmith (#68) are implemented on open stacked branches. |
+| Bangunan | Keep, rumah, tembok, menara pengawas, Lumbung, Gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, Hunting Lodge, Scout Post, Infirmary, road dan bridge; semua specialist workplaces sudah berada di `main`. |
+| Villager | On `main`: woodcutter, miner, farmer, Builder, Hunter, Scout, Healer, Blacksmith and soldier. Hunter, Scout, Healer and Blacksmith use explicit workplace capacity and assignment cleanup. |
 | Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; connected infrastructure raids and bounded counterattacks merged via PR #44; manual Frontier balance/play review remains open |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
-| Teknologi | 21 technologies in three eras; Field Medicine unlocks Infirmary, while existing Iron Weapons/Armor research gates individual Blacksmith recipes on PR #68 |
-| Save/load | v13 pada `main`; stacked branches add v14 Hunter, v15 Scout, v16 Healer and v17 Blacksmith/equipment. Legacy Classic v1–v16 and Frontier v7–v16 remain migration targets. |
+| Teknologi | 21 technologies in three eras; Field Medicine unlocks the Infirmary, while existing Iron Weapons/Armor research gates individual Blacksmith recipes. |
+| Save/load | v17 pada `main`; Hunter wildlife/occupation, Scout occupation, Healer occupation, Blacksmith occupation and individual soldier equipment are persisted. Classic v1–v16 and Frontier v7–v16 migration compatibility is covered. |
 | Kontrol | Rebind gerak, interaksi, serang, lari; shortcut UI/job/build belum dapat di-rebind |
 | Tampilan | Adaptive logical viewport = setengah ukuran client window, minimum 480×270, pixel scale tepat 2×; physical-display/fullscreen review belum dilakukan |
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map with live tower sight, hotbar, objective tracker, tech panel, pause menu |
@@ -130,7 +130,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 - Windows export telah dibuat dan diperiksa format PE di CI, tetapi belum dijalankan pada native Windows atau clean Windows machine.
 - Local stockpile Storage/Outpost, Frontier worker deposits, dan atomic bounded automatic transfer to Keep sudah tersedia di `main` melalui PR #31; physical carrier/player-directed shipment dan local-stock spending masih belum tersedia.
 - Outpost guard/garrison dan local visibility belum tersedia.
-- Hunter (#64), Scout (#65), Healer/Infirmary (#67) and Blacksmith/Forge (#68) are implemented on stacked PR branches; manual rendered-play acceptance remains open.
+- Hunter/Hunting Lodge (#64), Scout/Scout Post (#65), Healer/Infirmary (#67) and Blacksmith/Forge (#68) are merged into `main`; manual rendered gameplay and balance acceptance remains open.
 - Construction queue serta staged completion dengan Builder belum tersedia.
 - Phase 06 baru memiliki faction/archetype foundation; perilaku counterable semua archetype, camps, patrol, raids, counterattacks, dan persistence belum lengkap.
 - Phase 08 art/audio identity belum dikirim sebagai satu implementation slice; unit/faction/building visuals masih membutuhkan art pass khusus dan musik belum ada.
@@ -141,7 +141,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 ## 9. Rencana berikut
 Urutan backlog berdasarkan dependency:
 1. Phase 02: selesaikan player-directed shipments/carrier visuals, inspect/withdraw local stock, Outpost garrison dan local visibility. Supply attrition menunggu sampai transfer behavior dan local defense tervalidasi.
-2. Phase 04: integrate Hunter (#64) → Scout (#65) → Healer/Infirmary (#67) → Blacksmith/Forge (#68) after branch CI and manual play acceptance.
+2. Phase 04: specialist integration is complete on `main` through PRs #64 → #65 → #67 → #68; finish manual rendered gameplay, combat readability, economic pacing and balance acceptance.
 3. Phase 05: construction queue dan staged building completion dengan Builder; lanjutkan bangunan sesuai dependency produksi dan strategi.
 4. Phase 06: distinct/counterable policy keenam archetype, faction camps, bounded patrols, reinforcement budget, raids/counterattacks dan persistence.
 5. Phase 08: biome/faction/unit/building art pass, strategic-map readability, combat/environmental audio dan musik.
@@ -473,26 +473,26 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - The combined stress workload was merged through PR #45 (`83dd633`) from `feat/phase-06.5-faction-warfare-stress`.
 - Regression `tests/faction_warfare_stress.gd` builds a deterministic Frontier workload: 48 faction garrisons, eight camp patrols, four simultaneous faction infrastructure raids (one per faction), and 48 villagers.
 - The test creates exposed road targets inside each faction region, validates A* routes for all simultaneous raiders, asserts the global four-raider ceiling, and checks population plus camp/raid state against save-v13 validation.
-- Registered in `tools/run_tests.sh` and both Godot 4.3/4.7 CI matrices. The first post-merge run #41384940850 failed at GDScript parsing on line 214 because a literal escaped newline was committed; PR #46 replaces it with a real line break. Corrected workflow #41385244114 passed 70/70 jobs, including `faction_warfare_stress` on both engines; PR #46 remains open and unmerged.
+- Registered in the regression runner. The first post-merge run exposed an escaped-newline parse defect; the correction and expanded six-archetype warfare stress coverage were integrated via PR #47 (`b06c355`). Integrated workflow #41394905158 passed 70/70 jobs; PR #46 is superseded.
 - `tests/release_hardening.gd` validates Classic save fixtures v1–v13 and Frontier fixtures v7–v13; active faction raid state round-trip is separately covered by `tests/faction_raids.gd`.
 
 ## 44. Phase 06.2 — Beast Rider composable behavior extraction (2026-11-02, implementation branch)
 - Branch: `feat/phase-06.2-composable-behaviors`, based on the corrected Phase 06.5 verification head from PR #46.
 - Extracted the Beast Rider target scan/scoring, A* approach and locked charge route, telegraph/wind-up, impact/knockback, miss handling, cooldown and stagger interruption into `scripts/behaviors/beast_rider_behavior.gd`.
 - `scripts/entities/enemy.gd` now owns the shared enemy host and delegates Beast Rider lifecycle/timers/rendering to the component. The charge regression now reads/asserts component state directly.
-- PR #47 workflow [#41386046423](https://github.com/shimleabyte/hold-the-keep/actions/runs/41386046423) passed 70/70 jobs: Godot 4.3/4.7 parse, all 33 assertion suites per version (including `beast_rider_charge` and `faction_warfare_stress`), Frontier performance and Windows/Linux export. PR #47 remains open and unmerged.
+- PR #47 workflow [#41386046423](https://github.com/shimleabyte/hold-the-keep/actions/runs/41386046423) passed 70/70 jobs: Godot 4.3/4.7 parse, all 33 assertion suites per version (including `beast_rider_charge` and `faction_warfare_stress`), Frontier performance and Windows/Linux export. PR #47 merged into `main` as `b06c355`; integrated workflow #41394905158 passed 70/70 jobs.
 
 ## 45. Phase 06.2 — Shieldbearer composable brace extraction (2026-11-02, implementation branch)
 - Added `scripts/behaviors/shieldbearer_behavior.gd` for brace targeting response, wind-up/active timing, cooldown, disengage cancellation, stagger interruption, directional hit checks and telegraph drawing.
 - `scripts/entities/enemy.gd` delegates Shieldbearer brace updates, cooldown advancement, damage mitigation and rendering to the behavior component; archetype-specific brace fields and the old inline state machine were removed from the host.
 - `tests/shieldbearer_behavior.gd` now inspects the component state and directly verifies the damage-origin gate while retaining front/side/rear damage, stagger and disengage cases.
-- Workflow [#41387134030](https://github.com/shimleabyte/hold-the-keep/actions/runs/41387134030) passed 70/70 jobs: both engine parse checks, all assertion suites on Godot 4.3/4.7 including `shieldbearer_behavior`, `beast_rider_charge` and `faction_warfare_stress`, Frontier performance and Windows/Linux export. PR #47 remains open and unmerged.
+- Workflow [#41387134030](https://github.com/shimleabyte/hold-the-keep/actions/runs/41387134030) passed 70/70 jobs: both engine parse checks, all assertion suites on Godot 4.3/4.7 including `shieldbearer_behavior`, `beast_rider_charge` and `faction_warfare_stress`, Frontier performance and Windows/Linux export. PR #47 merged into `main` as `b06c355`; integrated workflow #41394905158 passed 70/70 jobs.
 
 ## 46. Phase 06.2 — Scout composable marking extraction (2026-11-02, implementation branch)
 - Added `scripts/behaviors/scout_behavior.gd` for bounded defender selection, preferred-range positioning, telegraphed marking, bounded same-faction propagation, expiry, stagger interruption, target disengagement and marker rendering.
 - `scripts/entities/enemy.gd` now delegates Scout state/timers/mark publication to this component. Thin host adapters remain so Shieldbearer, ranged enemies and garrisons can consume valid shared marks without depending on Scout internals.
 - `tests/scout_marking.gd` now asserts component state directly while retaining same-faction sharing, rival-faction exclusion, marked-target priority, expiry, stagger interruption and target disengagement.
-- Latest-head workflow [#41387833455](https://github.com/shimleabyte/hold-the-keep/actions/runs/41387833455) passed 70/70 jobs on Godot 4.3/4.7, including both Scout regressions, both Shieldbearer regressions, Beast Rider, faction raids and combined warfare stress. PR #47 remains open and unmerged.
+- Latest-head workflow [#41387833455](https://github.com/shimleabyte/hold-the-keep/actions/runs/41387833455) passed 70/70 jobs on Godot 4.3/4.7, including both Scout regressions, both Shieldbearer regressions, Beast Rider, faction raids and combined warfare stress. PR #47 merged into `main` as `b06c355`; integrated workflow #41394905158 passed 70/70 jobs.
 
 ## 47. Phase 06.2 — Saboteur composable disruption extraction (2026-11-02, implementation branch)
 - Added `scripts/behaviors/saboteur_behavior.gd` for bounded priority scoring, rotating building scan, reachable A* path selection, interception, wind-up, suppression/damage application, cooldown, stagger interruption and disruption telegraph.
@@ -504,13 +504,13 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Added `scripts/behaviors/siege_engine_behavior.gd` for bounded building-priority scanning, A* adjacent pathing, flow-field advance, defender interruption/retreat, telegraphed structural impact, recovery and marker rendering.
 - `scripts/entities/enemy.gd` delegates Siege Engine navigation, target/path state, timers, attack cycle, retreat and telegraph rendering to the component; the shared host retains only the archetype dispatch hook.
 - `tests/siege_engine_behavior.gd` now asserts through component state while retaining priority, reachable route, impact damage, cooldown, stagger interruption and building-only attack checks.
-- Latest workflow [#41389136213](https://github.com/shimleabyte/hold-the-keep/actions/runs/41389136213) passed 70/70 jobs on Godot 4.3/4.7. PR #47 remains open and unmerged.
+- Latest workflow [#41389136213](https://github.com/shimleabyte/hold-the-keep/actions/runs/41389136213) passed 70/70 jobs on Godot 4.3/4.7. PR #47 merged into `main` as `b06c355`; integrated workflow #41394905158 passed 70/70 jobs.
 
 ## 49. Phase 06.2 — War Shaman support component extraction (2026-11-02, implementation branch)
 - Added `scripts/behaviors/war_shaman_support_behavior.gd` to own support radius/amount, heal cooldown and the decision to heal the nearest injured same-faction ally through the shared `enemy_support.gd` targeting helper.
 - `scripts/entities/enemy.gd` delegates support timer advancement and the support tick to this component. The War Shaman's ranged attack remains on the shared ranged combat path; support is evaluated as a separate priority action and does not duplicate or replace projectile logic.
 - `tests/faction_registry.gd` now inspects the component directly and verifies allied healing, rival-faction exclusion and no repeated healing during cooldown.
-- Latest workflow [#41389866198](https://github.com/shimleabyte/hold-the-keep/actions/runs/41389866198) passed 70/70 jobs on Godot 4.3/4.7, including `faction_registry`, all behavior regressions, faction raids and warfare stress, Frontier performance and Windows/Linux export. The War Shaman support component is validated; PR #47 remains open and unmerged.
+- Latest workflow [#41389866198](https://github.com/shimleabyte/hold-the-keep/actions/runs/41389866198) passed 70/70 jobs on Godot 4.3/4.7, including `faction_registry`, all behavior regressions, faction raids and warfare stress, Frontier performance and Windows/Linux export. The War Shaman support component is validated; PR #47 merged into `main` as `b06c355`; integrated workflow #41394905158 passed 70/70 jobs.
 
 
 ## Riwayat terbaru
@@ -607,18 +607,18 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Test terdaftar di CI Godot 4.3/4.7 dan runner lokal. Probe ini menandai indikator untuk human follow-up: King case menghabiskan 345 Keep HP, menewaskan satu villager dan menjatuhkan player 10 kali dalam 75.1 detik simulasi; angka ini berasal dari roster terkurasi, bukan full-wave balance verdict.
 
 
-## Feature branch — Healer + Infirmary (2026-11-03)
-- Branch: `feat/healer-infirmary`, stacked after `feat/scout-specialist`; do not merge until Hunter PR #64 and Scout PR #65 are integrated and this branch is retargeted.
+## 51. Phase 04 — Healer + Infirmary (2026-11-03, merged via PR #67)
+- Integrated into `main` via PR #67 as merge commit `bf44703`, after Hunter #64 and Scout #65.
 - Adds Era II `field_medicine`, a locked two-slot Infirmary with a 16-tile service radius, the Healer occupation (I shortcut), patient reservations per workplace, and bounded 10-HP treatment every 3.2 seconds.
 - Save schema increments to v16. Existing v15 saves remain valid; migration coverage includes v1–v16 Classic and v7–v16 Frontier.
 - Regression `tests/healer_infirmary.gd` covers Field Medicine unlock, capacity, assignment, most-wounded patient selection, independent reservations, treatment clamp, demolition cleanup and v16/v15 migration.
-- This branch is not in `main`; manual rendered and gameplay acceptance remains pending.
+- The feature is in `main`; manual rendered treatment feedback, animation and gameplay-balance acceptance remain pending.
 
 
-## 52. Phase 04 — Blacksmith and Forge (2026-11-03, implementation branch)
-- Branch: `feat/blacksmith-forge`, based on the green Healer head `7dc6ebf`; stacked PR #68 targets `feat/healer-infirmary`.
+## 52. Phase 04 — Blacksmith and Forge (2026-11-03, merged via PR #68)
+- Integrated into `main` via PR #68 as merge commit `1b15f37`, after Healer/Infirmary PR #67.
 - Forge exposes two Blacksmith workplaces within an 18-tile service radius. Blacksmith is assigned through the JOBS drawer; no keyboard shortcut is taken from existing controls.
 - Existing Era III Iron Weapons and Iron Armor research gate separate one-time soldier recipes. Iron Weapon costs 3 iron + 1 wood and adds 20% individual soldier damage; Iron Armor costs 4 iron + 2 wood and adds 20% individual maximum HP.
 - Soldier targets are reserved per Forge. Workers reject expeditioning, recalling, hidden, fleeing or fighting targets; reservation cleanup runs on completion, invalid target, sabotage and workplace demolition.
-- Save schema increments to v17 for Blacksmith occupation, equipment flags and stat restoration. Classic v1–v17 and Frontier v7–v17 migration coverage passed in CI #634.
-- `tests/blacksmith_forge.gd` covers capacity, reservations, costs, stat effects, v16 migration and demolition cleanup. Latest full Godot 4.7 CI is required before marking the slice validated; rendered balance/art review remains manual.
+- Save schema increments to v17 for Blacksmith occupation, equipment flags and stat restoration. Classic v1–v17 and Frontier v7–v17 migration coverage passed in Godot 4.7 CI #635 (48/48 jobs).
+- `tests/blacksmith_forge.gd` covers capacity, reservations, costs, stat effects, v16 migration and demolition cleanup. Godot 4.7 CI #635 passed; rendered equipment visibility, animation and balance review remain manual.
