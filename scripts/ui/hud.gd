@@ -886,7 +886,7 @@ func _shipment_name(cell: Vector2i) -> String:
     if main_node != null:
         for depot in get_tree().get_nodes_in_group("depots"):
             if is_instance_valid(depot) and depot.cell == cell:
-                return "KEEP" if depot.id == "keep" else ("POS" if depot.id == "outpost" else "GDG")
+                return "KEEP" if depot.id == "keep" else ("POS" if depot.id == "outpost" else ("LUMBUNG" if depot.id == "granary" else "GDG"))
     return "HILANG"
 
 
