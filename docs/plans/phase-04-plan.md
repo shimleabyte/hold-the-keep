@@ -1,8 +1,8 @@
 # Phase 04 — Specialist Jobs and Workplace Completion
 
-**Status:** Builder is merged into `main`; Hunter + Hunting Lodge is on `feat/hunter-hunting-lodge` pending final CI/PR acceptance. Villager Scout + Scout Post is in progress on the stacked branch `feat/scout-specialist`; Healer and Blacksmith remain open.
+**Status:** Builder is merged into `main`; Hunter PR #64 passed 45/45 Godot 4.7 jobs. Villager Scout + Scout Post is implemented in open stacked PR #65; Healer and Blacksmith remain future slices.
 **Dependency:** Phase 02 connected depots; Phase 05 worksites and construction foundations.
-**Engine targets:** Godot 4.3 and 4.7.
+**Engine target:** Godot 4.7 only.
 
 ## Goal
 
@@ -25,14 +25,14 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - The enemy Scout/marking archetype is a combat AI behavior on `main`; it is not the villager Scout occupation described below.
 - Its existing mark publication is faction-bounded and observation-based. The new villager role must not inherit global enemy tracking.
 
-### Villager Scout — in progress on `feat/scout-specialist`
-- Add a two-slot Scout Post as the explicit workplace; Scouts cannot be assigned without a reachable free slot.
-- Use a bounded A* survey loop around the assigned post. Select only reachable walkable destinations with unexplored cells nearby; rotate sectors and avoid duplicating another Scout's active destination.
-- Reveal terrain through the existing permanent fog system with a 144px Scout sight radius. Do not add global enemy tracking or reveal enemies outside existing observation rules.
-- Return to the Scout Post when no unexplored reachable survey cells remain; periodically re-check so newly opened routes can be explored later.
-- Add Scout as a distinct occupation, U hotkey, quota/priority row, role sprite, Scout Post art/icon and player-facing controls.
-- Bump save schema to v15 for the Scout quota/priority/occupation and new building ID; preserve Classic v1–v14 and Frontier v7–v14 migration.
-- Add focused tests for workplace requirement/capacity, reachable target selection, fog reveal radius, bounded behavior, survey completion/return, two-Scout target separation and save migration.
+### Villager Scout — implemented on `feat/scout-specialist` (PR #65)
+- [x] Add a two-slot Scout Post as the explicit workplace; Scouts cannot be assigned without a reachable free slot.
+- [x] Use a bounded A* survey loop around the assigned post. Select only reachable walkable destinations with unexplored cells nearby; rotate sectors and avoid duplicating another Scout's active destination.
+- [x] Reveal terrain through the existing permanent fog system with a 144px Scout sight radius. Do not add global enemy tracking or reveal enemies outside existing observation rules.
+- [x] Return to the Scout Post when no unexplored reachable survey cells remain; periodically re-check so newly opened routes can be explored later.
+- [x] Add Scout as a distinct occupation, U hotkey, quota/priority row, role sprite, Scout Post art/icon and player-facing controls.
+- [x] Bump save schema to v15 for the Scout quota/priority/occupation and new building ID; preserve Classic v1–v14 and Frontier v7–v14 migration.
+- [x] Add focused tests for workplace requirement/capacity, reachable target selection, fog reveal radius, bounded behavior, survey completion/return, two-Scout target separation and save migration.
 - [ ] Rendered pathing, discovery pace and actual map-scale playtest.
 
 ### Healer
@@ -57,3 +57,6 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - Test priority/reassignment, capacity, work radius, unreachable targets, target reservation, output delivery and save/load.
 - Classic existing jobs and save compatibility remain unchanged.
 - Mark a specialist complete only after a player-facing UI path and rendered review exist, not merely after the class/enum is registered.
+
+### Healer dependency
+Hunter PR #64 and Scout PR #65 must be integrated in that order before the Healer/Infirmary branch is retargeted to `main`.
