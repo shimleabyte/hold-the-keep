@@ -224,6 +224,9 @@ func _run() -> void:
     var granary_destination_index := option_index_for_cell(hud._shipment_destination, granary_cell)
     require(granary_source_index >= 0 and granary_destination_index >= 0,
         "Granary must appear as both a source and destination in the shipment selectors")
+    require("LUMBUNG" in hud._shipment_source.get_item_text(granary_source_index)
+        and "LUMBUNG" in hud._shipment_destination.get_item_text(granary_destination_index),
+        "Shipment selectors must identify the food depot as Lumbung, not a generic Storage")
     hud._shipment_source.select(granary_source_index)
     hud._refresh_shipment_controls()
     var food_kind_index := -1
