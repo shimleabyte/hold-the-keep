@@ -3,7 +3,7 @@
 **Status:** Phase 09.2 deterministic scripted combat-budget probes for Frontier Act I–IV and the day-20 King assault are merged through PR #62 (`4cc0420`); workflow [#41564491766](https://github.com/shimleabyte/hold-the-keep/actions/runs/41564491766) passed 86/86 jobs on Godot 4.3/4.7, including Frontier performance diagnostic and Windows/Linux release export. The report records Keep damage, population loss, player downs, surviving enemies and simulated time using actual damage/cooldown transactions. It does not simulate full waves, autonomous AI/pathfinding or replace human playtesting. Phase 09.3 late-act save/reload coverage is merged through PR #57 (`a1ccebe`). Save schema remains v13. Target-hardware profiling, full-wave balance, human playtests, native Windows runtime and clean-machine release acceptance remain open.
 **Mainline:** `main` (PR #57 and PR #62 merged); continue with measured full-wave balance and manual release-acceptance gates.
 **Save schema:** v13 on `main`; PR #57 adds regression coverage only and does not change runtime save data.
-**Engine targets:** Godot 4.3 and 4.7.
+**Engine target:** Godot 4.7 only.
 
 ## Goal
 
@@ -36,14 +36,14 @@ Make the expanded 128×128 Frontier campaign predictable under load and safe to 
 - [x] Extend reload coverage through Frontier Acts I–IV, completed regional objectives, conquered strongholds, damaged Ashen Host HP, the day-20 King gate and save/reload of the final victory (PR #57; workflow #490, 78/78).
 - [x] Run the migration and campaign regression matrix on Godot 4.3 and 4.7; late-act reload and persisted-victory coverage also passes on both engines (workflow #490).
 
-### 09.4 — Release export hardening
+### 09.4 — Release export hardening (deferred until release phase)
 - [x] Add deterministic checks for the Windows Desktop and Linux export preset names, paths, resource filters and embedded PCK settings.
-- [x] Install the Godot 4.3-matching export templates in CI and produce real Windows and Linux release artifacts.
-- [x] Verify the Windows PE executable format and launch the Linux release headlessly for a bounded smoke test.
+- [ ] Re-enable Godot 4.7-matching export templates and produce Windows/Linux release artifacts during the release phase.
+- [ ] Verify the Windows PE executable format and launch the Linux release headlessly for a bounded smoke test during release acceptance.
 - [ ] Smoke-test the Windows build on a Windows runner and verify both binaries on clean target machines.
 - [ ] Verify clean-machine first launch, save directory creation, settings persistence and upgrade from an older save.
 
-### 09.5 — Manual release gate
+### 09.5 — Manual release gate (after feature freeze)
 - [ ] Classic: fresh campaign, day 1–15, victory/defeat, save/load and settings.
 - [ ] Frontier: fresh campaign, all four acts, all regional objective types, four strongholds and day-20 King.
 - [ ] Stress: large settlements, faction camps/raids when available, projectile-heavy combat, night waves and effects.
