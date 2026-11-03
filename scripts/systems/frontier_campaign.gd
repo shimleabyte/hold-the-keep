@@ -103,14 +103,21 @@ func _process(delta: float) -> void:
 
 
 func _scan_discovery() -> void:
-    var region := String(main.world.region_id(main.nav.cell_of(main.player.global_position)))
+    var player_position: Vector2 = main.player.global_position
+    var region := String(main.world.region_id(main.nav.cell_of(player_position)))
     if region.is_empty():
         return
     for objective_id in objectives:
         var record: Dictionary = objectives[objective_id]
         var definition: Dictionary = record["definition"]
-        if String(definition["type"]) == "discovery" and int(definition.get("act", 1)) <= unlocked_act and String(definition["region"]) == region and not bool(record["completed"]):
-            complete_objective(String(objective_id))
+        if String(definition["type"]) != "discovery" or int(definition.get("act", 1)) > unlocked_act:
+            continue
+        var target_region := String(definition["region"])
+        if target_region != region or bool(record["completed"]):
+            continue
+        if WorldConfig.is_frontier_expedition() and not main.world.is_expedition_survey_site_reached(target_region, player_position):
+            continue
+        complete_objective(String(objective_id))
 
 
 func _sync_expedition_gates() -> void:
