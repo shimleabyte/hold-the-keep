@@ -149,7 +149,7 @@ func _run() -> void:
         "Farmer deliveries to a Granary must remain local in Classic")
     require(classic.village.food_available() == granary.stockpile_amount("food"),
         "HUD food availability must reflect the Granary reserve after central food reaches zero")
-    hud = get_first_node_in_group("hud")
+    var hud = get_first_node_in_group("hud")
     hud._refresh_resources()
     require(hud._food.text == str(granary.stockpile_amount("food")),
         "The top resource bar must display usable Granary food in Classic")
@@ -225,7 +225,7 @@ func _run() -> void:
     frontier.supply.rebuild()
     require(frontier.supply.is_depot_connected(granary) and frontier.supply.is_depot_connected(storage),
         "Adjacent Granary and Storage depots must join the Keep-rooted network")
-    var hud = get_first_node_in_group("hud")
+    hud = get_first_node_in_group("hud")
     require(hud != null and hud._shipment_source != null and hud._shipment_destination != null,
         "The logistics panel must expose shipment source and destination controls")
     hud._refresh_outpost_panel()
