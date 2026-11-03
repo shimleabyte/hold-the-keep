@@ -1,5 +1,5 @@
 extends SceneTree
-## Phase 05.3b: food-only Granary storage, population upkeep, Frontier logistics and v14 persistence.
+## Phase 05.3b: food-only Granary storage, population upkeep, Frontier logistics and v15 persistence.
 
 func ticks(count: int) -> void:
     for i in range(count):
@@ -317,7 +317,7 @@ func _run() -> void:
     var frontier_food_before_save: int = granary.stockpile_amount("food")
     var frontier_snapshot: Dictionary = save_system.collect(frontier)
     require(frontier_snapshot["version"] == 15 and save_system._valid_save(frontier_snapshot),
-        "Frontier Granary stockpile and isolated-depot pressure must pass v14 validation")
+        "Frontier Granary stockpile and isolated-depot pressure must pass v15 validation")
     var invalid_shipment := frontier_snapshot.duplicate(true)
     invalid_shipment["supply"]["orders"].append({
         "id": int(invalid_shipment["supply"]["next_id"]),
