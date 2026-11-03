@@ -965,7 +965,7 @@ func _take_damage_from(amount: int, source_position: Vector2) -> void:
         remove_from_group("faction_raiders")
         Events.enemy_killed.emit(id)
         if is_boss:
-            if WorldConfig.profile_id == "frontier":
+            if WorldConfig.is_frontier_profile():
                 Events.frontier_final_boss_defeated.emit(GameClock.day)
             else:
                 Events.game_won.emit(GameClock.day)
