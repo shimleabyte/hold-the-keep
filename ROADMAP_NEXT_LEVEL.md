@@ -100,7 +100,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate — passed:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable stronghold approach, valid map bounds, viewport fit and 128×128 fog/index round-trip.
 
 ### Phase 01.2 — Progressive Frontier Expedition
-**Status:** Implemented on `feat/frontier-expedition-192x192`, PR #63. Godot 4.3/4.7 import/parse passed on workflow #41578766440; assertion, stress/performance and export jobs are still running. Not merged into `main`.
+**Status:** Implemented on `feat/frontier-expedition-192x192`, PR #63. The latest implementation and regression commit is queued in workflow #41579040554; the full Godot 4.3/4.7 assertion, stress/performance and export matrix is pending. Not merged into `main`.
 
 - [x] Add an independent 192×192 profile without changing Classic 64×64 or standard Frontier 128×128.
 - [x] Keep a 128×128 walkable heartland at the start; generate four sealed outer marches around it.
