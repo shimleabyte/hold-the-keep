@@ -117,8 +117,8 @@ func _run() -> void:
     require(forge.is_blacksmith_target_reserved(second_target),
         "Second soldier must receive an independent reservation")
 
-    var iron_before_weapon := inventory.get_amount("iron")
-    var wood_before_weapon := inventory.get_amount("wood")
+    var iron_before_weapon: int = inventory.get_amount("iron")
+    var wood_before_weapon: int = inventory.get_amount("wood")
     smith_a.state = smith_a.State.WORKING
     smith_a._tick_working(smith_a.SMITH_WORK_SECONDS)
     require(first_target.weapon_equipped,
@@ -136,8 +136,8 @@ func _run() -> void:
     smith_a._find_work()
     require(smith_a.target == first_target and smith_a._smith_recipe == "armor",
         "After weapon completion, the same soldier must become eligible for its missing armor")
-    var iron_before_armor := inventory.get_amount("iron")
-    var wood_before_armor := inventory.get_amount("wood")
+    var iron_before_armor: int = inventory.get_amount("iron")
+    var wood_before_armor: int = inventory.get_amount("wood")
     smith_a.state = smith_a.State.WORKING
     smith_a._tick_working(smith_a.SMITH_WORK_SECONDS)
     require(first_target.armor_equipped and first_target.max_hp > old_max_hp,
