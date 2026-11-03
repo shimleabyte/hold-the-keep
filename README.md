@@ -82,7 +82,7 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 3. Hasil: `build/windows/HoldTheKeep.exe` dan `build/linux/HoldTheKeep.x86_64` (PCK tertanam)
 
 ## Teknologi
-Pohon riset 21 teknologi dalam 3 era (data/techs.json), dibuka dengan Y:
+Pohon riset 21 teknologi dalam 3 era (data/techs.json), dibuka dengan Y. `field_medicine` (Era II) unlocks the two-slot Infirmary; Healer is assigned with I and treats wounded friendly soldiers within 16 tiles: 10 HP per 3.2 seconds. Hunter, Scout and Healer are implemented in the stacked specialist PRs; they are not yet part of `main`:
 - **Era Kayu** (awal): perkakas, bajak, palisade, rumah panjang, panah berbulu, dan **Ilmu Batu** (naik era)
 - **Era Batu**: perkakas batu, lumbung, menara batu, zirah kulit, latihan prajurit, dan **Tambang Besi** (naik era)
 - **Era Besi**: perkakas, senjata, zirah, menara, dan benteng besi (sebagian butuh bangunan Tempa)
