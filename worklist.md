@@ -568,6 +568,8 @@ These are feature assignments, not prerequisites for the architecture work. They
 
 **Acceptance:** Tests cover eligibility, cost payment, cancellation, choice resolution, delayed outcomes, save/reload and Classic/Frontier applicability.
 
+**Live status:** Implementation is in `work/dev-k-input-command-registry`: 39 rebindable actions cover movement/combat, jobs, building slots and system/strategy commands. Gamepad defaults and keyboard restore-defaults are included; Godot 4.7 CI remains the acceptance gate.
+
 ### DEV-K — Complete input command registry
 
 **Priority:** Medium  

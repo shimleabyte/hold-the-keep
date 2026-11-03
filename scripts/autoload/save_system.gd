@@ -24,11 +24,14 @@ func _on_day_changed(_day: int) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-    if event is InputEventKey and event.pressed and not event.echo:
-        if event.keycode == KEY_F5:
-            save_current()
-        elif event.keycode == KEY_F9:
-            request_load()
+    if not (event is InputEventKey and event.pressed and not event.echo):
+        return
+    if Input.is_action_just_pressed("save_game"):
+        save_current()
+        get_viewport().set_input_as_handled()
+    elif Input.is_action_just_pressed("load_game"):
+        request_load()
+        get_viewport().set_input_as_handled()
 
 
 func _main() -> Node:

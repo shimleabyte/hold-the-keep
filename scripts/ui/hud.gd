@@ -63,9 +63,9 @@ const HELP_ROWS := [
     ["N / QUEUE", "ANTREAN KONSTRUKSI"],
     ["KLIK KIRI", "PASANG BANGUNAN"],
     ["KLIK KANAN", "BATAL / BONGKAR"],
-    ["T M K B J U I R", "TAMBAH JOB"],
+    ["T M K B J U I X R", "TAMBAH JOB"],
     ["G", "SERBU / TARIK PRAJURIT"],
-    ["SHIFT + T M K B J U I R", "KURANGI JOB"],
+    ["SHIFT + T M K B J U I X R", "KURANGI JOB"],
     ["ALT + T/M/K/B/J/U/I/R", "NAIKKAN PRIORITAS"],
     ["ALT + SHIFT + KEY", "TURUNKAN PRIORITAS"],
     ["KLIK + / -", "UBAH KUOTA JOB"],
@@ -1329,9 +1329,9 @@ func _unhandled_input(event: InputEvent) -> void:
     if not (event is InputEventKey and event.pressed and not event.echo):
         return
     if _over.visible:
-        if event.keycode == KEY_L:
+        if Input.is_action_just_pressed("load_last_save"):
             SaveSystem.request_load()
-        elif event.keycode == KEY_R:
+        elif Input.is_action_just_pressed("restart_game"):
             Inventory.reset()
             GameClock.reset()
             Tech.reset()
@@ -1340,29 +1340,31 @@ func _unhandled_input(event: InputEvent) -> void:
         return
     if _event_decision_panel != null and _event_decision_panel.visible:
         return
-    if event.keycode == KEY_N:
+    if Input.is_action_just_pressed("toggle_construction_queue"):
         _toggle_construction_queue()
         get_viewport().set_input_as_handled()
-    elif event.keycode == KEY_ESCAPE and _queue_panel.visible:
+    elif Input.is_action_just_pressed("game_cancel") and _queue_panel.visible:
         _toggle_construction_queue()
         get_viewport().set_input_as_handled()
-    elif event.keycode == KEY_ESCAPE and _map_panel.visible:
+    elif Input.is_action_just_pressed("game_cancel") and _map_panel.visible:
         _toggle_map()
         get_viewport().set_input_as_handled()
-    elif event.keycode == KEY_ESCAPE and _jobs_panel.visible:
+    elif Input.is_action_just_pressed("game_cancel") and _jobs_panel.visible:
         _toggle_jobs()
         get_viewport().set_input_as_handled()
-    elif event.keycode == KEY_ESCAPE and _outpost_panel.visible:
+    elif Input.is_action_just_pressed("game_cancel") and _outpost_panel.visible:
         _toggle_outposts()
         get_viewport().set_input_as_handled()
-    elif event.keycode == KEY_TAB:
+    elif Input.is_action_just_pressed("toggle_map"):
         _toggle_map()
         get_viewport().set_input_as_handled()
-    elif event.keycode == KEY_H or event.keycode == KEY_F1:
+    elif Input.is_action_just_pressed("toggle_help"):
         _help.visible = not _help.visible
-    elif event.keycode == KEY_F3:
+        get_viewport().set_input_as_handled()
+    elif Input.is_action_just_pressed("toggle_fps"):
         _fps.visible = not _fps.visible
         _fps.text = ""
+        get_viewport().set_input_as_handled()
 
 
 ## True jika titik (koordinat viewport) berada di atas panel HUD yang menangkap mouse.

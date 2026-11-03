@@ -48,7 +48,7 @@ GitHub Actions menjalankan import/parse on Godot 4.7 only, 48 assertion regressi
 | map_stages.gd | empat biome Classic, fog map panel, batas tiga bab, bobot archer/brute per bab |
 | responsive_layout.gd | resolution-to-viewport mapping, exact 2× pixel scale, live synchronization, HUD safe playfield and map/hotbar bounds across six desktop resolutions |
 | player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, archer projectile, brute armor, combat save |
-| input_rebinding.gd | perubahan keybind, penolakan konflik/reserved key, persistensi settings |
+| input_rebinding.gd | Central InputMap keyboard/gamepad actions, job/build/ability/system shortcut rebinding, duplicate and reserved-key rejection, settings persistence and restore defaults |
 | restart_gameover.gd | layar game over dan restart (R) |
 | fx_shake_settings.gd | batas partikel, guncangan layar, tombol menu, performa dengan efek |
 | perf.gd | configurable Classic/Frontier benchmark; `PROFILE=frontier ENEMIES=96 VILLAGERS=80 FRAMES=360` reports p50/p95/p99 frame time, nodes, static memory, projectiles and particles |
