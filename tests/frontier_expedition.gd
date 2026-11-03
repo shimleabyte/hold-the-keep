@@ -59,7 +59,7 @@ func _initialize() -> void:
         assert(main.world.is_expedition_outer_cell(stronghold_cell, stronghold_region)
             and not core_reachable.has(stronghold_cell),
             "Each regional stronghold must wait inside its sealed outer march: " + stronghold_region)
-        var stronghold_entrance := main.world.expedition_outer_landing_cell(stronghold_region)
+        var stronghold_entrance: Vector2i = main.world.expedition_outer_landing_cell(stronghold_region)
         assert(Vector2(stronghold_cell - stronghold_entrance).length() >= 35.0,
             "Regional strongholds must remain deeper in the march than its entrance objectives: " + stronghold_region)
 
@@ -72,7 +72,7 @@ func _initialize() -> void:
         assert(main.world.is_expedition_outer_cell(site_cell, site_region)
             and not core_reachable.has(site_cell),
             "Regional objectives must be placed beyond their exploration gates: " + String(objective_id))
-        var site_entrance := main.world.expedition_outer_landing_cell(site_region)
+        var site_entrance: Vector2i = main.world.expedition_outer_landing_cell(site_region)
         var entrance_distance := Vector2(site_cell - site_entrance).length()
         assert(entrance_distance >= 8.0 and entrance_distance <= 36.0,
             "The first regional sites should sit within an exploration band beyond their gate: " + String(objective_id))
