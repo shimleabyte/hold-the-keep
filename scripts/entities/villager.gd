@@ -856,7 +856,7 @@ func _find_scout_work() -> void:
     var fog = get_tree().get_first_node_in_group("fog_of_war")
     if fog == null:
         return
-    var origin := nav.cell_of(workplace.position)
+    var origin: Vector2i = nav.cell_of(workplace.position)
     var best_cell := Vector2i(-1, -1)
     var best_path := PackedVector2Array()
     var best_score := -INF
@@ -866,7 +866,8 @@ func _find_scout_work() -> void:
     for radius in SCOUT_SEARCH_RADII:
         for offset in SCOUT_DIRECTIONS.size():
             var direction_index := (_scout_cursor + offset) % SCOUT_DIRECTIONS.size()
-            var candidate := origin + SCOUT_DIRECTIONS[direction_index] * radius
+            var direction: Vector2i = SCOUT_DIRECTIONS[direction_index]
+            var candidate: Vector2i = origin + direction * radius
             if workplace.position.distance_squared_to(nav.center_of(candidate)) > work_radius * work_radius:
                 continue
             if not nav.is_walkable(candidate) or _scout_target_reserved(candidate):
