@@ -2,7 +2,7 @@
 
 **Status:** Lumber Camp/Quarry worksite slice, Phase 05.2a Builder-driven blueprint sites (PR #58), Phase 05.2b queue/Builder priorities (PR #59), Phase 05.3a Watchtower vision (PR #60, `beef7b7`), and Phase 05.3b Granary food reserve (PR #61, `d9b87b1`) are merged. Workflow #41558978053 passed 84/84 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux exports. Rendered building/HUD review, balance and remaining facility chain remain open.
 **Dependency:** Phase 04 Builder occupation; Phase 02 depot/logistics rules.
-**Engine targets:** Godot 4.3 and 4.7.
+**Engine target:** Godot 4.7 only.
 
 ## Goal
 
