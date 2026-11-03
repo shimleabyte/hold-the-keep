@@ -172,8 +172,8 @@ func _run() -> void:
 
     main.village.quota["scout"] = 2
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 15,
-        "Scout occupation and priority must use additive save version 15")
+    require(snapshot["version"] == 16,
+        "Scout occupation and priority must remain valid in save version 16")
     require(save_system._valid_save(snapshot),
         "A live Scout Post and Scout snapshot must validate")
     var has_scout := false
@@ -189,10 +189,18 @@ func _run() -> void:
     legacy_v14["version"] = 14
     legacy_v14["quota"].erase("scout")
     legacy_v14["job_priority"].erase("scout")
+    legacy_v14["quota"].erase("healer")
+    legacy_v14["job_priority"].erase("healer")
     for villager in legacy_v14["villagers"]:
+        if String(villager.get("occupation", "")) == "healer":
+            villager["occupation"] = ""
+            villager["job"] = ""
         if String(villager.get("occupation", "")) == "scout":
             villager["occupation"] = ""
             villager["job"] = ""
+    for index in range(legacy_v14["buildings"].size() - 1, -1, -1):
+        if String(legacy_v14["buildings"][index].get("id", "")) == "infirmary":
+            legacy_v14["buildings"].remove_at(index)
     for index in range(legacy_v14["buildings"].size() - 1, -1, -1):
         if String(legacy_v14["buildings"][index].get("id", "")) == "scout_post":
             legacy_v14["buildings"].remove_at(index)
@@ -207,5 +215,5 @@ func _run() -> void:
     require(scout_a.job.is_empty() and scout_b.job.is_empty(),
         "Scouts must return to unassigned status when their Post is removed")
 
-    print("PASS: Scout capacity, bounded A* survey, local fog reveal, independent targets, return-to-post, v15 migration and teardown")
+    print("PASS: Scout capacity, bounded A* survey, local fog reveal, independent targets, return-to-post, v16 migration and teardown")
     quit(0)
