@@ -1,0 +1,63 @@
+name: Campaign Simulation QA
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "data/**"
+      - "scenes/**"
+      - "tests/frontier_campaign_simulation.gd"
+      - ".github/workflows/campaign-simulation.yml"
+      - "project.godot"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "data/**"
+      - "scenes/**"
+      - "tests/frontier_campaign_simulation.gd"
+      - ".github/workflows/campaign-simulation.yml"
+      - "project.godot"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: campaign-simulation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simulate:
+    name: Classic + Frontier runtime simulation · Godot 4.7
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Run deterministic campaign simulation
+        env:
+          HTK_AUTO_RESOLVE_EVENTS: "1"
+        run: |
+          mkdir -p build/diagnostics
+          set -o pipefail
+          timeout 600s godot --headless --fixed-fps 60 --path . --script res://tests/frontier_campaign_simulation.gd 2>&1 | tee build/diagnostics/campaign-simulation.txt
+          grep -q "^CAMPAIGN_SIMULATION_REPORT " build/diagnostics/campaign-simulation.txt
+
+      - name: Upload campaign simulation report
+        uses: actions/upload-artifact@v4
+        with:
+          name: campaign-simulation-godot-4.7
+          path: build/diagnostics/campaign-simulation.txt
+          if-no-files-found: error
