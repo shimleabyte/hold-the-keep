@@ -13,27 +13,28 @@ func require(condition: bool, message: String) -> void:
     assert(condition, message)
 
 
-func find_free_site(main, origin: Vector2i, footprint: Vector2i) -> Vector2i:
+func footprint_is_clear(main, anchor: Vector2i, footprint: Vector2i) -> bool:
     var map_size := int(root.get_node("WorldConfig").map_size)
-    for radius in range(3, 11):
-        for y in range(-radius, radius + 1):
-            for x in range(-radius, radius + 1):
-                if maxi(absi(x), absi(y)) != radius:
-                    continue
-                var anchor := origin + Vector2i(x, y)
-                if anchor.x < 1 or anchor.y < 1 or anchor.x + footprint.x >= map_size - 1 or anchor.y + footprint.y >= map_size - 1:
-                    continue
-                var clear := true
-                for dy in footprint.y:
-                    for dx in footprint.x:
-                        var cell := anchor + Vector2i(dx, dy)
-                        if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
-                            clear = false
-                            break
-                    if not clear:
-                        break
-                if clear:
-                    return anchor
+    if anchor.x < 1 or anchor.y < 1 or anchor.x + footprint.x >= map_size - 1 or anchor.y + footprint.y >= map_size - 1:
+        return false
+    for dy in footprint.y:
+        for dx in footprint.x:
+            var cell := anchor + Vector2i(dx, dy)
+            if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
+                return false
+    return true
+
+
+func find_adjacent_site(main, keep, footprint: Vector2i) -> Vector2i:
+    var candidates: Array[Vector2i] = [
+        keep.cell + Vector2i(keep.size.x, 0),
+        keep.cell + Vector2i(-footprint.x, 0),
+        keep.cell + Vector2i(0, keep.size.y),
+        keep.cell + Vector2i(0, -footprint.y)
+    ]
+    for candidate in candidates:
+        if footprint_is_clear(main, candidate, footprint):
+            return candidate
     return Vector2i(-1, -1)
 
 
@@ -82,7 +83,7 @@ func _run() -> void:
             keep = building
             break
     require(keep != null, "Classic campaign must retain its Keep")
-    var granary_cell := find_free_site(classic, keep.cell + Vector2i(keep.size.x, 0), Vector2i(3, 2))
+    var granary_cell := find_adjacent_site(classic, keep, Vector2i(3, 2))
     require(granary_cell.x >= 0, "Classic map must provide a Granary site beside the Keep")
     require(not tech.building_unlocked("granary"),
         "Granary must remain locked before its existing Granary research is completed")
@@ -136,6 +137,7 @@ func _run() -> void:
     require(classic.village.food_available() == granary.stockpile_amount("food"),
         "HUD food availability must reflect the Granary reserve after central food reaches zero")
 
+    var classic_food_before_save: int = granary.stockpile_amount("food")
     var classic_snapshot: Dictionary = save_system.collect(classic)
     require(classic_snapshot["version"] == 13 and save_system._valid_save(classic_snapshot),
         "A Classic save containing a food-only Granary must pass v13 validation")
@@ -166,7 +168,7 @@ func _run() -> void:
     var restored_classic = get_first_node_in_group("main")
     require(restored_classic != null, "Classic reload must recreate the campaign")
     var restored_granary = find_building("granary", granary_cell)
-    require(restored_granary != null and restored_granary.stockpile_amount("food") == granary.stockpile_amount("food"),
+    require(restored_granary != null and restored_granary.stockpile_amount("food") == classic_food_before_save,
         "Classic reload must preserve the Granary stockpile exactly")
 
     await stop_current_main()
@@ -193,8 +195,8 @@ func _run() -> void:
             keep = building
             break
     require(keep != null, "Frontier campaign must retain its Keep")
-    granary_cell = find_free_site(frontier, keep.cell + Vector2i(keep.size.x, 0), Vector2i(3, 2))
-    var storage_cell := find_free_site(frontier, keep.cell + Vector2i(-3, 0), Vector2i(3, 2))
+    granary_cell = find_adjacent_site(frontier, keep, Vector2i(3, 2))
+    var storage_cell := find_adjacent_site(frontier, keep, Vector2i(3, 2))
     require(granary_cell.x >= 0 and storage_cell.x >= 0,
         "Frontier map must provide adjacent Granary and Storage sites")
     granary = frontier.build.place_raw("granary", granary_cell)
@@ -242,6 +244,7 @@ func _run() -> void:
         "warning_sent": true, "raid_count": 0, "spawn_retry": 0.0, "status": "vulnerable"
     }
 
+    var frontier_food_before_save: int = granary.stockpile_amount("food")
     var frontier_snapshot: Dictionary = save_system.collect(frontier)
     require(frontier_snapshot["version"] == 13 and save_system._valid_save(frontier_snapshot),
         "Frontier Granary stockpile and isolated-depot pressure must pass v13 validation")
@@ -262,7 +265,7 @@ func _run() -> void:
     var restored_frontier = get_first_node_in_group("main")
     require(restored_frontier != null, "Frontier reload must recreate the campaign")
     var loaded_granary = find_building("granary", granary_cell)
-    require(loaded_granary != null and loaded_granary.stockpile_amount("food") == granary.stockpile_amount("food"),
+    require(loaded_granary != null and loaded_granary.stockpile_amount("food") == frontier_food_before_save,
         "Frontier reload must preserve Granary food without duplication or loss")
     require(restored_frontier.supply._pressure_records.has(pressure_key),
         "Save v13 must restore isolated Granary pressure state")
