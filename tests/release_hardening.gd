@@ -31,6 +31,9 @@ func _fixture_for_version(source: Dictionary, target_version: int) -> Dictionary
             if String(resource.get("kind", "")) != "food":
                 legacy_resources.append(resource)
         fixture["resources"] = legacy_resources
+        for index in range(fixture["buildings"].size() - 1, -1, -1):
+            if String(fixture["buildings"][index].get("id", "")) == "hunting_lodge":
+                fixture["buildings"].remove_at(index)
 
     if target_version < 15:
         fixture["quota"].erase("scout")
