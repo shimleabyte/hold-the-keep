@@ -5,7 +5,7 @@ func require(condition: bool, message: String) -> void:
     if not condition:
         push_error("FAIL: " + message)
         quit(1)
-        return
+    assert(condition, message)
 
 
 func ticks(count: int) -> void:
