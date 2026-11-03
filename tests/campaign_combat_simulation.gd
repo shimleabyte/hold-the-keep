@@ -103,6 +103,8 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     main.fog.set_physics_process(false)
     main.territory.set_physics_process(false)
     main.nav.set_physics_process(false)
+    main.flow.set_physics_process(false)
+    main.frontier_campaign.set_process(false)
     main.player.set_process(false)
     main.player.set_physics_process(false)
 
