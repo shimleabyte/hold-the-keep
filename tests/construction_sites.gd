@@ -1,5 +1,5 @@
 extends SceneTree
-## Phase 05.2a: Builder-driven construction, refunds and v14 persistence.
+## Phase 05.2a: Builder-driven construction, refunds and v15 persistence.
 func ticks(count: int) -> void:
     for i in range(count):
         await physics_frame
@@ -140,7 +140,7 @@ func _initialize() -> void:
     current_scene = reloaded
     await ticks(12)
     var restored_sites := get_nodes_in_group("construction_sites")
-    assert(restored_sites.size() == 2, "Loading a v14 save must restore all unfinished construction sites")
+    assert(restored_sites.size() == 2, "Loading a v15 save must restore all unfinished construction sites")
     var restored_site = null
     for candidate in restored_sites:
         if candidate.cell == second_cell:
@@ -151,7 +151,7 @@ func _initialize() -> void:
     var restored_queue: Array = reloaded.build.construction_queue()
     assert(restored_queue.size() == 2 and restored_queue[0].cell == third_cell
         and restored_queue[1].cell == second_cell,
-        "Explicit project priority must survive v14 save/load")
+        "Explicit project priority must survive v15 save/load")
     var expected_refund: int = int(restored_site.refundable_cost().get("wood", 0))
     var refund_before: int = inventory.get_amount("wood")
     assert(reloaded.build.demolish_at(second_cell), "Right-click demolition must cancel a blueprint")

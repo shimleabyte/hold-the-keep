@@ -403,5 +403,34 @@
       "accent": "#d4ad73",
       "shadow": "#463222"
     }
+  },
+  {
+    "id": "scout_post",
+    "name": "Pondok Pengintai",
+    "short": "INTAI",
+    "size": [
+      3,
+      2
+    ],
+    "cost": {
+      "wood": 24,
+      "stone": 10
+    },
+    "hp": 165,
+    "color": "#737b54",
+    "workplaces": {
+      "scout": 2
+    },
+    "work_radius": 22,
+    "repair_cost": {
+      "wood": 1
+    },
+    "visual": {
+      "material": "weathered timber and canvas",
+      "feature": "scout_post_map_board",
+      "primary": "#777d56",
+      "accent": "#c6b17b",
+      "shadow": "#39382b"
+    }
   }
 ]

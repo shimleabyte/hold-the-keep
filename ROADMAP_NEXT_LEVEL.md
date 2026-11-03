@@ -4,7 +4,7 @@
 **Phase 02 merge commits:** PR #31 (`6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`) delivered local depot storage/transfers; PR #32 (`2f94959b497677eae49d4303f72322650fb591c2`) delivered garrisons/inspection; PR #33 (`5d7db56b3a51a25541f541bb46c19b26996d22be`) delivered player-directed physical shipments and save v13. PR #33 validation: [workflow #41323062111](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323062111), 50/50 jobs successful on Godot 4.3/4.7, including 23 regressions per engine, Frontier diagnostic and Windows/Linux export.  
 **Baseline:** Godot 4.7 / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, optional Frontier Expedition world 192×192 / 20 days / 4 acts with a 128×128 starting heartland, mainline save format v13 with backward compatibility for save versions v1–v12.
 
-**Active CI policy:** Godot 4.7 only for import/parse, regressions and Frontier performance diagnostics. Godot 4.3 is not an active compatibility target. Windows/Linux release exports are deferred until release acceptance; export presets and build scripts remain in the repository. Historical multi-version and export results remain historical evidence.
+**Active CI policy:** Development CI runs only on Godot 4.7 for import/parse, regression and performance diagnostics. Windows/Linux release exports are deferred until the release phase; existing presets and scripts remain in the repository.
 
 ## 1. Product direction
 
@@ -153,7 +153,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** multiple strongholds can be found, attacked, destroyed, restored from saves and completed in a deterministic objective sequence.
 
 ### Phase 04 — Jobs and workplaces
-**Status:** First Builder/workplace slice is merged into `main`; workplace regression CI passed on Godot 4.3 and 4.7.
+**Status:** Builder is merged into `main`; Hunter + Hunting Lodge is on `feat/hunter-hunting-lodge` awaiting final CI/PR acceptance. Scout + Scout Post is in progress on `feat/scout-specialist`, stacked on the Hunter branch. Healer and Blacksmith remain open.
 
 - [x] Introduce Builder as a real labor occupation; soldier is stored separately as a military specialization, with a compatibility `job` alias.
 - [x] Add Builder workplace capacity on Keeps and Outposts, plus data-driven work radii.
@@ -162,7 +162,9 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Select the nearest reachable connected depot rather than stopping at an unreachable nearest depot.
 - [x] Add configurable job priority order, reassignment, Alt+job hotkeys and right-click controls in the job panel.
 - [x] Persist occupation, military specialization and priority order in save format v9; older saves still load through the compatibility job field.
-- [ ] Add Hunter, Scout, Healer and Blacksmith in subsequent incremental slices.
+- [x] Add Hunter as a two-slot Hunting Lodge occupation with deterministic wildlife harvest, food delivery, J hotkey/UI, target reservation, work-radius enforcement and v14 save migration (implementation branch `feat/hunter-hunting-lodge`; CI/PR pending).
+- [x] Add Scout as a two-slot Scout Post occupation with bounded A* exploration, local permanent-fog revelation, sector rotation, return-to-post when exhausted, U hotkey/UI and v15 save migration (`feat/scout-specialist`); open PR #65, awaiting integration and manual review.
+- [ ] Add Scout, Healer and Blacksmith in subsequent incremental slices.
 - [x] Complete Godot 4.3 / 4.7 CI regression matrix; real gameplay pathing still needs a manual playtest.
 
 **Acceptance gate:** workers select valid tasks, avoid cross-map wandering, recover from blocked paths, deposit at reachable storage and retain their state through saves.
@@ -179,7 +181,8 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add a dedicated construction queue panel with explicit order, one-step reorder controls, cancellation and visible per-site costs/live progress; Builder selection follows saved queue priority (PR #59 merged as `6147cfc`; workflow #509 passed 80/80).
 - [x] Extend the existing defensive tower into the Watchtower role with permanent 128px terrain discovery and live strategic-map enemy observation; keep its existing turret behavior (PR #60 merged as `beef7b7`; workflow #515 passed 82/82).
 - [x] Add the Granary food-only depot with population upkeep, food-only Frontier logistics/shipments, raid interaction and v13 save coverage (Phase 05.3b; PR #61 merged as `d9b87b1`, workflow #41558978053 passed 84/84).
-- [ ] Add remaining facilities according to dependency: Barracks, Archery Range, Hunting Lodge, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress and Signal Beacon.
+- [x] Add Hunting Lodge as the Hunter workplace (implementation branch `feat/hunter-hunting-lodge`; CI/PR pending).
+- [ ] Add remaining facilities according to dependency: Barracks, Archery Range, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress and Signal Beacon.
 - Introduce leather and gold only when a building or campaign system consumes them.
 - Add construction/repair work, military training, trade and siege production as separate validated slices.
 

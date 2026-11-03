@@ -17,7 +17,7 @@ Dari akar proyek:
 Skrip observasi lama yang hanya mencetak hasil tanpa assertion dipisahkan ke `run_diagnostics.sh`;
 jalankan saat meninjau animasi, pertarungan, efek, ekonomi atau alur save/menu.
 
-GitHub Actions sekarang menjalankan import/parse dan seluruh assertion regression suite hanya pada Godot 4.7. Frontier dan Frontier Expedition performance diagnostics juga menggunakan Godot 4.7. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Godot 4.3 tidak lagi menjadi target atau gate CI aktif. Windows/Linux release exports sengaja ditunda sampai fase release; build scripts dan export presets tetap disimpan di repository. Workflow historis yang disebut di bawah tetap merupakan catatan valid pada saat dijalankan, bukan konfigurasi CI saat ini.
+GitHub Actions menjalankan import/parse dan 44 assertion regression suites hanya pada Godot 4.7, plus Frontier dan Frontier Expedition performance diagnostics. Windows/Linux release exports ditunda sampai release phase; build scripts/export presets tetap disimpan. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Validasi terbaru untuk perluasan late-act reload: PR #57, workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578), 78/78 jobs sukses; kedua engine lulus untuk `campaign_reload_hardening`, termasuk save/reload Act IV dan state victory hari ke-20.
 
 | Skrip | Menguji |
 |---|---|
@@ -27,20 +27,22 @@ GitHub Actions sekarang menjalankan import/parse dan seluruh assertion regressio
 | villagers_economy.gd | job, setor ke gudang, ladang, populasi, malam, upkeep, performa |
 | events_boss_final_night.gd | event acak, boss, kemenangan, malam terakhir vs tingkat pertahanan |
 | save_load_audio_menu.gd | round-trip save/load, autosave, save rusak, audio, menu, pengaturan |
-| resource_save_state.gd | status pohon/batu/bijih besi dan timer tumbuh ulang, rollback ke backup save |
+| resource_save_state.gd | status pohon/batu/bijih besi/hewan liar dan timer tumbuh ulang, rollback ke backup save |
 | campaign_assault.gd | Classic single-stronghold compatibility, fog reveal/save, G assault/recall, garrison at dawn and conquest victory |
 | faction_visual_identity.gd | four distinct faction palettes/crests, six specialist equipment signatures, enemy visual assignment and Classic isolation |
-| building_visual_identity.gd | visual material/detail coverage for all 14 buildings, Frontier-only rendering, unique feature signatures and deterministic damage-state thresholds |
+| building_visual_identity.gd | visual material/detail coverage for all 16 buildings, Frontier-only rendering, unique feature signatures and deterministic damage-state thresholds |
 | audio_identity.gd | ten biome/day-night ambience loops, two original music themes, deterministic sample buffers, 14 event cues, Master bus routing and menu/campaign crossfade selection |
 | combat_visual_feedback.gd | melee/ranged anticipation, directional impact, stagger and distinct Dash/Cleave/Rally cue lifetimes |
 | faction_registry.gd | four faction definitions, region mapping, roster membership, stronghold garrisons, component-backed War Shaman allied healing/cooldown and v11 faction save persistence |
 | frontier_campaign.gd | Classic/Frontier campaign calendars, act gates, all regional objectives, rewards, save/load and day-20 King victory |
 | campaign_multi_stronghold.gd | four Frontier strongholds, deterministic objective order, regional placement, independent garrisons, locked objectives, save/load and final conquest |
-| workplace_assignments.gd | Builder workplace capacity/radius, repair material consumption, reachable depot selection, job priority reassignment and v11 save validation |
+| workplace_assignments.gd | Builder workplace capacity/radius, repair material consumption, reachable depot selection and priority reassignment |
+| hunting_lodge.gd | Hunter workplace capacity/radius, wildlife reservations, food yield/depot delivery, v15 save validation and teardown |
+| scout_specialist.gd | Scout Post capacity, bounded reachable A* survey, 144px local fog revelation, target separation, return-to-post behavior and v15 migration |
 | production_worksites.gd | Lumber Camp/Quarry workplace limits, specialist work radius, Classic fallback, cleanup and v13 save compatibility |
-| construction_sites.gd | Builder discovery/pathing, two-worker site cap, once-only funding, functional completion, proportional cancellation refund, save validation and v13 reload |
+| construction_sites.gd | Builder discovery/pathing, two-worker site cap, once-only funding, functional completion, proportional cancellation refund, save validation and v15 reload |
 | watchtower_vision.gd | Existing tower's 128px permanent exploration radius, live strategic-map enemy observation, out-of-range concealment and turret compatibility |
-| granary_food_storage.gd | Classic food reserve/upkeep, Frontier food-only storage, connected depot transfers, shipment rejection/refund, raid theft and save-v13 reload |
+| granary_food_storage.gd | Classic food reserve/upkeep, Frontier food-only storage, connected depot transfers, shipment rejection/refund, raid theft and save-v15 reload plus v13 legacy migration |
 | map_stages.gd | empat biome Classic, fog map panel, batas tiga bab, bobot archer/brute per bab |
 | responsive_layout.gd | resolution-to-viewport mapping, exact 2× pixel scale, live synchronization, HUD safe playfield and map/hotbar bounds across six desktop resolutions |
 | player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, archer projectile, brute armor, combat save |
@@ -52,25 +54,25 @@ GitHub Actions sekarang menjalankan import/parse dan seluruh assertion regressio
 | campaign_reload_hardening.gd | Act I–IV Frontier reloads, completed regional objectives, active escort recovery, three conquered strongholds, damaged final stronghold, day-20 King gate and persisted victory reload |
 | campaign_balance_matrix.gd | Classic 15-day and Frontier 20-day schedules, act wave budgets, faction rosters and final-boss gate |
 | campaign_combat_simulation.gd | Scripted sample engagements for Frontier Acts I–IV and the day-20 King assault; JSON metrics for Keep damage, population loss, player downs, enemy survivors and simulated time. Uses real damage/cooldown transactions but does not simulate pathfinding, autonomous AI or complete waves |
-| release_hardening.gd | Classic v1–v12 and Frontier v7–v12 save migration, interrupted writes, backup recovery and export presets |
+| release_hardening.gd | Classic v1–v15 and Frontier v7–v15 save migration, interrupted writes and backup recovery; release exports are deferred |
 | anim_sync.gd | pukulan penebang jatuh di frame benturan; pelarian memakai klip lari |
 | animation_motion.gd | idle breathing, walk/run lift, directional attack/work lean, hurt recoil, stable death pose |
 | world_config.gd | profile dimensions, tile indexing, Keep placement, Classic/Frontier profile definitions |
 | frontier_world.gd | 128×128 terrain, five biomes, dedicated Frontier terrain atlas contract, regional resources, iron veins, Keep claims, reachability and deterministic generation |
-| frontier_expedition.gd | 192×192 Expedition map, four sealed outer marches, discovery-gated crossings, bridge/path blocking, permanent fog reveal, v13 save persistence and minimum-viewport map bounds |
+| frontier_expedition.gd | 192×192 Expedition map, four sealed outer marches, discovery-gated crossings, bridge/path blocking, permanent fog reveal, v15 save persistence and minimum-viewport map bounds |
 | regional_control_roads.gd | regional neutral/player/enemy/contested states, walkable roads/bridges, Keep-connected supply routes, depot isolation, rerouting and save persistence |
-| local_depot_stockpiles.gd | Frontier local depot balances, capacity rejection, worker cargo deposit, bounded connected-depot shipments, v13 migration and save/load round-trip |
-| physical_shipments.gd | Player-directed depot orders, visible carriers, Keep withdrawals, capacity reservations, cancellation/refund, route interruption recovery and v13 persistence |
-| depot_cost_sources.gd | Explicit Keep/Storage/Outpost cost source, construction/research debit, no cross-depot pooling, disconnected-source rejection, atomic payment and v13 preference persistence |
-| supply_pressure.gd | Contested disconnected-depot warning, targeted saboteur pathing, deterministic stock theft, bounded repeat raid, depot damage, HUD state, v13 persistence and recovery |
+| local_depot_stockpiles.gd | Frontier local depot balances, capacity rejection, worker cargo deposit, bounded connected-depot shipments, v15 save state, v13 migration and save/load round-trip |
+| physical_shipments.gd | Player-directed depot orders, visible carriers, Keep withdrawals, capacity reservations, cancellation/refund, route interruption recovery and v15 persistence and v12 migration |
+| depot_cost_sources.gd | Explicit Keep/Storage/Outpost cost source, construction/research debit, no cross-depot pooling, disconnected-source rejection, atomic payment and v15 preference persistence and v13 compatibility |
+| supply_pressure.gd | Contested disconnected-depot warning, targeted saboteur pathing, deterministic stock theft, bounded repeat raid, depot damage, HUD state, v15 persistence, v13 legacy compatibility and recovery |
 | shieldbearer_behavior.gd | component-backed brace telegraph, frontal source-origin mitigation, side/rear counterplay, stagger interruption and disengage cancellation |
 | scout_marking.gd | component-backed Scout telegraph, same-faction-only bounded sharing, focus-target priority, mark expiry, stagger interruption and target disengage |
 | saboteur_disruption.gd | component-backed Saboteur priority scan, A* reachability, telegraphed disruption, structure damage, tower/depot/workplace suppression and recovery, stagger interruption |
 | siege_engine_behavior.gd | component-backed Siege Engine target priorities, A* pathing, telegraphed structural impact, recovery, defender interruption and building-only attack |
 | beast_rider_charge.gd | component-backed isolated defender target priority, A* locked charge route, telegraphed impact, sidestep miss and stagger interruption |
-| faction_camps_patrols.gd | deterministic enemy-territory camp placement, fog activation, A* patrol leash, bounded reinforcement, camp destruction and v13 save/restore |
+| faction_camps_patrols.gd | deterministic enemy-territory camp placement, fog activation, A* patrol leash, bounded reinforcement, camp destruction and v15 save/restore and v13 legacy compatibility |
 | faction_raids.gd | exposed connected depot/road target selection, finite camp dispatch, pathing, structure damage, depot theft, target abort, faction raid save/restore and cleanup |
-| faction_warfare_stress.gd | simultaneous 48 faction garrisons, eight patrols, four raids, 48 villagers, per-raider A* routing, global raid cap and v13 snapshot validation |
+| faction_warfare_stress.gd | simultaneous 48 faction garrisons, eight patrols, four raids, 48 villagers, per-raider A* routing, global raid cap and v15 snapshot validation |
 | balance_final_night.gd | `CASES="4,2;6,3"` = daftar "prajurit,menara"; `TECH=era2` atau `TECH=all` memberi teknologi; hasil MENANG/KALAH |
 
 Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; nilai sebenarnya 12).
@@ -78,11 +80,11 @@ Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan k
 
 ## Skrip yang dijalankan otomatis di CI
 
-Suite assertion yang dijalankan pada Godot 4.7 mencakup 42 skrip:
+Suite assertion yang dijalankan pada Godot 4.7 mencakup 44 skrip:
 
-`animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `production_worksites`, `construction_sites`, `watchtower_vision`, `granary_food_storage`, `faction_registry`, `faction_visual_identity`, `building_visual_identity`, `combat_visual_feedback`, `audio_identity`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `campaign_combat_simulation`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, `frontier_expedition`, `regional_control_roads`, `local_depot_stockpiles`, `outpost_garrisons`, `physical_shipments`, `depot_cost_sources`, `supply_pressure`, `shieldbearer_behavior`, `scout_marking`, `saboteur_disruption`, `siege_engine_behavior`, `beast_rider_charge`, `faction_camps_patrols`, `faction_raids`, serta `faction_warfare_stress`.
+`animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `hunting_lodge`, `scout_specialist`, `production_worksites`, `construction_sites`, `watchtower_vision`, `granary_food_storage`, `faction_registry`, `faction_visual_identity`, `building_visual_identity`, `combat_visual_feedback`, `audio_identity`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `campaign_combat_simulation`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, `frontier_expedition`, `regional_control_roads`, `local_depot_stockpiles`, `outpost_garrisons`, `physical_shipments`, `depot_cost_sources`, `supply_pressure`, `shieldbearer_behavior`, `scout_marking`, `saboteur_disruption`, `siege_engine_behavior`, `beast_rider_charge`, `faction_camps_patrols`, `faction_raids`, serta `faction_warfare_stress`.
 
-CI aktif menjalankan import/parse, 42 assertion suite pada Godot 4.7, serta dua Frontier performance diagnostics pada Godot 4.7. Tidak ada Godot 4.3 matrix atau release-export job dalam CI development. Riwayat run lama di bawah mencatat pipeline saat itu, termasuk pengujian lintas versi dan export; angka tersebut tidak menggambarkan pipeline aktif.
+CI aktif hanya menjalankan Godot 4.7 import/parse, 44 regression suites dan dua diagnostics. Windows/Linux packaging remains deferred. Pada 1 November 2026, PR #32 workflow #41318897606 lulus 48/48 jobs. Setelah Phase 02.3, PR #33 workflow #41323062111 lulus 50/50 jobs; 23 assertion suite berjalan pada masing-masing Godot 4.3 dan 4.7, bersama import/parse, performance diagnostic dan Windows/Linux export. PR #34 workflow #41325205416 completed successfully with 52/52 jobs: 24 assertion suites passed on each Godot 4.3 and 4.7, with import/parse, Frontier performance diagnostic and Windows/Linux release export.
 
 Skrip observasi/manual yang tidak termasuk assertion CI: `anim_sync`, `combat_tower_walls`, `events_boss_final_night`, `fx_shake_settings`, `restart_gameover`, `save_load_audio_menu`, `tech_tree`, dan `villagers_economy`. Jalankan skrip tersebut ketika memeriksa perilaku runtime yang belum dikonversi menjadi assertion.
 
@@ -108,7 +110,7 @@ Dijalankan di layar virtual dengan OpenGL software, hasilnya PNG di /tmp/shots:
 
 Phase 09 CI runs the Frontier timing benchmark as a non-gating diagnostic and uploads a p50/p95/p99 artifact. These runner-specific measurements do not substitute for target-hardware profiling.
 
-Release export is intentionally disabled in development CI. Keep `tools/build.sh`, `tools/build.ps1`, and `export_presets.cfg`; reintroduce template-backed Windows/Linux build and clean-machine smoke checks during the release phase, using Godot 4.7.
+Release export is intentionally not part of development CI. Re-enable it with Godot 4.7 templates during the release phase.
 
 
 PR #35 merged Phase 02.5 at `2ba5628`; workflow #41328005585 passed. PR #36 merged Shieldbearer directional brace at `b02aa60`; PR #39 merged Scout faction-aware marking at `11f3f13`; PR #40 merged Saboteur building disruption at `8f1a914`. PR #41 merged Siege Engine structural siege cycle at `58da7be`; workflow #41356689758 passed 62/62 jobs, including 29 assertion suites on each of Godot 4.3 and 4.7. PR #42 merged Beast Rider charge at `e6cf221`; workflow [#41366304675](https://github.com/shimleabyte/hold-the-keep/actions/runs/41366304675) passed 64/64 jobs. PR #43 merged Phase 06.3 faction camps and bounded patrols at `fa3a45a`; workflow [#41377840888](https://github.com/shimleabyte/hold-the-keep/actions/runs/41377840888) passed 66/66 jobs, including 31 assertion suites per engine, import/parse, Frontier performance diagnostic and Windows/Linux release export.
@@ -117,4 +119,4 @@ PR #35 merged Phase 02.5 at `2ba5628`; workflow #41328005585 passed. PR #36 merg
 PR #42 merged the Beast Rider charge and its regression coverage. The test verifies isolated-defender selection, a walkable route around a wall, telegraph/impact timing, sidestep avoidance, stagger interruption and the cooldown window. The ability is transient; save schema v13 is unchanged.
 
 
-PR #43 merged Phase 06.3 camp/patrol coverage. `faction_camps_patrols` passed on Godot 4.3 and 4.7. It checks deterministic placement in enemy territory, fog-gated activation, A* path/leash bounds, return behavior, active cap and finite reinforcement budget, camp destruction cleanup, and v13 save/restore persistence.
+PR #43 merged Phase 06.3 camp/patrol coverage. `faction_camps_patrols` passed on Godot 4.3 and 4.7. It checks deterministic placement in enemy territory, fog-gated activation, A* path/leash bounds, return behavior, active cap and finite reinforcement budget, camp destruction cleanup, and v15 save/restore persistence.
