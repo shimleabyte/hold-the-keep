@@ -1,6 +1,6 @@
 # Phase 04 — Specialist Jobs and Workplace Completion
 
-**Status:** Builder is merged into `main`. Hunter PR #64 passed 45/45 jobs on Godot 4.7. Scout PR #65 is implemented on the verified Hunter baseline; Healer/Infirmary PR #67 is implemented on the Scout stack and save schema v16. Both require a fresh full Godot 4.7 matrix and in-game acceptance before integration. Blacksmith remains open.
+**Status:** Builder is merged into `main`. Hunter PR #64 passed 45/45, Scout PR #65 passed 46/46, and Healer PR #67 passed 47/47 jobs on Godot 4.7. Blacksmith is being implemented on `feat/blacksmith-forge` after Healer; its fresh full CI and rendered in-game acceptance remain pending.
 **Dependency:** Phase 02 connected depots; Phase 05 worksites and construction foundations.
 **Engine target:** Godot 4.7 only.
 
@@ -43,10 +43,16 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - [x] Add Healer occupation, I quota/priority shortcut, sprite/HUD, Infirmary artwork and save schema v16.
 - [x] Add `tests/healer_infirmary.gd` for tech unlock, capacity, targeting, unique reservation, healing clamp, teardown and v15 migration; full suite CI remains pending.
 
-### Blacksmith
-- Operate from a Forge/Blacksmith workplace and consume Iron plus a defined secondary resource for a concrete output.
-- Begin with a small equipment/repair output that has an observable effect on soldier or structure stats.
-- Do not introduce gold, leather, coal or additional resources until a gameplay system consumes them.
+### Blacksmith — implemented on `feat/blacksmith-forge` (stacked PR #68)
+- [x] Use the existing Era III Forge as the workplace with two Blacksmith slots and an 18-tile service radius; no duplicate building or resource is introduced.
+- [x] Require existing Iron Weapons/Iron Armor research before the corresponding recipe becomes available.
+- [x] Craft individual Iron Weapons (3 iron + 1 wood, +20% soldier damage) and Iron Armor (4 iron + 2 wood, +20% soldier maximum HP); one of each per soldier.
+- [x] Reserve each soldier to one Blacksmith at a time; exclude expeditioning, recalling, hidden, fleeing and fighting soldiers.
+- [x] Release target reservations on completion, invalidation, Forge sabotage and Forge demolition.
+- [x] Add a Blacksmith job row in JOBS without consuming an existing keyboard shortcut; use the Forge icon and a distinct role sprite.
+- [x] Persist equipment flags and Blacksmith occupation in save v17, including restoration of armored soldier HP caps; retain v1–v16 Classic and v7–v16 Frontier migration.
+- [x] Add `tests/blacksmith_forge.gd` covering two-slot capacity, unique reservations, recipe costs/effects, save migration and workplace teardown.
+- [ ] Validate full Godot 4.7 CI and review rendered equipment visibility, combat balance and economic pacing in an actual playthrough.
 
 ## Shared requirements
 - Keep labor occupation separate from military specialization; soldier assignment must not be overwritten by a labor job change.
@@ -67,3 +73,10 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - Healers prioritize the most wounded reachable friendly soldier. A patient is reserved by one Healer at a time. Treatment restores 10 HP per 3.2 seconds and stops at full health; invalid patients and lost workplaces release reservations.
 - Save schema increments to v16. v1–v15 migration compatibility remains required.
 - `tests/healer_infirmary.gd` covers workplace requirement/capacity, patient selection, target uniqueness, healing, demolition cleanup and v15 migration. Full Godot 4.7 CI and rendered gameplay review remain pending.
+
+
+### Blacksmith implementation branch (2026-11-03)
+- Base: green Healer head `7dc6ebf`; branch `feat/blacksmith-forge`.
+- Healer CI #626 passed 47/47 jobs on Godot 4.7 before this slice started.
+- Blacksmith adds no new technology node: existing `iron_weapons` and `iron_armor` gate the respective permanent individual recipes.
+- Equipment is stored per soldier; reassignment away from soldier removes the equipment state so non-soldier HP is not corrupted.

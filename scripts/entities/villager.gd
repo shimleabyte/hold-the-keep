@@ -533,6 +533,10 @@ func _facility_sabotaged(facility: Variant) -> bool:
 
 func _tick_working(delta: float) -> void:
     if _facility_sabotaged(target) or _facility_sabotaged(workplace):
+        if job == "blacksmith" and _facility_sabotaged(workplace):
+            _release()
+            state = State.IDLE
+            _decide_t = 1.0
         anim.play("idle")
         return
     if target == null or not is_instance_valid(target):
@@ -1432,6 +1436,14 @@ func _job_color() -> Color:
 
 func _draw() -> void:
     anim.draw(self, TEXTURES.get(job, TEXTURES[""]), FW, FH)
+    if job == "soldier" and armor_equipped:
+        draw_rect(Rect2(-3, -13, 6, 5), Color("#64727b"))
+        draw_rect(Rect2(-2, -12, 4, 3), Color("#c0c6c2"))
+        draw_rect(Rect2(-4, -10, 1, 3), Color("#8e9aa0"))
+        draw_rect(Rect2(3, -10, 1, 3), Color("#8e9aa0"))
+    if job == "soldier" and weapon_equipped:
+        draw_line(Vector2(6, -8), Vector2(10, -15), Color("#d6dde0"), 1.5)
+        draw_line(Vector2(5, -9), Vector2(8, -8), Color("#c58a42"), 1.5)
     if job == "builder":
         draw_rect(Rect2(8, -13, 2, 6), Color("#704b2a"))
         draw_rect(Rect2(7, -15, 5, 2), Color("#aeb5bf"))

@@ -17,7 +17,7 @@ Dari akar proyek:
 Skrip observasi lama yang hanya mencetak hasil tanpa assertion dipisahkan ke `run_diagnostics.sh`;
 jalankan saat meninjau animasi, pertarungan, efek, ekonomi atau alur save/menu.
 
-GitHub Actions menjalankan import/parse on Godot 4.7 only, 45 assertion regression suites on Godot 4.7 only, plus Frontier and Frontier Expedition performance diagnostics. Windows/Linux release exports are deferred until the release phase. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Riwayat pipeline multi-engine/export dari PR #57 (workflow #490, 78/78) adalah bukti historis untuk konfigurasi sebelumnya, bukan gate aktif. Saat ini hanya hasil Godot 4.7 yang menjadi acceptance CI.
+GitHub Actions menjalankan import/parse on Godot 4.7 only, 46 assertion regression suites on Godot 4.7 only, plus Frontier and Frontier Expedition performance diagnostics. Windows/Linux release exports are deferred until the release phase. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Riwayat pipeline multi-engine/export dari PR #57 (workflow #490, 78/78) adalah bukti historis untuk konfigurasi sebelumnya, bukan gate aktif. Saat ini hanya hasil Godot 4.7 yang menjadi acceptance CI.
 
 | Skrip | Menguji |
 |---|---|
@@ -38,12 +38,13 @@ GitHub Actions menjalankan import/parse on Godot 4.7 only, 45 assertion regressi
 | campaign_multi_stronghold.gd | four Frontier strongholds, deterministic objective order, regional placement, independent garrisons, locked objectives, save/load and final conquest |
 | workplace_assignments.gd | Builder workplace capacity/radius, repair material consumption, reachable depot selection and priority reassignment |
 | hunting_lodge.gd | Hunter workplace capacity/radius, wildlife reservations, food yield/depot delivery, v16 save validation and teardown |
-| healer_infirmary.gd | Infirmary workplace requirement/capacity, wounded-soldier selection, patient reservation, bounded healing, teardown and v16 migration |
+| healer_infirmary.gd | Infirmary workplace requirement/capacity, wounded-soldier selection, patient reservation, bounded healing, teardown and v15 migration compatibility on current v17 schema |
+| blacksmith_forge.gd | Forge two-slot capacity, unique soldier reservations, weapon/armor costs and effects, v16 migration and workplace teardown |
 | scout_specialist.gd | Scout Post capacity, bounded reachable A* survey, 144px local fog revelation, target separation, return-to-post behavior and v15 migration |
 | production_worksites.gd | Lumber Camp/Quarry workplace limits, specialist work radius, Classic fallback, cleanup and v13 save compatibility |
-| construction_sites.gd | Builder discovery/pathing, two-worker site cap, once-only funding, functional completion, proportional cancellation refund, save validation and v16 reload |
+| construction_sites.gd | Builder discovery/pathing, two-worker site cap, once-only funding, functional completion, proportional cancellation refund, save validation and v17 reload |
 | watchtower_vision.gd | Existing tower's 128px permanent exploration radius, live strategic-map enemy observation, out-of-range concealment and turret compatibility |
-| granary_food_storage.gd | Classic food reserve/upkeep, Frontier food-only storage, connected depot transfers, shipment rejection/refund, raid theft and save-v16 reload plus v13 legacy migration |
+| granary_food_storage.gd | Classic food reserve/upkeep, Frontier food-only storage, connected depot transfers, shipment rejection/refund, raid theft and save-v17 reload plus v13 legacy migration |
 | map_stages.gd | empat biome Classic, fog map panel, batas tiga bab, bobot archer/brute per bab |
 | responsive_layout.gd | resolution-to-viewport mapping, exact 2× pixel scale, live synchronization, HUD safe playfield and map/hotbar bounds across six desktop resolutions |
 | player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, archer projectile, brute armor, combat save |
@@ -55,12 +56,12 @@ GitHub Actions menjalankan import/parse on Godot 4.7 only, 45 assertion regressi
 | campaign_reload_hardening.gd | Act I–IV Frontier reloads, completed regional objectives, active escort recovery, three conquered strongholds, damaged final stronghold, day-20 King gate and persisted victory reload |
 | campaign_balance_matrix.gd | Classic 15-day and Frontier 20-day schedules, act wave budgets, faction rosters and final-boss gate |
 | campaign_combat_simulation.gd | Scripted sample engagements for Frontier Acts I–IV and the day-20 King assault; JSON metrics for Keep damage, population loss, player downs, enemy survivors and simulated time. Uses real damage/cooldown transactions but does not simulate pathfinding, autonomous AI or complete waves |
-| release_hardening.gd | Classic v1–v16 and Frontier v7–v16 save migration, interrupted writes and backup recovery; release exports are deferred |
+| release_hardening.gd | Classic v1–v17 and Frontier v7–v17 save migration, interrupted writes and backup recovery; release exports are deferred |
 | anim_sync.gd | pukulan penebang jatuh di frame benturan; pelarian memakai klip lari |
 | animation_motion.gd | idle breathing, walk/run lift, directional attack/work lean, hurt recoil, stable death pose |
 | world_config.gd | profile dimensions, tile indexing, Keep placement, Classic/Frontier profile definitions |
 | frontier_world.gd | 128×128 terrain, five biomes, dedicated Frontier terrain atlas contract, regional resources, iron veins, Keep claims, reachability and deterministic generation |
-| frontier_expedition.gd | 192×192 Expedition map, four sealed outer marches, discovery-gated crossings, bridge/path blocking, permanent fog reveal, v16 save persistence and minimum-viewport map bounds |
+| frontier_expedition.gd | 192×192 Expedition map, four sealed outer marches, discovery-gated crossings, bridge/path blocking, permanent fog reveal, v17 save persistence and minimum-viewport map bounds |
 | regional_control_roads.gd | regional neutral/player/enemy/contested states, walkable roads/bridges, Keep-connected supply routes, depot isolation, rerouting and save persistence |
 | local_depot_stockpiles.gd | Frontier local depot balances, capacity rejection, worker cargo deposit, bounded connected-depot shipments, v15 save state, v13 migration and save/load round-trip |
 | physical_shipments.gd | Player-directed depot orders, visible carriers, Keep withdrawals, capacity reservations, cancellation/refund, route interruption recovery and v15 persistence and v12 migration |
@@ -81,11 +82,11 @@ Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan k
 
 ## Skrip yang dijalankan otomatis di CI
 
-Suite assertion yang dijalankan pada Godot 4.7 mencakup 45 skrip:
+Suite assertion yang dijalankan pada Godot 4.7 mencakup 46 skrip:
 
-`animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `hunting_lodge`, `scout_specialist`, `production_worksites`, `construction_sites`, `watchtower_vision`, `granary_food_storage`, `faction_registry`, `faction_visual_identity`, `building_visual_identity`, `combat_visual_feedback`, `audio_identity`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `campaign_combat_simulation`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, `frontier_expedition`, `regional_control_roads`, `local_depot_stockpiles`, `outpost_garrisons`, `physical_shipments`, `depot_cost_sources`, `supply_pressure`, `shieldbearer_behavior`, `scout_marking`, `saboteur_disruption`, `siege_engine_behavior`, `beast_rider_charge`, `faction_camps_patrols`, `faction_raids`, serta `faction_warfare_stress`.
+`animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `hunting_lodge`, `scout_specialist`, `healer_infirmary`, `blacksmith_forge`, `production_worksites`, `construction_sites`, `watchtower_vision`, `granary_food_storage`, `faction_registry`, `faction_visual_identity`, `building_visual_identity`, `combat_visual_feedback`, `audio_identity`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `campaign_combat_simulation`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, `frontier_expedition`, `regional_control_roads`, `local_depot_stockpiles`, `outpost_garrisons`, `physical_shipments`, `depot_cost_sources`, `supply_pressure`, `shieldbearer_behavior`, `scout_marking`, `saboteur_disruption`, `siege_engine_behavior`, `beast_rider_charge`, `faction_camps_patrols`, `faction_raids`, serta `faction_warfare_stress`.
 
-CI aktif menjalankan import/parse, 45 regression suites dan dua performance diagnostics pada Godot 4.7. Godot 4.3 dan Windows/Linux release exports bukan bagian dari development gate; export presets/build scripts tetap tersedia untuk release phase. Pada 1 November 2026, PR #32 workflow #41318897606 lulus 48/48 jobs. Setelah Phase 02.3, PR #33 workflow #41323062111 lulus 50/50 jobs; 23 assertion suite berjalan pada masing-masing Godot 4.3 dan 4.7, bersama import/parse, performance diagnostic dan Windows/Linux export. PR #34 workflow #41325205416 completed successfully with 52/52 jobs: 24 assertion suites passed on each Godot 4.3 and 4.7, with import/parse, Frontier performance diagnostic and Windows/Linux release export.
+CI aktif menjalankan import/parse, 46 regression suites dan dua performance diagnostics pada Godot 4.7. Godot 4.3 dan Windows/Linux release exports bukan bagian dari development gate; export presets/build scripts tetap tersedia untuk release phase. Pada 1 November 2026, PR #32 workflow #41318897606 lulus 48/48 jobs. Setelah Phase 02.3, PR #33 workflow #41323062111 lulus 50/50 jobs; 23 assertion suite berjalan pada masing-masing Godot 4.3 dan 4.7, bersama import/parse, performance diagnostic dan Windows/Linux export. PR #34 workflow #41325205416 completed successfully with 52/52 jobs: 24 assertion suites passed on each Godot 4.3 and 4.7, with import/parse, Frontier performance diagnostic and Windows/Linux release export.
 
 Skrip observasi/manual yang tidak termasuk assertion CI: `anim_sync`, `combat_tower_walls`, `events_boss_final_night`, `fx_shake_settings`, `restart_gameover`, `save_load_audio_menu`, `tech_tree`, dan `villagers_economy`. Jalankan skrip tersebut ketika memeriksa perilaku runtime yang belum dikonversi menjadi assertion.
 
