@@ -1,6 +1,6 @@
 # Phase 04 — Specialist Jobs and Workplace Completion
 
-**Status:** Builder is merged into `main`; Hunter + Hunting Lodge is implemented on `feat/hunter-hunting-lodge` pending CI/PR acceptance. Scout, Healer and Blacksmith remain open.
+**Status:** Builder is merged into `main`; Hunter + Hunting Lodge is on `feat/hunter-hunting-lodge` pending final CI/PR acceptance. Villager Scout + Scout Post is in progress on the stacked branch `feat/scout-specialist`; Healer and Blacksmith remain open.
 **Dependency:** Phase 02 connected depots; Phase 05 worksites and construction foundations.
 **Engine targets:** Godot 4.3 and 4.7.
 
@@ -21,12 +21,11 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - [x] Add focused workplace/food/save tests and deterministic Frontier wildlife placement coverage.
 - [ ] Review rendered art, pathing and hunting/farming balance in a real playthrough.
 
-### Scout
-- Reveal fog within a bounded observation radius and optionally mark discovered hostile sites/camps.
-- Avoid granting global enemy tracking; visibility must remain observation-based.
-- Support a distinct exploration assignment and return/idle behavior when no unexplored reachable cells remain.
+### Enemy Scout archetype — already implemented separately
+- The enemy Scout/marking archetype is a combat AI behavior on `main`; it is not the villager Scout occupation described below.
+- Its existing mark publication is faction-bounded and observation-based. The new villager role must not inherit global enemy tracking.
 
-### Scout — in progress on `feat/scout-specialist`
+### Villager Scout — in progress on `feat/scout-specialist`
 - Add a two-slot Scout Post as the explicit workplace; Scouts cannot be assigned without a reachable free slot.
 - Use a bounded A* survey loop around the assigned post. Select only reachable walkable destinations with unexplored cells nearby; rotate sectors and avoid duplicating another Scout's active destination.
 - Reveal terrain through the existing permanent fog system with a 144px Scout sight radius. Do not add global enemy tracking or reveal enemies outside existing observation rules.
