@@ -386,5 +386,24 @@
         "frontier_siegecraft"
       ]
     }
+  },
+  {
+    "id": "field_medicine",
+    "name": "Pengobatan Lapangan",
+    "era": 2,
+    "cost": {
+      "wood": 35,
+      "stone": 25
+    },
+    "time": 35,
+    "requires": [
+      "leather"
+    ],
+    "desc": "Membuka Balai Perawatan untuk dua Healer. Setiap perawatan memulihkan 10 HP setelah jeda 3,2 detik.",
+    "effects": {
+      "unlock_building": [
+        "infirmary"
+      ]
+    }
   }
 ]

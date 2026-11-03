@@ -118,8 +118,8 @@ func _initialize() -> void:
     main.supply._depot_connections[first.get_instance_id()] = true
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 15,
-        "The cost-source preference must persist alongside the v15 supply schema")
+    require(snapshot["version"] == 16,
+        "The cost-source preference must persist alongside the v16 supply schema")
     require(snapshot["supply"]["cost_source"] == {"cx": first_cell.x, "cy": first_cell.y},
         "The selected cost depot must persist in the supply save state")
     require(save_system._valid_save(snapshot),
@@ -130,16 +130,20 @@ func _initialize() -> void:
     legacy_v13["job_priority"].erase("hunter")
     legacy_v13["quota"].erase("scout")
     legacy_v13["job_priority"].erase("scout")
+    legacy_v13["quota"].erase("healer")
+    legacy_v13["job_priority"].erase("healer")
     for saved_villager in legacy_v13["villagers"]:
         if String(saved_villager.get("occupation", "")) == "scout":
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
-        if String(saved_villager.get("occupation", "")) == "hunter":
+        if String(saved_villager.get("occupation", "")) in ["hunter", "scout", "healer"]:
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
-    for index in range(legacy_v13["buildings"].size() - 1, -1, -1):
-        if String(legacy_v13["buildings"][index].get("id", "")) == "scout_post":
-            legacy_v13["buildings"].remove_at(index)
+        elif String(saved_villager.get("job", "")) in ["hunter", "scout", "healer"]:
+            saved_villager["job"] = ""
+    for legacy_building_index in range(legacy_v13["buildings"].size() - 1, -1, -1):
+        if String(legacy_v13["buildings"][legacy_building_index].get("id", "")) in ["hunting_lodge", "scout_post", "infirmary"]:
+            legacy_v13["buildings"].remove_at(legacy_building_index)
     var legacy_resources: Array = []
     for resource in legacy_v13["resources"]:
         if String(resource.get("kind", "")) != "food":

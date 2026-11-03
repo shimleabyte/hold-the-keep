@@ -71,9 +71,10 @@ func _initialize() -> void:
     legacy_save["quota"].erase("builder")
     legacy_save["quota"].erase("hunter")
     legacy_save["quota"].erase("scout")
+    legacy_save["quota"].erase("healer")
     legacy_save.erase("job_priority")
     for villager in legacy_save["villagers"]:
-        if String(villager.get("job", "")) in ["hunter", "scout"]:
+        if String(villager.get("job", "")) in ["hunter", "scout", "healer"]:
             villager["job"] = ""
         villager.erase("occupation")
         villager.erase("military_specialization")
@@ -83,7 +84,7 @@ func _initialize() -> void:
             legacy_resources.append(resource)
     legacy_save["resources"] = legacy_resources
     for building_index in range(legacy_save["buildings"].size() - 1, -1, -1):
-        if String(legacy_save["buildings"][building_index].get("id", "")) in ["hunting_lodge", "scout_post"]:
+        if String(legacy_save["buildings"][building_index].get("id", "")) in ["hunting_lodge", "scout_post", "infirmary"]:
             legacy_save["buildings"].remove_at(building_index)
     for legacy_version in range(1, 7):
         legacy_save["version"] = legacy_version

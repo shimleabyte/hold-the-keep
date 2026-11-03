@@ -14,7 +14,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.7 (GD
 - Tahan Shift / bumper kiri (gamepad): lari
 - Y / chip `Y` di HUD: panel teknologi
 - TAB atau tombol `MAP`: peta strategis (fog-of-war, biome, klaim, resource, Keep, dan musuh yang sedang teramati; Menara Pengawas memberi penglihatan lokal 128px)
-- Tombol `JOBS`: buka/tutup kuota penebang, penambang, petani, Builder, Hunter, Scout, dan prajurit; Esc menutup panel
+- Tombol `JOBS`: buka/tutup kuota penebang, penambang, petani, Builder, Hunter, Scout, Healer dan prajurit; Esc menutup panel
 - `B` / `Shift+B`: tambah/kurangi kuota Builder
 - `J` / `Shift+J`: tambah/kurangi kuota Hunter; penugasan hanya berhasil jika ada slot di Pondok Pemburu
 - `U` / `Shift+U`: tambah/kurangi kuota Scout; penugasan hanya berhasil jika ada slot di Pondok Pengintai
@@ -30,7 +30,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.7 (GD
 - C / tombol Y: Cleave — tebasan depan yang melukai dan membuat musuh limbung (level 2)
 - V / bumper kanan: Rally — memperkuat serangan pemain dan prajurit sekitar (level 3)
 - Kalahkan musuh untuk mendapat XP; level up memulihkan sebagian HP dan membuka skill
-- T / M / K / B / J / U / R: tambah penebang / penambang / petani / Builder / Hunter / Scout / prajurit (Shift = kurangi). Alt + tombol job mengubah prioritas; atau klik tombol + / - di panel job.
+- T / M / K / B / J / U / I / R: tambah penebang / penambang / petani / Builder / Hunter / Scout / Healer / prajurit (Shift = kurangi). Alt + tombol job mengubah prioritas; atau klik tombol + / - di panel job.
 - G: kirim seluruh prajurit untuk menyerbu benteng lawan yang sudah ditemukan; tekan lagi untuk menarik mereka kembali ke Keep
 - P / Esc (saat tidak membangun): menu jeda (simpan, muat, resolusi jendela, layar penuh, VSync, volume)
 - Menu jeda > Atur kontrol: rebind gerak, interaksi, serang, dan lari; gamepad tetap didukung
@@ -42,7 +42,7 @@ Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 
 
 ## Sistem permainan
 
-**Mode:** Classic mempertahankan dunia 64×64 dan kampanye 15 hari. Frontier memakai dunia 128×128, lima biome, empat stronghold, 11 objective regional, dan kampanye Conquest 20 hari/4 act. **Frontier Expedition** kini tersedia di `main` sebagai pilihan opsional 192×192: mulai dari heartland 128×128, lalu buka empat outer marches satu per satu dengan mencapai crossing survey di tiap region. Stronghold, objective sites dan faction camps menunggu di outer marches; fog-of-war permanen mengungkap dunia secara bertahap. Progres gate memakai discovery objective yang sudah ada; save schema tetap v13. PR #63 historically passed 88/88 jobs under the former multi-engine/release-export pipeline. Active development CI now targets Godot 4.7 only; release packaging is deferred. Status fitur dan backlog terbaru tercatat di roadmap.
+**Mode:** Classic mempertahankan dunia 64×64 dan kampanye 15 hari. Frontier memakai dunia 128×128, lima biome, empat stronghold, 11 objective regional, dan kampanye Conquest 20 hari/4 act. **Frontier Expedition** kini tersedia di `main` sebagai pilihan opsional 192×192: mulai dari heartland 128×128, lalu buka empat outer marches satu per satu dengan mencapai crossing survey di tiap region. Stronghold, objective sites dan faction camps menunggu di outer marches; fog-of-war permanen mengungkap dunia secara bertahap. Progres gate memakai discovery objective yang sudah ada; save schema di mainline tetap v13. PR #63 historically passed its 88/88 multi-version/export pipeline; current development CI targets Godot 4.7 only and release exports are deferred. Status fitur dan backlog terbaru tercatat di roadmap.
 
 ### Siklus pertahanan
 - Bertahan selama 15 hari; pada malam terakhir, kalahkan Raja Lawan.
@@ -62,27 +62,27 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 ### Desa dan ekonomi
 - Penduduk awal: 2. Keep memberi kapasitas 2; setiap rumah menambah 2 kapasitas.
 - Penduduk baru membutuhkan 8 makanan dan hanya muncul pada siang hari ketika kapasitas cukup.
-- Atur penebang, penambang, petani, Hunter, dan prajurit melalui T/M/K/J/U/R; Builder memakai B. Tombol kuota di HUD tetap tersedia.
+- Atur penebang, penambang, petani, Hunter, dan prajurit melalui T/M/K/B/J/U/I/R, termasuk Healer melalui I. Tombol kuota di HUD tetap tersedia.
 - Setiap penduduk mengonsumsi 2 makanan per hari. Kekurangan makanan membuat satu penduduk pergi. Setelah riset Lumbung, petani memprioritaskan depot pangan khusus berkapasitas 240; Classic memakai cadangan lumbung untuk upkeep setelah Inventory pusat habis.
 - Bangunan: rumah, tembok, Menara Pengawas (turret + vision 128px), Lumbung (240 pangan), gudang, ladang, tembok batu, tempa, Pos Terdepan, Kamp Penebang, Kuari, Pondok Pemburu, Pondok Pengintai, jalan, dan jembatan.
-- Kamp Penebang menyediakan dua workplace woodcutter dengan radius kerja 18 tile; Kuari menyediakan dua workplace miner dengan radius 16 tile. Pondok Pemburu (3×2, biaya 26 kayu + 8 batu) menyediakan dua slot Hunter dengan radius 18 tile. Tiap hewan memberi 5 pangan setelah tiga serangan; node pulih setelah 105 detik. Pondok Pengintai (3×2, biaya 24 kayu + 10 batu) menyediakan dua slot Scout dengan radius kerja 22 tile; Scout menjelajahi sektor terjangkau dengan penglihatan lokal 144px dan kembali ke Post saat tidak ada area baru yang dapat dijangkau. Jika belum ada fasilitas khusus, pekerja tetap memakai radius depot seperti pada Classic lama. Jika semua slot fasilitas penuh, pekerja tambahan tidak mengambil alih area kerja fasilitas tersebut.
+- Kamp Penebang menyediakan dua workplace woodcutter dengan radius kerja 18 tile; Kuari menyediakan dua workplace miner dengan radius 16 tile. Pondok Pemburu (3×2, biaya 26 kayu + 8 batu) menyediakan dua slot Hunter dengan radius 18 tile. Tiap hewan memberi 5 pangan setelah tiga serangan; node pulih setelah 105 detik. Pondok Pengintai (3×2, biaya 24 kayu + 10 batu) menyediakan dua slot Scout dengan radius kerja 22 tile; Scout menjelajahi sektor terjangkau dengan penglihatan lokal 144px dan kembali ke Post saat tidak ada area baru yang dapat dijangkau. Balai Perawatan (3×2, biaya 34 kayu + 24 batu) menyediakan dua slot Healer dengan radius 16 tile; Healer memprioritaskan prajurit terluka dan memulihkan 10 HP setiap 3,2 detik. Jika belum ada fasilitas khusus, pekerja tetap memakai radius depot seperti pada Classic lama. Jika semua slot fasilitas penuh, pekerja tambahan tidak mengambil alih area kerja fasilitas tersebut.
 - Pada Frontier, Gudang menampung 180 unit, Outpost 120 unit, dan Lumbung 240 unit pangan (hanya menerima food). Petani memprioritaskan Lumbung untuk setor pangan; tiap 3 detik depot terhubung mengirim maksimal 6 unit ke Keep secara otomatis. Lumbung bisa menjadi asal/tujuan pengiriman pangan, tetapi tidak bisa menjadi sumber biaya konstruksi atau riset. Depot yang terputus menyimpan stok sampai jalurnya tersambung. Buka `JOBS → POS` untuk melihat saldo, memilih **satu sumber biaya** (Keep/Gudang/Outpost), dan membuat perintah angkut manual. Konstruksi, riset, dan perbaikan mendebit depot yang dipilih saja; saldo beberapa depot tidak digabung. Depot remote harus tetap terhubung ke Keep. Depot yang terputus di wilayah enemy/contested mendapat peringatan 30 detik sebelum saboteur pertama tiba pada detik ke-60; maksimal dua gelombang per isolasi. Saboteur menyerang depot dan mencuri satu resource setiap dua hit dengan urutan food, iron, wood, stone. Hubungkan jalan kembali atau amankan wilayah untuk menghentikan raid; Outpost guards dan prajurit dapat melawan saboteur. Carrier shipment terlihat berjalan di peta; cargo dicadangkan saat order dibuat, status order terlihat di panel, dan order aktif bisa dibatalkan untuk mengembalikan cargo. Pengiriman menuju Keep memasukkan stok ke inventori pusat.
-- Teknologi 20-node dalam 3 era memperkuat ekonomi, pertahanan, eksplorasi, dan pengepungan.
+- Teknologi 21-node dalam 3 era memperkuat ekonomi, pertahanan, eksplorasi, dan pengepungan.
 
 ### Simpanan dan pengaturan
 - Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
-- Save versi 15 menyimpan world/campaign state, objektif regional, occupation Hunter/Scout, depletion/regrowth satwa liar, stok depot, sumber biaya aktif, penugasan penjaga, order angkut dan cargo yang masih dalam perjalanan; save versi 1–14 tetap diterima. Migrasi v15 tidak memaksa Scout pada save lama; quota dan priority Scout memakai default baru.
+- Save versi 16 menyimpan world/campaign state, objektif regional, occupation Hunter/Scout, depletion/regrowth satwa liar, stok depot, sumber biaya aktif, penugasan penjaga, order angkut dan cargo yang masih dalam perjalanan; save versi 1–15 tetap diterima. Migrasi v15 tidak memaksa Scout pada save lama; quota dan priority Scout memakai default baru.
 - Penulisan save memakai file sementara dan salinan pemulihan; loader mencoba salinan tersebut bila file utama rusak.
 - Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
 ## Membuat build rilis
-1. Saat release packaging dimulai, install export templates yang cocok dengan Godot 4.7.
+1. Di Godot: Editor > Manage Export Templates > Download and Install (versi 4.3)
 2. Jalankan `tools/build.sh` (Linux/macOS) atau `tools/build.ps1` (Windows).
    Atur lokasi Godot lewat variabel `GODOT`
 3. Hasil: `build/windows/HoldTheKeep.exe` dan `build/linux/HoldTheKeep.x86_64` (PCK tertanam)
 
 ## Teknologi
-Pohon riset 20 teknologi dalam 3 era (data/techs.json), dibuka dengan Y:
+Pohon riset 21 teknologi dalam 3 era (data/techs.json), dibuka dengan Y. `field_medicine` (Era II) unlocks the two-slot Infirmary; Healer is assigned with I and treats wounded friendly soldiers within 16 tiles: 10 HP per 3.2 seconds. Hunter, Scout and Healer are implemented in the stacked specialist PRs; they are not yet part of `main`:
 - **Era Kayu** (awal): perkakas, bajak, palisade, rumah panjang, panah berbulu, dan **Ilmu Batu** (naik era)
 - **Era Batu**: perkakas batu, lumbung, menara batu, zirah kulit, latihan prajurit, dan **Tambang Besi** (naik era)
 - **Era Besi**: perkakas, senjata, zirah, menara, dan benteng besi (sebagian butuh bangunan Tempa)
@@ -98,9 +98,6 @@ Peta strategis dibuka dengan TAB atau tombol MAP di HUD. Peta menampilkan hanya 
 Keep mengklaim area awal dalam radius 10 tile. Pos Terdepan (hotkey 6) memperluas klaim dalam radius 9 tile dan hanya boleh dibangun di frontier sendiri. Benteng lawan ditempatkan pada lokasi yang dapat dicapai di peta yang sama, mengklaim radius 9 tile, dan dijaga oleh prajurit yang berpatroli serta menerima penguatan berkala. Garis emas menunjukkan wilayah pemain; garis merah menunjukkan wilayah lawan.
 
 Fog of war menutup peta yang belum dijelajahi. Player, Keep, Pos Terdepan, dan villager membuka area; wilayah yang sudah ditemukan tetap terlihat setelah disimpan dan dimuat. Setelah benteng lawan ditemukan, tekan G untuk mengirim semua villager dengan job prajurit. Prajurit menyerang penjaga dahulu, lalu menghancurkan benteng (900 HP). Tekan G lagi untuk menarik pasukan kembali ke Keep. Classic mempertahankan jalur kemenangan 15 hari melawan Raja Lawan atau menaklukkan Keep lawan. Frontier adalah Conquest 20 hari: empat stronghold dan seluruh objektif regional harus selesai sebelum Raja pada hari ke-20 dikalahkan.
-
-## Specialist jobs (feature branches pending integration)
-Hunter is implemented through `feat/hunter-hunting-lodge` with a two-slot Hunting Lodge, bounded wildlife harvesting and food delivery. Villager Scout is implemented through `feat/scout-specialist` with a two-slot Scout Post, bounded A* surveys and 144px local permanent-fog revelation. Both use workplace capacity, explicit quotas/priority shortcuts and additive save migrations; the enemy Scout combat archetype is a separate system.
 
 ## HUD
 HUD permanen diringkas menjadi resource, jam, populasi, tombol MAP/JOBS/riset, vitals pemain dan Keep, indikator bab, serta bar bangunan. Kuota job berada di drawer JOBS dan tertutup secara default. XP dan Q/C/V tampil sebagai bar kompak di atas hotbar; detail bantuan tetap tersedia lewat H. Health bar Raja Lawan atau Benteng Lawan muncul saat relevan.

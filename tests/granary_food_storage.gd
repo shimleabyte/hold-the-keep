@@ -156,15 +156,15 @@ func _run() -> void:
 
     var classic_food_before_save: int = granary.stockpile_amount("food")
     var classic_snapshot: Dictionary = save_system.collect(classic)
-    require(classic_snapshot["version"] == 15 and save_system._valid_save(classic_snapshot),
-        "A Classic save containing a food-only Granary must pass v15 validation")
+    require(classic_snapshot["version"] == 16 and save_system._valid_save(classic_snapshot),
+        "A Classic save containing a food-only Granary must pass v16 validation")
     var saved_granary: Dictionary = {}
     for saved_building in classic_snapshot["buildings"]:
         if String(saved_building.get("id", "")) == "granary" and Vector2i(int(saved_building["cx"]), int(saved_building["cy"])) == granary_cell:
             saved_granary = saved_building
             break
     require(saved_granary.get("stockpile", {}) == {"food": granary.stockpile_amount("food")},
-        "Save v15 must serialize the Granary's food reserve")
+        "Save v16 must serialize the Granary's food reserve")
     var invalid_granary_stock := classic_snapshot.duplicate(true)
     for saved_building in invalid_granary_stock["buildings"]:
         if String(saved_building.get("id", "")) == "granary":
@@ -177,12 +177,14 @@ func _run() -> void:
     legacy_v13["job_priority"].erase("hunter")
     legacy_v13["quota"].erase("scout")
     legacy_v13["job_priority"].erase("scout")
+    legacy_v13["job_priority"].erase("healer")
+    legacy_v13["quota"].erase("healer")
+    legacy_v13["job_priority"].erase("healer")
     for villager in legacy_v13["villagers"]:
-        if String(villager.get("occupation", "")) == "scout":
+        if String(villager.get("occupation", "")) in ["hunter", "scout", "healer"]:
             villager["occupation"] = ""
             villager["job"] = ""
-        if String(villager.get("occupation", "")) == "hunter":
-            villager["occupation"] = ""
+        elif String(villager.get("job", "")) in ["hunter", "scout", "healer"]:
             villager["job"] = ""
     var old_resources: Array = []
     for resource in legacy_v13["resources"]:
@@ -190,7 +192,7 @@ func _run() -> void:
             old_resources.append(resource)
     legacy_v13["resources"] = old_resources
     for index in range(legacy_v13["buildings"].size() - 1, -1, -1):
-        if String(legacy_v13["buildings"][index].get("id", "")) == "granary":
+        if String(legacy_v13["buildings"][index].get("id", "")) in ["granary", "hunting_lodge", "scout_post", "infirmary"]:
             legacy_v13["buildings"].remove_at(index)
     require(save_system._valid_save(legacy_v13),
         "Existing v13 saves without a Granary must remain valid")
@@ -316,8 +318,8 @@ func _run() -> void:
 
     var frontier_food_before_save: int = granary.stockpile_amount("food")
     var frontier_snapshot: Dictionary = save_system.collect(frontier)
-    require(frontier_snapshot["version"] == 15 and save_system._valid_save(frontier_snapshot),
-        "Frontier Granary stockpile and isolated-depot pressure must pass v15 validation")
+    require(frontier_snapshot["version"] == 16 and save_system._valid_save(frontier_snapshot),
+        "Frontier Granary stockpile and isolated-depot pressure must pass v16 validation")
     var invalid_shipment := frontier_snapshot.duplicate(true)
     invalid_shipment["supply"]["orders"].append({
         "id": int(invalid_shipment["supply"]["next_id"]),

@@ -6,7 +6,7 @@ const SUPPORTED_FEATURES := [
     "keep_banner", "house_gable", "wall_stakes", "tower_battlements",
     "storage_shutters", "farm_crop_rows", "stone_mortar", "forge_embers",
     "outpost_signal", "road_ruts", "bridge_planks", "lumber_logs", "quarry_cart", "granary_wheat_sacks",
-    "hunting_lodge_trophy_rack", "scout_post_map_board"
+    "hunting_lodge_trophy_rack", "scout_post_map_board", "infirmary_medicine_rack"
 ]
 
 
@@ -163,6 +163,15 @@ static func draw_identity(
                 Vector2(pennant_x + 8.0, top + 7.0),
                 Vector2(pennant_x + 1.0, top + 11.0)
             ]), accent)
+        "infirmary_medicine_rack":
+            var shelf_y := top + 12.0
+            canvas.draw_line(Vector2(-half_width + 5.0, shelf_y), Vector2(half_width - 5.0, shelf_y), shadow, 2.0)
+            for bottle_x in [-half_width + 9.0, -2.0, half_width - 11.0]:
+                canvas.draw_rect(Rect2(bottle_x, shelf_y - 7.0, 5.0, 7.0), primary)
+                canvas.draw_rect(Rect2(bottle_x + 1.0, shelf_y - 9.0, 3.0, 2.0), accent)
+            canvas.draw_rect(Rect2(-2.0, top + 22.0, 4.0, 9.0), shadow)
+            canvas.draw_rect(Rect2(-1.0, top + 23.0, 2.0, 7.0), accent)
+            canvas.draw_rect(Rect2(-3.0, top + 25.0, 6.0, 2.0), accent)
 
     _draw_damage(canvas, building_id, visual, half_width, top, sprite_size.y, stage)
 
