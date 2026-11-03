@@ -1,6 +1,6 @@
 extends Node
 ## Population, labor occupations, military specializations and workplace assignment.
-## T/M/K/B/J/U/R change job quotas; Alt + job key raises priority, Alt + Shift + key lowers it.
+## T/M/K/B/J/U/I/R change job quotas; Alt + job key raises priority, Alt + Shift + key lowers it.
 
 const VILLAGER_SCRIPT := preload("res://scripts/entities/villager.gd")
 
@@ -8,13 +8,13 @@ const SPAWN_INTERVAL := 12.0
 const SPAWN_FOOD := 8
 const UPKEEP := 2  # makanan per penduduk per hari
 const MAX_QUOTA := 20
-const JOBS := ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "soldier"]
-const KEY_TO_JOB := {KEY_T: "woodcutter", KEY_M: "miner", KEY_K: "farmer", KEY_B: "builder", KEY_J: "hunter", KEY_U: "scout", KEY_R: "soldier"}
+const JOBS := ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "healer", "soldier"]
+const KEY_TO_JOB := {KEY_T: "woodcutter", KEY_M: "miner", KEY_K: "farmer", KEY_B: "builder", KEY_J: "hunter", KEY_U: "scout", KEY_I: "healer", KEY_R: "soldier"}
 
 var world
 var nav
-var quota := {"woodcutter": 1, "miner": 0, "farmer": 0, "builder": 0, "hunter": 0, "scout": 0, "soldier": 0}
-var job_priority: Array[String] = ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "soldier"]
+var quota := {"woodcutter": 1, "miner": 0, "farmer": 0, "builder": 0, "hunter": 0, "scout": 0, "healer": 0, "soldier": 0}
+var job_priority: Array[String] = ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "healer", "soldier"]
 
 var _spawn_t := 0.0
 var _assign_t := 0.0
@@ -141,7 +141,7 @@ func _process(delta: float) -> void:
 func assign_jobs() -> void:
     var vs := villagers()
     for villager in vs:
-        if villager.job in ["builder", "hunter", "scout"] and not villager.has_valid_workplace():
+        if villager.job in ["builder", "hunter", "scout", "healer"] and not villager.has_valid_workplace():
             villager.set_job("")
 
     for job_name in JOBS:
