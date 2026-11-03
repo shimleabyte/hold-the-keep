@@ -213,8 +213,8 @@ func _initialize() -> void:
         "The depot panel state must remain accurate for the repeat wave")
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 16,
-        "Supply pressure and Hunter state must use save schema v16")
+    require(snapshot["version"] == 17,
+        "Supply pressure and Hunter state must use save schema v17")
     require(snapshot["supply"]["pressure"].size() == 1,
         "The isolated Outpost pressure timer must be persisted")
     var saved_raider := saved_raider_for(snapshot["enemies"])
@@ -232,17 +232,21 @@ func _initialize() -> void:
     legacy_v13["job_priority"].erase("scout")
     legacy_v13["quota"].erase("healer")
     legacy_v13["job_priority"].erase("healer")
+    legacy_v13["quota"].erase("blacksmith")
+    legacy_v13["job_priority"].erase("blacksmith")
     for saved_villager in legacy_v13["villagers"]:
+        saved_villager.erase("weapon_equipped")
+        saved_villager.erase("armor_equipped")
         if String(saved_villager.get("occupation", "")) == "scout":
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
-        if String(saved_villager.get("occupation", "")) in ["hunter", "scout", "healer"]:
+        if String(saved_villager.get("occupation", "")) in ["hunter", "scout", "healer", "blacksmith"]:
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
-        elif String(saved_villager.get("job", "")) in ["hunter", "scout", "healer"]:
+        elif String(saved_villager.get("job", "")) in ["hunter", "scout", "healer", "blacksmith"]:
             saved_villager["job"] = ""
     for legacy_building_index in range(legacy_v13["buildings"].size() - 1, -1, -1):
-        if String(legacy_v13["buildings"][legacy_building_index].get("id", "")) in ["hunting_lodge", "scout_post", "infirmary"]:
+        if String(legacy_v13["buildings"][legacy_building_index].get("id", "")) in ["hunting_lodge", "scout_post", "infirmary", "forge"]:
             legacy_v13["buildings"].remove_at(legacy_building_index)
     var legacy_resources: Array = []
     for resource in legacy_v13["resources"]:
@@ -311,5 +315,5 @@ func _initialize() -> void:
         "Restoring the road connection must recall the active saboteur")
 
     events.event_triggered.disconnect(warning_hook)
-    print("PASS: contested isolation warning, targeted saboteur path/attack, deterministic depot stock attrition, HUD status, v16 persistence, v13 legacy compatibility and recovery by reconnecting roads")
+    print("PASS: contested isolation warning, targeted saboteur path/attack, deterministic depot stock attrition, HUD status, v17 persistence, v13 legacy compatibility and recovery by reconnecting roads")
     quit(0)

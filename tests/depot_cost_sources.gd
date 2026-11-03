@@ -118,8 +118,8 @@ func _initialize() -> void:
     main.supply._depot_connections[first.get_instance_id()] = true
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 16,
-        "The cost-source preference must persist alongside the v16 supply schema")
+    require(snapshot["version"] == 17,
+        "The cost-source preference must persist alongside the v17 supply schema")
     require(snapshot["supply"]["cost_source"] == {"cx": first_cell.x, "cy": first_cell.y},
         "The selected cost depot must persist in the supply save state")
     require(save_system._valid_save(snapshot),
@@ -132,17 +132,21 @@ func _initialize() -> void:
     legacy_v13["job_priority"].erase("scout")
     legacy_v13["quota"].erase("healer")
     legacy_v13["job_priority"].erase("healer")
+    legacy_v13["quota"].erase("blacksmith")
+    legacy_v13["job_priority"].erase("blacksmith")
     for saved_villager in legacy_v13["villagers"]:
+        saved_villager.erase("weapon_equipped")
+        saved_villager.erase("armor_equipped")
         if String(saved_villager.get("occupation", "")) == "scout":
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
-        if String(saved_villager.get("occupation", "")) in ["hunter", "scout", "healer"]:
+        if String(saved_villager.get("occupation", "")) in ["hunter", "scout", "healer", "blacksmith"]:
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
-        elif String(saved_villager.get("job", "")) in ["hunter", "scout", "healer"]:
+        elif String(saved_villager.get("job", "")) in ["hunter", "scout", "healer", "blacksmith"]:
             saved_villager["job"] = ""
     for legacy_building_index in range(legacy_v13["buildings"].size() - 1, -1, -1):
-        if String(legacy_v13["buildings"][legacy_building_index].get("id", "")) in ["hunting_lodge", "scout_post", "infirmary"]:
+        if String(legacy_v13["buildings"][legacy_building_index].get("id", "")) in ["hunting_lodge", "scout_post", "infirmary", "forge"]:
             legacy_v13["buildings"].remove_at(legacy_building_index)
     var legacy_resources: Array = []
     for resource in legacy_v13["resources"]:
