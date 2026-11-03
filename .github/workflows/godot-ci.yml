@@ -71,6 +71,7 @@ jobs:
           - campaign_balance_matrix
           - campaign_combat_simulation
           - data_db_validation
+          - save_validator
           - decision_events
           - release_hardening
           - input_rebinding
