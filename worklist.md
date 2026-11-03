@@ -7,6 +7,33 @@
 
 This is an execution worklist, not a claim that every item is already implemented. Re-check the live branch/PR state before starting each assignment.
 
+## Live execution status — 2026-11-04
+
+**Current main:** `c6f18945f94aaf095adbc724d7b0e3e0c8008b66` (merged deterministic campaign simulation PR #73).  
+**Current save schema:** v17 (verify against `scripts/autoload/save_system.gd` when rebasing future work).
+
+| Worklist item | Live disposition |
+|---|---|
+| INT-0 specialist integration | Complete: #64, #65, #67 and #68 are merged; duplicate #66 is closed. |
+| PR #37 depot cost sources | Reconciled: equivalent cost-source behavior and regression coverage are already on main; do not replay the stale branch. |
+| PR #49 Phase 06 documentation | Superseded by updated mainline docs; do not restore its old snapshot. |
+| DEV-A data contract validation | Integrated through replacement PR #71; original PR #69 was superseded and closed. |
+| DEV-B faction camp architecture | Integrated through PR #70. |
+| DEV-C campaign simulation QA | Integrated through PR #73. The new deterministic Classic/Frontier diagnostic now runs in the dedicated workflow and manual diagnostics runner. |
+| DEV-I enemy patrol controller | PR #74 is open against current main. Do not treat as complete until its refreshed Godot 4.7 CI passes. |
+| DEV-J decision-based events | PR #72 is open against current main. It adds event UI, choice resolution and optional save-state persistence; do not merge until its refreshed Godot 4.7 CI passes. |
+
+### Integration gates after PR #73
+
+- Main push validation for #73 is running as workflow run #672; the dedicated campaign simulation push run #2 is also running. Confirm both complete successfully before treating the merge as fully validated on main.
+- PR #72 and #74 were retargeted to the post-#73 main commit. Their current Godot CI runs (#670 and #671 respectively) were queued at the last inspection; wait for completed green results before merging.
+- DEV-E save/migration decomposition must wait until #72 is resolved because #72 changes `save_system.gd` and adds persistent event state.
+- DEV-G HUD modularization must wait until #72 is resolved because #72 changes `hud.gd`.
+- DEV-B is complete; do not start a second faction-camp refactor. DEV-I's patrol controller is a separate enemy-actor boundary and must retain the current faction-camp API.
+- DEV-D supply decomposition is now unblocked by the PR #37 disposition, but should remain a separate branch/workstream and preserve the integrated cost-source behavior.
+
+This status block is a live execution snapshot, not a substitute for checking GitHub again. Workflow run states and PR heads can change after this commit.
+
 ---
 
 ## 0. Ground rules and current baseline
