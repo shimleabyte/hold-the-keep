@@ -125,6 +125,18 @@ func _initialize() -> void:
     require(save_system._valid_save(snapshot),
         "A valid save with a selected Storage cost source must pass validation")
     var legacy_v13 := snapshot.duplicate(true)
+    legacy_v13["version"] = 13
+    legacy_v13["quota"].erase("hunter")
+    legacy_v13["job_priority"].erase("hunter")
+    for saved_villager in legacy_v13["villagers"]:
+        if String(saved_villager.get("occupation", "")) == "hunter":
+            saved_villager["occupation"] = ""
+            saved_villager["job"] = ""
+    var legacy_resources: Array = []
+    for resource in legacy_v13["resources"]:
+        if String(resource.get("kind", "")) != "food":
+            legacy_resources.append(resource)
+    legacy_v13["resources"] = legacy_resources
     legacy_v13["supply"].erase("cost_source")
     require(save_system._valid_save(legacy_v13),
         "Existing v13 saves without the additive source field must remain valid")
