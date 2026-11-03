@@ -175,6 +175,31 @@ func _run() -> void:
     require(save_system._valid_save(legacy_v15),
         "Existing v15 saves must remain valid after the Healer v16 migration")
 
+    var disappearing_patient = main.village.spawn_villager(keep.position + Vector2(-12, 22))
+    require(disappearing_patient.set_job("soldier"),
+        "A replacement soldier must be available for the in-transit reservation test")
+    disappearing_patient.hp = 5
+    healer_a._find_work()
+    require(healer_a.target == disappearing_patient and healer_a.state == healer_a.State.TO_WORK,
+        "The Healer must reserve a new wounded soldier while travelling")
+    require(infirmary.is_heal_target_reserved(disappearing_patient),
+        "The in-transit soldier must be reserved")
+    disappearing_patient.leave()
+    await ticks(2)
+    healer_a._physics_process(0.1)
+    require(healer_a.target == null and healer_a.state == healer_a.State.IDLE,
+        "A Healer must leave TO_WORK when its patient disappears")
+    require(not infirmary.is_heal_target_reserved(disappearing_patient),
+        "A disappearing patient must not leave a stale Infirmary reservation")
+
+    var replacement_patient = main.village.spawn_villager(keep.position + Vector2(-14, 22))
+    require(replacement_patient.set_job("soldier"),
+        "A new wounded soldier must be assignable after a previous patient disappears")
+    replacement_patient.hp = 8
+    healer_a._find_work()
+    require(healer_a.target == replacement_patient,
+        "The released Healer must be able to reserve a replacement patient")
+
     infirmary.demolish()
     require(not infirmary.is_heal_target_reserved(patient_b),
         "Demolishing the Infirmary must release any active patient reservation")
