@@ -1,5 +1,7 @@
 extends Node
-## Memuat data statis dari res://data/*.json.
+## Memuat dan memvalidasi data statis dari res://data/*.json sebelum membuat indeks.
+
+const DATA_SCHEMA_VALIDATOR = preload("res://scripts/autoload/data_schema_validator.gd")
 
 var buildings: Dictionary = {}
 var building_order: Array = []  # hanya yang bisa dibangun pemain (urutan hotkey)
@@ -11,58 +13,83 @@ var techs: Dictionary = {}
 var tech_order: Array = []
 var campaign_modes: Dictionary = {}
 var frontier_objectives: Array = []
+var source_data: Dictionary = {}
+var validation_errors: Array[String] = []
 
 
 func _ready() -> void:
-    var b = _load_json("res://data/buildings.json")
-    if b is Array:
-        for item in b:
-            buildings[item["id"]] = item
-            if item.get("buildable", true):
-                building_order.append(item["id"])
-    var e = _load_json("res://data/enemies.json")
-    if e is Array:
-        for item in e:
-            enemies[item["id"]] = item
-    var archetype_data = _load_json("res://data/enemy_archetypes.json")
-    if archetype_data is Array:
-        for item in archetype_data:
-            enemy_archetypes[item["id"]] = item
-            enemies[item["id"]] = item
-    var ev = _load_json("res://data/events.json")
-    if ev is Array:
-        events = ev
-    var t = _load_json("res://data/techs.json")
-    if t is Array:
-        for item in t:
-            techs[item["id"]] = item
-            tech_order.append(item["id"])
-    var w = _load_json("res://data/waves.json")
-    if w is Dictionary:
-        waves = w
-    var campaign_data = _load_json("res://data/campaigns.json")
-    if campaign_data is Dictionary:
-        campaign_modes = campaign_data
-    var objective_data = _load_json("res://data/frontier_objectives.json")
-    if objective_data is Array:
-        frontier_objectives = objective_data
+	source_data = {
+		"buildings": _load_json("res://data/buildings.json"),
+		"enemies": _load_json("res://data/enemies.json"),
+		"enemy_archetypes": _load_json("res://data/enemy_archetypes.json"),
+		"waves": _load_json("res://data/waves.json"),
+		"events": _load_json("res://data/events.json"),
+		"techs": _load_json("res://data/techs.json"),
+		"campaigns": _load_json("res://data/campaigns.json"),
+		"factions": _load_json("res://data/factions.json"),
+		"frontier_objectives": _load_json("res://data/frontier_objectives.json")
+	}
+
+	var validator = DATA_SCHEMA_VALIDATOR.new()
+	validation_errors = validator.validate(source_data)
+	if not validation_errors.is_empty():
+		for issue in validation_errors:
+			push_error("DataDB validation: " + issue)
+		return
+
+	var building_records: Array = source_data["buildings"]
+	for item in building_records:
+		buildings[String(item["id"])] = item
+		if item.get("buildable", true):
+			building_order.append(String(item["id"]))
+
+	var enemy_records: Array = source_data["enemies"]
+	for item in enemy_records:
+		enemies[String(item["id"])] = item
+
+	var archetype_records: Array = source_data["enemy_archetypes"]
+	for item in archetype_records:
+		enemy_archetypes[String(item["id"])] = item
+		enemies[String(item["id"])] = item
+
+	events = source_data["events"]
+	var tech_records: Array = source_data["techs"]
+	for item in tech_records:
+		techs[String(item["id"])] = item
+		tech_order.append(String(item["id"]))
+
+	waves = source_data["waves"]
+	campaign_modes = source_data["campaigns"]
+	frontier_objectives = source_data["frontier_objectives"]
 
 
 func _load_json(path: String) -> Variant:
-    var f := FileAccess.open(path, FileAccess.READ)
-    if f == null:
-        push_error("DataDB: %s tidak ditemukan" % path)
-        return null
-    var parsed = JSON.parse_string(f.get_as_text())
-    if parsed == null:
-        push_error("DataDB: %s tidak valid" % path)
-    return parsed
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		push_error("DataDB: %s tidak ditemukan" % path)
+		return null
+
+	var text := file.get_as_text()
+	file.close()
+	var parser := JSON.new()
+	var parse_error = parser.parse(text)
+	if parse_error != OK:
+		push_error(
+			"DataDB: %s JSON parse error at line %d: %s" %
+			[path, parser.get_error_line(), parser.get_error_message()]
+		)
+		return null
+	return parser.data
 
 
 ## Cost sebagai Dictionary[String, int] (JSON memberi float).
+## Return an empty dictionary for an unknown building instead of indexing a missing key.
 func cost_of(id: String) -> Dictionary:
-    var out := {}
-    var raw: Dictionary = buildings[id].get("cost", {})
-    for k in raw:
-        out[k] = int(raw[k])
-    return out
+	if not buildings.has(id):
+		push_error("DataDB: cost_of received unknown building ID '%s'" % id)
+		return {}
+	var out: Dictionary = {}
+	var raw: Dictionary = buildings[id].get("cost", {})
+	for key in raw:
+		out[String(key)] = int(raw[key])
+	return out
