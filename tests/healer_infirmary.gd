@@ -1,5 +1,5 @@
 extends SceneTree
-## Healer/Infirmary: assignment, treatment, patient reservations, workplace teardown and v16 migration.
+## Healer/Infirmary: assignment, treatment, patient reservations, workplace teardown and v17 migration.
 
 func require(condition: bool, message: String) -> void:
     if not condition:
@@ -148,8 +148,8 @@ func _run() -> void:
 
     main.village.quota["healer"] = 2
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 16,
-        "Healer occupation and Infirmary must use additive save version 16")
+    require(snapshot["version"] == 17,
+        "Current Healer branch must include additive save version 17")
     require(save_system._valid_save(snapshot),
         "A live Infirmary and Healer snapshot must validate")
     var has_healer := false
@@ -164,8 +164,12 @@ func _run() -> void:
     var legacy_v15: Dictionary = snapshot.duplicate(true)
     legacy_v15["version"] = 15
     legacy_v15["quota"].erase("healer")
+    legacy_v15["quota"].erase("blacksmith")
     legacy_v15["job_priority"].erase("healer")
+    legacy_v15["job_priority"].erase("blacksmith")
     for villager in legacy_v15["villagers"]:
+        villager.erase("weapon_equipped")
+        villager.erase("armor_equipped")
         if String(villager.get("occupation", "")) == "healer":
             villager["occupation"] = ""
             villager["job"] = ""
