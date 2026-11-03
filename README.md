@@ -40,7 +40,7 @@ Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 
 
 ## Sistem permainan
 
-**Mode:** Classic mempertahankan dunia 64×64 dan kampanye 15 hari. Frontier memakai dunia 128×128, lima biome, empat stronghold, 11 objective regional, dan kampanye Conquest 20 hari/4 act. PR #63 mengembangkan pilihan opsional **Frontier Expedition** 192×192: mulai dari heartland 128×128, lalu buka empat outer marches satu per satu dengan mencapai crossing survey di setiap region. Fog-of-war tetap permanen dan progres gate memakai objective discovery yang sudah ada; save schema tetap v13. Profil ini belum masuk `main` sampai PR #63 lulus CI dan digabung. Status fitur dan backlog terbaru tercatat di roadmap.
+**Mode:** Classic mempertahankan dunia 64×64 dan kampanye 15 hari. Frontier memakai dunia 128×128, lima biome, empat stronghold, 11 objective regional, dan kampanye Conquest 20 hari/4 act. **Frontier Expedition** kini tersedia di `main` sebagai pilihan opsional 192×192: mulai dari heartland 128×128, lalu buka empat outer marches satu per satu dengan mencapai crossing survey di tiap region. Stronghold, objective sites dan faction camps menunggu di outer marches; fog-of-war permanen mengungkap dunia secara bertahap. Progres gate memakai discovery objective yang sudah ada; save schema tetap v13. PR #63 lulus 88/88 job CI di Godot 4.3/4.7 serta release export. Status fitur dan backlog terbaru tercatat di roadmap.
 
 ### Siklus pertahanan
 - Bertahan selama 15 hari; pada malam terakhir, kalahkan Raja Lawan.
