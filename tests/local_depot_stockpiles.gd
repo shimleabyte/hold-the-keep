@@ -80,7 +80,7 @@ func _initialize() -> void:
         "The remaining depot must still accept new local deposits after a shipment")
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 13, "Local depot state must use save schema v13")
+    require(snapshot["version"] == 14, "Local depot and Hunter state must use save schema v14")
     var saved_storage: Dictionary = {}
     for saved_building in snapshot["buildings"]:
         if String(saved_building["id"]) == "storage" and int(saved_building["cx"]) == storage_cell.x:
@@ -89,7 +89,7 @@ func _initialize() -> void:
     require(saved_storage.get("stockpile", {}) == storage.export_stockpile(),
         "Save payload must serialize every local stockpile balance")
     require(save_system._valid_save(snapshot),
-        "A save with valid local stockpile state must pass v12 validation")
+        "A save with valid local stockpile state must pass current v14 validation")
 
     var negative_stock := snapshot.duplicate(true)
     for saved_building in negative_stock["buildings"]:
