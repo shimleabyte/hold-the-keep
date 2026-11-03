@@ -28,6 +28,10 @@ const REGION_FENLANDS := 3
 const REGION_ASHEN_MARCH := 4
 
 var _frontier_regions := PackedByteArray()
+var _expedition_barrier_cells: Dictionary = {}
+var _expedition_gate_cells: Dictionary = {}
+var _expedition_gate_original_tiles: Dictionary = {}
+var _expedition_unlocked_regions: Dictionary = {}
 var generated_resource_layout: Array[Dictionary] = []
 var generated_decoration_layout: Array[Dictionary] = []
 var generate_resource_nodes := true
@@ -59,12 +63,14 @@ func _ready() -> void:
     add_child(entities)
 
     generated_resource_layout.clear()
-    if WorldConfig.profile_id == "frontier":
+    if WorldConfig.is_frontier_profile():
         _generate_frontier()
     else:
         _generate_classic()
+    if WorldConfig.is_frontier_expedition():
+        _setup_expedition_barriers()
     _spawn_iron()
-    if WorldConfig.profile_id == "frontier":
+    if WorldConfig.is_frontier_profile():
         _spawn_frontier_decorations()
 
 
@@ -77,7 +83,7 @@ func is_buildable(cell: Vector2i) -> bool:
 func is_bridgeable(cell: Vector2i) -> bool:
     if cell.x < 1 or cell.y < 1 or cell.x > map_size - 2 or cell.y > map_size - 2:
         return false
-    return _layer.get_cell_atlas_coords(cell).x == T_WATER
+    return _layer.get_cell_atlas_coords(cell).x == T_WATER and not _expedition_barrier_cells.has(cell)
 
 
 func starting_keep_cell() -> Vector2i:
@@ -94,7 +100,7 @@ func spawn_point() -> Vector2:
 
 ## Stable regional labels used by terrain generation and the strategic map.
 func region_id(cell: Vector2i) -> String:
-    if WorldConfig.profile_id == "frontier":
+    if WorldConfig.is_frontier_profile():
         return _frontier_region_name(_frontier_region_at(cell))
     return _classic_region_id(cell)
 
@@ -117,7 +123,7 @@ func _build_tileset() -> TileSet:
     ts.set_physics_layer_collision_layer(0, 1)
 
     var src := TileSetAtlasSource.new()
-    src.texture = TILES_FRONTIER_TEX if WorldConfig.profile_id == "frontier" else TILES_TEX
+    src.texture = TILES_FRONTIER_TEX if WorldConfig.is_frontier_profile() else TILES_TEX
     src.texture_region_size = Vector2i(tile_size, tile_size)
     ts.add_source(src, 0)
     for i in 7:
@@ -568,8 +574,137 @@ func _frontier_region_name(region: int) -> String:
     return "HEARTHLAND"
 
 
+## Frontier Expedition keeps the established 128x128 heartland accessible first.
+## Four water-sealed crossings open only after the matching regional discovery objective.
+## The full 192x192 terrain is generated once; this is exploration gating, not chunk streaming.
+func _setup_expedition_barriers() -> void:
+    _expedition_barrier_cells.clear()
+    _expedition_gate_cells.clear()
+    _expedition_gate_original_tiles.clear()
+    _expedition_unlocked_regions.clear()
+
+    var profile: Dictionary = WorldConfig.profile_definition(WorldConfig.profile_id)
+    var core_size := int(profile.get("expedition_core_size", 128))
+    var core_min := int((map_size - core_size) / 2)
+    var core_max := core_min + core_size
+    var center := int(map_size / 2)
+    var barriers: Dictionary = {}
+
+    # Seal the four sides of the initial heartland.
+    for x in range(core_min, core_max):
+        barriers[Vector2i(x, core_min - 1)] = true
+        barriers[Vector2i(x, core_max)] = true
+    for y in range(core_min, core_max):
+        barriers[Vector2i(core_min - 1, y)] = true
+        barriers[Vector2i(core_max, y)] = true
+
+    # Keep the four outer marches separate until their own crossing is surveyed.
+    for y in range(0, core_min):
+        barriers[Vector2i(center - 1, y)] = true
+    for y in range(core_max, map_size):
+        barriers[Vector2i(center - 1, y)] = true
+    for x in range(0, core_min):
+        barriers[Vector2i(x, center - 1)] = true
+    for x in range(core_max, map_size):
+        barriers[Vector2i(x, center - 1)] = true
+
+    var gate_targets: Dictionary = {
+        "GREENWOOD": Vector2i(core_min + int(core_size * 0.25), core_min - 1),
+        "HIGHLANDS": Vector2i(core_min + int(core_size * 0.75), core_min - 1),
+        "FENLANDS": Vector2i(core_min + int(core_size * 0.25), core_max),
+        "ASHEN_MARCH": Vector2i(core_min + int(core_size * 0.75), core_max)
+    }
+    for region in gate_targets:
+        var gate_cell := _find_expedition_gate_cell(String(region), gate_targets[region])
+        if gate_cell.x < 0:
+            push_error("Frontier Expedition: could not place the %s survey gate" % String(region))
+            continue
+        barriers.erase(gate_cell)
+        _expedition_gate_cells[String(region)] = gate_cell
+        var original_tile := tile_type_at(gate_cell)
+        if original_tile == T_WATER:
+            original_tile = _frontier_gate_terrain(String(region))
+        _expedition_gate_original_tiles[String(region)] = original_tile
+
+    for value in barriers:
+        _seal_expedition_cell(value)
+    for region in _expedition_gate_cells:
+        _seal_expedition_cell(_expedition_gate_cells[region])
+
+
+func _find_expedition_gate_cell(region: String, target: Vector2i) -> Vector2i:
+    var core_size := int(WorldConfig.profile_definition(WorldConfig.profile_id).get("expedition_core_size", 128))
+    for radius in range(core_size):
+        for direction in [-1, 1]:
+            var candidate := target + Vector2i(radius * direction, 0)
+            if candidate.x < 1 or candidate.x >= map_size - 1:
+                continue
+            if _frontier_region_name(_frontier_region_at(candidate)) == region and tile_type_at(candidate) != T_WATER:
+                return candidate
+
+    for radius in range(core_size):
+        for direction in [-1, 1]:
+            var candidate := target + Vector2i(radius * direction, 0)
+            if candidate.x < 1 or candidate.x >= map_size - 1:
+                continue
+            if tile_type_at(candidate) != T_WATER:
+                return candidate
+    return Vector2i(-1, -1)
+
+
+func _frontier_gate_terrain(region: String) -> int:
+    match region:
+        "GREENWOOD":
+            return T_FOREST
+        "HIGHLANDS":
+            return T_HIGHLAND
+        "FENLANDS":
+            return T_MARSH
+        "ASHEN_MARCH":
+            return T_ASHEN
+    return T_GRASS
+
+
+func _seal_expedition_cell(cell: Vector2i) -> void:
+    var occupant: Variant = occupied.get(cell, null)
+    if occupant is Node and is_instance_valid(occupant):
+        occupant.queue_free()
+    occupied.erase(cell)
+    _expedition_barrier_cells[cell] = true
+    _layer.set_cell(cell, 0, Vector2i(T_WATER, 0))
+
+
+## Returns the regions newly opened by a completed discovery objective.
+func apply_expedition_sector_unlocks(discovered_regions: Dictionary) -> Array[String]:
+    var opened: Array[String] = []
+    if not WorldConfig.is_frontier_expedition():
+        return opened
+    for region in _expedition_gate_cells:
+        var should_open := bool(discovered_regions.get(String(region), false))
+        var is_open := bool(_expedition_unlocked_regions.get(String(region), false))
+        if should_open == is_open:
+            continue
+        var cell: Vector2i = _expedition_gate_cells[region]
+        if should_open:
+            var terrain := int(_expedition_gate_original_tiles.get(String(region), T_GRASS))
+            _layer.set_cell(cell, 0, Vector2i(terrain, 0))
+            _expedition_barrier_cells.erase(cell)
+            _expedition_unlocked_regions[String(region)] = true
+            opened.append(String(region))
+        else:
+            _seal_expedition_cell(cell)
+            _expedition_unlocked_regions[String(region)] = false
+    if not opened.is_empty():
+        queue_redraw()
+    return opened
+
+
+func is_expedition_gate_open(region: String) -> bool:
+    return bool(_expedition_unlocked_regions.get(region, false))
+
+
 func _spawn_iron() -> void:
-    if WorldConfig.profile_id == "frontier":
+    if WorldConfig.is_frontier_profile():
         _spawn_frontier_iron()
     else:
         _spawn_classic_iron()
