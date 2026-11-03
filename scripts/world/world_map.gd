@@ -74,6 +74,8 @@ func _ready() -> void:
     _spawn_iron()
     if WorldConfig.is_frontier_profile():
         _spawn_frontier_decorations()
+    if WorldConfig.is_frontier_expedition():
+        _build_expedition_outer_reachability()
 
 
 func is_buildable(cell: Vector2i) -> bool:
@@ -639,8 +641,6 @@ func _setup_expedition_barriers() -> void:
         _seal_expedition_cell(value)
     for region in _expedition_gate_cells:
         _seal_expedition_cell(_expedition_gate_cells[region])
-
-    _build_expedition_outer_reachability()
 
 
 func _expedition_core_reachable_cells(core_min: int, core_max: int) -> Dictionary:
