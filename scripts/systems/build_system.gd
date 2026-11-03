@@ -30,22 +30,25 @@ func _set_active(id: String) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo:
-        if event.keycode == KEY_ESCAPE:
+        if Input.is_action_just_pressed("game_cancel"):
             if active != "":
                 _set_active("")
             else:
                 Events.menu_requested.emit()
             get_viewport().set_input_as_handled()
             return
-        var idx := -1
-        if event.keycode == KEY_0:
-            idx = 9
-        elif event.keycode >= KEY_1 and event.keycode <= KEY_9:
-            idx = int(event.keycode) - int(KEY_1)
-        var order: Array = Tech.available_buildings()
-        if idx >= 0 and idx < order.size():
-            var id: String = order[idx]
-            _set_active("" if id == active else id)
+        var selected_slot := -1
+        for slot_index in 10:
+            if Input.is_action_just_pressed("build_slot_%d" % (slot_index + 1)):
+                selected_slot = slot_index
+                break
+        if selected_slot >= 0:
+            var order: Array = Tech.available_buildings()
+            if selected_slot < order.size():
+                var id: String = order[selected_slot]
+                _set_active("" if id == active else id)
+                get_viewport().set_input_as_handled()
+                return
     elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
         if active != "":
             _set_active("")

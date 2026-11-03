@@ -53,11 +53,12 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-    if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_O:
-        if WorldConfig.is_frontier_profile():
-            _panel.visible = not _panel.visible
-            _refresh()
-            get_viewport().set_input_as_handled()
+    if not (event is InputEventKey and event.pressed and not event.echo):
+        return
+    if Input.is_action_just_pressed("toggle_objectives") and WorldConfig.is_frontier_profile():
+        _panel.visible = not _panel.visible
+        _refresh()
+        get_viewport().set_input_as_handled()
 
 
 func _refresh() -> void:

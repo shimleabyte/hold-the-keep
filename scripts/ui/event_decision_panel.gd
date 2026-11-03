@@ -262,6 +262,6 @@ func configure_layout(viewport_size: Vector2) -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
     if visible and event is InputEventKey and event.pressed and not event.echo:
-        if event.keycode == KEY_ESCAPE:
+        if Input.is_action_just_pressed("game_cancel"):
             _on_cancel_pressed()
             get_viewport().set_input_as_handled()

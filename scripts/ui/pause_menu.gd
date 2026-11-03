@@ -169,7 +169,7 @@ func _build_controls_panel() -> void:
     _root.add_child(_controls_center)
 
     var panel := PanelContainer.new()
-    panel.custom_minimum_size = Vector2(370, 238)
+    panel.custom_minimum_size = Vector2(410, 248)
     _controls_center.add_child(panel)
 
     var box := VBoxContainer.new()
@@ -187,7 +187,7 @@ func _build_controls_panel() -> void:
     box.add_child(hint)
 
     var scroll := ScrollContainer.new()
-    scroll.custom_minimum_size = Vector2(350, 150)
+    scroll.custom_minimum_size = Vector2(390, 148)
     scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
     box.add_child(scroll)
 
@@ -196,42 +196,52 @@ func _build_controls_panel() -> void:
     rows.add_theme_constant_override("separation", 2)
     scroll.add_child(rows)
 
-    var labels := {
-        "move_up": "GERAK ATAS",
-        "move_down": "GERAK BAWAH",
-        "move_left": "GERAK KIRI",
-        "move_right": "GERAK KANAN",
-        "interact": "INTERAKSI",
-        "attack": "SERANG",
-        "sprint": "LARI"
-    }
-    for action in Settings.BINDABLE_ACTIONS:
-        var row := HBoxContainer.new()
-        row.custom_minimum_size = Vector2(0, 20)
-        rows.add_child(row)
+    var labels := {"move_up":"GERAK ATAS","move_down":"GERAK BAWAH","move_left":"GERAK KIRI","move_right":"GERAK KANAN","interact":"INTERAKSI","attack":"SERANG","sprint":"LARI","ability_dash":"DASH","ability_cleave":"TEBAS","ability_rally":"SERUAN","job_woodcutter":"PENEBANG","job_miner":"PENAMBANG","job_farmer":"PETANI","job_builder":"PEMBANGUN","job_hunter":"PEMBURU","job_scout":"PENGINTAI","job_healer":"PENYEMBUH","job_blacksmith":"PANDAI BESI","job_soldier":"PRAJURIT","menu_pause":"MENU / JEDA","toggle_technology":"TEKNOLOGI","toggle_objectives":"OBJEKTIF","toggle_map":"PETA","toggle_help":"BANTUAN","toggle_fps":"TAMPILKAN FPS","toggle_construction_queue":"ANTREAN KONSTRUKSI","command_expedition":"KOMANDO EKSPEDISI","save_game":"SIMPAN","load_game":"MUAT SAVE"}
+    for group_value in Settings.BINDABLE_GROUPS:
+        var group: Dictionary = group_value
+        var heading := Label.new()
+        heading.text = String(group.get("title", "CONTROLS"))
+        heading.add_theme_color_override("font_color", Color("#d0ad70"))
+        rows.add_child(heading)
+        for action_value in group.get("actions", []):
+            var action := String(action_value)
+            var row := HBoxContainer.new()
+            row.custom_minimum_size = Vector2(0, 20)
+            rows.add_child(row)
 
-        var label := Label.new()
-        label.text = labels.get(action, action.to_upper())
-        label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-        label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-        row.add_child(label)
+            var label := Label.new()
+            label.text = String(labels.get(action, action.to_upper()))
+            label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+            label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+            row.add_child(label)
 
-        var key_button := Button.new()
-        key_button.custom_minimum_size = Vector2(82, 19)
-        key_button.text = Settings.binding_label(action)
-        key_button.pressed.connect(_begin_rebind.bind(action))
-        row.add_child(key_button)
-        _controls_buttons[action] = key_button
+            var key_button := Button.new()
+            key_button.custom_minimum_size = Vector2(82, 19)
+            key_button.text = Settings.binding_label(action)
+            key_button.pressed.connect(_begin_rebind.bind(action))
+            row.add_child(key_button)
+            _controls_buttons[action] = key_button
 
     _controls_status = Label.new()
     _controls_status.text = "ESC MEMBATALKAN CAPTURE"
     _controls_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     box.add_child(_controls_status)
 
+    var control_actions := HBoxContainer.new()
+    control_actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    box.add_child(control_actions)
+
+    var reset := Button.new()
+    reset.text = "PULIHKAN DEFAULT"
+    reset.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    reset.pressed.connect(_restore_default_bindings)
+    control_actions.add_child(reset)
+
     var back := Button.new()
     back.text = "KEMBALI"
+    back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     back.pressed.connect(_close_controls)
-    box.add_child(back)
+    control_actions.add_child(back)
 
 
 func _build_campaign_panel() -> void:
@@ -367,6 +377,13 @@ func _close_controls() -> void:
     _menu_center.visible = true
 
 
+func _restore_default_bindings() -> void:
+    Settings.restore_default_bindings()
+    for action in Settings.BINDABLE_ACTIONS:
+        _controls_buttons[action].text = Settings.binding_label(action)
+    _controls_status.text = "DEFAULT DIPULIHKAN"
+
+
 func _begin_rebind(action: String) -> void:
     _rebinding_action = action
     _controls_buttons[action].text = "TEKAN..."
@@ -453,7 +470,7 @@ func _unhandled_input(event: InputEvent) -> void:
             _capture_binding(event)
             get_viewport().set_input_as_handled()
             return
-        if event.keycode == KEY_ESCAPE and _root.visible:
+        if Input.is_action_just_pressed("game_cancel") and _root.visible:
             if _campaign_center.visible:
                 _close_campaign_panel()
             elif _controls_center.visible:
@@ -462,6 +479,6 @@ func _unhandled_input(event: InputEvent) -> void:
                 _toggle()
             get_viewport().set_input_as_handled()
             return
-        if event.keycode == KEY_P:
+        if Input.is_action_just_pressed("menu_pause"):
             _toggle()
             get_viewport().set_input_as_handled()

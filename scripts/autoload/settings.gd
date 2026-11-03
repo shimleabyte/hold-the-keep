@@ -5,16 +5,50 @@ const PATH := "user://settings.cfg"
 const MIN_WINDOW_SIZE := Vector2i(960, 540)
 const MIN_VIEWPORT_SIZE := Vector2i(480, 270)
 const VIEWPORT_PIXEL_SCALE := 2
+const BINDABLE_GROUPS := [
+    {
+        "title": "MOVEMENT & COMBAT",
+        "actions": [
+            "move_up", "move_down", "move_left", "move_right",
+            "interact", "attack", "sprint",
+            "ability_dash", "ability_cleave", "ability_rally"
+        ]
+    },
+    {
+        "title": "VILLAGE JOBS",
+        "actions": [
+            "job_woodcutter", "job_miner", "job_farmer", "job_builder",
+            "job_hunter", "job_scout", "job_healer", "job_blacksmith", "job_soldier"
+        ]
+    },
+    {
+        "title": "BUILDING SLOTS",
+        "actions": [
+            "build_slot_1", "build_slot_2", "build_slot_3", "build_slot_4", "build_slot_5",
+            "build_slot_6", "build_slot_7", "build_slot_8", "build_slot_9", "build_slot_10"
+        ]
+    },
+    {
+        "title": "SYSTEM & STRATEGY",
+        "actions": [
+            "menu_pause", "toggle_technology", "toggle_objectives", "toggle_map",
+            "toggle_help", "toggle_fps", "toggle_construction_queue",
+            "command_expedition", "save_game", "load_game"
+        ]
+    }
+]
 const BINDABLE_ACTIONS := [
     "move_up", "move_down", "move_left", "move_right",
-    "interact", "attack", "sprint"
+    "interact", "attack", "sprint", "ability_dash", "ability_cleave", "ability_rally",
+    "job_woodcutter", "job_miner", "job_farmer", "job_builder", "job_hunter",
+    "job_scout", "job_healer", "job_blacksmith", "job_soldier",
+    "build_slot_1", "build_slot_2", "build_slot_3", "build_slot_4", "build_slot_5",
+    "build_slot_6", "build_slot_7", "build_slot_8", "build_slot_9", "build_slot_10",
+    "menu_pause", "toggle_technology", "toggle_objectives", "toggle_map",
+    "toggle_help", "toggle_fps", "toggle_construction_queue",
+    "command_expedition", "save_game", "load_game"
 ]
-const RESERVED_KEYS := [
-    KEY_ESCAPE, KEY_P, KEY_Y, KEY_H, KEY_F1, KEY_F3, KEY_F5, KEY_F9,
-    KEY_T, KEY_M, KEY_K, KEY_R, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6,
-    KEY_TAB, KEY_ENTER, KEY_KP_ENTER, KEY_G,
-    KEY_Q, KEY_C, KEY_V
-]
+const RESERVED_KEYS := [KEY_ESCAPE, KEY_ENTER, KEY_KP_ENTER]
 
 var fullscreen := false
 var windowed_size := Vector2i(1280, 720)
@@ -79,19 +113,43 @@ func save_settings() -> void:
 
 
 func _apply_custom_bindings() -> void:
-    for action in custom_bindings:
-        _replace_keyboard_binding(String(action), int(custom_bindings[action]))
+    var accepted: Dictionary = {}
+    for action in BINDABLE_ACTIONS:
+        if not custom_bindings.has(action):
+            continue
+        var code := int(custom_bindings[action])
+        if code <= 0 or code in RESERVED_KEYS or code in [KEY_SHIFT, KEY_CTRL, KEY_ALT, KEY_META]:
+            continue
+        if _key_is_used_by_other_action(action, code):
+            continue
+        _replace_keyboard_binding(action, code)
+        accepted[action] = code
+    custom_bindings = accepted
 
 
 func _replace_keyboard_binding(action: String, code: int) -> void:
+    _replace_keyboard_bindings(action, [code])
+
+
+func _replace_keyboard_bindings(action: String, codes: Array) -> void:
     if not InputMap.has_action(action):
         return
     for event in InputMap.action_get_events(action):
         if event is InputEventKey:
             InputMap.action_erase_event(action, event)
-    var key := InputEventKey.new()
-    key.physical_keycode = code as Key
-    InputMap.action_add_event(action, key)
+    for code_value in codes:
+        var key := InputEventKey.new()
+        key.physical_keycode = int(code_value) as Key
+        InputMap.action_add_event(action, key)
+
+
+func restore_default_bindings() -> void:
+    custom_bindings.clear()
+    for action in BINDABLE_ACTIONS:
+        _replace_keyboard_bindings(
+            action, InputSetup.DEFAULT_KEY_BINDINGS.get(action, [])
+        )
+    save_settings()
 
 
 func _key_is_used_by_other_action(action: String, code: int) -> bool:
