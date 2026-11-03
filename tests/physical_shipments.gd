@@ -119,10 +119,10 @@ func _initialize() -> void:
         "The interrupted order must retain the physical carrier's last position")
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 14,
-        "Physical shipment and Hunter state must be stored in save schema v14")
+    require(snapshot["version"] == 15,
+        "Physical shipment and Hunter state must be stored in save schema v15")
     require(save_system._valid_save(snapshot),
-        "A save with recoverable in-transit cargo must pass v14 validation")
+        "A save with recoverable in-transit cargo must pass v15 validation")
     var saved_order := order_for(snapshot["supply"]["orders"], interrupted_id)
     require(String(saved_order["status"]) == "blocked" and int(saved_order["cargo"]) == 6,
         "Save export must turn a moving courier into a resumable blocked shipment")
@@ -130,10 +130,18 @@ func _initialize() -> void:
     legacy_v12["version"] = 12
     legacy_v12["quota"].erase("hunter")
     legacy_v12["job_priority"].erase("hunter")
+    legacy_v12["quota"].erase("scout")
+    legacy_v12["job_priority"].erase("scout")
     for saved_villager in legacy_v12["villagers"]:
+        if String(saved_villager.get("occupation", "")) == "scout":
+            saved_villager["occupation"] = ""
+            saved_villager["job"] = ""
         if String(saved_villager.get("occupation", "")) == "hunter":
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
+    for index in range(legacy_v12["buildings"].size() - 1, -1, -1):
+        if String(legacy_v12["buildings"][index].get("id", "")) == "scout_post":
+            legacy_v12["buildings"].remove_at(index)
     var legacy_resources: Array = []
     for resource in legacy_v12["resources"]:
         if String(resource.get("kind", "")) != "food":
@@ -178,5 +186,5 @@ func _initialize() -> void:
         and restored_destination.stockpile_amount("wood") >= 6,
         "Restored cargo must resume its physical route and arrive exactly once")
 
-    print("PASS: player shipment orders, physical carriers, Keep withdrawals, capacity reservations, cancellation, route recovery and v14 persistence")
+    print("PASS: player shipment orders, physical carriers, Keep withdrawals, capacity reservations, cancellation, route recovery and v15 persistence")
     quit(0)
