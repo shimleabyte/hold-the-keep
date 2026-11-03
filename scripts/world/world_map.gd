@@ -69,9 +69,9 @@ func _ready() -> void:
         _generate_frontier()
     else:
         _generate_classic()
+    _spawn_iron()
     if WorldConfig.is_frontier_expedition():
         _setup_expedition_barriers()
-    _spawn_iron()
     if WorldConfig.is_frontier_profile():
         _spawn_frontier_decorations()
     if WorldConfig.is_frontier_expedition():
