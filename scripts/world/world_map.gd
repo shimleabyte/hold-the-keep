@@ -32,6 +32,7 @@ var _expedition_barrier_cells: Dictionary = {}
 var _expedition_gate_cells: Dictionary = {}
 var _expedition_gate_original_tiles: Dictionary = {}
 var _expedition_reserved_cells: Dictionary = {}
+var _expedition_outer_reachable: Dictionary = {}
 var _expedition_unlocked_regions: Dictionary = {}
 var generated_resource_layout: Array[Dictionary] = []
 var generated_decoration_layout: Array[Dictionary] = []
@@ -585,6 +586,7 @@ func _setup_expedition_barriers() -> void:
     _expedition_gate_cells.clear()
     _expedition_gate_original_tiles.clear()
     _expedition_reserved_cells.clear()
+    _expedition_outer_reachable.clear()
     _expedition_unlocked_regions.clear()
 
     var profile: Dictionary = WorldConfig.profile_definition(WorldConfig.profile_id)
@@ -638,6 +640,8 @@ func _setup_expedition_barriers() -> void:
     for region in _expedition_gate_cells:
         _seal_expedition_cell(_expedition_gate_cells[region])
 
+    _build_expedition_outer_reachability()
+
 
 func _expedition_core_reachable_cells(core_min: int, core_max: int) -> Dictionary:
     var reachable: Dictionary = {}
@@ -666,6 +670,48 @@ func _expedition_core_reachable_cells(core_min: int, core_max: int) -> Dictionar
             reachable[next] = true
             queue.append(next)
     return reachable
+
+
+## Build the walkable outer component from the far side of each sealed gate.
+## These cells remain unreachable from the Keep until the corresponding gate opens.
+func _build_expedition_outer_reachability() -> void:
+    _expedition_outer_reachable.clear()
+    var directions: Array[Vector2i] = [
+        Vector2i(1, 0), Vector2i(-1, 0),
+        Vector2i(0, 1), Vector2i(0, -1)
+    ]
+    for region in _expedition_gate_cells:
+        var gate_cell: Vector2i = _expedition_gate_cells[region]
+        var outward := Vector2i(0, -1) if gate_cell.y < map_size / 2 else Vector2i(0, 1)
+        var start_cell := gate_cell + outward
+        var visited: Dictionary = {}
+        if not is_buildable(start_cell) or occupied.has(start_cell) or region_id(start_cell) != String(region):
+            push_error("Frontier Expedition: outer landing for %s is not traversable" % String(region))
+            _expedition_outer_reachable[String(region)] = visited
+            continue
+        var queue: Array[Vector2i] = [start_cell]
+        visited[start_cell] = true
+        var cursor := 0
+        while cursor < queue.size():
+            var current := queue[cursor]
+            cursor += 1
+            for direction in directions:
+                var next_cell := current + direction
+                if visited.has(next_cell) or not is_buildable(next_cell) or occupied.has(next_cell):
+                    continue
+                if region_id(next_cell) != String(region):
+                    continue
+                visited[next_cell] = true
+                queue.append(next_cell)
+        _expedition_outer_reachable[String(region)] = visited
+
+
+## True only for tiles on the walkable outer component belonging to this march.
+func is_expedition_outer_cell(cell: Vector2i, region: String) -> bool:
+    if not WorldConfig.is_frontier_expedition() or not WorldConfig.is_valid_cell(cell):
+        return false
+    var reachable: Dictionary = _expedition_outer_reachable.get(region, {})
+    return reachable.has(cell)
 
 
 func _find_expedition_gate_cell(
