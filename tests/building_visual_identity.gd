@@ -74,5 +74,5 @@ func _run() -> void:
     var building_script := load("res://scripts/entities/building.gd") as GDScript
     assert(building_script != null and building_script.can_instantiate(),
         "Building rendering must compile with the new Frontier visual helper")
-    print("PASS: 13 distinct building materials/details, Frontier-only rendering and four deterministic damage states")
+    print("PASS: 14 distinct building materials/details, Frontier-only rendering and four deterministic damage states")
     quit(0)
