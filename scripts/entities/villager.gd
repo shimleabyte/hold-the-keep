@@ -43,6 +43,7 @@ const DEFAULT_WORK_RADIUS := 12.0
 const BUILDER_REPAIR_INTERVAL := 1.6
 const BUILDER_REPAIR_AMOUNT := 12
 const SCOUT_REVEAL_RADIUS := 144.0
+const SCOUT_MAX_PATH_CELLS := 64
 const SCOUT_SURVEY_SECONDS := 1.4
 const SCOUT_RECHECK_SECONDS := 5.0
 const SCOUT_SEARCH_RADII: Array[int] = [20, 16, 12, 8]
@@ -103,6 +104,7 @@ var _rally_interval_mult := 1.0
 var _scout_target_cell := Vector2i(-1, -1)
 var _scout_cursor := 0
 var _scout_survey_t := 0.0
+var _scout_revealed_at_target := false
 
 
 func _ready() -> void:
@@ -171,6 +173,7 @@ func set_job(j: String) -> bool:
     _expedition_target = null
     _scout_target_cell = Vector2i(-1, -1)
     _scout_survey_t = 0.0
+    _scout_revealed_at_target = false
     var old_max := max_hp
     job = j
     if job in ["builder", "hunter", "scout"] and not _claim_workplace(job):
@@ -236,6 +239,7 @@ func on_workplace_lost(building) -> void:
     _release()
     _scout_target_cell = Vector2i(-1, -1)
     _scout_survey_t = 0.0
+    _scout_revealed_at_target = false
     if job == "scout":
         _path = PackedVector2Array()
         _pi = 0
@@ -857,18 +861,18 @@ func _find_scout_work() -> void:
     var best_path := PackedVector2Array()
     var best_score := -INF
     var best_direction := _scout_cursor
+    var work_radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
 
     for radius in SCOUT_SEARCH_RADII:
         for offset in SCOUT_DIRECTIONS.size():
             var direction_index := (_scout_cursor + offset) % SCOUT_DIRECTIONS.size()
             var candidate := origin + SCOUT_DIRECTIONS[direction_index] * radius
-            var work_radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
             if workplace.position.distance_squared_to(nav.center_of(candidate)) > work_radius * work_radius:
                 continue
             if not nav.is_walkable(candidate) or _scout_target_reserved(candidate):
                 continue
             var path: PackedVector2Array = nav.path_to(position, candidate)
-            if path.is_empty():
+            if path.is_empty() or path.size() > SCOUT_MAX_PATH_CELLS:
                 continue
             var unexplored := 0
             for y in range(candidate.y - 5, candidate.y + 6):
@@ -893,6 +897,7 @@ func _find_scout_work() -> void:
     _scout_target_cell = best_cell
     _scout_cursor = (best_direction + 1) % SCOUT_DIRECTIONS.size()
     _scout_survey_t = 0.0
+    _scout_revealed_at_target = false
     _goal_cells = [best_cell]
     _set_path(best_path)
     state = State.SCOUTING
@@ -916,6 +921,7 @@ func _tick_scouting(delta: float) -> void:
     if not has_valid_workplace() or _facility_sabotaged(workplace):
         _scout_target_cell = Vector2i(-1, -1)
         _scout_survey_t = 0.0
+        _scout_revealed_at_target = false
         state = State.IDLE
         _decide_t = SCOUT_RECHECK_SECONDS
         return
@@ -926,13 +932,16 @@ func _tick_scouting(delta: float) -> void:
     if _pi < _path.size():
         _move_along(delta)
         return
-    var fog = get_tree().get_first_node_in_group("fog_of_war")
-    if fog != null:
-        fog.reveal_position(global_position, SCOUT_REVEAL_RADIUS)
+    if not _scout_revealed_at_target:
+        var fog = get_tree().get_first_node_in_group("fog_of_war")
+        if fog != null:
+            fog.reveal_position(global_position, SCOUT_REVEAL_RADIUS)
+        _scout_revealed_at_target = true
     _scout_survey_t += delta
     if _scout_survey_t >= SCOUT_SURVEY_SECONDS:
         _scout_target_cell = Vector2i(-1, -1)
         _scout_survey_t = 0.0
+        _scout_revealed_at_target = false
         state = State.IDLE
         _decide_t = SCOUT_RECHECK_SECONDS
 
@@ -943,6 +952,7 @@ func _return_to_scout_post() -> void:
         state = State.IDLE
         return
     _scout_target_cell = Vector2i(-1, -1)
+    _scout_revealed_at_target = false
     var cells: Array[Vector2i] = workplace.cells()
     if position.distance_to(workplace.position) <= OUTPOST_GUARD_ARRIVAL_RADIUS:
         state = State.IDLE
@@ -1106,6 +1116,7 @@ func _begin_flee() -> void:
     _release()
     _scout_target_cell = Vector2i(-1, -1)
     _scout_survey_t = 0.0
+    _scout_revealed_at_target = false
     var keep = _find_keep()
     state = State.FLEEING
     if keep == null:
