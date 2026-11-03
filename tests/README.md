@@ -30,7 +30,7 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 43 assertion reg
 | resource_save_state.gd | status pohon/batu/bijih besi/hewan liar dan timer tumbuh ulang, rollback ke backup save |
 | campaign_assault.gd | Classic single-stronghold compatibility, fog reveal/save, G assault/recall, garrison at dawn and conquest victory |
 | faction_visual_identity.gd | four distinct faction palettes/crests, six specialist equipment signatures, enemy visual assignment and Classic isolation |
-| building_visual_identity.gd | visual material/detail coverage for all 14 buildings, Frontier-only rendering, unique feature signatures and deterministic damage-state thresholds |
+| building_visual_identity.gd | visual material/detail coverage for all 16 buildings, Frontier-only rendering, unique feature signatures and deterministic damage-state thresholds |
 | audio_identity.gd | ten biome/day-night ambience loops, two original music themes, deterministic sample buffers, 14 event cues, Master bus routing and menu/campaign crossfade selection |
 | combat_visual_feedback.gd | melee/ranged anticipation, directional impact, stagger and distinct Dash/Cleave/Rally cue lifetimes |
 | faction_registry.gd | four faction definitions, region mapping, roster membership, stronghold garrisons, component-backed War Shaman allied healing/cooldown and v11 faction save persistence |
@@ -70,7 +70,7 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 43 assertion reg
 | saboteur_disruption.gd | component-backed Saboteur priority scan, A* reachability, telegraphed disruption, structure damage, tower/depot/workplace suppression and recovery, stagger interruption |
 | siege_engine_behavior.gd | component-backed Siege Engine target priorities, A* pathing, telegraphed structural impact, recovery, defender interruption and building-only attack |
 | beast_rider_charge.gd | component-backed isolated defender target priority, A* locked charge route, telegraphed impact, sidestep miss and stagger interruption |
-| faction_camps_patrols.gd | deterministic enemy-territory camp placement, fog activation, A* patrol leash, bounded reinforcement, camp destruction and v13 save/restore |
+| faction_camps_patrols.gd | deterministic enemy-territory camp placement, fog activation, A* patrol leash, bounded reinforcement, camp destruction and v15 save/restore and v13 legacy compatibility |
 | faction_raids.gd | exposed connected depot/road target selection, finite camp dispatch, pathing, structure damage, depot theft, target abort, faction raid save/restore and cleanup |
 | faction_warfare_stress.gd | simultaneous 48 faction garrisons, eight patrols, four raids, 48 villagers, per-raider A* routing, global raid cap and v15 snapshot validation |
 | balance_final_night.gd | `CASES="4,2;6,3"` = daftar "prajurit,menara"; `TECH=era2` atau `TECH=all` memberi teknologi; hasil MENANG/KALAH |
@@ -119,4 +119,4 @@ PR #35 merged Phase 02.5 at `2ba5628`; workflow #41328005585 passed. PR #36 merg
 PR #42 merged the Beast Rider charge and its regression coverage. The test verifies isolated-defender selection, a walkable route around a wall, telegraph/impact timing, sidestep avoidance, stagger interruption and the cooldown window. The ability is transient; save schema v13 is unchanged.
 
 
-PR #43 merged Phase 06.3 camp/patrol coverage. `faction_camps_patrols` passed on Godot 4.3 and 4.7. It checks deterministic placement in enemy territory, fog-gated activation, A* path/leash bounds, return behavior, active cap and finite reinforcement budget, camp destruction cleanup, and v13 save/restore persistence.
+PR #43 merged Phase 06.3 camp/patrol coverage. `faction_camps_patrols` passed on Godot 4.3 and 4.7. It checks deterministic placement in enemy territory, fog-gated activation, A* path/leash bounds, return behavior, active cap and finite reinforcement budget, camp destruction cleanup, and v15 save/restore persistence.
