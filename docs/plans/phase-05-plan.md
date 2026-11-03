@@ -1,6 +1,6 @@
 # Phase 05 — Construction System and Building Production Chains
 
-**Status:** Lumber Camp/Quarry worksite slice, Phase 05.2a Builder-driven blueprint sites (PR #58), Phase 05.2b queue/Builder priorities (PR #59), and Phase 05.3a Watchtower vision (PR #60, `beef7b7`) are merged. Workflow #515 passed 82/82 jobs on Godot 4.3/4.7, Frontier diagnostic and Windows/Linux exports. Rendered HUD/map-marker review and remaining facility chain remain open.
+**Status:** Lumber Camp/Quarry worksite slice, Phase 05.2a Builder-driven blueprint sites (PR #58), Phase 05.2b queue/Builder priorities (PR #59), Phase 05.3a Watchtower vision (PR #60, `beef7b7`), and Phase 05.3b Granary food reserve (PR #61, `d9b87b1`) are merged. Workflow #41558978053 passed 84/84 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux exports. Rendered building/HUD review, balance and remaining facility chain remain open.
 **Dependency:** Phase 04 Builder occupation; Phase 02 depot/logistics rules.
 **Engine targets:** Godot 4.3 and 4.7.
 
@@ -39,7 +39,7 @@ Make building placement a managed construction process. Builder labor must matte
 - Keep and Outpost reveal behavior is preserved. Discovered terrain remains mapped after tower demolition, while live observation immediately ends.
 - Regression `tests/watchtower_vision.gd` covers unseen-before/build, inner/outer radius, strategic-map observation, permanent discovery after demolition and unchanged turret stats.
 
-## 05.3b — Granary food reserve (implementation branch)
+## 05.3b — Granary food reserve (merged via PR #61)
 - Existing `granary` research now unlocks the `granary` building while retaining its +1 farmer slot per farm effect.
 - Granary is a 3×2, 240-capacity local depot that accepts food only. It cannot be selected as a construction/research cost source.
 - Farmers prioritize a reachable Granary for food. In Classic, upkeep and population growth consume central Inventory first and then the Granary reserve; the HUD displays that combined usable amount. In Frontier, connected Granary stock transfers to Keep under the existing per-depot logistics budget and can be shipped by carrier.
@@ -49,7 +49,7 @@ Make building placement a managed construction process. Builder labor must matte
 
 ## 05.3 — Facility dependency order
 1. [x] Watchtower vision: the existing tower gains local vision and retains its defensive coverage; no duplicate structure is shipped.
-2. [ ] Granary food reserve: implement and validate the food-only depot described above.
+2. [x] Granary food reserve: 240-capacity food-only depot, Classic reserve/upkeep, Frontier transfers/shipments/raids and v13 save validation (PR #61 merged as `d9b87b1`; workflow #41558978053 passed 84/84).
 3. Barracks: recruits/trains soldiers through time and resource costs; must respect population and capacity.
 4. Hunting Lodge: provides Hunter workplace slots and access to wildlife harvest.
 5. Infirmary: provides Healer workplace slots and recovery service.
