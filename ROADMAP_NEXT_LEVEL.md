@@ -1,8 +1,8 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
-**Status (2026-11-03):** Mainline contains the Frontier expansion slices through Phase 08.7, Phase 09.3, Phase 05.2a/05.2b construction and queue management (PRs #58/#59), Phase 05.3a Watchtower vision (PR #60, `beef7b7`), and Phase 05.3b Granary food reserve (PR #61, `d9b87b1`). Workflow #41558978053 passed 84/84 jobs on Godot 4.7, Frontier performance diagnostic and Windows/Linux release exports. Rendered building/HUD review, manual balance and target-hardware acceptance remain outstanding. PR #55 merged regional ambience/music/event audio (`d933bb6`); workflow #477 passed 78/78. PR #57 merged four-act Frontier save/reload and final-victory persistence coverage (`a1ccebe`); workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 on Godot 4.3/4.7, Frontier performance diagnostic, and Windows/Linux release exports. Save schema remains v13. Manual visual/audio review, target-hardware profiling, full campaign balance/playtesting, native Windows runtime and clean-machine acceptance remain open.
+**Status (2026-11-03):** Mainline includes Frontier expansion through Phase 08.7, Phase 09.3, Phase 05 construction/queue management (PRs #58/#59), Watchtower vision (#60), Granary food reserve (#61), and the ordered Phase 04 specialist stack: Hunter #64 (`e59864d`), Scout #65 (`ea9a63c`), Healer #67 (`bf44703`) and Blacksmith/Forge #68 (`1b15f37`). The specialist PRs passed 45/45, 46/46, 47/47 and 48/48 Godot 4.7 jobs respectively (#620, #621, #626, #635). Mainline save schema is now v17. Manual rendered gameplay, equipment visibility, treatment/combat readability, full campaign balance, target-hardware profiling, native Windows runtime and clean-machine acceptance remain open.
 **Phase 02 merge commits:** PR #31 (`6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`) delivered local depot storage/transfers; PR #32 (`2f94959b497677eae49d4303f72322650fb591c2`) delivered garrisons/inspection; PR #33 (`5d7db56b3a51a25541f541bb46c19b26996d22be`) delivered player-directed physical shipments and save v13. PR #33 validation: [workflow #41323062111](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323062111), 50/50 jobs successful on Godot 4.3/4.7, including 23 regressions per engine, Frontier diagnostic and Windows/Linux export.  
-**Baseline:** Godot 4.7 / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, optional Frontier Expedition world 192×192 / 20 days / 4 acts with a 128×128 starting heartland, `main` save format v13. The specialist stack adds save v14 (Hunter), v15 (Scout), v16 (Healer) and v17 (Blacksmith equipment), retaining v1–v16 compatibility.
+**Baseline:** Godot 4.7 / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, optional Frontier Expedition world 192×192 / 20 days / 4 acts with a 128×128 starting heartland, `main` save format v17. Classic v1–v16 and Frontier v7–v16 remain supported through migration.
 
 **Active CI policy:** Godot 4.7 only for import/parse, regressions and Frontier diagnostics. Godot 4.3 compatibility checks and Windows/Linux release exports are excluded from development CI; package builds return during release acceptance.
 
@@ -153,7 +153,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** multiple strongholds can be found, attacked, destroyed, restored from saves and completed in a deterministic objective sequence.
 
 ### Phase 04 — Jobs and workplaces
-**Status:** Builder is merged into `main`. Hunter PR #64 passed 45/45, Scout PR #65 passed 46/46, Healer PR #67 passed 47/47, and Blacksmith/Forge PR #68 passed 48/48 jobs on Godot 4.7 (run #634). The specialist stack remains open for rendered gameplay acceptance and ordered integration.
+**Status:** Builder, Hunter (#64), Scout (#65), Healer (#67) and Blacksmith/Forge (#68) are merged into `main` in dependency order. Their Godot 4.7 workflows passed 45/45 (#620), 46/46 (#621), 47/47 (#626) and 48/48 (#635). Integration is complete; rendered gameplay and balance acceptance remain manual.
 
 - [x] Introduce Builder as a real labor occupation; soldier is stored separately as a military specialization, with a compatibility `job` alias.
 - [x] Add Builder workplace capacity on Keeps and Outposts, plus data-driven work radii.
@@ -162,12 +162,12 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Select the nearest reachable connected depot rather than stopping at an unreachable nearest depot.
 - [x] Add configurable job priority order, reassignment, Alt+job hotkeys and right-click controls in the job panel.
 - [x] Persist occupation, military specialization and priority order in save format v9; older saves still load through the compatibility job field.
-- [x] Add Hunter as a two-slot Hunting Lodge occupation with deterministic wildlife harvest, food delivery, J hotkey/UI, target reservation, work-radius enforcement and v14 save migration (PR #64; CI #620 passed 45/45; manual gameplay acceptance remains).
-- [x] Add Scout as a two-slot Scout Post occupation with bounded A* exploration, local permanent-fog revelation, sector rotation, return-to-post when exhausted, U hotkey/UI and v15 save migration (PR #65; CI #621 passed 46/46; manual map-scale acceptance remains).
-- [x] Add Hunter, Scout and Healer as stacked workplace-specialist slices; their pull requests remain unmerged pending integration review.
-- [x] Complete Blacksmith/Forge implementation, v17 migration coverage and Godot 4.7 CI #634 (48/48 jobs).
-- [ ] Review rendered equipment visibility, combat balance and economic pacing in an actual playthrough; integrate the open specialist PR stack in order.
-- [x] Complete Godot 4.3 / 4.7 CI regression matrix; real gameplay pathing still needs a manual playtest.
+- [x] Merge Hunter and the two-slot Hunting Lodge through PR #64 (`e59864d`): deterministic wildlife harvest, food delivery, J hotkey/UI, target reservation, work-radius enforcement and save v14 migration. CI #620 passed 45/45; rendered food-rate/pathing review remains manual.
+- [x] Merge Scout and the two-slot Scout Post through PR #65 (`ea9a63c`): bounded A* exploration, local permanent-fog revelation, sector rotation, return-to-post, U hotkey/UI and save v15 migration. CI #621 passed 46/46; rendered discovery-pace/map-scale review remains manual.
+- [x] Merge Hunter → Scout → Healer → Blacksmith/Forge in order through PRs #64, #65, #67 and #68; all four specialist workplaces are now part of `main`.
+- [x] Merge Blacksmith/Forge through PR #68 (`1b15f37`), including individual soldier weapon/armor upgrades and v17 migration. Godot 4.7 CI #635 passed 48/48 jobs.
+- [ ] Review rendered Hunter/Scout/Healer/Blacksmith behavior, equipment visibility, treatment/combat readability, combat balance and economic pacing in an actual playthrough.
+- [x] Complete the Godot 4.7 CI regression matrix for all specialist slices; real gameplay pathing and rendered behavior still need a manual playtest.
 
 **Acceptance gate:** workers select valid tasks, avoid cross-map wandering, recover from blocked paths, deposit at reachable storage and retain their state through saves.
 
@@ -183,7 +183,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add a dedicated construction queue panel with explicit order, one-step reorder controls, cancellation and visible per-site costs/live progress; Builder selection follows saved queue priority (PR #59 merged as `6147cfc`; workflow #509 passed 80/80).
 - [x] Extend the existing defensive tower into the Watchtower role with permanent 128px terrain discovery and live strategic-map enemy observation; keep its existing turret behavior (PR #60 merged as `beef7b7`; workflow #515 passed 82/82).
 - [x] Add the Granary food-only depot with population upkeep, food-only Frontier logistics/shipments, raid interaction and v13 save coverage (Phase 05.3b; PR #61 merged as `d9b87b1`, workflow #41558978053 passed 84/84).
-- [x] Add Hunting Lodge as the Hunter workplace (implementation branch `feat/hunter-hunting-lodge`; CI/PR pending).
+- [x] Add and merge Hunting Lodge as the Hunter workplace through PR #64; dedicated Godot 4.7 regression passed.
 - [ ] Add remaining facilities according to dependency: Barracks, Archery Range, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress and Signal Beacon.
 - Introduce leather and gold only when a building or campaign system consumes them.
 - Add construction/repair work, military training, trade and siege production as separate validated slices.
@@ -214,10 +214,10 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Optional camp/patrol state added to save v13 with regression coverage for reload assignment; no schema bump. `faction_camps_patrols` passed on Godot 4.3/4.7.
 - [x] Phase 06.4 faction raids merged via PR #44 (`5cc5084`); workflow #41381487306 passed 68/68 jobs. Faction camps dispatch finite native-role raiders against exposed, connected Outposts/Storage and roads/bridges in their own region; bounded scans and A* checks, target revalidation/withdrawal, structure damage, second-hit depot theft and additive save-v13 persistence are covered by `tests/faction_raids.gd`.
 - [x] Merged through PR #21; Godot 4.3 / 4.7 CI passed (30/30 jobs).
-- [x] Phase 06.5 combined warfare stress workload merged via PR #45 (`83dd633`): 48 garrisons, eight camp patrols, four simultaneous faction raids and 48 villagers, including A* routing and save-v13 assertions. Corrective PR #46 fixes the literal escaped newline; workflow [#41385244114](https://github.com/shimleabyte/hold-the-keep/actions/runs/41385244114) passed 70/70 jobs. PR #46 is still open, so the correction is verified but not yet in `main`.
+- [x] Phase 06.5 combined warfare stress was merged via PR #45 and strengthened through PR #47 (`b06c355`): all 48 garrisons tick across six archetype behaviors alongside eight patrols, four simultaneous raids and 48 additional villagers. PR #47 includes the GDScript correction formerly isolated in PR #46; integrated workflow [#41394905158](https://github.com/shimleabyte/hold-the-keep/actions/runs/41394905158) passed 70/70 jobs. PR #46 is superseded.
 - [ ] Manual Frontier gameplay review.
 
-**Acceptance gate:** each archetype creates a distinct tactical response; AI remains bounded under stress tests; factions obey territory and campaign state; save/load and both engine CI versions pass.
+**Acceptance gate:** each archetype creates a distinct tactical response; AI remains bounded under stress tests; factions obey territory and campaign state; save/load and Godot 4.7 CI pass. Manual Frontier gameplay review remains open.
 
 ### Phase 07 — Technology and campaign objectives
 **Status:** Implementation merged through PR #28. Current mainline workflow #41314731305 passed 46/46 jobs; rendered/manual difficulty and campaign review remain open.
