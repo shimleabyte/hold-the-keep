@@ -364,6 +364,12 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 var saved_id := String(saved_building["id"])
                 if saved_cell == destination_cell and ["keep", "storage", "outpost", "granary"].has(saved_id):
                     destination_building = saved_building
+            if not destination_building.is_empty() and String(destination_building["id"]) != "keep":
+                var accepted_kinds: Array = DataDB.buildings[String(destination_building["id"])].get(
+                    "accepted_resources", ["wood", "stone", "food", "iron"]
+                )
+                if not accepted_kinds.has(kind):
+                    return false
             # Cargo is escrowed in the order; the source can be destroyed before delivery.
             if status in ["queued", "in_transit", "blocked"] and not destination_building.is_empty() and String(destination_building["id"]) != "keep":
                 var key := "%d:%d" % [destination_cell.x, destination_cell.y]
@@ -583,7 +589,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             var faction_raid_cell := Vector2i(int(faction_raid_target["cx"]), int(faction_raid_target["cy"]))
             if not WorldConfig.is_valid_cell(faction_raid_cell):
                 return false
-            var target_ids: Array = ["storage", "outpost"] if faction_raid_kind == "depot" else ["road", "bridge"]
+            var target_ids: Array = ["storage", "outpost", "granary"] if faction_raid_kind == "depot" else ["road", "bridge"]
             var faction_target_exists := false
             for saved_building in buildings:
                 var saved_cell := Vector2i(int(saved_building.get("cx", -1)), int(saved_building.get("cy", -1)))
