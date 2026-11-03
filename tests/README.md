@@ -74,7 +74,7 @@ GitHub Actions menjalankan import/parse on Godot 4.7 only, 46 assertion regressi
 | beast_rider_charge.gd | component-backed isolated defender target priority, A* locked charge route, telegraphed impact, sidestep miss and stagger interruption |
 | faction_camps_patrols.gd | deterministic enemy-territory camp placement, fog activation, A* patrol leash, bounded reinforcement, camp destruction and v15 save/restore and v13 legacy compatibility |
 | faction_raids.gd | exposed connected depot/road target selection, finite camp dispatch, pathing, structure damage, depot theft, target abort, faction raid save/restore and cleanup |
-| faction_warfare_stress.gd | simultaneous 48 faction garrisons, eight patrols, four raids, 48 villagers, per-raider A* routing, global raid cap and v15 snapshot validation |
+| faction_warfare_stress.gd | integrated 48-garrison AI tick across six archetype behaviors, eight patrols, four concurrent raids, 48 additional villagers, per-raider A* routing, same-faction Shaman healing, global raid cap and save-v13 snapshot validation (PR #47) |
 | balance_final_night.gd | `CASES="4,2;6,3"` = daftar "prajurit,menara"; `TECH=era2` atau `TECH=all` memberi teknologi; hasil MENANG/KALAH |
 
 Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; nilai sebenarnya 12).
