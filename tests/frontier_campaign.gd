@@ -77,6 +77,11 @@ func _run() -> void:
     legacy_snapshot["version"] = 10
     legacy_snapshot["quota"].erase("hunter")
     legacy_snapshot["job_priority"].erase("hunter")
+    var legacy_resources: Array = []
+    for resource in legacy_snapshot["resources"]:
+        if String(resource.get("kind", "")) != "food":
+            legacy_resources.append(resource)
+    legacy_snapshot["resources"] = legacy_resources
     legacy_snapshot.erase("frontier_campaign")
     assert(save_system._valid_save(legacy_snapshot), "Version 10 Frontier saves must remain compatible")
 
