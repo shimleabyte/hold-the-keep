@@ -234,6 +234,12 @@ func on_workplace_lost(building) -> void:
     workplace = null
     workplace_job = ""
     _release()
+    _scout_target_cell = Vector2i(-1, -1)
+    _scout_survey_t = 0.0
+    if job == "scout":
+        _path = PackedVector2Array()
+        _pi = 0
+        _decide_t = SCOUT_RECHECK_SECONDS
     state = State.IDLE
 
 
@@ -856,6 +862,9 @@ func _find_scout_work() -> void:
         for offset in SCOUT_DIRECTIONS.size():
             var direction_index := (_scout_cursor + offset) % SCOUT_DIRECTIONS.size()
             var candidate := origin + SCOUT_DIRECTIONS[direction_index] * radius
+            var work_radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
+            if workplace.position.distance_squared_to(nav.center_of(candidate)) > work_radius * work_radius:
+                continue
             if not nav.is_walkable(candidate) or _scout_target_reserved(candidate):
                 continue
             var path: PackedVector2Array = nav.path_to(position, candidate)
@@ -893,7 +902,7 @@ func _scout_target_reserved(cell: Vector2i) -> bool:
     for other in get_tree().get_nodes_in_group("villagers"):
         if other == self or not is_instance_valid(other):
             continue
-        if String(other.job) != "scout" or other.workplace != workplace:
+        if String(other.job) != "scout":
             continue
         var reserved_cell: Vector2i = other.get("_scout_target_cell")
         if reserved_cell.x < 0:
@@ -1095,6 +1104,8 @@ func _find_keep():
 
 func _begin_flee() -> void:
     _release()
+    _scout_target_cell = Vector2i(-1, -1)
+    _scout_survey_t = 0.0
     var keep = _find_keep()
     state = State.FLEEING
     if keep == null:
