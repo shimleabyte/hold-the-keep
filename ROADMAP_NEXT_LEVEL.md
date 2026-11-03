@@ -162,7 +162,8 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add Builder-driven blueprint sites: pay once at placement, cap at two active Builders per site, advance only while Builders are working, convert atomically to a finished building and refund unconsumed materials on cancellation (PR #58 merged as `d3bba66`; workflow #41484825656 passed).
 - [x] Add a dedicated construction queue panel with explicit order, one-step reorder controls, cancellation and visible per-site costs/live progress; Builder selection follows saved queue priority (PR #59 merged as `6147cfc`; workflow #509 passed 80/80).
 - [x] Extend the existing defensive tower into the Watchtower role with permanent 128px terrain discovery and live strategic-map enemy observation; keep its existing turret behavior (PR #60 merged as `beef7b7`; workflow #515 passed 82/82).
-- [ ] Add remaining facilities according to dependency: Granary, Barracks, Archery Range, Hunting Lodge, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress and Signal Beacon.
+- [ ] Add the Granary food-only depot with population upkeep, logistics and v13 save coverage (Phase 05.3b).
+- [ ] Add remaining facilities according to dependency: Barracks, Archery Range, Hunting Lodge, Infirmary, Bridge/Gate, Market, Siege Workshop, Stables, Fortress and Signal Beacon.
 - Introduce leather and gold only when a building or campaign system consumes them.
 - Add construction/repair work, military training, trade and siege production as separate validated slices.
 
