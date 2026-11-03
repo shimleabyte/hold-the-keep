@@ -396,14 +396,14 @@ func _find_raid_target(camp: Dictionary) -> Dictionary:
         if scanned >= MAX_RAID_TARGET_SCAN:
             break
         scanned += 1
-        if not is_instance_valid(depot) or not ["storage", "outpost"].has(String(depot.id)):
+        if not is_instance_valid(depot) or not ["storage", "outpost", "granary"].has(String(depot.id)):
             continue
         if not main.supply.is_depot_connected(depot) or not _raid_target_exposed(depot, camp):
             continue
         var distance := Vector2(camp["position"]).distance_to(depot.position)
         if distance > 760.0:
             continue
-        var priority := 6 if String(depot.id) == "outpost" else 5
+        var priority := 7 if String(depot.id) == "outpost" else (6 if String(depot.id) == "granary" else 5)
         candidates.append({
             "node": depot,
             "kind": "depot",

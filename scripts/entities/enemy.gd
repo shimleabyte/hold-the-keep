@@ -406,7 +406,7 @@ func setup_supply_raid(target_cell: Vector2i, navigation) -> void:
 
 func _find_raid_depot():
     for depot in get_tree().get_nodes_in_group("depots"):
-        if is_instance_valid(depot) and depot.cell == raid_target_cell and ["storage", "outpost"].has(String(depot.id)):
+        if is_instance_valid(depot) and depot.cell == raid_target_cell and ["storage", "outpost", "granary"].has(String(depot.id)):
             return depot
     return null
 
@@ -440,7 +440,7 @@ func _find_faction_raid_target():
         if not is_instance_valid(candidate) or candidate.cell != raid_target_cell:
             continue
         var candidate_id := String(candidate.id)
-        if faction_raid_target_kind == "depot" and ["storage", "outpost"].has(candidate_id):
+        if faction_raid_target_kind == "depot" and ["storage", "outpost", "granary"].has(candidate_id):
             return candidate
         if faction_raid_target_kind == "road" and ["road", "bridge"].has(candidate_id):
             return candidate
@@ -464,7 +464,7 @@ func _faction_raid_target_valid(target, supply) -> bool:
         return false
 
     if faction_raid_target_kind == "depot":
-        return ["storage", "outpost"].has(String(target.id)) and supply.is_depot_connected(target)
+        return ["storage", "outpost", "granary"].has(String(target.id)) and supply.is_depot_connected(target)
     if faction_raid_target_kind == "road":
         if not ["road", "bridge"].has(String(target.id)):
             return false

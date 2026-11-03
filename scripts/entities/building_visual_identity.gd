@@ -5,7 +5,7 @@ extends RefCounted
 const SUPPORTED_FEATURES := [
     "keep_banner", "house_gable", "wall_stakes", "tower_battlements",
     "storage_shutters", "farm_crop_rows", "stone_mortar", "forge_embers",
-    "outpost_signal", "road_ruts", "bridge_planks", "lumber_logs", "quarry_cart"
+    "outpost_signal", "road_ruts", "bridge_planks", "lumber_logs", "quarry_cart", "granary_wheat_sacks"
 ]
 
 
@@ -131,6 +131,15 @@ static func draw_identity(
             canvas.draw_line(Vector2(-half_width + 4.0, top + sprite_size.y - 14.0), Vector2(-half_width + 19.0, top + sprite_size.y - 14.0), accent, 1.0)
             canvas.draw_circle(Vector2(-half_width + 7.0, top + sprite_size.y - 6.0), 2.0, shadow)
             canvas.draw_circle(Vector2(-half_width + 17.0, top + sprite_size.y - 6.0), 2.0, shadow)
+        "granary_wheat_sacks":
+            for index in 3:
+                var x := -half_width + 7.0 + float(index) * 12.0
+                canvas.draw_rect(Rect2(x, top + sprite_size.y - 15.0, 9.0, 9.0), shadow)
+                canvas.draw_rect(Rect2(x + 1.0, top + sprite_size.y - 14.0, 7.0, 7.0), primary)
+                canvas.draw_line(Vector2(x + 2.0, top + sprite_size.y - 11.0), Vector2(x + 7.0, top + sprite_size.y - 11.0), accent, 1.0)
+            canvas.draw_line(Vector2(-half_width + 13.0, top + 7.0), Vector2(-half_width + 13.0, top + 2.0), accent, 1.0)
+            canvas.draw_line(Vector2(-half_width + 13.0, top + 3.0), Vector2(-half_width + 9.0, top + 5.0), accent, 1.0)
+            canvas.draw_line(Vector2(-half_width + 13.0, top + 3.0), Vector2(-half_width + 17.0, top + 5.0), accent, 1.0)
 
     _draw_damage(canvas, building_id, visual, half_width, top, sprite_size.y, stage)
 
@@ -161,5 +170,5 @@ static func _draw_damage(
             Vector2(half_width - 8.0, top + 11.0),
             Vector2(half_width - 3.0, top + 17.0)
         ]), shadow)
-        if building_id in ["wall", "house", "storage", "outpost", "lumber_camp", "bridge"]:
+        if building_id in ["wall", "house", "storage", "outpost", "lumber_camp", "granary", "bridge"]:
             canvas.draw_line(Vector2(-half_width + 3.0, top + 10.0), Vector2(-half_width + 8.0, top + 14.0), accent, 1.5)

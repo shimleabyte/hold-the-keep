@@ -291,7 +291,7 @@ func advance_supply_pressure(delta: float) -> void:
     var next_records: Dictionary = {}
     var state_changed := false
     for depot in get_tree().get_nodes_in_group("depots"):
-        if not is_instance_valid(depot) or not ["storage", "outpost"].has(String(depot.id)):
+        if not is_instance_valid(depot) or not ["storage", "outpost", "granary"].has(String(depot.id)):
             continue
         var key := _pressure_key(depot.cell)
         var record: Dictionary = _pressure_records.get(key, {
@@ -429,7 +429,7 @@ func _recall_supply_raiders(cell: Vector2i) -> void:
 
 ## Saboteurs always take one unit in a fixed priority order every second successful hit.
 func raid_steal_from(depot: Node) -> String:
-    if depot == null or not is_instance_valid(depot) or not ["storage", "outpost"].has(String(depot.id)):
+    if depot == null or not is_instance_valid(depot) or not ["storage", "outpost", "granary"].has(String(depot.id)):
         return ""
     for kind in ["food", "iron", "wood", "stone"]:
         if depot.stockpile_amount(kind) <= 0:
@@ -466,6 +466,8 @@ func create_shipment(source_cell: Vector2i, destination_cell: Vector2i, kind: St
     if not is_depot_connected(source) or not is_depot_connected(destination):
         return -1
     if destination.id != "keep":
+        if not destination.accepts_resource(kind):
+            return -1
         var reserved := _reserved_capacity(destination_cell)
         if destination.stockpile_total() + reserved + amount > destination.stockpile_capacity:
             return -1
@@ -780,7 +782,7 @@ func import_state(value: Variant) -> void:
                 continue
             var saved_cell := Vector2i(int(saved_record.get("cx", -1)), int(saved_record.get("cy", -1)))
             var depot = _find_depot(saved_cell)
-            if depot == null or not ["storage", "outpost"].has(String(depot.id)):
+            if depot == null or not ["storage", "outpost", "granary"].has(String(depot.id)):
                 continue
             _pressure_records[_pressure_key(saved_cell)] = {
                 "cx": saved_cell.x,

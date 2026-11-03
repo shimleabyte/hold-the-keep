@@ -134,11 +134,14 @@
     "requires": [
       "farming"
     ],
-    "desc": "Tiap ladang menampung +1 petani.",
+    "desc": "Membuka Lumbung berkapasitas 240 pangan dan menambah satu slot petani per Ladang.",
     "effects": {
       "add": {
         "farm.workers": 1
-      }
+      },
+      "unlock_building": [
+        "granary"
+      ]
     }
   },
   {

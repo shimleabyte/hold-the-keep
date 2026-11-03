@@ -855,11 +855,16 @@ func _is_in_work_radius(candidate) -> bool:
 
 func _go_depot() -> void:
     _depot = null
+    var best_priority := 2
     var best_path_length := INF
     var best_path := PackedVector2Array()
     var supply = get_tree().get_first_node_in_group("supply_network")
     for depot in get_tree().get_nodes_in_group("depots"):
         if supply != null and not supply.is_depot_connected(depot):
+            continue
+        if depot.id == "granary" and carry_kind != "food":
+            continue
+        if depot.id == "granary" and carry > 0 and not depot.can_store_resource(carry_kind, carry):
             continue
         if WorldConfig.profile_id == "frontier" and carry > 0 and depot.id != "keep":
             if not depot.can_store_resource(carry_kind, carry):
@@ -867,7 +872,9 @@ func _go_depot() -> void:
         var path: PackedVector2Array = nav.path_adjacent(position, depot.cells())
         if path.is_empty():
             continue
-        if float(path.size()) < best_path_length:
+        var priority := 0 if carry_kind == "food" and depot.id == "granary" else 1
+        if priority < best_priority or (priority == best_priority and float(path.size()) < best_path_length):
+            best_priority = priority
             best_path_length = float(path.size())
             _depot = depot
             best_path = path
@@ -890,7 +897,12 @@ func _deposit() -> void:
             _depot = null
             _go_depot()
             return
-        if WorldConfig.profile_id == "frontier" and _depot.id != "keep":
+        if _depot.id == "granary":
+            if not _depot.store_resource(carry_kind, carry):
+                _depot = null
+                _go_depot()
+                return
+        elif WorldConfig.profile_id == "frontier" and _depot.id != "keep":
             if not _depot.store_resource(carry_kind, carry):
                 _depot = null
                 _go_depot()

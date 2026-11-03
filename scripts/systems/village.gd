@@ -79,13 +79,49 @@ func spawn_position() -> Vector2:
     return keep.position + Vector2(randf_range(-10.0, 10.0), 10.0)
 
 
+func food_available() -> int:
+    var amount := Inventory.get_amount("food")
+    if WorldConfig.profile_id != "classic":
+        return amount
+    for granary in get_tree().get_nodes_in_group("granaries"):
+        if is_instance_valid(granary):
+            amount += granary.stockpile_amount("food")
+    return amount
+
+
+func spend_food(amount: int) -> int:
+    var remaining := maxi(0, amount)
+    var spent := mini(remaining, Inventory.get_amount("food"))
+    if spent > 0:
+        Inventory.spend("food", spent)
+        remaining -= spent
+    if remaining > 0 and WorldConfig.profile_id == "classic":
+        var granaries: Array = get_tree().get_nodes_in_group("granaries")
+        granaries.sort_custom(func(a, b) -> bool:
+            if a.cell.y == b.cell.y:
+                return a.cell.x < b.cell.x
+            return a.cell.y < b.cell.y
+        )
+        for granary in granaries:
+            if remaining <= 0:
+                break
+            if not is_instance_valid(granary):
+                continue
+            var amount_here := mini(remaining, granary.stockpile_amount("food"))
+            if amount_here > 0 and granary.take_resource("food", amount_here):
+                remaining -= amount_here
+                spent += amount_here
+    return spent
+
+
 func try_spawn() -> bool:
     var pop := population()
     if pop >= capacity() or GameClock.is_night or _keep() == null:
         return false
-    if Inventory.get_amount("food") < SPAWN_FOOD + UPKEEP * (pop + 1):
+    if food_available() < SPAWN_FOOD + UPKEEP * (pop + 1):
         return false
-    Inventory.spend("food", SPAWN_FOOD)
+    if spend_food(SPAWN_FOOD) != SPAWN_FOOD:
+        return false
     spawn_villager(spawn_position())
     Events.build_feedback.emit("Penduduk baru bergabung")
     return true
@@ -277,9 +313,7 @@ func _on_day_changed(_day: int) -> void:
     if pop == 0:
         return
     var need := pop * UPKEEP
-    var eaten := mini(need, Inventory.get_amount("food"))
-    if eaten > 0:
-        Inventory.spend("food", eaten)
+    var eaten := spend_food(need)
     if eaten < need:
         if remove_one():
             Events.build_feedback.emit("Kelaparan! Seorang penduduk pergi")

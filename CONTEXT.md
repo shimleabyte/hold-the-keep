@@ -24,7 +24,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #59 (save schema v13; statu
 | Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit Keep/Storage/Outpost cost source for construction/research/repair is merged; deterministic contested-depot warning and targeted Saboteur raids merged through PR #35 |
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload; Act I–IV + victory reload dilindungi `campaign_reload_hardening.gd` |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
-| Bangunan | Keep, rumah, tembok, menara pengawas (existing turret plus 128px vision), gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; Builder-driven blueprint queue/reorder/cancel and v13 persistence |
+| Bangunan | Keep, rumah, tembok, menara pengawas (turret + 128px vision), Lumbung 240 pangan, Gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; Builder queue/reorder/cancel and v13 persistence |
 | Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
 | Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; connected infrastructure raids and bounded counterattacks merged via PR #44; manual Frontier balance/play review remains open |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
@@ -585,3 +585,9 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Existing `tower` now displays as `Menara Pengawas` and declares `vision_radius: 128`; no duplicate building ID, art asset or save schema field.
 - Fog scanning permanently discovers terrain inside tower vision. Strategic-map enemy observation uses the same radius; demolishing a tower ends live observation but does not re-cover explored terrain.
 - Existing turret range, damage and fire interval remain unchanged. Regression `tests/watchtower_vision.gd` passes on both engine versions; rendered map-marker review remains manual.
+
+## Phase 05.3b — Granary food reserve (implementation branch)
+- Branch: `feat/phase-05.3b-granary-food-storage`.
+- Granary research now unlocks a 3×2 food-only depot with 240 capacity while preserving its farm-worker bonus.
+- Classic upkeep spends central Inventory first, then stored Granary food. Frontier uses local depot transfers, shipments and isolated-depot raid pressure.
+- Tests cover accepted resource restrictions, Classic upkeep/reload, Frontier transfer/shipment/raid behavior, and v13 save validation. CI/rendered acceptance pending.

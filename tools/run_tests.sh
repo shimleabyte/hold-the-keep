@@ -28,6 +28,7 @@ tests=(
     production_worksites
     construction_sites
     watchtower_vision
+    granary_food_storage
     faction_registry
     faction_visual_identity
     building_visual_identity

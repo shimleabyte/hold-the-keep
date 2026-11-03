@@ -104,6 +104,38 @@
     "short": "PENGAWAS"
   },
   {
+    "id": "granary",
+    "name": "Lumbung",
+    "short": "LUMBUNG",
+    "size": [
+      3,
+      2
+    ],
+    "cost": {
+      "wood": 24,
+      "stone": 10
+    },
+    "hp": 180,
+    "color": "#a17b48",
+    "depot": true,
+    "stockpile_capacity": 240,
+    "accepted_resources": [
+      "food"
+    ],
+    "work_radius": 14,
+    "locked": true,
+    "repair_cost": {
+      "wood": 1
+    },
+    "visual": {
+      "material": "timber and grain",
+      "feature": "granary_wheat_sacks",
+      "primary": "#9a7342",
+      "accent": "#dfc16e",
+      "shadow": "#45301f"
+    }
+  },
+  {
     "id": "storage",
     "name": "Gudang",
     "size": [
