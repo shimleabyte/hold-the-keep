@@ -190,6 +190,13 @@ func collect(main: Node) -> Dictionary:
     }
 
 
+func _is_positive_integral(value: Variant) -> bool:
+    if not (value is int or value is float):
+        return false
+    var numeric_value := float(value)
+    return is_finite(numeric_value) and numeric_value >= 1.0 and numeric_value == floor(numeric_value)
+
+
 func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
     if not (data is Dictionary):
         return false
@@ -232,7 +239,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 return false
             if not scheduled_consequence_id is String or String(scheduled_consequence_id).is_empty():
                 return false
-            if not scheduled_due_day is int or int(scheduled_due_day) < 1:
+            if not _is_positive_integral(scheduled_due_day):
                 return false
             var scheduled_reference_found := false
             for event_value in DataDB.events:
@@ -252,7 +259,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                             continue
                         var after_days: Variant = definition_value.get("after_days", null)
                         var consequence_effects: Variant = definition_value.get("effects", {})
-                        if not after_days is int or int(after_days) < 1:
+                        if not _is_positive_integral(after_days):
                             return false
                         if not consequence_effects is Dictionary or consequence_effects.is_empty():
                             return false
