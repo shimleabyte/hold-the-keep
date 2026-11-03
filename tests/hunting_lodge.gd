@@ -128,7 +128,7 @@ func _run() -> void:
     assert(hunter_a._depot == keep and hunter_a.state == hunter_a.State.TO_DEPOT,
         "A Hunter carrying food must route to the connected Keep depot")
 
-    var food_before := inventory.get_amount("food")
+    var food_before: int = inventory.get_amount("food")
     hunter_a.position = keep.position
     hunter_a._deposit()
     assert(inventory.get_amount("food") == food_before + 5,

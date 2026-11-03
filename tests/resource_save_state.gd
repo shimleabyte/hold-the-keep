@@ -75,7 +75,7 @@ func _initialize() -> void:
     assert(save_system.request_load(), "Loader must recover from the valid backup")
     await ticks(4)
     var restored = current_scene
-    for kind in ["wood", "stone", "iron", "food"]
+    for kind in ["wood", "stone", "iron", "food"]:
         var cell: Vector2i = cells[kind]
         var node = restored.world.occupied.get(cell)
         assert(node != null and node.has_method("export_state"),
