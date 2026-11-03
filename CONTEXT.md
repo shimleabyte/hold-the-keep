@@ -6,14 +6,14 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio, PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening, PR #58 (`d3bba66`) for Phase 05.2a Builder-driven construction sites, PR #59 (`6147cfc`) for Phase 05.2b construction queue/Builder priorities/HUD, PR #60 (`beef7b7`) for Phase 05.3a Watchtower vision, PR #61 (`d9b87b1`) for Phase 05.3b Granary food reserve, and PR #62 (`4cc0420`) for Phase 09.2 scripted campaign combat-budget probes; PR #63 (`a594069`) for Frontier Expedition. PR #62 workflow #41564491766 passed 86/86 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release exports. Save schema remains v13; rendered building/HUD, full-wave balance and human playtest acceptance remain open.
+**Current source of truth:** `main` contains PRs #55–#63 through Frontier Expedition and remains at save schema v13. Active development target is Godot 4.7 only. CI validates 4.7 import/parse, regressions and Frontier/Expedition diagnostics; Windows/Linux exports are deferred until release. Hunter PR #64 now passes the 45-job Godot 4.7-only matrix (#620); Scout PR #65 contains its own specialist slice and is being brought onto the verified Hunter baseline.
 
-**Active implementation branches:** PR #64 (`feat/hunter-hunting-lodge`) adds Hunter, Pondok Pemburu, renewable wildlife, five-food harvesting, two workplace slots, an 18-tile radius, J quota/priority controls and save v14 migration; it remains open pending final CI/PR acceptance. The stacked branch `feat/scout-specialist` adds a two-slot Pondok Pengintai, bounded A* exploration, 144px local permanent-fog revelation, U quota/priority controls and additive save v15 migration. Neither feature branch is part of `main` until merged. Rendered gameplay review remains an acceptance gate.
+**Active implementation branches:** PR #64 (`feat/hunter-hunting-lodge`) delivers Hunter/Hunting Lodge and has passed 45/45 jobs on Godot 4.7 (run #620); it remains open for review/integration. PR #65 (`feat/scout-specialist`) delivers the villager Scout occupation, Scout Post, bounded A* exploration, 144px local permanent fog and save v15; it is stacked on PR #64 and must follow Hunter into `main`.
 
-**Merged into `main`:** PR #63 (`a594069`) adds the optional 192×192 Frontier Expedition profile. It preserves Classic 64×64 and standard Frontier 128×128, begins in a 128×128 connected heartland, and opens each of four outer marches only after the player reaches its survey crossing. Four strongholds, seven regional objective sites and four faction camps are placed in their sealed outer marches; permanent fog reveals them as they are explored. Crossing state is derived from existing discovery objectives; save schema remains v13. PR workflow #41580977570 passed 88/88 jobs across Godot 4.3/4.7, both performance diagnostics, and Windows/Linux export checks. Main push workflow #41581523207 was pending at the time of this update. PR #63 is merged; Frontier Expedition is part of `main`.
+**Merged into `main`:** PR #63 (`a594069`) adds the optional 192×192 Frontier Expedition profile. It preserves Classic 64×64 and standard Frontier 128×128, begins in a 128×128 connected heartland, and opens each of four outer marches only after the player reaches its survey crossing. Four strongholds, seven regional objective sites and four faction camps are placed in their sealed outer marches; permanent fog reveals them as they are explored. Crossing state is derived from existing discovery objectives; save schema remains v13. PR workflow #41580977570 passed 88/88 jobs across Godot 4.7 (historical multi-version runs retain their original descriptions), both performance diagnostics, and Windows/Linux export checks. Main push workflow #41581523207 was pending at the time of this update. PR #63 is merged; Frontier Expedition is part of `main`.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
-- Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
+- Versi aktif: **Godot 4.7**. Godot 4.3 is not an active compatibility target or CI gate.
 - Jendela default 1280×720, minimum 960×540. Viewport logis mengikuti setengah ukuran client window (minimum 480×270), pixel art integer-scale tepat 2×.
 - Tujuan pemain: bertahan 15 hari, di malam ke-15 kalahkan Raja Lawan. Keep hancur = kalah.
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
@@ -29,7 +29,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #62 (save schema v13; statu
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload; Act I–IV + victory reload dilindungi `campaign_reload_hardening.gd` |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara pengawas (turret + 128px vision), Lumbung 240 pangan, Gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge pada `main`; PR #64 branch menambah Pondok Pemburu; `feat/scout-specialist` menambah Pondok Pengintai. |
-| Villager | Pada `main`: penebang, penambang, petani, soldier dan Builder. PR #64 branch menambah Hunter; `feat/scout-specialist` menambah villager Scout. Healer dan Blacksmith masih terbuka. |
+| Villager | Penebang, penambang, petani, soldier and Builder are in main; Hunter is implemented on open PR #64 and Scout on open stacked PR #65; Healer/Blacksmith remain future slices |
 | Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; connected infrastructure raids and bounded counterattacks merged via PR #44; manual Frontier balance/play review remains open |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
@@ -38,8 +38,8 @@ Ringkasan implementasi aktual pada `main` setelah PR #62 (save schema v13; statu
 | Tampilan | Adaptive logical viewport = setengah ukuran client window, minimum 480×270, pixel scale tepat 2×; physical-display/fullscreen review belum dilakukan |
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map with live tower sight, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 10 procedural ambience loops (5 biome × siang/malam), 2 original music loops, 14 event cues; Master bus routing dan crossfade; human listening/level-balance QA masih terbuka |
-| Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | PR #61 workflow #41558978053 passed 84/84 jobs: Godot 4.3/4.7 parse, 40 regressions per engine, Frontier performance diagnostic and Windows/Linux release exports. |
+| Rilis | Export presets and build scripts remain available; automatic Windows/Linux exports are deferred until the release phase |
+| CI | Active gate: Godot 4.7 import/parse, regression matrix and two Frontier diagnostics. No Godot 4.3 or release-export jobs |
 
 ## 3. Struktur
 ```
