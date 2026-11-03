@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 14
+const VERSION := 15
 
 var pending: Dictionary = {}
 
@@ -500,6 +500,8 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             var allowed_occupations := ["", "woodcutter", "miner", "farmer", "builder"]
             if version >= 14:
                 allowed_occupations.append("hunter")
+            if version >= 15:
+                allowed_occupations.append("scout")
             if not allowed_occupations.has(occupation):
                 return false
             if not ["", "soldier"].has(specialization):
@@ -626,19 +628,25 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             allowed_jobs.append("builder")
         if version >= 14:
             allowed_jobs.append("hunter")
+        if version >= 15:
+            allowed_jobs.append("scout")
         if not allowed_jobs.has(String(job)):
             return false
     if version >= 14 and not quota.has("hunter"):
         return false
+    if version >= 15 and not quota.has("scout"):
+        return false
     if version >= 9:
         var priority = data.get("job_priority", null)
-        var expected_priority_size := 6 if version >= 14 else 5
+        var expected_priority_size := 7 if version >= 15 else (6 if version >= 14 else 5)
         if not (priority is Array) or priority.size() != expected_priority_size:
             return false
         var unique_priority: Dictionary = {}
         var priority_jobs := ["woodcutter", "miner", "farmer", "builder", "soldier"]
         if version >= 14:
             priority_jobs.append("hunter")
+        if version >= 15:
+            priority_jobs.append("scout")
         for value in priority:
             var job_name := String(value)
             if not priority_jobs.has(job_name) or unique_priority.has(job_name):
