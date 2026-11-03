@@ -26,6 +26,16 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - Avoid granting global enemy tracking; visibility must remain observation-based.
 - Support a distinct exploration assignment and return/idle behavior when no unexplored reachable cells remain.
 
+### Scout — in progress on `feat/scout-specialist`
+- Add a two-slot Scout Post as the explicit workplace; Scouts cannot be assigned without a reachable free slot.
+- Use a bounded A* survey loop around the assigned post. Select only reachable walkable destinations with unexplored cells nearby; rotate sectors and avoid duplicating another Scout's active destination.
+- Reveal terrain through the existing permanent fog system with a 144px Scout sight radius. Do not add global enemy tracking or reveal enemies outside existing observation rules.
+- Return to the Scout Post when no unexplored reachable survey cells remain; periodically re-check so newly opened routes can be explored later.
+- Add Scout as a distinct occupation, S hotkey, quota/priority row, role sprite, Scout Post art/icon and player-facing controls.
+- Bump save schema to v15 for the Scout quota/priority/occupation and new building ID; preserve Classic v1–v14 and Frontier v7–v14 migration.
+- Add focused tests for workplace requirement/capacity, reachable target selection, fog reveal radius, bounded behavior, survey completion/return, two-Scout target separation and save migration.
+- [ ] Rendered pathing, discovery pace and actual map-scale playtest.
+
 ### Healer
 - Prioritize damaged friendly soldiers/guards within a workplace or Outpost service radius.
 - Consume a defined medical resource only once such a resource has a real source/consumer chain; otherwise use a documented cooldown/limited charge model.
