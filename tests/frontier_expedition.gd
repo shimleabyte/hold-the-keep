@@ -59,6 +59,9 @@ func _initialize() -> void:
         assert(main.world.is_expedition_outer_cell(stronghold_cell, stronghold_region)
             and not core_reachable.has(stronghold_cell),
             "Each regional stronghold must wait inside its sealed outer march: " + stronghold_region)
+        var entrance := main.world.expedition_outer_landing_cell(stronghold_region)
+        assert(Vector2(stronghold_cell - entrance).length() >= 35.0,
+            "Regional strongholds must remain deeper in the march than its entrance objectives: " + stronghold_region)
 
     assert(main.frontier_campaign.sites.size() == 7,
         "All non-discovery objectives must have sites in the locked outer marches")
@@ -69,6 +72,10 @@ func _initialize() -> void:
         assert(main.world.is_expedition_outer_cell(site_cell, site_region)
             and not core_reachable.has(site_cell),
             "Regional objectives must be placed beyond their exploration gates: " + String(objective_id))
+        var entrance := main.world.expedition_outer_landing_cell(site_region)
+        var entrance_distance := Vector2(site_cell - entrance).length()
+        assert(entrance_distance >= 8.0 and entrance_distance <= 36.0,
+            "The first regional sites should sit within an exploration band beyond their gate: " + String(objective_id))
 
     assert(main.frontier_campaign.faction_camps.camps.size() == 4,
         "All four faction camps must be seeded even when their outer marches are still sealed")
