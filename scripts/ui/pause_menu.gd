@@ -320,7 +320,7 @@ func _on_campaign_profile_selected(index: int) -> void:
 func _open_campaign_panel() -> void:
     _menu_center.visible = false
     _controls_center.visible = false
-    _campaign_profile.select(0 if WorldConfig.profile_id == "classic" else 1)
+    _campaign_profile.select(_profile_option_index(WorldConfig.profile_id))
     _on_campaign_profile_selected(_campaign_profile.selected)
     _campaign_center.visible = true
 
