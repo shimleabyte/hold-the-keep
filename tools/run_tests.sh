@@ -29,6 +29,7 @@ tests=(
     hunting_lodge
     scout_specialist
     healer_infirmary
+    blacksmith_forge
     production_worksites
     construction_sites
     watchtower_vision
@@ -46,6 +47,7 @@ tests=(
     data_db_validation
     decision_events
     release_hardening
+    save_validator
     input_rebinding
     map_stages
     player_combat
