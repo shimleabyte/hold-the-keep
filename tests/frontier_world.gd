@@ -22,6 +22,15 @@ func resource_signature(world: Node) -> Array[String]:
 
 
 
+func wildlife_signature(world: Node) -> Array[String]:
+    var signature: Array[String] = []
+    for entry in world.generated_wildlife_layout:
+        var cell: Vector2i = entry["cell"]
+        signature.append("%d,%d:%s" % [cell.x, cell.y, String(entry["region"])])
+    signature.sort()
+    return signature
+
+
 func decoration_signature(world: Node) -> Array[String]:
     var signature: Array[String] = []
     for entry in world.generated_decoration_layout:
@@ -304,6 +313,8 @@ func _initialize() -> void:
                 "Biome assignment must be deterministic at %s" % cell)
     assert(resource_signature(mirror) == resource_signature(world),
         "Resource placement must be deterministic for a matching seed/profile")
+    assert(wildlife_signature(mirror) == wildlife_signature(world),
+        "Wildlife distribution must be deterministic for a matching seed/profile")
     assert(decoration_signature(mirror) == decoration_signature(world),
         "Biome decoration and landmark placement must be deterministic for a matching seed/profile")
 
