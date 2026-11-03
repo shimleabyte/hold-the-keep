@@ -15,6 +15,7 @@ const TEXTURES := {
     "bridge": preload("res://assets/sprites/bridge.svg"),
     "lumber_camp": preload("res://assets/sprites/lumber_camp.svg"),
     "quarry": preload("res://assets/sprites/quarry.svg"),
+    "granary": preload("res://assets/sprites/granary.svg"),
 }
 const ARROW_SCRIPT := preload("res://scripts/entities/arrow.gd")
 const BuildingVisual := preload("res://scripts/entities/building_visual_identity.gd")
@@ -108,10 +109,15 @@ func _process(delta: float) -> void:
         Events.build_feedback.emit("%s kembali berfungsi" % String(id).to_upper())
 
 
-func can_store_resource(kind: String, amount: int) -> bool:
-    if is_sabotaged() or amount <= 0 or stockpile_capacity <= 0:
+func accepts_resource(kind: String) -> bool:
+    if stockpile_capacity <= 0:
         return false
-    if not ["wood", "stone", "food", "iron"].has(kind):
+    var accepted_resources: Array = data.get("accepted_resources", ["wood", "stone", "food", "iron"])
+    return accepted_resources.has(kind)
+
+
+func can_store_resource(kind: String, amount: int) -> bool:
+    if is_sabotaged() or amount <= 0 or not accepts_resource(kind):
         return false
     return stockpile_total() + amount <= stockpile_capacity
 
@@ -147,7 +153,7 @@ func import_stockpile(value: Variant) -> bool:
     var total := 0
     for kind in value:
         var amount := int(value[kind])
-        if not ["wood", "stone", "food", "iron"].has(String(kind)) or amount < 0:
+        if not accepts_resource(String(kind)) or amount < 0:
             return false
         if amount > 0:
             restored[String(kind)] = amount
@@ -176,6 +182,8 @@ func _ready() -> void:
         add_to_group("depots")
     if id == "farm":
         add_to_group("farms")
+    if id == "granary":
+        add_to_group("granaries")
     set_physics_process(_range > 0.0)
     set_process(false)
     if id == "keep":
@@ -239,6 +247,7 @@ func _leave_groups() -> void:
     remove_from_group("buildings")
     remove_from_group("depots")
     remove_from_group("farms")
+    remove_from_group("granaries")
     remove_from_group("roads")
 
 
