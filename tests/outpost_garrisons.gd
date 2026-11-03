@@ -147,23 +147,25 @@ func _initialize() -> void:
     hud._toggle_outposts()
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 14, "Guard links and shipment state must use save v14")
+    assert(snapshot["version"] == 15, "Guard links and shipment state must use save v15")
     var saved_guard_count := 0
     for saved_villager in snapshot["villagers"]:
         if saved_villager.get("guard_outpost", null) is Dictionary:
             saved_guard_count += 1
     assert(saved_guard_count == 2, "Save snapshot must persist both Outpost guard assignments")
-    assert(save_system._valid_save(snapshot), "Save v14 with valid guard links must pass validation")
+    assert(save_system._valid_save(snapshot), "Save v12 with valid guard links must pass validation")
     var legacy_snapshot := snapshot.duplicate(true)
     legacy_snapshot["version"] = 12
     legacy_snapshot.erase("supply")
     legacy_snapshot["quota"].erase("hunter")
+    legacy_snapshot["quota"].erase("scout")
     legacy_snapshot["job_priority"].erase("hunter")
+    legacy_snapshot["job_priority"].erase("scout")
     for saved_villager in legacy_snapshot["villagers"]:
-        if String(saved_villager.get("occupation", "")) == "hunter":
+        if String(saved_villager.get("occupation", "")) in ["hunter", "scout"]:
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
-        elif String(saved_villager.get("job", "")) == "hunter":
+        elif String(saved_villager.get("job", "")) in ["hunter", "scout"]:
             saved_villager["job"] = ""
         saved_villager.erase("guard_outpost")
     var legacy_resources: Array = []
@@ -171,9 +173,9 @@ func _initialize() -> void:
         if String(resource.get("kind", "")) != "food":
             legacy_resources.append(resource)
     legacy_snapshot["resources"] = legacy_resources
-    for index in range(legacy_snapshot["buildings"].size() - 1, -1, -1):
-        if String(legacy_snapshot["buildings"][index].get("id", "")) == "hunting_lodge":
-            legacy_snapshot["buildings"].remove_at(index)
+    for building_index in range(legacy_snapshot["buildings"].size() - 1, -1, -1):
+        if String(legacy_snapshot["buildings"][building_index].get("id", "")) in ["hunting_lodge", "scout_post"]:
+            legacy_snapshot["buildings"].remove_at(building_index)
     assert(save_system._valid_save(legacy_snapshot),
         "Existing v12 saves without shipment or guard fields must remain valid")
     var invalid_snapshot := snapshot.duplicate(true)

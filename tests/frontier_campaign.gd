@@ -70,14 +70,23 @@ func _run() -> void:
         "Destroying the Greenwood camp must complete its objective")
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 14, "Frontier campaign, depot, shipment and Hunter state must write save version 14")
+    assert(snapshot["version"] == 15, "Frontier campaign, depot, shipment and Hunter/Scout state must write save version 15")
     assert(snapshot["frontier_campaign"]["objectives"].size() == 11, "Save must retain every objective")
     assert(save_system._valid_save(snapshot), "Fresh Frontier objective state must validate")
     var legacy_snapshot: Dictionary = snapshot.duplicate(true)
     legacy_snapshot["version"] = 10
     legacy_snapshot["quota"].erase("hunter")
     legacy_snapshot["job_priority"].erase("hunter")
+    legacy_snapshot["quota"].erase("scout")
+    legacy_snapshot["job_priority"].erase("scout")
     var legacy_resources: Array = []
+    for saved_villager in legacy_snapshot["villagers"]:
+        if String(saved_villager.get("occupation", "")) == "scout":
+            saved_villager["occupation"] = ""
+            saved_villager["job"] = ""
+    for index in range(legacy_snapshot["buildings"].size() - 1, -1, -1):
+        if String(legacy_snapshot["buildings"][index].get("id", "")) == "scout_post":
+            legacy_snapshot["buildings"].remove_at(index)
     for resource in legacy_snapshot["resources"]:
         if String(resource.get("kind", "")) != "food":
             legacy_resources.append(resource)

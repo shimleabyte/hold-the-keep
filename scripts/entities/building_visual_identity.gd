@@ -6,7 +6,7 @@ const SUPPORTED_FEATURES := [
     "keep_banner", "house_gable", "wall_stakes", "tower_battlements",
     "storage_shutters", "farm_crop_rows", "stone_mortar", "forge_embers",
     "outpost_signal", "road_ruts", "bridge_planks", "lumber_logs", "quarry_cart", "granary_wheat_sacks",
-    "hunting_lodge_trophy_rack"
+    "hunting_lodge_trophy_rack", "scout_post_map_board"
 ]
 
 
@@ -149,6 +149,20 @@ static func draw_identity(
                 canvas.draw_line(Vector2(antler_x - 3.0, rack_y - 5.0), Vector2(antler_x - 5.0, rack_y - 3.0), accent, 1.0)
                 canvas.draw_line(Vector2(antler_x - 3.0, rack_y - 5.0), Vector2(antler_x - 1.0, rack_y - 7.0), accent, 1.0)
             canvas.draw_rect(Rect2(-3.0, rack_y + 2.0, 6.0, 5.0), primary)
+        "scout_post_map_board":
+            var board_y := top + 12.0
+            canvas.draw_rect(Rect2(-half_width + 7.0, board_y, sprite_size.x - 14.0, 12.0), shadow)
+            canvas.draw_rect(Rect2(-half_width + 8.0, board_y + 1.0, sprite_size.x - 16.0, 10.0), primary)
+            canvas.draw_line(Vector2(-half_width + 10.0, board_y + 8.0), Vector2(half_width - 10.0, board_y + 3.0), accent, 1.0)
+            canvas.draw_line(Vector2(-2.0, board_y + 2.0), Vector2(3.0, board_y + 8.0), accent, 1.0)
+            canvas.draw_circle(Vector2(0.0, board_y + 5.0), 1.5, Color("#d6c18b"))
+            var pennant_x := half_width - 9.0
+            canvas.draw_line(Vector2(pennant_x, top + 2.0), Vector2(pennant_x, top + 21.0), shadow, 1.5)
+            canvas.draw_colored_polygon(PackedVector2Array([
+                Vector2(pennant_x + 1.0, top + 4.0),
+                Vector2(pennant_x + 8.0, top + 7.0),
+                Vector2(pennant_x + 1.0, top + 11.0)
+            ]), accent)
 
     _draw_damage(canvas, building_id, visual, half_width, top, sprite_size.y, stage)
 

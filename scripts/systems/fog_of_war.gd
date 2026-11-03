@@ -80,7 +80,8 @@ func _scan_sources() -> void:
             changed = reveal_position(building.global_position, tower_reveal_radius) or changed
     for villager in get_tree().get_nodes_in_group("villagers"):
         if villager.visible:
-            changed = reveal_position(villager.global_position, 64.0) or changed
+            var villager_reveal_radius := 144.0 if String(villager.job) == "scout" else 64.0
+            changed = reveal_position(villager.global_position, villager_reveal_radius) or changed
     if changed:
         queue_redraw()
 

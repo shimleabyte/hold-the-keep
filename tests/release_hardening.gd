@@ -31,6 +31,23 @@ func _fixture_for_version(source: Dictionary, target_version: int) -> Dictionary
             if String(resource.get("kind", "")) != "food":
                 legacy_resources.append(resource)
         fixture["resources"] = legacy_resources
+        for index in range(fixture["buildings"].size() - 1, -1, -1):
+            if String(fixture["buildings"][index].get("id", "")) == "hunting_lodge":
+                fixture["buildings"].remove_at(index)
+
+    if target_version < 15:
+        fixture["quota"].erase("scout")
+        if fixture.has("job_priority"):
+            fixture["job_priority"].erase("scout")
+        for villager in fixture["villagers"]:
+            if String(villager.get("job", "")) == "scout":
+                villager["job"] = ""
+            if String(villager.get("occupation", "")) == "scout":
+                villager["occupation"] = ""
+                villager["job"] = ""
+        for index in range(fixture["buildings"].size() - 1, -1, -1):
+            if String(fixture["buildings"][index].get("id", "")) == "scout_post":
+                fixture["buildings"].remove_at(index)
 
     if target_version < 12:
         for building in fixture["buildings"]:
@@ -117,15 +134,15 @@ func _run() -> void:
     game_clock.set_process(false)
 
     var classic_snapshot: Dictionary = save_system.collect(classic_main)
-    assert(classic_snapshot["version"] == 14,
-        "Current release hardening must exercise the latest v14 schema")
-    for version in range(1, 15):
+    assert(classic_snapshot["version"] == 15,
+        "Current release hardening must exercise the latest v15 schema")
+    for version in range(1, 16):
         var fixture := _fixture_for_version(classic_snapshot, version)
         assert(save_system._valid_save(fixture),
             "Classic migration fixture v%d must remain structurally valid" % version)
 
     var unsupported := classic_snapshot.duplicate(true)
-    unsupported["version"] = 15
+    unsupported["version"] = 16
     assert(not save_system._valid_save(unsupported),
         "Unknown future save versions must be rejected")
     var invalid_index := classic_snapshot.duplicate(true)
@@ -170,7 +187,7 @@ func _run() -> void:
     var frontier_snapshot: Dictionary = save_system.collect(frontier_main)
     assert(frontier_snapshot["world"]["map_size"] == 128,
         "Frontier fixtures must use the 128x128 world")
-    for version in range(7, 15):
+    for version in range(7, 16):
         var fixture := _fixture_for_version(frontier_snapshot, version)
         assert(save_system._valid_save(fixture),
             "Frontier migration fixture v%d must remain structurally valid" % version)
@@ -190,7 +207,7 @@ func _run() -> void:
     assert(not save_system._valid_save(broken_campaign),
         "A truncated Frontier objective registry must be rejected")
 
-    print("PASS: Classic save schemas v1-v14, Frontier v7-v14, interrupted writes, backup recovery eligibility and Windows/Linux export presets")
+    print("PASS: Classic save schemas v1-v15, Frontier v7-v15, interrupted writes, backup recovery eligibility and Windows/Linux export presets")
     quit(0)
 
 

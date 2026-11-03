@@ -26,6 +26,7 @@ tests=(
     campaign_multi_stronghold
     workplace_assignments
     hunting_lodge
+    scout_specialist
     production_worksites
     construction_sites
     watchtower_vision

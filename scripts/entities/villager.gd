@@ -7,7 +7,7 @@ extends Node2D
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
 
-enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING }
+enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING, SCOUTING, SCOUT_RETURNING }
 
 const TEXTURES := {
     "": preload("res://assets/sprites/villager_idle.svg"),
@@ -16,6 +16,7 @@ const TEXTURES := {
     "farmer": preload("res://assets/sprites/villager_farmer.svg"),
     "builder": preload("res://assets/sprites/villager_miner.svg"),
     "hunter": preload("res://assets/sprites/villager_hunter.svg"),
+    "scout": preload("res://assets/sprites/villager_scout.svg"),
     "soldier": preload("res://assets/sprites/villager_soldier.svg"),
 }
 
@@ -41,6 +42,15 @@ const REACH := 11.0
 const DEFAULT_WORK_RADIUS := 12.0
 const BUILDER_REPAIR_INTERVAL := 1.6
 const BUILDER_REPAIR_AMOUNT := 12
+const SCOUT_REVEAL_RADIUS := 144.0
+const SCOUT_MAX_PATH_CELLS := 64
+const SCOUT_SURVEY_SECONDS := 1.4
+const SCOUT_RECHECK_SECONDS := 5.0
+const SCOUT_SEARCH_RADII: Array[int] = [20, 16, 12, 8]
+const SCOUT_DIRECTIONS: Array[Vector2i] = [
+    Vector2i(1, 0), Vector2i(1, 1), Vector2i(0, 1), Vector2i(-1, 1),
+    Vector2i(-1, 0), Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1)
+]
 
 var occupation := ""
 var military_specialization := ""
@@ -91,6 +101,10 @@ var _running := false
 var _rally_t := 0.0
 var _rally_damage_mult := 1.0
 var _rally_interval_mult := 1.0
+var _scout_target_cell := Vector2i(-1, -1)
+var _scout_cursor := 0
+var _scout_survey_t := 0.0
+var _scout_revealed_at_target := false
 
 
 func _ready() -> void:
@@ -157,9 +171,12 @@ func set_job(j: String) -> bool:
     _release_workplace()
     _expeditioning = false
     _expedition_target = null
+    _scout_target_cell = Vector2i(-1, -1)
+    _scout_survey_t = 0.0
+    _scout_revealed_at_target = false
     var old_max := max_hp
     job = j
-    if job in ["builder", "hunter"] and not _claim_workplace(job):
+    if job in ["builder", "hunter", "scout"] and not _claim_workplace(job):
         job = ""
         remove_from_group("defenders")
         max_hp = _hp_cap_for("")
@@ -220,6 +237,13 @@ func on_workplace_lost(building) -> void:
     workplace = null
     workplace_job = ""
     _release()
+    _scout_target_cell = Vector2i(-1, -1)
+    _scout_survey_t = 0.0
+    _scout_revealed_at_target = false
+    if job == "scout":
+        _path = PackedVector2Array()
+        _pi = 0
+        _decide_t = SCOUT_RECHECK_SECONDS
     state = State.IDLE
 
 
@@ -294,7 +318,7 @@ func _physics_process(delta: float) -> void:
     if GameClock.is_night and job != "soldier" and state != State.FLEEING:
         _begin_flee()
 
-    if nav.version != _path_ver and (state == State.TO_WORK or state == State.TO_DEPOT or state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or (state == State.IDLE and is_outpost_guard())):
+    if nav.version != _path_ver and (state == State.TO_WORK or state == State.TO_DEPOT or state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or state == State.SCOUTING or state == State.SCOUT_RETURNING or (state == State.IDLE and is_outpost_guard())):
         _repath()
 
     match state:
@@ -330,6 +354,13 @@ func _physics_process(delta: float) -> void:
                 state = State.IDLE
                 _scan_t = 0.0
                 _wander_t = 2.0
+        State.SCOUTING:
+            _tick_scouting(delta)
+        State.SCOUT_RETURNING:
+            if _move_along(delta):
+                _scout_target_cell = Vector2i(-1, -1)
+                state = State.IDLE
+                _decide_t = SCOUT_RECHECK_SECONDS
     _update_anim(delta)
 
 
@@ -343,9 +374,9 @@ func _update_anim(delta: float) -> void:
         State.EXPEDITION:
             moving = _pi < _path.size()
             _running = _expedition_target != null and is_instance_valid(_expedition_target) and position.distance_to(_expedition_target.position) > RUN_DISTANCE
-        State.RECALLING:
+        State.RECALLING, State.SCOUTING, State.SCOUT_RETURNING:
             moving = _pi < _path.size()
-            _running = true
+            _running = state == State.RECALLING or state == State.SCOUT_RETURNING
         State.FLEEING:
             moving = true
             _running = true
@@ -728,6 +759,9 @@ func _find_work() -> void:
     if carry > 0:
         _go_depot()
         return
+    if job == "scout":
+        _find_scout_work()
+        return
     var cands: Array = []
     match job:
         "woodcutter", "miner":
@@ -809,6 +843,130 @@ func _find_work() -> void:
         return
     if cands.is_empty():
         _bad.clear()
+
+
+func _find_scout_work() -> void:
+    if not has_valid_workplace():
+        _release_workplace()
+        if not _claim_workplace("scout"):
+            return
+    if _facility_sabotaged(workplace):
+        return
+
+    var fog = get_tree().get_first_node_in_group("fog_of_war")
+    if fog == null:
+        return
+    var origin: Vector2i = nav.cell_of(workplace.position)
+    var best_cell := Vector2i(-1, -1)
+    var best_path := PackedVector2Array()
+    var best_score := -INF
+    var best_direction := _scout_cursor
+    var work_radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
+
+    for radius in SCOUT_SEARCH_RADII:
+        for offset in SCOUT_DIRECTIONS.size():
+            var direction_index := (_scout_cursor + offset) % SCOUT_DIRECTIONS.size()
+            var direction: Vector2i = SCOUT_DIRECTIONS[direction_index]
+            var candidate: Vector2i = origin + direction * radius
+            if workplace.position.distance_squared_to(nav.center_of(candidate)) > work_radius * work_radius:
+                continue
+            if not nav.is_walkable(candidate) or _scout_target_reserved(candidate):
+                continue
+            var path: PackedVector2Array = nav.path_to(position, candidate)
+            if path.is_empty() or path.size() > SCOUT_MAX_PATH_CELLS:
+                continue
+            var unexplored := 0
+            for y in range(candidate.y - 5, candidate.y + 6):
+                for x in range(candidate.x - 5, candidate.x + 6):
+                    if x < 0 or y < 0 or x >= WorldConfig.map_size or y >= WorldConfig.map_size:
+                        continue
+                    if not fog.is_revealed_cell(Vector2i(x, y)):
+                        unexplored += 1
+            if unexplored <= 0:
+                continue
+            var score := float(unexplored) * 8.0 - float(path.size()) * 1.5 + float(radius)
+            if score > best_score:
+                best_score = score
+                best_cell = candidate
+                best_path = path
+                best_direction = direction_index
+
+    if best_cell.x < 0:
+        _return_to_scout_post()
+        return
+
+    _scout_target_cell = best_cell
+    _scout_cursor = (best_direction + 1) % SCOUT_DIRECTIONS.size()
+    _scout_survey_t = 0.0
+    _scout_revealed_at_target = false
+    _goal_cells = [best_cell]
+    _set_path(best_path)
+    state = State.SCOUTING
+
+
+func _scout_target_reserved(cell: Vector2i) -> bool:
+    for other in get_tree().get_nodes_in_group("villagers"):
+        if other == self or not is_instance_valid(other):
+            continue
+        if String(other.job) != "scout":
+            continue
+        var reserved_cell: Vector2i = other.get("_scout_target_cell")
+        if reserved_cell.x < 0:
+            continue
+        if Vector2(reserved_cell).distance_to(Vector2(cell)) < 8.0:
+            return true
+    return false
+
+
+func _tick_scouting(delta: float) -> void:
+    if not has_valid_workplace() or _facility_sabotaged(workplace):
+        _scout_target_cell = Vector2i(-1, -1)
+        _scout_survey_t = 0.0
+        _scout_revealed_at_target = false
+        state = State.IDLE
+        _decide_t = SCOUT_RECHECK_SECONDS
+        return
+    if nav.version != _path_ver:
+        _repath()
+        if state != State.SCOUTING:
+            return
+    if _pi < _path.size():
+        _move_along(delta)
+        return
+    if not _scout_revealed_at_target:
+        var fog = get_tree().get_first_node_in_group("fog_of_war")
+        if fog != null:
+            fog.reveal_position(global_position, SCOUT_REVEAL_RADIUS)
+        _scout_revealed_at_target = true
+    _scout_survey_t += delta
+    if _scout_survey_t >= SCOUT_SURVEY_SECONDS:
+        _scout_target_cell = Vector2i(-1, -1)
+        _scout_survey_t = 0.0
+        _scout_revealed_at_target = false
+        state = State.IDLE
+        _decide_t = SCOUT_RECHECK_SECONDS
+
+
+func _return_to_scout_post() -> void:
+    if not has_valid_workplace():
+        _scout_target_cell = Vector2i(-1, -1)
+        state = State.IDLE
+        return
+    _scout_target_cell = Vector2i(-1, -1)
+    _scout_revealed_at_target = false
+    var cells: Array[Vector2i] = workplace.cells()
+    if position.distance_to(workplace.position) <= OUTPOST_GUARD_ARRIVAL_RADIUS:
+        state = State.IDLE
+        _decide_t = SCOUT_RECHECK_SECONDS
+        return
+    var path: PackedVector2Array = nav.path_adjacent(position, cells)
+    if path.is_empty():
+        state = State.IDLE
+        _decide_t = SCOUT_RECHECK_SECONDS
+        return
+    _goal_cells = cells
+    _set_path(path)
+    state = State.SCOUT_RETURNING
 
 
 func _cells_of(n) -> Array[Vector2i]:
@@ -957,6 +1115,9 @@ func _find_keep():
 
 func _begin_flee() -> void:
     _release()
+    _scout_target_cell = Vector2i(-1, -1)
+    _scout_survey_t = 0.0
+    _scout_revealed_at_target = false
     var keep = _find_keep()
     state = State.FLEEING
     if keep == null:
@@ -1013,7 +1174,13 @@ func _set_path(p: PackedVector2Array) -> void:
 
 
 func _repath() -> void:
-    var p: PackedVector2Array = nav.path_adjacent(position, _goal_cells)
+    var p: PackedVector2Array
+    if state == State.SCOUTING:
+        p = nav.path_to(position, _scout_target_cell)
+    elif state == State.SCOUT_RETURNING and has_valid_workplace():
+        p = nav.path_adjacent(position, workplace.cells())
+    else:
+        p = nav.path_adjacent(position, _goal_cells)
     if p.is_empty():
         match state:
             State.FLEEING:
@@ -1026,6 +1193,11 @@ func _repath() -> void:
                 _expedition_target = null
                 state = State.IDLE
                 Events.build_feedback.emit("Prajurit tidak menemukan jalur pulang")
+            State.SCOUTING, State.SCOUT_RETURNING:
+                _scout_target_cell = Vector2i(-1, -1)
+                _scout_survey_t = 0.0
+                state = State.IDLE
+                _decide_t = SCOUT_RECHECK_SECONDS
             _:
                 state = State.IDLE
         return
@@ -1039,7 +1211,7 @@ func _move_along(delta: float) -> bool:
     var tgt := _path[_pi]
     var to := tgt - position
     var d := to.length()
-    var fast := state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or (state == State.FIGHT and _foe != null and is_instance_valid(_foe) and position.distance_to(_foe.position) > RUN_DISTANCE)
+    var fast := state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or state == State.SCOUT_RETURNING or (state == State.FIGHT and _foe != null and is_instance_valid(_foe) and position.distance_to(_foe.position) > RUN_DISTANCE)
     var step := (RUN_SPEED if fast else SPEED) * delta
     if not anim.is_busy() and anim.face(to):
         queue_redraw()
@@ -1063,6 +1235,8 @@ func _job_color() -> Color:
             return Color("#d6b13c")
         "hunter":
             return Color("#b77c43")
+        "scout":
+            return Color("#b7a37b")
         "soldier":
             return Color("#3f6fb5")
     return Color("#d9d2c3")
