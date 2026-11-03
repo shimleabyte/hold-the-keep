@@ -1,5 +1,5 @@
 extends SceneTree
-## Frontier local depot stockpiles, bounded capacity and save v13 persistence.
+## Frontier local depot stockpiles, bounded capacity and save v14 persistence.
 
 func ticks(count: int) -> void:
     for i in range(count):
