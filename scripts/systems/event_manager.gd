@@ -11,7 +11,7 @@ func _ready() -> void:
 
 
 func _on_day_changed(day: int) -> void:
-    var mode_id := "frontier" if WorldConfig.profile_id == "frontier" else "classic"
+    var mode_id := "frontier" if WorldConfig.is_frontier_profile() else "classic"
     var campaign_rules: Dictionary = DataDB.campaign_modes.get(mode_id, {})
     var final_day := int(campaign_rules.get("final_day", DataDB.waves.get("final_day", 999)))
     if day < 2 or day >= final_day:
