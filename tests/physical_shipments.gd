@@ -119,10 +119,10 @@ func _initialize() -> void:
         "The interrupted order must retain the physical carrier's last position")
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 16,
-        "Physical shipment and Hunter state must be stored in save schema v16")
+    require(snapshot["version"] == 17,
+        "Physical shipment and Hunter state must be stored in save schema v17")
     require(save_system._valid_save(snapshot),
-        "A save with recoverable in-transit cargo must pass v16 validation")
+        "A save with recoverable in-transit cargo must pass v17 validation")
     var saved_order := order_for(snapshot["supply"]["orders"], interrupted_id)
     require(String(saved_order["status"]) == "blocked" and int(saved_order["cargo"]) == 6,
         "Save export must turn a moving courier into a resumable blocked shipment")
@@ -134,17 +134,21 @@ func _initialize() -> void:
     legacy_v12["job_priority"].erase("scout")
     legacy_v12["quota"].erase("healer")
     legacy_v12["job_priority"].erase("healer")
+    legacy_v12["quota"].erase("blacksmith")
+    legacy_v12["job_priority"].erase("blacksmith")
     for saved_villager in legacy_v12["villagers"]:
+        saved_villager.erase("weapon_equipped")
+        saved_villager.erase("armor_equipped")
         if String(saved_villager.get("occupation", "")) == "scout":
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
-        if String(saved_villager.get("occupation", "")) in ["hunter", "scout", "healer"]:
+        if String(saved_villager.get("occupation", "")) in ["hunter", "scout", "healer", "blacksmith"]:
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
-        elif String(saved_villager.get("job", "")) in ["hunter", "scout", "healer"]:
+        elif String(saved_villager.get("job", "")) in ["hunter", "scout", "healer", "blacksmith"]:
             saved_villager["job"] = ""
     for legacy_building_index in range(legacy_v12["buildings"].size() - 1, -1, -1):
-        if String(legacy_v12["buildings"][legacy_building_index].get("id", "")) in ["hunting_lodge", "scout_post", "infirmary"]:
+        if String(legacy_v12["buildings"][legacy_building_index].get("id", "")) in ["hunting_lodge", "scout_post", "infirmary", "forge"]:
             legacy_v12["buildings"].remove_at(legacy_building_index)
     var legacy_resources: Array = []
     for resource in legacy_v12["resources"]:

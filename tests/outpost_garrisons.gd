@@ -147,7 +147,7 @@ func _initialize() -> void:
     hud._toggle_outposts()
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 16, "Guard links and shipment state must use save v16")
+    assert(snapshot["version"] == 17, "Guard links and shipment state must use save v16")
     var saved_guard_count := 0
     for saved_villager in snapshot["villagers"]:
         if saved_villager.get("guard_outpost", null) is Dictionary:
@@ -163,8 +163,12 @@ func _initialize() -> void:
     legacy_snapshot["job_priority"].erase("scout")
     legacy_snapshot["quota"].erase("healer")
     legacy_snapshot["job_priority"].erase("healer")
+    legacy_snapshot["quota"].erase("blacksmith")
+    legacy_snapshot["job_priority"].erase("blacksmith")
     for saved_villager in legacy_snapshot["villagers"]:
-        if String(saved_villager.get("occupation", "")) in ["hunter", "scout", "healer"]:
+        saved_villager.erase("weapon_equipped")
+        saved_villager.erase("armor_equipped")
+        if String(saved_villager.get("occupation", "")) in ["hunter", "scout", "healer", "blacksmith"]:
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
         elif String(saved_villager.get("job", "")) in ["hunter", "scout"]:
@@ -176,7 +180,7 @@ func _initialize() -> void:
             legacy_resources.append(resource)
     legacy_snapshot["resources"] = legacy_resources
     for building_index in range(legacy_snapshot["buildings"].size() - 1, -1, -1):
-        if String(legacy_snapshot["buildings"][building_index].get("id", "")) in ["hunting_lodge", "scout_post", "infirmary"]:
+        if String(legacy_snapshot["buildings"][building_index].get("id", "")) in ["hunting_lodge", "scout_post", "infirmary", "forge"]:
             legacy_snapshot["buildings"].remove_at(building_index)
     assert(save_system._valid_save(legacy_snapshot),
         "Existing v12 saves without shipment or guard fields must remain valid")
