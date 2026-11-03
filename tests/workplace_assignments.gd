@@ -102,7 +102,7 @@ func _initialize() -> void:
         "Soldier must be stored as a military specialization")
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 14, "Current campaign, depot and shipment state must use save version 14")
+    assert(snapshot["version"] == 16, "Current campaign, depot and shipment state must use save version 16")
     assert(snapshot["job_priority"][2] == "builder", "Save must persist job priority")
     var has_saved_builder := false
     var has_saved_soldier := false
