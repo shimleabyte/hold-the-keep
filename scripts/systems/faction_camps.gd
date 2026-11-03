@@ -146,6 +146,8 @@ func _find_camp_cell(
             var cell := Vector2i(x, y)
             if (not WorldConfig.is_frontier_expedition() and not reachable.has(cell)) or not main.nav.is_walkable(cell):
                 continue
+            if WorldConfig.is_frontier_expedition() and not main.world.is_expedition_outer_cell(cell, region_id):
+                continue
             if main.world.occupied.has(cell) or String(main.world.region_id(cell)) != region_id:
                 continue
             if main.territory.owner_at(cell) != "enemy":
