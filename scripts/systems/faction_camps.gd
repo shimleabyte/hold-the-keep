@@ -3,17 +3,17 @@ extends Node2D
 
 const CAMP_SCRIPT := preload("res://scripts/entities/faction_camp.gd")
 const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
+const PATROL_PLANNER_SCRIPT := preload("res://scripts/systems/faction_camp_patrol_planner.gd")
+const RAID_SELECTOR_SCRIPT := preload("res://scripts/systems/faction_raid_target_selector.gd")
 const CAMP_SCAN_INTERVAL := 0.5
 const CAMP_SITE_CLEARANCE := 10.0
 const CAMP_SPACING := 12.0
 const MAX_ACTIVE_FACTION_RAIDERS := 4
-const MAX_RAID_TARGET_SCAN := 48
-const MAX_RAID_PATH_CHECKS := 8
-
 var main
+var _patrol_planner
+var _raid_selector
 var camps: Dictionary = {}
 var _scan_timer := 0.0
-var _road_target_scan_cursor := 0
 
 
 func _ready() -> void:
@@ -23,6 +23,10 @@ func _ready() -> void:
 
 func setup(main_ref, saved: Dictionary = {}) -> void:
     main = main_ref
+    _patrol_planner = PATROL_PLANNER_SCRIPT.new()
+    _patrol_planner.setup(main)
+    _raid_selector = RAID_SELECTOR_SCRIPT.new()
+    _raid_selector.setup(main)
     camps.clear()
     _scan_timer = CAMP_SCAN_INTERVAL
     if not WorldConfig.is_frontier_profile():
@@ -180,125 +184,30 @@ func _find_camp_cell(
     return best
 
 
-func _patrol_cell_allowed(cell: Vector2i, region_id: String, camp_cell: Vector2i, radius: float) -> bool:
-    if not WorldConfig.is_valid_cell(cell) or not main.nav.is_walkable(cell):
-        return false
-    if main.world.occupied.has(cell) or String(main.world.region_id(cell)) != region_id:
-        return false
-    if main.territory.owner_at(cell) != "enemy":
-        return false
-    return Vector2(cell - camp_cell).length() * WorldConfig.tile_size <= radius + WorldConfig.tile_size
+func _patrol_cell_allowed(
+    cell: Vector2i, region_id: String, camp_cell: Vector2i, radius: float
+) -> bool:
+    return _patrol_planner._patrol_cell_allowed(cell, region_id, camp_cell, radius)
 
 
-func _path_stays_in_camp(path: PackedVector2Array, region_id: String, camp_cell: Vector2i, radius: float) -> bool:
-    if path.is_empty():
-        return false
-    for point in path:
-        var cell: Vector2i = main.nav.cell_of(point)
-        if not _patrol_cell_allowed(cell, region_id, camp_cell, radius):
-            return false
-    return true
+func _path_stays_in_camp(
+    path: PackedVector2Array, region_id: String, camp_cell: Vector2i, radius: float
+) -> bool:
+    return _patrol_planner._path_stays_in_camp(path, region_id, camp_cell, radius)
 
 
-func _reachable_patrol_cells(camp_cell: Vector2i, region_id: String, radius: float) -> Dictionary:
-    var reachable: Dictionary = {}
-    if not _patrol_cell_allowed(camp_cell, region_id, camp_cell, radius):
-        return reachable
-    var queue: Array[Vector2i] = [camp_cell]
-    reachable[camp_cell] = true
-    var cursor := 0
-    var directions: Array[Vector2i] = [
-        Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)
-    ]
-    while cursor < queue.size():
-        var current: Vector2i = queue[cursor]
-        cursor += 1
-        for direction in directions:
-            var next_cell: Vector2i = current + direction
-            if reachable.has(next_cell) or not _patrol_cell_allowed(next_cell, region_id, camp_cell, radius):
-                continue
-            reachable[next_cell] = true
-            queue.append(next_cell)
-    return reachable
+func _reachable_patrol_cells(
+    camp_cell: Vector2i, region_id: String, radius: float
+) -> Dictionary:
+    return _patrol_planner._reachable_patrol_cells(camp_cell, region_id, radius)
 
 
-func _build_patrol_points(camp_cell: Vector2i, region_id: String, radius: float) -> Array[Vector2]:
-    var candidates_by_quadrant: Array[Array] = [[], [], [], []]
-    var reachable: Dictionary = _reachable_patrol_cells(camp_cell, region_id, radius)
-    var max_tiles := int(floor(radius / float(WorldConfig.tile_size))) - 1
+func _build_patrol_points(
+    camp_cell: Vector2i, region_id: String, radius: float
+) -> Array[Vector2]:
+    return _patrol_planner._build_patrol_points(camp_cell, region_id, radius)
 
-    # Rank reachable cells first; defer expensive A* requests until a small candidate set is known.
-    for candidate_value in reachable.keys():
-        var candidate: Vector2i = candidate_value
-        var offset := candidate - camp_cell
-        var distance := Vector2(offset).length()
-        if distance < 2.5 or distance > float(max_tiles):
-            continue
-        if not _patrol_cell_allowed(candidate, region_id, camp_cell, radius):
-            continue
 
-        var quadrant := 0
-        if offset.x >= 0 and offset.y < 0:
-            quadrant = 0
-        elif offset.x >= 0 and offset.y >= 0:
-            quadrant = 1
-        elif offset.x < 0 and offset.y >= 0:
-            quadrant = 2
-        else:
-            quadrant = 3
-        var noise := float(posmod(
-            candidate.x * 92821 + candidate.y * 68917 + WorldConfig.world_seed * 31 + quadrant * 997,
-            10007
-        )) / 10007.0
-        var score := absf(distance - 4.4) + noise * 0.35
-        candidates_by_quadrant[quadrant].append({"cell": candidate, "score": score})
-
-    var result: Array[Vector2] = []
-    var path_checked: Dictionary = {}
-    for quadrant in 4:
-        var values: Array = candidates_by_quadrant[quadrant]
-        values.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-            return float(a["score"]) < float(b["score"])
-        )
-        var attempts := 0
-        for entry in values:
-            if attempts >= 2:
-                break
-            attempts += 1
-            var candidate_cell: Vector2i = entry["cell"]
-            path_checked[candidate_cell] = true
-            var path: PackedVector2Array = main.nav.path_to(main.nav.center_of(camp_cell), candidate_cell)
-            if _path_stays_in_camp(path, region_id, camp_cell, radius):
-                result.append(main.nav.center_of(candidate_cell))
-                break
-
-    if result.size() < 2:
-        var fallback: Array = []
-        for quadrant_values in candidates_by_quadrant:
-            for entry in quadrant_values:
-                fallback.append(entry)
-        fallback.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-            return float(a["score"]) < float(b["score"])
-        )
-        var fallback_attempts := 0
-        for entry in fallback:
-            var point: Vector2 = main.nav.center_of(entry["cell"])
-            if result.has(point):
-                continue
-            if fallback_attempts >= 2:
-                break
-            var candidate_cell: Vector2i = entry["cell"]
-            if path_checked.has(candidate_cell):
-                continue
-            fallback_attempts += 1
-            path_checked[candidate_cell] = true
-            var path: PackedVector2Array = main.nav.path_to(main.nav.center_of(camp_cell), candidate_cell)
-            if not _path_stays_in_camp(path, region_id, camp_cell, radius):
-                continue
-            result.append(point)
-            if result.size() >= 3:
-                break
-    return result
 
 func _camp_patrol_config(camp: Dictionary) -> Dictionary:
     return {
@@ -377,88 +286,12 @@ func _retreat_faction_raiders(camp_id: String) -> void:
 
 
 func _raid_target_exposed(target, camp: Dictionary) -> bool:
-    if target == null or not is_instance_valid(target) or int(target.hp) <= 0:
-        return false
-    var target_region := String(main.world.region_id(target.cell))
-    if target_region != String(camp["region_id"]):
-        return false
-    var owner := String(main.territory.owner_at(target.cell))
-    var region: Dictionary = main.territory.get_region_state(target_region)
-    var control := String(region.get("control", "neutral"))
-    return owner == "contested" or (owner == "player" and control in ["enemy", "contested"])
+    return _raid_selector._raid_target_exposed(target, camp)
 
 
 func _find_raid_target(camp: Dictionary) -> Dictionary:
-    main.supply._ensure_current()
-    main.territory._ensure_current()
-    var candidates: Array[Dictionary] = []
-    var scanned := 0
+    return _raid_selector._find_raid_target(camp)
 
-    for depot in get_tree().get_nodes_in_group("depots"):
-        if scanned >= MAX_RAID_TARGET_SCAN:
-            break
-        scanned += 1
-        if not is_instance_valid(depot) or not ["storage", "outpost", "granary"].has(String(depot.id)):
-            continue
-        if not main.supply.is_depot_connected(depot) or not _raid_target_exposed(depot, camp):
-            continue
-        var distance := Vector2(camp["position"]).distance_to(depot.position)
-        if distance > 760.0:
-            continue
-        var priority := 7 if String(depot.id) == "outpost" else (6 if String(depot.id) == "granary" else 5)
-        candidates.append({
-            "node": depot,
-            "kind": "depot",
-            "node_id": String(depot.id),
-            "cell": depot.cell,
-            "score": float(priority * 1000) - distance
-        })
-
-    var road_nodes: Array = get_tree().get_nodes_in_group("roads")
-    var road_scan_count := mini(MAX_RAID_TARGET_SCAN - scanned, road_nodes.size())
-    for offset in road_scan_count:
-        var road = road_nodes[(_road_target_scan_cursor + offset) % road_nodes.size()]
-        scanned += 1
-        if not is_instance_valid(road) or not ["road", "bridge"].has(String(road.id)):
-            continue
-        var connected := false
-        for road_cell in road.cells():
-            if main.supply.connected_road_cells.has(road_cell):
-                connected = true
-                break
-        if not connected or not _raid_target_exposed(road, camp):
-            continue
-        var distance := Vector2(camp["position"]).distance_to(road.position)
-        if distance > 760.0:
-            continue
-        var priority := 3 if String(road.id) == "bridge" else 2
-        candidates.append({
-            "node": road,
-            "kind": "road",
-            "node_id": String(road.id),
-            "cell": road.cell,
-            "score": float(priority * 1000) - distance
-        })
-    if not road_nodes.is_empty():
-        _road_target_scan_cursor = (_road_target_scan_cursor + road_scan_count) % road_nodes.size()
-
-    candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-        return float(a["score"]) > float(b["score"])
-    )
-    var path_checks := mini(MAX_RAID_PATH_CHECKS, candidates.size())
-    for index in path_checks:
-        var candidate: Dictionary = candidates[index]
-        var target = candidate["node"]
-        var target_cells: Array[Vector2i] = target.cells()
-        var path: PackedVector2Array = main.nav.path_adjacent(camp["position"], target_cells)
-        if path.is_empty():
-            continue
-        return {
-            "cell": candidate["cell"],
-            "kind": candidate["kind"],
-            "node_id": candidate["node_id"]
-        }
-    return {}
 
 
 func _spawn_faction_raid(camp: Dictionary, target: Dictionary) -> bool:
