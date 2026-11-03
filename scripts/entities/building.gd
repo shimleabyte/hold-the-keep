@@ -292,8 +292,8 @@ func release(v) -> void:
 func claim_heal_target(healer, patient) -> bool:
     if id != "infirmary" or is_sabotaged() or not is_instance_valid(healer) or not is_instance_valid(patient):
         return false
-    var healer_id := healer.get_instance_id()
-    var patient_id := patient.get_instance_id()
+    var healer_id: int = healer.get_instance_id()
+    var patient_id: int = patient.get_instance_id()
     if int(_healer_assignments.get(healer_id, -1)) == patient_id:
         return true
     release_heal_target(healer)
@@ -319,7 +319,7 @@ func is_heal_target_reserved(patient, except_healer = null) -> bool:
 func release_heal_target(healer) -> void:
     if not is_instance_valid(healer):
         return
-    var healer_id := healer.get_instance_id()
+    var healer_id: int = healer.get_instance_id()
     if not _healer_assignments.has(healer_id):
         return
     var patient_id := int(_healer_assignments[healer_id])
