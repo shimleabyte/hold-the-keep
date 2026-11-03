@@ -153,6 +153,8 @@ func _initialize() -> void:
         var objective_id := String(discoveries[region])
         var gate_cell: Vector2i = main.world._expedition_gate_cells[region]
         var approach_cell := gate_cell + (Vector2i(0, 1) if gate_cell.y < world_config.map_size / 2 else Vector2i(0, -1))
+        var outward := Vector2i(0, -1) if gate_cell.y < world_config.map_size / 2 else Vector2i(0, 1)
+        var landing_cell := gate_cell + outward
         assert(main.world.region_id(approach_cell) == region,
             "The inside approach must carry the matching discovery region: " + region)
         assert(main.nav.is_walkable(approach_cell) and core_reachable.has(approach_cell),
@@ -169,8 +171,6 @@ func _initialize() -> void:
             "An opened crossing must restore terrain collision and navigation: " + region)
         assert(main.world.is_expedition_reserved_cell(landing_cell),
             "The opened crossing must retain a clear outer landing: " + region)
-        var outward := Vector2i(0, -1) if gate_cell.y < world_config.map_size / 2 else Vector2i(0, 1)
-        var landing_cell := gate_cell + outward
         assert(main.world.is_buildable(landing_cell) and main.nav.is_walkable(landing_cell),
             "An opened crossing must lead onto an unobstructed tile in its outer march: " + region)
 
