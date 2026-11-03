@@ -2,10 +2,10 @@
 
 > Status proyek: [CONTEXT.md](CONTEXT.md). Design bible: [docs/WORLD_AND_GAMEPLAY_BIBLE.md](docs/WORLD_AND_GAMEPLAY_BIBLE.md). Roadmap: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Implementation plans: [Phase 02](docs/plans/phase-02-plan.md), [Phase 04](docs/plans/phase-04-plan.md), [Phase 05](docs/plans/phase-05-plan.md), [Phase 06](docs/plans/phase-06-plan.md), [Phase 08](docs/plans/phase-08-plan.md), [Phase 09](docs/plans/phase-09-plan.md), [Phase 10](docs/plans/phase-10-plan.md). Test guide: [tests/README.md](tests/README.md).
 
-Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (GDScript).
+Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.7 (GDScript).
 
 ## Menjalankan
-1. Buka Godot 4.3+ (dites juga di 4.7) -> Import -> pilih `project.godot`.
+1. Buka Godot 4.7 -> Import -> pilih `project.godot`.
    Tunggu import aset selesai (pertama kali saja)
 2. Tekan F5
 
@@ -30,7 +30,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - C / tombol Y: Cleave — tebasan depan yang melukai dan membuat musuh limbung (level 2)
 - V / bumper kanan: Rally — memperkuat serangan pemain dan prajurit sekitar (level 3)
 - Kalahkan musuh untuk mendapat XP; level up memulihkan sebagian HP dan membuka skill
-- T / M / K / J / U / R: tambah penebang / penambang / petani / Hunter / prajurit (Shift = kurangi); B / Shift+B khusus Builder. Alt + tombol job mengubah prioritas; atau klik tombol + / - di panel job.
+- T / M / K / B / J / U / R: tambah penebang / penambang / petani / Builder / Hunter / Scout / prajurit (Shift = kurangi). Alt + tombol job mengubah prioritas; atau klik tombol + / - di panel job.
 - G: kirim seluruh prajurit untuk menyerbu benteng lawan yang sudah ditemukan; tekan lagi untuk menarik mereka kembali ke Keep
 - P / Esc (saat tidak membangun): menu jeda (simpan, muat, resolusi jendela, layar penuh, VSync, volume)
 - Menu jeda > Atur kontrol: rebind gerak, interaksi, serang, dan lari; gamepad tetap didukung
@@ -42,7 +42,7 @@ Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 
 
 ## Sistem permainan
 
-**Mode:** Classic mempertahankan dunia 64×64 dan kampanye 15 hari. Frontier memakai dunia 128×128, lima biome, empat stronghold, 11 objective regional, dan kampanye Conquest 20 hari/4 act. **Frontier Expedition** kini tersedia di `main` sebagai pilihan opsional 192×192: mulai dari heartland 128×128, lalu buka empat outer marches satu per satu dengan mencapai crossing survey di tiap region. Stronghold, objective sites dan faction camps menunggu di outer marches; fog-of-war permanen mengungkap dunia secara bertahap. Progres gate memakai discovery objective yang sudah ada; save schema tetap v13. PR #63 lulus 88/88 job CI di Godot 4.3/4.7 serta release export. Status fitur dan backlog terbaru tercatat di roadmap.
+**Mode:** Classic mempertahankan dunia 64×64 dan kampanye 15 hari. Frontier memakai dunia 128×128, lima biome, empat stronghold, 11 objective regional, dan kampanye Conquest 20 hari/4 act. **Frontier Expedition** kini tersedia di `main` sebagai pilihan opsional 192×192: mulai dari heartland 128×128, lalu buka empat outer marches satu per satu dengan mencapai crossing survey di tiap region. Stronghold, objective sites dan faction camps menunggu di outer marches; fog-of-war permanen mengungkap dunia secara bertahap. Progres gate memakai discovery objective yang sudah ada; save schema tetap v13. PR #63 historically passed 88/88 jobs under the former multi-engine/release-export pipeline. Active development CI now targets Godot 4.7 only; release packaging is deferred. Status fitur dan backlog terbaru tercatat di roadmap.
 
 ### Siklus pertahanan
 - Bertahan selama 15 hari; pada malam terakhir, kalahkan Raja Lawan.
@@ -76,7 +76,7 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 - Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
 ## Membuat build rilis
-1. Di Godot: Editor > Manage Export Templates > Download and Install (versi 4.3)
+1. Saat release packaging dimulai, install export templates yang cocok dengan Godot 4.7.
 2. Jalankan `tools/build.sh` (Linux/macOS) atau `tools/build.ps1` (Windows).
    Atur lokasi Godot lewat variabel `GODOT`
 3. Hasil: `build/windows/HoldTheKeep.exe` dan `build/linux/HoldTheKeep.x86_64` (PCK tertanam)
@@ -98,6 +98,9 @@ Peta strategis dibuka dengan TAB atau tombol MAP di HUD. Peta menampilkan hanya 
 Keep mengklaim area awal dalam radius 10 tile. Pos Terdepan (hotkey 6) memperluas klaim dalam radius 9 tile dan hanya boleh dibangun di frontier sendiri. Benteng lawan ditempatkan pada lokasi yang dapat dicapai di peta yang sama, mengklaim radius 9 tile, dan dijaga oleh prajurit yang berpatroli serta menerima penguatan berkala. Garis emas menunjukkan wilayah pemain; garis merah menunjukkan wilayah lawan.
 
 Fog of war menutup peta yang belum dijelajahi. Player, Keep, Pos Terdepan, dan villager membuka area; wilayah yang sudah ditemukan tetap terlihat setelah disimpan dan dimuat. Setelah benteng lawan ditemukan, tekan G untuk mengirim semua villager dengan job prajurit. Prajurit menyerang penjaga dahulu, lalu menghancurkan benteng (900 HP). Tekan G lagi untuk menarik pasukan kembali ke Keep. Classic mempertahankan jalur kemenangan 15 hari melawan Raja Lawan atau menaklukkan Keep lawan. Frontier adalah Conquest 20 hari: empat stronghold dan seluruh objektif regional harus selesai sebelum Raja pada hari ke-20 dikalahkan.
+
+## Specialist jobs (feature branches pending integration)
+Hunter is implemented through `feat/hunter-hunting-lodge` with a two-slot Hunting Lodge, bounded wildlife harvesting and food delivery. Villager Scout is implemented through `feat/scout-specialist` with a two-slot Scout Post, bounded A* surveys and 144px local permanent-fog revelation. Both use workplace capacity, explicit quotas/priority shortcuts and additive save migrations; the enemy Scout combat archetype is a separate system.
 
 ## HUD
 HUD permanen diringkas menjadi resource, jam, populasi, tombol MAP/JOBS/riset, vitals pemain dan Keep, indikator bab, serta bar bangunan. Kuota job berada di drawer JOBS dan tertutup secara default. XP dan Q/C/V tampil sebagai bar kompak di atas hotbar; detail bantuan tetap tersedia lewat H. Health bar Raja Lawan atau Benteng Lawan muncul saat relevan.
