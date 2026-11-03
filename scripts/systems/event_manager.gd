@@ -184,7 +184,7 @@ func import_state(state: Dictionary) -> void:
             var due_day_value: Variant = saved_entry.get("due_day", null)
             if event_id.is_empty() or choice_id.is_empty() or consequence_id.is_empty():
                 continue
-            if not due_day_value is int or int(due_day_value) < 1:
+            if not _is_positive_integral(due_day_value):
                 continue
             if _find_consequence(event_id, choice_id, consequence_id).is_empty():
                 push_warning("EventManager: saved consequence '%s/%s/%s' no longer exists" % [
@@ -221,6 +221,13 @@ func import_state(state: Dictionary) -> void:
     push_warning("EventManager: saved decision '%s' no longer exists" % pending_id)
 
 
+func _is_positive_integral(value: Variant) -> bool:
+    if not (value is int or value is float):
+        return false
+    var numeric_value := float(value)
+    return is_finite(numeric_value) and numeric_value >= 1.0 and numeric_value == floor(numeric_value)
+
+
 func _schedule_delayed_consequences(event_value: Dictionary, choice: Dictionary) -> void:
     var definitions: Variant = choice.get("consequences", [])
     if not definitions is Array:
@@ -234,7 +241,7 @@ func _schedule_delayed_consequences(event_value: Dictionary, choice: Dictionary)
         var consequence_id := String(definition.get("id", ""))
         var delay_value: Variant = definition.get("after_days", 0)
         var effects: Variant = definition.get("effects", {})
-        if consequence_id.is_empty() or not delay_value is int or int(delay_value) < 1:
+        if consequence_id.is_empty() or not _is_positive_integral(delay_value):
             push_warning("EventManager: invalid delayed consequence in %s/%s" % [event_id, choice_id])
             continue
         if not effects is Dictionary or effects.is_empty():
