@@ -161,7 +161,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add configurable job priority order, reassignment, Alt+job hotkeys and right-click controls in the job panel.
 - [x] Persist occupation, military specialization and priority order in save format v9; older saves still load through the compatibility job field.
 - [x] Add Hunter as a two-slot Hunting Lodge occupation with deterministic wildlife harvest, food delivery, J hotkey/UI, target reservation, work-radius enforcement and v14 save migration (implementation branch `feat/hunter-hunting-lodge`; CI/PR pending).
-- [ ] Add Scout as a two-slot Scout Post occupation with bounded A* exploration, local permanent-fog revelation, sector rotation, return-to-post when exhausted, S hotkey/UI and v15 save migration (`feat/scout-specialist`).
+- [ ] Add Scout as a two-slot Scout Post occupation with bounded A* exploration, local permanent-fog revelation, sector rotation, return-to-post when exhausted, U hotkey/UI and v15 save migration (`feat/scout-specialist`).
 - [ ] Add Scout, Healer and Blacksmith in subsequent incremental slices.
 - [x] Complete Godot 4.3 / 4.7 CI regression matrix; real gameplay pathing still needs a manual playtest.
 
