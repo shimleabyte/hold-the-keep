@@ -1,5 +1,5 @@
 extends SceneTree
-## Frontier Expedition: larger world, discovery-gated marches, permanent fog and v14 save validation.
+## Frontier Expedition: larger world, discovery-gated marches, permanent fog and v15 save validation.
 
 func ticks(count: int) -> void:
     for _index in range(count):
@@ -204,7 +204,7 @@ func _initialize() -> void:
     assert(String(expedition_save["world"]["profile"]) == "frontier_expedition"
         and int(expedition_save["world"]["map_size"]) == 192
         and save_system._valid_save(expedition_save),
-        "192x192 Expedition worlds, fog and completed discovery state must validate in v14")
+        "192x192 Expedition worlds, fog and completed discovery state must validate in v15")
     var invalid_save := expedition_save.duplicate(true)
     invalid_save["fog"]["cells"].append(world_config.map_cells)
     assert(not save_system._valid_save(invalid_save),
@@ -227,5 +227,5 @@ func _initialize() -> void:
 
     assert(settings.set_world_profile(previous_profile),
         "The test must restore the previous profile preference")
-    print("PASS: 192x192 Expedition, four discovery-gated marches, permanent exploration fog and v14 save validation")
+    print("PASS: 192x192 Expedition, four discovery-gated marches, permanent exploration fog and v15 save validation")
     quit(0)
