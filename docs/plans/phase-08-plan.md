@@ -3,7 +3,7 @@
 **Status:** Implementation slices 08.2–08.7 are merged. PR #50/#52/#53/#54/#55 delivered biome dressing, faction identity, building identity, combat visual feedback and regional audio; workflows #471/#473/#475/#476/#477 passed 30/30, 72/72, 74/74, 76/76 and 78/78 jobs respectively. Phase 08 remains open for rendered screenshot review and manual audio listening/level-balance QA.
 **Art direction:** [World & Gameplay Design Bible](../WORLD_AND_GAMEPLAY_BIBLE.md) — Grim Medieval Folklore Fantasy, weathered medieval pixel art and restrained folklore motifs.
 **Dependency:** Stable gameplay contracts from Phases 02, 04, 05, 06 and current UI layouts from Phase 10.
-**Engine targets:** Godot 4.3 and 4.7.
+**Engine target:** Godot 4.7 only.
 
 ## Goal
 
