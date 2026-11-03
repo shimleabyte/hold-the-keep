@@ -132,12 +132,24 @@ func _run() -> void:
     require(reveal_cell.x >= 0,
         "Scout destination must have unexplored terrain within its local sight radius")
 
-    var distant_cell := first_target + Vector2i(12, 0)
-    if distant_cell.x >= config.map_size:
-        distant_cell = first_target + Vector2i(-12, 0)
-    require(distant_cell.x >= 0 and distant_cell.x < config.map_size
-        and not fog.is_revealed_cell(distant_cell),
-        "A distant cell must remain unexplored outside the Scout's local vision")
+    var distant_cell := Vector2i(-1, -1)
+    for radius in range(11, 17):
+        for y in range(-radius, radius + 1):
+            for x in range(-radius, radius + 1):
+                if Vector2(float(x), float(y)).length() < 11.0:
+                    continue
+                var candidate := first_target + Vector2i(x, y)
+                if candidate.x < 0 or candidate.y < 0 or candidate.x >= config.map_size or candidate.y >= config.map_size:
+                    continue
+                if not fog.is_revealed_cell(candidate):
+                    distant_cell = candidate
+                    break
+            if distant_cell.x >= 0:
+                break
+        if distant_cell.x >= 0:
+            break
+    require(distant_cell.x >= 0,
+        "A distant unexplored cell must exist outside the Scout's local vision")
 
     scout_a.position = main.nav.center_of(first_target)
     scout_a._pi = scout_a._path.size()
