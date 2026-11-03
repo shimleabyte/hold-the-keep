@@ -398,7 +398,12 @@ func _apply_save(d: Dictionary) -> void:
             var saved_specialization := String(v.get("military_specialization", ""))
             restored_job = saved_specialization if not saved_specialization.is_empty() else String(v.get("occupation", ""))
         n.set_job(restored_job)
-        n.hp = int(v["hp"])
+        if save_version >= 17 and n.job == "soldier":
+            n.weapon_equipped = bool(v.get("weapon_equipped", false))
+            n.armor_equipped = bool(v.get("armor_equipped", false))
+            n.max_hp = n._hp_cap_for(n.job)
+            n.queue_redraw()
+        n.hp = clampi(int(v["hp"]), 1, n.max_hp)
         if int(v["carry"]) > 0:
             n.receive(String(v["kind"]), int(v["carry"]))
         if bool(v.get("expedition", false)) and is_instance_valid(enemy_keep):

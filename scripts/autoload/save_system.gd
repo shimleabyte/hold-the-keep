@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 16
+const VERSION := 17
 
 var pending: Dictionary = {}
 
@@ -118,6 +118,7 @@ func collect(main: Node) -> Dictionary:
         villagers.append({"x": villager.position.x, "y": villager.position.y, "job": villager.job,
             "occupation": villager.occupation, "military_specialization": villager.military_specialization,
             "hp": villager.hp, "carry": villager.carry, "kind": villager.carry_kind,
+            "weapon_equipped": villager.weapon_equipped, "armor_equipped": villager.armor_equipped,
             "expedition": villager.is_expeditioning(), "recalling": villager.is_recalling_expedition(),
             "guard_outpost": guard_outpost})
 
@@ -511,12 +512,30 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 allowed_occupations.append("scout")
             if version >= 16:
                 allowed_occupations.append("healer")
+            if version >= 17:
+                allowed_occupations.append("blacksmith")
             if not allowed_occupations.has(occupation):
                 return false
             if not ["", "soldier"].has(specialization):
                 return false
             var legacy_job := specialization if not specialization.is_empty() else occupation
             if String(villager["job"]) != legacy_job or (not occupation.is_empty() and not specialization.is_empty()):
+                return false
+        if version >= 17:
+            if not villager.has("weapon_equipped") or not villager.has("armor_equipped"):
+                return false
+            if typeof(villager["weapon_equipped"]) != TYPE_BOOL or typeof(villager["armor_equipped"]) != TYPE_BOOL:
+                return false
+            var weapon_equipped := bool(villager["weapon_equipped"])
+            var armor_equipped := bool(villager["armor_equipped"])
+            if (weapon_equipped or armor_equipped) and String(villager["job"]) != "soldier":
+                return false
+            var completed_techs: Variant = tech.get("done", [])
+            if not (completed_techs is Array):
+                return false
+            if weapon_equipped and not completed_techs.has("iron_weapons"):
+                return false
+            if armor_equipped and not completed_techs.has("iron_armor"):
                 return false
         var guard_data: Variant = villager.get("guard_outpost", null)
         if guard_data != null:
@@ -641,6 +660,8 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             allowed_jobs.append("scout")
         if version >= 16:
             allowed_jobs.append("healer")
+        if version >= 17:
+            allowed_jobs.append("blacksmith")
         if not allowed_jobs.has(String(job)):
             return false
     if version >= 14 and not quota.has("hunter"):
@@ -649,9 +670,11 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         return false
     if version >= 16 and not quota.has("healer"):
         return false
+    if version >= 17 and not quota.has("blacksmith"):
+        return false
     if version >= 9:
         var priority = data.get("job_priority", null)
-        var expected_priority_size := 8 if version >= 16 else (7 if version >= 15 else (6 if version >= 14 else 5))
+        var expected_priority_size := 9 if version >= 17 else (8 if version >= 16 else (7 if version >= 15 else (6 if version >= 14 else 5)))
         if not (priority is Array) or priority.size() != expected_priority_size:
             return false
         var unique_priority: Dictionary = {}
@@ -662,6 +685,8 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             priority_jobs.append("scout")
         if version >= 16:
             priority_jobs.append("healer")
+        if version >= 17:
+            priority_jobs.append("blacksmith")
         for value in priority:
             var job_name := String(value)
             if not priority_jobs.has(job_name) or unique_priority.has(job_name):

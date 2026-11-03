@@ -6,9 +6,9 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** `main` contains PRs #55–#63 through Frontier Expedition and remains at save schema v13. The active engine target is Godot 4.7 only. Development CI runs 4.7 import/parse, regression suites and Frontier/Expedition performance diagnostics; Windows/Linux exports are deferred until release. Hunter PR #64 passed 45/45 jobs on Godot 4.7 (run #620). Scout PR #65 is stacked on Hunter and is currently validating its migration fixtures. Healer PR #67 adds Field Medicine, a two-slot Infirmary, the Healer occupation and save schema v16; it is stacked after Scout.
+**Current source of truth:** `main` contains PRs #55–#63 through Frontier Expedition and remains at save schema v13. The active engine target is Godot 4.7 only. Development CI runs 4.7 import/parse, regression suites and Frontier/Expedition performance diagnostics; Windows/Linux exports are deferred until release. Hunter PR #64 passed 45/45 jobs (#620); Scout PR #65 passed 46/46 jobs (#621); Healer PR #67 passed 47/47 jobs (#626); Blacksmith PR #68 passed 48/48 jobs on Godot 4.7 (#634).
 
-**Active implementation branches:** PR #64 (`feat/hunter-hunting-lodge`) adds Hunter, renewable wildlife and the two-slot Hunting Lodge; its latest Godot 4.7-only run #620 passed 45/45 jobs. PR #65 (`feat/scout-specialist`) adds the two-slot Scout Post, bounded A* exploration and 144px local permanent-fog reveal; it is based on the verified Hunter branch and is awaiting fresh CI. PR #67 (`feat/healer-infirmary`) adds Era II Field Medicine, a two-slot Infirmary, reserved patient treatment, I quota/priority controls and save v16; it remains stacked after Scout.
+**Active implementation branches:** PR #64 (`feat/hunter-hunting-lodge`) adds Hunter, renewable wildlife and the two-slot Hunting Lodge; CI #620 passed 45/45. PR #65 (`feat/scout-specialist`) adds the two-slot Scout Post and bounded A* exploration; CI #621 passed 46/46. PR #67 (`feat/healer-infirmary`) adds Field Medicine, the two-slot Infirmary and reserved treatment; CI #626 passed 47/47. PR #68 (`feat/blacksmith-forge`) adds two Forge Blacksmith slots, individual soldier weapon/armor upgrades and save v17; CI #634 passed 48/48 on Godot 4.7. All PRs remain open; rendered gameplay acceptance and ordered integration remain.
 
 **Merged into `main`:** PR #63 (`a594069`) adds the optional 192×192 Frontier Expedition profile. It preserves Classic 64×64 and standard Frontier 128×128, begins in a 128×128 connected heartland, and opens each of four outer marches only after the player reaches its survey crossing. Four strongholds, seven regional objective sites and four faction camps are placed in their sealed outer marches; permanent fog reveals them as they are explored. Crossing state is derived from existing discovery objectives; save schema remains v13. PR workflow #41580977570 passed 88/88 jobs across Godot 4.3/4.7, both performance diagnostics, and Windows/Linux export checks. Main push workflow #41581523207 was pending at the time of this update. PR #63 is merged; Frontier Expedition is part of `main`.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
@@ -29,11 +29,11 @@ Ringkasan implementasi aktual pada `main` setelah PR #62 (save schema v13; statu
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload; Act I–IV + victory reload dilindungi `campaign_reload_hardening.gd` |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara pengawas (turret + 128px vision), Lumbung 240 pangan, Gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge pada `main`; PR #64 branch menambah Pondok Pemburu; `feat/scout-specialist` menambah Pondok Pengintai. |
-| Villager | On `main`: woodcutter, miner, farmer, soldier and Builder. Hunter (#64), Scout (#65) and Healer/Infirmary (#67) are implemented on open stacked branches; Blacksmith remains unimplemented. |
+| Villager | On `main`: woodcutter, miner, farmer, soldier and Builder. Hunter (#64), Scout (#65), Healer (#67) and Blacksmith (#68) are implemented on open stacked branches. |
 | Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; connected infrastructure raids and bounded counterattacks merged via PR #44; manual Frontier balance/play review remains open |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
-| Teknologi | 21 technologies in three eras; Field Medicine unlocks the Infirmary on the Healer branch |
-| Save/load | v13 pada `main`; PR #64 branch menulis v14 dengan Hunter dan wildlife state; `feat/scout-specialist` menulis v15 dengan Scout occupation/quota/priority dan Scout Post. Migration coverage retains Classic v1–v14 and Frontier v7–v14. |
+| Teknologi | 21 technologies in three eras; Field Medicine unlocks Infirmary, while existing Iron Weapons/Armor research gates individual Blacksmith recipes on PR #68 |
+| Save/load | v13 pada `main`; stacked branches add v14 Hunter, v15 Scout, v16 Healer and v17 Blacksmith/equipment. Legacy Classic v1–v16 and Frontier v7–v16 remain migration targets. |
 | Kontrol | Rebind gerak, interaksi, serang, lari; shortcut UI/job/build belum dapat di-rebind |
 | Tampilan | Adaptive logical viewport = setengah ukuran client window, minimum 480×270, pixel scale tepat 2×; physical-display/fullscreen review belum dilakukan |
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map with live tower sight, hotbar, objective tracker, tech panel, pause menu |
@@ -130,7 +130,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 - Windows export telah dibuat dan diperiksa format PE di CI, tetapi belum dijalankan pada native Windows atau clean Windows machine.
 - Local stockpile Storage/Outpost, Frontier worker deposits, dan atomic bounded automatic transfer to Keep sudah tersedia di `main` melalui PR #31; physical carrier/player-directed shipment dan local-stock spending masih belum tersedia.
 - Outpost guard/garrison dan local visibility belum tersedia.
-- Hunter (#64), Scout (#65) and Healer/Infirmary (#67) are implemented on stacked PR branches; Blacksmith remains open.
+- Hunter (#64), Scout (#65), Healer/Infirmary (#67) and Blacksmith/Forge (#68) are implemented on stacked PR branches; manual rendered-play acceptance remains open.
 - Construction queue serta staged completion dengan Builder belum tersedia.
 - Phase 06 baru memiliki faction/archetype foundation; perilaku counterable semua archetype, camps, patrol, raids, counterattacks, dan persistence belum lengkap.
 - Phase 08 art/audio identity belum dikirim sebagai satu implementation slice; unit/faction/building visuals masih membutuhkan art pass khusus dan musik belum ada.
@@ -141,7 +141,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 ## 9. Rencana berikut
 Urutan backlog berdasarkan dependency:
 1. Phase 02: selesaikan player-directed shipments/carrier visuals, inspect/withdraw local stock, Outpost garrison dan local visibility. Supply attrition menunggu sampai transfer behavior dan local defense tervalidasi.
-2. Phase 04: finish CI/manual acceptance and integrate Hunter (#64) → Scout (#65) → Healer/Infirmary (#67); then implement Blacksmith with a concrete equipment/repair output.
+2. Phase 04: integrate Hunter (#64) → Scout (#65) → Healer/Infirmary (#67) → Blacksmith/Forge (#68) after branch CI and manual play acceptance.
 3. Phase 05: construction queue dan staged building completion dengan Builder; lanjutkan bangunan sesuai dependency produksi dan strategi.
 4. Phase 06: distinct/counterable policy keenam archetype, faction camps, bounded patrols, reinforcement budget, raids/counterattacks dan persistence.
 5. Phase 08: biome/faction/unit/building art pass, strategic-map readability, combat/environmental audio dan musik.
@@ -613,3 +613,12 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Save schema increments to v16. Existing v15 saves remain valid; migration coverage includes v1–v16 Classic and v7–v16 Frontier.
 - Regression `tests/healer_infirmary.gd` covers Field Medicine unlock, capacity, assignment, most-wounded patient selection, independent reservations, treatment clamp, demolition cleanup and v16/v15 migration.
 - This branch is not in `main`; manual rendered and gameplay acceptance remains pending.
+
+
+## 52. Phase 04 — Blacksmith and Forge (2026-11-03, implementation branch)
+- Branch: `feat/blacksmith-forge`, based on the green Healer head `7dc6ebf`; stacked PR #68 targets `feat/healer-infirmary`.
+- Forge exposes two Blacksmith workplaces within an 18-tile service radius. Blacksmith is assigned through the JOBS drawer; no keyboard shortcut is taken from existing controls.
+- Existing Era III Iron Weapons and Iron Armor research gate separate one-time soldier recipes. Iron Weapon costs 3 iron + 1 wood and adds 20% individual soldier damage; Iron Armor costs 4 iron + 2 wood and adds 20% individual maximum HP.
+- Soldier targets are reserved per Forge. Workers reject expeditioning, recalling, hidden, fleeing or fighting targets; reservation cleanup runs on completion, invalid target, sabotage and workplace demolition.
+- Save schema increments to v17 for Blacksmith occupation, equipment flags and stat restoration. Classic v1–v17 and Frontier v7–v17 migration coverage passed in CI #634.
+- `tests/blacksmith_forge.gd` covers capacity, reservations, costs, stat effects, v16 migration and demolition cleanup. Latest full Godot 4.7 CI is required before marking the slice validated; rendered balance/art review remains manual.

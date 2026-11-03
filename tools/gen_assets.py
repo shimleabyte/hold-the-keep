@@ -189,6 +189,11 @@ def draw_tool(r, kind, hx, hy, dx, dy, sc=1.0):
             P(hx + px * i, hy + py * i, gc)
         P(hx - ux, hy - uy, WOOD_D)
         P(hx - ux * 2, hy - uy * 2, WOOD_D)
+    elif kind == "hammer":
+        along(7 * sc, WOOD_D)
+        for i in (-2, -1, 0, 1, 2):
+            P(ex + px * i, ey + py * i, STEEL)
+        P(ex + ux, ey + uy, STEEL_L)
     elif kind == "dagger":
         along(max(2, 4 * sc), STEEL_L, 1)
         for i in (-1, 0, 1):
@@ -208,7 +213,7 @@ TOOL_POSE = {
 SWING = {"states": ["raised", "swing", "low", "rest"], "by": [-1, 0, 1, 0], "lean": [-1, 1, 2, 0]}
 STAB = {"states": ["back", "thrust", "thrust", "rest"], "by": [0, 0, 0, 0], "lean": [-1, 1, 2, 0]}
 POKE = {"states": ["raised", "low", "low", "rest"], "by": [-1, 1, 1, 0], "lean": [0, 1, 1, 0]}
-TOOL_ANIM = {None: STAB, "axe": SWING, "pick": SWING, "fork": POKE, "sword": STAB, "esword": STAB, "dagger": STAB}
+TOOL_ANIM = {None: STAB, "axe": SWING, "pick": SWING, "fork": POKE, "hammer": SWING, "sword": STAB, "esword": STAB, "dagger": STAB}
 
 
 def pose_for(look, anim, i):
@@ -496,6 +501,9 @@ def make_characters():
     humanoid_sheet("villager_idle", Look("#d9d2c3", "#b3ab9a"))
     humanoid_sheet("villager_woodcutter", Look("#4e9a4a", "#3b7a38", hat="wood", tool_a="axe"))
     humanoid_sheet("villager_miner", Look("#8a8f98", "#6e737b", hat="miner", tool_a="pick"))
+    humanoid_sheet("villager_blacksmith", Look("#985c3d", "#6f3e2a", pants="#3c3029", hat="band",
+                                                tool_a="hammer", tool_w="hammer", beard="#4a3024",
+                                                trim="#e19a55"))
     humanoid_sheet("villager_farmer", Look("#d6b13c", "#a8892c", hat="farm", tool_a="fork"))
     humanoid_sheet("villager_soldier", Look("#3f6fb5", "#2f548a", hat="helm", tool_a="sword", shield="#3f6fb5"))
     humanoid_sheet("enemy_bandit", Look("#a33b3b", "#7d2c2c", hat="hood", tool_a="dagger", mask=True))

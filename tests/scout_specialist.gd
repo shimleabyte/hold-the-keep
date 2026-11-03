@@ -172,8 +172,8 @@ func _run() -> void:
 
     main.village.quota["scout"] = 2
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 16,
-        "Scout occupation and priority must remain valid in save version 16")
+    require(snapshot["version"] == 17,
+        "Scout occupation and priority must remain valid in current save version 17")
     require(save_system._valid_save(snapshot),
         "A live Scout Post and Scout snapshot must validate")
     var has_scout := false
@@ -191,7 +191,14 @@ func _run() -> void:
     legacy_v14["job_priority"].erase("scout")
     legacy_v14["quota"].erase("healer")
     legacy_v14["job_priority"].erase("healer")
+    legacy_v14["quota"].erase("blacksmith")
+    legacy_v14["job_priority"].erase("blacksmith")
     for villager in legacy_v14["villagers"]:
+        villager.erase("weapon_equipped")
+        villager.erase("armor_equipped")
+        if String(villager.get("occupation", "")) == "blacksmith":
+            villager["occupation"] = ""
+            villager["job"] = ""
         if String(villager.get("occupation", "")) == "healer":
             villager["occupation"] = ""
             villager["job"] = ""
@@ -215,5 +222,5 @@ func _run() -> void:
     require(scout_a.job.is_empty() and scout_b.job.is_empty(),
         "Scouts must return to unassigned status when their Post is removed")
 
-    print("PASS: Scout capacity, bounded A* survey, local fog reveal, independent targets, return-to-post, v16 migration and teardown")
+    print("PASS: Scout capacity, bounded A* survey, local fog reveal, independent targets, return-to-post, v17 migration and teardown")
     quit(0)

@@ -2,7 +2,7 @@
 
 **Status (2026-11-03):** Mainline contains the Frontier expansion slices through Phase 08.7, Phase 09.3, Phase 05.2a/05.2b construction and queue management (PRs #58/#59), Phase 05.3a Watchtower vision (PR #60, `beef7b7`), and Phase 05.3b Granary food reserve (PR #61, `d9b87b1`). Workflow #41558978053 passed 84/84 jobs on Godot 4.7, Frontier performance diagnostic and Windows/Linux release exports. Rendered building/HUD review, manual balance and target-hardware acceptance remain outstanding. PR #55 merged regional ambience/music/event audio (`d933bb6`); workflow #477 passed 78/78. PR #57 merged four-act Frontier save/reload and final-victory persistence coverage (`a1ccebe`); workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 on Godot 4.3/4.7, Frontier performance diagnostic, and Windows/Linux release exports. Save schema remains v13. Manual visual/audio review, target-hardware profiling, full campaign balance/playtesting, native Windows runtime and clean-machine acceptance remain open.
 **Phase 02 merge commits:** PR #31 (`6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`) delivered local depot storage/transfers; PR #32 (`2f94959b497677eae49d4303f72322650fb591c2`) delivered garrisons/inspection; PR #33 (`5d7db56b3a51a25541f541bb46c19b26996d22be`) delivered player-directed physical shipments and save v13. PR #33 validation: [workflow #41323062111](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323062111), 50/50 jobs successful on Godot 4.3/4.7, including 23 regressions per engine, Frontier diagnostic and Windows/Linux export.  
-**Baseline:** Godot 4.7 / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, optional Frontier Expedition world 192×192 / 20 days / 4 acts with a 128×128 starting heartland, `main` save format v13. The specialist stack adds save v14 (Hunter), v15 (Scout) and v16 (Healer), retaining v1–v15 compatibility.
+**Baseline:** Godot 4.7 / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, optional Frontier Expedition world 192×192 / 20 days / 4 acts with a 128×128 starting heartland, `main` save format v13. The specialist stack adds save v14 (Hunter), v15 (Scout), v16 (Healer) and v17 (Blacksmith equipment), retaining v1–v16 compatibility.
 
 **Active CI policy:** Godot 4.7 only for import/parse, regressions and Frontier diagnostics. Godot 4.3 compatibility checks and Windows/Linux release exports are excluded from development CI; package builds return during release acceptance.
 
@@ -153,7 +153,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** multiple strongholds can be found, attacked, destroyed, restored from saves and completed in a deterministic objective sequence.
 
 ### Phase 04 — Jobs and workplaces
-**Status:** Builder is merged into `main`. Hunter PR #64 passed 45/45 Godot 4.7 jobs. Scout PR #65 is implemented and stacked after Hunter; its fresh Godot 4.7 CI is pending. Healer/Infirmary PR #67 is implemented and stacked after Scout; its migration and regression suite is being revalidated. Blacksmith remains open.
+**Status:** Builder is merged into `main`. Hunter PR #64 passed 45/45, Scout PR #65 passed 46/46, Healer PR #67 passed 47/47, and Blacksmith/Forge PR #68 passed 48/48 jobs on Godot 4.7 (run #634). The specialist stack remains open for rendered gameplay acceptance and ordered integration.
 
 - [x] Introduce Builder as a real labor occupation; soldier is stored separately as a military specialization, with a compatibility `job` alias.
 - [x] Add Builder workplace capacity on Keeps and Outposts, plus data-driven work radii.
@@ -162,9 +162,11 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Select the nearest reachable connected depot rather than stopping at an unreachable nearest depot.
 - [x] Add configurable job priority order, reassignment, Alt+job hotkeys and right-click controls in the job panel.
 - [x] Persist occupation, military specialization and priority order in save format v9; older saves still load through the compatibility job field.
-- [x] Add Hunter as a two-slot Hunting Lodge occupation with deterministic wildlife harvest, food delivery, J hotkey/UI, target reservation, work-radius enforcement and v14 save migration (implementation branch `feat/hunter-hunting-lodge`; CI/PR pending).
-- [x] Add Scout as a two-slot Scout Post occupation with bounded A* exploration, local permanent-fog revelation, sector rotation, return-to-post when exhausted, U hotkey/UI and v15 save migration (`feat/scout-specialist`, PR #65); final 4.7 CI and manual map-scale acceptance remain.
-- [ ] Add Scout, Healer and Blacksmith in subsequent incremental slices.
+- [x] Add Hunter as a two-slot Hunting Lodge occupation with deterministic wildlife harvest, food delivery, J hotkey/UI, target reservation, work-radius enforcement and v14 save migration (PR #64; CI #620 passed 45/45; manual gameplay acceptance remains).
+- [x] Add Scout as a two-slot Scout Post occupation with bounded A* exploration, local permanent-fog revelation, sector rotation, return-to-post when exhausted, U hotkey/UI and v15 save migration (PR #65; CI #621 passed 46/46; manual map-scale acceptance remains).
+- [x] Add Hunter, Scout and Healer as stacked workplace-specialist slices; their pull requests remain unmerged pending integration review.
+- [x] Complete Blacksmith/Forge implementation, v17 migration coverage and Godot 4.7 CI #634 (48/48 jobs).
+- [ ] Review rendered equipment visibility, combat balance and economic pacing in an actual playthrough; integrate the open specialist PR stack in order.
 - [x] Complete Godot 4.3 / 4.7 CI regression matrix; real gameplay pathing still needs a manual playtest.
 
 **Acceptance gate:** workers select valid tasks, avoid cross-map wandering, recover from blocked paths, deposit at reachable storage and retain their state through saves.

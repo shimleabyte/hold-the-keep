@@ -156,15 +156,15 @@ func _run() -> void:
 
     var classic_food_before_save: int = granary.stockpile_amount("food")
     var classic_snapshot: Dictionary = save_system.collect(classic)
-    require(classic_snapshot["version"] == 16 and save_system._valid_save(classic_snapshot),
-        "A Classic save containing a food-only Granary must pass v16 validation")
+    require(classic_snapshot["version"] == 17 and save_system._valid_save(classic_snapshot),
+        "A Classic save containing a food-only Granary must pass v17 validation")
     var saved_granary: Dictionary = {}
     for saved_building in classic_snapshot["buildings"]:
         if String(saved_building.get("id", "")) == "granary" and Vector2i(int(saved_building["cx"]), int(saved_building["cy"])) == granary_cell:
             saved_granary = saved_building
             break
     require(saved_granary.get("stockpile", {}) == {"food": granary.stockpile_amount("food")},
-        "Save v16 must serialize the Granary's food reserve")
+        "Save v17 must serialize the Granary's food reserve")
     var invalid_granary_stock := classic_snapshot.duplicate(true)
     for saved_building in invalid_granary_stock["buildings"]:
         if String(saved_building.get("id", "")) == "granary":
@@ -180,7 +180,14 @@ func _run() -> void:
     legacy_v13["job_priority"].erase("healer")
     legacy_v13["quota"].erase("healer")
     legacy_v13["job_priority"].erase("healer")
+    legacy_v13["quota"].erase("blacksmith")
+    legacy_v13["job_priority"].erase("blacksmith")
     for villager in legacy_v13["villagers"]:
+        villager.erase("weapon_equipped")
+        villager.erase("armor_equipped")
+        if String(villager.get("occupation", "")) == "blacksmith":
+            villager["occupation"] = ""
+            villager["job"] = ""
         if String(villager.get("occupation", "")) in ["hunter", "scout", "healer"]:
             villager["occupation"] = ""
             villager["job"] = ""
@@ -318,8 +325,8 @@ func _run() -> void:
 
     var frontier_food_before_save: int = granary.stockpile_amount("food")
     var frontier_snapshot: Dictionary = save_system.collect(frontier)
-    require(frontier_snapshot["version"] == 16 and save_system._valid_save(frontier_snapshot),
-        "Frontier Granary stockpile and isolated-depot pressure must pass v16 validation")
+    require(frontier_snapshot["version"] == 17 and save_system._valid_save(frontier_snapshot),
+        "Frontier Granary stockpile and isolated-depot pressure must pass v17 validation")
     var invalid_shipment := frontier_snapshot.duplicate(true)
     invalid_shipment["supply"]["orders"].append({
         "id": int(invalid_shipment["supply"]["next_id"]),
@@ -340,7 +347,7 @@ func _run() -> void:
     require(loaded_granary != null and loaded_granary.stockpile_amount("food") == frontier_food_before_save,
         "Frontier reload must preserve Granary food without duplication or loss")
     require(restored_frontier.supply._pressure_records.has(pressure_key),
-        "Save v15 must restore isolated Granary pressure state")
+        "Save v17 must restore isolated Granary pressure state")
 
     print("PASS: Classic food reserve/upkeep, Frontier food-only depot transfers/shipments/raids and v13 migration compatibility")
     quit(0)

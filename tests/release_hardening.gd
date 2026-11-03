@@ -16,6 +16,19 @@ func _fixture_for_version(source: Dictionary, target_version: int) -> Dictionary
     var fixture: Dictionary = source.duplicate(true)
     fixture["version"] = target_version
 
+    if target_version < 17:
+        fixture["quota"].erase("blacksmith")
+        if fixture.has("job_priority"):
+            fixture["job_priority"].erase("blacksmith")
+        for villager in fixture["villagers"]:
+            if String(villager.get("job", "")) == "blacksmith":
+                villager["job"] = ""
+            if String(villager.get("occupation", "")) == "blacksmith":
+                villager["occupation"] = ""
+                villager["job"] = ""
+            villager.erase("weapon_equipped")
+            villager.erase("armor_equipped")
+
     if target_version < 14:
         fixture["quota"].erase("hunter")
         if fixture.has("job_priority"):
@@ -33,6 +46,20 @@ func _fixture_for_version(source: Dictionary, target_version: int) -> Dictionary
         fixture["resources"] = legacy_resources
         for index in range(fixture["buildings"].size() - 1, -1, -1):
             if String(fixture["buildings"][index].get("id", "")) == "hunting_lodge":
+                fixture["buildings"].remove_at(index)
+
+    if target_version < 17:
+        fixture["quota"].erase("blacksmith")
+        if fixture.has("job_priority"):
+            fixture["job_priority"].erase("blacksmith")
+        for villager in fixture["villagers"]:
+            villager.erase("weapon_equipped")
+            villager.erase("armor_equipped")
+            if String(villager.get("occupation", "")) == "blacksmith":
+                villager["occupation"] = ""
+                villager["job"] = ""
+        for index in range(fixture["buildings"].size() - 1, -1, -1):
+            if String(fixture["buildings"][index].get("id", "")) == "forge":
                 fixture["buildings"].remove_at(index)
 
     if target_version < 16:
@@ -116,15 +143,15 @@ func _run() -> void:
     game_clock.set_process(false)
 
     var classic_snapshot: Dictionary = save_system.collect(classic_main)
-    assert(classic_snapshot["version"] == 16,
-        "Current release hardening must exercise the latest v16 schema")
-    for version in range(1, 17):
+    assert(classic_snapshot["version"] == 17,
+        "Current release hardening must exercise the latest v17 schema")
+    for version in range(1, 18):
         var fixture := _fixture_for_version(classic_snapshot, version)
         assert(save_system._valid_save(fixture),
             "Classic migration fixture v%d must remain structurally valid" % version)
 
     var unsupported := classic_snapshot.duplicate(true)
-    unsupported["version"] = 17
+    unsupported["version"] = 18
     assert(not save_system._valid_save(unsupported),
         "Unknown future save versions must be rejected")
     var invalid_index := classic_snapshot.duplicate(true)
@@ -167,7 +194,7 @@ func _run() -> void:
     var frontier_snapshot: Dictionary = save_system.collect(frontier_main)
     assert(frontier_snapshot["world"]["map_size"] == 128,
         "Frontier fixtures must use the 128x128 world")
-    for version in range(7, 17):
+    for version in range(7, 18):
         var fixture := _fixture_for_version(frontier_snapshot, version)
         assert(save_system._valid_save(fixture),
             "Frontier migration fixture v%d must remain structurally valid" % version)
@@ -187,7 +214,7 @@ func _run() -> void:
     assert(not save_system._valid_save(broken_campaign),
         "A truncated Frontier objective registry must be rejected")
 
-    print("PASS: Classic save schemas v1-v16, Frontier v7-v16, interrupted writes and backup recovery eligibility")
+    print("PASS: Classic save schemas v1-v17, Frontier v7-v17, interrupted writes and backup recovery eligibility")
     quit(0)
 
 

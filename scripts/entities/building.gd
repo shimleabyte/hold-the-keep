@@ -37,6 +37,8 @@ var guards: Array = []
 var guard_capacity := 0
 var _healer_targets: Dictionary = {}
 var _healer_assignments: Dictionary = {}
+var _blacksmith_targets: Dictionary = {}
+var _blacksmith_assignments: Dictionary = {}
 var local_stockpile: Dictionary = {}
 var stockpile_capacity := 0
 var _sabotage_remaining := 0.0
@@ -327,6 +329,48 @@ func release_heal_target(healer) -> void:
     if current == healer:
         _healer_targets.erase(patient_id)
     _healer_assignments.erase(healer_id)
+
+
+func claim_blacksmith_target(smith, soldier) -> bool:
+    if id != "forge" or is_sabotaged() or not is_instance_valid(smith) or not is_instance_valid(soldier):
+        return false
+    if String(smith.job) != "blacksmith" or String(soldier.job) != "soldier":
+        return false
+    var smith_id: int = smith.get_instance_id()
+    var soldier_id: int = soldier.get_instance_id()
+    if int(_blacksmith_assignments.get(smith_id, -1)) == soldier_id:
+        return true
+    release_blacksmith_target(smith)
+    var current = _blacksmith_targets.get(soldier_id, null)
+    if current != null and is_instance_valid(current) and current != smith:
+        return false
+    _blacksmith_targets[soldier_id] = smith
+    _blacksmith_assignments[smith_id] = soldier_id
+    return true
+
+
+func is_blacksmith_target_reserved(soldier, except_smith = null) -> bool:
+    if not is_instance_valid(soldier):
+        return false
+    var soldier_id: int = soldier.get_instance_id()
+    var current = _blacksmith_targets.get(soldier_id, null)
+    if current == null or not is_instance_valid(current):
+        _blacksmith_targets.erase(soldier_id)
+        return false
+    return current != except_smith
+
+
+func release_blacksmith_target(smith) -> void:
+    if not is_instance_valid(smith):
+        return
+    var smith_id: int = smith.get_instance_id()
+    if not _blacksmith_assignments.has(smith_id):
+        return
+    var soldier_id := int(_blacksmith_assignments[smith_id])
+    var current = _blacksmith_targets.get(soldier_id, null)
+    if current == smith:
+        _blacksmith_targets.erase(soldier_id)
+    _blacksmith_assignments.erase(smith_id)
 
 
 func can_assign_repairer(v) -> bool:
