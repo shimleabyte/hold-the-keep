@@ -68,6 +68,7 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
 func _find_site_cell(region: String, used: Array[Vector2i]) -> Vector2i:
     var reachable: Dictionary = main.nav.reachable_cells(main.nav.cell_of(main.player.global_position))
     var keep_cell := WorldConfig.starting_keep_cell()
+    var expedition_landing := main.world.expedition_outer_landing_cell(region) if WorldConfig.is_frontier_expedition() else Vector2i(-1, -1)
     var best := Vector2i(-1, -1)
     var best_score := -INF
     for y in WorldConfig.map_size:
@@ -92,6 +93,10 @@ func _find_site_cell(region: String, used: Array[Vector2i]) -> Vector2i:
             var distance := Vector2(cell - keep_cell).length()
             var noise := float(posmod(x * 92821 + y * 68917 + WorldConfig.world_seed * 17, 10007)) / 10007.0
             var score := distance + noise * 10.0
+            if WorldConfig.is_frontier_expedition() and expedition_landing.x >= 0:
+                # Keep objective sites near the newly opened entrance; reserve the deep march for its stronghold.
+                var entrance_distance := Vector2(cell - expedition_landing).length()
+                score = -absf(entrance_distance - 20.0) + noise * 0.5
             if score > best_score:
                 best_score = score
                 best = cell
