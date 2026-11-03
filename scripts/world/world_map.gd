@@ -592,6 +592,9 @@ func _setup_expedition_barriers() -> void:
     var core_min := int((map_size - core_size) / 2)
     var core_max := core_min + core_size
     var center := int(map_size / 2)
+    var core_reachable := _expedition_core_reachable_cells(core_min, core_max)
+    if core_reachable.is_empty():
+        push_error("Frontier Expedition: starting heartland has no reachable survey network")
     var barriers: Dictionary = {}
 
     # Seal the four sides of the initial heartland.
@@ -619,7 +622,7 @@ func _setup_expedition_barriers() -> void:
         "ASHEN_MARCH": Vector2i(core_min + int(core_size * 0.75), core_max)
     }
     for region in gate_targets:
-        var gate_cell := _find_expedition_gate_cell(String(region), gate_targets[region])
+        var gate_cell := _find_expedition_gate_cell(String(region), gate_targets[region], core_min, core_max, center, core_reachable)
         if gate_cell.x < 0:
             push_error("Frontier Expedition: could not place the %s survey gate" % String(region))
             continue
@@ -636,16 +639,55 @@ func _setup_expedition_barriers() -> void:
         _seal_expedition_cell(_expedition_gate_cells[region])
 
 
-func _find_expedition_gate_cell(region: String, target: Vector2i) -> Vector2i:
-    var core_size := int(WorldConfig.profile_definition(WorldConfig.profile_id).get("expedition_core_size", 128))
+func _expedition_core_reachable_cells(core_min: int, core_max: int) -> Dictionary:
+    var reachable: Dictionary = {}
+    var start_cell := Vector2i((spawn_point() / float(tile_size)).floor())
+    if start_cell.x < core_min or start_cell.y < core_min or start_cell.x >= core_max or start_cell.y >= core_max:
+        return reachable
+    if not is_buildable(start_cell) or occupied.has(start_cell):
+        return reachable
+
+    var queue: Array[Vector2i] = [start_cell]
+    reachable[start_cell] = true
+    var cursor := 0
+    var directions: Array[Vector2i] = [
+        Vector2i(1, 0), Vector2i(-1, 0),
+        Vector2i(0, 1), Vector2i(0, -1)
+    ]
+    while cursor < queue.size():
+        var current := queue[cursor]
+        cursor += 1
+        for direction in directions:
+            var next := current + direction
+            if next.x < core_min or next.y < core_min or next.x >= core_max or next.y >= core_max:
+                continue
+            if reachable.has(next) or not is_buildable(next) or occupied.has(next):
+                continue
+            reachable[next] = true
+            queue.append(next)
+    return reachable
+
+
+func _find_expedition_gate_cell(
+    region: String,
+    target: Vector2i,
+    core_min: int,
+    core_max: int,
+    center: int,
+    core_reachable: Dictionary
+) -> Vector2i:
     var inward := Vector2i(0, 1) if target.y < map_size / 2 else Vector2i(0, -1)
     var outward := -inward
-    for radius in range(core_size):
+    for radius in range(core_max - core_min):
         for direction in [-1, 1]:
             var candidate := target + Vector2i(radius * direction, 0)
             var approach := candidate + inward
             var landing := candidate + outward
-            if candidate.x < 1 or candidate.x >= map_size - 1:
+            # Gates must replace a cell on the actual core perimeter, never a
+            # nearby tile outside it or the fixed wall dividing adjacent marches.
+            if candidate.x < core_min or candidate.x >= core_max or candidate.x == center - 1:
+                continue
+            if not core_reachable.has(approach):
                 continue
             if _frontier_region_name(_frontier_region_at(candidate)) != region:
                 continue
@@ -653,7 +695,7 @@ func _find_expedition_gate_cell(region: String, target: Vector2i) -> Vector2i:
                 continue
             if _frontier_region_name(_frontier_region_at(landing)) != region:
                 continue
-            if tile_type_at(candidate) == T_WATER or not is_buildable(approach) or occupied.has(approach):
+            if tile_type_at(candidate) == T_WATER:
                 continue
             if not is_buildable(landing) or occupied.has(landing):
                 continue
