@@ -5,7 +5,7 @@ const BuildingVisual := preload("res://scripts/entities/building_visual_identity
 
 const EXPECTED_BUILDINGS := [
     "keep", "house", "wall", "tower", "granary", "storage", "farm", "outpost",
-    "stone_wall", "forge", "lumber_camp", "quarry", "hunting_lodge", "scout_post", "road", "bridge"
+    "stone_wall", "forge", "lumber_camp", "quarry", "hunting_lodge", "scout_post", "infirmary", "road", "bridge"
 ]
 
 
@@ -74,5 +74,5 @@ func _run() -> void:
     var building_script := load("res://scripts/entities/building.gd") as GDScript
     assert(building_script != null and building_script.can_instantiate(),
         "Building rendering must compile with the new Frontier visual helper")
-    print("PASS: 16 distinct building materials/details, Frontier-only rendering and four deterministic damage states")
+    print("PASS: 17 distinct building materials/details, Frontier-only rendering and four deterministic damage states")
     quit(0)
