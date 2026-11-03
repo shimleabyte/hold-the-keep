@@ -143,8 +143,8 @@ func _run() -> void:
 
     main.village.quota["hunter"] = 2
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 16,
-        "Hunter occupation and wildlife state must remain valid in save version 16")
+    require(snapshot["version"] == 17,
+        "Hunter occupation and wildlife state must remain valid in current save version 17")
     require(save_system._valid_save(snapshot),
         "A live Hunting Lodge and Hunter snapshot must validate")
     var has_hunter := false
@@ -164,7 +164,14 @@ func _run() -> void:
     legacy_v13["job_priority"].erase("scout")
     legacy_v13["quota"].erase("healer")
     legacy_v13["job_priority"].erase("healer")
+    legacy_v13["quota"].erase("blacksmith")
+    legacy_v13["job_priority"].erase("blacksmith")
     for saved_villager in legacy_v13["villagers"]:
+        saved_villager.erase("weapon_equipped")
+        saved_villager.erase("armor_equipped")
+        if String(saved_villager.get("occupation", "")) == "blacksmith":
+            saved_villager["occupation"] = ""
+            saved_villager["job"] = ""
         if String(saved_villager.get("occupation", "")) == "scout":
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
@@ -199,5 +206,5 @@ func _run() -> void:
     require(hunter_a.job.is_empty() and hunter_b.job.is_empty(),
         "Hunters must return to unassigned status when their workplace is removed")
 
-    print("PASS: Hunter assignment, Lodge capacity/radius, wildlife reservation/yield, food delivery, v16 save migration and teardown")
+    print("PASS: Hunter assignment, Lodge capacity/radius, wildlife reservation/yield, food delivery, v17 save migration and teardown")
     quit(0)
