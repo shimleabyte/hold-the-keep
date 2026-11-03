@@ -116,8 +116,8 @@ func _run() -> void:
     game_clock.set_process(false)
 
     var classic_snapshot: Dictionary = save_system.collect(classic_main)
-    assert(classic_snapshot["version"] == 15,
-        "Current release hardening must exercise the latest v15 schema")
+    assert(classic_snapshot["version"] == 16,
+        "Current release hardening must exercise the latest v16 schema")
     for version in range(1, 17):
         var fixture := _fixture_for_version(classic_snapshot, version)
         assert(save_system._valid_save(fixture),
