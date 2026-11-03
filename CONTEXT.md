@@ -6,14 +6,12 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio, PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening, PR #58 (`d3bba66`) for Phase 05.2a Builder-driven construction sites, PR #59 (`6147cfc`) for Phase 05.2b construction queue/Builder priorities/HUD, PR #60 (`beef7b7`) for Phase 05.3a Watchtower vision, PR #61 (`d9b87b1`) for Phase 05.3b Granary food reserve, and PR #62 (`4cc0420`) for Phase 09.2 scripted campaign combat-budget probes; PR #63 (`a594069`) for Frontier Expedition. PR #62 workflow #41564491766 passed 86/86 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release exports. Save schema remains v13; rendered building/HUD, full-wave balance and human playtest acceptance remain open.
+**Current source of truth:** `main` contains PRs #55–#63, including regional audio, late-act save/reload hardening, Builder construction/queue, Watchtower vision, Granary reserve, campaign combat-budget probes and Frontier Expedition. Save schema remains v13. Current development target is Godot 4.7 only. GitHub Actions runs 4.7 import/parse, regression tests and Frontier performance diagnostics; Godot 4.3 compatibility jobs and Windows/Linux release-export jobs are no longer part of active development CI. Release packaging is deferred until the release phase. Hunter PR #64 and Scout PR #65 remain open; #65 is stacked on #64 and must follow it into main.
 
-**Active implementation branch:** PR #64 (`feat/hunter-hunting-lodge`) adds the Hunter occupation and Pondok Pemburu, deterministic renewable wildlife, five-food harvesting, two workplace slots, an 18-tile radius, J hotkey/priority controls and additive save v14. It retains v1–v13 migration coverage. The branch is not part of `main` until PR #64 merges; its Godot 4.3/4.7 CI and real rendered gameplay review remain acceptance gates.
-
-**Merged into `main`:** PR #63 (`a594069`) adds the optional 192×192 Frontier Expedition profile. It preserves Classic 64×64 and standard Frontier 128×128, begins in a 128×128 connected heartland, and opens each of four outer marches only after the player reaches its survey crossing. Four strongholds, seven regional objective sites and four faction camps are placed in their sealed outer marches; permanent fog reveals them as they are explored. Crossing state is derived from existing discovery objectives; save schema remains v13. PR workflow #41580977570 passed 88/88 jobs across Godot 4.3/4.7, both performance diagnostics, and Windows/Linux export checks. Main push workflow #41581523207 was pending at the time of this update. PR #63 is merged; Frontier Expedition is part of `main`.
+**Merged into `main`:** PR #63 (`a594069`) adds the optional 192×192 Frontier Expedition profile. It preserves Classic 64×64 and standard Frontier 128×128, begins in a 128×128 connected heartland, and opens each of four outer marches only after the player reaches its survey crossing. Four strongholds, seven regional objective sites and four faction camps are placed in their sealed outer marches; permanent fog reveals them as they are explored. Crossing state is derived from existing discovery objectives; save schema remains v13. Its 88/88 run passed under the previous multi-version/export pipeline; that historical result is not the current CI policy.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
-- Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
+- Versi aktif: **Godot 4.7**. Godot 4.3 is no longer a development target or CI gate.
 - Jendela default 1280×720, minimum 960×540. Viewport logis mengikuti setengah ukuran client window (minimum 480×270), pixel art integer-scale tepat 2×.
 - Tujuan pemain: bertahan 15 hari, di malam ke-15 kalahkan Raja Lawan. Keep hancur = kalah.
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
@@ -28,18 +26,18 @@ Ringkasan implementasi aktual pada `main` setelah PR #62 (save schema v13; statu
 | Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit Keep/Storage/Outpost cost source for construction/research/repair is merged; deterministic contested-depot warning and targeted Saboteur raids merged through PR #35 |
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload; Act I–IV + victory reload dilindungi `campaign_reload_hardening.gd` |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
-| Bangunan | Keep, rumah, tembok, menara pengawas (turret + 128px vision), Lumbung 240 pangan, Gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge pada `main`; PR #64 branch menambah Pondok Pemburu. |
-| Villager | Pada `main`: penebang, penambang, petani, soldier dan Builder. PR #64 branch menambah Hunter; Scout, Healer dan Blacksmith masih belum tersedia. |
+| Bangunan | Keep, rumah, tembok, menara pengawas (turret + 128px vision), Lumbung 240 pangan, Gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; Builder queue/reorder/cancel and v13 persistence |
+| Villager | Penebang, penambang, petani, soldier dan Builder tersedia; Hunter sedang ditinjau di PR #64, Scout di PR #65 (stacked); Healer dan Blacksmith belum diimplementasikan |
 | Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; connected infrastructure raids and bounded counterattacks merged via PR #44; manual Frontier balance/play review remains open |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
-| Save/load | v13 pada `main`; PR #64 branch menulis v14 dengan wildlife depletion/regrowth dan Hunter occupation serta migrasi Classic v1–v13 / Frontier v7–v13. State world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo tetap dipertahankan. |
+| Save/load | v13 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo; Classic v1–v13 dan Frontier v7–v13 migration matrix dijaga. PR #34 adds optional cost-source preference without a save-version bump; earlier v13 snapshots without it remain valid |
 | Kontrol | Rebind gerak, interaksi, serang, lari; shortcut UI/job/build belum dapat di-rebind |
 | Tampilan | Adaptive logical viewport = setengah ukuran client window, minimum 480×270, pixel scale tepat 2×; physical-display/fullscreen review belum dilakukan |
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map with live tower sight, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 10 procedural ambience loops (5 biome × siang/malam), 2 original music loops, 14 event cues; Master bus routing dan crossfade; human listening/level-balance QA masih terbuka |
-| Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | PR #61 workflow #41558978053 passed 84/84 jobs: Godot 4.3/4.7 parse, 40 regressions per engine, Frontier performance diagnostic and Windows/Linux release exports. |
+| Rilis | Export scripts/presets tetap tersedia; automatic Windows/Linux release exports sengaja ditunda sampai release phase |
+| CI | Active development gate: Godot 4.7 import/parse, regression matrix and two Frontier performance diagnostics. Godot 4.3 and release exports are excluded; latest results must be read from the current workflow run. |
 
 ## 3. Struktur
 ```
@@ -51,7 +49,7 @@ scripts/autoload/      InputSetup, Events (signal bus), DataDB (JSON), Settings,
 scripts/world/         world_map.gd (tileset biome dari tiles.svg, noise, pohon/batu, occupied dict)
 scripts/systems/       flow_field (Dijkstra musuh), nav_grid (AStarGrid2D villager), build_system, territory,
                        fog_of_war (peta permanen), village/expedition, wave_spawner, event_manager
-scripts/entities/      player, enemy, enemy_keep (stronghold/garrison source), villager (expedition/recall), building, resource_tree, rock, iron_ore, wildlife_node, arrow, corpse,
+scripts/entities/      player, enemy, enemy_keep (stronghold/garrison source), villager (expedition/recall), building, resource_tree, rock, iron_ore, arrow, corpse,
                        fx_layer, sprite_anim
 scripts/ui/            hud.gd (layout viewport-aware), world_map_panel.gd, tech_panel.gd, pause_menu.gd (window-size presets), pixel_font.gd
 data/                  buildings.json, enemies.json, waves.json, events.json, techs.json
@@ -61,7 +59,7 @@ tools/                 gen_assets.py (generator SVG), build.sh, build.ps1
 tests/                 skrip tes headless dan screenshot (lihat tests/README.md)
 ```
 Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildings`, `depots`, `farms`,
-`harvestable`, `resource_nodes`, `wildlife`, `enemies`, `ranged_enemies`, `enemy_projectiles`, `enemy_garrison`, `enemy_strongholds`, `villagers`, `defenders`, `fog_of_war`.
+`harvestable`, `resource_nodes`, `enemies`, `ranged_enemies`, `enemy_projectiles`, `enemy_garrison`, `enemy_strongholds`, `villagers`, `defenders`, `fog_of_war`.
 
 ## 4. Konvensi arsitektur
 - **Signal bus**: sistem berkomunikasi lewat `Events` (resource_changed, building_*, village_changed,
@@ -104,9 +102,9 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
   disimulasikan sebagian.
 
 ## 6. Cara memverifikasi
-- Jalankan: `godot --headless --path . --import` sekali, lalu `godot --headless --fixed-fps 60 --path . --script tests/<x>.gd`.
+- Jalankan dengan Godot 4.7: `godot --headless --path . --import`, `bash tools/check_gdscript.sh`, lalu `bash tools/run_tests.sh`.
 - Render nyata lewat Xvfb + OpenGL software untuk screenshot (lihat tests/README.md).
-- Latest mainline workflow #41314731305 completed with 46/46 successful jobs, including Godot 4.3/4.7 import/parse, assertion regressions, performance diagnostic, and Windows/Linux export checks. This is CI evidence, not a substitute for human campaign playtesting or physical-display review.
+- Active CI validates only Godot 4.7. It does not build Windows/Linux releases during feature development. Distinguish completed jobs from queued/in-progress jobs and inspect the complete run before claiming a pass.
 - Angka perf historis: ~2 ms/frame untuk 150 musuh + 42 villager + 300 partikel (headless, tanpa render); belum mengukur biaya fog/campaign.
 - Setelah mengubah `tools/gen_assets.py`: `python3 tools/gen_assets.py`, lalu import ulang.
 
@@ -127,10 +125,10 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 - Belum ada bukti screenshot dan playtest pada monitor fisik pemilik; render CI/software tidak menggantikan pemeriksaan display dan fullscreen.
 - Belum ada full human playthrough Classic hari 1–15 dan Frontier act 1–4/day 20 yang terdokumentasi.
 - Belum ada target-hardware benchmark yang mencatat CPU, GPU, OS, resolusi, workload, dan frame-time percentiles.
-- Windows export telah dibuat dan diperiksa format PE di CI, tetapi belum dijalankan pada native Windows atau clean Windows machine.
+- Native Windows and clean-machine release acceptance are deferred; no Windows export test runs in development CI.
 - Local stockpile Storage/Outpost, Frontier worker deposits, dan atomic bounded automatic transfer to Keep sudah tersedia di `main` melalui PR #31; physical carrier/player-directed shipment dan local-stock spending masih belum tersedia.
 - Outpost guard/garrison dan local visibility belum tersedia.
-- Hunter, Scout, Healer, dan Blacksmith belum tersedia.
+- Hunter PR #64 and Scout PR #65 are implemented on open stacked branches but are not in `main`; Healer and Blacksmith remain to be implemented.
 - Construction queue serta staged completion dengan Builder belum tersedia.
 - Phase 06 baru memiliki faction/archetype foundation; perilaku counterable semua archetype, camps, patrol, raids, counterattacks, dan persistence belum lengkap.
 - Phase 08 art/audio identity belum dikirim sebagai satu implementation slice; unit/faction/building visuals masih membutuhkan art pass khusus dan musik belum ada.
@@ -138,17 +136,14 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 - Steam integration opsional dan bukan blocker gameplay.
 - Save v12 dan compatibility coverage tersedia di `main` melalui PR #31, tetapi acceptance upgrade pada mesin bersih tetap belum diverifikasi.
 
-## 9. Rencana berikut (belum dikerjakan)
-Urutan backlog berdasarkan dependency:
-1. Phase 02: selesaikan player-directed shipments/carrier visuals, inspect/withdraw local stock, Outpost garrison dan local visibility. Supply attrition menunggu sampai transfer behavior dan local defense tervalidasi.
-2. Phase 04: implementasikan Hunter, Scout, Healer dan Blacksmith dengan workplace, radius, biaya/hasil, UI kuota, pathfinding dan save/load.
-3. Phase 05: construction queue dan staged building completion dengan Builder; lanjutkan bangunan sesuai dependency produksi dan strategi.
-4. Phase 06: distinct/counterable policy keenam archetype, faction camps, bounded patrols, reinforcement budget, raids/counterattacks dan persistence.
-5. Phase 08: biome/faction/unit/building art pass, strategic-map readability, combat/environmental audio dan musik.
-6. Phase 07/09/10 acceptance: human campaign playtest, difficulty review, target-hardware profile, native Windows smoke, clean-machine migration, physical-resolution screenshots dan fullscreen test.
-7. Polish sekunder: rebind shortcut UI/job/build, tooltip, Windows .ico; Steam tetap opsional.
-
-Dokumen kanonik setiap fase berada di ROADMAP_NEXT_LEVEL.md dan docs/plans/. Automated CI, headless simulation, rendered screenshot, dan human playtest harus dilaporkan sebagai bukti yang berbeda.
+## 9. Rencana berikut
+Urutan backlog berdasarkan dependency dan target engine:
+1. Stabilkan Hunter PR #64 dengan CI Godot 4.7, lalu retarget Scout PR #65 ke `main` setelah Hunter masuk.
+2. Implementasikan Healer + Infirmary dengan healing bounded, target reservation, workplace radius, serta aturan biaya/cooldown yang nyata.
+3. Implementasikan Blacksmith + Forge dengan output peralatan/repair yang mempunyai dampak terukur pada unit atau struktur.
+4. Lanjutkan facility chain secara bertahap: Barracks, Archery Range, Market, lalu Siege Workshop/Stables/Fortress/Signal Beacon berdasarkan dependency.
+5. Selesaikan rendered art/audio review, human campaign playtests, target-hardware profiling dan resolution/fullscreen QA.
+6. Aktifkan kembali Windows/Linux export, native Windows smoke dan clean-machine acceptance hanya pada release phase; jangan jadikan gate pengembangan harian.
 
 ## 9b. Tahap lanjutan kampanye wilayah
 Pondasi Frontier campaign sekarang sudah tersedia: world 128×128, lima biome, empat stronghold, 11 regional objectives, empat faksi, road-connected supply, dan 20-day/4-act calendar. Karena itu, jangan mengulang roadmap awal berupa peta region transisi atau single-stronghold upgrade.
