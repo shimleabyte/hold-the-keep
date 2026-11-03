@@ -126,6 +126,8 @@ func _run() -> void:
 
     # Verify the patrol uses an A* route to its next waypoint, not direct movement.
     var patrol = patrols[0]
+    require(patrol.patrol_movement != null and patrol.patrol_movement.actor == patrol,
+        "Enemy patrol movement must be configured through its isolated controller")
     patrol.set_physics_process(false)
     patrol._tick_patrol_route()
     var patrol_goal: Vector2 = patrol.guard_origin

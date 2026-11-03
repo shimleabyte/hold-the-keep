@@ -8,6 +8,7 @@ const CombatVisualFeedback := preload("res://scripts/entities/combat_visual_feed
 const Corpse := preload("res://scripts/entities/corpse.gd")
 const ENEMY_BOLT := preload("res://scripts/entities/enemy_bolt.gd")
 const ENEMY_TARGETING := preload("res://scripts/systems/enemy_targeting.gd")
+const PATROL_MOVEMENT_SCRIPT := preload("res://scripts/behaviors/enemies/enemy_patrol_movement.gd")
 const WarShamanSupportBehavior := preload("res://scripts/behaviors/war_shaman_support_behavior.gd")
 const BeastRiderBehavior := preload("res://scripts/behaviors/beast_rider_behavior.gd")
 const ShieldbearerBehavior := preload("res://scripts/behaviors/shieldbearer_behavior.gd")
@@ -95,6 +96,7 @@ var flow
 var player
 var anim := SpriteAnim.new()
 var combat_feedback = CombatVisualFeedback.new()
+var patrol_movement = PATROL_MOVEMENT_SCRIPT.new()
 
 var _offset := Vector2.ZERO
 var _atk_cd := 0.0
@@ -230,6 +232,7 @@ func configure_patrol(camp_data: Dictionary, saved_patrol_state: Dictionary = {}
     _patrol_repath_timer = 0.0
     if is_inside_tree():
         patrol_nav = get_tree().get_first_node_in_group("navigation_grid")
+        patrol_movement.configure(self)
         add_to_group("enemy_patrols")
 
 
@@ -248,6 +251,7 @@ func _ready() -> void:
     if is_patrol:
         add_to_group("enemy_patrols")
         patrol_nav = get_tree().get_first_node_in_group("navigation_grid")
+        patrol_movement.configure(self)
     if archetype in ["saboteur", "siege_engine", "beast_rider"]:
         var nav_grid := get_tree().get_first_node_in_group("navigation_grid")
         if archetype == "saboteur":
@@ -849,77 +853,13 @@ func _move_toward_direct(target: Vector2, delta: float) -> void:
 
 
 func _tick_patrol_route() -> void:
-    if patrol_points.is_empty():
-        guard_origin = patrol_origin
-        return
-    if position.distance_to(patrol_origin) > patrol_radius:
-        patrol_returning = true
-    if patrol_returning:
-        guard_origin = patrol_origin
-        if position.distance_to(patrol_origin) <= 14.0:
-            patrol_returning = false
-            patrol_waypoint_index = posmod(patrol_waypoint_index, patrol_points.size())
-            guard_origin = patrol_points[patrol_waypoint_index]
-        return
-    var waypoint: Vector2 = patrol_points[patrol_waypoint_index]
-    guard_origin = waypoint
-    if position.distance_to(waypoint) <= 12.0:
-        patrol_waypoint_index = (patrol_waypoint_index + 1) % patrol_points.size()
-        guard_origin = patrol_points[patrol_waypoint_index]
-
-
+    patrol_movement.tick_route()
 func _patrol_cell_in_enemy_region(cell: Vector2i) -> bool:
-    if patrol_nav == null or not patrol_nav.is_walkable(cell):
-        return false
-    if String(world.region_id(cell)) != patrol_region_id:
-        return false
-    if patrol_territory != null and patrol_territory.owner_at(cell) != "enemy":
-        return false
-    return true
-
-
+    return patrol_movement.cell_in_enemy_region(cell)
 func _patrol_cell_allowed(cell: Vector2i) -> bool:
-    if not _patrol_cell_in_enemy_region(cell):
-        return false
-    return Vector2(patrol_nav.cell_of(patrol_origin) - cell).length() * WorldConfig.tile_size <= patrol_radius + WorldConfig.tile_size
-
-
+    return patrol_movement.cell_allowed(cell)
 func _move_patrol_toward(target: Vector2, delta: float) -> void:
-    if patrol_nav == null:
-        return
-    var goal_cell: Vector2i = patrol_nav.cell_of(target)
-    if not WorldConfig.is_valid_cell(goal_cell) or not _patrol_cell_allowed(goal_cell):
-        return
-    _patrol_repath_timer = maxf(0.0, _patrol_repath_timer - delta)
-    if _patrol_path_version != patrol_nav.version or _patrol_goal_cell != goal_cell or _patrol_path.is_empty() or _patrol_repath_timer <= 0.0:
-        var candidate_path: PackedVector2Array = patrol_nav.path_to(global_position, goal_cell)
-        var valid_path := not candidate_path.is_empty()
-        if valid_path:
-            for path_point in candidate_path:
-                var path_cell: Vector2i = patrol_nav.cell_of(path_point)
-                var cell_is_allowed := _patrol_cell_in_enemy_region(path_cell)
-                if not patrol_returning:
-                    cell_is_allowed = _patrol_cell_allowed(path_cell)
-                if not cell_is_allowed:
-                    valid_path = false
-                    break
-        if not valid_path:
-            _patrol_path = PackedVector2Array()
-            return
-        _patrol_path = candidate_path
-        _patrol_path_index = 1 if candidate_path.size() > 1 else 0
-        _patrol_path_version = patrol_nav.version
-        _patrol_goal_cell = goal_cell
-        _patrol_repath_timer = 0.55
-
-    while _patrol_path_index < _patrol_path.size() and global_position.distance_to(_patrol_path[_patrol_path_index]) <= 3.0:
-        _patrol_path_index += 1
-    if _patrol_path_index < _patrol_path.size():
-        _move_toward_direct(_patrol_path[_patrol_path_index], delta)
-    elif global_position.distance_to(target) <= float(WorldConfig.tile_size):
-        _move_toward_direct(target, delta)
-
-
+    patrol_movement.move_toward(target, delta)
 func receive_healing(amount: int) -> void:
     if hp <= 0 or amount <= 0:
         return
