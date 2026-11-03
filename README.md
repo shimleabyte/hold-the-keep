@@ -2,10 +2,10 @@
 
 > Status proyek: [CONTEXT.md](CONTEXT.md). Design bible: [docs/WORLD_AND_GAMEPLAY_BIBLE.md](docs/WORLD_AND_GAMEPLAY_BIBLE.md). Roadmap: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Implementation plans: [Phase 02](docs/plans/phase-02-plan.md), [Phase 04](docs/plans/phase-04-plan.md), [Phase 05](docs/plans/phase-05-plan.md), [Phase 06](docs/plans/phase-06-plan.md), [Phase 08](docs/plans/phase-08-plan.md), [Phase 09](docs/plans/phase-09-plan.md), [Phase 10](docs/plans/phase-10-plan.md). Test guide: [tests/README.md](tests/README.md).
 
-Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (GDScript).
+Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.7 (GDScript).
 
 ## Menjalankan
-1. Buka Godot 4.3+ (dites juga di 4.7) -> Import -> pilih `project.godot`.
+1. Buka Godot 4.7 -> Import -> pilih `project.godot`.
    Tunggu import aset selesai (pertama kali saja)
 2. Tekan F5
 
@@ -40,7 +40,7 @@ Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 
 
 ## Sistem permainan
 
-**Mode:** Classic mempertahankan dunia 64×64 dan kampanye 15 hari. Frontier memakai dunia 128×128, lima biome, empat stronghold, 11 objective regional, dan kampanye Conquest 20 hari/4 act. **Frontier Expedition** kini tersedia di `main` sebagai pilihan opsional 192×192: mulai dari heartland 128×128, lalu buka empat outer marches satu per satu dengan mencapai crossing survey di tiap region. Stronghold, objective sites dan faction camps menunggu di outer marches; fog-of-war permanen mengungkap dunia secara bertahap. Progres gate memakai discovery objective yang sudah ada; save schema tetap v13. PR #63 lulus 88/88 job CI di Godot 4.3/4.7 serta release export. Status fitur dan backlog terbaru tercatat di roadmap.
+**Mode:** Classic mempertahankan dunia 64×64 dan kampanye 15 hari. Frontier memakai dunia 128×128, lima biome, empat stronghold, 11 objective regional, dan kampanye Conquest 20 hari/4 act. **Frontier Expedition** kini tersedia di `main` sebagai pilihan opsional 192×192: mulai dari heartland 128×128, lalu buka empat outer marches satu per satu dengan mencapai crossing survey di tiap region. Stronghold, objective sites dan faction camps menunggu di outer marches; fog-of-war permanen mengungkap dunia secara bertahap. Progres gate memakai discovery objective yang sudah ada; save schema tetap v13. PR #63 historically passed 88/88 jobs under the former Godot 4.3/4.7 and release-export pipeline. Current development CI targets Godot 4.7 only; release packaging is deferred. Status fitur dan backlog terbaru tercatat di roadmap.
 
 ### Siklus pertahanan
 - Bertahan selama 15 hari; pada malam terakhir, kalahkan Raja Lawan.
@@ -74,7 +74,7 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 - Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
 ## Membuat build rilis
-1. Di Godot: Editor > Manage Export Templates > Download and Install (versi 4.3)
+1. Saat release packaging dimulai, install export templates yang cocok dengan Godot 4.7.
 2. Jalankan `tools/build.sh` (Linux/macOS) atau `tools/build.ps1` (Windows).
    Atur lokasi Godot lewat variabel `GODOT`
 3. Hasil: `build/windows/HoldTheKeep.exe` dan `build/linux/HoldTheKeep.x86_64` (PCK tertanam)
