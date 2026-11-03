@@ -102,6 +102,8 @@ func _run() -> void:
         "An assigned Scout must enter the dedicated scouting state")
     require(scout_a._scout_target_cell.x >= 0 and not scout_a._path.is_empty(),
         "Scout must select a reachable survey destination")
+    require(scout_a._path.size() <= scout_a.SCOUT_MAX_PATH_CELLS,
+        "Scout survey paths must remain within the bounded route budget")
     require(main.nav.is_walkable(scout_a._scout_target_cell),
         "Scout destination must be a walkable cell")
     var scout_radius := float(post.data.get("work_radius", 0.0)) * float(config.tile_size)
