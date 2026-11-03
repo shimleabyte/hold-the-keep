@@ -731,7 +731,9 @@ func _refresh_depot_option(option: OptionButton, depots: Array, preferred: Vecto
     var selected_index := -1
     for depot in depots:
         var cell: Vector2i = depot.cell
-        var label := "KEEP" if String(depot.id) == "keep" else ("POS" if String(depot.id) == "outpost" else "GUDANG")
+        var label := "KEEP" if String(depot.id) == "keep" else (
+            "POS" if String(depot.id) == "outpost" else ("LUMBUNG" if String(depot.id) == "granary" else "GUDANG")
+        )
         option.add_item("%s %d,%d" % [label, cell.x, cell.y])
         var index := option.item_count - 1
         option.set_item_metadata(index, {"cx": cell.x, "cy": cell.y})
