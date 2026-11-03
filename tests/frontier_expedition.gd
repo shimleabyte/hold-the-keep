@@ -47,6 +47,15 @@ func _initialize() -> void:
     assert(main.frontier_campaign.objectives.size() == 11,
         "The larger map must retain the existing four-act regional campaign")
 
+    assert(main.frontier_campaign.faction_camps.camps.size() == 4,
+        "All four faction camps must be seeded even when their outer marches are still sealed")
+    for camp_id in main.frontier_campaign.faction_camps.camps:
+        var camp_record: Dictionary = main.frontier_campaign.faction_camps.camps[camp_id]
+        var camp_cell: Vector2i = camp_record["cell"]
+        assert(main.world.region_id(camp_cell) == String(camp_record["region_id"])
+            and main.nav.is_walkable(camp_cell),
+            "Each dormant outer faction camp must have valid terrain in its own region: " + String(camp_id))
+
     var region_cells := {
         "HEARTHLAND": 0,
         "GREENWOOD": 0,
