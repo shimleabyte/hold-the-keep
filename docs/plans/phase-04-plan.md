@@ -2,7 +2,7 @@
 
 **Status:** Builder is merged into `main`; Hunter + Hunting Lodge is on `feat/hunter-hunting-lodge` pending final CI/PR acceptance. Villager Scout + Scout Post is in progress on the stacked branch `feat/scout-specialist`; Healer and Blacksmith remain open.
 **Dependency:** Phase 02 connected depots; Phase 05 worksites and construction foundations.
-**Engine targets:** Godot 4.3 and 4.7.
+**Engine target:** Godot 4.7 only.
 
 ## Goal
 
@@ -57,3 +57,10 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - Test priority/reassignment, capacity, work radius, unreachable targets, target reservation, output delivery and save/load.
 - Classic existing jobs and save compatibility remain unchanged.
 - Mark a specialist complete only after a player-facing UI path and rendered review exist, not merely after the class/enum is registered.
+
+### Healer + Infirmary implementation branch (2026-11-03)
+- Branch: `feat/healer-infirmary`, stacked after `feat/scout-specialist`.
+- Era II `field_medicine` unlocks a two-slot Infirmary (16-tile service radius) and a player Healer occupation assigned with I.
+- Healers prioritize the most wounded reachable friendly soldier. A patient is reserved by one Healer at a time. Treatment restores 10 HP per 3.2 seconds and stops at full health; invalid patients and lost workplaces release reservations.
+- Save schema increments to v16. v1–v15 migration compatibility remains required.
+- `tests/healer_infirmary.gd` covers workplace requirement/capacity, patient selection, target uniqueness, healing, demolition cleanup and v15 migration. Full Godot 4.7 CI and rendered gameplay review remain pending.
