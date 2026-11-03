@@ -107,13 +107,30 @@ func _initialize() -> void:
 
     var legacy_v11 := snapshot.duplicate(true)
     legacy_v11["version"] = 11
-    for saved_building in legacy_v11["buildings"]:
-        saved_building.erase("stockpile")
+    legacy_v11["quota"].erase("hunter")
+    legacy_v11["job_priority"].erase("hunter")
+    for villager in legacy_v11["villagers"]:
+        if String(villager.get("occupation", "")) == "hunter":
+            villager["occupation"] = ""
+            villager["job"] = ""
+        elif String(villager.get("job", "")) == "hunter":
+            villager["job"] = ""
+    var legacy_resources: Array = []
+    for resource in legacy_v11["resources"]:
+        if String(resource.get("kind", "")) != "food":
+            legacy_resources.append(resource)
+    legacy_v11["resources"] = legacy_resources
+    for index in range(legacy_v11["buildings"].size() - 1, -1, -1):
+        var legacy_building_id := String(legacy_v11["buildings"][index].get("id", ""))
+        if legacy_building_id == "hunting_lodge":
+            legacy_v11["buildings"].remove_at(index)
+        else:
+            legacy_v11["buildings"][index].erase("stockpile")
     require(save_system._valid_save(legacy_v11),
         "Existing v11 saves without local stockpile fields must remain migratable")
 
     require(save_system.save_current(true), "A Frontier save with local depot inventory must succeed")
-    require(save_system.request_load(), "A v13 Frontier save with local inventory must reload")
+    require(save_system.request_load(), "A v14 Frontier save with local inventory must reload")
     await ticks(12)
     var restored = current_scene
     game_clock.set_process(false)
