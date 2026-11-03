@@ -119,10 +119,10 @@ func _initialize() -> void:
         "The interrupted order must retain the physical carrier's last position")
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 13,
-        "Physical shipment state must be stored in save schema v13")
+    require(snapshot["version"] == 14,
+        "Physical shipment and Hunter state must be stored in save schema v14")
     require(save_system._valid_save(snapshot),
-        "A save with recoverable in-transit cargo must pass v13 validation")
+        "A save with recoverable in-transit cargo must pass v14 validation")
     var saved_order := order_for(snapshot["supply"]["orders"], interrupted_id)
     require(String(saved_order["status"]) == "blocked" and int(saved_order["cargo"]) == 6,
         "Save export must turn a moving courier into a resumable blocked shipment")
@@ -167,5 +167,5 @@ func _initialize() -> void:
         and restored_destination.stockpile_amount("wood") >= 6,
         "Restored cargo must resume its physical route and arrive exactly once")
 
-    print("PASS: player shipment orders, physical carriers, Keep withdrawals, capacity reservations, cancellation, route recovery and v13 persistence")
+    print("PASS: player shipment orders, physical carriers, Keep withdrawals, capacity reservations, cancellation, route recovery and v14 persistence")
     quit(0)
