@@ -108,7 +108,6 @@ var _scout_target_cell := Vector2i(-1, -1)
 var _scout_cursor := 0
 var _scout_survey_t := 0.0
 var _scout_revealed_at_target := false
-var _healer_work_t := 0.0
 
 
 func _ready() -> void:
@@ -474,8 +473,9 @@ func _tick_working(delta: float) -> void:
         anim.play("idle")
         return
     if target == null or not is_instance_valid(target):
-        target = null
+        _release()
         state = State.IDLE
+        _decide_t = 0.15
         return
     if job == "healer":
         if not has_valid_workplace() or String(target.job) != "soldier" or int(target.hp) <= 0 \
