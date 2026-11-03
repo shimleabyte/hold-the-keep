@@ -20,7 +20,7 @@ func _ready() -> void:
 
 func setup(main_ref, saved: Dictionary = {}) -> void:
     main = main_ref
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return
     final_boss_defeated = bool(saved.get("final_boss_defeated", false))
     unlocked_act = clampi(int(saved.get("unlocked_act", 1)), 1, 4)
@@ -59,6 +59,7 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
     faction_camps = FACTION_CAMPS_SCRIPT.new()
     main.world.add_child(faction_camps)
     faction_camps.setup(main, saved.get("camps", {}))
+    _sync_expedition_gates()
 
     _update_unlocked_acts()
     _try_finish()
@@ -93,7 +94,7 @@ func _find_site_cell(region: String, used: Array[Vector2i]) -> Vector2i:
 
 
 func _process(delta: float) -> void:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return
     _scan_timer -= delta
     if _scan_timer <= 0.0:
@@ -112,6 +113,25 @@ func _scan_discovery() -> void:
             complete_objective(String(objective_id))
 
 
+func _sync_expedition_gates() -> void:
+    if not WorldConfig.is_frontier_expedition() or main == null or main.world == null:
+        return
+    var discovered_regions: Dictionary = {}
+    for objective_id in objectives:
+        var record: Dictionary = objectives[objective_id]
+        var definition: Dictionary = record.get("definition", {})
+        if String(definition.get("type", "")) == "discovery" and bool(record.get("completed", false)):
+            discovered_regions[String(definition.get("region", ""))] = true
+    var opened: Array[String] = main.world.apply_expedition_sector_unlocks(discovered_regions)
+    if opened.is_empty():
+        return
+    main.nav.rebuild()
+    main.flow.rebuild()
+    main.territory.rebuild()
+    for region in opened:
+        Events.build_feedback.emit("Survei %s selesai. Jalur ekspedisi terbuka." % region)
+
+
 func complete_objective(objective_id: String) -> bool:
     if not objectives.has(objective_id):
         return false
@@ -121,6 +141,7 @@ func complete_objective(objective_id: String) -> bool:
     var definition: Dictionary = record["definition"]
     record["completed"] = true
     objectives[objective_id] = record
+    _sync_expedition_gates()
 
     var reward: Dictionary = definition.get("reward", {})
     var multiplier := Tech.stat("campaign.discovery_reward", 1.0) if String(definition["type"]) == "discovery" else 1.0
@@ -157,7 +178,7 @@ func _act_requirements_met(act: int) -> bool:
 
 
 func is_victory_ready() -> bool:
-    if WorldConfig.profile_id != "frontier" or not final_boss_defeated:
+    if not WorldConfig.is_frontier_profile() or not final_boss_defeated:
         return false
     for objective_id in objectives:
         var record: Dictionary = objectives[objective_id]
@@ -190,7 +211,7 @@ func _try_finish() -> void:
 
 
 func objective_summary() -> String:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return "Objektif regional hanya tersedia pada Frontier / Conquest."
     var stage: Dictionary = main.spawner.stage_info(GameClock.day)
     var lines: Array[String] = [
@@ -219,7 +240,7 @@ func objective_summary() -> String:
 
 
 func export_state() -> Dictionary:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return {"profile":"classic","objectives":[],"final_boss_defeated":false,"unlocked_act":1,"camps":{"records":[]}}
     var records: Array[Dictionary] = []
     for objective_id in objectives:
