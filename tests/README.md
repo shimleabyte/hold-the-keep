@@ -17,7 +17,7 @@ Dari akar proyek:
 Skrip observasi lama yang hanya mencetak hasil tanpa assertion dipisahkan ke `run_diagnostics.sh`;
 jalankan saat meninjau animasi, pertarungan, efek, ekonomi atau alur save/menu.
 
-GitHub Actions menjalankan import/parse on Godot 4.7 only, 44 assertion regression tests on Godot 4.7 only, Frontier and Frontier Expedition performance diagnostics. release export is deferreds are deferred until the release phase. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Validasi terbaru untuk perluasan late-act reload: PR #57, workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578), 78/78 jobs sukses; kedua engine lulus untuk `campaign_reload_hardening`, termasuk save/reload Act IV dan state victory hari ke-20.
+GitHub Actions menjalankan import/parse on Godot 4.7 only, 45 assertion regression tests on Godot 4.7 only, plus Frontier and Frontier Expedition performance diagnostics. Windows/Linux release exports are deferred until the release phase. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Riwayat pipeline multi-engine/export dari PR #57 (workflow #490, 78/78) adalah bukti historis untuk konfigurasi sebelumnya, bukan gate aktif. Saat ini hanya hasil Godot 4.7 yang menjadi acceptance CI.
 
 | Skrip | Menguji |
 |---|---|
@@ -43,7 +43,7 @@ GitHub Actions menjalankan import/parse on Godot 4.7 only, 44 assertion regressi
 | production_worksites.gd | Lumber Camp/Quarry workplace limits, specialist work radius, Classic fallback, cleanup and v13 save compatibility |
 | construction_sites.gd | Builder discovery/pathing, two-worker site cap, once-only funding, functional completion, proportional cancellation refund, save validation and v16 reload |
 | watchtower_vision.gd | Existing tower's 128px permanent exploration radius, live strategic-map enemy observation, out-of-range concealment and turret compatibility |
-| granary_food_storage.gd | Classic food reserve/upkeep, Frontier food-only storage, connected depot transfers, shipment rejection/refund, raid theft and save-v15 reload plus v13 legacy migration |
+| granary_food_storage.gd | Classic food reserve/upkeep, Frontier food-only storage, connected depot transfers, shipment rejection/refund, raid theft and save-v16 reload plus v13 legacy migration |
 | map_stages.gd | empat biome Classic, fog map panel, batas tiga bab, bobot archer/brute per bab |
 | responsive_layout.gd | resolution-to-viewport mapping, exact 2× pixel scale, live synchronization, HUD safe playfield and map/hotbar bounds across six desktop resolutions |
 | player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, archer projectile, brute armor, combat save |
@@ -55,7 +55,7 @@ GitHub Actions menjalankan import/parse on Godot 4.7 only, 44 assertion regressi
 | campaign_reload_hardening.gd | Act I–IV Frontier reloads, completed regional objectives, active escort recovery, three conquered strongholds, damaged final stronghold, day-20 King gate and persisted victory reload |
 | campaign_balance_matrix.gd | Classic 15-day and Frontier 20-day schedules, act wave budgets, faction rosters and final-boss gate |
 | campaign_combat_simulation.gd | Scripted sample engagements for Frontier Acts I–IV and the day-20 King assault; JSON metrics for Keep damage, population loss, player downs, enemy survivors and simulated time. Uses real damage/cooldown transactions but does not simulate pathfinding, autonomous AI or complete waves |
-| release_hardening.gd | Classic v1–v15 and Frontier v7–v15 save migration, interrupted writes, backup recovery and export presets |
+| release_hardening.gd | Classic v1–v15 and Frontier v7–v16 save migration, interrupted writes, backup recovery and export presets |
 | anim_sync.gd | pukulan penebang jatuh di frame benturan; pelarian memakai klip lari |
 | animation_motion.gd | idle breathing, walk/run lift, directional attack/work lean, hurt recoil, stable death pose |
 | world_config.gd | profile dimensions, tile indexing, Keep placement, Classic/Frontier profile definitions |
