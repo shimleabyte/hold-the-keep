@@ -358,12 +358,21 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             seen_shipment_ids[shipment_id] = true
             max_shipment_id = maxi(max_shipment_id, shipment_id)
 
+            var source_building: Dictionary = {}
             var destination_building: Dictionary = {}
             for saved_building in buildings:
                 var saved_cell := Vector2i(int(saved_building["cx"]), int(saved_building["cy"]))
                 var saved_id := String(saved_building["id"])
+                if saved_cell == source_cell and ["keep", "storage", "outpost", "granary"].has(saved_id):
+                    source_building = saved_building
                 if saved_cell == destination_cell and ["keep", "storage", "outpost", "granary"].has(saved_id):
                     destination_building = saved_building
+            if not source_building.is_empty() and String(source_building["id"]) != "keep":
+                var source_kinds: Array = DataDB.buildings[String(source_building["id"])].get(
+                    "accepted_resources", ["wood", "stone", "food", "iron"]
+                )
+                if not source_kinds.has(kind):
+                    return false
             if not destination_building.is_empty() and String(destination_building["id"]) != "keep":
                 var accepted_kinds: Array = DataDB.buildings[String(destination_building["id"])].get(
                     "accepted_resources", ["wood", "stone", "food", "iron"]
