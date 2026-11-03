@@ -4,7 +4,7 @@ extends RefCounted
 
 const RESOURCE_KINDS: Array[String] = ["wood", "stone", "food", "iron"]
 
-var network: Node
+var network
 
 
 func configure(supply_network: Node) -> void:
