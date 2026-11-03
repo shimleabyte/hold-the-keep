@@ -39,9 +39,17 @@ Make building placement a managed construction process. Builder labor must matte
 - Keep and Outpost reveal behavior is preserved. Discovered terrain remains mapped after tower demolition, while live observation immediately ends.
 - Regression `tests/watchtower_vision.gd` covers unseen-before/build, inner/outer radius, strategic-map observation, permanent discovery after demolition and unchanged turret stats.
 
+## 05.3b — Granary food reserve (implementation branch)
+- Existing `granary` research now unlocks the `granary` building while retaining its +1 farmer slot per farm effect.
+- Granary is a 3×2, 240-capacity local depot that accepts food only. It cannot be selected as a construction/research cost source.
+- Farmers prioritize a reachable Granary for food. In Classic, upkeep and population growth consume central Inventory first and then the Granary reserve; the HUD displays that combined usable amount. In Frontier, connected Granary stock transfers to Keep under the existing per-depot logistics budget and can be shipped by carrier.
+- Granaries participate in isolated-depot pressure and both saboteur/faction raids. Demolition returns its food to central Inventory; destruction remains a loss.
+- Save v13 persists stockpiles with per-building accepted-resource validation; shipment creation and save validation reject non-food cargo destined for a Granary. Existing v13 saves without Granaries remain compatible.
+- Regression `tests/granary_food_storage.gd` covers Classic upkeep and reload, Frontier transfers/shipments/raids, invalid resource payloads, and pressure-state persistence.
+
 ## 05.3 — Facility dependency order
 1. [x] Watchtower vision: the existing tower gains local vision and retains its defensive coverage; no duplicate structure is shipped.
-2. Granary: increases food storage and supports food-preservation/upkeep improvements.
+2. [ ] Granary food reserve: implement and validate the food-only depot described above.
 3. Barracks: recruits/trains soldiers through time and resource costs; must respect population and capacity.
 4. Hunting Lodge: provides Hunter workplace slots and access to wildlife harvest.
 5. Infirmary: provides Healer workplace slots and recovery service.
