@@ -266,7 +266,11 @@
       "primary": "#777e82",
       "accent": "#e8a04e",
       "shadow": "#302f2d"
-    }
+    },
+    "workplaces": {
+      "blacksmith": 2
+    },
+    "work_radius": 18
   },
   {
     "id": "lumber_camp",

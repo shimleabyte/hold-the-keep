@@ -18,6 +18,7 @@ const TEXTURES := {
     "hunter": preload("res://assets/sprites/villager_hunter.svg"),
     "scout": preload("res://assets/sprites/villager_scout.svg"),
     "healer": preload("res://assets/sprites/villager_healer.svg"),
+    "blacksmith": preload("res://assets/sprites/villager_blacksmith.svg"),
     "soldier": preload("res://assets/sprites/villager_soldier.svg"),
 }
 
@@ -45,6 +46,9 @@ const BUILDER_REPAIR_INTERVAL := 1.6
 const BUILDER_REPAIR_AMOUNT := 12
 const HEAL_INTERVAL := 3.2
 const HEAL_AMOUNT := 10
+const SMITH_WORK_SECONDS := 4.5
+const BLACKSMITH_WEAPON_COST := {"iron": 3, "wood": 1}
+const BLACKSMITH_ARMOR_COST := {"iron": 4, "wood": 2}
 const SCOUT_REVEAL_RADIUS := 144.0
 const SCOUT_MAX_PATH_CELLS := 64
 const SCOUT_SURVEY_SECONDS := 1.4
@@ -108,6 +112,9 @@ var _scout_target_cell := Vector2i(-1, -1)
 var _scout_cursor := 0
 var _scout_survey_t := 0.0
 var _scout_revealed_at_target := false
+var weapon_equipped := false
+var armor_equipped := false
+var _smith_recipe := ""
 
 
 func _ready() -> void:
@@ -127,6 +134,8 @@ func _hit_interval() -> float:
 
 func _soldier_damage() -> int:
     var value := Tech.stat("soldier.damage", float(SOLDIER_DAMAGE))
+    if weapon_equipped:
+        value *= 1.2
     if _rally_t > 0.0:
         value *= _rally_damage_mult
     return roundi(value)
@@ -146,7 +155,41 @@ func apply_rally(duration: float, damage_multiplier: float, interval_multiplier:
 
 
 func _hp_cap_for(j: String) -> int:
-    return roundi(Tech.stat("soldier.hp", float(SOLDIER_HP))) if j == "soldier" else WORKER_HP
+    if j != "soldier":
+        return WORKER_HP
+    var value := Tech.stat("soldier.hp", float(SOLDIER_HP))
+    if armor_equipped:
+        value *= 1.2
+    return roundi(value)
+
+
+func equip_weapon() -> bool:
+    if job != "soldier" or weapon_equipped:
+        return false
+    weapon_equipped = true
+    queue_redraw()
+    return true
+
+
+func equip_armor() -> bool:
+    if job != "soldier" or armor_equipped:
+        return false
+    var old_max := maxi(1, max_hp)
+    armor_equipped = true
+    max_hp = _hp_cap_for(job)
+    hp = clampi(roundi(float(hp) * float(max_hp) / float(old_max)), 1, max_hp)
+    queue_redraw()
+    return true
+
+
+func _blacksmith_recipe_for(soldier: Variant) -> String:
+    if not is_instance_valid(soldier) or String(soldier.job) != "soldier" or int(soldier.hp) <= 0:
+        return ""
+    if Tech.is_done("iron_weapons") and not bool(soldier.weapon_equipped):
+        return "weapon"
+    if Tech.is_done("iron_armor") and not bool(soldier.armor_equipped):
+        return "armor"
+    return ""
 
 
 func _on_tech(_tech_id: String) -> void:
@@ -178,8 +221,11 @@ func set_job(j: String) -> bool:
     _scout_survey_t = 0.0
     _scout_revealed_at_target = false
     var old_max := max_hp
+    if job == "soldier" and j != "soldier":
+        weapon_equipped = false
+        armor_equipped = false
     job = j
-    if job in ["builder", "hunter", "scout", "healer"] and not _claim_workplace(job):
+    if job in ["builder", "hunter", "scout", "healer", "blacksmith"] and not _claim_workplace(job):
         job = ""
         remove_from_group("defenders")
         max_hp = _hp_cap_for("")
@@ -351,6 +397,14 @@ func _physics_process(delta: float) -> void:
                 _release()
                 state = State.IDLE
                 _decide_t = 0.15
+            elif job == "blacksmith" and (not has_valid_workplace()
+                    or String(target.job) != "soldier" or _blacksmith_recipe_for(target) == ""
+                    or target.is_expeditioning() or target.is_recalling_expedition()
+                    or target.state in [State.HIDDEN, State.FLEEING, State.FIGHT]
+                    or not _is_in_workplace_radius(target)):
+                _release()
+                state = State.IDLE
+                _decide_t = 0.2
             elif _move_along(delta):
                 state = State.WORKING
                 _work_t = 0.0
@@ -485,6 +539,36 @@ func _tick_working(delta: float) -> void:
         _release()
         state = State.IDLE
         _decide_t = 0.15
+        return
+    if job == "blacksmith":
+        var recipe := _blacksmith_recipe_for(target)
+        if not has_valid_workplace() or String(target.job) != "soldier" or recipe == "" \
+                or recipe != _smith_recipe or target.is_expeditioning() or target.is_recalling_expedition() \
+                or target.state in [State.HIDDEN, State.FLEEING, State.FIGHT] \
+                or not _is_in_workplace_radius(target):
+            _release()
+            state = State.IDLE
+            _decide_t = 0.2
+            return
+        anim.face(target.position - position)
+        _work_t += delta
+        if _work_t >= SMITH_WORK_SECONDS:
+            var cost: Dictionary = BLACKSMITH_WEAPON_COST if recipe == "weapon" else BLACKSMITH_ARMOR_COST
+            var supply = get_tree().get_first_node_in_group("supply_network")
+            var paid: bool = supply.pay_cost(cost) if supply != null else Inventory.spend_all(cost)
+            if not paid:
+                _release()
+                state = State.IDLE
+                _decide_t = 4.0
+                Events.build_feedback.emit("Bahan tempa tidak cukup")
+                return
+            var equipped := target.equip_weapon() if recipe == "weapon" else target.equip_armor()
+            if equipped:
+                Events.build_feedback.emit("Senjata besi selesai: damage prajurit +20%" if recipe == "weapon"
+                    else "Zirah besi selesai: HP maksimum prajurit +20%")
+            _release()
+            state = State.IDLE
+            _decide_t = 0.2
         return
     if job == "healer":
         if not has_valid_workplace() or String(target.job) != "soldier" or int(target.hp) <= 0 \
@@ -832,6 +916,22 @@ func _find_work() -> void:
             for f in get_tree().get_nodes_in_group("farms"):
                 if f.free_slots("farmer") > 0 and _is_in_work_radius(f) and not _bad.has(f):
                     cands.append(f)
+        "blacksmith":
+            if not has_valid_workplace():
+                _release_workplace()
+                if not _claim_workplace("blacksmith"):
+                    return
+            if _facility_sabotaged(workplace):
+                return
+            for soldier in get_tree().get_nodes_in_group("villagers"):
+                if soldier == self or not is_instance_valid(soldier) or String(soldier.job) != "soldier":
+                    continue
+                if _blacksmith_recipe_for(soldier) == "" or soldier.is_expeditioning() \
+                        or soldier.is_recalling_expedition() or soldier.state in [State.HIDDEN, State.FLEEING, State.FIGHT]:
+                    continue
+                if not _is_in_workplace_radius(soldier) or workplace.is_blacksmith_target_reserved(soldier, self):
+                    continue
+                cands.append(soldier)
         "healer":
             if not has_valid_workplace():
                 _release_workplace()
@@ -898,6 +998,13 @@ func _find_work() -> void:
                 continue
         elif job == "healer":
             if not workplace.claim_heal_target(self, n):
+                continue
+        elif job == "blacksmith":
+            if not workplace.claim_blacksmith_target(self, n):
+                continue
+            _smith_recipe = _blacksmith_recipe_for(n)
+            if _smith_recipe == "":
+                workplace.release_blacksmith_target(self)
                 continue
         elif not _claim(n):
             continue
@@ -1052,6 +1159,8 @@ func _claim(n) -> bool:
 func _release() -> void:
     if job == "healer":
         _release_heal_target()
+    elif job == "blacksmith":
+        _release_blacksmith_target()
     elif target != null and is_instance_valid(target):
         if target.has_method("release_repairer") and job == "builder":
             target.release_repairer(self)
@@ -1067,6 +1176,12 @@ func _release() -> void:
 func _release_heal_target() -> void:
     if workplace != null and is_instance_valid(workplace) and workplace.has_method("release_heal_target"):
         workplace.release_heal_target(self)
+
+
+func _release_blacksmith_target() -> void:
+    if workplace != null and is_instance_valid(workplace) and workplace.has_method("release_blacksmith_target"):
+        workplace.release_blacksmith_target(self)
+    _smith_recipe = ""
 
 
 func _has_specialized_workplace(job_name: String) -> bool:

@@ -41,8 +41,8 @@ const ICONS := {
     "infirmary": preload("res://assets/sprites/icon_infirmary.svg"),
     "healer": preload("res://assets/sprites/icon_healer.svg"),
 }
-const JOBS := ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "healer", "soldier"]
-const JOB_ICONS := {"woodcutter": "axe", "miner": "pick", "farmer": "wheat", "builder": "hammer", "hunter": "bow", "scout": "compass", "healer": "healer", "soldier": "sword"}
+const JOBS := ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "healer", "blacksmith", "soldier"]
+const JOB_ICONS := {"woodcutter": "axe", "miner": "pick", "farmer": "wheat", "builder": "hammer", "hunter": "bow", "scout": "compass", "healer": "healer", "blacksmith": "forge", "soldier": "sword"}
 const PANEL_BG := Color(0.09, 0.08, 0.11, 0.82)
 const PANEL_BORDER := Color("#6b5a40")
 const GOLD := Color("#ffd23f")
@@ -361,7 +361,7 @@ func _build_combat_bar() -> void:
     add_child(_combat_bar)
 
 func _build_jobs() -> void:
-    _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 120))
+    _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 132))
     for i in JOBS.size():
         var row := JobRow.new()
         row.job = JOBS[i]
@@ -369,6 +369,8 @@ func _build_jobs() -> void:
         row.font = _font
         row.position = Vector2(2, 3 + i * 12)
         row.size = Vector2(72, 12)
+        if JOBS[i] == "blacksmith":
+            row.tooltip_text = "Blacksmith: crafts individual soldier equipment at a Forge"
         row.adjust.connect(_on_job_adjust)
         row.priority_adjust.connect(_on_job_priority_adjust)
         _jobs_panel.add_child(row)
@@ -376,7 +378,7 @@ func _build_jobs() -> void:
     _outpost_button = HudChip.new()
     _outpost_button.label = "POS"
     _outpost_button.font = _font
-    _outpost_button.position = Vector2(2, 104)
+    _outpost_button.position = Vector2(2, 116)
     _outpost_button.size = Vector2(72, 13)
     _outpost_button.pressed.connect(_toggle_outposts)
     _jobs_panel.add_child(_outpost_button)
