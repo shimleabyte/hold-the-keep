@@ -42,7 +42,7 @@ Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 
 
 ## Sistem permainan
 
-**Mode:** Classic mempertahankan dunia 64×64 dan kampanye 15 hari. Frontier memakai dunia 128×128, lima biome, empat stronghold, 11 objective regional, dan kampanye Conquest 20 hari/4 act. **Frontier Expedition** kini tersedia di `main` sebagai pilihan opsional 192×192: mulai dari heartland 128×128, lalu buka empat outer marches satu per satu dengan mencapai crossing survey di tiap region. Stronghold, objective sites dan faction camps menunggu di outer marches; fog-of-war permanen mengungkap dunia secara bertahap. Progres gate memakai discovery objective yang sudah ada; save schema di mainline tetap v13. PR #63 historically passed its 88/88 multi-version/export pipeline; current development CI targets Godot 4.7 only and release exports are deferred. Status fitur dan backlog terbaru tercatat di roadmap.
+**Mode:** Classic mempertahankan dunia 64×64 dan kampanye 15 hari. Frontier memakai dunia 128×128, lima biome, empat stronghold, 11 objective regional, dan kampanye Conquest 20 hari/4 act. **Frontier Expedition** kini tersedia di `main` sebagai pilihan opsional 192×192: mulai dari heartland 128×128, lalu buka empat outer marches satu per satu dengan mencapai crossing survey di tiap region. Stronghold, objective sites dan faction camps menunggu di outer marches; fog-of-war permanen mengungkap dunia secara bertahap. Progres gate memakai discovery objective yang sudah ada. Mainline save schema saat ini v17 setelah integrasi Hunter, Scout, Healer, dan Blacksmith; save v1–v16 tetap didukung melalui migrasi. PR #63 historically passed its 88/88 multi-version/export pipeline; current development CI targets Godot 4.7 only and release exports are deferred. Status fitur dan backlog terbaru tercatat di roadmap.
 
 ### Siklus pertahanan
 - Bertahan selama 15 hari; pada malam terakhir, kalahkan Raja Lawan.
@@ -82,7 +82,7 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 3. Hasil: `build/windows/HoldTheKeep.exe` dan `build/linux/HoldTheKeep.x86_64` (PCK tertanam)
 
 ## Teknologi
-Pohon riset 21 teknologi dalam 3 era (data/techs.json), dibuka dengan Y. `field_medicine` (Era II) unlocks the two-slot Infirmary; Healer is assigned with I and heals wounded friendly soldiers for 10 HP every 3.2 seconds within 16 tiles. Blacksmith uses the existing Forge and researched `iron_weapons`/`iron_armor` technologies to craft permanent individual soldier upgrades. Hunter, Scout, Healer and Blacksmith are implemented in stacked PRs #64, #65, #67 and #68; they are not yet part of `main`:
+Pohon riset 21 teknologi dalam 3 era (data/techs.json), dibuka dengan Y. `field_medicine` (Era II) unlocks the two-slot Infirmary; Healer is assigned with I and heals wounded friendly soldiers for 10 HP every 3.2 seconds within 16 tiles. Blacksmith uses the existing Forge and researched `iron_weapons`/`iron_armor` technologies to craft permanent individual soldier upgrades. Hunter, Scout, Healer and Blacksmith are merged into `main` through PRs #64, #65, #67 and #68. Manual rendered gameplay, equipment visibility, economic pacing and combat-balance acceptance remain open:
 - **Era Kayu** (awal): perkakas, bajak, palisade, rumah panjang, panah berbulu, dan **Ilmu Batu** (naik era)
 - **Era Batu**: perkakas batu, lumbung, menara batu, zirah kulit, latihan prajurit, dan **Tambang Besi** (naik era)
 - **Era Besi**: perkakas, senjata, zirah, menara, dan benteng besi (sebagian butuh bangunan Tempa)
