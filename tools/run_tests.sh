@@ -27,6 +27,7 @@ tests=(
     workplace_assignments
     hunting_lodge
     scout_specialist
+    healer_infirmary
     production_worksites
     construction_sites
     watchtower_vision
