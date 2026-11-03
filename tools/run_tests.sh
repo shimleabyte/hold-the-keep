@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
+export HTK_AUTO_RESOLVE_EVENTS="${HTK_AUTO_RESOLVE_EVENTS:-1}"
 GODOT_BIN="${GODOT:-godot}"
 TIMEOUT_BIN="${TIMEOUT_BIN:-timeout}"
 TEST_TIMEOUT_SECONDS="${TEST_TIMEOUT_SECONDS:-120}"
@@ -43,6 +44,7 @@ tests=(
     campaign_balance_matrix
     campaign_combat_simulation
     data_db_validation
+    decision_events
     release_hardening
     input_rebinding
     map_stages

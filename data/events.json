@@ -1,14 +1,74 @@
 [
-  {"id": "trader",     "name": "Pedagang Keliling", "text": "Pedagang menukar 10 kayu dengan 15 makanan", "weight": 3, "from_day": 2,
-   "requires": {"wood": 10}, "effects": {"wood": -10, "food": 15}},
-  {"id": "harvest",    "name": "Panen Melimpah",    "text": "Panen berlimpah: +12 makanan",               "weight": 3, "from_day": 2,
-   "effects": {"food": 12}},
-  {"id": "stone_find", "name": "Tambang Baru",      "text": "Pedagang batu datang: +8 batu",              "weight": 2, "from_day": 3,
-   "effects": {"stone": 8}},
-  {"id": "refugees",   "name": "Pengungsi",         "text": "Seorang pengungsi bergabung",                "weight": 2, "from_day": 3,
-   "effects": {"villagers": 1}},
-  {"id": "famine",     "name": "Paceklik",          "text": "Paceklik! Makanan berkurang setengah",       "weight": 2, "from_day": 4,
-   "requires": {"food": 10}, "effects": {"food_pct": -50}},
-  {"id": "plague",     "name": "Wabah",             "text": "Wabah! Seorang penduduk sakit dan pergi",    "weight": 1, "from_day": 5,
-   "effects": {"villagers": -1}}
+  {
+    "id": "trader",
+    "name": "Pedagang Keliling",
+    "text": "Seorang pedagang menawarkan pertukaran persediaan.",
+    "weight": 3,
+    "from_day": 2,
+    "effects": {"wood": -10, "food": 15},
+    "choices": [
+      {"id": "trade", "label": "Tukar 10 kayu untuk 15 makanan", "description": "Terima tawaran pedagang dan perkuat cadangan pangan.", "requires": {"wood": 10}, "effects": {"wood": -10, "food": 15}, "result": "Persediaan pangan bertambah.", "consequences": [{"id": "supplier_delivery", "after_days": 2, "effects": {"food": 8}, "result": "Pedagang mengirim delapan makanan tambahan sesuai janji."}]},
+      {"id": "decline", "label": "Tolak tawaran pedagang", "description": "Simpan seluruh persediaan untuk kebutuhan benteng.", "effects": {}, "result": "Pedagang meninggalkan wilayah."}
+    ]
+  },
+  {
+    "id": "harvest",
+    "name": "Panen Melimpah",
+    "text": "Hasil ladang melampaui perkiraan. Bagaimana hasilnya digunakan?",
+    "weight": 3,
+    "from_day": 2,
+    "effects": {"food": 12},
+    "choices": [
+      {"id": "store_grain", "label": "Simpan hasil panen (+12 makanan)", "description": "Masukkan seluruh hasil ke dalam persediaan pangan.", "effects": {"food": 12}, "result": "Persediaan pangan bertambah."},
+      {"id": "sell_surplus", "label": "Jual surplus (+6 makanan, +4 kayu)", "description": "Tukar sebagian hasil panen dengan bahan bangunan.", "effects": {"food": 6, "wood": 4}, "result": "Sebagian hasil panen ditukar dengan kayu."}
+    ]
+  },
+  {
+    "id": "stone_find",
+    "name": "Tambang Baru",
+    "text": "Pekerja menemukan urat batu yang mudah digali.",
+    "weight": 2,
+    "from_day": 3,
+    "effects": {"stone": 8},
+    "choices": [
+      {"id": "extract_stone", "label": "Kirim penambang (+8 batu)", "description": "Ambil seluruh batu yang tersedia.", "effects": {"stone": 8}, "result": "Delapan batu masuk ke persediaan."},
+      {"id": "trade_stone", "label": "Tukar hasil awal (+4 batu, +3 kayu)", "description": "Ambil sebagian batu dan tukar sisanya dengan kayu.", "effects": {"stone": 4, "wood": 3}, "result": "Bahan bangunan diterima."}
+    ]
+  },
+  {
+    "id": "refugees",
+    "name": "Pengungsi",
+    "text": "Satu keluarga tiba di gerbang dan meminta perlindungan.",
+    "weight": 2,
+    "from_day": 3,
+    "effects": {"villagers": 1},
+    "choices": [
+      {"id": "shelter", "label": "Terima pengungsi", "description": "Sediakan delapan makanan untuk menerima satu penduduk.", "requires": {"food": 8}, "effects": {"food": -8, "villagers": 1}, "result": "Satu penduduk bergabung dengan permukiman.", "consequences": [{"id": "refugee_tools", "after_days": 2, "effects": {"wood": 5}, "result": "Para pengungsi menemukan dan mengumpulkan lima kayu di sekitar permukiman."}]},
+      {"id": "turn_away", "label": "Tolak permintaan", "description": "Pertahankan persediaan untuk penduduk yang sudah ada.", "effects": {}, "result": "Keluarga melanjutkan perjalanan."}
+    ]
+  },
+  {
+    "id": "famine",
+    "name": "Paceklik",
+    "text": "Persediaan pangan menyusut. Pilih cara menghadapi paceklik.",
+    "weight": 2,
+    "from_day": 4,
+    "effects": {"food_pct": -50},
+    "choices": [
+      {"id": "rationing", "label": "Terapkan jatah ketat", "description": "Kurangi persediaan pangan sebesar lima puluh persen.", "effects": {"food_pct": -50}, "result": "Persediaan pangan dipangkas untuk bertahan."},
+      {"id": "buy_grain", "label": "Beli pasokan (12 kayu → 15 makanan)", "description": "Tukar bahan bangunan dengan pedagang pangan.", "requires": {"wood": 12}, "effects": {"wood": -12, "food": 15}, "result": "Pasokan pangan darurat tiba."}
+    ]
+  },
+  {
+    "id": "plague",
+    "name": "Wabah",
+    "text": "Penyakit menyebar di permukiman. Putuskan tindakan segera.",
+    "weight": 1,
+    "from_day": 5,
+    "effects": {"villagers": -1},
+    "choices": [
+      {"id": "quarantine", "label": "Karantina (8 makanan, 4 kayu)", "description": "Gunakan perbekalan untuk memisahkan warga yang sakit dan membatasi penyebaran.", "requires": {"food": 8, "wood": 4}, "effects": {"food": -8, "wood": -4}, "result": "Wabah berhasil dibatasi tanpa kehilangan penduduk."},
+      {"id": "banish", "label": "Usir satu penduduk", "description": "Hentikan penyebaran dengan mengusir satu penduduk dari permukiman.", "effects": {"villagers": -1}, "result": "Satu penduduk meninggalkan permukiman."}
+    ]
+  }
 ]

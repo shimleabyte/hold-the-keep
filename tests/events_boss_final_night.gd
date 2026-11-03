@@ -39,6 +39,7 @@ func _initialize() -> void:
     var inv = root.get_node("Inventory")
     var main = await boot()
     var em = main.events
+    em.auto_resolve_random_events = true
     var vil = main.village
 
     # ---- E1: efek event ----
@@ -69,7 +70,7 @@ func _initialize() -> void:
     for i in 600:
         var ev = em.pick(9)
         if not ev.is_empty(): seen9[ev["id"]] = seen9.get(ev["id"], 0) + 1
-    print("E2 day-9 picks (pop 1/cap 2): ", seen9, " (plague must be absent, refugees present)")
+    print("E2 day-9 picks (pop 1/cap 2): ", seen9, " (refugees and quarantine-capable plague may appear; banishment must be unavailable at pop 1)")
 
     # ---- E3: hari terakhir tidak ada event acak ----
     var banner = [0]
