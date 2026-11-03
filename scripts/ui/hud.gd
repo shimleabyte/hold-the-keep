@@ -563,6 +563,7 @@ func _build_outpost_panel() -> void:
     _shipment_source.size = Vector2(166, 18)
     _shipment_source.add_theme_font_override("font", _font)
     _shipment_source.add_theme_font_size_override("font_size", 7)
+    _shipment_source.item_selected.connect(_on_shipment_endpoint_selected)
     _outpost_panel.add_child(_shipment_source)
 
     _shipment_destination = OptionButton.new()
@@ -570,6 +571,7 @@ func _build_outpost_panel() -> void:
     _shipment_destination.size = Vector2(168, 18)
     _shipment_destination.add_theme_font_override("font", _font)
     _shipment_destination.add_theme_font_size_override("font_size", 7)
+    _shipment_destination.item_selected.connect(_on_shipment_endpoint_selected)
     _outpost_panel.add_child(_shipment_destination)
 
     _shipment_kind = OptionButton.new()
@@ -833,6 +835,7 @@ func _refresh_shipment_controls() -> void:
     _shipment_kind.disabled = WorldConfig.profile_id != "frontier"
     _shipment_amount.editable = WorldConfig.profile_id == "frontier"
     _shipment_send_button.disabled = not frontier_enabled
+    _refresh_shipment_kind_options(endpoints)
     _shipment_refreshing = false
 
     for child in _shipment_orders_list.get_children():
@@ -880,6 +883,43 @@ func _refresh_shipment_controls() -> void:
         shown += 1
         if shown >= 8:
             break
+
+
+func _refresh_shipment_kind_options(depots: Array) -> void:
+    var source_cell := _depot_option_cell(_shipment_source)
+    var destination_cell := _depot_option_cell(_shipment_destination)
+    var source = null
+    var destination = null
+    for depot in depots:
+        if depot.cell == source_cell:
+            source = depot
+        if depot.cell == destination_cell:
+            destination = depot
+    var selected_kind := ""
+    if _shipment_kind.get_selected() >= 0:
+        selected_kind = String(_shipment_kind.get_item_metadata(_shipment_kind.get_selected()))
+    var first_allowed := -1
+    var selection_still_valid := false
+    for index in _shipment_kind.item_count:
+        var kind := String(_shipment_kind.get_item_metadata(index))
+        var allowed := true
+        if source != null and String(source.id) == "granary" and kind != "food":
+            allowed = false
+        if destination != null and String(destination.id) == "granary" and kind != "food":
+            allowed = false
+        _shipment_kind.set_item_disabled(index, not allowed)
+        if allowed and first_allowed < 0:
+            first_allowed = index
+        if allowed and kind == selected_kind:
+            selection_still_valid = true
+    if not selection_still_valid and first_allowed >= 0:
+        _shipment_kind.select(first_allowed)
+
+
+func _on_shipment_endpoint_selected(_index: int) -> void:
+    if _shipment_refreshing:
+        return
+    _refresh_shipment_controls()
 
 
 func _shipment_name(cell: Vector2i) -> String:
