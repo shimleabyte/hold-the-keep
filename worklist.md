@@ -34,7 +34,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ### Next ownership boundaries
 
-- DEV-E save/migration architecture is now unblocked. It must preserve v17 event-state data from #72, current supply save data, and historical Classic/Frontier migrations. Do not change the version without a complete migration plan and fixtures.
+- DEV-E first phase is integrated through PR #77 (`SaveValidator` extraction); next phase is the sequential migration pipeline. Preserve v17 event-state data from #72, current supply state, and historical Classic/Frontier fixtures. Do not change the version without a complete migration plan and fixtures.
 - DEV-G HUD modularization is now unblocked. The decision panel from #72 is part of current main; extract it through its established interface rather than rebuilding or moving its gameplay rules into the HUD.
 - DEV-D may continue only with separately scoped shipment, graph or pressure slices. Do not re-open cost-source behavior already extracted by #75; keep `SupplyNetwork` method signatures stable.
 - DEV-F villager roles and DEV-H world generation remain independent candidates after checking their current file ownership and interfaces.
@@ -332,6 +332,8 @@ Suggested modules:
 **Start condition for all tasks below:** INT-0 is integrated and the current mainline API/save schema is stable. These tasks are deliberately separate because they touch high-conflict host files.
 
 ### DEV-E — Save and migration architecture
+
+**Status:** First slice complete through PR #77: snapshot validation is extracted to `scripts/persistence/save_validator.gd`; `SaveSystem._valid_save()` remains as the compatibility façade. Sequential migration extraction and save-file I/O/recovery decomposition remain pending.
 
 **Priority:** Critical  
 **Primary owner files:**
