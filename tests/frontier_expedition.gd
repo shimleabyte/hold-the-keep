@@ -46,15 +46,41 @@ func _initialize() -> void:
         "The expanded map must create one crossing for each outer march")
     assert(main.frontier_campaign.objectives.size() == 11,
         "The larger map must retain the existing four-act regional campaign")
+    var core_reachable: Dictionary = main.nav.reachable_cells(main.nav.cell_of(main.world.spawn_point()))
+    assert(not core_reachable.is_empty(),
+        "The starting Expedition heartland must have a connected walkable network")
+
+    var strongholds: Array = main.campaign.objectives_in_order()
+    assert(strongholds.size() == 4,
+        "All four regional strongholds must be placed at the beginning of the campaign")
+    for stronghold in strongholds:
+        var stronghold_cell := Vector2i(int(stronghold["cx"]), int(stronghold["cy"]))
+        var stronghold_region := String(stronghold["region"])
+        assert(main.world.is_expedition_outer_cell(stronghold_cell, stronghold_region)
+            and not core_reachable.has(stronghold_cell),
+            "Each regional stronghold must wait inside its sealed outer march: " + stronghold_region)
+
+    assert(main.frontier_campaign.sites.size() == 7,
+        "All non-discovery objectives must have sites in the locked outer marches")
+    for objective_id in main.frontier_campaign.sites:
+        var site = main.frontier_campaign.sites[objective_id]
+        var site_cell := Vector2i((site.global_position / float(world_config.tile_size)).floor())
+        var site_region := String(site.region_id)
+        assert(main.world.is_expedition_outer_cell(site_cell, site_region)
+            and not core_reachable.has(site_cell),
+            "Regional objectives must be placed beyond their exploration gates: " + String(objective_id))
 
     assert(main.frontier_campaign.faction_camps.camps.size() == 4,
         "All four faction camps must be seeded even when their outer marches are still sealed")
     for camp_id in main.frontier_campaign.faction_camps.camps:
         var camp_record: Dictionary = main.frontier_campaign.faction_camps.camps[camp_id]
         var camp_cell: Vector2i = camp_record["cell"]
-        assert(main.world.region_id(camp_cell) == String(camp_record["region_id"])
-            and main.nav.is_walkable(camp_cell),
-            "Each dormant outer faction camp must have valid terrain in its own region: " + String(camp_id))
+        var camp_region := String(camp_record["region_id"])
+        assert(main.world.region_id(camp_cell) == camp_region
+            and main.nav.is_walkable(camp_cell)
+            and main.world.is_expedition_outer_cell(camp_cell, camp_region)
+            and not core_reachable.has(camp_cell),
+            "Each dormant faction camp must wait on valid terrain in its own sealed march: " + String(camp_id))
 
     var region_cells := {
         "HEARTHLAND": 0,
@@ -73,9 +99,6 @@ func _initialize() -> void:
             "Each existing biome must retain meaningful territory on the larger map: " + region)
 
     var locked_regions: Array[String] = ["GREENWOOD", "HIGHLANDS", "FENLANDS", "ASHEN_MARCH"]
-    var core_reachable: Dictionary = main.nav.reachable_cells(main.nav.cell_of(main.world.spawn_point()))
-    assert(not core_reachable.is_empty(),
-        "The starting Expedition heartland must have a connected walkable network")
     for region in locked_regions:
         assert(not main.world.is_expedition_gate_open(region),
             "Outer sector must start locked until its matching discovery: " + region)
