@@ -144,7 +144,7 @@ func _find_camp_cell(
     for y in WorldConfig.map_size:
         for x in WorldConfig.map_size:
             var cell := Vector2i(x, y)
-            if not reachable.has(cell) or not main.nav.is_walkable(cell):
+            if (not WorldConfig.is_frontier_expedition() and not reachable.has(cell)) or not main.nav.is_walkable(cell):
                 continue
             if main.world.occupied.has(cell) or String(main.world.region_id(cell)) != region_id:
                 continue
