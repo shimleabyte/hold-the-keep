@@ -46,7 +46,7 @@ func configure(world_ref, fog_ref, territory_ref, font_ref: Font = null) -> void
 func configure_layout(viewport_size: Vector2) -> void:
     var available_width := maxf(192.0, viewport_size.x - 150.0)
     var available_height := maxf(192.0, viewport_size.y - 70.0)
-    var minimum_tile_scale := 1.0 if WorldConfig.profile_id == "frontier" else 3.0
+    var minimum_tile_scale := 1.0 if WorldConfig.is_frontier_profile() else 3.0
     _map_scale = clampf(minf(available_width, available_height) / float(WorldConfig.map_size), minimum_tile_scale, 4.5)
     _map_pixels = WorldConfig.map_size * _map_scale
     size = Vector2(_map_pixels + 128.0, _map_pixels + 50.0)
@@ -175,7 +175,7 @@ func _marker(world_position: Vector2, color: Color, radius := 1.5) -> void:
 func _draw_region_labels() -> void:
     var center := WorldConfig.map_size / 2
     var regions: Array = []
-    if WorldConfig.profile_id == "frontier":
+    if WorldConfig.is_frontier_profile():
         regions = [
             [Vector2i(roundi(WorldConfig.map_size * 0.19), roundi(WorldConfig.map_size * 0.20)), "GREENWOOD"],
             [Vector2i(roundi(WorldConfig.map_size * 0.81), roundi(WorldConfig.map_size * 0.20)), "HIGHLANDS"],
@@ -264,7 +264,7 @@ func _draw_campaign_markers() -> void:
 
 
 func _draw_frontier_site_markers() -> void:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return
     for site in get_tree().get_nodes_in_group("frontier_sites"):
         if not is_instance_valid(site) or site.site_state == "complete":
@@ -310,7 +310,7 @@ func _draw_frontier_site_markers() -> void:
                 Vector2.ONE * marker_size), marker_color)
 
 func _draw_faction_camp_markers() -> void:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return
     var manager = get_tree().get_first_node_in_group("faction_camp_manager")
     if manager == null:
