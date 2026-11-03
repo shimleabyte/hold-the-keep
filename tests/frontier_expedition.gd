@@ -133,7 +133,7 @@ func _initialize() -> void:
     var beyond_gate := greenwood_gate + Vector2i(0, -1)
     assert(main.nav.is_walkable(beyond_gate),
         "The outer side of an unlocked survey gate must be reachable")
-    var explored_position := main.nav.center_of(beyond_gate)
+    var explored_position: Vector2 = main.nav.center_of(beyond_gate)
     main.player.global_position = explored_position
     main.fog._scan_sources()
     assert(main.fog.is_revealed_cell(beyond_gate),
