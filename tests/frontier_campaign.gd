@@ -28,7 +28,7 @@ func _run() -> void:
     ]
     for tech_id in legacy_ids:
         assert(data_db.techs.has(tech_id), "Existing technology ID lost: " + tech_id)
-    assert(data_db.tech_order.size() == 20, "Technology tree must contain twenty nodes")
+    assert(data_db.tech_order.size() == 21, "Technology tree must contain twenty nodes")
     assert(data_db.campaign_modes["classic"]["final_day"] == 15, "Classic must remain 15 days")
     assert(data_db.campaign_modes["classic"]["stages"].size() == 3, "Classic must retain three stages")
     assert(data_db.campaign_modes["frontier"]["final_day"] == 20, "Frontier must last 20 days")
@@ -70,7 +70,7 @@ func _run() -> void:
         "Destroying the Greenwood camp must complete its objective")
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 15, "Frontier campaign, depot, shipment and Hunter/Scout state must write save version 15")
+    assert(snapshot["version"] == 16, "Frontier campaign, depot, shipment and Hunter/Scout/Healer state must write save version 16")
     assert(snapshot["frontier_campaign"]["objectives"].size() == 11, "Save must retain every objective")
     assert(save_system._valid_save(snapshot), "Fresh Frontier objective state must validate")
     var legacy_snapshot: Dictionary = snapshot.duplicate(true)
@@ -79,14 +79,18 @@ func _run() -> void:
     legacy_snapshot["job_priority"].erase("hunter")
     legacy_snapshot["quota"].erase("scout")
     legacy_snapshot["job_priority"].erase("scout")
+    legacy_snapshot["quota"].erase("healer")
+    legacy_snapshot["job_priority"].erase("healer")
     var legacy_resources: Array = []
     for saved_villager in legacy_snapshot["villagers"]:
-        if String(saved_villager.get("occupation", "")) == "scout":
+        if String(saved_villager.get("occupation", "")) in ["hunter", "scout", "healer"]:
             saved_villager["occupation"] = ""
             saved_villager["job"] = ""
-    for index in range(legacy_snapshot["buildings"].size() - 1, -1, -1):
-        if String(legacy_snapshot["buildings"][index].get("id", "")) == "scout_post":
-            legacy_snapshot["buildings"].remove_at(index)
+        elif String(saved_villager.get("job", "")) in ["hunter", "scout", "healer"]:
+            saved_villager["job"] = ""
+    for legacy_building_index in range(legacy_snapshot["buildings"].size() - 1, -1, -1):
+        if String(legacy_snapshot["buildings"][legacy_building_index].get("id", "")) in ["hunting_lodge", "scout_post", "infirmary"]:
+            legacy_snapshot["buildings"].remove_at(legacy_building_index)
     for resource in legacy_snapshot["resources"]:
         if String(resource.get("kind", "")) != "food":
             legacy_resources.append(resource)
