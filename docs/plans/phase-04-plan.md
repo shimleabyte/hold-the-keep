@@ -1,8 +1,8 @@
 # Phase 04 — Specialist Jobs and Workplace Completion
 
-**Status:** Builder and first workplace/repair slice merged into `main`. Hunter, Scout, Healer and Blacksmith remain unimplemented.
+**Status:** Builder and first workplace/repair slice merged into `main`. Hunter is implemented in open PR #64; Scout is implemented in open stacked PR #65. Both require final Godot 4.7 CI and in-game acceptance before integration. Healer and Blacksmith remain unimplemented.
 **Dependency:** Phase 02 connected depots; Phase 05 worksites and construction foundations.
-**Engine targets:** Godot 4.3 and 4.7.
+**Engine target:** Godot 4.7 only.
 
 ## Goal
 
