@@ -17,6 +17,7 @@ const TEXTURES := {
     "quarry": preload("res://assets/sprites/quarry.svg"),
     "granary": preload("res://assets/sprites/granary.svg"),
     "hunting_lodge": preload("res://assets/sprites/hunting_lodge.svg"),
+    "scout_post": preload("res://assets/sprites/scout_post.svg"),
 }
 const ARROW_SCRIPT := preload("res://scripts/entities/arrow.gd")
 const BuildingVisual := preload("res://scripts/entities/building_visual_identity.gd")
