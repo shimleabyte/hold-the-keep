@@ -1050,7 +1050,9 @@ func _claim(n) -> bool:
 
 
 func _release() -> void:
-    if target != null and is_instance_valid(target):
+    if job == "healer":
+        _release_heal_target()
+    elif target != null and is_instance_valid(target):
         if target.has_method("release_repairer") and job == "builder":
             target.release_repairer(self)
         elif target.has_method("release"):
@@ -1058,8 +1060,6 @@ func _release() -> void:
         elif target.get("worker") == self:
             target.worker = null
     target = null
-    if job == "healer":
-        _release_heal_target()
     _work_t = 0.0
     _hit_done = false
 
