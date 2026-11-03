@@ -80,7 +80,7 @@ func _initialize() -> void:
         "The remaining depot must still accept new local deposits after a shipment")
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 15, "Local depot and Hunter state must use save schema v15")
+    require(snapshot["version"] == 16, "Local depot and Hunter state must use save schema v16")
     var saved_storage: Dictionary = {}
     for saved_building in snapshot["buildings"]:
         if String(saved_building["id"]) == "storage" and int(saved_building["cx"]) == storage_cell.x:
@@ -89,7 +89,7 @@ func _initialize() -> void:
     require(saved_storage.get("stockpile", {}) == storage.export_stockpile(),
         "Save payload must serialize every local stockpile balance")
     require(save_system._valid_save(snapshot),
-        "A save with valid local stockpile state must pass current v15 validation")
+        "A save with valid local stockpile state must pass current v16 validation")
 
     var negative_stock := snapshot.duplicate(true)
     for saved_building in negative_stock["buildings"]:
@@ -107,8 +107,29 @@ func _initialize() -> void:
 
     var legacy_v11 := snapshot.duplicate(true)
     legacy_v11["version"] = 11
-    for saved_building in legacy_v11["buildings"]:
-        saved_building.erase("stockpile")
+    legacy_v11["quota"].erase("hunter")
+    legacy_v11["quota"].erase("scout")
+    legacy_v11["job_priority"].erase("hunter")
+    legacy_v11["job_priority"].erase("scout")
+    legacy_v11["quota"].erase("healer")
+    legacy_v11["job_priority"].erase("healer")
+    for villager in legacy_v11["villagers"]:
+        if String(villager.get("occupation", "")) in ["hunter", "scout", "healer"]:
+            villager["occupation"] = ""
+            villager["job"] = ""
+        elif String(villager.get("job", "")) in ["hunter", "scout"]:
+            villager["job"] = ""
+    var legacy_resources: Array = []
+    for resource in legacy_v11["resources"]:
+        if String(resource.get("kind", "")) != "food":
+            legacy_resources.append(resource)
+    legacy_v11["resources"] = legacy_resources
+    for building_index in range(legacy_v11["buildings"].size() - 1, -1, -1):
+        var legacy_building_id := String(legacy_v11["buildings"][building_index].get("id", ""))
+        if legacy_building_id in ["hunting_lodge", "scout_post", "infirmary"]:
+            legacy_v11["buildings"].remove_at(building_index)
+        else:
+            legacy_v11["buildings"][building_index].erase("stockpile")
     require(save_system._valid_save(legacy_v11),
         "Existing v11 saves without local stockpile fields must remain migratable")
 
