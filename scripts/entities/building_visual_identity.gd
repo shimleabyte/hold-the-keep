@@ -170,5 +170,5 @@ static func _draw_damage(
             Vector2(half_width - 8.0, top + 11.0),
             Vector2(half_width - 3.0, top + 17.0)
         ]), shadow)
-        if building_id in ["wall", "house", "storage", "outpost", "lumber_camp", "bridge"]:
+        if building_id in ["wall", "house", "storage", "outpost", "lumber_camp", "granary", "bridge"]:
             canvas.draw_line(Vector2(-half_width + 3.0, top + 10.0), Vector2(-half_width + 8.0, top + 14.0), accent, 1.5)
