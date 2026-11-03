@@ -1,6 +1,6 @@
 # Phase 04 — Specialist Jobs and Workplace Completion
 
-**Status:** Builder is merged into `main`. Hunter PR #64 passed 45/45, Scout PR #65 passed 46/46, Healer PR #67 passed 47/47, and Blacksmith PR #68 passed 48/48 jobs on Godot 4.7 (run #634). Rendered gameplay and balance acceptance remain manual; the stacked PRs remain unmerged.
+**Status:** Builder, Hunter (#64), Scout (#65), Healer (#67) and Blacksmith/Forge (#68) are merged into `main` in dependency order. Their Godot 4.7 workflows passed 45/45 (#620), 46/46 (#621), 47/47 (#626) and 48/48 (#635). Rendered gameplay, readability, economic pacing and balance acceptance remain manual.
 **Dependency:** Phase 02 connected depots; Phase 05 worksites and construction foundations.
 **Engine target:** Godot 4.7 only.
 
@@ -10,7 +10,7 @@ Expand labor roles only when they create a distinct economic or tactical output.
 
 ## Specialist slices
 
-### Hunter — implemented on `feat/hunter-hunting-lodge`
+### Hunter — merged via PR #64
 - [x] Require a free Hunter slot in a Hunting Lodge; reject assignment when no matching workplace is available.
 - [x] Generate finite, deterministic wildlife nodes outside the protected clearing; Frontier herds favour Greenwood and Fenlands.
 - [x] Enforce the Lodge work radius and reserve each wildlife target to one worker.
@@ -25,7 +25,7 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - The enemy Scout/marking archetype is a combat AI behavior on `main`; it is not the villager Scout occupation described below.
 - Its existing mark publication is faction-bounded and observation-based. The new villager role must not inherit global enemy tracking.
 
-### Villager Scout — in progress on `feat/scout-specialist`
+### Villager Scout — merged via PR #65
 - Add a two-slot Scout Post as the explicit workplace; Scouts cannot be assigned without a reachable free slot.
 - Use a bounded A* survey loop around the assigned post. Select only reachable walkable destinations with unexplored cells nearby; rotate sectors and avoid duplicating another Scout's active destination.
 - Reveal terrain through the existing permanent fog system with a 144px Scout sight radius. Do not add global enemy tracking or reveal enemies outside existing observation rules.
@@ -35,7 +35,7 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - Add focused tests for workplace requirement/capacity, reachable target selection, fog reveal radius, bounded behavior, survey completion/return, two-Scout target separation and save migration.
 - [ ] Rendered pathing, discovery pace and actual map-scale playtest.
 
-### Healer — implemented on `feat/healer-infirmary` (PR #67)
+### Healer — merged via PR #67
 - [x] Prioritize the most damaged reachable friendly soldier within the Infirmary service radius.
 - [x] Unlock the two-slot Infirmary through Era II Field Medicine after Leather Armor; do not add a new resource.
 - [x] Use a 16-tile service radius, one-Healer-per-patient reservation, 10 HP per 3.2 seconds, and stop at full HP or on patient/workplace loss.
@@ -43,7 +43,7 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - [x] Add Healer occupation, I quota/priority shortcut, sprite/HUD, Infirmary artwork and save schema v16.
 - [x] Add `tests/healer_infirmary.gd` for tech unlock, capacity, targeting, unique reservation, healing clamp, teardown and v15 migration; CI #626 passed 47/47 jobs.
 
-### Blacksmith — implemented on `feat/blacksmith-forge` (stacked PR #68)
+### Blacksmith — merged via PR #68
 - [x] Use the existing Era III Forge as the workplace with two Blacksmith slots and an 18-tile service radius; no duplicate building or resource is introduced.
 - [x] Require existing Iron Weapons/Iron Armor research before the corresponding recipe becomes available.
 - [x] Craft individual Iron Weapons (3 iron + 1 wood, +20% soldier damage) and Iron Armor (4 iron + 2 wood, +20% soldier maximum HP); one of each per soldier.
@@ -52,7 +52,7 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - [x] Add a Blacksmith job row in JOBS without consuming an existing keyboard shortcut; use the Forge icon and a distinct role sprite.
 - [x] Persist equipment flags and Blacksmith occupation in save v17, including restoration of armored soldier HP caps; retain v1–v16 Classic and v7–v16 Frontier migration.
 - [x] Add `tests/blacksmith_forge.gd` covering two-slot capacity, unique reservations, recipe costs/effects, save migration and workplace teardown.
-- [x] Validate full Godot 4.7 CI: run #634 passed 48/48 jobs, including the dedicated Blacksmith regression and v1–v17/v7–v17 migration coverage.
+- [x] Validate full Godot 4.7 CI: run #635 passed 48/48 jobs, including the dedicated Blacksmith regression and v1–v17/v7–v17 migration coverage.
 - [ ] Review rendered equipment visibility, combat balance and economic pacing in an actual playthrough.
 
 ## Shared requirements
@@ -68,16 +68,16 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - Classic existing jobs and save compatibility remain unchanged.
 - Mark a specialist complete only after a player-facing UI path and rendered review exist, not merely after the class/enum is registered.
 
-### Healer + Infirmary implementation branch (2026-11-03)
-- Branch: `feat/healer-infirmary`, stacked after `feat/scout-specialist`.
+### Healer + Infirmary integration (2026-11-03)
+- Merged into `main` through PR #67 (`bf44703`), after PR #64 Hunter and PR #65 Scout.
 - Era II `field_medicine` unlocks a two-slot Infirmary (16-tile service radius) and a player Healer occupation assigned with I.
 - Healers prioritize the most wounded reachable friendly soldier. A patient is reserved by one Healer at a time. Treatment restores 10 HP per 3.2 seconds and stops at full health; invalid patients and lost workplaces release reservations.
 - Save schema increments to v16. v1–v15 migration compatibility remains required.
-- `tests/healer_infirmary.gd` covers workplace requirement/capacity, patient selection, target uniqueness, healing, demolition cleanup and v15 migration. Full Godot 4.7 CI and rendered gameplay review remain pending.
+- `tests/healer_infirmary.gd` covers workplace requirement/capacity, patient selection, target uniqueness, healing, demolition cleanup and v15 migration. Godot 4.7 CI #626 passed 47/47; rendered treatment feedback and balance review remain manual.
 
 
-### Blacksmith implementation branch (2026-11-03)
-- Base: green Healer head `7dc6ebf`; branch `feat/blacksmith-forge`.
+### Blacksmith / Forge integration (2026-11-03)
+- Merged into `main` through PR #68 (`1b15f37`) on top of Healer/Infirmary PR #67.
 - Healer CI #626 passed 47/47 jobs on Godot 4.7 before this slice started.
-- Blacksmith adds no new technology node: existing `iron_weapons` and `iron_armor` gate the respective permanent individual recipes.
-- Equipment is stored per soldier; reassignment away from soldier removes the equipment state so non-soldier HP is not corrupted.
+- Blacksmith adds no new technology node: existing `iron_weapons` and `iron_armor` gate the respective permanent individual recipes. This behavior is now integrated in `main`.
+- Equipment is stored per soldier; reassignment away from soldier removes the equipment state so non-soldier HP is not corrupted. Godot 4.7 CI #635 passed 48/48, including migration and equipment regression coverage.
