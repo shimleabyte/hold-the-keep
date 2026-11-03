@@ -1,8 +1,8 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
-**Status (2026-11-03):** Mainline contains the Frontier expansion slices through Phase 08.7, Phase 09.3, Phase 05.2a/05.2b construction and queue management (PRs #58/#59), Phase 05.3a Watchtower vision (PR #60, `beef7b7`), and Phase 05.3b Granary food reserve (PR #61, `d9b87b1`). Workflow #41558978053 passed 84/84 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release exports. Rendered building/HUD review, manual balance and target-hardware acceptance remain outstanding. PR #55 merged regional ambience/music/event audio (`d933bb6`); workflow #477 passed 78/78. PR #57 merged four-act Frontier save/reload and final-victory persistence coverage (`a1ccebe`); workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 on Godot 4.3/4.7, Frontier performance diagnostic, and Windows/Linux release exports. Save schema remains v13. Manual visual/audio review, target-hardware profiling, full campaign balance/playtesting, native Windows runtime and clean-machine acceptance remain open.
+**Status (2026-11-03):** Mainline contains the Frontier expansion slices through Phase 08.7, Phase 09.3, Phase 05.2a/05.2b construction and queue management (PRs #58/#59), Phase 05.3a Watchtower vision (PR #60, `beef7b7`), and Phase 05.3b Granary food reserve (PR #61, `d9b87b1`). Workflow #41558978053 passed 84/84 jobs on Godot 4.7, Frontier performance diagnostic and Windows/Linux release exports. Rendered building/HUD review, manual balance and target-hardware acceptance remain outstanding. PR #55 merged regional ambience/music/event audio (`d933bb6`); workflow #477 passed 78/78. PR #57 merged four-act Frontier save/reload and final-victory persistence coverage (`a1ccebe`); workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 on Godot 4.3/4.7, Frontier performance diagnostic, and Windows/Linux release exports. Save schema remains v13. Manual visual/audio review, target-hardware profiling, full campaign balance/playtesting, native Windows runtime and clean-machine acceptance remain open.
 **Phase 02 merge commits:** PR #31 (`6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`) delivered local depot storage/transfers; PR #32 (`2f94959b497677eae49d4303f72322650fb591c2`) delivered garrisons/inspection; PR #33 (`5d7db56b3a51a25541f541bb46c19b26996d22be`) delivered player-directed physical shipments and save v13. PR #33 validation: [workflow #41323062111](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323062111), 50/50 jobs successful on Godot 4.3/4.7, including 23 regressions per engine, Frontier diagnostic and Windows/Linux export.  
-**Baseline:** Godot 4.3+ / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, optional Frontier Expedition world 192×192 / 20 days / 4 acts with a 128×128 starting heartland, mainline save format v13 with backward compatibility for save versions v1–v12.
+**Baseline:** Godot 4.7 / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, optional Frontier Expedition world 192×192 / 20 days / 4 acts with a 128×128 starting heartland, mainline save format v13 with backward compatibility for save versions v1–v12.
 
 ## 1. Product direction
 
@@ -71,7 +71,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Status:** Complete and merged into `main`; legacy profile migration covered by `world_config` and `release_hardening` on Godot 4.3/4.7.
 
 - [x] Add this roadmap and link it from project documentation.
-- [x] Add Godot CI on Godot 4.3 and 4.7.
+- [x] Add Godot CI on Godot 4.7.
 - [x] Add parse-only validation for every GDScript file.
 - [x] Add one headless regression runner with deterministic 60 FPS.
 - [x] Centralize world profiles, dimensions, tile size, seed, starting Keep position and profile-level resource density.
@@ -146,7 +146,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Make objective order deterministic; each conquered region unlocks the next objective and grants a regional resource reward.
 - [x] Persist the full objective registry, stronghold health and conquest state in save format v8; retain v1–v7 single-stronghold compatibility.
 - [x] Preserve the existing one-stronghold Classic campaign.
-- [x] Complete the Godot 4.3 / 4.7 regression matrix; objective/map presentation still needs a human gameplay review.
+- [x] Complete the Godot 4.7 regression matrix; objective/map presentation still needs a human gameplay review.
 
 **Acceptance gate:** multiple strongholds can be found, attacked, destroyed, restored from saves and completed in a deterministic objective sequence.
 
