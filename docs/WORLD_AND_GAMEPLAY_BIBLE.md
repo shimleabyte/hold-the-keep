@@ -131,6 +131,15 @@ The existing five biomes remain the core geographic vocabulary:
 
 Old Frontier remains a ruin-dense subregion rather than a sixth core biome. Its identity should come from landmarks, ruins, history and encounter design—not merely a different ground color.
 
+### Frontier Expedition geography
+
+Frontier Expedition is an optional larger campaign profile, not a replacement for the established 128×128 Frontier campaign. It uses a 192×192 tile world while keeping a 128×128 heartland walkable at the start. The four surrounding marches are generated from the same five-biome vocabulary but remain physically sealed behind survey crossings.
+
+A march opens only when the player explores to its inner-side crossing and completes that region's discovery objective. The crossing is a real navigation/terrain change, not a menu toggle: closed barriers reject ordinary movement and bridge placement. Once opened, the player can move into the outer march and continue revealing it through permanent fog-of-war. Strategic-map survey markers must remain hidden until normal vision discovers the approach; unknown terrain and locations must not be disclosed early.
+
+The four discovery records are the source of truth for open crossings. Loading a save must reconstruct gate state from those records, with no new save-version field. The world remains fully generated and loaded; sector boundaries are gameplay gates, not runtime chunk streaming. Outer territory should become useful through existing exploration, outpost, road, resource and faction systems rather than being an empty visual border.
+
+
 A biome must be identifiable through more than its floor tile. It should combine terrain, props, resource distribution, silhouettes, landmarks, ambient sound and a gameplay reason to visit.
 
 ---
