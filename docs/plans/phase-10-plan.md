@@ -2,7 +2,7 @@
 
 **Status:** Implementation merged through PR #30 into `main`; mainline workflow #294 passed 44/44 jobs. Manual physical-display screenshots and fullscreen playtest remain open.  
 **Mainline:** `main`  
-**Engine targets:** Godot 4.3 and 4.7
+**Engine target:** Godot 4.7 only
 
 ## Problem
 
@@ -32,4 +32,4 @@ HUD stays in logical-pixel top/bottom bands. The central playfield expands as re
 
 ## Verification
 
-`tests/responsive_layout.gd` covers all six mappings, live synchronization, unchanged camera zoom, HUD reflow, minimum central playfield height and map/hotbar bounds. Fresh Godot 4.3/4.7 CI and manual rendered gameplay at target resolutions/fullscreen are required before merge.
+`tests/responsive_layout.gd` covers all six mappings, live synchronization, unchanged camera zoom, HUD reflow, minimum central playfield height and map/hotbar bounds. Godot 4.7 CI and manual rendered gameplay at target resolutions/fullscreen are required before merge.
