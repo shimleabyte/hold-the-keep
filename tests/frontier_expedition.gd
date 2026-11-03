@@ -142,7 +142,11 @@ func _initialize() -> void:
     for record in expedition_save["frontier_campaign"]["objectives"]:
         if String(record.get("id", "")).begins_with("discover_"):
             saved_discoveries[String(record["id"])] = bool(record.get("completed", false))
-    assert(saved_discoveries.size() == 4 and saved_discoveries.values().all(func(value): return value),
+    var completed_discovery_count := 0
+    for objective_id in saved_discoveries:
+        if bool(saved_discoveries[objective_id]):
+            completed_discovery_count += 1
+    assert(saved_discoveries.size() == 4 and completed_discovery_count == 4,
         "All four gate unlocks must be represented by existing saved discovery objectives")
 
     var pause = get_first_node_in_group("pause_menu")
