@@ -151,6 +151,8 @@ func _initialize() -> void:
         and world_config.cell_from_index(far_index) == Vector2i(191, 191),
         "The largest Expedition row-major index must round-trip")
     var expedition_save: Dictionary = save_system.collect(main)
+    assert(String(expedition_save["frontier_campaign"]["profile"]) == "frontier_expedition",
+        "The Frontier campaign save must retain the active Expedition profile identifier")
     assert(String(expedition_save["world"]["profile"]) == "frontier_expedition"
         and int(expedition_save["world"]["map_size"]) == 192
         and save_system._valid_save(expedition_save),
