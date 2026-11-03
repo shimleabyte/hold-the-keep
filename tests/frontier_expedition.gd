@@ -64,10 +64,15 @@ func _initialize() -> void:
             "Each existing biome must retain meaningful territory on the larger map: " + region)
 
     var locked_regions: Array[String] = ["GREENWOOD", "HIGHLANDS", "FENLANDS", "ASHEN_MARCH"]
+    var core_reachable: Dictionary = main.nav.reachable_cells(main.nav.cell_of(main.world.spawn_point()))
+    assert(not core_reachable.is_empty(),
+        "The starting Expedition heartland must have a connected walkable network")
     for region in locked_regions:
         assert(not main.world.is_expedition_gate_open(region),
             "Outer sector must start locked until its matching discovery: " + region)
         var gate_cell: Vector2i = main.world._expedition_gate_cells[region]
+        assert(gate_cell.x >= 32 and gate_cell.x < 160 and gate_cell.x != 95,
+            "Survey gates must replace cells on a real heartland perimeter, not a side wall: " + region)
         assert(main.world.tile_type_at(gate_cell) == 2,
             "An undiscovered sector crossing must be physically sealed by water: " + region)
         assert(not main.world.is_buildable(gate_cell)
@@ -104,8 +109,8 @@ func _initialize() -> void:
         var approach_cell := gate_cell + (Vector2i(0, 1) if gate_cell.y < world_config.map_size / 2 else Vector2i(0, -1))
         assert(main.world.region_id(approach_cell) == region,
             "The inside approach must carry the matching discovery region: " + region)
-        assert(main.nav.is_walkable(approach_cell),
-            "The expedition must be able to reach the survey side of the sealed gate: " + region)
+        assert(main.nav.is_walkable(approach_cell) and core_reachable.has(approach_cell),
+            "The survey approach must be connected to the starting Keep, not just locally walkable: " + region)
         main.player.global_position = main.nav.center_of(approach_cell)
         main.frontier_campaign._scan_discovery()
         assert(bool(main.frontier_campaign.objectives[objective_id]["completed"]),
