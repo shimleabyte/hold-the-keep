@@ -29,7 +29,7 @@ func _on_day_changed(day: int) -> void:
 
 
 func _campaign_rules() -> Dictionary:
-    var mode_id := "frontier" if WorldConfig.profile_id == "frontier" else "classic"
+    var mode_id := "frontier" if WorldConfig.is_frontier_profile() else "classic"
     return DataDB.campaign_modes.get(mode_id, {}).duplicate(true)
 
 
@@ -92,7 +92,7 @@ func _pool_for(day: int) -> Array:
                 entry["weight"] = int(entry["weight"]) + 2
         out.append(entry)
 
-    if WorldConfig.profile_id == "frontier":
+    if WorldConfig.is_frontier_profile():
         var act_rosters := {
             "act_2": ["enemy_scout", "enemy_shieldbearer"],
             "act_3": ["enemy_saboteur", "enemy_war_shaman"],
@@ -210,7 +210,7 @@ func spawn_one(forced_type := "") -> bool:
     var data: Dictionary = DataDB.enemies[forced_type if forced_type != "" else _pick_type()]
     var e := ENEMY_SCRIPT.new()
     var faction_id := ""
-    if WorldConfig.profile_id == "frontier":
+    if WorldConfig.is_frontier_profile():
         faction_id = FactionRegistry.faction_for_region(world.region_id(cell))
     e.setup(data, world, flow, player, faction_id)
     e.position = Vector2(cell) * WorldConfig.tile_size + Vector2(WorldConfig.tile_size / 2.0, WorldConfig.tile_size / 2.0)
