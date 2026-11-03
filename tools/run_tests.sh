@@ -48,6 +48,7 @@ tests=(
     territory_claims
     world_config
     frontier_world
+    frontier_expedition
     regional_control_roads
     local_depot_stockpiles
     outpost_garrisons

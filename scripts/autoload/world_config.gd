@@ -1,6 +1,6 @@
 extends Node
 ## Single source of truth for world dimensions and profile-level generation settings.
-## Classic remains the default until the expanded Frontier profile is implemented and tested.
+## Classic and the original Frontier profile remain compatible; Frontier Expedition adds a larger exploration-first map.
 
 const TILE_SIZE := 16
 const DEFAULT_SEED := 1337
@@ -16,6 +16,13 @@ const PROFILES: Dictionary = {
         "starting_claim_radius": 15.0,
         "safe_radius": 12.0,
         "iron_veins": 32
+    },
+    "frontier_expedition": {
+        "map_size": 192,
+        "starting_claim_radius": 15.0,
+        "safe_radius": 12.0,
+        "iron_veins": 72,
+        "expedition_core_size": 128
     }
 }
 
@@ -63,6 +70,15 @@ func _apply_profile_values(id: String) -> void:
     starting_claim_radius = float(profile["starting_claim_radius"])
     safe_radius = float(profile["safe_radius"])
     iron_veins = int(profile["iron_veins"])
+
+
+func is_frontier_profile(id: String = "") -> bool:
+    var selected := profile_id if id.is_empty() else id
+    return selected == "frontier" or selected == "frontier_expedition"
+
+
+func is_frontier_expedition() -> bool:
+    return profile_id == "frontier_expedition"
 
 
 func profile_definition(id: String) -> Dictionary:

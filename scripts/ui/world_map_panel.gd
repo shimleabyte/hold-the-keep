@@ -46,7 +46,7 @@ func configure(world_ref, fog_ref, territory_ref, font_ref: Font = null) -> void
 func configure_layout(viewport_size: Vector2) -> void:
     var available_width := maxf(192.0, viewport_size.x - 150.0)
     var available_height := maxf(192.0, viewport_size.y - 70.0)
-    var minimum_tile_scale := 1.0 if WorldConfig.profile_id == "frontier" else 3.0
+    var minimum_tile_scale := 1.0 if WorldConfig.is_frontier_profile() else 3.0
     _map_scale = clampf(minf(available_width, available_height) / float(WorldConfig.map_size), minimum_tile_scale, 4.5)
     _map_pixels = WorldConfig.map_size * _map_scale
     size = Vector2(_map_pixels + 128.0, _map_pixels + 50.0)
@@ -135,6 +135,7 @@ func _draw() -> void:
     _draw_resource_markers()
     _draw_building_markers()
     _draw_campaign_markers()
+    _draw_expedition_survey_markers()
     _draw_frontier_site_markers()
     _draw_faction_camp_markers()
     _draw_unit_markers()
@@ -175,7 +176,7 @@ func _marker(world_position: Vector2, color: Color, radius := 1.5) -> void:
 func _draw_region_labels() -> void:
     var center := WorldConfig.map_size / 2
     var regions: Array = []
-    if WorldConfig.profile_id == "frontier":
+    if WorldConfig.is_frontier_profile():
         regions = [
             [Vector2i(roundi(WorldConfig.map_size * 0.19), roundi(WorldConfig.map_size * 0.20)), "GREENWOOD"],
             [Vector2i(roundi(WorldConfig.map_size * 0.81), roundi(WorldConfig.map_size * 0.20)), "HIGHLANDS"],
@@ -263,8 +264,34 @@ func _draw_campaign_markers() -> void:
 
 
 
+func _draw_expedition_survey_markers() -> void:
+    if not WorldConfig.is_frontier_expedition() or world == null:
+        return
+    for region in ["GREENWOOD", "HIGHLANDS", "FENLANDS", "ASHEN_MARCH"]:
+        if world.is_expedition_gate_open(region):
+            continue
+        if not world._expedition_gate_cells.has(region):
+            continue
+        var gate_cell: Vector2i = world._expedition_gate_cells[region]
+        var inward := Vector2i(0, 1) if gate_cell.y < WorldConfig.map_size / 2 else Vector2i(0, -1)
+        var approach := gate_cell + inward
+        var approach_position := (Vector2(approach) + Vector2(0.5, 0.5)) * WorldConfig.tile_size
+        # A survey marker is only rendered after ordinary fog has revealed its approach.
+        if not _position_is_known(approach_position):
+            continue
+        var marker_position := _world_to_map(approach_position)
+        var marker_size := maxf(2.5, 5.5 * _map_scale / 3.0)
+        draw_colored_polygon(PackedVector2Array([
+            marker_position + Vector2(0, -marker_size),
+            marker_position + Vector2(marker_size, 0),
+            marker_position + Vector2(0, marker_size),
+            marker_position + Vector2(-marker_size, 0)
+        ]), Color("#e0bd70"))
+        draw_circle(marker_position, maxf(1.0, marker_size * 0.22), Color("#302820"))
+
+
 func _draw_frontier_site_markers() -> void:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return
     for site in get_tree().get_nodes_in_group("frontier_sites"):
         if not is_instance_valid(site) or site.site_state == "complete":
@@ -310,7 +337,7 @@ func _draw_frontier_site_markers() -> void:
                 Vector2.ONE * marker_size), marker_color)
 
 func _draw_faction_camp_markers() -> void:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return
     var manager = get_tree().get_first_node_in_group("faction_camp_manager")
     if manager == null:

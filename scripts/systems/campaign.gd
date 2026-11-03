@@ -24,7 +24,7 @@ func configure_new(profile_id: String) -> void:
     _records.clear()
     _nodes.clear()
     _completion_emitted = false
-    if profile_id == "frontier":
+    if WorldConfig.is_frontier_profile(profile_id):
         for definition in FRONTIER_OBJECTIVES:
             _add_objective(String(definition["id"]), String(definition["region"]), String(definition["faction"]), definition["reward"])
     else:
@@ -203,7 +203,7 @@ func _on_stronghold_conquered(stronghold_id: String, region: String, _cell: Vect
 func _emit_campaign_completion() -> void:
     if _completion_emitted:
         return
-    if WorldConfig.profile_id == "frontier":
+    if WorldConfig.is_frontier_profile():
         var progression = get_tree().get_first_node_in_group("frontier_campaign")
         if progression == null or not progression.is_victory_ready():
             return

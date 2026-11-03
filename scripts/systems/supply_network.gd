@@ -68,7 +68,7 @@ func _physics_process(_delta: float) -> void:
 
 
 func _process(delta: float) -> void:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return
     _transfer_timer += delta
     if _transfer_timer >= TRANSFER_INTERVAL:
@@ -88,7 +88,7 @@ func _process(delta: float) -> void:
 ## Move a bounded amount from each connected remote depot into the Keep inventory.
 ## This legacy automatic route remains separate from player-directed physical trips.
 func transfer_local_stockpiles() -> int:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return 0
     _ensure_current()
     var depots: Array = get_tree().get_nodes_in_group("depots")
@@ -141,7 +141,7 @@ func _selected_cost_depot():
 
 
 func set_cost_source(cell: Vector2i) -> bool:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return cell == get_cost_source_cell()
     _ensure_current()
     var depot = _find_depot(cell)
@@ -164,13 +164,13 @@ func cost_source_label() -> String:
         "POS %d,%d" % [source.cell.x, source.cell.y] if String(source.id) == "outpost"
         else "GUDANG %d,%d" % [source.cell.x, source.cell.y]
     )
-    if WorldConfig.profile_id == "frontier" and not is_depot_connected(source):
+    if WorldConfig.is_frontier_profile() and not is_depot_connected(source):
         label += " · JALUR PUTUS"
     return label
 
 
 func cost_source_amount(kind: String) -> int:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return Inventory.get_amount(kind)
     var source = _selected_cost_depot()
     if source == null or not is_depot_connected(source):
@@ -179,7 +179,7 @@ func cost_source_amount(kind: String) -> int:
 
 
 func cost_reason(cost: Dictionary) -> String:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return "" if Inventory.can_afford(cost) else "Bahan kurang di KEEP"
     var source = _selected_cost_depot()
     if source == null:
@@ -225,7 +225,7 @@ func pay_cost(cost: Dictionary) -> bool:
     if cost_reason(cost) != "":
         return false
     var source = _selected_cost_depot()
-    if WorldConfig.profile_id != "frontier" or source == null or String(source.id) == "keep":
+    if not WorldConfig.is_frontier_profile() or source == null or String(source.id) == "keep":
         return Inventory.spend_all(cost)
     var paid: Dictionary = {}
     for kind in cost:
@@ -244,7 +244,7 @@ func pay_cost(cost: Dictionary) -> bool:
 
 ## Return the raid exposure state used by the depot panel.
 func depot_pressure_state(depot: Node) -> Dictionary:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return {"status": "connected", "label": "NONAKTIF"}
     if depot == null or not is_instance_valid(depot) or String(depot.id) == "keep":
         return {"status": "connected", "label": "TERHUBUNG"}
@@ -285,7 +285,7 @@ func _active_supply_raiders(cell: Vector2i) -> int:
 
 
 func advance_supply_pressure(delta: float) -> void:
-    if WorldConfig.profile_id != "frontier" or delta <= 0.0:
+    if not WorldConfig.is_frontier_profile() or delta <= 0.0:
         return
     _ensure_current()
     var next_records: Dictionary = {}
@@ -448,7 +448,7 @@ func raid_steal_from(depot: Node) -> String:
 ## owned by the order until delivery, cancellation/refund, or explicit recovery.
 ## Returns the order ID, or -1 when any precondition fails.
 func create_shipment(source_cell: Vector2i, destination_cell: Vector2i, kind: String, amount: int) -> int:
-    if WorldConfig.profile_id != "frontier" or not TRANSFER_KINDS.has(kind):
+    if not WorldConfig.is_frontier_profile() or not TRANSFER_KINDS.has(kind):
         return -1
     if amount <= 0 or amount > MAX_SHIPMENT_AMOUNT or source_cell == destination_cell:
         return -1
@@ -530,7 +530,7 @@ func get_shipment_status_label(status: String) -> String:
 
 
 func advance_shipment_orders() -> void:
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return
     _ensure_current()
     for index in range(shipment_orders.size()):

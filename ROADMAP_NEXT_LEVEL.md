@@ -2,7 +2,7 @@
 
 **Status (2026-11-03):** Mainline contains the Frontier expansion slices through Phase 08.7, Phase 09.3, Phase 05.2a/05.2b construction and queue management (PRs #58/#59), Phase 05.3a Watchtower vision (PR #60, `beef7b7`), and Phase 05.3b Granary food reserve (PR #61, `d9b87b1`). Workflow #41558978053 passed 84/84 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release exports. Rendered building/HUD review, manual balance and target-hardware acceptance remain outstanding. PR #55 merged regional ambience/music/event audio (`d933bb6`); workflow #477 passed 78/78. PR #57 merged four-act Frontier save/reload and final-victory persistence coverage (`a1ccebe`); workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578) passed 78/78 on Godot 4.3/4.7, Frontier performance diagnostic, and Windows/Linux release exports. Save schema remains v13. Manual visual/audio review, target-hardware profiling, full campaign balance/playtesting, native Windows runtime and clean-machine acceptance remain open.
 **Phase 02 merge commits:** PR #31 (`6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`) delivered local depot storage/transfers; PR #32 (`2f94959b497677eae49d4303f72322650fb591c2`) delivered garrisons/inspection; PR #33 (`5d7db56b3a51a25541f541bb46c19b26996d22be`) delivered player-directed physical shipments and save v13. PR #33 validation: [workflow #41323062111](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323062111), 50/50 jobs successful on Godot 4.3/4.7, including 23 regressions per engine, Frontier diagnostic and Windows/Linux export.  
-**Baseline:** Godot 4.3+ / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, mainline save format v13 with backward compatibility for save versions v1–v12.
+**Baseline:** Godot 4.3+ / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, optional Frontier Expedition world 192×192 / 20 days / 4 acts with a 128×128 starting heartland, mainline save format v13 with backward compatibility for save versions v1–v12.
 
 ## 1. Product direction
 
@@ -26,7 +26,7 @@ Classic Mode remains available. The expanded campaign must not silently reinterp
 
 | Area | Target |
 |---|---|
-| Frontier world | 128×128 tiles (4× current tile count) |
+| Frontier world | 128×128 tiles (4× current tile count); optional Frontier Expedition expands to 192×192 (9× Classic) |
 | Logical generation sectors | 32×32 tiles; initially keep the full map loaded |
 | Tile size | 16×16 pixels |
 | Initial terrain biomes | 5: Hearthland, Greenwood, Highlands, Fenlands, Ashen March |
@@ -98,6 +98,20 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Verify the 128×128 fog/save index round-trip and cross-profile save backup behavior.
 
 **Acceptance gate — passed:** deterministic generation, valid walkability, resource distribution, safe Keep footprint, reachable stronghold approach, valid map bounds, viewport fit and 128×128 fog/index round-trip.
+
+### Phase 01.2 — Progressive Frontier Expedition
+**Status:** Implemented on `feat/frontier-expedition-192x192`, PR #63. The latest implementation and regression commit is queued in workflow #41579040554; the full Godot 4.3/4.7 assertion, stress/performance and export matrix is pending. Not merged into `main`.
+
+- [x] Add an independent 192×192 profile without changing Classic 64×64 or standard Frontier 128×128.
+- [x] Keep a 128×128 walkable heartland at the start; generate four sealed outer marches around it.
+- [x] Make the four crossings physically impassable until their matching regional discoveries are reached at the survey approach.
+- [x] Prevent bridge/build/pathfinding bypasses through sealed barrier cells and reserve a clear tile on both sides of each gate.
+- [x] Reuse permanent fog-of-war; reveal the strategic-map survey marker only after its approach is normally explored.
+- [x] Persist opened marches through the existing discovery objective records; keep save schema v13 unchanged.
+- [x] Add regression coverage and a separate Frontier Expedition performance diagnostic.
+- [ ] Pass the complete Godot 4.3/4.7 assertion matrix, Frontier Expedition diagnostic, and Windows/Linux exports.
+
+**Acceptance gate — pending:** deterministic 192×192 generation; all four inner approaches and outer landings walkable; closed gates cannot be bridged or pathfinded through; each gate opens only at its survey threshold; fog, map bounds and saved unlocks survive reload; existing Classic/Frontier regressions pass.
 
 ### Phase 02 — Territory, roads and supply
 **Status:** Regional control/road/connected-depot foundation merged into `main`. PR #31 adds bounded local stockpiles and automatic Keep-bound shipments under save v12. PR #32 is merged and adds read-only Storage/Outpost stock inspection and local Outpost garrisons (two slots, assignment UI, 128-pixel defense leash, lifecycle/save integration); its 48/48 Godot CI gate passed. Local Outpost vision and observed-only enemy markers already exist on `main`. PR #33 merged player-directed physical orders, escrowed cargo, route recovery and save v13; Godot 4.3/4.7 CI passed 50/50. PR #34 merged direct source-depot spending for construction/research/repair. Payments are isolated to one selected connected depot, never pooled, and the optional source preference is persisted additively in save v13. Workflow #41325205416 passed 52/52 jobs. Phase 02.5 supply pressure is implemented on `feat/phase-02-supply-pressure`; warning/raid/attrition and persistence regression is added, PR/CI pending.
@@ -268,7 +282,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 
 ## 6. Explicit non-goals for the first expansion
 
-- No 256×256 map before 128×128 is profiled and stable.
+- No 256×256 map before the 192×192 Frontier Expedition is profiled and stable.
 - No runtime chunk streaming before evidence requires it.
 - No multiplayer or online services.
 - No large content dump of units/buildings without distinct mechanics and tests.
@@ -278,7 +292,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 ## 7. Decision log
 
 - The expansion is a strategy-layer evolution, not a replacement of the existing action-combat identity.
-- Frontier target size is 128×128; Classic remains 64×64.
+- Standard Frontier remains 128×128 and Classic remains 64×64; optional Frontier Expedition expands to 192×192 while preserving a 128×128 walkable starting heartland.
 - The larger starting territory is a 15-tile Keep radius, not an unrestricted starting half-map.
 - Five terrain biomes are the initial target; Old Frontier is a ruin-rich subregion theme.
 - Phase 00 was merged into `main` through PR #7. Phase 01 is based directly on `main` in `feat/frontier-world-generation-mainline` (PR #10).

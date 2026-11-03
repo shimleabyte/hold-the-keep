@@ -76,7 +76,7 @@ func spawn_enemy(main: Node, enemy_id: String, faction_id: String, cell: Vector2
 
 func spawn_workload(main: Node, profile: String, enemy_count: int, villager_count: int) -> void:
     var per_faction := maxi(0, floori(float(enemy_count) / float(FACTION_IDS.size())))
-    if profile == "frontier":
+    if world_config.is_frontier_profile(profile):
         for faction_id in FACTION_IDS:
             var faction: Dictionary = faction_registry.factions.get(faction_id, {})
             var region_id := String(faction.get("region", ""))
@@ -114,7 +114,7 @@ func spawn_workload(main: Node, profile: String, enemy_count: int, villager_coun
             main.world,
             main.flow,
             main.player,
-            "iron_legion" if profile == "frontier" else ""
+            "iron_legion" if world_config.is_frontier_profile(profile) else ""
         )
         archer.position = main.player.position + Vector2(128.0, 0.0)
         main.world.entities.add_child(archer)
@@ -132,8 +132,8 @@ func _run() -> void:
     var profile := OS.get_environment("PROFILE")
     if profile.is_empty():
         profile = DEFAULTS["profile"]
-    if not ["classic", "frontier"].has(profile):
-        push_error("PROFILE must be either classic or frontier")
+    if not ["classic", "frontier", "frontier_expedition"].has(profile):
+        push_error("PROFILE must be classic, frontier or frontier_expedition")
         quit(2)
         return
 

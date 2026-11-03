@@ -25,7 +25,7 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
     main = main_ref
     camps.clear()
     _scan_timer = CAMP_SCAN_INTERVAL
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return
 
     main.nav.rebuild()
@@ -144,7 +144,9 @@ func _find_camp_cell(
     for y in WorldConfig.map_size:
         for x in WorldConfig.map_size:
             var cell := Vector2i(x, y)
-            if not reachable.has(cell) or not main.nav.is_walkable(cell):
+            if (not WorldConfig.is_frontier_expedition() and not reachable.has(cell)) or not main.nav.is_walkable(cell):
+                continue
+            if WorldConfig.is_frontier_expedition() and not main.world.is_expedition_outer_cell(cell, region_id):
                 continue
             if main.world.occupied.has(cell) or String(main.world.region_id(cell)) != region_id:
                 continue
@@ -502,7 +504,7 @@ func _spawn_patrol(camp: Dictionary) -> bool:
 
 
 func _process(delta: float) -> void:
-    if WorldConfig.profile_id != "frontier" or camps.is_empty():
+    if not WorldConfig.is_frontier_profile() or camps.is_empty():
         return
     _scan_timer -= delta
     if _scan_timer > 0.0:

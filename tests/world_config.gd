@@ -37,6 +37,19 @@ func _initialize() -> void:
     assert(int(frontier.get("iron_veins", 0)) == 32,
         "Frontier resource density must scale with the fourfold map area")
 
+    var expedition: Dictionary = world_config.profile_definition("frontier_expedition")
+    assert(int(expedition.get("map_size", 0)) == 192,
+        "Frontier Expedition must define a separate 192x192 world without changing legacy Frontier")
+    assert(int(frontier.get("map_size", 0)) == 128,
+        "Existing Frontier saves must retain their original 128x128 dimensions")
+    assert(int(expedition.get("expedition_core_size", 0)) == 128,
+        "The Expedition profile must preserve the original 128x128 heartland as its starting area")
+    assert(int(expedition.get("iron_veins", 0)) == 72,
+        "Expedition iron supply must scale to the larger map area")
+    assert(world_config.is_frontier_profile("frontier_expedition")
+        and not world_config.is_frontier_profile("classic"),
+        "Both Frontier profiles must use shared campaign systems without changing Classic")
+
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main

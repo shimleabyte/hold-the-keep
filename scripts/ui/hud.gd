@@ -786,7 +786,7 @@ func _refresh_cost_source_controls(depots: Array) -> void:
                 break
     if selected_index >= 0:
         _cost_source_option.select(selected_index)
-    _cost_source_option.disabled = WorldConfig.profile_id != "frontier" or _cost_source_option.item_count < 2
+    _cost_source_option.disabled = not WorldConfig.is_frontier_profile() or _cost_source_option.item_count < 2
 
 
 func _on_cost_source_selected(index: int) -> void:
@@ -831,11 +831,11 @@ func _refresh_shipment_controls() -> void:
     _shipment_refreshing = true
     _refresh_depot_option(_shipment_source, endpoints, previous_source, 0)
     _refresh_depot_option(_shipment_destination, endpoints, previous_destination, 1)
-    var frontier_enabled := WorldConfig.profile_id == "frontier" and endpoints.size() >= 2
+    var frontier_enabled := WorldConfig.is_frontier_profile() and endpoints.size() >= 2
     _shipment_source.disabled = not frontier_enabled
     _shipment_destination.disabled = not frontier_enabled
-    _shipment_kind.disabled = WorldConfig.profile_id != "frontier"
-    _shipment_amount.editable = WorldConfig.profile_id == "frontier"
+    _shipment_kind.disabled = not WorldConfig.is_frontier_profile()
+    _shipment_amount.editable = WorldConfig.is_frontier_profile()
     _shipment_send_button.disabled = not frontier_enabled
     _refresh_shipment_kind_options(endpoints)
     _shipment_refreshing = false

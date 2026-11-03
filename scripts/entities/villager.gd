@@ -866,7 +866,7 @@ func _go_depot() -> void:
             continue
         if depot.id == "granary" and carry > 0 and not depot.can_store_resource(carry_kind, carry):
             continue
-        if WorldConfig.profile_id == "frontier" and carry > 0 and depot.id != "keep":
+        if WorldConfig.is_frontier_profile() and carry > 0 and depot.id != "keep":
             if not depot.can_store_resource(carry_kind, carry):
                 continue
         var path: PackedVector2Array = nav.path_adjacent(position, depot.cells())
@@ -902,7 +902,7 @@ func _deposit() -> void:
                 _depot = null
                 _go_depot()
                 return
-        elif WorldConfig.profile_id == "frontier" and _depot.id != "keep":
+        elif WorldConfig.is_frontier_profile() and _depot.id != "keep":
             if not _depot.store_resource(carry_kind, carry):
                 _depot = null
                 _go_depot()

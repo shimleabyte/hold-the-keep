@@ -268,6 +268,7 @@ func _build_campaign_panel() -> void:
     _campaign_profile.custom_minimum_size = Vector2(220, 20)
     _campaign_profile.add_item("CLASSIC · 64 × 64")
     _campaign_profile.add_item("FRONTIER · 128 × 128")
+    _campaign_profile.add_item("FRONTIER EXPEDITION · 192 × 192")
     _campaign_profile.item_selected.connect(_on_campaign_profile_selected)
     box.add_child(_campaign_profile)
 
@@ -291,23 +292,35 @@ func _build_campaign_panel() -> void:
     _campaign_dialog.confirmed.connect(_start_new_campaign)
     _root.add_child(_campaign_dialog)
 
-    _campaign_profile.select(0 if WorldConfig.profile_id == "classic" else 1)
+    _campaign_profile.select(_profile_option_index(WorldConfig.profile_id))
     _on_campaign_profile_selected(_campaign_profile.selected)
+
+
+func _profile_option_index(profile_id: String) -> int:
+    match profile_id:
+        "frontier":
+            return 1
+        "frontier_expedition":
+            return 2
+    return 0
 
 
 func _on_campaign_profile_selected(index: int) -> void:
     if _campaign_info == null:
         return
-    if index == 1:
-        _campaign_info.text = "128 × 128 tiles · lima region · lebih banyak ruang untuk ekspansi."
-    else:
-        _campaign_info.text = "64 × 64 tiles · campaign 15 hari · map Classic tetap seperti semula."
+    match index:
+        1:
+            _campaign_info.text = "128 × 128 tiles · lima region · kampanye Conquest 20 hari."
+        2:
+            _campaign_info.text = "192 × 192 tiles · 2.25× luas Frontier · empat outer marches terbuka melalui discovery. Fog permanen menyimpan jejak eksplorasi."
+        _:
+            _campaign_info.text = "64 × 64 tiles · campaign 15 hari · map Classic tetap seperti semula."
 
 
 func _open_campaign_panel() -> void:
     _menu_center.visible = false
     _controls_center.visible = false
-    _campaign_profile.select(0 if WorldConfig.profile_id == "classic" else 1)
+    _campaign_profile.select(_profile_option_index(WorldConfig.profile_id))
     _on_campaign_profile_selected(_campaign_profile.selected)
     _campaign_center.visible = true
 
@@ -322,7 +335,12 @@ func _confirm_new_campaign() -> void:
 
 
 func _start_new_campaign() -> void:
-    var selected_profile := "classic" if _campaign_profile.selected == 0 else "frontier"
+    var selected_profile := "classic"
+    match _campaign_profile.selected:
+        1:
+            selected_profile = "frontier"
+        2:
+            selected_profile = "frontier_expedition"
     if not WorldConfig.apply_profile(selected_profile):
         return
     Settings.set_world_profile(selected_profile)

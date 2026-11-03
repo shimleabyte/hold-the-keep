@@ -177,7 +177,7 @@ func _enemy_keep_cells(anchor: Vector2i) -> Array[Vector2i]:
 
 func _find_enemy_keep_cell(target_region := "") -> Vector2i:
     nav.rebuild()
-    if WorldConfig.profile_id == "frontier":
+    if WorldConfig.is_frontier_profile():
         return _find_frontier_enemy_keep_cell(target_region)
     var candidates: Array[Dictionary] = []
     var keep_cell: Vector2i = world.starting_keep_cell()
@@ -209,6 +209,9 @@ func _find_enemy_keep_cell(target_region := "") -> Vector2i:
 
 
 func _find_frontier_enemy_keep_cell(target_region := "") -> Vector2i:
+    if WorldConfig.is_frontier_expedition():
+        return _find_expedition_enemy_keep_cell(target_region)
+
     var start: Vector2i = nav.cell_of(player.global_position)
     var reachable: Dictionary = nav.reachable_cells(start)
     if reachable.is_empty():
@@ -244,6 +247,39 @@ func _find_frontier_enemy_keep_cell(target_region := "") -> Vector2i:
                         accessible = true
 
             if clear and accessible:
+                best_cell = anchor
+                best_distance = distance
+
+    return best_cell
+
+
+func _find_expedition_enemy_keep_cell(target_region: String) -> Vector2i:
+    var keep_cell: Vector2i = world.starting_keep_cell()
+    var keep_center := Vector2(keep_cell) + Vector2(1.5, 1.5)
+    var best_cell := Vector2i(-1, -1)
+    var best_distance := -INF
+
+    for y in range(5, WorldConfig.map_size - 5):
+        for x in range(5, WorldConfig.map_size - 5):
+            var anchor := Vector2i(x, y)
+            if not world.is_expedition_outer_cell(anchor, target_region):
+                continue
+            var distance := (Vector2(anchor) + Vector2(1.5, 1.5)).distance_to(keep_center)
+            if distance <= best_distance:
+                continue
+
+            var clear := true
+            for cell in _enemy_keep_cells(anchor):
+                if not world.is_expedition_outer_cell(cell, target_region):
+                    clear = false
+                    break
+                if not world.is_buildable(cell) or world.occupied.has(cell):
+                    clear = false
+                    break
+                if String(world.region_id(cell)) != target_region:
+                    clear = false
+                    break
+            if clear:
                 best_cell = anchor
                 best_distance = distance
 
