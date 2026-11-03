@@ -7,30 +7,39 @@
 
 This is an execution worklist, not a claim that every item is already implemented. Re-check the live branch/PR state before starting each assignment.
 
-## Live execution status — 2026-11-04
+## Live execution status — 2026-11-04 (post specialist, events and logistics integration)
 
-**Current main:** `c6f18945f94aaf095adbc724d7b0e3e0c8008b66` (merged deterministic campaign simulation PR #73).  
-**Current save schema:** v17 (verify against `scripts/autoload/save_system.gd` when rebasing future work).
+**Current main:** `ea34ee1071f2ddbc49572584e2da9409053c520a` (PR #75 merged).  
+**Current save schema:** v17.  
+**Open pull requests:** none returned by the latest open-PR scan. Re-check before assigning work.
 
 | Worklist item | Live disposition |
 |---|---|
-| INT-0 specialist integration | Complete: #64, #65, #67 and #68 are merged; duplicate #66 is closed. |
-| PR #37 depot cost sources | Reconciled: equivalent cost-source behavior and regression coverage are already on main; do not replay the stale branch. |
-| PR #49 Phase 06 documentation | Superseded by updated mainline docs; do not restore its old snapshot. |
-| DEV-A data contract validation | Integrated through replacement PR #71; original PR #69 was superseded and closed. |
-| DEV-B faction camp architecture | Integrated through PR #70. |
-| DEV-C campaign simulation QA | Integrated through PR #73. The new deterministic Classic/Frontier diagnostic now runs in the dedicated workflow and manual diagnostics runner. |
-| DEV-I enemy patrol controller | PR #74 is open against current main. Do not treat as complete until its refreshed Godot 4.7 CI passes. |
-| DEV-J decision-based events | PR #72 is open against current main. It adds event UI, choice resolution and optional save-state persistence; do not merge until its refreshed Godot 4.7 CI passes. |
+| INT-0 specialist integration | Complete: #64 Hunter, #65 Scout, #67 Healer and #68 Blacksmith merged; duplicate #66 closed. |
+| PR #37 depot cost sources | Reconciled: equivalent source-selection and local-payment behavior is integrated; do not replay its stale branch. |
+| PR #49 Phase 06 documentation | Superseded by corrected mainline documentation; do not restore its old snapshot. |
+| DEV-A data contract validation | Complete through replacement PR #71; original #69 was superseded and closed. |
+| DEV-B faction camp architecture | Integrated through PR #70. Preserve its public camp/patrol/raid interfaces. |
+| DEV-C campaign simulation QA | Integrated through PR #73. Deterministic Classic/Frontier simulation workflow and manual diagnostic are present. |
+| DEV-D supply network decomposition | First extraction integrated through PR #75: `SupplyCostTransactions` now owns cost-source selection, affordability, payment and refunds behind the `SupplyNetwork` façade. Shipment lifecycle, graph and supply-pressure responsibilities remain in the host and are separate follow-up slices. |
+| DEV-I enemy controller decomposition | Patrol movement extraction integrated through PR #74 as `EnemyPatrolMovement`; do not duplicate this controller. |
+| DEV-J decision-based events | Integrated through PR #72: choice UI, affordability, cancellation, delayed consequences and optional v17 event-state persistence. JSON numeric round-trip handling is covered. |
 
-### Integration gates after PR #73
+### Verified merge and CI results
 
-- Main push validation for #73 is running as workflow run #672; the dedicated campaign simulation push run #2 is also running. Confirm both complete successfully before treating the merge as fully validated on main.
-- PR #72 and #74 were retargeted to the post-#73 main commit. Their current Godot CI runs (#670 and #671 respectively) were queued at the last inspection; wait for completed green results before merging.
-- DEV-E save/migration decomposition must wait until #72 is resolved because #72 changes `save_system.gd` and adds persistent event state.
-- DEV-G HUD modularization must wait until #72 is resolved because #72 changes `hud.gd`.
-- DEV-B is complete; do not start a second faction-camp refactor. DEV-I's patrol controller is a separate enemy-actor boundary and must retain the current faction-camp API.
-- DEV-D supply decomposition is now unblocked by the PR #37 disposition, but should remain a separate branch/workstream and preserve the integrated cost-source behavior.
+- PR #72 merged as `064b0f5e984b301f2ac1aaef2c31a39b24583204`. Its updated Godot 4.7 workflow passed 50/50 jobs; the Classic/Frontier campaign simulation workflow passed 1/1.
+- PR #74 merged as `dde5370612ef8550644debdcf31bd360b58da6ed`. Its Godot 4.7 workflow passed 49/49 jobs.
+- PR #75 merged as `ea34ee1071f2ddbc49572584e2da9409053c520a`. Its Godot 4.7 workflow passed 49/49 jobs; the campaign simulation workflow passed 1/1.
+- The latest main push after PR #75 has a pending Godot 4.7 run and a completed-success campaign simulation run. Confirm the main push run finishes green before calling the latest mainline fully validated.
+
+### Next ownership boundaries
+
+- DEV-E save/migration architecture is now unblocked. It must preserve v17 event-state data from #72, current supply save data, and historical Classic/Frontier migrations. Do not change the version without a complete migration plan and fixtures.
+- DEV-G HUD modularization is now unblocked. The decision panel from #72 is part of current main; extract it through its established interface rather than rebuilding or moving its gameplay rules into the HUD.
+- DEV-D may continue only with separately scoped shipment, graph or pressure slices. Do not re-open cost-source behavior already extracted by #75; keep `SupplyNetwork` method signatures stable.
+- DEV-F villager roles and DEV-H world generation remain independent candidates after checking their current file ownership and interfaces.
+- DEV-I may continue with other enemy-host responsibilities, but patrol movement is already extracted. Coordinate faction-camp callers before changing enemy-facing contracts.
+- DEV-C and DEV-J are complete for the current worklist scope. Do not assign duplicate implementations.
 
 This status block is a live execution snapshot, not a substitute for checking GitHub again. Workflow run states and PR heads can change after this commit.
 
@@ -52,8 +61,8 @@ The audited `main` already contains:
 - Roads, depots, local stockpiles, physical shipments, cost-source selection and supply pressure.
 - Twenty technology nodes across three eras.
 - Adaptive logical viewport and modular visual/audio systems.
-- Save schema v13 on the audited mainline.
-- 42 assertion-based regression suites plus Godot 4.7 import/parse and Frontier performance diagnostics.
+- Save schema v17 on current mainline (the original audit snapshot was v13).
+- Current Godot 4.7 regression matrix, project import/parse and Frontier performance diagnostics; exact suite lists live in `.github/workflows/godot-ci.yml` and `tools/run_tests.sh`.
 
 ### Engine and CI policy
 
@@ -217,6 +226,8 @@ Suggested modules:
 
 ### DEV-C — Full campaign simulation QA
 
+**Status:** Complete through PR #73; deterministic Classic/Frontier simulations are integrated and CI-registered.
+
 **Priority:** High  
 **Start:** After INT-0 integration  
 **Primary owner files:**
@@ -269,6 +280,8 @@ Use explicit seeds and bounded workloads. Do not turn an excessively long or uns
 
 ### DEV-D — Supply network decomposition
 
+**Status:** Partially complete through PR #75; cost transactions have been extracted. Continue only with distinct shipment, graph or pressure responsibilities.
+
 **Priority:** High  
 **Start:** After INT-0 and after PR #37 is reconciled  
 **Primary owner files:**
@@ -277,7 +290,7 @@ Use explicit seeds and bounded workloads. Do not turn an excessively long or uns
 - New focused modules under `scripts/systems/`
 - Focused logistics regression tests
 
-**Problem:** The current 886-line supply manager owns depot connectivity, stockpile transfers, cost selection, payment, shipment orders, cargo recovery and supply pressure.
+**Problem:** The current 805-line `SupplyNetwork` façade still coordinates depot connectivity, stockpile transfers, shipment orders, cargo recovery and supply pressure. Cost-source selection, affordability, payment and refunds have already been extracted into `SupplyCostTransactions` by PR #75.
 
 **Scope:** Retain `SupplyNetwork` as a stable façade while moving responsibilities into explicit services.
 
@@ -488,6 +501,8 @@ Preserve the fully generated/loaded world model. Do not introduce runtime chunk 
 
 ### DEV-I — Enemy controller decomposition
 
+**Status:** Patrol movement is complete through PR #74. Further work must not reimplement `EnemyPatrolMovement`.
+
 **Priority:** Medium  
 **Primary owner files:**
 
@@ -536,6 +551,8 @@ Do not move behavior into a second duplicate controller. Define narrow interface
 These are feature assignments, not prerequisites for the architecture work. They should start only when the assigned owner can implement them without modifying an active architectural refactor.
 
 ### DEV-J — Decision-based event system
+
+**Status:** Complete through PR #72, including decision UI, resource-gated choices, delayed consequences and v17 persistence.
 
 **Priority:** Medium  
 **Suggested files:** New event/decision modules, `scripts/systems/event_manager.gd`, new event definitions and focused tests.
