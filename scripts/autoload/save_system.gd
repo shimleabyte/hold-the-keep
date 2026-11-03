@@ -576,7 +576,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             if not raid_target_exists:
                 return false
         if bool(enemy.get("faction_raid", false)):
-            if String(campaign_world_data.get("profile", "")) != "frontier":
+            if not WorldConfig.is_frontier_profile(String(campaign_world_data.get("profile", ""))):
                 return false
             if not bool(enemy.get("garrison", false)) or not (enemy.get("raid_target", null) is Dictionary):
                 return false
@@ -659,7 +659,7 @@ func _valid_campaign_state(value: Variant, expected_profile: String, map_size: i
         return false
     if expected_profile == "classic" and order.size() != 1:
         return false
-    if expected_profile == "frontier" and not [1, 4].has(order.size()):
+    if WorldConfig.is_frontier_profile(expected_profile) and not [1, 4].has(order.size()):
         return false
 
     var records: Dictionary = {}
@@ -711,7 +711,7 @@ func _valid_frontier_campaign(value: Variant, expected_profile: String, map_size
         return false
     if expected_profile == "classic":
         return objectives.is_empty()
-    if expected_profile != "frontier" or objectives.size() != DataDB.frontier_objectives.size():
+    if not WorldConfig.is_frontier_profile(expected_profile) or objectives.size() != DataDB.frontier_objectives.size():
         return false
     if not value.has("final_boss_defeated") or not (value["final_boss_defeated"] is bool):
         return false
