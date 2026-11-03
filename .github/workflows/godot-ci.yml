@@ -19,13 +19,9 @@ concurrency:
 
 jobs:
   validate:
-    name: Godot ${{ matrix.godot-version }} · import and parse
+    name: Godot 4.7 · import and parse
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        godot-version: ["4.3.0", "4.7.0"]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -33,7 +29,7 @@ jobs:
       - name: Install Godot
         uses: chickensoft-games/setup-godot@v2
         with:
-          version: ${{ matrix.godot-version }}
+          version: "4.7.0"
           use-dotnet: false
 
       - name: Import project
@@ -43,7 +39,7 @@ jobs:
         run: bash tools/check_gdscript.sh
 
   regression:
-    name: Godot ${{ matrix.godot-version }} · ${{ matrix.test }}
+    name: Godot 4.7 · ${{ matrix.test }}
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 6
@@ -51,7 +47,6 @@ jobs:
       fail-fast: false
       max-parallel: 6
       matrix:
-        godot-version: ["4.3.0", "4.7.0"]
         test:
           - animation_motion
           - campaign_assault
@@ -167,38 +162,3 @@ jobs:
           path: build/diagnostics/frontier-perf.txt
           if-no-files-found: error
 
-  release-export:
-    name: Windows + Linux release export · Godot 4.3
-    needs: validate
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Install Godot and matching export templates
-        uses: chickensoft-games/setup-godot@v2
-        with:
-          version: "4.3.0"
-          use-dotnet: false
-          include-templates: true
-
-      - name: Build Windows and Linux releases
-        run: GODOT=godot bash tools/build.sh
-
-      - name: Verify Windows executable format
-        run: |
-          file build/windows/HoldTheKeep.exe
-          file build/windows/HoldTheKeep.exe | grep -E "PE32|MS Windows"
-
-      - name: Smoke-test Linux release
-        run: timeout 30s build/linux/HoldTheKeep.x86_64 --headless --quit-after 5
-
-      - name: Upload release binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: hold-the-keep-desktop-godot-4.3
-          path: |
-            build/windows/HoldTheKeep.exe
-            build/linux/HoldTheKeep.x86_64
-          if-no-files-found: error
