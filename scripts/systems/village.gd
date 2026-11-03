@@ -1,6 +1,6 @@
 extends Node
 ## Population, labor occupations, military specializations and workplace assignment.
-## T/M/K/B/J/R changes job quotas; Alt + job key raises priority, Alt + Shift + key lowers it.
+## T/M/K/B/J/U/R change job quotas; Alt + job key raises priority, Alt + Shift + key lowers it.
 
 const VILLAGER_SCRIPT := preload("res://scripts/entities/villager.gd")
 
