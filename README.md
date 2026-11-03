@@ -14,9 +14,10 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - Tahan Shift / bumper kiri (gamepad): lari
 - Y / chip `Y` di HUD: panel teknologi
 - TAB atau tombol `MAP`: peta strategis (fog-of-war, biome, klaim, resource, Keep, dan musuh yang sedang teramati; Menara Pengawas memberi penglihatan lokal 128px)
-- Tombol `JOBS`: buka/tutup kuota penebang, penambang, petani, Builder, Hunter, dan prajurit; Esc menutup panel
+- Tombol `JOBS`: buka/tutup kuota penebang, penambang, petani, Builder, Hunter, Scout, dan prajurit; Esc menutup panel
 - `B` / `Shift+B`: tambah/kurangi kuota Builder
 - `J` / `Shift+J`: tambah/kurangi kuota Hunter; penugasan hanya berhasil jika ada slot di Pondok Pemburu
+- `U` / `Shift+U`: tambah/kurangi kuota Scout; penugasan hanya berhasil jika ada slot di Pondok Pengintai
 - `N` / `QUEUE`: buka/tutup antrean konstruksi; tampilkan progres, biaya proyek, dahulukan/tunda, dan batalkan blueprint
 - E / Spasi / tombol A (gamepad): tebang pohon, tambang batu
 - 1-9 / 0 atau klik slot di bar bawah: pilih hingga 10 bangunan pertama (termasuk Pos Terdepan, Kamp Penebang, dan Kuari)
@@ -29,7 +30,7 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.3+ (G
 - C / tombol Y: Cleave — tebasan depan yang melukai dan membuat musuh limbung (level 2)
 - V / bumper kanan: Rally — memperkuat serangan pemain dan prajurit sekitar (level 3)
 - Kalahkan musuh untuk mendapat XP; level up memulihkan sebagian HP dan membuka skill
-- T / M / K / J / R: tambah penebang / penambang / petani / Hunter / prajurit (Shift = kurangi); B / Shift+B khusus Builder. Alt + tombol job mengubah prioritas; atau klik tombol + / - di panel job.
+- T / M / K / J / U / R: tambah penebang / penambang / petani / Hunter / prajurit (Shift = kurangi); B / Shift+B khusus Builder. Alt + tombol job mengubah prioritas; atau klik tombol + / - di panel job.
 - G: kirim seluruh prajurit untuk menyerbu benteng lawan yang sudah ditemukan; tekan lagi untuk menarik mereka kembali ke Keep
 - P / Esc (saat tidak membangun): menu jeda (simpan, muat, resolusi jendela, layar penuh, VSync, volume)
 - Menu jeda > Atur kontrol: rebind gerak, interaksi, serang, dan lari; gamepad tetap didukung
@@ -61,16 +62,16 @@ Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis p
 ### Desa dan ekonomi
 - Penduduk awal: 2. Keep memberi kapasitas 2; setiap rumah menambah 2 kapasitas.
 - Penduduk baru membutuhkan 8 makanan dan hanya muncul pada siang hari ketika kapasitas cukup.
-- Atur penebang, penambang, petani, Hunter, dan prajurit melalui T/M/K/J/R; Builder memakai B. Tombol kuota di HUD tetap tersedia.
+- Atur penebang, penambang, petani, Hunter, dan prajurit melalui T/M/K/J/U/R; Builder memakai B. Tombol kuota di HUD tetap tersedia.
 - Setiap penduduk mengonsumsi 2 makanan per hari. Kekurangan makanan membuat satu penduduk pergi. Setelah riset Lumbung, petani memprioritaskan depot pangan khusus berkapasitas 240; Classic memakai cadangan lumbung untuk upkeep setelah Inventory pusat habis.
-- Bangunan: rumah, tembok, Menara Pengawas (turret + vision 128px), Lumbung (240 pangan), gudang, ladang, tembok batu, tempa, Pos Terdepan, Kamp Penebang, Kuari, Pondok Pemburu, jalan, dan jembatan.
-- Kamp Penebang menyediakan dua workplace woodcutter dengan radius kerja 18 tile; Kuari menyediakan dua workplace miner dengan radius 16 tile. Pondok Pemburu (3×2, biaya 26 kayu + 8 batu) menyediakan dua slot Hunter dengan radius 18 tile. Tiap hewan memberi 5 pangan setelah tiga serangan; node pulih setelah 105 detik. Jika belum ada fasilitas khusus, pekerja tetap memakai radius depot seperti pada Classic lama. Jika semua slot fasilitas penuh, pekerja tambahan tidak mengambil alih area kerja fasilitas tersebut.
+- Bangunan: rumah, tembok, Menara Pengawas (turret + vision 128px), Lumbung (240 pangan), gudang, ladang, tembok batu, tempa, Pos Terdepan, Kamp Penebang, Kuari, Pondok Pemburu, Pondok Pengintai, jalan, dan jembatan.
+- Kamp Penebang menyediakan dua workplace woodcutter dengan radius kerja 18 tile; Kuari menyediakan dua workplace miner dengan radius 16 tile. Pondok Pemburu (3×2, biaya 26 kayu + 8 batu) menyediakan dua slot Hunter dengan radius 18 tile. Tiap hewan memberi 5 pangan setelah tiga serangan; node pulih setelah 105 detik. Pondok Pengintai (3×2, biaya 24 kayu + 10 batu) menyediakan dua slot Scout dengan radius kerja 22 tile; Scout menjelajahi sektor terjangkau dengan penglihatan lokal 144px dan kembali ke Post saat tidak ada area baru yang dapat dijangkau. Jika belum ada fasilitas khusus, pekerja tetap memakai radius depot seperti pada Classic lama. Jika semua slot fasilitas penuh, pekerja tambahan tidak mengambil alih area kerja fasilitas tersebut.
 - Pada Frontier, Gudang menampung 180 unit, Outpost 120 unit, dan Lumbung 240 unit pangan (hanya menerima food). Petani memprioritaskan Lumbung untuk setor pangan; tiap 3 detik depot terhubung mengirim maksimal 6 unit ke Keep secara otomatis. Lumbung bisa menjadi asal/tujuan pengiriman pangan, tetapi tidak bisa menjadi sumber biaya konstruksi atau riset. Depot yang terputus menyimpan stok sampai jalurnya tersambung. Buka `JOBS → POS` untuk melihat saldo, memilih **satu sumber biaya** (Keep/Gudang/Outpost), dan membuat perintah angkut manual. Konstruksi, riset, dan perbaikan mendebit depot yang dipilih saja; saldo beberapa depot tidak digabung. Depot remote harus tetap terhubung ke Keep. Depot yang terputus di wilayah enemy/contested mendapat peringatan 30 detik sebelum saboteur pertama tiba pada detik ke-60; maksimal dua gelombang per isolasi. Saboteur menyerang depot dan mencuri satu resource setiap dua hit dengan urutan food, iron, wood, stone. Hubungkan jalan kembali atau amankan wilayah untuk menghentikan raid; Outpost guards dan prajurit dapat melawan saboteur. Carrier shipment terlihat berjalan di peta; cargo dicadangkan saat order dibuat, status order terlihat di panel, dan order aktif bisa dibatalkan untuk mengembalikan cargo. Pengiriman menuju Keep memasukkan stok ke inventori pusat.
 - Teknologi 20-node dalam 3 era memperkuat ekonomi, pertahanan, eksplorasi, dan pengepungan.
 
 ### Simpanan dan pengaturan
 - Autosave setiap fajar; simpan manual dengan F5 dan muat dengan F9.
-- Save versi 14 menyimpan world/campaign state, objektif regional, pekerjaan Hunter, depletion/regrowth satwa liar, stok depot, sumber biaya aktif, penugasan penjaga, order angkut dan cargo yang masih dalam perjalanan; save versi 1–13 tetap diterima. Migrasi v14 menghapus occupation Hunter saat membaca save lama dan mempertahankan validitas data sebelum Hunter diperkenalkan.
+- Save versi 15 menyimpan world/campaign state, objektif regional, occupation Hunter/Scout, depletion/regrowth satwa liar, stok depot, sumber biaya aktif, penugasan penjaga, order angkut dan cargo yang masih dalam perjalanan; save versi 1–14 tetap diterima. Migrasi v15 tidak memaksa Scout pada save lama; quota dan priority Scout memakai default baru.
 - Penulisan save memakai file sementara dan salinan pemulihan; loader mencoba salinan tersebut bila file utama rusak.
 - Pengaturan layar penuh, VSync, volume, dan guncangan layar tersimpan di `user://settings.cfg`.
 
