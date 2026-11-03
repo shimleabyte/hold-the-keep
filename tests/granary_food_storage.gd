@@ -45,6 +45,14 @@ func find_building(building_id: String, cell: Vector2i):
     return null
 
 
+func option_index_for_cell(option: OptionButton, cell: Vector2i) -> int:
+    for index in option.item_count:
+        var metadata: Variant = option.get_item_metadata(index)
+        if metadata is Dictionary and Vector2i(int(metadata.get("cx", -1)), int(metadata.get("cy", -1))) == cell:
+            return index
+    return -1
+
+
 func stop_current_main() -> void:
     var main = get_first_node_in_group("main")
     if main != null and is_instance_valid(main):
@@ -208,6 +216,36 @@ func _run() -> void:
     frontier.supply.rebuild()
     require(frontier.supply.is_depot_connected(granary) and frontier.supply.is_depot_connected(storage),
         "Adjacent Granary and Storage depots must join the Keep-rooted network")
+    var hud = get_first_node_in_group("hud")
+    require(hud != null and hud._shipment_source != null and hud._shipment_destination != null,
+        "The logistics panel must expose shipment source and destination controls")
+    hud._refresh_outpost_panel()
+    var granary_source_index := option_index_for_cell(hud._shipment_source, granary_cell)
+    var granary_destination_index := option_index_for_cell(hud._shipment_destination, granary_cell)
+    require(granary_source_index >= 0 and granary_destination_index >= 0,
+        "Granary must appear as both a source and destination in the shipment selectors")
+    hud._shipment_source.select(granary_source_index)
+    hud._refresh_shipment_controls()
+    var food_kind_index := -1
+    var wood_kind_index := -1
+    for kind_index in hud._shipment_kind.item_count:
+        var kind_name := String(hud._shipment_kind.get_item_metadata(kind_index))
+        if kind_name == "food":
+            food_kind_index = kind_index
+        elif kind_name == "wood":
+            wood_kind_index = kind_index
+    require(food_kind_index >= 0 and wood_kind_index >= 0
+        and not hud._shipment_kind.is_item_disabled(food_kind_index)
+        and hud._shipment_kind.is_item_disabled(wood_kind_index),
+        "A Granary source must enable FOOD and disable non-food shipment types")
+    hud._shipment_source.select(0)
+    hud._shipment_destination.select(granary_destination_index)
+    hud._refresh_shipment_controls()
+    require(not hud._shipment_kind.is_item_disabled(food_kind_index)
+        and hud._shipment_kind.is_item_disabled(wood_kind_index),
+        "A Granary destination must enable FOOD and disable non-food shipment types")
+    hud._shipment_destination.select(0)
+    hud._refresh_shipment_controls()
     require(granary.store_resource("food", 20) and storage.store_resource("wood", 5),
         "Granary food and Storage materials must be stored in separate local ledgers")
 
