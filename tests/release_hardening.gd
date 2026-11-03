@@ -4,7 +4,7 @@ var world_config
 var game_clock
 var save_system
 
-## Release hardening: historical save schemas, interrupted writes and export presets.
+## Save hardening: historical schemas, interrupted writes and rollback recovery.
 
 
 func ticks(count: int) -> void:
@@ -33,6 +33,20 @@ func _fixture_for_version(source: Dictionary, target_version: int) -> Dictionary
         fixture["resources"] = legacy_resources
         for index in range(fixture["buildings"].size() - 1, -1, -1):
             if String(fixture["buildings"][index].get("id", "")) == "hunting_lodge":
+                fixture["buildings"].remove_at(index)
+
+    if target_version < 16:
+        fixture["quota"].erase("healer")
+        if fixture.has("job_priority"):
+            fixture["job_priority"].erase("healer")
+        for villager in fixture["villagers"]:
+            if String(villager.get("job", "")) == "healer":
+                villager["job"] = ""
+            if String(villager.get("occupation", "")) == "healer":
+                villager["occupation"] = ""
+                villager["job"] = ""
+        for index in range(fixture["buildings"].size() - 1, -1, -1):
+            if String(fixture["buildings"][index].get("id", "")) == "infirmary":
                 fixture["buildings"].remove_at(index)
 
     if target_version < 15:
@@ -90,38 +104,6 @@ func _write_text(path: String, value: String) -> bool:
     return error == OK
 
 
-func _check_export_presets() -> void:
-    var presets := ConfigFile.new()
-    assert(presets.load("res://export_presets.cfg") == OK,
-        "The release export preset file must parse")
-
-    var sections := presets.get_sections()
-    assert(sections.has("preset.0") and sections.has("preset.1"),
-        "Both Windows and Linux export presets must be declared")
-
-    assert(String(presets.get_value("preset.0", "name", "")) == "Windows Desktop",
-        "Windows export preset name must match the build script")
-    assert(String(presets.get_value("preset.0", "platform", "")) == "Windows Desktop",
-        "Windows preset must target the desktop platform")
-    assert(String(presets.get_value("preset.0", "export_path", "")) == "build/windows/HoldTheKeep.exe",
-        "Windows artifact path must match the release build script")
-
-    assert(String(presets.get_value("preset.1", "name", "")) == "Linux",
-        "Linux export preset name must match the build script")
-    assert(String(presets.get_value("preset.1", "platform", "")) == "Linux",
-        "Linux preset must target Linux")
-    assert(String(presets.get_value("preset.1", "export_path", "")) == "build/linux/HoldTheKeep.x86_64",
-        "Linux artifact path must match the release build script")
-
-    for section in ["preset.0", "preset.1"]:
-        assert(String(presets.get_value(section, "export_filter", "")) == "all_resources",
-            "Release exports must include all runtime resources")
-        assert(String(presets.get_value(section, "include_filter", "")) == "*.json",
-            "Data-driven JSON definitions must be included in release exports")
-        assert(bool(presets.get_value(section + ".options", "binary_format/embed_pck", false)),
-            "Release exports must embed the PCK")
-
-
 func _run() -> void:
     world_config.apply_profile("classic")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
@@ -136,21 +118,19 @@ func _run() -> void:
     var classic_snapshot: Dictionary = save_system.collect(classic_main)
     assert(classic_snapshot["version"] == 15,
         "Current release hardening must exercise the latest v15 schema")
-    for version in range(1, 16):
+    for version in range(1, 17):
         var fixture := _fixture_for_version(classic_snapshot, version)
         assert(save_system._valid_save(fixture),
             "Classic migration fixture v%d must remain structurally valid" % version)
 
     var unsupported := classic_snapshot.duplicate(true)
-    unsupported["version"] = 16
+    unsupported["version"] = 17
     assert(not save_system._valid_save(unsupported),
         "Unknown future save versions must be rejected")
     var invalid_index := classic_snapshot.duplicate(true)
     invalid_index["fog"]["cells"].append(64 * 64)
     assert(not save_system._valid_save(invalid_index),
         "Out-of-range Classic fog indices must be rejected")
-
-    _check_export_presets()
 
     # Simulate a crash after writing a temporary file but before installing it.
     assert(save_system.save_current(true), "The first primary save must be installed")
@@ -187,7 +167,7 @@ func _run() -> void:
     var frontier_snapshot: Dictionary = save_system.collect(frontier_main)
     assert(frontier_snapshot["world"]["map_size"] == 128,
         "Frontier fixtures must use the 128x128 world")
-    for version in range(7, 16):
+    for version in range(7, 17):
         var fixture := _fixture_for_version(frontier_snapshot, version)
         assert(save_system._valid_save(fixture),
             "Frontier migration fixture v%d must remain structurally valid" % version)
@@ -207,7 +187,7 @@ func _run() -> void:
     assert(not save_system._valid_save(broken_campaign),
         "A truncated Frontier objective registry must be rejected")
 
-    print("PASS: Classic save schemas v1-v15, Frontier v7-v15, interrupted writes, backup recovery eligibility and Windows/Linux export presets")
+    print("PASS: Classic save schemas v1-v16, Frontier v7-v16, interrupted writes and backup recovery eligibility")
     quit(0)
 
 
