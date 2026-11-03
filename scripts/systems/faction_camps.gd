@@ -25,7 +25,7 @@ func setup(main_ref, saved: Dictionary = {}) -> void:
     main = main_ref
     camps.clear()
     _scan_timer = CAMP_SCAN_INTERVAL
-    if WorldConfig.profile_id != "frontier":
+    if not WorldConfig.is_frontier_profile():
         return
 
     main.nav.rebuild()
@@ -502,7 +502,7 @@ func _spawn_patrol(camp: Dictionary) -> bool:
 
 
 func _process(delta: float) -> void:
-    if WorldConfig.profile_id != "frontier" or camps.is_empty():
+    if not WorldConfig.is_frontier_profile() or camps.is_empty():
         return
     _scan_timer -= delta
     if _scan_timer > 0.0:
