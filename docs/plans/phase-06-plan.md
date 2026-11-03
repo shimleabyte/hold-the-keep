@@ -1,7 +1,7 @@
 # Phase 06 — Factions, Enemy Archetypes and Territorial AI
 
-**Status:** Partially implemented. Faction foundations, all delivered combat archetype slices, Phase 06.3 camps/patrols and Phase 06.4 infrastructure raids are merged into `main`. PR #44 (`5cc5084`) merged raids; workflow #41381487306 passed 68/68 jobs on Godot 4.3/4.7.
-**Mainline:** `main`. Phase 06.4 and the Phase 06.5 stress workload are merged. PR #46 carries the GDScript syntax correction; its corrected Godot workflow #41385244114 passed 70/70 jobs, but the correction remains unmerged.
+**Status:** Partially implemented. Faction foundations, six composable archetype behaviors, Phase 06.3 camps/patrols, Phase 06.4 infrastructure raids and Phase 06.5 combined warfare verification are merged into `main`. PR #47 (`b06c355`) integrated the six behavior components and the corrected integrated stress suite; workflow #41394905158 passed 70/70 jobs on Godot 4.3/4.7.
+**Mainline:** `main` at the Phase 06.5 integration point `b06c355` (with later Phase 04/05/08/09 changes now also on main). PR #47 includes the GDScript correction formerly isolated in PR #46; PR #46 is superseded. Integrated workflow #41394905158 passed 70/70 jobs.
 **Current save schema:** v13. Preserve Classic compatibility and validate legacy migrations through v13 plus v13 round-trip.
 **Engine target:** Godot 4.7 only.
 
@@ -22,7 +22,7 @@ Replace the single generic enemy identity with four regional powers whose units 
 
 ## Remaining implementation sequence
 
-### 06.2 — Composable combat behaviors (implementation complete on PR #47; awaiting mainline integration)
+### 06.2 — Composable combat behaviors (merged via PR #47; workflow #41394905158 passed 70/70)
 - Extract movement, attack-pattern and ability policies from the enemy controller.
 - [x] Scout scouting/marking merged through PR #39 (`11f3f13`): a telegraphed mark is shared only with same-faction enemies in a bounded radius, prioritizes the marked defender until expiry, and can be interrupted by stagger or target disengagement. `tests/scout_marking.gd` passed on Godot 4.3 and 4.7; workflow #41354720293 passed 58/58 jobs.
 - [x] Shieldbearer directional brace merged through PR #36 (`b02aa60`): data-defined wind-up, locked facing, finite active window and frontal damage mitigation; side/rear hits bypass the block. Player attacks, Cleave, Dash and tower arrows pass their impact origin. Stagger interrupts the brace; disengaging during wind-up cancels it. `tests/shieldbearer_behavior.gd` appeared in the available successful job list; the complete 4.3/4.7 matrix was not independently verifiable from that snapshot.
@@ -58,8 +58,8 @@ Replace the single generic enemy identity with four regional powers whose units 
 ### 06.5 — Persistence, balance and verification
 - [x] Persist camp state, patrol assignments, raid budgets/cooldowns, active raid target and faction identity as additive save-v13 fields.
 - [x] Validate Classic save migration fixtures v1–v13 and Frontier fixtures v7–v13 in `tests/release_hardening.gd`; active raid serialization/restoration is covered by `tests/faction_raids.gd`.
-- [x] Add combined stress coverage for large simultaneous garrisons, patrols and raids. Regression `tests/faction_warfare_stress.gd` was merged via PR #45 (`83dd633`): 48 garrisons, eight patrols, four concurrent faction raids and 48 villagers, with A* and save-v13 assertions. The first post-merge workflow failed at line 214 due to a literal escaped newline; corrective PR #46 fixes the syntax and is running CI.
-- [x] Full corrected workflow #41385244114 passed 70/70 jobs on Godot 4.3/4.7, including import/parse, all 33 regression suites per engine, Frontier performance and Windows/Linux export. The correction is in open PR #46 and must reach `main` before the merged branch is considered fixed.
+- [x] Add combined stress coverage for large simultaneous garrisons, patrols, raids and archetype behavior. PR #47 (`b06c355`) includes the GDScript correction formerly isolated in PR #46 and extends the workload to tick all 48 garrisons across all six behaviors, alongside eight patrols, four raids, 48 additional villagers, same-faction Shaman healing and save-v13 assertions.
+- [x] Integrated workflow [#41394905158](https://github.com/shimleabyte/hold-the-keep/actions/runs/41394905158) passed 70/70 jobs on Godot 4.3/4.7, including import/parse, all regression suites per engine, Frontier performance and Windows/Linux export. PR #47 contains the correction; open PR #46 is superseded.
 - [ ] Review screenshots and play the Frontier campaign manually before calling Phase 06 complete.
 
 ## Invariants
