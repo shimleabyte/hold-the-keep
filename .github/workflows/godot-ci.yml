@@ -71,6 +71,7 @@ jobs:
           - campaign_balance_matrix
           - campaign_combat_simulation
           - data_db_validation
+          - decision_events
           - release_hardening
           - input_rebinding
           - map_stages
@@ -109,6 +110,8 @@ jobs:
         run: godot --headless --path . --import
 
       - name: Run ${{ matrix.test }}
+        env:
+          HTK_AUTO_RESOLVE_EVENTS: "1"
         run: timeout 180s godot --headless --fixed-fps 60 --path . --script "res://tests/${{ matrix.test }}.gd"
 
   performance-diagnostic:
@@ -136,6 +139,7 @@ jobs:
           VILLAGERS: "80"
           FRAMES: "360"
           WARMUP: "90"
+          HTK_AUTO_RESOLVE_EVENTS: "1"
         run: |
           mkdir -p build/diagnostics
           godot --headless --fixed-fps 60 --path . --script res://tests/perf.gd 2>&1 | tee build/diagnostics/frontier-perf.txt
@@ -148,6 +152,7 @@ jobs:
           VILLAGERS: "80"
           FRAMES: "180"
           WARMUP: "45"
+          HTK_AUTO_RESOLVE_EVENTS: "1"
         run: |
           godot --headless --fixed-fps 60 --path . --script res://tests/perf.gd 2>&1 | tee build/diagnostics/frontier-expedition-perf.txt
           grep -q "^PERF_REPORT " build/diagnostics/frontier-expedition-perf.txt
