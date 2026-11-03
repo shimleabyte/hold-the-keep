@@ -81,9 +81,9 @@ func _initialize() -> void:
         if String(resource.get("kind", "")) != "food":
             legacy_resources.append(resource)
     legacy_save["resources"] = legacy_resources
-    for index in range(legacy_save["buildings"].size() - 1, -1, -1):
-        if String(legacy_save["buildings"][index].get("id", "")) == "hunting_lodge":
-            legacy_save["buildings"].remove_at(index)
+    for building_index in range(legacy_save["buildings"].size() - 1, -1, -1):
+        if String(legacy_save["buildings"][building_index].get("id", "")) == "hunting_lodge":
+            legacy_save["buildings"].remove_at(building_index)
     for legacy_version in range(1, 7):
         legacy_save["version"] = legacy_version
         assert(save_system._valid_save(legacy_save),
