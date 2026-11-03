@@ -34,6 +34,8 @@ var workers: Array = []
 var repairers: Array = []
 var guards: Array = []
 var guard_capacity := 0
+var _healer_targets: Dictionary = {}
+var _healer_assignments: Dictionary = {}
 var local_stockpile: Dictionary = {}
 var stockpile_capacity := 0
 var _sabotage_remaining := 0.0
@@ -284,6 +286,46 @@ func release(v) -> void:
     if is_instance_valid(v) and v.workplace == self:
         v.workplace = null
         v.workplace_job = ""
+
+
+func claim_heal_target(healer, patient) -> bool:
+    if id != "infirmary" or is_sabotaged() or not is_instance_valid(healer) or not is_instance_valid(patient):
+        return false
+    var healer_id := healer.get_instance_id()
+    var patient_id := patient.get_instance_id()
+    if int(_healer_assignments.get(healer_id, -1)) == patient_id:
+        return true
+    release_heal_target(healer)
+    var current = _healer_targets.get(patient_id, null)
+    if current != null and is_instance_valid(current) and current != healer:
+        return false
+    _healer_targets[patient_id] = healer
+    _healer_assignments[healer_id] = patient_id
+    return true
+
+
+func is_heal_target_reserved(patient, except_healer = null) -> bool:
+    if not is_instance_valid(patient):
+        return false
+    var patient_id := patient.get_instance_id()
+    var current = _healer_targets.get(patient_id, null)
+    if current == null or not is_instance_valid(current):
+        _healer_targets.erase(patient_id)
+        return false
+    return current != except_healer
+
+
+func release_heal_target(healer) -> void:
+    if not is_instance_valid(healer):
+        return
+    var healer_id := healer.get_instance_id()
+    if not _healer_assignments.has(healer_id):
+        return
+    var patient_id := int(_healer_assignments[healer_id])
+    var current = _healer_targets.get(patient_id, null)
+    if current == healer:
+        _healer_targets.erase(patient_id)
+    _healer_assignments.erase(healer_id)
 
 
 func can_assign_repairer(v) -> bool:
