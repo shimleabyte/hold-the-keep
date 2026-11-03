@@ -163,7 +163,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
         enemy.set_physics_process(false)
         enemies.append(enemy)
 
-    var wave_budget := main.spawner.wave_size(int(case_data["day"]))
+    var wave_budget: int = main.spawner.wave_size(int(case_data["day"]))
     var keep_start := int(keep.hp)
     var elapsed := 0.0
     var player_attack_timer := 0.0
