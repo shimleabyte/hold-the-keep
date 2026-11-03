@@ -55,6 +55,9 @@ func _initialize() -> void:
     main.nav.rebuild()
     main.supply.rebuild()
 
+    require(main.supply._cost_transactions != null
+        and main.supply._cost_transactions.network == main.supply,
+        "SupplyNetwork must configure its isolated cost-transaction service")
     require(main.supply.is_depot_connected(first) and main.supply.is_depot_connected(second),
         "Adjacent Storage depots must be eligible sources through the Keep-rooted network")
     require(main.supply.get_cost_source_cell() == keep_cell,

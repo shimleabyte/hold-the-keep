@@ -14,6 +14,7 @@ const MAX_SHIPMENT_HISTORY := 16
 const MAX_ACTIVE_SHIPMENTS := 8
 const SHIPMENT_TICK := 0.2
 const CARRIER_SCRIPT := preload("res://scripts/entities/supply_carrier.gd")
+const COST_TRANSACTIONS_SCRIPT := preload("res://scripts/systems/supply_cost_transactions.gd")
 const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
 const PRESSURE_WARNING_SECONDS := 30.0
 const PRESSURE_RAID_SECONDS := 60.0
@@ -38,11 +39,13 @@ var _pressure_timer := 0.0
 var _pressure_records: Dictionary = {}
 var _next_shipment_id := 1
 var _cost_source_cell := Vector2i(-1, -1)
+var _cost_transactions = COST_TRANSACTIONS_SCRIPT.new()
 var shipment_orders: Array[Dictionary] = []
 var _carriers: Dictionary = {}
 
 
 func _ready() -> void:
+    _cost_transactions.configure(self)
     add_to_group("supply_network")
     Events.building_placed.connect(_on_building_event)
     Events.building_removed.connect(_on_building_event)
@@ -127,119 +130,35 @@ func transfer_local_stockpiles() -> int:
 ## Construction and research draw from one explicitly selected depot.
 ## Remote balances remain separate; nothing is pooled or silently transferred.
 func get_cost_source_cell() -> Vector2i:
-    var source = _selected_cost_depot()
-    return source.cell if source != null else Vector2i(-1, -1)
-
-
-func _selected_cost_depot():
-    _ensure_current()
-    if _cost_source_cell != Vector2i(-1, -1):
-        var selected = _find_depot(_cost_source_cell)
-        if selected != null:
-            return selected
-    return _find_keep()
+    return _cost_transactions.get_cost_source_cell()
 
 
 func set_cost_source(cell: Vector2i) -> bool:
-    if not WorldConfig.is_frontier_profile():
-        return cell == get_cost_source_cell()
-    _ensure_current()
-    var depot = _find_depot(cell)
-    if depot == null or not ["keep", "storage", "outpost"].has(String(depot.id)):
-        return false
-    if not is_depot_connected(depot):
-        return false
-    if _cost_source_cell == cell:
-        return true
-    _cost_source_cell = cell
-    Events.supply_cost_source_changed.emit()
-    return true
+    return _cost_transactions.set_cost_source(cell)
 
 
 func cost_source_label() -> String:
-    var source = _selected_cost_depot()
-    if source == null:
-        return "KEEP"
-    var label := "KEEP" if String(source.id) == "keep" else (
-        "POS %d,%d" % [source.cell.x, source.cell.y] if String(source.id) == "outpost"
-        else "GUDANG %d,%d" % [source.cell.x, source.cell.y]
-    )
-    if WorldConfig.is_frontier_profile() and not is_depot_connected(source):
-        label += " · JALUR PUTUS"
-    return label
+    return _cost_transactions.cost_source_label()
 
 
 func cost_source_amount(kind: String) -> int:
-    if not WorldConfig.is_frontier_profile():
-        return Inventory.get_amount(kind)
-    var source = _selected_cost_depot()
-    if source == null or not is_depot_connected(source):
-        return 0
-    return Inventory.get_amount(kind) if String(source.id) == "keep" else source.stockpile_amount(kind)
+    return _cost_transactions.cost_source_amount(kind)
 
 
 func cost_reason(cost: Dictionary) -> String:
-    if not WorldConfig.is_frontier_profile():
-        return "" if Inventory.can_afford(cost) else "Bahan kurang di KEEP"
-    var source = _selected_cost_depot()
-    if source == null:
-        return "Depot sumber biaya tidak tersedia"
-    if not is_depot_connected(source):
-        return "Jalur ke sumber biaya terputus"
-    for kind in cost:
-        var amount := int(cost[kind])
-        if amount < 0:
-            return "Biaya bahan tidak valid"
-        if amount == 0:
-            continue
-        if String(source.id) != "keep" and not TRANSFER_KINDS.has(String(kind)):
-            return "Jenis bahan tidak tersedia di depot lokal"
-        var available: int = Inventory.get_amount(String(kind)) if String(source.id) == "keep" else int(source.stockpile_amount(String(kind)))
-        if available < amount:
-            return "Bahan kurang di " + cost_source_label()
-    return ""
+    return _cost_transactions.cost_reason(cost)
 
 
-## Return unfinished construction materials to their original depot when possible.
-## A missing or full remote depot falls back to the central Keep inventory.
 func refund_cost_to_source(source_cell: Vector2i, refund: Dictionary) -> void:
-    var source = _find_depot(source_cell)
-    if source == null or not ["keep", "storage", "outpost"].has(String(source.id)):
-        source = _find_keep()
-    for kind in refund:
-        var amount := int(refund[kind])
-        if amount <= 0:
-            continue
-        if source != null and String(source.id) != "keep":
-            if source.store_resource(String(kind), amount):
-                continue
-        Inventory.add(String(kind), amount)
-    Events.supply_stock_changed.emit()
+    _cost_transactions.refund_cost_to_source(source_cell, refund)
 
 
 func can_pay_cost(cost: Dictionary) -> bool:
-    return cost_reason(cost) == ""
+    return _cost_transactions.can_pay_cost(cost)
 
 
 func pay_cost(cost: Dictionary) -> bool:
-    if cost_reason(cost) != "":
-        return false
-    var source = _selected_cost_depot()
-    if not WorldConfig.is_frontier_profile() or source == null or String(source.id) == "keep":
-        return Inventory.spend_all(cost)
-    var paid: Dictionary = {}
-    for kind in cost:
-        var resource := String(kind)
-        var amount := int(cost[kind])
-        if amount <= 0:
-            continue
-        if not source.take_resource(resource, amount):
-            for paid_kind in paid:
-                source.store_resource(String(paid_kind), int(paid[paid_kind]))
-            return false
-        paid[resource] = amount
-    Events.supply_stock_changed.emit()
-    return true
+    return _cost_transactions.pay_cost(cost)
 
 
 ## Return the raid exposure state used by the depot panel.
