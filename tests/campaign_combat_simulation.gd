@@ -10,7 +10,6 @@ const STEP_SECONDS := 0.1
 const MAX_SIM_SECONDS := 120.0
 const PLAYER_ATTACK_INTERVAL := 0.45
 const PLAYER_CLEAVE_INTERVAL := 8.0
-const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
 
 const CASES: Array[Dictionary] = [
     {
@@ -133,6 +132,10 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     player._rally_cd = 0.0
     player._rally_t = 0.0
 
+    var player_level_start: int = player.level
+    var enemy_script: Script = load("res://scripts/entities/enemy.gd")
+    assert(enemy_script != null, "Enemy script must load after autoload initialization")
+
     var villagers := get_nodes_in_group("villagers")
     var population_start := villagers.size()
     var soldier = null
@@ -161,7 +164,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     for index in range(roster.size()):
         var enemy_id := String(roster[index])
         assert(data_db.enemies.has(enemy_id), "Missing combat simulation enemy data: " + enemy_id)
-        var enemy = ENEMY_SCRIPT.new()
+        var enemy = enemy_script.new()
         enemy.setup(data_db.enemies[enemy_id], main.world, main.flow, player, String(case_data["faction"]))
         enemy.position = player.global_position + offsets[index % offsets.size()]
         main.world.entities.add_child(enemy)
@@ -234,7 +237,8 @@ func _run_case(case_data: Dictionary) -> Dictionary:
         "case": String(case_data["label"]),
         "day": int(case_data["day"]),
         "faction": String(case_data["faction"]),
-        "player_level": player.level,
+        "player_level_start": player_level_start,
+        "player_level_end": player.level,
         "wave_budget": wave_budget,
         "sample_roster": roster.duplicate(),
         "sample_count": roster.size(),
