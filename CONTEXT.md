@@ -13,7 +13,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 **Merged into `main`:** PR #63 (`a594069`) adds the optional 192×192 Frontier Expedition profile. It preserves Classic 64×64 and standard Frontier 128×128, begins in a 128×128 connected heartland, and opens each of four outer marches only after the player reaches its survey crossing. Four strongholds, seven regional objective sites and four faction camps are placed in their sealed outer marches; permanent fog reveals them as they are explored. Crossing state is derived from existing discovery objectives; save schema remains v13. PR workflow #41580977570 passed 88/88 jobs across Godot 4.3/4.7, both performance diagnostics, and Windows/Linux export checks. Main push workflow #41581523207 was pending at the time of this update. PR #63 is merged; Frontier Expedition is part of `main`.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
-- Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
+- Versi aktif: **Godot 4.7**. Godot 4.3 is not an active compatibility target or CI gate.
 - Jendela default 1280×720, minimum 960×540. Viewport logis mengikuti setengah ukuran client window (minimum 480×270), pixel art integer-scale tepat 2×.
 - Tujuan pemain: bertahan 15 hari, di malam ke-15 kalahkan Raja Lawan. Keep hancur = kalah.
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
@@ -138,7 +138,7 @@ Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildi
 - Steam integration opsional dan bukan blocker gameplay.
 - Save v12 dan compatibility coverage tersedia di `main` melalui PR #31, tetapi acceptance upgrade pada mesin bersih tetap belum diverifikasi.
 
-## 9. Rencana berikut (belum dikerjakan)
+## 9. Rencana berikut
 Urutan backlog berdasarkan dependency:
 1. Phase 02: selesaikan player-directed shipments/carrier visuals, inspect/withdraw local stock, Outpost garrison dan local visibility. Supply attrition menunggu sampai transfer behavior dan local defense tervalidasi.
 2. Phase 04: implementasikan Hunter, Scout, Healer dan Blacksmith dengan workplace, radius, biaya/hasil, UI kuota, pathfinding dan save/load.
@@ -605,3 +605,11 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Output JSON per kasus: wave budget vs sample count, Keep HP/damage, populasi tersisa/hilang, player downs, musuh dikalahkan/tersisa, waktu simulasi dan failure modes.
 - Batas validitas: bukan simulasi seluruh wave 20–65 musuh, pathfinding, autonomous AI, ekonomi pekerja atau pengganti human playtest. Tidak mengubah angka balance runtime atau save schema v13.
 - Test terdaftar di CI Godot 4.3/4.7 dan runner lokal. Probe ini menandai indikator untuk human follow-up: King case menghabiskan 345 Keep HP, menewaskan satu villager dan menjatuhkan player 10 kali dalam 75.1 detik simulasi; angka ini berasal dari roster terkurasi, bukan full-wave balance verdict.
+
+
+## Feature branch — Healer + Infirmary (2026-11-03)
+- Branch: `feat/healer-infirmary`, stacked after `feat/scout-specialist`; do not merge until Hunter PR #64 and Scout PR #65 are integrated and this branch is retargeted.
+- Adds Era II `field_medicine`, a locked two-slot Infirmary with a 16-tile service radius, the Healer occupation (I shortcut), patient reservations per workplace, and bounded 10-HP treatment every 3.2 seconds.
+- Save schema increments to v16. Existing v15 saves remain valid; migration coverage includes v1–v16 Classic and v7–v16 Frontier.
+- Regression `tests/healer_infirmary.gd` covers capacity, assignment, most-wounded patient selection, independent reservations, treatment clamp, demolition cleanup and v15 migration.
+- This branch is not in `main`; manual rendered and gameplay acceptance remains pending.
