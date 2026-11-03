@@ -816,6 +816,14 @@ func is_expedition_survey_site_reached(region: String, player_position: Vector2)
     return Vector2(player_cell - approach).length_squared() <= 25.0
 
 
+func expedition_outer_landing_cell(region: String) -> Vector2i:
+    if not _expedition_gate_cells.has(region):
+        return Vector2i(-1, -1)
+    var gate_cell: Vector2i = _expedition_gate_cells[region]
+    var outward := Vector2i(0, -1) if gate_cell.y < map_size / 2 else Vector2i(0, 1)
+    return gate_cell + outward
+
+
 func is_expedition_gate_open(region: String) -> bool:
     return bool(_expedition_unlocked_regions.get(region, false))
 
