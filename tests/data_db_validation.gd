@@ -1,23 +1,31 @@
 extends SceneTree
 ## Regression tests for static gameplay data contracts and cross-file references.
 
+var failures: int = 0
+
+
+func require(condition: bool, message: String) -> void:
+	if not condition:
+		failures += 1
+		push_error("FAIL: " + message)
+
 func _initialize() -> void:
 	call_deferred("_run")
 
 
 func _run() -> void:
 	var data_db = root.get_node("DataDB")
-	assert(data_db.validation_errors.is_empty(),
+	require(data_db.validation_errors.is_empty(),
 		"Shipped gameplay data must validate: %s" % "; ".join(data_db.validation_errors))
-	assert(data_db.buildings.has("keep") and data_db.enemies.has("king"),
+	require(data_db.buildings.has("keep") and data_db.enemies.has("king"),
 		"DataDB must only publish indexed data after validation succeeds")
-	assert(data_db.cost_of("house").get("wood", -1) == 12,
+	require(data_db.cost_of("house").get("wood", -1) == 12,
 		"Validated building costs must remain available through the existing API")
 
 	var validator_script = load("res://scripts/autoload/data_schema_validator.gd")
 	var validator = validator_script.new()
 	var valid_sources: Dictionary = data_db.source_data.duplicate(true)
-	assert(validator.validate(valid_sources).is_empty(),
+	require(validator.validate(valid_sources).is_empty(),
 		"An unchanged copy of every shipped data source must remain valid")
 
 	var duplicate_building := valid_sources.duplicate(true)
@@ -82,6 +90,10 @@ func _run() -> void:
 	_assert_has_error(errors, "events must be a JSON array",
 		"Invalid JSON root types must fail with the source name")
 
+	if failures > 0:
+		push_error("FAIL: %d static data-contract assertions failed" % failures)
+		quit(1)
+		return
 	print("PASS: DataDB schema, uniqueness, numeric bounds, references and campaign progression")
 	quit(0)
 
@@ -97,5 +109,5 @@ func _assert_has_error(errors: Array[String], fragment: String, message: String)
 	for issue in errors:
 		if issue.contains(fragment):
 			return
-	assert(false, "%s. Expected diagnostic containing '%s'; got: %s" %
+	require(false, "%s. Expected diagnostic containing '%s'; got: %s" %
 		[message, fragment, "; ".join(errors)])
