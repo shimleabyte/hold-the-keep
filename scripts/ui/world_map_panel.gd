@@ -135,6 +135,7 @@ func _draw() -> void:
     _draw_resource_markers()
     _draw_building_markers()
     _draw_campaign_markers()
+    _draw_expedition_survey_markers()
     _draw_frontier_site_markers()
     _draw_faction_camp_markers()
     _draw_unit_markers()
@@ -261,6 +262,32 @@ func _draw_campaign_markers() -> void:
         draw_rect(Rect2(marker_position - Vector2.ONE * marker_size * 0.5, Vector2.ONE * marker_size), marker_color)
 
 
+
+
+func _draw_expedition_survey_markers() -> void:
+    if not WorldConfig.is_frontier_expedition() or world == null:
+        return
+    for region in ["GREENWOOD", "HIGHLANDS", "FENLANDS", "ASHEN_MARCH"]:
+        if world.is_expedition_gate_open(region):
+            continue
+        if not world._expedition_gate_cells.has(region):
+            continue
+        var gate_cell: Vector2i = world._expedition_gate_cells[region]
+        var inward := Vector2i(0, 1) if gate_cell.y < WorldConfig.map_size / 2 else Vector2i(0, -1)
+        var approach := gate_cell + inward
+        var approach_position := (Vector2(approach) + Vector2(0.5, 0.5)) * WorldConfig.tile_size
+        # A survey marker is only rendered after ordinary fog has revealed its approach.
+        if not _position_is_known(approach_position):
+            continue
+        var marker_position := _world_to_map(approach_position)
+        var marker_size := maxf(2.5, 5.5 * _map_scale / 3.0)
+        draw_colored_polygon(PackedVector2Array([
+            marker_position + Vector2(0, -marker_size),
+            marker_position + Vector2(marker_size, 0),
+            marker_position + Vector2(0, marker_size),
+            marker_position + Vector2(-marker_size, 0)
+        ]), Color("#e0bd70"))
+        draw_circle(marker_position, maxf(1.0, marker_size * 0.22), Color("#302820"))
 
 
 func _draw_frontier_site_markers() -> void:
