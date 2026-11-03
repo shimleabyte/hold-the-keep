@@ -3,7 +3,7 @@
 **Status:** Partially implemented. Faction foundations, all delivered combat archetype slices, Phase 06.3 camps/patrols and Phase 06.4 infrastructure raids are merged into `main`. PR #44 (`5cc5084`) merged raids; workflow #41381487306 passed 68/68 jobs on Godot 4.3/4.7.
 **Mainline:** `main`. Phase 06.4 and the Phase 06.5 stress workload are merged. PR #46 carries the GDScript syntax correction; its corrected Godot workflow #41385244114 passed 70/70 jobs, but the correction remains unmerged.
 **Current save schema:** v13. Preserve Classic compatibility and validate legacy migrations through v13 plus v13 round-trip.
-**Engine target:** Godot 4.3 and 4.7.
+**Engine target:** Godot 4.7 only.
 
 ## Goal
 
