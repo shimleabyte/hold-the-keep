@@ -38,6 +38,7 @@ tests=(
     frontier_stress
     campaign_reload_hardening
     campaign_balance_matrix
+    campaign_combat_simulation
     release_hardening
     input_rebinding
     map_stages

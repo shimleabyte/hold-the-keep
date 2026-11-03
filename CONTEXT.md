@@ -15,7 +15,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #61 (save schema v13; status per 3 November 2026). Perilaku Shieldbearer/Scout/Saboteur/Siege Engine/Beast Rider, faction camps/patrols/raids, combined warfare stress, Phase 08.3–08.7 visual/audio identity, dan Phase 09.3 late-act save/reload acceptance sudah tercakup. PR #57 menambah regression test end-to-end untuk Act I–IV, sebelas objective, empat stronghold, gate King hari ke-20 dan persistensi victory setelah reload; gameplay dan save schema tidak berubah.
+Ringkasan implementasi aktual pada `main` setelah PR #61 (save schema v13; status per 3 November 2026). PR #62 pada branch `test/phase-09-campaign-combat-simulation` menambahkan scripted combat-budget probe Phase 09.2; validasi Godot 4.3/4.7 masih berjalan dan belum menjadi bagian `main`. Perilaku Shieldbearer/Scout/Saboteur/Siege Engine/Beast Rider, faction camps/patrols/raids, combined warfare stress, Phase 08.3–08.7 visual/audio identity, dan Phase 09.3 late-act save/reload acceptance sudah tercakup. PR #57 menambah regression test end-to-end untuk Act I–IV, sebelas objective, empat stronghold, gate King hari ke-20 dan persistensi victory setelah reload; gameplay dan save schema tidak berubah.
 
 | Area | Kondisi saat ini |
 |---|---|
@@ -592,3 +592,11 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Farmers prioritize reachable Granaries; Classic daily upkeep and villager growth draw from central Inventory first, then stored Granary food. The resource bar displays combined usable food.
 - Frontier Granaries participate in connected depot transfers, food-only shipments, isolated-depot pressure and saboteur/faction raids. Granary is intentionally excluded as a construction/research cost source.
 - Save schema stays v13 with per-building accepted-resource validation; legacy v13 saves without Granaries remain valid. Regression covers Classic/Frontier behavior and save/load on both Godot engines.
+
+
+## Phase 09.2 — scripted campaign combat-budget probes (2026-11-03, PR #62)
+- Menambahkan `tests/campaign_combat_simulation.gd`: lima encounter terkurasi untuk ujung Act I–IV dan serangan King pada hari ke-20.
+- Menggunakan transaksi damage player/enemy, armor, structure multiplier, cooldown, Cleave dan Rally yang sudah ada; target schedule dibuat deterministik.
+- Output JSON per kasus: wave budget vs sample count, Keep HP/damage, populasi tersisa/hilang, player downs, musuh dikalahkan/tersisa, waktu simulasi dan failure modes.
+- Batas validitas: bukan simulasi seluruh wave 20–65 musuh, pathfinding, autonomous AI, ekonomi pekerja atau pengganti human playtest. Tidak mengubah angka balance runtime atau save schema v13.
+- PR #62 memasukkan test ke CI Godot 4.3/4.7 dan runner lokal; hasil CI final harus diperbarui setelah seluruh job selesai.
