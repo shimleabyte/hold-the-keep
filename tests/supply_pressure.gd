@@ -225,6 +225,18 @@ func _initialize() -> void:
         "A valid snapshot with active supply pressure and a targeted raider must pass validation")
 
     var legacy_v13: Dictionary = snapshot.duplicate(true)
+    legacy_v13["version"] = 13
+    legacy_v13["quota"].erase("hunter")
+    legacy_v13["job_priority"].erase("hunter")
+    for saved_villager in legacy_v13["villagers"]:
+        if String(saved_villager.get("occupation", "")) == "hunter":
+            saved_villager["occupation"] = ""
+            saved_villager["job"] = ""
+    var legacy_resources: Array = []
+    for resource in legacy_v13["resources"]:
+        if String(resource.get("kind", "")) != "food":
+            legacy_resources.append(resource)
+    legacy_v13["resources"] = legacy_resources
     legacy_v13["supply"].erase("pressure")
     for enemy_state in legacy_v13["enemies"]:
         if bool(enemy_state.get("supply_raid", false)):
