@@ -639,19 +639,26 @@ func _setup_expedition_barriers() -> void:
 func _find_expedition_gate_cell(region: String, target: Vector2i) -> Vector2i:
     var core_size := int(WorldConfig.profile_definition(WorldConfig.profile_id).get("expedition_core_size", 128))
     var inward := Vector2i(0, 1) if target.y < map_size / 2 else Vector2i(0, -1)
+    var outward := -inward
     for radius in range(core_size):
         for direction in [-1, 1]:
             var candidate := target + Vector2i(radius * direction, 0)
             var approach := candidate + inward
+            var landing := candidate + outward
             if candidate.x < 1 or candidate.x >= map_size - 1:
                 continue
             if _frontier_region_name(_frontier_region_at(candidate)) != region:
                 continue
             if _frontier_region_name(_frontier_region_at(approach)) != region:
                 continue
+            if _frontier_region_name(_frontier_region_at(landing)) != region:
+                continue
             if tile_type_at(candidate) == T_WATER or not is_buildable(approach) or occupied.has(approach):
                 continue
+            if not is_buildable(landing) or occupied.has(landing):
+                continue
             _expedition_reserved_cells[approach] = true
+            _expedition_reserved_cells[landing] = true
             return candidate
     return Vector2i(-1, -1)
 
