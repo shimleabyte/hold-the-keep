@@ -6,11 +6,11 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio, PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening, PR #58 (`d3bba66`) for Phase 05.2a Builder-driven construction sites, PR #59 (`6147cfc`) for Phase 05.2b construction queue/Builder priorities/HUD, PR #60 (`beef7b7`) for Phase 05.3a Watchtower vision, PR #61 (`d9b87b1`) for Phase 05.3b Granary food reserve, and PR #62 (`4cc0420`) for Phase 09.2 scripted campaign combat-budget probes. PR #62 workflow #41564491766 passed 86/86 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release exports. Save schema remains v13; rendered building/HUD, full-wave balance and human playtest acceptance remain open.
+**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio, PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening, PR #58 (`d3bba66`) for Phase 05.2a Builder-driven construction sites, PR #59 (`6147cfc`) for Phase 05.2b construction queue/Builder priorities/HUD, PR #60 (`beef7b7`) for Phase 05.3a Watchtower vision, PR #61 (`d9b87b1`) for Phase 05.3b Granary food reserve, and PR #62 (`4cc0420`) for Phase 09.2 scripted campaign combat-budget probes; PR #63 (`a594069`) for Frontier Expedition. PR #62 workflow #41564491766 passed 86/86 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release exports. Save schema remains v13; rendered building/HUD, full-wave balance and human playtest acceptance remain open.
 
 **Active implementation branch:** PR #64 (`feat/hunter-hunting-lodge`) adds the Hunter occupation and Pondok Pemburu, deterministic renewable wildlife, five-food harvesting, two workplace slots, an 18-tile radius, J hotkey/priority controls and additive save v14. It retains v1–v13 migration coverage. The branch is not part of `main` until PR #64 merges; its Godot 4.3/4.7 CI and real rendered gameplay review remain acceptance gates.
 
-**Merged into `main`:** PR #63 (`a594069`) adds the optional 192×192 Frontier Expedition profile. It preserves Classic 64×64 and standard Frontier 128×128, begins in a 128×128 connected heartland, and opens each of four outer marches only after the player reaches its survey crossing. Four strongholds, seven regional objective sites and four faction camps are placed in their sealed outer marches; permanent fog reveals them as they are explored. Crossing state is derived from existing discovery objectives; save schema remains v13. PR workflow #41580977570 passed 88/88 jobs across Godot 4.3/4.7, both performance diagnostics, and Windows/Linux export checks. Main push workflow #41581523207 was pending at the time of this update. Do not describe this profile as part of `main` until PR #63 merges.
+**Merged into `main`:** PR #63 (`a594069`) adds the optional 192×192 Frontier Expedition profile. It preserves Classic 64×64 and standard Frontier 128×128, begins in a 128×128 connected heartland, and opens each of four outer marches only after the player reaches its survey crossing. Four strongholds, seven regional objective sites and four faction camps are placed in their sealed outer marches; permanent fog reveals them as they are explored. Crossing state is derived from existing discovery objectives; save schema remains v13. PR workflow #41580977570 passed 88/88 jobs across Godot 4.3/4.7, both performance diagnostics, and Windows/Linux export checks. Main push workflow #41581523207 was pending at the time of this update. PR #63 is merged; Frontier Expedition is part of `main`.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -28,12 +28,12 @@ Ringkasan implementasi aktual pada `main` setelah PR #62 (save schema v13; statu
 | Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit Keep/Storage/Outpost cost source for construction/research/repair is merged; deterministic contested-depot warning and targeted Saboteur raids merged through PR #35 |
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload; Act I–IV + victory reload dilindungi `campaign_reload_hardening.gd` |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
-| Bangunan | Keep, rumah, tembok, menara pengawas (turret + 128px vision), Lumbung 240 pangan, Gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge; Builder queue/reorder/cancel and v13 persistence |
-| Villager | Penebang, penambang, petani, soldier dan Builder; Hunter, Scout, Healer, Blacksmith belum tersedia |
+| Bangunan | Keep, rumah, tembok, menara pengawas (turret + 128px vision), Lumbung 240 pangan, Gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge pada `main`; PR #64 branch menambah Pondok Pemburu. |
+| Villager | Pada `main`: penebang, penambang, petani, soldier dan Builder. PR #64 branch menambah Hunter; Scout, Healer dan Blacksmith masih belum tersedia. |
 | Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; connected infrastructure raids and bounded counterattacks merged via PR #44; manual Frontier balance/play review remains open |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
-| Save/load | v13 pada `main`; state world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo; Classic v1–v13 dan Frontier v7–v13 migration matrix dijaga. PR #34 adds optional cost-source preference without a save-version bump; earlier v13 snapshots without it remain valid |
+| Save/load | v13 pada `main`; PR #64 branch menulis v14 dengan wildlife depletion/regrowth dan Hunter occupation serta migrasi Classic v1–v13 / Frontier v7–v13. State world/campaign/objective/site/job/building/resource/faction/local depot inventory, shipment ledger dan escrow cargo tetap dipertahankan. |
 | Kontrol | Rebind gerak, interaksi, serang, lari; shortcut UI/job/build belum dapat di-rebind |
 | Tampilan | Adaptive logical viewport = setengah ukuran client window, minimum 480×270, pixel scale tepat 2×; physical-display/fullscreen review belum dilakukan |
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map with live tower sight, hotbar, objective tracker, tech panel, pause menu |
@@ -51,7 +51,7 @@ scripts/autoload/      InputSetup, Events (signal bus), DataDB (JSON), Settings,
 scripts/world/         world_map.gd (tileset biome dari tiles.svg, noise, pohon/batu, occupied dict)
 scripts/systems/       flow_field (Dijkstra musuh), nav_grid (AStarGrid2D villager), build_system, territory,
                        fog_of_war (peta permanen), village/expedition, wave_spawner, event_manager
-scripts/entities/      player, enemy, enemy_keep (stronghold/garrison source), villager (expedition/recall), building, resource_tree, rock, iron_ore, arrow, corpse,
+scripts/entities/      player, enemy, enemy_keep (stronghold/garrison source), villager (expedition/recall), building, resource_tree, rock, iron_ore, wildlife_node, arrow, corpse,
                        fx_layer, sprite_anim
 scripts/ui/            hud.gd (layout viewport-aware), world_map_panel.gd, tech_panel.gd, pause_menu.gd (window-size presets), pixel_font.gd
 data/                  buildings.json, enemies.json, waves.json, events.json, techs.json
@@ -61,7 +61,7 @@ tools/                 gen_assets.py (generator SVG), build.sh, build.ps1
 tests/                 skrip tes headless dan screenshot (lihat tests/README.md)
 ```
 Grup node yang dipakai lintas skrip: `main`, `hud`, `player`, `village`, `buildings`, `depots`, `farms`,
-`harvestable`, `resource_nodes`, `enemies`, `ranged_enemies`, `enemy_projectiles`, `enemy_garrison`, `enemy_strongholds`, `villagers`, `defenders`, `fog_of_war`.
+`harvestable`, `resource_nodes`, `wildlife`, `enemies`, `ranged_enemies`, `enemy_projectiles`, `enemy_garrison`, `enemy_strongholds`, `villagers`, `defenders`, `fog_of_war`.
 
 ## 4. Konvensi arsitektur
 - **Signal bus**: sistem berkomunikasi lewat `Events` (resource_changed, building_*, village_changed,
