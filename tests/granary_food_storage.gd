@@ -99,6 +99,8 @@ func _run() -> void:
     tech._recompute()
     require(tech.building_unlocked("granary") and tech.available_buildings().has("granary"),
         "The Granary research must unlock the actual buildable facility")
+    require(is_equal_approx(tech.stat("farm.workers", 3.0), 4.0),
+        "The existing Granary research must retain its +1 farmer slot per farm effect")
 
     var granary = classic.build.place_raw("granary", granary_cell)
     await ticks(2)
@@ -138,12 +140,19 @@ func _run() -> void:
     var farmer = classic.village.villagers()[0]
     farmer.carry = 4
     farmer.carry_kind = "food"
-    farmer._depot = granary
+    farmer._depot = null
+    farmer._go_depot()
+    require(farmer._depot == granary,
+        "A farmer carrying food must prioritize a reachable Granary over the central Keep")
     farmer._deposit()
     require(granary.stockpile_amount("food") == 10 - population_before * 2,
         "Farmer deliveries to a Granary must remain local in Classic")
     require(classic.village.food_available() == granary.stockpile_amount("food"),
         "HUD food availability must reflect the Granary reserve after central food reaches zero")
+    hud = get_first_node_in_group("hud")
+    hud._refresh_resources()
+    require(hud._food.text == str(granary.stockpile_amount("food")),
+        "The top resource bar must display usable Granary food in Classic")
 
     var classic_food_before_save: int = granary.stockpile_amount("food")
     var classic_snapshot: Dictionary = save_system.collect(classic)
