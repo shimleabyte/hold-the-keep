@@ -191,6 +191,8 @@ func _run() -> void:
         "A Healer must leave TO_WORK when its patient disappears")
     require(not infirmary.is_heal_target_reserved(disappearing_patient),
         "A disappearing patient must not leave a stale Infirmary reservation")
+    require(not infirmary._healer_assignments.has(healer_a.get_instance_id()),
+        "The Healer's patient assignment entry must be removed when the patient disappears")
 
     var replacement_patient = main.village.spawn_villager(keep.position + Vector2(-14, 22))
     require(replacement_patient.set_job("soldier"),
