@@ -37,7 +37,8 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 43 assertion reg
 | frontier_campaign.gd | Classic/Frontier campaign calendars, act gates, all regional objectives, rewards, save/load and day-20 King victory |
 | campaign_multi_stronghold.gd | four Frontier strongholds, deterministic objective order, regional placement, independent garrisons, locked objectives, save/load and final conquest |
 | workplace_assignments.gd | Builder workplace capacity/radius, repair material consumption, reachable depot selection and priority reassignment |
-| hunting_lodge.gd | Hunter workplace capacity/radius, wildlife reservations, food yield/depot delivery, v14 save validation and teardown |
+| hunting_lodge.gd | Hunter workplace capacity/radius, wildlife reservations, food yield/depot delivery, v15 save validation and teardown |
+| scout_specialist.gd | Scout Post capacity, bounded reachable A* survey, 144px local fog revelation, target separation, return-to-post behavior and v14 migration |
 | production_worksites.gd | Lumber Camp/Quarry workplace limits, specialist work radius, Classic fallback, cleanup and v13 save compatibility |
 | construction_sites.gd | Builder discovery/pathing, two-worker site cap, once-only funding, functional completion, proportional cancellation refund, save validation and v13 reload |
 | watchtower_vision.gd | Existing tower's 128px permanent exploration radius, live strategic-map enemy observation, out-of-range concealment and turret compatibility |
@@ -58,10 +59,10 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 43 assertion reg
 | animation_motion.gd | idle breathing, walk/run lift, directional attack/work lean, hurt recoil, stable death pose |
 | world_config.gd | profile dimensions, tile indexing, Keep placement, Classic/Frontier profile definitions |
 | frontier_world.gd | 128×128 terrain, five biomes, dedicated Frontier terrain atlas contract, regional resources, iron veins, Keep claims, reachability and deterministic generation |
-| frontier_expedition.gd | 192×192 Expedition map, four sealed outer marches, discovery-gated crossings, bridge/path blocking, permanent fog reveal, v14 save persistence and minimum-viewport map bounds |
+| frontier_expedition.gd | 192×192 Expedition map, four sealed outer marches, discovery-gated crossings, bridge/path blocking, permanent fog reveal, v15 save persistence and minimum-viewport map bounds |
 | regional_control_roads.gd | regional neutral/player/enemy/contested states, walkable roads/bridges, Keep-connected supply routes, depot isolation, rerouting and save persistence |
-| local_depot_stockpiles.gd | Frontier local depot balances, capacity rejection, worker cargo deposit, bounded connected-depot shipments, v14 save state, v13 migration and save/load round-trip |
-| physical_shipments.gd | Player-directed depot orders, visible carriers, Keep withdrawals, capacity reservations, cancellation/refund, route interruption recovery and v14 persistence and v12 migration |
+| local_depot_stockpiles.gd | Frontier local depot balances, capacity rejection, worker cargo deposit, bounded connected-depot shipments, v15 save state, v13 migration and save/load round-trip |
+| physical_shipments.gd | Player-directed depot orders, visible carriers, Keep withdrawals, capacity reservations, cancellation/refund, route interruption recovery and v15 persistence and v12 migration |
 | depot_cost_sources.gd | Explicit Keep/Storage/Outpost cost source, construction/research debit, no cross-depot pooling, disconnected-source rejection, atomic payment and v14 preference persistence and v13 compatibility |
 | supply_pressure.gd | Contested disconnected-depot warning, targeted saboteur pathing, deterministic stock theft, bounded repeat raid, depot damage, HUD state, v13 persistence and recovery |
 | shieldbearer_behavior.gd | component-backed brace telegraph, frontal source-origin mitigation, side/rear counterplay, stagger interruption and disengage cancellation |
@@ -71,7 +72,7 @@ GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 43 assertion reg
 | beast_rider_charge.gd | component-backed isolated defender target priority, A* locked charge route, telegraphed impact, sidestep miss and stagger interruption |
 | faction_camps_patrols.gd | deterministic enemy-territory camp placement, fog activation, A* patrol leash, bounded reinforcement, camp destruction and v13 save/restore |
 | faction_raids.gd | exposed connected depot/road target selection, finite camp dispatch, pathing, structure damage, depot theft, target abort, faction raid save/restore and cleanup |
-| faction_warfare_stress.gd | simultaneous 48 faction garrisons, eight patrols, four raids, 48 villagers, per-raider A* routing, global raid cap and v14 snapshot validation |
+| faction_warfare_stress.gd | simultaneous 48 faction garrisons, eight patrols, four raids, 48 villagers, per-raider A* routing, global raid cap and v15 snapshot validation |
 | balance_final_night.gd | `CASES="4,2;6,3"` = daftar "prajurit,menara"; `TECH=era2` atau `TECH=all` memberi teknologi; hasil MENANG/KALAH |
 
 Catatan: sebagian label teks di dalam skrip sudah usang (misalnya "tower 7dmg"; nilai sebenarnya 12).
