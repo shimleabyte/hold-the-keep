@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio, PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening, PR #58 (`d3bba66`) for Phase 05.2a Builder-driven construction sites, PR #59 (`6147cfc`) for Phase 05.2b construction queue/Builder priorities/HUD, and PR #60 (`beef7b7`) for Phase 05.3a Watchtower vision. Workflow #515 passed 82/82 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release exports. Save schema remains v13; rendered HUD/gameplay and balance acceptance remain open.
+**Current source of truth:** `main` includes PR #55 (`d933bb6`) for Phase 08.7 regional ambience/music/event audio, PR #57 (`a1ccebe`) for Phase 09.3 late-act save/reload hardening, PR #58 (`d3bba66`) for Phase 05.2a Builder-driven construction sites, PR #59 (`6147cfc`) for Phase 05.2b construction queue/Builder priorities/HUD, PR #60 (`beef7b7`) for Phase 05.3a Watchtower vision, and PR #61 (`d9b87b1`) for Phase 05.3b Granary food reserve. Workflow #41558978053 passed 84/84 jobs on Godot 4.3/4.7, Frontier performance diagnostic and Windows/Linux release exports. Save schema remains v13; rendered building/HUD and balance acceptance remain open.
 - Game 2D top-down **village defense + light management** bertema medieval. Solo dev, semi-lightweight.
 - **Native desktop, bukan web** (keputusan eksplisit pemilik). Godot 4 + GDScript, renderer GL Compatibility.
 - Versi: dibuat dan dites di **Godot 4.3**, juga lolos di **4.7-stable**. Minimum 4.3 (memakai `TileMapLayer`).
@@ -15,7 +15,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #59 (save schema v13; status per 3 November 2026). Perilaku Shieldbearer/Scout/Saboteur/Siege Engine/Beast Rider, faction camps/patrols/raids, combined warfare stress, Phase 08.3–08.7 visual/audio identity, dan Phase 09.3 late-act save/reload acceptance sudah tercakup. PR #57 menambah regression test end-to-end untuk Act I–IV, sebelas objective, empat stronghold, gate King hari ke-20 dan persistensi victory setelah reload; gameplay dan save schema tidak berubah.
+Ringkasan implementasi aktual pada `main` setelah PR #61 (save schema v13; status per 3 November 2026). Perilaku Shieldbearer/Scout/Saboteur/Siege Engine/Beast Rider, faction camps/patrols/raids, combined warfare stress, Phase 08.3–08.7 visual/audio identity, dan Phase 09.3 late-act save/reload acceptance sudah tercakup. PR #57 menambah regression test end-to-end untuk Act I–IV, sebelas objective, empat stronghold, gate King hari ke-20 dan persistensi victory setelah reload; gameplay dan save schema tidak berubah.
 
 | Area | Kondisi saat ini |
 |---|---|
@@ -35,7 +35,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #59 (save schema v13; statu
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map with live tower sight, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 10 procedural ambience loops (5 biome × siang/malam), 2 original music loops, 14 event cues; Master bus routing dan crossfade; human listening/level-balance QA masih terbuka |
 | Rilis | CI menghasilkan Windows/Linux export dengan Godot 4.3 templates; Linux headless smoke dan PE format diperiksa. Native Windows runtime dan clean-machine acceptance belum dilakukan |
-| CI | PR #60 workflow #515 passed 82/82 jobs: Godot 4.3/4.7 parse, 39 regressions per engine, Frontier performance diagnostic and Windows/Linux release exports. |
+| CI | PR #61 workflow #41558978053 passed 84/84 jobs: Godot 4.3/4.7 parse, 40 regressions per engine, Frontier performance diagnostic and Windows/Linux release exports. |
 
 ## 3. Struktur
 ```
@@ -586,8 +586,9 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Fog scanning permanently discovers terrain inside tower vision. Strategic-map enemy observation uses the same radius; demolishing a tower ends live observation but does not re-cover explored terrain.
 - Existing turret range, damage and fire interval remain unchanged. Regression `tests/watchtower_vision.gd` passes on both engine versions; rendered map-marker review remains manual.
 
-## Phase 05.3b — Granary food reserve (implementation branch)
-- Branch: `feat/phase-05.3b-granary-food-storage`.
-- Granary research now unlocks a 3×2 food-only depot with 240 capacity while preserving its farm-worker bonus.
-- Classic upkeep spends central Inventory first, then stored Granary food. Frontier uses local depot transfers, shipments and isolated-depot raid pressure.
-- Tests cover accepted resource restrictions, Classic upkeep/reload, Frontier transfer/shipment/raid behavior, and v13 save validation. CI/rendered acceptance pending.
+## Phase 05.3b — Granary food reserve (2026-11-03, merged via PR #61)
+- PR #61 squash-merged into `main` as `d9b87b1`; workflow #41558978053 passed 84/84 jobs.
+- Granary research unlocks a 3×2, 240-capacity food-only depot while preserving the +1 farm-worker slot bonus.
+- Farmers prioritize reachable Granaries; Classic daily upkeep and villager growth draw from central Inventory first, then stored Granary food. The resource bar displays combined usable food.
+- Frontier Granaries participate in connected depot transfers, food-only shipments, isolated-depot pressure and saboteur/faction raids. Granary is intentionally excluded as a construction/research cost source.
+- Save schema stays v13 with per-building accepted-resource validation; legacy v13 saves without Granaries remain valid. Regression covers Classic/Frontier behavior and save/load on both Godot engines.
