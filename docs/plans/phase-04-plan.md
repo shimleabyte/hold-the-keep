@@ -1,6 +1,6 @@
 # Phase 04 — Specialist Jobs and Workplace Completion
 
-**Status:** Builder is merged into `main`; Hunter + Hunting Lodge is on `feat/hunter-hunting-lodge` pending final CI/PR acceptance. Villager Scout + Scout Post is in progress on the stacked branch `feat/scout-specialist`; Healer and Blacksmith remain open.
+**Status:** Builder is merged into `main`. Hunter PR #64 passed 45/45 jobs on Godot 4.7. Scout PR #65 is implemented on the verified Hunter baseline; Healer/Infirmary PR #67 is implemented on the Scout stack and save schema v16. Both require a fresh full Godot 4.7 matrix and in-game acceptance before integration. Blacksmith remains open.
 **Dependency:** Phase 02 connected depots; Phase 05 worksites and construction foundations.
 **Engine target:** Godot 4.7 only.
 
@@ -35,10 +35,13 @@ Expand labor roles only when they create a distinct economic or tactical output.
 - Add focused tests for workplace requirement/capacity, reachable target selection, fog reveal radius, bounded behavior, survey completion/return, two-Scout target separation and save migration.
 - [ ] Rendered pathing, discovery pace and actual map-scale playtest.
 
-### Healer
-- Prioritize damaged friendly soldiers/guards within a workplace or Outpost service radius.
-- Consume a defined medical resource only once such a resource has a real source/consumer chain; otherwise use a documented cooldown/limited charge model.
-- Respect combat safety, path reachability and target reservation to prevent multiple healers wasting work on the same target.
+### Healer — implemented on `feat/healer-infirmary` (PR #67)
+- [x] Prioritize the most damaged reachable friendly soldier within the Infirmary service radius.
+- [x] Unlock the two-slot Infirmary through Era II Field Medicine after Leather Armor; do not add a new resource.
+- [x] Use a 16-tile service radius, one-Healer-per-patient reservation, 10 HP per 3.2 seconds, and stop at full HP or on patient/workplace loss.
+
+- [x] Add Healer occupation, I quota/priority shortcut, sprite/HUD, Infirmary artwork and save schema v16.
+- [x] Add `tests/healer_infirmary.gd` for tech unlock, capacity, targeting, unique reservation, healing clamp, teardown and v15 migration; full suite CI remains pending.
 
 ### Blacksmith
 - Operate from a Forge/Blacksmith workplace and consume Iron plus a defined secondary resource for a concrete output.
