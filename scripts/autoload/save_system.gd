@@ -414,7 +414,12 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
     for building in buildings:
         if not (building is Dictionary) or not building.has("id") or not building.has("cx") or not building.has("cy") or not building.has("hp"):
             return false
-        if not DataDB.buildings.has(String(building["id"])):
+        var saved_building_id := String(building["id"])
+        if not DataDB.buildings.has(saved_building_id):
+            return false
+        if saved_building_id == "hunting_lodge" and version < 14:
+            return false
+        if saved_building_id == "scout_post" and version < 15:
             return false
         if version >= 12:
             var stockpile = building.get("stockpile", null)
