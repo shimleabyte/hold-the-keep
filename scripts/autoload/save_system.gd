@@ -185,6 +185,7 @@ func collect(main: Node) -> Dictionary:
         "spawner": main.spawner.export_state(),
         "tech": Tech.export_state(),
         "supply": main.supply.export_state(),
+        "events": main.events.export_state() if main.events != null else {"pending_event_id": "", "scheduled_consequences": []},
         "frontier_campaign": main.frontier_campaign.export_state() if main.frontier_campaign != null else {"profile": WorldConfig.profile_id, "objectives": [], "final_boss_defeated": false, "unlocked_act": 1},
     }
 
@@ -195,6 +196,71 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
     var version := int(data.get("version", 0))
     if version < 1 or version > VERSION:
         return false
+
+    if data.has("events"):
+        var saved_events: Variant = data["events"]
+        if not saved_events is Dictionary:
+            return false
+        var pending_event_id: Variant = saved_events.get("pending_event_id", "")
+        if not pending_event_id is String:
+            return false
+        if not String(pending_event_id).is_empty():
+            var pending_event_found := false
+            for event_value in DataDB.events:
+                if String(event_value.get("id", "")) != String(pending_event_id):
+                    continue
+                var event_choices: Variant = event_value.get("choices", [])
+                if event_choices is Array and not event_choices.is_empty():
+                    pending_event_found = true
+                    break
+            if not pending_event_found:
+                return false
+        var scheduled_value: Variant = saved_events.get("scheduled_consequences", [])
+        if not scheduled_value is Array:
+            return false
+        for scheduled_entry_value in scheduled_value:
+            if not scheduled_entry_value is Dictionary:
+                return false
+            var scheduled_entry: Dictionary = scheduled_entry_value
+            var scheduled_event_id: Variant = scheduled_entry.get("event_id", "")
+            var scheduled_choice_id: Variant = scheduled_entry.get("choice_id", "")
+            var scheduled_consequence_id: Variant = scheduled_entry.get("consequence_id", "")
+            var scheduled_due_day: Variant = scheduled_entry.get("due_day", null)
+            if not scheduled_event_id is String or String(scheduled_event_id).is_empty():
+                return false
+            if not scheduled_choice_id is String or String(scheduled_choice_id).is_empty():
+                return false
+            if not scheduled_consequence_id is String or String(scheduled_consequence_id).is_empty():
+                return false
+            if not scheduled_due_day is int or int(scheduled_due_day) < 1:
+                return false
+            var scheduled_reference_found := false
+            for event_value in DataDB.events:
+                if not event_value is Dictionary or String(event_value.get("id", "")) != String(scheduled_event_id):
+                    continue
+                var event_choices: Variant = event_value.get("choices", [])
+                if not event_choices is Array:
+                    return false
+                for choice_value in event_choices:
+                    if not choice_value is Dictionary or String(choice_value.get("id", "")) != String(scheduled_choice_id):
+                        continue
+                    var definitions: Variant = choice_value.get("consequences", [])
+                    if not definitions is Array:
+                        return false
+                    for definition_value in definitions:
+                        if not definition_value is Dictionary or String(definition_value.get("id", "")) != String(scheduled_consequence_id):
+                            continue
+                        var after_days: Variant = definition_value.get("after_days", null)
+                        var consequence_effects: Variant = definition_value.get("effects", {})
+                        if not after_days is int or int(after_days) < 1:
+                            return false
+                        if not consequence_effects is Dictionary or consequence_effects.is_empty():
+                            return false
+                        scheduled_reference_found = true
+                        break
+                break
+            if not scheduled_reference_found:
+                return false
 
     var inventory = data.get("inventory")
     var clock = data.get("clock")

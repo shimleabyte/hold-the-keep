@@ -440,6 +440,7 @@ func _apply_save(d: Dictionary) -> void:
     supply.rebuild()
     supply.import_state(d.get("supply", {}))
     supply.advance_shipment_orders()
+    events.import_state(d.get("events", {}))
     Events.build_feedback.emit("Game dimuat")
 
 

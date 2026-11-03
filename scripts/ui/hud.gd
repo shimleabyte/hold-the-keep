@@ -4,6 +4,7 @@ extends CanvasLayer
 
 const PIXEL_FONT := preload("res://scripts/ui/pixel_font.gd")
 const MAP_PANEL_SCRIPT := preload("res://scripts/ui/world_map_panel.gd")
+const EVENT_DECISION_PANEL_SCRIPT := preload("res://scripts/ui/event_decision_panel.gd")
 const ICONS := {
     "wood": preload("res://assets/sprites/icon_wood.svg"),
     "stone": preload("res://assets/sprites/icon_stone.svg"),
@@ -140,6 +141,7 @@ var _slots: Dictionary = {}
 var _help: Panel
 var _msg: Label
 var _banner: Label
+var _event_decision_panel
 var _over: ColorRect
 var _over_label: Label
 
@@ -188,6 +190,10 @@ func _ready() -> void:
     if main_node != null:
         var initial_stage: Dictionary = main_node.spawner.stage_info(GameClock.day)
         _on_stage_changed(String(initial_stage.get("id", "frontier")), String(initial_stage.get("name", "PERBATASAN")), GameClock.day)
+    _event_decision_panel = EVENT_DECISION_PANEL_SCRIPT.new()
+    if main_node != null:
+        _event_decision_panel.configure(main_node.events)
+    add_child(_event_decision_panel)
     _refresh_resources()
     _refresh_slots()
     get_viewport().size_changed.connect(_on_viewport_size_changed)
@@ -1225,6 +1231,8 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _msg.size.x = _viewport_size.x
     _banner.position = Vector2(0, maxf(82.0, _viewport_size.y * 0.16))
     _banner.size.x = _viewport_size.x
+    if _event_decision_panel != null:
+        _event_decision_panel.configure_layout(_viewport_size)
     _fps.position = Vector2(_viewport_size.x - 58.0, 96.0)
 
     _over.size = _viewport_size
@@ -1329,6 +1337,8 @@ func _unhandled_input(event: InputEvent) -> void:
             Tech.reset()
             get_tree().paused = false
             get_tree().reload_current_scene()
+        return
+    if _event_decision_panel != null and _event_decision_panel.visible:
         return
     if event.keycode == KEY_N:
         _toggle_construction_queue()
