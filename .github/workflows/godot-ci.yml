@@ -80,6 +80,7 @@ jobs:
           - territory_claims
           - world_config
           - frontier_world
+          - frontier_expedition
           - regional_control_roads
           - local_depot_stockpiles
           - outpost_garrisons
@@ -139,6 +140,24 @@ jobs:
           mkdir -p build/diagnostics
           godot --headless --fixed-fps 60 --path . --script res://tests/perf.gd 2>&1 | tee build/diagnostics/frontier-perf.txt
           grep -q "^PERF_REPORT " build/diagnostics/frontier-perf.txt
+
+      - name: Run Frontier Expedition reference workload
+        env:
+          PROFILE: frontier_expedition
+          ENEMIES: "96"
+          VILLAGERS: "80"
+          FRAMES: "180"
+          WARMUP: "45"
+        run: |
+          godot --headless --fixed-fps 60 --path . --script res://tests/perf.gd 2>&1 | tee build/diagnostics/frontier-expedition-perf.txt
+          grep -q "^PERF_REPORT " build/diagnostics/frontier-expedition-perf.txt
+
+      - name: Upload Frontier Expedition performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontier-expedition-performance-godot-4.7
+          path: build/diagnostics/frontier-expedition-perf.txt
+          if-no-files-found: error
 
       - name: Upload performance report
         uses: actions/upload-artifact@v4
