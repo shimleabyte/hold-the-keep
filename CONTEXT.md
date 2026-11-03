@@ -29,7 +29,7 @@ Ringkasan implementasi aktual pada `main` setelah PR #62 (save schema v13; statu
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload; Act I–IV + victory reload dilindungi `campaign_reload_hardening.gd` |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara pengawas (turret + 128px vision), Lumbung 240 pangan, Gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, road dan bridge pada `main`; PR #64 branch menambah Pondok Pemburu; `feat/scout-specialist` menambah Pondok Pengintai. |
-| Villager | Pada `main`: penebang, penambang, petani, soldier dan Builder. PR #64 branch menambah Hunter; `feat/scout-specialist` menambah villager Scout. |
+| Villager | Pada `main`: penebang, penambang, petani, soldier dan Builder. PR #64 branch menambah Hunter; `feat/scout-specialist` menambah villager Scout. Healer dan Blacksmith masih terbuka. |
 | Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; connected infrastructure raids and bounded counterattacks merged via PR #44; manual Frontier balance/play review remains open |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 20 teknologi, tiga era, panel Y, Cartography dan Siegecraft |
