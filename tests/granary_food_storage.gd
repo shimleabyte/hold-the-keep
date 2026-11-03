@@ -177,14 +177,14 @@ func _run() -> void:
     legacy_v13["job_priority"].erase("hunter")
     legacy_v13["quota"].erase("scout")
     legacy_v13["job_priority"].erase("scout")
+    legacy_v13["job_priority"].erase("healer")
     legacy_v13["quota"].erase("healer")
     legacy_v13["job_priority"].erase("healer")
     for villager in legacy_v13["villagers"]:
-        if String(villager.get("occupation", "")) == "scout":
-            villager["occupation"] = ""
-            villager["job"] = ""
         if String(villager.get("occupation", "")) in ["hunter", "scout", "healer"]:
             villager["occupation"] = ""
+            villager["job"] = ""
+        elif String(villager.get("job", "")) in ["hunter", "scout", "healer"]:
             villager["job"] = ""
     var old_resources: Array = []
     for resource in legacy_v13["resources"]:
@@ -318,8 +318,8 @@ func _run() -> void:
 
     var frontier_food_before_save: int = granary.stockpile_amount("food")
     var frontier_snapshot: Dictionary = save_system.collect(frontier)
-    require(frontier_snapshot["version"] == 15 and save_system._valid_save(frontier_snapshot),
-        "Frontier Granary stockpile and isolated-depot pressure must pass v15 validation")
+    require(frontier_snapshot["version"] == 16 and save_system._valid_save(frontier_snapshot),
+        "Frontier Granary stockpile and isolated-depot pressure must pass v16 validation")
     var invalid_shipment := frontier_snapshot.duplicate(true)
     invalid_shipment["supply"]["orders"].append({
         "id": int(invalid_shipment["supply"]["next_id"]),
