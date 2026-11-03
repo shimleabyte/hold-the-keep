@@ -48,6 +48,20 @@ func _fixture_for_version(source: Dictionary, target_version: int) -> Dictionary
             if String(fixture["buildings"][index].get("id", "")) == "hunting_lodge":
                 fixture["buildings"].remove_at(index)
 
+    if target_version < 17:
+        fixture["quota"].erase("blacksmith")
+        if fixture.has("job_priority"):
+            fixture["job_priority"].erase("blacksmith")
+        for villager in fixture["villagers"]:
+            villager.erase("weapon_equipped")
+            villager.erase("armor_equipped")
+            if String(villager.get("occupation", "")) == "blacksmith":
+                villager["occupation"] = ""
+                villager["job"] = ""
+        for index in range(fixture["buildings"].size() - 1, -1, -1):
+            if String(fixture["buildings"][index].get("id", "")) == "forge":
+                fixture["buildings"].remove_at(index)
+
     if target_version < 16:
         fixture["quota"].erase("healer")
         if fixture.has("job_priority"):

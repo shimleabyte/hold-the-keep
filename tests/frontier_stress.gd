@@ -111,6 +111,7 @@ func _run() -> void:
         "hunter": 0,
         "scout": 0,
         "healer": 0,
+        "blacksmith": 0,
         "soldier": 12
     }
     main.village.assign_jobs()
