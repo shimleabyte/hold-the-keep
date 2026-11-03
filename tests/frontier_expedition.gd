@@ -116,6 +116,10 @@ func _initialize() -> void:
             and main.world.is_buildable(gate_cell)
             and main.nav.is_walkable(gate_cell),
             "An opened crossing must restore terrain collision and navigation: " + region)
+        var outward := Vector2i(0, -1) if gate_cell.y < world_config.map_size / 2 else Vector2i(0, 1)
+        var landing_cell := gate_cell + outward
+        assert(main.world.is_buildable(landing_cell) and main.nav.is_walkable(landing_cell),
+            "An opened crossing must lead onto an unobstructed tile in its outer march: " + region)
 
     # Rebuild the gate state from completed discovery objectives, as happens after loading a save.
     main.world.apply_expedition_sector_unlocks({})
@@ -127,7 +131,9 @@ func _initialize() -> void:
 
     var greenwood_gate: Vector2i = main.world._expedition_gate_cells["GREENWOOD"]
     var beyond_gate := greenwood_gate + Vector2i(0, -1)
-    var explored_position := (Vector2(beyond_gate) + Vector2(0.5, 0.5)) * world_config.tile_size
+    assert(main.nav.is_walkable(beyond_gate),
+        "The outer side of an unlocked survey gate must be reachable")
+    var explored_position := main.nav.center_of(beyond_gate)
     main.player.global_position = explored_position
     main.fog._scan_sources()
     assert(main.fog.is_revealed_cell(beyond_gate),
