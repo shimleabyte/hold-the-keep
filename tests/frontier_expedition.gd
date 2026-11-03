@@ -95,13 +95,23 @@ func _initialize() -> void:
         "FENLANDS": "discover_fenlands",
         "ASHEN_MARCH": "discover_ashen_march"
     }
+    # Allow all four stages in this isolated probe; each discovery still completes
+    # only when the player reaches the inner-side approach to its own sealed gate.
+    main.frontier_campaign.unlocked_act = 4
     for region in locked_regions:
         var objective_id := String(discoveries[region])
-        assert(main.frontier_campaign.complete_objective(objective_id),
-            "Completing the regional discovery must open its crossing: " + region)
+        var gate_cell: Vector2i = main.world._expedition_gate_cells[region]
+        var approach_cell := gate_cell + (Vector2i(0, 1) if gate_cell.y < world_config.map_size / 2 else Vector2i(0, -1))
+        assert(main.world.region_id(approach_cell) == region,
+            "The inside approach must carry the matching discovery region: " + region)
+        assert(main.nav.is_walkable(approach_cell),
+            "The expedition must be able to reach the survey side of the sealed gate: " + region)
+        main.player.global_position = main.nav.center_of(approach_cell)
+        main.frontier_campaign._scan_discovery()
+        assert(bool(main.frontier_campaign.objectives[objective_id]["completed"]),
+            "Entering the surveyed approach region must complete discovery: " + region)
         assert(main.world.is_expedition_gate_open(region),
             "Matching discovery must persistently open its sector: " + region)
-        var gate_cell: Vector2i = main.world._expedition_gate_cells[region]
         assert(main.world.tile_type_at(gate_cell) != 2
             and main.world.is_buildable(gate_cell)
             and main.nav.is_walkable(gate_cell),
