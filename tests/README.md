@@ -17,7 +17,7 @@ Dari akar proyek:
 Skrip observasi lama yang hanya mencetak hasil tanpa assertion dipisahkan ke `run_diagnostics.sh`;
 jalankan saat meninjau animasi, pertarungan, efek, ekonomi atau alur save/menu.
 
-GitHub Actions menjalankan import/parse pada Godot 4.3 dan 4.7, 42 assertion regression tests per versi, Frontier performance diagnostic, serta Windows/Linux export. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Validasi terbaru untuk perluasan late-act reload: PR #57, workflow [#490](https://github.com/shimleabyte/hold-the-keep/actions/runs/41432676578), 78/78 jobs sukses; kedua engine lulus untuk `campaign_reload_hardening`, termasuk save/reload Act IV dan state victory hari ke-20.
+GitHub Actions sekarang menjalankan import/parse dan seluruh assertion regression suite hanya pada Godot 4.7. Frontier dan Frontier Expedition performance diagnostics juga menggunakan Godot 4.7. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Godot 4.3 tidak lagi menjadi target atau gate CI aktif. Windows/Linux release exports sengaja ditunda sampai fase release; build scripts dan export presets tetap disimpan di repository. Workflow historis yang disebut di bawah tetap merupakan catatan valid pada saat dijalankan, bukan konfigurasi CI saat ini.
 
 | Skrip | Menguji |
 |---|---|
@@ -78,11 +78,11 @@ Selisih "state identical after load" pada save_load_audio_menu.gd hanya urutan k
 
 ## Skrip yang dijalankan otomatis di CI
 
-Suite assertion yang dijalankan pada Godot 4.3 dan 4.7 masing-masing mencakup 42 skrip:
+Suite assertion yang dijalankan pada Godot 4.7 mencakup 42 skrip:
 
 `animation_motion`, `campaign_assault`, `campaign_multi_stronghold`, `workplace_assignments`, `production_worksites`, `construction_sites`, `watchtower_vision`, `granary_food_storage`, `faction_registry`, `faction_visual_identity`, `building_visual_identity`, `combat_visual_feedback`, `audio_identity`, `frontier_campaign`, `frontier_stress`, `campaign_reload_hardening`, `campaign_balance_matrix`, `campaign_combat_simulation`, `release_hardening`, `input_rebinding`, `map_stages`, `player_combat`, `resource_save_state`, `responsive_layout`, `territory_claims`, `world_config`, `frontier_world`, `frontier_expedition`, `regional_control_roads`, `local_depot_stockpiles`, `outpost_garrisons`, `physical_shipments`, `depot_cost_sources`, `supply_pressure`, `shieldbearer_behavior`, `scout_marking`, `saboteur_disruption`, `siege_engine_behavior`, `beast_rider_charge`, `faction_camps_patrols`, `faction_raids`, serta `faction_warfare_stress`.
 
-CI juga menjalankan import/parse pada kedua versi Godot, performance diagnostic Frontier dan Frontier Expedition pada Godot 4.7, serta template-backed Windows/Linux release export pada Godot 4.3. Pada 1 November 2026, PR #32 workflow #41318897606 lulus 48/48 jobs. Setelah Phase 02.3, PR #33 workflow #41323062111 lulus 50/50 jobs; 23 assertion suite berjalan pada masing-masing Godot 4.3 dan 4.7, bersama import/parse, performance diagnostic dan Windows/Linux export. PR #34 workflow #41325205416 completed successfully with 52/52 jobs: 24 assertion suites passed on each Godot 4.3 and 4.7, with import/parse, Frontier performance diagnostic and Windows/Linux release export.
+CI aktif menjalankan import/parse, 42 assertion suite pada Godot 4.7, serta dua Frontier performance diagnostics pada Godot 4.7. Tidak ada Godot 4.3 matrix atau release-export job dalam CI development. Riwayat run lama di bawah mencatat pipeline saat itu, termasuk pengujian lintas versi dan export; angka tersebut tidak menggambarkan pipeline aktif.
 
 Skrip observasi/manual yang tidak termasuk assertion CI: `anim_sync`, `combat_tower_walls`, `events_boss_final_night`, `fx_shake_settings`, `restart_gameover`, `save_load_audio_menu`, `tech_tree`, dan `villagers_economy`. Jalankan skrip tersebut ketika memeriksa perilaku runtime yang belum dikonversi menjadi assertion.
 
@@ -108,7 +108,7 @@ Dijalankan di layar virtual dengan OpenGL software, hasilnya PNG di /tmp/shots:
 
 Phase 09 CI runs the Frontier timing benchmark as a non-gating diagnostic and uploads a p50/p95/p99 artifact. These runner-specific measurements do not substitute for target-hardware profiling.
 
-The release-export workflow installs Godot 4.3-matching templates, builds Windows and Linux binaries, validates the Windows PE format and smoke-tests the Linux executable. These checks do not replace clean-machine user acceptance.
+Release export is intentionally disabled in development CI. Keep `tools/build.sh`, `tools/build.ps1`, and `export_presets.cfg`; reintroduce template-backed Windows/Linux build and clean-machine smoke checks during the release phase, using Godot 4.7.
 
 
 PR #35 merged Phase 02.5 at `2ba5628`; workflow #41328005585 passed. PR #36 merged Shieldbearer directional brace at `b02aa60`; PR #39 merged Scout faction-aware marking at `11f3f13`; PR #40 merged Saboteur building disruption at `8f1a914`. PR #41 merged Siege Engine structural siege cycle at `58da7be`; workflow #41356689758 passed 62/62 jobs, including 29 assertion suites on each of Godot 4.3 and 4.7. PR #42 merged Beast Rider charge at `e6cf221`; workflow [#41366304675](https://github.com/shimleabyte/hold-the-keep/actions/runs/41366304675) passed 64/64 jobs. PR #43 merged Phase 06.3 faction camps and bounded patrols at `fa3a45a`; workflow [#41377840888](https://github.com/shimleabyte/hold-the-keep/actions/runs/41377840888) passed 66/66 jobs, including 31 assertion suites per engine, import/parse, Frontier performance diagnostic and Windows/Linux release export.
