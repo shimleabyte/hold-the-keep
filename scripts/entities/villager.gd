@@ -340,8 +340,17 @@ func _physics_process(delta: float) -> void:
             _tick_idle(delta)
         State.TO_WORK:
             if target == null or not is_instance_valid(target):
-                target = null
+                _release()
                 state = State.IDLE
+                _decide_t = 0.15
+            elif job == "healer" and (String(target.job) != "soldier"
+                    or int(target.hp) <= 0 or int(target.hp) >= int(target.max_hp)
+                    or target.is_expeditioning() or target.is_recalling_expedition()
+                    or target.state in [State.HIDDEN, State.FLEEING]
+                    or not _is_in_workplace_radius(target)):
+                _release()
+                state = State.IDLE
+                _decide_t = 0.15
             elif _move_along(delta):
                 state = State.WORKING
                 _work_t = 0.0
