@@ -8,6 +8,7 @@ const TREE_SCRIPT := preload("res://scripts/entities/resource_tree.gd")
 const ROCK_SCRIPT := preload("res://scripts/entities/rock.gd")
 const ROCK_CHANCE := 0.02
 const IRON_SCRIPT := preload("res://scripts/entities/iron_ore.gd")
+const WILDLIFE_SCRIPT := preload("res://scripts/entities/wildlife_node.gd")
 const FRONTIER_DECORATION_SCRIPT := preload("res://scripts/entities/frontier_decoration.gd")
 
 const TILES_TEX := preload("res://assets/sprites/tiles.svg")
@@ -35,6 +36,7 @@ var _expedition_reserved_cells: Dictionary = {}
 var _expedition_outer_reachable: Dictionary = {}
 var _expedition_unlocked_regions: Dictionary = {}
 var generated_resource_layout: Array[Dictionary] = []
+var generated_wildlife_layout: Array[Dictionary] = []
 var generated_decoration_layout: Array[Dictionary] = []
 var generate_resource_nodes := true
 
@@ -65,6 +67,7 @@ func _ready() -> void:
     add_child(entities)
 
     generated_resource_layout.clear()
+    generated_wildlife_layout.clear()
     if WorldConfig.is_frontier_profile():
         _generate_frontier()
     else:
@@ -72,6 +75,7 @@ func _ready() -> void:
     _spawn_iron()
     if WorldConfig.is_frontier_expedition():
         _setup_expedition_barriers()
+    _spawn_wildlife()
     if WorldConfig.is_frontier_profile():
         _spawn_frontier_decorations()
     if WorldConfig.is_frontier_expedition():
@@ -543,6 +547,65 @@ func _spawn_frontier_iron() -> void:
             placed += 1
         if placed >= 2:
             veins += 1
+
+
+## Place finite, renewable small-game nodes outside the protected starting clearing.
+## A separate seed keeps wood/stone/iron layouts unchanged and reproducible.
+func _spawn_wildlife() -> void:
+    generated_wildlife_layout.clear()
+    var rng := RandomNumberGenerator.new()
+    rng.seed = map_seed + 2419
+    var center := Vector2(map_size, map_size) * 0.5
+    var frontier := WorldConfig.is_frontier_profile()
+    var protected_radius := maxf(
+        safe_radius + (7.0 if frontier else 4.0),
+        float(map_size) * (0.15 if frontier else 0.10)
+    )
+    var candidates: Array[Dictionary] = []
+    for y in range(2, map_size - 2):
+        for x in range(2, map_size - 2):
+            var cell := Vector2i(x, y)
+            if Vector2(cell).distance_to(center) < protected_radius:
+                continue
+            if not is_buildable(cell) or occupied.has(cell) or _expedition_reserved_cells.has(cell):
+                continue
+            var region := region_id(cell)
+            if frontier and not ["GREENWOOD", "FENLANDS"].has(region):
+                continue
+            candidates.append({
+                "cell": cell,
+                "region": region,
+                "score": Vector2(cell).distance_to(center) + rng.randf_range(0.0, 2.0)
+            })
+    candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+        return float(a["score"]) < float(b["score"])
+    )
+    var target_count := mini(112, maxi(12, roundi(float(map_size * map_size) / 340.0)))
+    var blocked_nearby: Dictionary = {}
+    var placed := 0
+    for candidate in candidates:
+        if placed >= target_count:
+            break
+        var cell: Vector2i = candidate["cell"]
+        if blocked_nearby.has(cell):
+            continue
+        var region := String(candidate["region"])
+        generated_wildlife_layout.append({"cell": cell, "region": region})
+        if generate_resource_nodes:
+            var wildlife = WILDLIFE_SCRIPT.new()
+            wildlife.regional_style = region.to_lower()
+            wildlife.position = Vector2(
+                cell.x * tile_size + tile_size / 2.0,
+                cell.y * tile_size + tile_size
+            )
+            entities.add_child(wildlife)
+            occupied[cell] = wildlife
+        else:
+            occupied[cell] = true
+        for dy in range(-1, 2):
+            for dx in range(-1, 2):
+                blocked_nearby[cell + Vector2i(dx, dy)] = true
+        placed += 1
 
 
 func _place_iron_node(cell: Vector2i) -> void:

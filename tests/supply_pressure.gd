@@ -213,8 +213,8 @@ func _initialize() -> void:
         "The depot panel state must remain accurate for the repeat wave")
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 13,
-        "Supply pressure must remain an additive save-v13 extension")
+    require(snapshot["version"] == 14,
+        "Supply pressure and Hunter state must use save schema v14")
     require(snapshot["supply"]["pressure"].size() == 1,
         "The isolated Outpost pressure timer must be persisted")
     var saved_raider := saved_raider_for(snapshot["enemies"])
@@ -225,6 +225,18 @@ func _initialize() -> void:
         "A valid snapshot with active supply pressure and a targeted raider must pass validation")
 
     var legacy_v13: Dictionary = snapshot.duplicate(true)
+    legacy_v13["version"] = 13
+    legacy_v13["quota"].erase("hunter")
+    legacy_v13["job_priority"].erase("hunter")
+    for saved_villager in legacy_v13["villagers"]:
+        if String(saved_villager.get("occupation", "")) == "hunter":
+            saved_villager["occupation"] = ""
+            saved_villager["job"] = ""
+    var legacy_resources: Array = []
+    for resource in legacy_v13["resources"]:
+        if String(resource.get("kind", "")) != "food":
+            legacy_resources.append(resource)
+    legacy_v13["resources"] = legacy_resources
     legacy_v13["supply"].erase("pressure")
     for enemy_state in legacy_v13["enemies"]:
         if bool(enemy_state.get("supply_raid", false)):
@@ -287,5 +299,5 @@ func _initialize() -> void:
         "Restoring the road connection must recall the active saboteur")
 
     events.event_triggered.disconnect(warning_hook)
-    print("PASS: contested isolation warning, targeted saboteur path/attack, deterministic depot stock attrition, HUD status, v13 persistence, legacy compatibility and recovery by reconnecting roads")
+    print("PASS: contested isolation warning, targeted saboteur path/attack, deterministic depot stock attrition, HUD status, v14 persistence, v13 legacy compatibility and recovery by reconnecting roads")
     quit(0)

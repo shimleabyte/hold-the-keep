@@ -127,7 +127,7 @@ func _run() -> void:
     assert(save_system.save_current(true),
         "Frontier save must succeed with a partially damaged stronghold and active escort")
     var act_two_snapshot: Dictionary = save_system.collect(main)
-    assert(act_two_snapshot["version"] == 13
+    assert(act_two_snapshot["version"] == 14
         and act_two_snapshot["frontier_campaign"]["profile"] == "frontier",
         "The snapshot must use the current Frontier campaign schema")
     assert(save_system.request_load(),
@@ -200,9 +200,9 @@ func _run() -> void:
     assert(save_system.save_current(true),
         "The late-campaign Frontier state must save")
     var late_snapshot: Dictionary = save_system.collect(main)
-    assert(late_snapshot["version"] == 13
+    assert(late_snapshot["version"] == 14
         and int(late_snapshot["frontier_campaign"]["unlocked_act"]) == 4,
-        "Late-campaign save must preserve schema v13 and Act IV")
+        "Late-campaign save must preserve schema v14 and Act IV")
     for objective_record in late_snapshot["frontier_campaign"]["objectives"]:
         assert(bool(objective_record["completed"]),
             "Late-campaign snapshot must preserve every completed objective")

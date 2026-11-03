@@ -4,7 +4,7 @@ extends Node
 const PATH := "user://save.json"
 const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
-const VERSION := 13
+const VERSION := 14
 
 var pending: Dictionary = {}
 
@@ -497,7 +497,10 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 return false
             var occupation := String(villager["occupation"])
             var specialization := String(villager["military_specialization"])
-            if not ["", "woodcutter", "miner", "farmer", "builder"].has(occupation):
+            var allowed_occupations := ["", "woodcutter", "miner", "farmer", "builder"]
+            if version >= 14:
+                allowed_occupations.append("hunter")
+            if not allowed_occupations.has(occupation):
                 return false
             if not ["", "soldier"].has(specialization):
                 return false
@@ -621,16 +624,24 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         var allowed_jobs := ["woodcutter", "miner", "farmer", "soldier"]
         if version >= 9:
             allowed_jobs.append("builder")
+        if version >= 14:
+            allowed_jobs.append("hunter")
         if not allowed_jobs.has(String(job)):
             return false
+    if version >= 14 and not quota.has("hunter"):
+        return false
     if version >= 9:
         var priority = data.get("job_priority", null)
-        if not (priority is Array) or priority.size() != 5:
+        var expected_priority_size := 6 if version >= 14 else 5
+        if not (priority is Array) or priority.size() != expected_priority_size:
             return false
         var unique_priority: Dictionary = {}
+        var priority_jobs := ["woodcutter", "miner", "farmer", "builder", "soldier"]
+        if version >= 14:
+            priority_jobs.append("hunter")
         for value in priority:
             var job_name := String(value)
-            if not ["woodcutter", "miner", "farmer", "builder", "soldier"].has(job_name) or unique_priority.has(job_name):
+            if not priority_jobs.has(job_name) or unique_priority.has(job_name):
                 return false
             unique_priority[job_name] = true
     for resource in resources:
@@ -639,7 +650,10 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         for key in ["cx", "cy", "kind", "state"]:
             if not resource.has(key):
                 return false
-        if not ["wood", "stone", "iron"].has(String(resource["kind"])):
+        var allowed_resource_kinds := ["wood", "stone", "iron"]
+        if version >= 14:
+            allowed_resource_kinds.append("food")
+        if not allowed_resource_kinds.has(String(resource["kind"])):
             return false
         if not (resource["state"] is Dictionary):
             return false

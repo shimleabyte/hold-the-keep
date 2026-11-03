@@ -5,7 +5,8 @@ extends RefCounted
 const SUPPORTED_FEATURES := [
     "keep_banner", "house_gable", "wall_stakes", "tower_battlements",
     "storage_shutters", "farm_crop_rows", "stone_mortar", "forge_embers",
-    "outpost_signal", "road_ruts", "bridge_planks", "lumber_logs", "quarry_cart", "granary_wheat_sacks"
+    "outpost_signal", "road_ruts", "bridge_planks", "lumber_logs", "quarry_cart", "granary_wheat_sacks",
+    "hunting_lodge_trophy_rack"
 ]
 
 
@@ -140,6 +141,14 @@ static func draw_identity(
             canvas.draw_line(Vector2(-half_width + 13.0, top + 7.0), Vector2(-half_width + 13.0, top + 2.0), accent, 1.0)
             canvas.draw_line(Vector2(-half_width + 13.0, top + 3.0), Vector2(-half_width + 9.0, top + 5.0), accent, 1.0)
             canvas.draw_line(Vector2(-half_width + 13.0, top + 3.0), Vector2(-half_width + 17.0, top + 5.0), accent, 1.0)
+        "hunting_lodge_trophy_rack":
+            var rack_y := top + 11.0
+            canvas.draw_line(Vector2(-half_width + 5.0, rack_y), Vector2(half_width - 5.0, rack_y), shadow, 2.0)
+            for antler_x in [-half_width + 10.0, half_width - 10.0]:
+                canvas.draw_line(Vector2(antler_x, rack_y), Vector2(antler_x - 3.0, rack_y - 5.0), accent, 1.5)
+                canvas.draw_line(Vector2(antler_x - 3.0, rack_y - 5.0), Vector2(antler_x - 5.0, rack_y - 3.0), accent, 1.0)
+                canvas.draw_line(Vector2(antler_x - 3.0, rack_y - 5.0), Vector2(antler_x - 1.0, rack_y - 7.0), accent, 1.0)
+            canvas.draw_rect(Rect2(-3.0, rack_y + 2.0, 6.0, 5.0), primary)
 
     _draw_damage(canvas, building_id, visual, half_width, top, sprite_size.y, stage)
 

@@ -70,11 +70,18 @@ func _run() -> void:
         "Destroying the Greenwood camp must complete its objective")
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 13, "Frontier campaign, depot and shipment state must write save version 13")
+    assert(snapshot["version"] == 14, "Frontier campaign, depot, shipment and Hunter state must write save version 14")
     assert(snapshot["frontier_campaign"]["objectives"].size() == 11, "Save must retain every objective")
     assert(save_system._valid_save(snapshot), "Fresh Frontier objective state must validate")
     var legacy_snapshot: Dictionary = snapshot.duplicate(true)
     legacy_snapshot["version"] = 10
+    legacy_snapshot["quota"].erase("hunter")
+    legacy_snapshot["job_priority"].erase("hunter")
+    var legacy_resources: Array = []
+    for resource in legacy_snapshot["resources"]:
+        if String(resource.get("kind", "")) != "food":
+            legacy_resources.append(resource)
+    legacy_snapshot["resources"] = legacy_resources
     legacy_snapshot.erase("frontier_campaign")
     assert(save_system._valid_save(legacy_snapshot), "Version 10 Frontier saves must remain compatible")
 

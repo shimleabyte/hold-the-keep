@@ -85,7 +85,7 @@ func _run() -> void:
     assert(not shaman.support_behavior.tick(), "War Shaman must not heal repeatedly while support is cooling down")
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["version"] == 13, "Current campaign, depot and shipment state must use save format v13")
+    assert(snapshot["version"] == 14, "Current campaign, depot, shipment and Hunter state must use save format v14")
     var found_faction_save := false
     for saved_enemy in snapshot["enemies"]:
         if String(saved_enemy.get("faction", "")).is_empty():
@@ -96,5 +96,5 @@ func _run() -> void:
     assert(found_faction_save, "Save must retain faction identity for spawned enemies")
     assert(save_system._valid_save(snapshot), "Faction-enabled save must pass structural validation")
 
-    print("PASS: faction data, regional mapping, garrison rosters, faction tint, shaman support and v13 persistence")
+    print("PASS: faction data, regional mapping, garrison rosters, faction tint, shaman support and v14 persistence")
     quit(0)

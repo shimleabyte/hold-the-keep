@@ -118,13 +118,25 @@ func _initialize() -> void:
     main.supply._depot_connections[first.get_instance_id()] = true
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["version"] == 13,
-        "The cost-source preference must remain an additive v13 supply field")
+    require(snapshot["version"] == 14,
+        "The cost-source preference must persist alongside the v14 supply schema")
     require(snapshot["supply"]["cost_source"] == {"cx": first_cell.x, "cy": first_cell.y},
         "The selected cost depot must persist in the supply save state")
     require(save_system._valid_save(snapshot),
         "A valid save with a selected Storage cost source must pass validation")
     var legacy_v13 := snapshot.duplicate(true)
+    legacy_v13["version"] = 13
+    legacy_v13["quota"].erase("hunter")
+    legacy_v13["job_priority"].erase("hunter")
+    for saved_villager in legacy_v13["villagers"]:
+        if String(saved_villager.get("occupation", "")) == "hunter":
+            saved_villager["occupation"] = ""
+            saved_villager["job"] = ""
+    var legacy_resources: Array = []
+    for resource in legacy_v13["resources"]:
+        if String(resource.get("kind", "")) != "food":
+            legacy_resources.append(resource)
+    legacy_v13["resources"] = legacy_resources
     legacy_v13["supply"].erase("cost_source")
     require(save_system._valid_save(legacy_v13),
         "Existing v13 saves without the additive source field must remain valid")
@@ -148,5 +160,5 @@ func _initialize() -> void:
     require(restored_main.supply.get_cost_source_cell() == first_cell,
         "Save/load must restore the explicitly selected cost source")
 
-    print("PASS: explicit Keep/Storage/Outpost payment source, atomic local spending, no cross-depot pooling, disconnection rejection, UI selection and v13 persistence")
+    print("PASS: explicit Keep/Storage/Outpost payment source, atomic local spending, no cross-depot pooling, disconnection rejection, UI selection and v14 persistence")
     quit(0)
