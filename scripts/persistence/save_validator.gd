@@ -464,7 +464,7 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         if garrison_data != null:
             if not (garrison_data is Dictionary) or not garrison_data.has("id") or not garrison_data.has("cx") or not garrison_data.has("cy"):
                 return false
-            if String(villager.get("job", "")) != "soldier" or bool(villager.get("expedition", false)) or bool(villager.get("recalling", false)):
+            if String(villager.get("job", "")) != "soldier" or String(villager.get("military_specialization", "")) == "archer" or bool(villager.get("expedition", false)) or bool(villager.get("recalling", false)):
                 return false
             var garrison_id := String(garrison_data["id"])
             if not DataDB.buildings.has(garrison_id):
