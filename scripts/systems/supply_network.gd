@@ -12,7 +12,7 @@ const SHIPMENT_DISPATCH_SCRIPT := preload("res://scripts/systems/supply_shipment
 const COST_TRANSACTIONS_SCRIPT := preload("res://scripts/systems/supply_cost_transactions.gd")
 const SHIPMENT_LEDGER_SCRIPT := preload("res://scripts/systems/supply_shipment_ledger.gd")
 const ROAD_GRAPH_SCRIPT := preload("res://scripts/systems/supply_road_graph.gd")
-const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
+const SUPPLY_PRESSURE_SCRIPT := preload("res://scripts/systems/supply_pressure_controller.gd")
 const PRESSURE_WARNING_SECONDS := 30.0
 const PRESSURE_RAID_SECONDS := 60.0
 const PRESSURE_REPEAT_SECONDS := 150.0
@@ -42,7 +42,10 @@ var _transfer_timer := 0.0
 var _transfer_cursor := 0
 var _shipment_timer := 0.0
 var _pressure_timer := 0.0
-var _pressure_records: Dictionary = {}
+var _supply_pressure = SUPPLY_PRESSURE_SCRIPT.new()
+var _pressure_records: Dictionary:
+    get:
+        return _supply_pressure.records
 var _shipment_ledger = SHIPMENT_LEDGER_SCRIPT.new()
 var _shipment_dispatch = SHIPMENT_DISPATCH_SCRIPT.new()
 var _cost_source_cell := Vector2i(-1, -1)
@@ -53,6 +56,7 @@ var _carriers: Dictionary = {}
 
 func _ready() -> void:
     _cost_transactions.configure(self)
+    _supply_pressure.configure(self)
     add_to_group("supply_network")
     Events.building_placed.connect(_on_building_event)
     Events.building_removed.connect(_on_building_event)
@@ -170,187 +174,11 @@ func pay_cost(cost: Dictionary) -> bool:
 
 ## Return the raid exposure state used by the depot panel.
 func depot_pressure_state(depot: Node) -> Dictionary:
-    if not WorldConfig.is_frontier_profile():
-        return {"status": "connected", "label": "NONAKTIF"}
-    if depot == null or not is_instance_valid(depot) or String(depot.id) == "keep":
-        return {"status": "connected", "label": "TERHUBUNG"}
-    if is_depot_connected(depot):
-        return {"status": "connected", "label": "TERHUBUNG"}
-    if not _depot_under_threat(depot):
-        return {"status": "isolated", "label": "TERPUTUS"}
-    if _active_supply_raiders(depot.cell) > 0:
-        return {"status": "raiding", "label": "DIGEMPUR"}
-    var record: Dictionary = _pressure_records.get(_pressure_key(depot.cell), {})
-    if bool(record.get("warning_sent", false)):
-        return {"status": "vulnerable", "label": "ANCAMAN RAID"}
-    return {"status": "exposed", "label": "TERPENCIL"}
-
-
-func _pressure_key(cell: Vector2i) -> String:
-    return "%d:%d" % [cell.x, cell.y]
-
-
-func _depot_under_threat(depot: Node) -> bool:
-    if territory == null or not is_instance_valid(territory):
-        return false
-    var owner: String = territory.owner_at(depot.cell)
-    if owner == "enemy" or owner == "contested":
-        return true
-    var region_id: String = world.region_id(depot.cell)
-    var region: Dictionary = territory.get_region_state(region_id)
-    var control := String(region.get("control", "neutral"))
-    return control == "enemy" or control == "contested"
-
-
-func _active_supply_raiders(cell: Vector2i) -> int:
-    var count := 0
-    for enemy in get_tree().get_nodes_in_group("supply_raiders"):
-        if is_instance_valid(enemy) and enemy.is_supply_raider and enemy.raid_target_cell == cell:
-            count += 1
-    return count
+    return _supply_pressure.depot_state(depot)
 
 
 func advance_supply_pressure(delta: float) -> void:
-    if not WorldConfig.is_frontier_profile() or delta <= 0.0:
-        return
-    _ensure_current()
-    var next_records: Dictionary = {}
-    var state_changed := false
-    for depot in get_tree().get_nodes_in_group("depots"):
-        if not is_instance_valid(depot) or not ["storage", "outpost", "granary"].has(String(depot.id)):
-            continue
-        var key := _pressure_key(depot.cell)
-        var record: Dictionary = _pressure_records.get(key, {
-            "cx": depot.cell.x,
-            "cy": depot.cell.y,
-            "contested_seconds": 0.0,
-            "warning_sent": false,
-            "raid_count": 0,
-            "spawn_retry": 0.0,
-            "status": "isolated"
-        }).duplicate(true)
-        var previous_status := String(record.get("status", "isolated"))
-
-        if is_depot_connected(depot):
-            if _pressure_records.has(key):
-                _recall_supply_raiders(depot.cell)
-                state_changed = true
-            continue
-
-        if not _depot_under_threat(depot):
-            if float(record.get("contested_seconds", 0.0)) > 0.0 or int(record.get("raid_count", 0)) > 0:
-                _recall_supply_raiders(depot.cell)
-                state_changed = true
-            record["contested_seconds"] = 0.0
-            record["warning_sent"] = false
-            record["raid_count"] = 0
-            record["spawn_retry"] = 0.0
-            record["status"] = "isolated"
-            next_records[key] = record
-            if previous_status != "isolated":
-                state_changed = true
-            continue
-
-        record["contested_seconds"] = minf(
-            PRESSURE_RAID_SECONDS + PRESSURE_REPEAT_SECONDS * MAX_RAIDS_PER_ISOLATION,
-            float(record.get("contested_seconds", 0.0)) + delta
-        )
-        var contested_seconds := float(record["contested_seconds"])
-        if contested_seconds >= PRESSURE_WARNING_SECONDS and not bool(record.get("warning_sent", false)):
-            record["warning_sent"] = true
-            Events.event_triggered.emit(
-                "JALUR LOGISTIK TERANCAM",
-                "%s di %d,%d terisolasi di wilayah sengketa. Saboteur dapat tiba dalam 30 detik. Sambungkan jalan, rebut kembali wilayah, atau tugaskan penjaga."
-                % [String(depot.id).to_upper(), depot.cell.x, depot.cell.y]
-            )
-            state_changed = true
-
-        var retry_in := maxf(0.0, float(record.get("spawn_retry", 0.0)) - delta)
-        record["spawn_retry"] = retry_in
-        var raid_count := int(record.get("raid_count", 0))
-        var next_raid_at := PRESSURE_RAID_SECONDS + float(raid_count) * PRESSURE_REPEAT_SECONDS
-        if raid_count < MAX_RAIDS_PER_ISOLATION and contested_seconds >= next_raid_at and retry_in <= 0.0 and _active_supply_raiders(depot.cell) == 0 and get_tree().get_nodes_in_group("supply_raiders").size() < MAX_ACTIVE_SUPPLY_RAIDERS:
-            if _spawn_supply_raid(depot):
-                raid_count += 1
-                record["raid_count"] = raid_count
-                Events.event_triggered.emit(
-                    "SABOTEUR MENYERANG",
-                    "Saboteur menyerbu %s %d,%d. Penjaga lokal dapat menghadapinya; pulihkan jalan atau perbaiki depot dari Keep."
-                    % [String(depot.id).to_upper(), depot.cell.x, depot.cell.y]
-                )
-                state_changed = true
-            else:
-                record["spawn_retry"] = 10.0
-
-        var next_status := "exposed"
-        if _active_supply_raiders(depot.cell) > 0:
-            next_status = "raiding"
-        elif bool(record.get("warning_sent", false)):
-            next_status = "vulnerable"
-        record["status"] = next_status
-        if previous_status != next_status:
-            state_changed = true
-        next_records[key] = record
-
-    for old_key in _pressure_records:
-        if next_records.has(old_key):
-            continue
-        var old_record: Dictionary = _pressure_records[old_key]
-        var old_cell := Vector2i(int(old_record.get("cx", -1)), int(old_record.get("cy", -1)))
-        if old_cell.x >= 0:
-            _recall_supply_raiders(old_cell)
-        state_changed = true
-
-    _pressure_records = next_records
-    while _pressure_records.size() > MAX_PRESSURE_RECORDS:
-        _pressure_records.erase(_pressure_records.keys()[0])
-    if state_changed:
-        Events.supply_pressure_changed.emit()
-
-
-func _spawn_supply_raid(depot: Node) -> bool:
-    if nav == null or world == null or flow == null or not DataDB.enemies.has("enemy_saboteur"):
-        return false
-    var spawn_cell := _find_supply_raid_spawn(depot)
-    if spawn_cell.x < 0:
-        return false
-    var enemy = ENEMY_SCRIPT.new()
-    var faction_id := FactionRegistry.faction_for_region(world.region_id(spawn_cell))
-    enemy.setup(DataDB.enemies["enemy_saboteur"], world, flow, player, faction_id)
-    enemy.setup_supply_raid(depot.cell, nav)
-    enemy.position = nav.center_of(spawn_cell)
-    world.entities.add_child(enemy)
-    return true
-
-
-func _find_supply_raid_spawn(depot: Node) -> Vector2i:
-    if nav == null or territory == null:
-        return Vector2i(-1, -1)
-    var target_cells: Array[Vector2i] = depot.cells()
-    for radius in range(4, 10):
-        for y in range(-radius, radius + 1):
-            for x in range(-radius, radius + 1):
-                if maxi(absi(x), absi(y)) != radius:
-                    continue
-                var candidate: Vector2i = depot.cell + Vector2i(x, y)
-                if not world.is_buildable(candidate) or not nav.is_walkable(candidate):
-                    continue
-                var owner: String = territory.owner_at(candidate)
-                var region: Dictionary = territory.get_region_state(world.region_id(candidate))
-                var region_control := String(region.get("control", "neutral"))
-                var hostile_cell := owner == "enemy" or owner == "contested" or region_control == "enemy" or region_control == "contested"
-                if not hostile_cell:
-                    continue
-                var path: PackedVector2Array = nav.path_adjacent(nav.center_of(candidate), target_cells)
-                if path.size() >= 2:
-                    return candidate
-    return Vector2i(-1, -1)
-
-
-func _recall_supply_raiders(cell: Vector2i) -> void:
-    for enemy in get_tree().get_nodes_in_group("supply_raiders"):
-        if is_instance_valid(enemy) and enemy.is_supply_raider and enemy.raid_target_cell == cell:
-            enemy.retreat()
+    _supply_pressure.advance(delta)
 
 
 ## Saboteurs always take one unit in a fixed priority order every second successful hit.
@@ -567,18 +395,7 @@ func export_state() -> Dictionary:
             order["status"] = "blocked"
         orders[index] = order
     var source_cell := get_cost_source_cell()
-    var pressure: Array[Dictionary] = []
-    for key in _pressure_records:
-        var record: Dictionary = _pressure_records[key]
-        pressure.append({
-            "cx": int(record.get("cx", -1)),
-            "cy": int(record.get("cy", -1)),
-            "contested_seconds": float(record.get("contested_seconds", 0.0)),
-            "warning_sent": bool(record.get("warning_sent", false)),
-            "raid_count": int(record.get("raid_count", 0)),
-            "spawn_retry": float(record.get("spawn_retry", 0.0)),
-            "status": String(record.get("status", "isolated"))
-        })
+    var pressure: Array[Dictionary] = _supply_pressure.snapshot()
     return {
         "next_id": _shipment_ledger.next_id,
         "orders": orders,
@@ -591,7 +408,7 @@ func export_state() -> Dictionary:
 func import_state(value: Variant) -> void:
     _shipment_ledger.clear()
     _carriers.clear()
-    _pressure_records.clear()
+    _supply_pressure.restore([])
     if not (value is Dictionary):
         return
     var orders: Variant = value.get("orders", [])
@@ -611,24 +428,7 @@ func import_state(value: Variant) -> void:
         var keep = _find_keep()
         _cost_source_cell = keep.cell if keep != null else Vector2i(-1, -1)
     Events.supply_cost_source_changed.emit()
-    var saved_pressure: Variant = value.get("pressure", [])
-    if saved_pressure is Array:
-        for saved_record in saved_pressure:
-            if not (saved_record is Dictionary):
-                continue
-            var saved_cell := Vector2i(int(saved_record.get("cx", -1)), int(saved_record.get("cy", -1)))
-            var depot = _find_depot(saved_cell)
-            if depot == null or not ["storage", "outpost", "granary"].has(String(depot.id)):
-                continue
-            _pressure_records[_pressure_key(saved_cell)] = {
-                "cx": saved_cell.x,
-                "cy": saved_cell.y,
-                "contested_seconds": clampf(float(saved_record.get("contested_seconds", 0.0)), 0.0, PRESSURE_RAID_SECONDS + PRESSURE_REPEAT_SECONDS * MAX_RAIDS_PER_ISOLATION),
-                "warning_sent": bool(saved_record.get("warning_sent", false)),
-                "raid_count": clampi(int(saved_record.get("raid_count", 0)), 0, MAX_RAIDS_PER_ISOLATION),
-                "spawn_retry": clampf(float(saved_record.get("spawn_retry", 0.0)), 0.0, 30.0),
-                "status": String(saved_record.get("status", "isolated"))
-            }
+    _supply_pressure.restore(value.get("pressure", []))
     _trim_shipment_history()
     Events.supply_pressure_changed.emit()
 
