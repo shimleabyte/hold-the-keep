@@ -54,6 +54,34 @@ func _initialize() -> void:
     assert(forward_enemy.hp < forward_hp, "Cleave must damage enemies in its forward arc")
     assert(rear_enemy.hp == rear_hp, "Cleave must not damage enemies behind the player")
 
+    var normal_front = enemy_script.new()
+    normal_front.setup(sturdy_bandit, main.world, main.flow, player)
+    normal_front.global_position = player.global_position + Vector2(20, 0)
+    main.world.entities.add_child(normal_front)
+    normal_front.set_physics_process(false)
+    var normal_rear = enemy_script.new()
+    normal_rear.setup(sturdy_bandit, main.world, main.flow, player)
+    normal_rear.global_position = player.global_position + Vector2(-20, 0)
+    main.world.entities.add_child(normal_rear)
+    normal_rear.set_physics_process(false)
+    var normal_flank = enemy_script.new()
+    normal_flank.setup(sturdy_bandit, main.world, main.flow, player)
+    normal_flank.global_position = player.global_position + Vector2(0, -20)
+    main.world.entities.add_child(normal_flank)
+    normal_flank.set_physics_process(false)
+
+    player.facing = Vector2.RIGHT
+    var normal_front_hp: int = normal_front.hp
+    var normal_rear_hp: int = normal_rear.hp
+    var normal_flank_hp: int = normal_flank.hp
+    player._apply_attack()
+    assert(normal_front.hp < normal_front_hp,
+        "A normal melee swing must damage an enemy inside its forward attack sector")
+    assert(normal_rear.hp == normal_rear_hp,
+        "A normal melee swing must not damage an enemy directly behind the player")
+    assert(normal_flank.hp == normal_flank_hp,
+        "A normal melee swing must not damage an enemy outside its visible forward sector")
+
     player.gain_experience(player.combat_status()["next_xp"])
     assert(player.level == 3 and player.combat_status()["rally_unlocked"],
         "Level 3 must unlock Rally")
