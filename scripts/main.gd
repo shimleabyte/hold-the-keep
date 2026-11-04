@@ -53,6 +53,12 @@ func _ready() -> void:
     if OS.get_environment("HTK_AUTO_START_GAME") == "1":
         _start_campaign(WorldConfig.profile_id, true)
         return
+    if not SaveSystem.pending.is_empty():
+        var saved_world: Variant = SaveSystem.pending.get("world", {})
+        var saved_profile := String(saved_world.get("profile", WorldConfig.profile_id)) if saved_world is Dictionary else WorldConfig.profile_id
+        if WorldConfig.apply_profile(saved_profile):
+            _start_campaign(saved_profile, true)
+            return
     var title_screen = TITLE_SCREEN_SCRIPT.new()
     title_screen.mode_selected.connect(_start_campaign)
     add_child(title_screen)
