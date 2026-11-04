@@ -215,6 +215,11 @@ func _ready() -> void:
 
 # ---------------------------------------------------------------- pembangun UI
 
+func _bind_focus_hint(control: Control) -> void:
+    if not control.tooltip_text.is_empty():
+        control.focus_entered.connect(_show_message.bind(control.tooltip_text))
+
+
 func _panel(pos: Vector2, panel_size: Vector2, parent: Node = null) -> Panel:
     var p := Panel.new()
     p.position = pos
@@ -320,6 +325,7 @@ func _build_top_bar() -> void:
     _map_button.position = Vector2(410, 1)
     _map_button.size = Vector2(18, 14)
     _map_button.pressed.connect(_toggle_map)
+    _bind_focus_hint(_map_button)
     bar.add_child(_map_button)
 
     _jobs_button = HUD_WIDGETS.HudChip.new()
@@ -329,6 +335,7 @@ func _build_top_bar() -> void:
     _jobs_button.position = Vector2(432, 1)
     _jobs_button.size = Vector2(18, 14)
     _jobs_button.pressed.connect(_toggle_jobs)
+    _bind_focus_hint(_jobs_button)
     bar.add_child(_jobs_button)
 
     _tech_btn = HUD_WIDGETS.TechButton.new()
@@ -338,6 +345,7 @@ func _build_top_bar() -> void:
     _tech_btn.position = Vector2(454, 1)
     _tech_btn.size = Vector2(22, 14)
     _tech_btn.pressed.connect(func() -> void: Events.tech_panel_requested.emit())
+    _bind_focus_hint(_tech_btn)
     bar.add_child(_tech_btn)
 
     _research_panel = _panel(Vector2(4, 45), Vector2(126, 12))
@@ -433,6 +441,7 @@ func _build_jobs() -> void:
     _outpost_button.position = Vector2(2, 116)
     _outpost_button.size = Vector2(72, 13)
     _outpost_button.pressed.connect(_toggle_outposts)
+    _bind_focus_hint(_outpost_button)
     _jobs_panel.add_child(_outpost_button)
     _jobs_panel.visible = false
 
@@ -458,6 +467,7 @@ func _build_build_bar() -> void:
     _queue_button.size = Vector2(18, 16)
     _queue_button.tooltip_text = "Buka antrean konstruksi (B)"
     _queue_button.pressed.connect(_toggle_construction_queue)
+    _bind_focus_hint(_queue_button)
     add_child(_queue_button)
     _blockers.append(_queue_button)
     _build_left_hint = _label(self, "BANGUNAN 1-8", Vector2(46, 225), Color(1, 1, 1, 0.78))
@@ -494,10 +504,11 @@ func _rebuild_build_bar() -> void:
         for kind in ["wood", "stone", "iron", "food"]:
             if cost.has(kind):
                 cost_parts.append("%s %d" % [kind.capitalize(), int(cost[kind])])
-        slot.tooltip_text = "%s  ·  %s\n%s" % [
+        slot.tooltip_text = "%s  ·  tombol %s\n%s" % [
             String(data["name"]), slot.key_text,
-            ", ".join(PackedStringArray(cost_parts)) if not cost_parts.is_empty() else "No resource cost"
+            ", ".join(PackedStringArray(cost_parts)) if not cost_parts.is_empty() else "Tanpa biaya resource"
         ]
+        _bind_focus_hint(slot)
         slot.position = Vector2(x0 + i * (w + 3), _viewport_size.y - SLOT_H - 2)
         slot.size = Vector2(w, SLOT_H)
         slot.pressed.connect(_on_slot_pressed)
