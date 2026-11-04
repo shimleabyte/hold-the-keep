@@ -50,6 +50,7 @@ func _initialize() -> void:
         and not world_config.is_frontier_profile("classic"),
         "Both Frontier profiles must use shared campaign systems without changing Classic")
 
+    OS.set_environment("HTK_AUTO_START_GAME", "0")
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main
