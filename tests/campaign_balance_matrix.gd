@@ -80,6 +80,18 @@ func run_profile(profile: String, expected: Dictionary) -> void:
     main.spawner.start_wave(final_day)
     assert(main.spawner._boss_pending,
         "%s must queue the final boss on its configured final day" % profile)
+    assert(main.spawner._boss_t < 0.0,
+        "%s final boss must wait behind the regular wave instead of appearing immediately" % profile)
+    var final_wave_count := main.spawner.wave_size(final_day)
+    var reveal_remaining := floori(float(final_wave_count) * 0.25)
+    main.spawner._to_spawn = reveal_remaining + 1
+    main.spawner._process(0.1)
+    assert(main.spawner._boss_t < 0.0,
+        "%s boss warning must not start before at least 75%% of regular enemies are deployed" % profile)
+    main.spawner._to_spawn = reveal_remaining
+    main.spawner._process(0.1)
+    assert(is_equal_approx(main.spawner._boss_t, main.spawner.BOSS_WARNING_SECONDS),
+        "%s boss must announce itself with a four-second warning after the wave reaches its reveal threshold" % profile)
 
     print("PASS: %s schedule and wave matrix (final day %d)" % [profile, final_day])
     main.queue_free()
