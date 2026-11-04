@@ -274,6 +274,14 @@ func _initialize() -> void:
         "Save validation must reject a garrison reference to a missing building definition")
 
     assert(save_system.save_current(true), "Campaign with assigned guards must save")
+    var disk_save: Variant = JSON.parse_string(FileAccess.get_file_as_string(save_system.PATH))
+    assert(disk_save is Dictionary, "Written campaign save must parse as a JSON object")
+    var disk_barracks_guard_count := 0
+    for disk_villager in disk_save.get("villagers", []):
+        var disk_garrison: Variant = disk_villager.get("guard_garrison", null)
+        if disk_garrison is Dictionary and String(disk_garrison.get("id", "")) == "barracks":
+            disk_barracks_guard_count += 1
+    assert(disk_barracks_guard_count == 1, "Written save must retain the Barracks garrison reference")
     assert(save_system.request_load(), "Saved campaign with guard assignments must reload")
     await ticks(12)
     var restored_main = get_first_node_in_group("main")
@@ -291,8 +299,15 @@ func _initialize() -> void:
         if building.id == "barracks":
             restored_barracks = building
             break
-    assert(restored_barracks != null and restored_barracks.guard_count() == 1,
-        "Save/load must restore the Barracks guard onto the correct garrison building")
+    assert(restored_barracks != null, "Save/load must restore the Barracks building itself")
+    assert(restored_barracks.guard_capacity == 4, "Restored Barracks must retain its four-slot capacity")
+    var restored_barracks_guard_count := 0
+    for soldier in get_nodes_in_group("villagers"):
+        if soldier.is_outpost_guard() and soldier.guard_outpost == restored_barracks:
+            restored_barracks_guard_count += 1
+    print("BARRACKS_RESTORE_DIAGNOSTIC: guards=%d, capacity=%d" % [restored_barracks.guard_count(), restored_barracks.guard_capacity])
+    assert(restored_barracks_guard_count == 1 and restored_barracks.guard_count() == 1,
+        "Save/load must restore the Barracks guard reference and building slot ownership")
     for soldier in get_nodes_in_group("villagers"):
         if soldier.is_outpost_guard():
             assert(soldier.guard_outpost in [restored_outpost, restored_barracks],
