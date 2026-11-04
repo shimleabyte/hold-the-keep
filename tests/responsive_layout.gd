@@ -61,6 +61,21 @@ func _initialize() -> void:
         "Transient gameplay feedback must use a compact bubble, not full-width floating text")
     assert(hud._msg_bubble.mouse_filter == Control.MOUSE_FILTER_IGNORE,
         "The feedback bubble must never block world interaction")
+    assert(hud._clock_widget.size.y == 18,
+        "The clock must reserve a second line for the next phase countdown")
+    game_clock.time_of_day = 0.5
+    assert(hud._clock_widget.countdown_text() == "NIGHT 00:18",
+        "The clock must display the exact time remaining until night")
+    game_clock.time_of_day = 0.75
+    assert(hud._clock_widget.countdown_text() == "DAWN 00:27",
+        "The clock must display the exact time remaining until dawn")
+    main.spawner.start_wave(1)
+    hud._process(0.2)
+    assert(hud._foes.text == "0+6" and hud._foes.visible,
+        "The hostile counter must expose queued wave enemies before the first spawn")
+    assert(hud._foes.tooltip_text.find("6 remaining") >= 0,
+        "The hostile counter must explain active versus queued enemies")
+    main.spawner.end_wave()
     assert(not hud._stage_label.visible and not hud._boss_title.visible,
         "Stage and boss names must remain contextual rather than permanent text")
     for job_id in hud._jobs:
