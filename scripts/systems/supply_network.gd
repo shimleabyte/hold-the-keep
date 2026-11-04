@@ -12,7 +12,7 @@ const TRANSFER_KINDS: Array[String] = ["wood", "stone", "food", "iron"]
 const MAX_SHIPMENT_AMOUNT := 60
 const MAX_ACTIVE_SHIPMENTS := 8
 const SHIPMENT_TICK := 0.2
-const CARRIER_SCRIPT := preload("res://scripts/entities/supply_carrier.gd")
+const SHIPMENT_DISPATCH_SCRIPT := preload("res://scripts/systems/supply_shipment_dispatch.gd")
 const COST_TRANSACTIONS_SCRIPT := preload("res://scripts/systems/supply_cost_transactions.gd")
 const SHIPMENT_LEDGER_SCRIPT := preload("res://scripts/systems/supply_shipment_ledger.gd")
 const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
@@ -38,6 +38,7 @@ var _shipment_timer := 0.0
 var _pressure_timer := 0.0
 var _pressure_records: Dictionary = {}
 var _shipment_ledger = SHIPMENT_LEDGER_SCRIPT.new()
+var _shipment_dispatch = SHIPMENT_DISPATCH_SCRIPT.new()
 var _cost_source_cell := Vector2i(-1, -1)
 var _cost_transactions = COST_TRANSACTIONS_SCRIPT.new()
 
@@ -444,66 +445,15 @@ func get_shipment_status_label(status: String) -> String:
 
 
 func advance_shipment_orders() -> void:
-    if not WorldConfig.is_frontier_profile():
-        return
-    _ensure_current()
-    for index in range(_shipment_ledger.orders.size()):
-        var order: Dictionary = _shipment_ledger.orders[index]
-        if not _shipment_ledger.is_active_order(order):
-            continue
-        var destination = _find_depot(Vector2i(int(order["destination_x"]), int(order["destination_y"])))
-        if destination == null:
-            _remove_carrier(int(order["id"]))
-            order = _shipment_ledger.orders[index]
-            _recover_cargo(order, "recovered")
-            continue
-        if not shipment_route_available(int(order["id"])):
-            if String(order["status"]) == "in_transit":
-                _remove_carrier(int(order["id"]))
-                order = _shipment_ledger.orders[index]
-            order["status"] = "blocked"
-            _shipment_ledger.orders[index] = order
-            continue
-        var carrier = _carriers.get(int(order["id"]), null)
-        if is_instance_valid(carrier):
-            continue
-        var start := Vector2(float(order["x"]), float(order["y"]))
-        var courier = CARRIER_SCRIPT.new()
-        if not courier.configure(self, nav, int(order["id"]), destination, start):
-            order["status"] = "blocked"
-            _shipment_ledger.orders[index] = order
-            continue
-        world.entities.add_child(courier)
-        _carriers[int(order["id"])] = courier
-        order["status"] = "in_transit"
-        _shipment_ledger.orders[index] = order
+    _shipment_dispatch.advance(self)
 
 
 func shipment_route_available(order_id: int) -> bool:
-    var index := _shipment_ledger.order_index(order_id)
-    if index < 0:
-        return false
-    var order: Dictionary = _shipment_ledger.orders[index]
-    var destination = _find_depot(Vector2i(int(order["destination_x"]), int(order["destination_y"])))
-    if destination == null or not is_depot_connected(destination):
-        return false
-    # Source stock was already withdrawn. A destroyed source no longer blocks delivery.
-    var source = _find_depot(Vector2i(int(order["source_x"]), int(order["source_y"])))
-    return source == null or is_depot_connected(source)
+    return _shipment_dispatch.route_available(self, order_id)
 
 
 func carrier_blocked(order_id: int, carrier_position: Vector2) -> void:
-    var index := _shipment_ledger.order_index(order_id)
-    if index < 0:
-        return
-    var order: Dictionary = _shipment_ledger.orders[index]
-    if not _shipment_ledger.is_active_order(order):
-        return
-    order["status"] = "blocked"
-    order["x"] = carrier_position.x
-    order["y"] = carrier_position.y
-    _shipment_ledger.orders[index] = order
-    _carriers.erase(order_id)
+    _shipment_dispatch.carrier_blocked(self, order_id, carrier_position)
 
 
 func carrier_completed(order_id: int, carrier_position: Vector2) -> void:
