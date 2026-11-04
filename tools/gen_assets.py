@@ -98,12 +98,14 @@ BELT = WOOD_D
 
 class Look:
     def __init__(self, tunic, tunic_d, pants="#4a3b2a", hair=HAIR, hat=None, cape=None, mask=False,
-                 tool_a=None, tool_w="same", shield=None, k=1.0, beard=None, trim=None, boots=DARK):
+                 tool_a=None, tool_w="same", shield=None, k=1.0, beard=None, trim=None, boots=DARK,
+                 quiver=False, apron=False, heavy_armor=False):
         self.tunic, self.tunic_d, self.pants, self.hair = tunic, tunic_d, pants, hair
         self.hat, self.cape, self.mask, self.shield = hat, cape, mask, shield
         self.tool_a = tool_a
         self.tool_w = tool_a if tool_w == "same" else tool_w
         self.k, self.beard, self.trim, self.boots = k, beard, trim, boots
+        self.quiver, self.apron, self.heavy_armor = quiver, apron, heavy_armor
         self.mx = int(math.floor(2 * k + 0.5))
         self.my = int(math.floor(4 * k + 0.5))
         self.fw = int(math.floor(16 * k + 0.5)) + 2 * self.mx
@@ -162,7 +164,7 @@ def draw_tool(r, kind, hx, hy, dx, dy, sc=1.0):
         for x, y in line_pts(hx + ux * start, hy + uy * start, hx + ux * L, hy + uy * L):
             P(x, y, c)
 
-    base = {"axe": 7, "pick": 7, "fork": 8}.get(kind, 0) * sc
+    base = {"axe": 7, "pick": 7, "fork": 8, "mace": 6}.get(kind, 0) * sc
     ex, ey = hx + ux * base, hy + uy * base
     if kind == "axe":
         along(7 * sc, WOOD_D)
@@ -194,6 +196,19 @@ def draw_tool(r, kind, hx, hy, dx, dy, sc=1.0):
         for i in (-2, -1, 0, 1, 2):
             P(ex + px * i, ey + py * i, STEEL)
         P(ex + ux, ey + uy, STEEL_L)
+    elif kind == "bow":
+        for step in range(7):
+            t = -1.0 + step / 3.0
+            P(hx + ux * (3.0 * (1.0 - t * t)) + px * (4.0 * t),
+              hy + uy * (3.0 * (1.0 - t * t)) + py * (4.0 * t), WOOD_D)
+        for x, y in line_pts(hx - px * 4, hy - py * 4, hx + px * 4, hy + py * 4):
+            P(x, y, STEEL_L)
+    elif kind == "mace":
+        along(6 * sc, WOOD_D)
+        for i in (-2, -1, 0, 1, 2):
+            P(ex + px * i, ey + py * i, STEEL)
+        P(ex + ux, ey + uy, STEEL_L)
+        P(ex + ux * 2, ey + uy * 2, "#515965")
     elif kind == "dagger":
         along(max(2, 4 * sc), STEEL_L, 1)
         for i in (-1, 0, 1):
@@ -213,7 +228,7 @@ TOOL_POSE = {
 SWING = {"states": ["raised", "swing", "low", "rest"], "by": [-1, 0, 1, 0], "lean": [-1, 1, 2, 0]}
 STAB = {"states": ["back", "thrust", "thrust", "rest"], "by": [0, 0, 0, 0], "lean": [-1, 1, 2, 0]}
 POKE = {"states": ["raised", "low", "low", "rest"], "by": [-1, 1, 1, 0], "lean": [0, 1, 1, 0]}
-TOOL_ANIM = {None: STAB, "axe": SWING, "pick": SWING, "fork": POKE, "hammer": SWING, "sword": STAB, "esword": STAB, "dagger": STAB}
+TOOL_ANIM = {None: STAB, "axe": SWING, "pick": SWING, "fork": POKE, "hammer": SWING, "sword": STAB, "esword": STAB, "dagger": STAB, "bow": STAB, "mace": SWING}
 
 
 def pose_for(look, anim, i):
@@ -253,6 +268,15 @@ def draw_hat(look, r, by, lean=0):
         r(5 + L, 0 + by, 6, 2, "#d6b86a"); r(5 + L, 1 + by, 6, 1, "#8a6a2a"); r(2 + L, 2 + by, 12, 1, "#e8d28a")
     elif h == "helm":
         r(4 + L, 0 + by, 8, 3, STEEL); r(5 + L, 0 + by, 3, 1, STEEL_L); r(4 + L, 3 + by, 1, 2, STEEL); r(11 + L, 3 + by, 1, 2, STEEL)
+    elif h == "builder":
+        r(5 + L, 0 + by, 6, 3, "#e0a432"); r(4 + L, 3 + by, 8, 1, "#865a2b")
+        r(7 + L, 1 + by, 2, 1, "#fff0b5"); r(10 + L, 1 + by, 2, 1, "#fff0b5")
+    elif h == "archer":
+        r(4 + L, 0 + by, 8, 3, "#365d45"); r(3 + L, 3 + by, 10, 1, "#244232")
+        r(10 + L, -1 + by, 1, 2, "#d6c18b"); r(11 + L, -2 + by, 1, 2, "#a9bd7b")
+    elif h == "brute":
+        r(3 + L, 0 + by, 10, 3, "#626b75"); r(4 + L, 0 + by, 8, 1, "#c7cdd5")
+        r(3 + L, 3 + by, 10, 2, "#3b414c"); r(5 + L, 4 + by, 6, 1, "#252a33")
     elif h == "hood":
         r(4 + L, 0 + by, 8, 5, "#5c1f1f"); r(4 + L, 5 + by, 1, 2, "#5c1f1f"); r(11 + L, 5 + by, 1, 2, "#5c1f1f")
     elif h == "band":
@@ -336,10 +360,21 @@ def render_humanoid(look, view, pose, svg, ox, oy):
         lg = pose.get("lg", (0, 0))
         if look.cape and not back:
             r(3, 8 + by, 10, 7, look.cape)
+        if look.quiver:
+            r(2, 7 + by, 3, 7, WOOD_D); r(2, 7 + by, 3, 1, WOOD_L)
+            r(3, 5 + by, 1, 5, STEEL_L); r(4, 6 + by, 1, 5, STEEL_L)
         boot(5, 2, lg[0]); boot(9, 2, lg[1])
         r(4, 7 + by, 8, 6, look.tunic); r(4, 12 + by, 8, 1, look.tunic_d); r(4, 10 + by, 8, 1, BELT)
         if look.trim:
             r(4, 7 + by, 8, 1, look.trim); r(4, 10 + by, 8, 1, look.trim)
+        if look.apron and not back:
+            r(5, 11 + by, 6, 4, "#68442d"); r(5, 11 + by, 6, 1, "#b88247")
+            r(6, 12 + by, 1, 2, "#d19a5a"); r(9, 12 + by, 1, 2, "#d19a5a")
+        if look.heavy_armor:
+            r(2, 8 + by, 3, 3, "#4b515c"); r(3, 8 + by, 2, 1, "#b6bdc6")
+            r(11, 8 + by, 3, 3, "#4b515c"); r(11, 8 + by, 2, 1, "#b6bdc6")
+            r(5, 8 + by, 6, 4, "#68717d"); r(6, 9 + by, 4, 1, "#c7cdd5")
+            r(7, 11 + by, 2, 1, "#a38a58")
         sw = pose.get("arm", 0)
         r(3, 8 + by, 1, 4, look.tunic_d); r(3, 12 + by + max(0, sw), 1, 1, SKIN)
         if look.shield:
@@ -362,6 +397,9 @@ def render_humanoid(look, view, pose, svg, ox, oy):
     if look.cape:
         back_len = 3 if pose.get("run") else 2
         r(5 - back_len + lean, 8 + by, back_len + 1, 7 + (0 if pose.get("run") else 0), look.cape)
+    if look.quiver:
+        r(2 + lean, 7 + by, 2, 7, WOOD_D); r(2 + lean, 7 + by, 2, 1, WOOD_L)
+        r(3 + lean, 5 + by, 1, 6, STEEL_L); r(4 + lean, 6 + by, 1, 5, STEEL_L)
     # kaki jauh
     fx = 7 + f_off
     if 2 - f_lift > 0:
@@ -374,6 +412,11 @@ def render_humanoid(look, view, pose, svg, ox, oy):
     r(5 + lean, 7 + by, 5, 6, look.tunic); r(5 + lean, 12 + by, 5, 1, look.tunic_d); r(5 + lean, 10 + by, 5, 1, BELT)
     if look.trim:
         r(5 + lean, 7 + by, 5, 1, look.trim)
+    if look.apron:
+        r(6 + lean, 11 + by, 4, 4, "#68442d"); r(6 + lean, 11 + by, 4, 1, "#b88247")
+    if look.heavy_armor:
+        r(4 + lean, 7 + by, 3, 2, "#4b515c"); r(4 + lean, 7 + by, 3, 1, "#b6bdc6")
+        r(7 + lean, 8 + by, 4, 4, "#68717d"); r(8 + lean, 9 + by, 2, 1, "#c7cdd5")
     # kaki dekat
     nx = 6 + n_off
     if 2 - n_lift > 0:
@@ -501,13 +544,20 @@ def make_characters():
     humanoid_sheet("villager_idle", Look("#d9d2c3", "#b3ab9a"))
     humanoid_sheet("villager_woodcutter", Look("#4e9a4a", "#3b7a38", hat="wood", tool_a="axe"))
     humanoid_sheet("villager_miner", Look("#8a8f98", "#6e737b", hat="miner", tool_a="pick"))
+    humanoid_sheet("villager_builder", Look("#b77935", "#825329", pants="#574532", hat="builder",
+                                             tool_a="hammer", tool_w="hammer", apron=True, trim="#d89a4e"))
     humanoid_sheet("villager_blacksmith", Look("#985c3d", "#6f3e2a", pants="#3c3029", hat="band",
                                                 tool_a="hammer", tool_w="hammer", beard="#4a3024",
                                                 trim="#e19a55"))
     humanoid_sheet("villager_farmer", Look("#d6b13c", "#a8892c", hat="farm", tool_a="fork"))
     humanoid_sheet("villager_soldier", Look("#3f6fb5", "#2f548a", hat="helm", tool_a="sword", shield="#3f6fb5"))
     humanoid_sheet("enemy_bandit", Look("#a33b3b", "#7d2c2c", hat="hood", tool_a="dagger", mask=True))
+    humanoid_sheet("enemy_archer", Look("#496c54", "#304b3b", pants="#373f32", hat="archer",
+                                        cape="#253e32", tool_a="bow", tool_w="bow", quiver=True, trim="#a9b97c"))
     humanoid_sheet("enemy_soldier", Look("#3b4f8a", "#2d3d6b", hat="helm", tool_a="esword", shield=STEEL))
+    humanoid_sheet("enemy_brute", Look("#595b64", "#383c45", pants="#312d2a", hat="brute",
+                                       cape="#3a3030", tool_a="mace", tool_w="mace", shield="#606773",
+                                       heavy_armor=True, beard="#3f302a", trim="#9b8250", k=1.1))
     wolf_sheet("enemy_wolf")
     humanoid_sheet("enemy_king", Look("#4a4a58", "#34343f", pants="#2a2a33", hat="crown", cape="#5a1019", tool_a="sword",
                                       beard="#6b3a1e", trim=GOLD, k=1.5, boots="#111111"))
