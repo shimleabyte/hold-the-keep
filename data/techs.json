@@ -75,11 +75,14 @@
     },
     "time": 25,
     "requires": [],
-    "desc": "Damage menara +25%.",
+    "desc": "Damage menara +25% dan membuka Lapangan Panah untuk melatih dua pemanah.",
     "effects": {
       "mult": {
         "tower.damage": 1.25
-      }
+      },
+      "unlock_building": [
+        "archery_range"
+      ]
     }
   },
   {

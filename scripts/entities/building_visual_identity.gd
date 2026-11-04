@@ -7,7 +7,7 @@ const SUPPORTED_FEATURES := [
     "storage_shutters", "farm_crop_rows", "stone_mortar", "forge_embers",
     "outpost_signal", "road_ruts", "bridge_planks", "lumber_logs", "quarry_cart", "granary_wheat_sacks",
     "hunting_lodge_trophy_rack", "scout_post_map_board", "infirmary_medicine_rack",
-    "barracks_training_yard"
+    "barracks_training_yard", "archery_range_target_yard"
 ]
 
 
@@ -184,6 +184,19 @@ static func draw_identity(
                 canvas.draw_line(Vector2(target_x - 4.0, gate_y - 12.0), Vector2(target_x + 4.0, gate_y - 12.0), accent, 1.5)
                 canvas.draw_circle(Vector2(target_x, gate_y - 20.0), 2.5, accent)
             canvas.draw_line(Vector2(-half_width + 8.0, top + 6.0), Vector2(half_width - 8.0, top + 6.0), accent, 1.0)
+
+        "archery_range_target_yard":
+            var target_y := top + 10.0
+            for target_x in [-half_width + 12.0, half_width - 12.0]:
+                canvas.draw_rect(Rect2(target_x - 5.0, target_y - 3.0, 10.0, 15.0), shadow)
+                canvas.draw_circle(Vector2(target_x, target_y + 3.0), 4.5, accent)
+                canvas.draw_circle(Vector2(target_x, target_y + 3.0), 2.5, primary)
+                canvas.draw_circle(Vector2(target_x, target_y + 3.0), 1.0, shadow)
+                canvas.draw_line(Vector2(target_x, target_y + 3.0), Vector2(target_x + 2.0, target_y - 7.0), accent, 1.0)
+            canvas.draw_rect(Rect2(-8.0, top + 20.0, 16.0, 7.0), shadow)
+            canvas.draw_rect(Rect2(-6.0, top + 21.0, 12.0, 5.0), primary)
+            canvas.draw_line(Vector2(-half_width + 7.0, top + 30.0), Vector2(half_width - 7.0, top + 30.0), accent, 1.5)
+            canvas.draw_line(Vector2(-half_width + 9.0, top + 33.0), Vector2(half_width - 9.0, top + 33.0), shadow, 2.0)
 
     _draw_damage(canvas, building_id, visual, half_width, top, sprite_size.y, stage)
 
