@@ -3,6 +3,7 @@ extends RefCounted
 ## Enemy retains identity, archetype state, navigation and persisted combat fields.
 
 const ENEMY_BOLT := preload("res://scripts/entities/enemy_bolt.gd")
+const ATTACK_HIT_DELAY := 0.14
 const Corpse := preload("res://scripts/entities/corpse.gd")
 
 var _enemy: Variant
@@ -29,7 +30,7 @@ func begin_attack(target, direction: Vector2) -> void:
         enemy._pounce_t = 0.16
         Events.fx_burst.emit("dust", enemy.position + Vector2(0, -2), -enemy._pounce_dir, 1.3)
     else:
-        enemy._pending_t = 0.14
+        enemy._pending_t = ATTACK_HIT_DELAY
     enemy.combat_feedback.begin_windup(direction, enemy._pending_t, false)
     Audio.play("charge" if enemy.role == "pouncer" else "windup", 1.0, -9.0)
 
