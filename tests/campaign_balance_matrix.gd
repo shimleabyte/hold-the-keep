@@ -3,6 +3,7 @@ extends SceneTree
 var world_config
 var game_clock
 var data_db
+var _night_warning_count := 0
 
 ## Deterministic campaign difficulty matrix: schedule, wave growth and act rosters.
 
@@ -10,6 +11,30 @@ var data_db
 func ticks(count: int) -> void:
     for i in range(count):
         await physics_frame
+
+
+func _on_build_feedback(message: String) -> void:
+    if message.begins_with("Senja mendekat."):
+        _night_warning_count += 1
+
+
+func verify_night_warning() -> void:
+    game_clock.set_process(false)
+    game_clock.reset()
+    game_clock.time_of_day = GameClock.NIGHT_START - GameClock.NIGHT_WARNING_LEAD - 0.001
+    game_clock._process(0.5)
+    assert(_night_warning_count == 1,
+        "The player must receive a preparation warning before the night phase")
+    game_clock._process(0.5)
+    assert(_night_warning_count == 1,
+        "The same night warning must not repeat every frame")
+
+    game_clock.time_of_day = 0.999
+    game_clock._process(0.5)
+    game_clock.time_of_day = GameClock.NIGHT_START - GameClock.NIGHT_WARNING_LEAD - 0.001
+    game_clock._process(0.5)
+    assert(_night_warning_count == 2,
+        "The warning must become available again on the next day")
 
 
 func pool_has(pool: Array, enemy_id: String) -> bool:
@@ -87,6 +112,8 @@ func run_profile(profile: String, expected: Dictionary) -> void:
 
 
 func _run() -> void:
+    var events = root.get_node("Events")
+    events.build_feedback.connect(_on_build_feedback)
     await run_profile("classic", {
         "final_day": 15,
         "days": {
@@ -106,6 +133,9 @@ func _run() -> void:
             20: {"stage":"act_4", "wave":65}
         }
     })
+    verify_night_warning()
+    events.build_feedback.disconnect(_on_build_feedback)
+    print("PASS: once-per-night preparation warning and next-day reset")
     quit(0)
 
 
