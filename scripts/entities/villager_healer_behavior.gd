@@ -33,5 +33,5 @@ func _target_valid() -> bool:
     return String(target.job) == "soldier" and int(target.hp) > 0 \
         and int(target.hp) < int(target.max_hp) and not target.is_expeditioning() \
         and not target.is_recalling_expedition() \
-        and target.state not in [_villager.State.HIDDEN, _villager.State.FLEEING] \
+        and not target.is_unavailable_for_healing() \
         and _villager._is_in_workplace_radius(target)
