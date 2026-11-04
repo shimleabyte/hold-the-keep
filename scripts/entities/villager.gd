@@ -907,7 +907,7 @@ func _tick_fight(delta: float) -> void:
         if anim.face(_foe.position - position):
             queue_redraw()
         if dist < ARCHER_MIN_RANGE:
-            var retreat := (position - _foe.position).normalized()
+            var retreat: Vector2 = (position - _foe.position).normalized()
             if retreat.length_squared() > 0.0:
                 position += retreat * SPEED * 0.8 * delta
         if _atk_cd <= 0.0:

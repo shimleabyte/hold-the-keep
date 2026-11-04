@@ -694,7 +694,7 @@ func _refresh_outpost_panel() -> void:
             elif is_archery_range:
                 var workplace_data: Dictionary = structure.data.get("workplaces", {})
                 var capacity := int(workplace_data.get("archer", 0))
-                var assigned := capacity - structure.free_slots("archer")
+                var assigned: int = capacity - structure.free_slots("archer")
                 heading.text = "LAPANGAN PANAH %d,%d  ·  PEMANAH %d/%d" % [structure.cell.x, structure.cell.y, assigned, capacity]
             elif structure_id == "granary":
                 heading.text = "LUMBUNG %d,%d" % [structure.cell.x, structure.cell.y]
