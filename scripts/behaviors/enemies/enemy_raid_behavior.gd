@@ -43,7 +43,7 @@ func faction_raid_target_valid(target, supply):
     var owner := String(supply.territory.owner_at(target.cell))
     var region: Dictionary = supply.territory.get_region_state(enemy.faction_raid_region_id)
     var control := String(region.get("control", "neutral"))
-    var exposed := owner == "contested" or (owner == "enemy.player" and control in ["enemy", "contested"])
+    var exposed := owner == "contested" or (owner == "player" and control in ["enemy", "contested"])
     if not exposed:
         return false
 
