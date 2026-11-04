@@ -140,6 +140,14 @@ func _build_screen() -> void:
         "frontier"
     ))
 
+    modes.add_child(_mode_card(
+        "03  /  EXPEDITION",
+        "BEYOND THE FRONTIER",
+        "A vast 192 × 192 world. Survey sealed crossings, uncover four outer marches and establish routes to rival strongholds.",
+        "ENTER EXPEDITION",
+        "frontier_expedition"
+    ))
+
     var footer := HBoxContainer.new()
     content.add_child(footer)
     var note := _label("NO ROAD IS SAFE. NO WINTER IS KIND.", 7, MUTED)
