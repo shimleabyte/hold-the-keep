@@ -149,6 +149,7 @@ var _jobs: Dictionary = {}
 var _slots: Dictionary = {}
 var _help: Panel
 var _msg: Label
+var _msg_bubble: Panel
 var _banner: Label
 var _event_decision_panel
 var _over: ColorRect
@@ -269,7 +270,8 @@ func _icon(parent: Node, icon_name: String, pos: Vector2) -> TextureRect:
 
 ## Ikon + angka.
 func _stat(parent: Node, icon_name: String, pos: Vector2) -> Label:
-    _icon(parent, icon_name, pos + Vector2(0, 2))
+    var icon_node := _icon(parent, icon_name, pos + Vector2(0, 2))
+    icon_node.tooltip_text = "%s tersimpan" % icon_name.capitalize()
     var value := _label(parent, "0", pos + Vector2(13, 0))
     value.tooltip_text = "%s tersimpan" % icon_name.capitalize()
     value.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -289,6 +291,7 @@ func _build_top_bar() -> void:
     _iron = _label(bar, "0", Vector2(124, 1), Color("#e19a68"))
     _iron.tooltip_text = "Besi tersimpan"
     _iron.mouse_filter = Control.MOUSE_FILTER_STOP
+    _iron_icon.tooltip_text = "Besi tersimpan"
     for divider_x in [35.0, 71.0, 107.0, 145.0]:
         var divider := ColorRect.new()
         divider.position = Vector2(divider_x, 4)
@@ -317,6 +320,7 @@ func _build_top_bar() -> void:
     _pop = _label(bar, "0/0", Vector2(349, 1), Color("#a9c9bf"))
     _pop.tooltip_text = "Jumlah warga / kapasitas rumah"
     _pop.mouse_filter = Control.MOUSE_FILTER_STOP
+    _people_icon.tooltip_text = "Jumlah warga / kapasitas rumah"
 
     _map_button = HUD_WIDGETS.HudChip.new()
     _map_button.icon = ICONS["compass"]
@@ -704,10 +708,29 @@ func _build_help() -> void:
     _help.visible = false
 
 func _build_messages() -> void:
-    _msg = _label(self, "", Vector2(0, 194))
-    _msg.size = Vector2(480, 12)
+    # Short-lived feedback uses a compact dark bubble instead of floating text
+    # across the entire playfield.
+    _msg_bubble = Panel.new()
+    _msg_bubble.size = Vector2(280, 22)
+    _msg_bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _msg_bubble.visible = false
+    var bubble_style := StyleBoxFlat.new()
+    bubble_style.bg_color = Color(0.055, 0.05, 0.045, 0.96)
+    bubble_style.border_color = Color("#9a7948")
+    bubble_style.set_border_width_all(1)
+    bubble_style.corner_radius_top_left = 2
+    bubble_style.corner_radius_top_right = 2
+    bubble_style.corner_radius_bottom_left = 2
+    bubble_style.corner_radius_bottom_right = 2
+    _msg_bubble.add_theme_stylebox_override("panel", bubble_style)
+    add_child(_msg_bubble)
+    _msg = _label(_msg_bubble, "", Vector2(6, 2))
+    _msg.size = Vector2(268, 18)
     _msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    _msg.modulate.a = 0.0
+    _msg.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    _msg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _msg.modulate.a = 1.0
+    _msg_bubble.modulate.a = 0.0
     _banner = _label(self, "", Vector2(0, 44))
     _banner.size = Vector2(480, 30)
     _banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -780,8 +803,10 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _build_right_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
     _combat_bar.position = Vector2((_viewport_size.x - _combat_bar.size.x) * 0.5, build_y - _combat_bar.size.y - 19.0)
-    _msg.position = Vector2(0, _combat_bar.position.y - _msg.size.y - 6.0)
-    _msg.size.x = _viewport_size.x
+    _msg_bubble.position = Vector2(
+        (_viewport_size.x - _msg_bubble.size.x) * 0.5,
+        _combat_bar.position.y - _msg_bubble.size.y - 6.0
+    )
     _banner.position = Vector2(0, maxf(82.0, _viewport_size.y * 0.16))
     _banner.size.x = _viewport_size.x
     if _event_decision_panel != null:
@@ -1081,10 +1106,12 @@ func _on_campaign_won(day: int) -> void:
 
 func _show_message(text: String) -> void:
     _msg.text = text
-    _msg.modulate.a = 1.0
+    _msg_bubble.visible = true
+    _msg_bubble.modulate.a = 1.0
     if _msg_tween != null:
         _msg_tween.kill()
     _msg_tween = create_tween()
-    _msg_tween.tween_interval(1.8)
-    _msg_tween.tween_property(_msg, "modulate:a", 0.0, 0.5)
+    _msg_tween.tween_interval(2.0)
+    _msg_tween.tween_property(_msg_bubble, "modulate:a", 0.0, 0.45)
+    _msg_tween.tween_callback(func() -> void: _msg_bubble.visible = false)
 
