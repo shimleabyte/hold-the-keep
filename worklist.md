@@ -1,6 +1,6 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `8d11d130355775ddc48a3a5bacce9c65368299d2` (2026-11-04)  
+**Audit baseline:** `main` at `bad437f77da42f5f2f1d26b29cd6d8e9e755a479` (2026-11-04)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
@@ -9,9 +9,9 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ## Live execution status — 2026-11-04 (post PR #87 Archery Range integration)
 
-**Current main:** `8d11d130355775ddc48a3a5bacce9c65368299d2` — PR #87 merged; adds Fletching-unlocked Archery Range, two archer workplaces, ranged projectile combat, logistics assignment/release, and v17 persistence coverage.  
+**Current main:** `bad437f77da42f5f2f1d26b29cd6d8e9e755a479` — includes PR #87 Archery Range and PR #89 canonical save migration/file-store extraction; save schema remains v17.  
 **Current save schema:** v17.  
-**Open pull requests observed in the latest repository search:** #84, #86, #88 and #89. Re-check live state before taking action.
+**Open pull requests observed in the latest repository search:** #86 DEV-H Frontier decoration and #91 DEV-F archer combat extraction. Re-check live state before taking action.
 
 | Workstream | Current disposition |
 |---|---|
@@ -20,8 +20,8 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-B faction camp architecture | Integrated through PR #70. Preserve public camp/patrol/raid interfaces. |
 | DEV-C campaign simulation QA | Integrated through PR #73. This is deterministic campaign simulation/diagnostics, not a substitute for human playtesting. |
 | DEV-D supply network decomposition | Partial: PR #75 extracted cost-source selection, affordability, payment and refunds into `SupplyCostTransactions`. Shipment lifecycle, depot graph/ledger and supply pressure remain. |
-| DEV-E save/migration architecture | `SaveValidator` and in-memory `SaveMigrationPipeline` are integrated through #77/#81. Canonical on-disk conversion and file I/O/recovery extraction are proposed in #84/#88/#89. #89 is the latest reapplication against current main; treat #84 and #88 as competing older iterations, not additional work to merge. |
-| DEV-F villager role architecture | Not started. `villager.gd` remains a high-conflict host; extract behavior incrementally while preserving shared movement, workplace, carrying and save contracts. |
+| DEV-E save/migration architecture | Complete through #89: canonical v17 conversion for supported Classic v1–v17 / Frontier v7–v17 saves and `SaveFileStore` parsing, temp verification, backup rotation and rollback are integrated. Schema remains v17; #84 and #88 were closed as superseded duplicates. |
+| DEV-F villager role architecture | In progress: #91 extracts archer combat policy from the 1530-line villager host and adds retreat/cadence assertions. Further role-specific extraction remains; preserve movement, workplace, carrying and save contracts. |
 | DEV-G HUD modularization | Not started. Decision-based event panel is already integrated through #72; extract it through its existing interface. |
 | DEV-H world generation | Partial. Existing terrain/resource/region generation extraction is on main; #86 proposes deterministic decoration/landmark extraction and still requires Godot 4.7 validation plus rendered parity review. |
 | DEV-I enemy controller | Partial. Patrol movement is already extracted through #74 as `EnemyPatrolMovement`; other shared host responsibilities remain. |
@@ -33,15 +33,15 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ### Current open-PR disposition
 
-- **#89 — canonical save migration/file store:** latest DEV-E reapplication against `8d11d13`. Review and require its own Godot 4.7 regression matrix and campaign simulation checks before merge.
-- **#88 and #84 — canonical save migration/file store:** older competing iterations of the same DEV-E slice. Do not merge alongside #89. After confirming #89 contains all unique changes and is validated, close the superseded PRs with a clear explanation; do not delete branches until unique commits are reconciled.
-- **#86 — deterministic Frontier decoration/landmarks:** separate DEV-H slice. Require Godot 4.7 import/parse, full regression, Frontier/Expedition tests and performance diagnostics. Manual identical-seed rendered comparison remains mandatory.
-- **#87 — Archery Range:** merged into main at `8d11d13`.
+- **#91 — DEV-F archer combat extraction:** open. Import/parse passed; full Godot 4.7 regression matrix and campaign simulation checks are running. Do not merge until the final head's checks pass.
+- **#86 — deterministic Frontier decoration/landmarks:** open and retargeted to current main. Its earlier Godot CI run reported failure even though the visible job list showed success; obtain a fresh complete run and inspect the discrepancy before merge. Manual identical-seed rendered comparison remains mandatory.
+- **#89 — canonical save migration/file store:** merged into main at `bad437f`; Godot CI regression jobs and Campaign Simulation QA passed on the validated implementation. #84 and #88 were closed as superseded duplicates.
+- **#87 — Archery Range:** merged into main before the current baseline.
 
 ### Recommended execution order
 
-1. Stabilize integration: validate #89 and #86 independently; reconcile duplicate save PRs; confirm the current mainline CI state.
-2. DEV-F: begin villager decomposition in small, independently testable slices. Avoid broad rewrites.
+1. Stabilize integration: finish #91 checks, diagnose/revalidate #86, and confirm the post-#89 mainline CI state.
+2. DEV-F: continue villager decomposition in small, independently testable slices after #91. Avoid broad rewrites.
 3. DEV-D: extract shipment lifecycle first, then depot graph/ledger and supply-pressure responsibilities as separate slices.
 4. DEV-G: modularize HUD components without changing layout contracts or gameplay rules.
 5. DEV-H and DEV-I: finish generation and enemy-host decomposition after checking current file ownership and API dependencies.
