@@ -65,6 +65,12 @@ func _initialize() -> void:
         "The title screen must expose a Continue action")
     assert(title_screen.find_child("SettingsButton", true, false) != null,
         "The title screen must expose Settings")
+    var title_scroll = title_screen.find_child("TitleContentScroll", true, false)
+    assert(title_scroll is ScrollContainer,
+        "The title screen's central content must remain scrollable at compact viewport sizes")
+    var campaign_options = title_screen.find_child("CampaignOptions", true, false)
+    assert(campaign_options is HFlowContainer,
+        "Campaign choices must wrap instead of overflowing horizontally")
     assert(title_screen.get_node_or_null("SettingsPanel") != null,
         "The title screen must provide an in-menu settings panel")
     main._start_campaign("classic")

@@ -69,11 +69,20 @@ func _build_screen() -> void:
     top_line.add_child(edition)
     top_line.add_child(_label("BUILD  /  0.1", 7, MUTED))
 
+    var title_scroll := ScrollContainer.new()
+    title_scroll.name = "TitleContentScroll"
+    title_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    title_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    title_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    title_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+    content.add_child(title_scroll)
+
     var title_block := VBoxContainer.new()
+    title_block.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     title_block.size_flags_vertical = Control.SIZE_EXPAND_FILL
     title_block.alignment = BoxContainer.ALIGNMENT_CENTER
     title_block.add_theme_constant_override("separation", 0)
-    content.add_child(title_block)
+    title_scroll.add_child(title_block)
 
     var overline := _label("THE BORDERLANDS ARE NOT YOURS", 8, GOLD)
     overline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -110,9 +119,11 @@ func _build_screen() -> void:
     _continue_button.pressed.connect(_continue_campaign)
     continue_row.add_child(_continue_button)
 
-    var modes := HBoxContainer.new()
-    modes.alignment = BoxContainer.ALIGNMENT_CENTER
-    modes.add_theme_constant_override("separation", 12)
+    var modes := HFlowContainer.new()
+    modes.name = "CampaignOptions"
+    modes.alignment = FlowContainer.ALIGNMENT_CENTER
+    modes.add_theme_constant_override("h_separation", 12)
+    modes.add_theme_constant_override("v_separation", 10)
     title_block.add_child(modes)
     modes.add_child(_mode_card(
         "01  /  CLASSIC",
