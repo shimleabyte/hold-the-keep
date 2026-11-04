@@ -24,7 +24,7 @@ func find_work() -> void:
     var best_cell := Vector2i(-1, -1)
     var best_path := PackedVector2Array()
     var best_score: float = -INF
-    var best_direction: int = int(_villager._scout_cursor)
+    var best_direction: int = _villager.scout_behavior_cursor()
     var work_radius: float = float(_villager.workplace.data.get("work_radius", _villager.DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
 
     for radius in _villager.SCOUT_SEARCH_RADII:
@@ -75,7 +75,7 @@ func target_reserved(cell: Vector2i) -> bool:
             continue
         if String(other.job) != "scout":
             continue
-        var reserved_cell: Vector2i = other.get("_scout_target_cell")
+        var reserved_cell: Vector2i = other.scout_behavior_reserved_cell()
         if reserved_cell.x < 0:
             continue
         if Vector2(reserved_cell).distance_to(Vector2(cell)) < 8.0:
@@ -85,50 +85,35 @@ func target_reserved(cell: Vector2i) -> bool:
 
 func tick(delta: float) -> void:
     if not _villager.has_valid_workplace() or _villager._facility_sabotaged(_villager.workplace):
-        _villager._scout_target_cell = Vector2i(-1, -1)
-        _villager._scout_survey_t = 0.0
-        _villager._scout_revealed_at_target = false
-        _villager.state = _villager.State.IDLE
-        _villager._decide_t = _villager.SCOUT_RECHECK_SECONDS
+        _villager.scout_behavior_reset_survey()
+        _villager.scout_behavior_wait_for_scout()
         return
-    if _villager.nav.version != _villager._path_ver:
-        _villager._repath()
-        if _villager.state != _villager.State.SCOUTING:
-            return
-    if _villager._pi < _villager._path.size():
-        _villager._move_along(delta)
+    if not _villager.scout_behavior_repath_if_needed():
         return
-    if not _villager._scout_revealed_at_target:
+    if not _villager.scout_behavior_has_arrived():
+        _villager.scout_behavior_move(delta)
+        return
+    if not _villager.scout_behavior_is_revealed():
         var fog = _villager.get_tree().get_first_node_in_group("fog_of_war")
         if fog != null:
             fog.reveal_position(_villager.global_position, _villager.SCOUT_REVEAL_RADIUS)
-        _villager._scout_revealed_at_target = true
-    _villager._scout_survey_t += delta
-    if _villager._scout_survey_t >= _villager.SCOUT_SURVEY_SECONDS:
-        _villager._scout_target_cell = Vector2i(-1, -1)
-        _villager._scout_survey_t = 0.0
-        _villager._scout_revealed_at_target = false
-        _villager.state = _villager.State.IDLE
-        _villager._decide_t = _villager.SCOUT_RECHECK_SECONDS
+        _villager.scout_behavior_mark_revealed()
+    if _villager.scout_behavior_advance_survey(delta):
+        _villager.scout_behavior_finish_survey()
 
 
 func return_to_post() -> void:
     if not _villager.has_valid_workplace():
-        _villager._scout_target_cell = Vector2i(-1, -1)
-        _villager.state = _villager.State.IDLE
+        _villager.scout_behavior_reset_survey()
+        _villager.scout_behavior_wait_for_scout()
         return
-    _villager._scout_target_cell = Vector2i(-1, -1)
-    _villager._scout_revealed_at_target = false
+    _villager.scout_behavior_reset_survey()
     var cells: Array[Vector2i] = _villager.workplace.cells()
     if _villager.position.distance_to(_villager.workplace.position) <= _villager.OUTPOST_GUARD_ARRIVAL_RADIUS:
-        _villager.state = _villager.State.IDLE
-        _villager._decide_t = _villager.SCOUT_RECHECK_SECONDS
+        _villager.scout_behavior_wait_for_scout()
         return
     var path: PackedVector2Array = _villager.nav.path_adjacent(_villager.position, cells)
     if path.is_empty():
-        _villager.state = _villager.State.IDLE
-        _villager._decide_t = _villager.SCOUT_RECHECK_SECONDS
+        _villager.scout_behavior_wait_for_scout()
         return
-    _villager._goal_cells = cells
-    _villager._set_path(path)
-    _villager.state = _villager.State.SCOUT_RETURNING
+    _villager.scout_behavior_set_return_path(cells, path)
