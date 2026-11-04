@@ -1,7 +1,6 @@
 extends RefCounted
 ## Adapts validated historical snapshots and can build a canonical current-schema copy.
 
-const CAMPAIGN_SCRIPT := preload("res://scripts/systems/campaign.gd")
 
 func build_restore_plan(snapshot: Dictionary, world: Node, target_version: int) -> Dictionary:
     var source_version := int(snapshot.get("version", 0))
@@ -215,10 +214,7 @@ func migrate_snapshot_to_current(snapshot: Dictionary, main: Node, target_versio
                 legacy_state["faction"] = "legacy_raiders"
             else:
                 return null
-        var legacy_campaign = CAMPAIGN_SCRIPT.new()
-        legacy_campaign.configure_legacy(profile, legacy_state)
-        migrated["campaign"] = legacy_campaign.export_state()
-        legacy_campaign.free()
+        migrated["campaign"] = _legacy_campaign_state(profile, legacy_state)
 
     var player_state: Variant = migrated.get("player", {})
     if not (player_state is Dictionary):
@@ -353,3 +349,30 @@ func _default_frontier_campaign(profile: String, data_db: Node) -> Dictionary:
 func _is_valid_cell_for_world(world: Node, cell: Vector2i) -> bool:
     var size := int(world.get("map_size"))
     return cell.x >= 0 and cell.y >= 0 and cell.x < size and cell.y < size
+
+
+## Build the exact data shape produced by Campaign.configure_legacy() + export_state()
+## without preloading the gameplay Node (which depends on scene autoload callbacks).
+func _legacy_campaign_state(profile: String, saved: Dictionary) -> Dictionary:
+    var fallback_id := "classic_enemy_keep" if profile == "classic" else "legacy_frontier_keep"
+    var stronghold_id := String(saved.get("id", fallback_id))
+    var objective := {
+        "id": stronghold_id,
+        "region": String(saved.get("region", "")),
+        "faction": String(saved.get("faction", "legacy_raiders")),
+        "cx": -1,
+        "cy": -1,
+        "hp": 900,
+        "destroyed": false,
+        "reinforce_timer": 105.0,
+        "spawn_index": 0,
+        "reward": {}
+    }
+    for key in ["cx", "cy", "hp", "destroyed", "reinforce_timer", "spawn_index"]:
+        if saved.has(key):
+            objective[key] = saved[key]
+    return {
+        "profile": profile,
+        "order": [stronghold_id],
+        "objectives": [objective]
+    }
