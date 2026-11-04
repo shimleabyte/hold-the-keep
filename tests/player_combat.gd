@@ -36,23 +36,41 @@ func _initialize() -> void:
     sturdy_bandit["hp"] = 80
     var forward_enemy = enemy_script.new()
     forward_enemy.setup(sturdy_bandit, main.world, main.flow, player)
-    forward_enemy.position = player.global_position + Vector2(28, 0)
+    forward_enemy.position = player.global_position + Vector2(18, 0)
     main.world.entities.add_child(forward_enemy)
     forward_enemy.set_physics_process(false)
 
     var rear_enemy = enemy_script.new()
     rear_enemy.setup(sturdy_bandit, main.world, main.flow, player)
-    rear_enemy.position = player.global_position + Vector2(-44, 0)
+    rear_enemy.position = player.global_position + Vector2(-18, 0)
     main.world.entities.add_child(rear_enemy)
     rear_enemy.set_physics_process(false)
 
-    player.facing = Vector2.RIGHT
+    player.facing = Vector2.LEFT
     var forward_hp: int = forward_enemy.hp
     var rear_hp: int = rear_enemy.hp
+    player._attack()
+    assert(player._attack_direction == Vector2.RIGHT,
+        "Basic attack must lock onto its selected target before the wind-up")
+    player.facing = Vector2.LEFT
+    await ticks(12)
+    assert(forward_enemy.hp < forward_hp,
+        "Basic attack must damage the target in the telegraphed direction even if movement turns the player")
+    assert(rear_enemy.hp == rear_hp,
+        "Basic attack must not damage enemies behind the locked swing direction")
+
+    player.facing = Vector2.LEFT
+    var forward_cleave_hp: int = forward_enemy.hp
+    var rear_cleave_hp: int = rear_enemy.hp
     assert(player.activate_ability("cleave"), "Cleave should activate after unlocking")
+    assert(player._cleave_direction == Vector2.RIGHT,
+        "Cleave must lock its aim direction before the wind-up")
+    player.facing = Vector2.LEFT
     await ticks(20)
-    assert(forward_enemy.hp < forward_hp, "Cleave must damage enemies in its forward arc")
-    assert(rear_enemy.hp == rear_hp, "Cleave must not damage enemies behind the player")
+    assert(forward_enemy.hp < forward_cleave_hp,
+        "Cleave must damage enemies in its telegraphed arc after the player turns")
+    assert(rear_enemy.hp == rear_cleave_hp,
+        "Cleave must not damage enemies behind the locked ability direction")
 
     player.gain_experience(player.combat_status()["next_xp"])
     assert(player.level == 3 and player.combat_status()["rally_unlocked"],
@@ -113,5 +131,5 @@ func _initialize() -> void:
     assert(save_system._valid_save(snapshot),
         "Combat-enabled save payload must pass validation")
 
-    print("PASS: XP, level unlocks, dash, directional cleave, rally buff, ranged projectile, brute armor, combat save")
+    print("PASS: XP, level unlocks, dash, locked directional melee/Cleave, rally buff, ranged projectile, brute armor, combat save")
     quit()
