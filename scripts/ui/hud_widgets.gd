@@ -29,7 +29,7 @@ class ClockWidget extends Control:
         var night_now := GameClock.time_of_day >= GameClock.NIGHT_START and GameClock.time_of_day < GameClock.NIGHT_END
         var remaining := GameClock.seconds_until_phase_change()
         return "%s %02d:%02d" % [
-            "DAWN" if night_now else "NIGHT",
+            "FAJAR" if night_now else "MALAM",
             floori(float(remaining) / 60.0),
             remaining % 60
         ]
