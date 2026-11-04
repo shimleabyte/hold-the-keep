@@ -1,6 +1,8 @@
 extends SceneTree
 ## Frontier profile integration: deterministic regions, traversal, resources and Keep footprint.
 
+const FRONTIER_REGION_GENERATOR := preload("res://scripts/world/generation/frontier_region_generator.gd")
+
 const DIRS4: Array[Vector2i] = [
     Vector2i(1, 0), Vector2i(-1, 0),
     Vector2i(0, 1), Vector2i(0, -1)
@@ -84,6 +86,25 @@ func _initialize() -> void:
         and world_config.safe_radius == 12.0,
         "Frontier must apply the expanded starting footprint and clearing")
 
+    var region_layout := FRONTIER_REGION_GENERATOR.generate(128, world_config.world_seed)
+    var repeated_region_layout := FRONTIER_REGION_GENERATOR.generate(128, world_config.world_seed)
+    assert(region_layout.size() == 128 * 128,
+        "The Frontier region stage must return one label per map cell")
+    assert(region_layout == repeated_region_layout,
+        "The same Frontier profile size and seed must produce identical region labels")
+    var region_counts: Array[int] = [0, 0, 0, 0, 0]
+    for region_id in region_layout:
+        assert(region_id >= 0 and region_id < region_counts.size(),
+            "The region stage must emit only the five registered region identifiers")
+        region_counts[region_id] += 1
+    for region_id in region_counts.size():
+        assert(region_counts[region_id] >= 700,
+            "Every generated Frontier region must retain meaningful territory")
+    var expedition_region_layout := FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed)
+    assert(expedition_region_layout.size() == 192 * 192
+        and expedition_region_layout == FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed),
+        "The same deterministic region stage must support the 192x192 Expedition profile")
+
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main
@@ -91,6 +112,8 @@ func _initialize() -> void:
     game_clock.set_process(false)
 
     var world = main.world
+    assert(world._frontier_regions == region_layout,
+        "WorldMap must consume the isolated region generator without changing its output")
     var hud = get_first_node_in_group("hud")
     assert(hud != null, "The Frontier scene must create the HUD")
     hud._layout_viewport(Vector2(480, 270))
