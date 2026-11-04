@@ -1,6 +1,6 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `11176db514107a298f878097d8de5ffaf148dbf9` (2026-11-04)  
+**Audit baseline:** `main` at `af2a83f3df2a8651b346a59c2373aed1a5020791` (2026-11-04)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
@@ -9,9 +9,9 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ## Live execution status — 2026-11-04 (post PR #87 Archery Range integration)
 
-**Current main:** `11176db514107a298f878097d8de5ffaf148dbf9` — includes PR #87 Archery Range, PR #89 canonical save migration/file-store extraction and PR #91 VillagerArcherCombat extraction; save schema remains v17.  
+**Current main:** `af2a83f3df2a8651b346a59c2373aed1a5020791` — includes PR #87 Archery Range, PR #89 canonical save migration/file-store extraction, PR #91 VillagerArcherCombat, PR #94 SupplyShipmentLedger, PR #96 SupplyShipmentDispatch, PR #97 SupplyRoadGraph, PR #99 SupplyPressureController and PR #86 deterministic Frontier decoration/landmarks; save schema remains v17.  
 **Current save schema:** v17.  
-**Open pull requests observed in the latest repository search:** #86 DEV-H Frontier decoration/landmark extraction. Re-check live state before taking action.
+**Open implementation pull requests observed in the latest repository search:** none. PR #95 is the documentation reconciliation for this snapshot. Re-check live state before taking action.
 
 | Workstream | Current disposition |
 |---|---|
@@ -19,11 +19,11 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-A data contract validation | Complete through PR #71 replacement. |
 | DEV-B faction camp architecture | Integrated through PR #70. Preserve public camp/patrol/raid interfaces. |
 | DEV-C campaign simulation QA | Integrated through PR #73. This is deterministic campaign simulation/diagnostics, not a substitute for human playtesting. |
-| DEV-D supply network decomposition | Partial: PR #75 extracted cost-source selection, affordability, payment and refunds into `SupplyCostTransactions`. Shipment lifecycle, depot graph/ledger and supply pressure remain. |
+| DEV-D supply network decomposition | Partial: PR #75 extracted cost-source transactions; PR #94 added `SupplyShipmentLedger` for order IDs, active-order accounting, destination reservations, bounded history and save restoration. PR #96 integrated route availability, carrier dispatch/re-dispatch and blocked-carrier callbacks into `SupplyShipmentDispatch`; PR #97 extracted Keep-rooted road/depot connectivity into `SupplyRoadGraph`. PR #99 extracted Frontier isolation, warning cadence, saboteur dispatch/retry/recall and pressure save snapshot/restore into `SupplyPressureController`. Mainline `supply_network.gd` is now 458 lines. Remaining supply pressure concerns are now limited to the raid resource-theft hook and public façade. |
 | DEV-E save/migration architecture | Complete through #89: canonical v17 conversion for supported Classic v1–v17 / Frontier v7–v17 saves and `SaveFileStore` parsing, temp verification, backup rotation and rollback are integrated. Schema remains v17; #84 and #88 were closed as superseded duplicates. |
 | DEV-F villager role architecture | First slice integrated through #91: `VillagerArcherCombat` owns ranged attack policy while the villager retains state/cooldown/animation/world ownership. Host reduced from 1530 to 1509 lines. Further role-specific extraction remains; preserve movement, workplace, carrying and save contracts. |
 | DEV-G HUD modularization | Not started. Decision-based event panel is already integrated through #72; extract it through its existing interface. |
-| DEV-H world generation | Partial. Existing terrain/resource/region generation extraction is on main; #86 proposes deterministic decoration/landmark extraction and still requires Godot 4.7 validation plus rendered parity review. |
+| DEV-H world generation | Generator decomposition integrated through #86: deterministic region, terrain, resource, decoration and landmark selection are isolated. Godot 4.7 regression and Campaign Simulation QA passed; manual same-seed rendered comparison remains part of visual acceptance. |
 | DEV-I enemy controller | Partial. Patrol movement is already extracted through #74 as `EnemyPatrolMovement`; other shared host responsibilities remain. |
 | DEV-J decision-based events | Integrated through PR #72. |
 | DEV-K input command registry | Integrated through PR #76. |
@@ -33,16 +33,19 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ### Current open-PR disposition
 
-- **#86 — deterministic Frontier decoration/landmarks:** open and retargeted to current main. Its earlier Godot CI run reported failure even though the visible job list showed success; obtain a fresh complete run and inspect the discrepancy before merge. Manual identical-seed rendered comparison remains mandatory.
+- **#99 — DEV-D pressure extraction:** merged into main at `af2a83f`; Godot 4.7 import/parse, all 53 CI jobs (including `supply_pressure`, `regional_control_roads`, `physical_shipments` and `saboteur_disruption`) and Campaign Simulation QA passed on the final head.
+- **#97 — DEV-D road graph extraction:** merged into main at `e5b13d6`; Godot 4.7 import/parse, all 53 CI jobs and Campaign Simulation QA passed on the final head.
+- **#96 — DEV-D shipment dispatch extraction:** merged into main at `6662d2d`; Godot 4.7 import/parse, all 53 CI jobs and Campaign Simulation QA passed on the final head.
+- **#86 — deterministic Frontier decoration/landmarks:** merged into main at `a2fb9c3`. Godot 4.7 import/parse, all 53 CI jobs and Campaign Simulation QA passed after tests were changed to compare against the exact generation-time eligibility snapshot. Manual identical-seed rendered comparison remains a separate visual acceptance task.
+- **#94 — DEV-D shipment ledger extraction:** merged into main at `96cfe01`; Godot 4.7 import/parse, all 53 CI jobs and Campaign Simulation QA passed on the final head.
 - **#91 — DEV-F archer combat extraction:** merged into main at `11176db`; Godot 4.7 import/parse, all 29 regression/performance jobs and Campaign Simulation QA passed on the final head.
 - **#89 — canonical save migration/file store:** merged into main at `bad437f`; Godot 4.7 regression jobs and Campaign Simulation QA passed. #84 and #88 were closed as superseded duplicates.
 - **#87 — Archery Range:** merged into main before the current baseline.
 
 ### Recommended execution order
 
-1. Stabilize integration: diagnose/revalidate #86 and confirm the post-#89/#91 mainline CI state.
-2. DEV-F: continue villager decomposition in small, independently testable slices, next isolating one non-archer role behavior without changing shared contracts. Avoid broad rewrites.
-3. DEV-D: extract shipment lifecycle first, then depot graph/ledger and supply-pressure responsibilities as separate slices.
+1. DEV-F: continue villager decomposition in small, independently testable slices, next isolating one non-archer role behavior without changing shared contracts. Avoid broad rewrites.
+2. DEV-D: review the remaining supply façade and raid stock-theft hook; do not split further unless a concrete responsibility boundary and regression coverage justify it.
 4. DEV-G: modularize HUD components without changing layout contracts or gameplay rules.
 5. DEV-H and DEV-I: finish generation and enemy-host decomposition after checking current file ownership and API dependencies.
 6. DEV-M: replace remaining unrelated placeholder textures and perform rendered gameplay/audio QA.
