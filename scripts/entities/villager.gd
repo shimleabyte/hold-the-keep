@@ -19,7 +19,7 @@ const TEXTURES := {
     "woodcutter": preload("res://assets/sprites/villager_woodcutter.svg"),
     "miner": preload("res://assets/sprites/villager_miner.svg"),
     "farmer": preload("res://assets/sprites/villager_farmer.svg"),
-    "builder": preload("res://assets/sprites/villager_miner.svg"),
+    "builder": preload("res://assets/sprites/villager_builder.svg"),
     "hunter": preload("res://assets/sprites/villager_hunter.svg"),
     "scout": preload("res://assets/sprites/villager_scout.svg"),
     "healer": preload("res://assets/sprites/villager_healer.svg"),
