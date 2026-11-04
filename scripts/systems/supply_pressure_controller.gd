@@ -87,7 +87,7 @@ func advance(delta: float) -> void:
         var retry_in := maxf(0.0, float(record.get("spawn_retry", 0.0)) - delta)
         record["spawn_retry"] = retry_in
         var raid_count := int(record.get("raid_count", 0))
-        var next_raid_at := _network.PRESSURE_RAID_SECONDS + float(raid_count) * _network.PRESSURE_REPEAT_SECONDS
+        var next_raid_at: float = float(_network.PRESSURE_RAID_SECONDS) + float(raid_count) * float(_network.PRESSURE_REPEAT_SECONDS)
         if raid_count < _network.MAX_RAIDS_PER_ISOLATION and contested_seconds >= next_raid_at and retry_in <= 0.0 and _active_raiders(depot.cell) == 0 and _network.get_tree().get_nodes_in_group("supply_raiders").size() < _network.MAX_ACTIVE_SUPPLY_RAIDERS:
             if _spawn_raid(depot):
                 raid_count += 1
