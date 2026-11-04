@@ -75,6 +75,33 @@ func _initialize() -> void:
     assert(main.world != null,
         "Selecting Classic from the title screen must initialize the gameplay world")
 
+    var hud = main.get_tree().get_first_node_in_group("hud")
+    assert(hud != null, "Gameplay must create its HUD")
+    assert(hud._map_button.icon != null and hud._map_button.label.is_empty(),
+        "The world-map control must use an icon without a permanent text label")
+    assert(hud._jobs_button.icon != null and hud._jobs_button.label.is_empty(),
+        "The jobs control must use an icon without a permanent text label")
+    assert(hud._tech_btn.icon != null,
+        "Research must remain discoverable through its icon")
+    assert(hud._map_button.focus_mode == Control.FOCUS_ALL
+        and hud._jobs_button.focus_mode == Control.FOCUS_ALL
+        and hud._tech_btn.focus_mode == Control.FOCUS_ALL,
+        "Icon-only navigation controls must remain keyboard/controller focusable")
+    assert(not hud._hp_text.visible and not hud._keep_text.visible,
+        "Persistent vitals must use bars and icons rather than numeric text")
+    assert(not hud._build_left_hint.visible and not hud._build_right_hint.visible,
+        "Keyboard instruction text must not occupy permanent gameplay HUD space")
+    assert(hud._combat_bar.ability_icons.size() == 3,
+        "Combat abilities must be represented by distinct icons")
+    assert(not hud._stage_label.visible and not hud._research_name.visible,
+        "Stage and research names must move to contextual tooltips")
+    assert(not hud._slots.is_empty(),
+        "The icon-first build bar must still expose available building choices")
+    for building_id in hud._slots:
+        var build_slot = hud._slots[building_id]
+        assert(build_slot.icon != null and not build_slot.tooltip_text.is_empty(),
+            "Every icon-only building slot must retain its name, shortcut and cost in a tooltip")
+
     var current_save: Dictionary = save_system.collect(main)
     assert(current_save["world"]["profile"] == "classic",
         "New saves must record the active world profile")

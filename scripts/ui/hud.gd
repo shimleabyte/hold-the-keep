@@ -89,6 +89,7 @@ var _viewport_size := Vector2(480, 270)
 var _top_bar: Panel
 var _clock_widget: HUD_WIDGETS.ClockWidget
 var _people_icon: TextureRect
+var _stage_icon: TextureRect
 var _vitals_panel: Panel
 var _stage_panel: Panel
 var _build_left_hint: Label
@@ -214,6 +215,11 @@ func _ready() -> void:
 
 # ---------------------------------------------------------------- pembangun UI
 
+func _bind_focus_hint(control: Control) -> void:
+    if not control.tooltip_text.is_empty():
+        control.focus_entered.connect(_show_message.bind(control.tooltip_text))
+
+
 func _panel(pos: Vector2, panel_size: Vector2, parent: Node = null) -> Panel:
     var p := Panel.new()
     p.position = pos
@@ -264,7 +270,10 @@ func _icon(parent: Node, icon_name: String, pos: Vector2) -> TextureRect:
 ## Ikon + angka.
 func _stat(parent: Node, icon_name: String, pos: Vector2) -> Label:
     _icon(parent, icon_name, pos + Vector2(0, 2))
-    return _label(parent, "0", pos + Vector2(13, 0))
+    var value := _label(parent, "0", pos + Vector2(13, 0))
+    value.tooltip_text = "%s tersimpan" % icon_name.capitalize()
+    value.mouse_filter = Control.MOUSE_FILTER_STOP
+    return value
 
 
 func _build_top_bar() -> void:
@@ -278,6 +287,8 @@ func _build_top_bar() -> void:
     _food.add_theme_color_override("font_color", Color("#e2cb78"))
     _iron_icon = _icon(bar, "iron", Vector2(111, 3))
     _iron = _label(bar, "0", Vector2(124, 1), Color("#e19a68"))
+    _iron.tooltip_text = "Besi tersimpan"
+    _iron.mouse_filter = Control.MOUSE_FILTER_STOP
     for divider_x in [35.0, 71.0, 107.0, 145.0]:
         var divider := ColorRect.new()
         divider.position = Vector2(divider_x, 4)
@@ -292,45 +303,59 @@ func _build_top_bar() -> void:
     _clock_widget.moon = ICONS["moon"]
     _clock_widget.position = Vector2(151, 2)
     _clock_widget.size = Vector2(142, 11)
+    _clock_widget.tooltip_text = "Hari dan siklus siang / malam"
     bar.add_child(_clock_widget)
 
     _foes_icon = _icon(bar, "skull", Vector2(300, 3))
     _foes = _label(bar, "0", Vector2(313, 1), Color("#ff8a7a"))
+    _foes_icon.tooltip_text = "Nearby hostile forces"
+    _foes.tooltip_text = "Nearby hostile forces"
     _foes_icon.visible = false
     _foes.visible = false
 
     _people_icon = _icon(bar, "people", Vector2(336, 3))
     _pop = _label(bar, "0/0", Vector2(349, 1), Color("#a9c9bf"))
+    _pop.tooltip_text = "Jumlah warga / kapasitas rumah"
+    _pop.mouse_filter = Control.MOUSE_FILTER_STOP
 
     _map_button = HUD_WIDGETS.HudChip.new()
-    _map_button.label = "MAP"
+    _map_button.icon = ICONS["compass"]
     _map_button.font = _font
-    _map_button.position = Vector2(370, 1)
-    _map_button.size = Vector2(35, 13)
+    _map_button.tooltip_text = "Peta wilayah  ·  TAB"
+    _map_button.position = Vector2(410, 1)
+    _map_button.size = Vector2(18, 14)
     _map_button.pressed.connect(_toggle_map)
+    _bind_focus_hint(_map_button)
     bar.add_child(_map_button)
 
     _jobs_button = HUD_WIDGETS.HudChip.new()
-    _jobs_button.label = "JOBS"
+    _jobs_button.icon = ICONS["people"]
     _jobs_button.font = _font
-    _jobs_button.position = Vector2(409, 1)
-    _jobs_button.size = Vector2(35, 13)
+    _jobs_button.tooltip_text = "Pekerjaan dan prioritas warga"
+    _jobs_button.position = Vector2(432, 1)
+    _jobs_button.size = Vector2(18, 14)
     _jobs_button.pressed.connect(_toggle_jobs)
+    _bind_focus_hint(_jobs_button)
     bar.add_child(_jobs_button)
 
     _tech_btn = HUD_WIDGETS.TechButton.new()
     _tech_btn.icon = ICONS["tech"]
     _tech_btn.font = _font
-    _tech_btn.position = Vector2(448, 1)
-    _tech_btn.size = Vector2(30, 13)
+    _tech_btn.tooltip_text = "Riset teknologi  ·  Y"
+    _tech_btn.position = Vector2(454, 1)
+    _tech_btn.size = Vector2(22, 14)
     _tech_btn.pressed.connect(func() -> void: Events.tech_panel_requested.emit())
+    _bind_focus_hint(_tech_btn)
     bar.add_child(_tech_btn)
 
     _research_panel = _panel(Vector2(4, 45), Vector2(126, 12))
     _research_name = _label(_research_panel, "", Vector2(3, 1), Color("#ffd23f"))
+    _research_name.visible = false
+    _icon(_research_panel, "tech", Vector2(3, 0))
+    _research_panel.tooltip_text = "Progres riset aktif"
     _research_bar = HUD_WIDGETS.StatBar.new()
-    _research_bar.position = Vector2(77, 3)
-    _research_bar.size = Vector2(45, 6)
+    _research_bar.position = Vector2(22, 3)
+    _research_bar.size = Vector2(99, 6)
     _research_bar.fill = Color("#6fcf5a")
     _research_panel.add_child(_research_bar)
     _research_panel.visible = false
@@ -340,30 +365,35 @@ func _build_top_bar() -> void:
 
 func _build_vitals() -> void:
     _vitals_panel = _panel(Vector2(4, 22), Vector2(122, 20))
+    _vitals_panel.tooltip_text = "Kesehatan pemain dan ketahanan benteng"
     var p := _vitals_panel
     _icon(p, "heart", Vector2(3, 2))
     _hp_bar = HUD_WIDGETS.StatBar.new()
     _hp_bar.position = Vector2(17, 3)
-    _hp_bar.size = Vector2(45, 5)
+    _hp_bar.size = Vector2(98, 5)
     _hp_bar.fill = Color("#d63a3a")
     p.add_child(_hp_bar)
     _hp_text = _label(p, "100", Vector2(66, 1))
+    _hp_text.visible = false
     _icon(p, "keep", Vector2(3, 10))
     _keep_bar = HUD_WIDGETS.StatBar.new()
     _keep_bar.position = Vector2(17, 11)
-    _keep_bar.size = Vector2(45, 5)
+    _keep_bar.size = Vector2(98, 5)
     _keep_bar.fill = GOLD
     p.add_child(_keep_bar)
     _keep_text = _label(p, "-", Vector2(66, 9))
+    _keep_text.visible = false
 
 func _build_stage_bar() -> void:
     _stage_panel = _panel(Vector2(136, 22), Vector2(205, 20))
     var p := _stage_panel
+    _stage_icon = _icon(p, "compass", Vector2(4, 3))
     _stage_label = _label(p, "BAB I  PERBATASAN", Vector2(3, 1), Color("#f0d39a"))
-    _stage_label.add_theme_font_size_override("font_size", 9)
+    _stage_label.visible = false
     _stage_bar = HUD_WIDGETS.StatBar.new()
-    _stage_bar.position = Vector2(3, 13)
-    _stage_bar.size = Vector2(199, 4)
+    _stage_bar.position = Vector2(22, 6)
+    _stage_bar.size = Vector2(178, 8)
+    _stage_panel.tooltip_text = "Campaign chapter and progression"
     _stage_bar.fill = Color("#b98c4a")
     p.add_child(_stage_bar)
 
@@ -372,9 +402,12 @@ func _build_combat_bar() -> void:
     _combat_bar = HUD_WIDGETS.CombatBar.new()
     _combat_bar.font = _font
     _combat_bar.position = Vector2(151, 219)
-    _combat_bar.size = Vector2(178, 18)
-    _combat_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _combat_bar.size = Vector2(158, 18)
+    _combat_bar.ability_icons = [ICONS["compass"], ICONS["sword"], ICONS["people"]]
+    _combat_bar.tooltip_text = "Q · Dash    C · Tebas    V · Seruan — ikon menunjukkan status dan cooldown"
+    _combat_bar.mouse_filter = Control.MOUSE_FILTER_STOP
     add_child(_combat_bar)
+    _blockers.append(_combat_bar)
 
 func _build_jobs() -> void:
     _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 132))
@@ -385,18 +418,30 @@ func _build_jobs() -> void:
         row.font = _font
         row.position = Vector2(2, 3 + i * 12)
         row.size = Vector2(72, 12)
-        if JOBS[i] == "blacksmith":
-            row.tooltip_text = "Blacksmith: crafts individual soldier equipment at a Forge"
+        var job_descriptions := {
+            "woodcutter": "Penebang — mengumpulkan kayu",
+            "miner": "Penambang — mengambil batu dan bijih",
+            "farmer": "Petani — menghasilkan makanan",
+            "builder": "Pembangun — membangun dan memperbaiki",
+            "hunter": "Pemburu — memasok makanan dari satwa",
+            "scout": "Pengintai — membuka wilayah",
+            "healer": "Penyembuh — memulihkan unit terluka",
+            "blacksmith": "Pandai besi — membuat perlengkapan prajurit",
+            "soldier": "Prajurit — mempertahankan permukiman"
+        }
+        row.tooltip_text = String(job_descriptions.get(JOBS[i], JOBS[i])) + "  ·  Left click −/+ quota, right click priority"
         row.adjust.connect(_on_job_adjust)
         row.priority_adjust.connect(_on_job_priority_adjust)
         _jobs_panel.add_child(row)
         _jobs[JOBS[i]] = row
     _outpost_button = HUD_WIDGETS.HudChip.new()
-    _outpost_button.label = "POS"
+    _outpost_button.icon = ICONS["outpost"]
     _outpost_button.font = _font
+    _outpost_button.tooltip_text = "Outposts, garrisons and logistics"
     _outpost_button.position = Vector2(2, 116)
     _outpost_button.size = Vector2(72, 13)
     _outpost_button.pressed.connect(_toggle_outposts)
+    _bind_focus_hint(_outpost_button)
     _jobs_panel.add_child(_outpost_button)
     _jobs_panel.visible = false
 
@@ -404,10 +449,11 @@ func _build_boss_bar() -> void:
     _boss_panel = _panel(Vector2(140, 46), Vector2(200, 18))
     _boss_title = _label(_boss_panel, "RAJA LAWAN", Vector2(0, 0), Color("#ff8a7a"))
     _boss_title.size = Vector2(200, 9)
-    _boss_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _boss_title.visible = false
+    _icon(_boss_panel, "skull", Vector2(4, 3))
     _boss_bar = HUD_WIDGETS.StatBar.new()
-    _boss_bar.position = Vector2(6, 10)
-    _boss_bar.size = Vector2(188, 6)
+    _boss_bar.position = Vector2(23, 5)
+    _boss_bar.size = Vector2(170, 8)
     _boss_bar.fill = Color("#c0392b")
     _boss_panel.add_child(_boss_bar)
     _boss_panel.visible = false
@@ -415,17 +461,19 @@ func _build_boss_bar() -> void:
 
 func _build_build_bar() -> void:
     _queue_button = HUD_WIDGETS.HudChip.new()
-    _queue_button.label = "QUEUE"
+    _queue_button.icon = ICONS["hammer"]
     _queue_button.font = _font
     _queue_button.position = Vector2(4, 211)
-    _queue_button.size = Vector2(38, 12)
+    _queue_button.size = Vector2(18, 16)
     _queue_button.tooltip_text = "Buka antrean konstruksi (B)"
     _queue_button.pressed.connect(_toggle_construction_queue)
+    _bind_focus_hint(_queue_button)
     add_child(_queue_button)
     _blockers.append(_queue_button)
     _build_left_hint = _label(self, "BANGUNAN 1-8", Vector2(46, 225), Color(1, 1, 1, 0.78))
+    _build_left_hint.visible = false
     _build_right_hint = _label(self, "TAB PETA  ·  H BANTUAN", Vector2(360, 225), Color(1, 1, 1, 0.78))
-    _build_right_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    _build_right_hint.visible = false
     _rebuild_build_bar()
 
 func _rebuild_build_bar() -> void:
@@ -447,16 +495,20 @@ func _rebuild_build_bar() -> void:
         var slot := HUD_WIDGETS.BuildSlot.new()
         slot.id = id
         slot.font = _font
-        slot.key_text = str(i + 1)
+        slot.key_text = str((i + 1) % 10)
         var data: Dictionary = DataDB.buildings[id]
-        slot.title = String(data.get("short", data["name"])) if w < SLOT_W else String(data["name"])
+        slot.title = String(data.get("short", data["name"]))
         slot.icon = ICONS[id]
-        var costs: Array = []
         var cost := DataDB.cost_of(id)
-        for kind in ["wood", "stone", "iron"]:
+        var cost_parts: Array[String] = []
+        for kind in ["wood", "stone", "iron", "food"]:
             if cost.has(kind):
-                costs.append([ICONS[kind], int(cost[kind])])
-        slot.costs = costs
+                cost_parts.append("%s %d" % [kind.capitalize(), int(cost[kind])])
+        slot.tooltip_text = "%s  ·  tombol %s\n%s" % [
+            String(data["name"]), slot.key_text,
+            ", ".join(PackedStringArray(cost_parts)) if not cost_parts.is_empty() else "Tanpa biaya resource"
+        ]
+        _bind_focus_hint(slot)
         slot.position = Vector2(x0 + i * (w + 3), _viewport_size.y - SLOT_H - 2)
         slot.size = Vector2(w, SLOT_H)
         slot.pressed.connect(_on_slot_pressed)
@@ -700,9 +752,9 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _people_icon.position.x = _viewport_size.x - 144.0
     _pop.position.x = _viewport_size.x - 131.0
 
-    _map_button.position.x = _viewport_size.x - 110.0
-    _jobs_button.position.x = _viewport_size.x - 71.0
-    _tech_btn.position.x = _viewport_size.x - 32.0
+    _map_button.position.x = _viewport_size.x - 70.0
+    _jobs_button.position.x = _viewport_size.x - 48.0
+    _tech_btn.position.x = _viewport_size.x - 26.0
 
     _vitals_panel.position = Vector2(4, 22)
     _stage_panel.position = Vector2((_viewport_size.x - _stage_panel.size.x) * 0.5, 22)
@@ -721,10 +773,9 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _help.position = Vector2((_viewport_size.x - _help.size.x) * 0.5, (_viewport_size.y - help_height) * 0.5)
 
     var build_y := _viewport_size.y - SLOT_H - 2.0
-    var hint_y := build_y - 14.0
-    _queue_button.position = Vector2(5, hint_y - 1.0)
-    _build_left_hint.position = Vector2(46, hint_y)
-    _build_right_hint.position = Vector2(_viewport_size.x - 132.0, hint_y)
+    _queue_button.position = Vector2(5, build_y - 18.0)
+    _build_left_hint.position = Vector2(46, build_y - 14.0)
+    _build_right_hint.position = Vector2(_viewport_size.x - 132.0, build_y - 14.0)
     _build_right_hint.size = Vector2(127.0, 10)
     _build_right_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
@@ -773,6 +824,9 @@ func _process(delta: float) -> void:
     _research_panel.visible = Tech.current != ""
     if Tech.current != "":
         _research_name.text = Tech.tech_name(Tech.current).substr(0, 12)
+        _research_panel.tooltip_text = "%s — progres riset %d%%" % [
+            Tech.tech_name(Tech.current), roundi(Tech.progress_ratio() * 100.0)
+        ]
         _research_bar.set_value(Tech.progress_ratio())
     _tech_btn.busy = Tech.current != ""
     _tech_btn.queue_redraw()
@@ -813,6 +867,7 @@ func _process(delta: float) -> void:
     if boss != null:
         _boss_title.text = "RAJA LAWAN"
         _boss_title.add_theme_color_override("font_color", Color("#ff8a7a"))
+        _boss_panel.tooltip_text = "Raja lawan — ketahanan"
         _boss_panel.visible = true
         _boss_bar.set_value(float(boss.hp) / boss.max_hp)
     else:
@@ -824,6 +879,7 @@ func _process(delta: float) -> void:
         if discovered:
             _boss_title.text = String(stronghold.faction_id).replace("_", " ").to_upper()
             _boss_title.add_theme_color_override("font_color", Color("#d97868"))
+            _boss_panel.tooltip_text = "%s stronghold integrity" % String(stronghold.faction_id).replace("_", " ").capitalize()
             _boss_bar.set_value(float(stronghold.hp) / stronghold.max_hp)
 
 
@@ -885,6 +941,10 @@ func _on_stage_changed(stage_id: String, stage_name: String, day: int) -> void:
     if main_node != null:
         var stage: Dictionary = main_node.spawner.stage_info(day)
         stage_summary = String(stage.get("summary", ""))
+    _stage_panel.tooltip_text = "%s — %s  ·  Day %d\n%s" % [
+        String(stage_id).to_upper(), stage_name, day, stage_summary
+    ]
+    _stage_icon.tooltip_text = _stage_panel.tooltip_text
     _banner.text = "%s  %s  ·  HARI %d\n%s" % [
         String(stage_id).to_upper(), stage_name, day, stage_summary
     ]

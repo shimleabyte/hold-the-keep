@@ -98,6 +98,7 @@ class JobRow extends Control:
 ## Level, XP, and active-skill cooldowns.
 class CombatBar extends Control:
     var font: Font
+    var ability_icons: Array = []
     var state: Dictionary = {}
 
     func update_state(value: Dictionary) -> void:
@@ -110,27 +111,31 @@ class CombatBar extends Control:
         var level := int(state.get("level", 1))
         var xp := int(state.get("xp", 0))
         var next_xp := int(state.get("next_xp", 0))
-        draw_string(font, Vector2(4, 10), "LV%d" % level, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("#ffd23f"))
         var ratio := float(xp) / float(maxi(1, next_xp)) if next_xp > 0 else 1.0
-        draw_rect(Rect2(25, 4, 25, 7), Color("#29231d"))
-        draw_rect(Rect2(26, 5, 23.0 * clampf(ratio, 0.0, 1.0), 5), Color("#d39b42"))
+        draw_rect(Rect2(3, 3, 35, 5), Color("#29231d"))
+        draw_rect(Rect2(4, 4, 33.0 * clampf(ratio, 0.0, 1.0), 3), Color("#d39b42"))
+        draw_string(font, Vector2(3, 15), str(level), HORIZONTAL_ALIGNMENT_LEFT, 10, 6, Color("#ffd23f"))
         var abilities := [
-            ["Q", "DASH", true, float(state.get("dash_cd", 0.0))],
-            ["C", "TEBAS", bool(state.get("cleave_unlocked", false)), float(state.get("cleave_cd", 0.0))],
-            ["V", "SERUAN", bool(state.get("rally_unlocked", false)), float(state.get("rally_cd", 0.0))]
+            ["Q", true, float(state.get("dash_cd", 0.0))],
+            ["C", bool(state.get("cleave_unlocked", false)), float(state.get("cleave_cd", 0.0))],
+            ["V", bool(state.get("rally_unlocked", false)), float(state.get("rally_cd", 0.0))]
         ]
         for i in abilities.size():
             var item: Array = abilities[i]
-            var x := 54.0 + i * 40.0
-            var unlocked := bool(item[2])
-            var cooldown := float(item[3])
+            var x := 43.0 + i * 37.0
+            var unlocked := bool(item[1])
+            var cooldown := float(item[2])
             var ready := unlocked and cooldown <= 0.05
             var tint := Color("#ffd23f") if ready else (Color("#a99a83") if unlocked else Color("#665d52"))
-            draw_rect(Rect2(x, 2, 38, 12), Color("#211b19"))
-            draw_rect(Rect2(x, 2, 38, 12), Color("#6b5a40"), false, 1.0)
-            var status := "OK" if ready else ("--" if not unlocked else "%.0f" % cooldown)
-            draw_string(font, Vector2(x + 3, 10), String(item[0]) + " " + status,
-                HORIZONTAL_ALIGNMENT_LEFT, -1, 7, tint)
+            draw_rect(Rect2(x, 1, 34, 16), Color("#211b19"))
+            draw_rect(Rect2(x, 1, 34, 16), Color("#6b5a40"), false, 1.0)
+            if i < ability_icons.size() and ability_icons[i] is Texture2D:
+                draw_texture(ability_icons[i], Vector2(x + 2, 3), tint)
+            if unlocked and cooldown > 0.05:
+                draw_string(font, Vector2(x + 17, 11), "%.0f" % cooldown,
+                    HORIZONTAL_ALIGNMENT_LEFT, 15, 6, Color("#f0d8ad"))
+            draw_string(font, Vector2(x + 23, 15), String(item[0]),
+                HORIZONTAL_ALIGNMENT_LEFT, 9, 6, Color("#d7ba7a"))
 
 
 ## Slot bar bangunan: ikon, nomor + nama, biaya. Bisa diklik.
@@ -218,6 +223,7 @@ class BuildSlot extends Control:
 
     func _ready() -> void:
         mouse_filter = Control.MOUSE_FILTER_STOP
+        focus_mode = Control.FOCUS_ALL
         mouse_entered.connect(func() -> void:
             hover = true
             queue_redraw())
@@ -229,6 +235,9 @@ class BuildSlot extends Control:
         if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
             pressed.emit(id)
             accept_event()
+        elif event.is_action_pressed("ui_accept"):
+            pressed.emit(id)
+            accept_event()
 
     func _draw() -> void:
         var bg := Color(0.09, 0.08, 0.11, 0.88)
@@ -237,30 +246,28 @@ class BuildSlot extends Control:
         draw_rect(Rect2(Vector2.ZERO, size), bg)
         draw_rect(Rect2(Vector2.ZERO, size), Color("#ffd23f") if selected else Color("#6b5a40"), false, 1.0)
         var a := 1.0 if affordable else 0.45
-        # baris atas: nomor, ikon, nama; baris bawah: biaya
-        draw_string(font, Vector2(3, 11), key_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 1, 1, a * 0.6))
-        draw_texture(icon, Vector2(10, 2), Color(1, 1, 1, a))
-        var title_col := Color("#ffd23f") if selected else Color.WHITE
-        title_col.a = a
-        draw_string(font, Vector2(29, 11), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, title_col)
-        var x := 4.0
-        for c in costs:
-            draw_texture(c[0], Vector2(x, 18), Color(1, 1, 1, a))
-            x += 11.0
-            var t := str(c[1])
-            draw_string(font, Vector2(x, 27), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 1, 1, a))
-            x += font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 4.0
+        # Permanent labels/costs are intentionally removed; details remain available by tooltip.
+        draw_string(font, Vector2(3, 9), key_text, HORIZONTAL_ALIGNMENT_LEFT, 10, 6, Color(1, 1, 1, a * 0.8))
+        var icon_size := Vector2(icon.get_size())
+        var icon_pos := Vector2((size.x - icon_size.x) * 0.5, (size.y - icon_size.y) * 0.5)
+        draw_texture(icon, icon_pos, Color(1, 1, 1, a))
+        draw_circle(Vector2(size.x - 5, size.y - 5), 2.0,
+            Color("#75b86c") if affordable else Color("#c75a4d"))
+        if selected:
+            draw_rect(Rect2(Vector2.ONE, size - Vector2(2, 2)), Color("#ffd23f"), false, 1.0)
 
 ## Compact top-bar button for secondary panels.
 class HudChip extends Control:
     signal pressed
     var label := ""
+    var icon: Texture2D
     var font: Font
     var active := false
     var hover := false
 
     func _ready() -> void:
         mouse_filter = Control.MOUSE_FILTER_STOP
+        focus_mode = Control.FOCUS_ALL
         mouse_entered.connect(func() -> void:
             hover = true
             queue_redraw())
@@ -272,6 +279,9 @@ class HudChip extends Control:
         if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
             pressed.emit()
             accept_event()
+        elif event.is_action_pressed("ui_accept"):
+            pressed.emit()
+            accept_event()
 
     func _draw() -> void:
         var bg := Color("#51432f") if active else Color("#201d1a")
@@ -279,7 +289,11 @@ class HudChip extends Control:
             bg = bg.lightened(0.18)
         draw_rect(Rect2(Vector2.ZERO, size), bg)
         draw_rect(Rect2(Vector2.ZERO, size), Color("#e0b969") if active else Color("#6b5a40"), false, 1.0)
-        draw_string(font, Vector2(size.x / 2.0, 9), label, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color("#f0e2c7"))
+        if icon != null:
+            var icon_pos := (size - Vector2(icon.get_size())) * 0.5
+            draw_texture(icon, icon_pos)
+        elif not label.is_empty():
+            draw_string(font, Vector2(size.x / 2.0, 9), label, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color("#f0e2c7"))
 
 
 ## Tombol "RISET [Y]" di panel atas.
@@ -292,6 +306,7 @@ class TechButton extends Control:
 
     func _ready() -> void:
         mouse_filter = Control.MOUSE_FILTER_STOP
+        focus_mode = Control.FOCUS_ALL
         mouse_entered.connect(func() -> void:
             hover = true
             queue_redraw())
@@ -303,10 +318,12 @@ class TechButton extends Control:
         if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
             pressed.emit()
             accept_event()
+        elif event.is_action_pressed("ui_accept"):
+            pressed.emit()
+            accept_event()
 
     func _draw() -> void:
         var bg := Color(0.2, 0.17, 0.1, 0.9) if hover else Color(0.12, 0.1, 0.08, 0.9)
         draw_rect(Rect2(Vector2.ZERO, size), bg)
         draw_rect(Rect2(Vector2.ZERO, size), Color("#ffd23f") if busy else Color("#6b5a40"), false, 1.0)
-        draw_texture(icon, Vector2(2, 1))
-        draw_string(font, Vector2(14, 10), "Y", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE)
+        draw_texture(icon, (size - Vector2(icon.get_size())) * 0.5)
