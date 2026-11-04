@@ -81,7 +81,7 @@ func _process(delta: float) -> void:
     _shipment_timer += delta
     if _shipment_timer >= SHIPMENT_TICK:
         _shipment_timer = 0.0
-        advance__shipment_ledger.orders()
+        advance_shipment_orders()
     _pressure_timer += delta
     if _pressure_timer >= PRESSURE_TICK:
         var pressure_delta := _pressure_timer
@@ -407,7 +407,7 @@ func create_shipment(source_cell: Vector2i, destination_cell: Vector2i, kind: St
         "y": source.position.y
     })
     _trim_shipment_history()
-    advance__shipment_ledger.orders()
+    advance_shipment_orders()
     return order_id
 
 
@@ -423,7 +423,7 @@ func cancel_shipment(order_id: int) -> bool:
     return true
 
 
-func get__shipment_ledger.orders() -> Array[Dictionary]:
+func get_shipment_orders() -> Array[Dictionary]:
     return _shipment_ledger.orders.duplicate(true)
 
 
@@ -444,7 +444,7 @@ func get_shipment_status_label(status: String) -> String:
     return "TIDAK DIKETAHUI"
 
 
-func advance__shipment_ledger.orders() -> void:
+func advance_shipment_orders() -> void:
     if not WorldConfig.is_frontier_profile():
         return
     _ensure_current()
@@ -563,16 +563,6 @@ func _recover_cargo(order: Dictionary, final_status: String) -> void:
     if index >= 0:
         _shipment_ledger.orders[index] = order
     _trim_shipment_history()
-
-
-func _reserved_capacity(destination_cell: Vector2i) -> int:
-    var reserved := 0
-    for order in _shipment_ledger.orders:
-        if not _shipment_ledger.is_active_order(order):
-            continue
-        if int(order["destination_x"]) == destination_cell.x and int(order["destination_y"]) == destination_cell.y:
-            reserved += int(order["cargo"])
-    return reserved
 
 
 func _find_depot(cell: Vector2i):
