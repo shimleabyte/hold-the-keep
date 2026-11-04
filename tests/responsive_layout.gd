@@ -73,6 +73,10 @@ func _initialize() -> void:
     hud._show_message("HUD bubble accessibility check")
     assert(hud._msg_bubble.visible and hud._msg.text == "HUD bubble accessibility check",
         "Gameplay feedback must appear in the contextual bubble")
+    assert(is_equal_approx(hud._message_duration("HUD bubble accessibility check"), 2.0),
+        "Ordinary feedback must retain its compact two-second lifetime")
+    assert(is_equal_approx(hud._message_duration("Raja lawan mendekat! Bersiap."), 4.0),
+        "The final boss warning must remain visible for its full four-second telegraph")
     var player = get_first_node_in_group("player")
     assert(player != null and player.camera.zoom == Vector2.ONE,
         "The wider field of view must come from viewport dimensions, not gameplay camera zoom")
