@@ -1,64 +1,63 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `50d0f36f37e9a8127a4350cb9e140720bae782cf` (2026-11-04)  
+**Audit baseline:** `main` at `df80c3deae9a526d71c29faae1179f1a8e2eb03d` (2026-11-05)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
 
 This is an execution worklist, not a claim that every item is already implemented. Re-check the live branch/PR state before starting each assignment.
 
-## Live execution status — 2026-11-04 (Priority 1 architecture stabilized)
+## Live execution status — 2026-11-05 (Priority 1 architecture stabilized)
 
-**Current main:** `50d0f36f37e9a8127a4350cb9e140720bae782cf` — includes PR #87 Archery Range, #89 save migration/file-store extraction, #91 VillagerArcherCombat, #94/#96/#97 supply ledger/dispatch/road graph, #99 SupplyPressureController, #100 VillagerScoutBehavior, #101 HudWidgets, #102 EnemyRaidBehavior, #103 VillagerHealerBehavior, #105 VillagerBlacksmithBehavior, #106 ConstructionQueuePanel, #107 VillagerBuilderBehavior, #108 EnemyCombatLifecycle and #109 OutpostPanel, plus #86 deterministic Frontier decoration/landmarks. Save schema remains v17.  
+**Current main:** `df80c3deae9a526d71c29faae1179f1a8e2eb03d` — includes the integrated Priority 1 architecture slices and PR #125 P0 enemy-counterplay/final-wave pacing fixes. Save schema remains v17.  
 **Current save schema:** v17.  
-**Open implementation pull requests:** none.
+**Open implementation pull requests:** #127 HUD countdowns; #128 Android ARMv7/touch controls; #129 distinct Builder/Archer/Brute sprites; #130 rendered Frontier same-seed QA.
 
 | Workstream | Current disposition |
 |---|---|
 | INT-0 specialist integration | Complete: Hunter, Scout, Healer and Blacksmith integrations are on main. |
 | DEV-A data contract validation | Complete through PR #71 replacement. |
 | DEV-B faction camp architecture | Integrated through PR #70. Preserve public camp/patrol/raid interfaces. |
-| DEV-C campaign simulation QA | Integrated through PR #73. This is deterministic campaign simulation/diagnostics, not a substitute for human playtesting. |
-| DEV-D supply network decomposition | **Priority 1 complete.** PR #75 extracted cost transactions; #94 shipment ledger; #96 dispatch/recovery; #97 road graph; #99 supply pressure controller. Mainline `supply_network.gd` is approximately 458 lines. The remaining deterministic raid stock-theft hook is intentionally retained as a small façade operation: its fixed resource priority, successful-hit cadence and feedback are covered by `supply_pressure`. No further split is justified without a larger cohesive responsibility. |
-| DEV-E save/migration architecture | Complete through #89: canonical v17 conversion for supported Classic v1–v17 / Frontier v7–v17 saves and `SaveFileStore` parsing, temp verification, backup rotation and rollback are integrated. Schema remains v17; #84 and #88 were closed as superseded duplicates. |
-| DEV-F villager role architecture | Five focused role slices integrated: #91 `VillagerArcherCombat`, #100 `VillagerScoutBehavior`, #103 `VillagerHealerBehavior`, #105 `VillagerBlacksmithBehavior` and #107 `VillagerBuilderBehavior`. The villager retains shared movement, navigation, workplace claims, carrying, animation and persistence ownership. Host is approximately 1470 lines; do not extract tiny role fragments without a stronger responsibility boundary. |
-| DEV-G HUD modularization | Main panel boundaries extracted: #101 eight reusable widgets (`hud_widgets.gd`), #106 construction queue (`construction_queue_panel.gd`) and #109 outpost/garrison/logistics (`outpost_panel.gd`). Existing world map and event-decision panels are separate. `hud.gd` is approximately 1031 lines and remains the global composition/layout coordinator. |
-| DEV-H world generation | Generator decomposition integrated through #86: deterministic region, terrain, resource, decoration and landmark selection are isolated. Godot 4.7 regression and Campaign Simulation QA passed; manual same-seed rendered comparison remains part of visual acceptance. |
-| DEV-I enemy controller | Shared patrol movement (#74), raid targeting/navigation (#102 `EnemyRaidBehavior`) and attack/damage/death lifecycle (#108 `EnemyCombatLifecycle`) are extracted. Existing archetype behaviors and `EnemyTargeting` remain separate. `enemy.gd` is approximately 741 lines. Core controller decomposition is complete for this milestone. |
+| DEV-C campaign simulation QA | Integrated through PR #73. Deterministic diagnostics are not a substitute for human playtesting. |
+| DEV-D supply network decomposition | **Priority 1 complete.** PR #75 extracted cost transactions; #94 shipment ledger; #96 dispatch/recovery; #97 road graph; #99 supply pressure controller. Keep the stable façade unless a new cohesive responsibility is demonstrated. |
+| DEV-E save/migration architecture | Complete through #89: canonical v17 conversion and file-store recovery are integrated. Schema remains v17. |
+| DEV-F villager role architecture | Five role slices integrated: Archer, Scout, Healer, Blacksmith and Builder. Shared movement, navigation, workplace claims, carrying, animation and persistence remain host-owned. |
+| DEV-G HUD modularization | Main widget, construction queue and outpost/logistics boundaries are integrated. `hud.gd` remains the root composition/layout coordinator. |
+| DEV-H world generation | Generator decomposition integrated through #86. PR #130 adds a fixed-seed 1024×1024 rendered repeatability diagnostic. Godot 4.7 import/parse passed; actual renderer execution and image inspection remain pending. |
+| DEV-I enemy controller | Patrol movement, raid behavior and shared combat lifecycle are integrated. Archetype behavior modules remain separate. |
 | DEV-J decision-based events | Integrated through PR #72. |
 | DEV-K input command registry | Integrated through PR #76. |
 | DEV-L Barracks | Integrated through PR #78. |
-| Archery Range / ranged soldiers | Integrated through PR #87. Preserve soldier-role, garrison, expedition and v17 save compatibility. |
-| DEV-M visual identity / rendered QA | Partial. Distinct silhouettes, rendered gameplay review, audio listening and visual readability checks remain. |
+| Archery Range / ranged soldiers | Integrated through PR #87. |
+| DEV-M visual identity / rendered QA | Active in PR #129: dedicated Builder, Archer and Brute sprite sheets replace the three known role placeholders. Godot 4.7 CI passed 54/54 jobs and Campaign Simulation QA succeeded. Normal-zoom animation/readability review remains pending. |
 
 ### Recent Priority 1 integrations
 
-- **#109 — DEV-G OutpostPanel:** merged at `50d0f36`; all 54 Godot 4.7 checks and Campaign Simulation QA passed. Extracts depot management, cost-source selection, physical shipments, guard assignment and archer assignment UI.
-- **#108 — DEV-I EnemyCombatLifecycle:** merged at `120711c`; all 54 Godot 4.7 checks and Campaign Simulation QA passed. Extracts shared attack timing, projectile/melee resolution, stagger, damage mitigation, healing and death cleanup.
+- **#109 — DEV-G OutpostPanel:** merged at `50d0f36`; all 54 Godot 4.7 checks and Campaign Simulation QA passed.
+- **#108 — DEV-I EnemyCombatLifecycle:** merged at `120711c`; all 54 Godot 4.7 checks and Campaign Simulation QA passed.
 - **#107 — DEV-F VillagerBuilderBehavior:** merged at `3c58902`; all 54 Godot 4.7 checks and Campaign Simulation QA passed.
 - **#106 — DEV-G ConstructionQueuePanel:** merged at `37557a2`; all 54 Godot 4.7 checks and Campaign Simulation QA passed.
 - **#105 — DEV-F VillagerBlacksmithBehavior:** merged at `972899e`; all 54 Godot 4.7 checks and Campaign Simulation QA passed.
 - Earlier foundations remain integrated: #101/#102/#103/#100, #99/#97/#96/#94, #91 and #89. All these integrations retain save schema v17.
 
-### Recommended execution order
+### Active execution order
 
-**Priority 1 is complete on main.** Supply/logistics, five villager role slices, the major HUD panel boundaries and shared enemy combat lifecycle are integrated. The remaining large controllers now have stable ownership boundaries; avoid further extraction solely to reduce line counts.
+**Priority 1 architecture is complete on main.** Do not start more extraction work to reduce line counts.
 
-1. DEV-H: perform deterministic same-seed rendered comparison; generator architecture itself is integrated.
-2. DEV-M: replace remaining placeholder textures and perform rendered gameplay/audio QA.
-3. Run extended Classic and Frontier human playthroughs; record pacing, recovery, difficulty spikes and confusing UI interactions.
-4. Tune campaign pacing and economic pressure only from reproducible playtest evidence.
-5. Expand facilities or archetypes only when a specific gameplay gap is demonstrated.
+1. DEV-H / PR #130: run the same-seed capture with a real renderer or Xvfb + Mesa; inspect both PNGs and the pixel-diff result. A parse pass alone does not satisfy rendered acceptance.
+2. DEV-M / PR #129: inspect Builder, Archer and Brute silhouettes and all facing/animation clips at normal gameplay zoom; review day/night and combat readability before merge.
+3. Review PR #127 and #128 independently. HUD changes must be checked for panel overlap; Android work still requires its own export and physical-device validation.
+4. Run extended Classic and Frontier playthroughs; record pacing, recovery, difficulty spikes and confusing interactions.
+5. Tune campaign pacing and economic pressure only from reproducible playtest evidence. Add facilities/archetypes only for demonstrated gameplay gaps.
 
 ### Validation and release boundaries
 
 - Development CI targets **Godot 4.7 only**. Do not add Godot 4.3 or Windows export jobs to feature CI.
-- Automated campaign simulation is useful diagnostic coverage, but it does not prove full-wave balance, player-facing readability or campaign fun.
-- Remaining acceptance work includes full-wave autonomous-AI balance tests, human playthrough across all Frontier acts, target-hardware profiling, rendered resolution/fullscreen review, audio listening, and later Windows runtime/clean-machine release checks.
-- Do not claim a feature is complete solely because headless tests pass. Record rendered/manual QA separately.
+- Campaign Simulation QA is deterministic diagnostic coverage, not proof of complete-wave balance or player-facing readability.
+- Remaining acceptance work includes same-seed rendered review, role-sprite rendered review, full-wave autonomous-AI balance, human playthroughs across Frontier acts, target-hardware profiling, fullscreen/resolution review, audio listening and later clean-machine release checks.
+- Do not claim a feature complete solely because headless tests pass. Record rendered/manual QA separately.
 
-This snapshot supersedes the previous live-status block. Re-check PR heads, workflow runs and main before each merge or assignment; repository state can change after this commit.
-
+This snapshot records the live PR state as of 2026-11-05. Re-check PR heads, workflow runs and `main` before each merge or assignment; repository state can change after this commit.
 ---
 
 ## 0. Ground rules and current baseline
