@@ -48,6 +48,7 @@ tests=(
     decision_events
     release_hardening
     save_validator
+    save_migration_pipeline
     input_rebinding
     map_stages
     player_combat
