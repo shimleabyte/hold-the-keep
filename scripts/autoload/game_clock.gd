@@ -1,19 +1,22 @@
 extends Node
 ## Siklus siang-malam. time_of_day: 0.0 .. 1.0
 
-const DAY_LENGTH := 180.0  # detik per hari
+const DAY_LENGTH := 180.0  # detik per siklus penuh
 const NIGHT_START := 0.6
 const NIGHT_END := 0.9
+const NIGHT_WARNING_LEAD := 0.05 # 9 seconds before the night phase starts
 
 var time_of_day := 0.0
 var day := 1
 var is_night := false
+var _night_warning_sent := false
 
 
 func reset() -> void:
     time_of_day = 0.0
     day = 1
     is_night = false
+    _night_warning_sent = false
 
 
 func _process(delta: float) -> void:
@@ -21,7 +24,11 @@ func _process(delta: float) -> void:
     if time_of_day >= 1.0:
         time_of_day -= 1.0
         day += 1
+        _night_warning_sent = false
         Events.day_changed.emit(day)
+    if not _night_warning_sent and not is_night and time_of_day >= NIGHT_START - NIGHT_WARNING_LEAD:
+        _night_warning_sent = true
+        Events.build_feedback.emit("Senja mendekat. Bersiap untuk serangan malam.")
     var night := time_of_day >= NIGHT_START and time_of_day < NIGHT_END
     if night != is_night:
         is_night = night
