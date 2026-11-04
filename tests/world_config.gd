@@ -55,8 +55,17 @@ func _initialize() -> void:
     current_scene = main
     await process_frame
     await process_frame
+    assert(main.world == null,
+        "Launching the project must show the title screen without constructing a gameplay world")
+    assert(main.get_node_or_null("TitleScreen") != null,
+        "The main scene must present the title screen before gameplay")
+    main._start_campaign("classic")
+    await process_frame
+    await process_frame
     await process_frame
     game_clock.set_process(false)
+    assert(main.world != null,
+        "Selecting Classic from the title screen must initialize the gameplay world")
 
     var current_save: Dictionary = save_system.collect(main)
     assert(current_save["world"]["profile"] == "classic",
