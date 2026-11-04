@@ -72,6 +72,7 @@ jobs:
           - campaign_combat_simulation
           - data_db_validation
           - save_validator
+          - save_migration_pipeline
           - decision_events
           - release_hardening
           - input_rebinding
