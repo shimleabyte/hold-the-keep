@@ -260,7 +260,7 @@ func _run() -> void:
         legacy_file.store_string(JSON.stringify(classic_v1_for_storage))
         legacy_file.flush()
         legacy_file.close()
-    var load_requested := save_system.request_load()
+    var load_requested: bool = save_system.request_load()
     _require(load_requested, "Loading a supported historical save must request scene restoration")
     var installed_snapshot: Variant = save_system._read_valid_save("user://save.json")
     _require(installed_snapshot is Dictionary and int(installed_snapshot.get("version", 0)) == save_system.VERSION,
@@ -273,7 +273,7 @@ func _run() -> void:
 
     if load_requested:
         await _ticks(8)
-        var restored_main = get_tree().get_first_node_in_group("main")
+        var restored_main: Node = root.get_first_node_in_group("main")
         _require(restored_main != null and restored_main.campaign != null and restored_main.campaign.objectives_in_order().size() == 1,
             "The canonical v17 replacement must restore the original legacy stronghold campaign")
         if restored_main != null:
