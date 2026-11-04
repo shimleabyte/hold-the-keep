@@ -6,14 +6,18 @@ const TMP := "user://save.tmp"
 const BACKUP := "user://save.bak"
 const VERSION := 17
 const SAVE_VALIDATOR_SCRIPT := preload("res://scripts/persistence/save_validator.gd")
+const SAVE_FILE_STORE_SCRIPT := preload("res://scripts/persistence/save_file_store.gd")
+const SAVE_MIGRATION_SCRIPT := preload("res://scripts/persistence/save_migration_pipeline.gd")
 
 var pending: Dictionary = {}
 var _validator = SAVE_VALIDATOR_SCRIPT.new()
+var _file_store = SAVE_FILE_STORE_SCRIPT.new()
 
 
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS
     _validator.configure(VERSION)
+    _file_store.configure(_validator)
     Events.day_changed.connect(_on_day_changed)
 
 
@@ -50,51 +54,14 @@ func save_current(silent := false) -> bool:
         return false
 
     var data := collect(main)
-    DirAccess.remove_absolute(TMP)
-    var file := FileAccess.open(TMP, FileAccess.WRITE)
-    if file == null:
+    if not _file_store.write_snapshot(data, PATH, TMP, BACKUP):
         if not silent:
-            Events.build_feedback.emit("Gagal menulis save")
-        return false
-
-    file.store_string(JSON.stringify(data))
-    file.flush()
-    var write_error := file.get_error()
-    file.close()
-    if write_error != OK:
-        DirAccess.remove_absolute(TMP)
-        if not silent:
-            Events.build_feedback.emit("Gagal menulis save")
-        return false
-
-    # Only replace the rollback copy with a verified primary save.
-    if FileAccess.file_exists(PATH):
-        if _read_saved_data(PATH, false) != null:
-            DirAccess.remove_absolute(BACKUP)
-            var backup_error := DirAccess.rename_absolute(PATH, BACKUP)
-            if backup_error != OK:
-                DirAccess.remove_absolute(TMP)
-                if not silent:
-                    Events.build_feedback.emit("Gagal mengamankan save lama")
-                return false
-        else:
-            DirAccess.remove_absolute(PATH)
-
-    var install_error := DirAccess.rename_absolute(TMP, PATH)
-    if install_error != OK:
-        if FileAccess.file_exists(BACKUP):
-            var restore_error := DirAccess.rename_absolute(BACKUP, PATH)
-            if restore_error != OK:
-                push_error("Save rollback failed; backup remains at " + BACKUP)
-        DirAccess.remove_absolute(TMP)
-        if not silent:
-            Events.build_feedback.emit("Gagal memasang save baru")
+            Events.build_feedback.emit("Gagal menyimpan save")
         return false
 
     if not silent:
         Events.build_feedback.emit("Game disimpan")
     return true
-
 
 func _has_keep() -> bool:
     for building in get_tree().get_nodes_in_group("buildings"):
@@ -206,18 +173,7 @@ func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
 
 
 func _read_saved_data(path: String, enforce_world_compatibility := true) -> Variant:
-    if not FileAccess.file_exists(path):
-        return null
-    var file := FileAccess.open(path, FileAccess.READ)
-    if file == null:
-        return null
-    var json := JSON.new()
-    var parse_result := json.parse(file.get_as_text())
-    file.close()
-    if parse_result != OK or not _valid_save(json.data, enforce_world_compatibility):
-        return null
-    return json.data
-
+    return _file_store.read_snapshot(path, enforce_world_compatibility)
 
 func _read_valid_save(path: String) -> Variant:
     return _read_saved_data(path, true)
@@ -235,11 +191,23 @@ func request_load() -> bool:
         Events.build_feedback.emit("Save rusak atau versi tidak cocok")
         return false
 
+    var source_version := int(parsed.get("version", 0))
+    if source_version < VERSION:
+        var main := _main()
+        var migration = SAVE_MIGRATION_SCRIPT.new()
+        var migrated: Variant = migration.migrate_snapshot_to_current(parsed, main, VERSION)
+        if migrated is Dictionary and _valid_save(migrated, true):
+            if _file_store.write_snapshot(migrated, PATH, TMP, BACKUP):
+                parsed = migrated
+            else:
+                push_warning("Save migration: canonical v%d snapshot was valid but could not be installed; loading the original snapshot" % VERSION)
+        else:
+            push_warning("Save migration: historical snapshot could not be upgraded losslessly; loading it without rewriting the source file")
+
     pending = parsed
     get_tree().paused = false
     get_tree().reload_current_scene()
     return true
-
 
 func take_pending() -> Dictionary:
     var data := pending
