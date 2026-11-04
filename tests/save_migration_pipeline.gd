@@ -15,6 +15,8 @@ func _run() -> void:
     var game_clock = root.get_node("GameClock")
     var save_system = root.get_node("SaveSystem")
     world_config.apply_profile("classic")
+    for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
+        DirAccess.remove_absolute(path)
 
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
@@ -157,8 +159,9 @@ func _run() -> void:
     _require(JSON.stringify(current) == current_before,
         "Building a current restore plan must not mutate the caller's persisted snapshot")
 
-    # Exercise every officially supported Classic source version through the
-    # same restore-plan entry point, not merely the version-boundary examples.
+    # Exercise every officially supported Classic source version through both
+    # the restore adapter and the canonical v17 conversion path.
+    var classic_v1_for_storage: Dictionary = {}
     for source_version in range(1, 18):
         var classic_fixture: Dictionary = snapshot.duplicate(true)
         classic_fixture["version"] = source_version
@@ -174,9 +177,39 @@ func _run() -> void:
             classic_fixture.erase("campaign")
         if source_version < 9:
             classic_fixture.erase("job_priority")
+            classic_fixture["quota"].erase("builder")
             for villager in classic_fixture["villagers"]:
                 villager.erase("occupation")
                 villager.erase("military_specialization")
+        if source_version < 14:
+            classic_fixture["quota"].erase("hunter")
+            for resource_index in range(classic_fixture["resources"].size() - 1, -1, -1):
+                if String(classic_fixture["resources"][resource_index].get("kind", "")) == "food":
+                    classic_fixture["resources"].remove_at(resource_index)
+            for index in range(classic_fixture["buildings"].size() - 1, -1, -1):
+                if String(classic_fixture["buildings"][index].get("id", "")) == "hunting_lodge":
+                    classic_fixture["buildings"].remove_at(index)
+        if source_version < 15:
+            classic_fixture["quota"].erase("scout")
+            for index in range(classic_fixture["buildings"].size() - 1, -1, -1):
+                if String(classic_fixture["buildings"][index].get("id", "")) == "scout_post":
+                    classic_fixture["buildings"].remove_at(index)
+        if source_version < 16:
+            classic_fixture["quota"].erase("healer")
+            for index in range(classic_fixture["buildings"].size() - 1, -1, -1):
+                if String(classic_fixture["buildings"][index].get("id", "")) == "infirmary":
+                    classic_fixture["buildings"].remove_at(index)
+        if source_version < 17:
+            classic_fixture["quota"].erase("blacksmith")
+            for index in range(classic_fixture["buildings"].size() - 1, -1, -1):
+                if String(classic_fixture["buildings"][index].get("id", "")) == "forge":
+                    classic_fixture["buildings"].remove_at(index)
+            for villager in classic_fixture["villagers"]:
+                if String(villager.get("job", "")) == "blacksmith":
+                    villager["job"] = ""
+                if String(villager.get("occupation", "")) == "blacksmith":
+                    villager["job"] = ""
+                    villager["occupation"] = ""
         if source_version < 10:
             for enemy in classic_fixture["enemies"]:
                 enemy.erase("faction")
@@ -191,13 +224,62 @@ func _run() -> void:
             for villager in classic_fixture["villagers"]:
                 villager.erase("weapon_equipped")
                 villager.erase("armor_equipped")
+            classic_fixture.erase("events")
+        if source_version < 14 and classic_fixture.has("job_priority"):
+            classic_fixture["job_priority"].erase("hunter")
+        if source_version < 15 and classic_fixture.has("job_priority"):
+            classic_fixture["job_priority"].erase("scout")
+        if source_version < 16 and classic_fixture.has("job_priority"):
+            classic_fixture["job_priority"].erase("healer")
+        if source_version < 17 and classic_fixture.has("job_priority"):
+            classic_fixture["job_priority"].erase("blacksmith")
+        var classic_before_canonical := JSON.stringify(classic_fixture)
+        var canonical_classic: Variant = pipeline.migrate_snapshot_to_current(classic_fixture, main, save_system.VERSION)
+        _require(canonical_classic is Dictionary,
+            "Classic v%d must be eligible for canonical v17 conversion" % source_version)
+        if canonical_classic is Dictionary:
+            _require(int(canonical_classic.get("version", 0)) == save_system.VERSION,
+                "Classic v%d canonical conversion must set schema v17" % source_version)
+            _require(save_system._valid_save(canonical_classic, true),
+                "Classic v%d canonical output must satisfy the current SaveValidator" % source_version)
+        _require(JSON.stringify(classic_fixture) == classic_before_canonical,
+            "Classic v%d canonical conversion must not mutate the source fixture" % source_version)
+        if source_version == 1:
+            classic_v1_for_storage = classic_fixture.duplicate(true)
         var classic_plan: Dictionary = pipeline.build_restore_plan(classic_fixture, main.world, save_system.VERSION)
         _require(int(classic_plan["source_version"]) == source_version,
             "Classic v%d must produce a restore plan tagged with its source version" % source_version)
         _require((String(classic_plan["campaign_mode"]) == "campaign") == (source_version >= 8),
             "Classic v%d must retain the correct legacy/campaign restore mode" % source_version)
 
-    main.queue_free()
+    _require(save_system._valid_save(classic_v1_for_storage, true),
+        "The v1 on-disk migration fixture must pass its original schema validator")
+    var legacy_file := FileAccess.open("user://save.json", FileAccess.WRITE)
+    _require(legacy_file != null, "The v1 on-disk migration fixture must be writable")
+    if legacy_file != null:
+        legacy_file.store_string(JSON.stringify(classic_v1_for_storage))
+        legacy_file.flush()
+        legacy_file.close()
+    var load_requested := save_system.request_load()
+    _require(load_requested, "Loading a supported historical save must request scene restoration")
+    var installed_snapshot: Variant = save_system._read_valid_save("user://save.json")
+    _require(installed_snapshot is Dictionary and int(installed_snapshot.get("version", 0)) == save_system.VERSION,
+        "Loading a historical primary must atomically install its canonical v17 replacement")
+    var rollback_snapshot: Variant = save_system._read_valid_save("user://save.bak")
+    _require(rollback_snapshot is Dictionary and int(rollback_snapshot.get("version", 0)) == 1,
+        "Canonical replacement must retain the original v1 primary as a verified rollback backup")
+    _require(not FileAccess.file_exists("user://save.tmp"),
+        "A successful canonical migration must not leave a temporary file")
+
+    if load_requested:
+        await _ticks(8)
+        var restored_main = get_tree().get_first_node_in_group("main")
+        _require(restored_main != null and restored_main.campaign != null and restored_main.campaign.objectives_in_order().size() == 1,
+            "The canonical v17 replacement must restore the original legacy stronghold campaign")
+        if restored_main != null:
+            main = restored_main
+    if is_instance_valid(main):
+        main.queue_free()
     await _ticks(3)
     world_config.apply_profile("frontier")
     var frontier_main = load("res://scenes/main.tscn").instantiate()
@@ -213,8 +295,43 @@ func _run() -> void:
         frontier_fixture["version"] = source_version
         if source_version < 8:
             frontier_fixture.erase("campaign")
+        if source_version < 9:
+            frontier_fixture.erase("job_priority")
+            frontier_fixture["quota"].erase("builder")
+            for villager in frontier_fixture["villagers"]:
+                villager.erase("occupation")
+                villager.erase("military_specialization")
         if source_version < 11:
             frontier_fixture.erase("frontier_campaign")
+        if source_version < 14:
+            frontier_fixture["quota"].erase("hunter")
+            for resource_index in range(frontier_fixture["resources"].size() - 1, -1, -1):
+                if String(frontier_fixture["resources"][resource_index].get("kind", "")) == "food":
+                    frontier_fixture["resources"].remove_at(resource_index)
+            for index in range(frontier_fixture["buildings"].size() - 1, -1, -1):
+                if String(frontier_fixture["buildings"][index].get("id", "")) == "hunting_lodge":
+                    frontier_fixture["buildings"].remove_at(index)
+        if source_version < 15:
+            frontier_fixture["quota"].erase("scout")
+            for index in range(frontier_fixture["buildings"].size() - 1, -1, -1):
+                if String(frontier_fixture["buildings"][index].get("id", "")) == "scout_post":
+                    frontier_fixture["buildings"].remove_at(index)
+        if source_version < 16:
+            frontier_fixture["quota"].erase("healer")
+            for index in range(frontier_fixture["buildings"].size() - 1, -1, -1):
+                if String(frontier_fixture["buildings"][index].get("id", "")) == "infirmary":
+                    frontier_fixture["buildings"].remove_at(index)
+        if source_version < 17:
+            frontier_fixture["quota"].erase("blacksmith")
+            for index in range(frontier_fixture["buildings"].size() - 1, -1, -1):
+                if String(frontier_fixture["buildings"][index].get("id", "")) == "forge":
+                    frontier_fixture["buildings"].remove_at(index)
+            for villager in frontier_fixture["villagers"]:
+                if String(villager.get("job", "")) == "blacksmith":
+                    villager["job"] = ""
+                if String(villager.get("occupation", "")) == "blacksmith":
+                    villager["job"] = ""
+                    villager["occupation"] = ""
         if source_version < 12:
             for building in frontier_fixture["buildings"]:
                 building.erase("stockpile")
@@ -224,6 +341,26 @@ func _run() -> void:
             for villager in frontier_fixture["villagers"]:
                 villager.erase("weapon_equipped")
                 villager.erase("armor_equipped")
+            frontier_fixture.erase("events")
+        if source_version < 14 and frontier_fixture.has("job_priority"):
+            frontier_fixture["job_priority"].erase("hunter")
+        if source_version < 15 and frontier_fixture.has("job_priority"):
+            frontier_fixture["job_priority"].erase("scout")
+        if source_version < 16 and frontier_fixture.has("job_priority"):
+            frontier_fixture["job_priority"].erase("healer")
+        if source_version < 17 and frontier_fixture.has("job_priority"):
+            frontier_fixture["job_priority"].erase("blacksmith")
+        var frontier_before_canonical := JSON.stringify(frontier_fixture)
+        var canonical_frontier: Variant = pipeline.migrate_snapshot_to_current(frontier_fixture, frontier_main, save_system.VERSION)
+        _require(canonical_frontier is Dictionary,
+            "Frontier v%d must be eligible for canonical v17 conversion" % source_version)
+        if canonical_frontier is Dictionary:
+            _require(int(canonical_frontier.get("version", 0)) == save_system.VERSION,
+                "Frontier v%d canonical conversion must set schema v17" % source_version)
+            _require(save_system._valid_save(canonical_frontier, true),
+                "Frontier v%d canonical output must satisfy the current SaveValidator" % source_version)
+        _require(JSON.stringify(frontier_fixture) == frontier_before_canonical,
+            "Frontier v%d canonical conversion must not mutate the source fixture" % source_version)
         var frontier_plan: Dictionary = pipeline.build_restore_plan(frontier_fixture, frontier_main.world, save_system.VERSION)
         _require(int(frontier_plan["source_version"]) == source_version,
             "Frontier v%d must produce a restore plan tagged with its source version" % source_version)
