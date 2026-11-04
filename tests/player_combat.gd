@@ -117,6 +117,24 @@ func _initialize() -> void:
     assert(wolf._pounce_t == 0.0 and wolf._stagger_t > 0.0,
         "Stagger must interrupt an active pounce")
 
+    var melee_attacker = enemy_script.new()
+    melee_attacker.setup(data_db.enemies["bandit"], main.world, main.flow, player)
+    melee_attacker.position = player.global_position + Vector2(8, 0)
+    main.world.entities.add_child(melee_attacker)
+    melee_attacker.set_physics_process(false)
+    var player_position_before_evade: Vector2 = player.global_position
+    player.hp = player.MAX_HP
+    player._invuln = 0.0
+    melee_attacker._begin_attack(player, player.global_position - melee_attacker.global_position)
+    assert(melee_attacker.combat_feedback.windup_remaining > 0.0,
+        "Enemy melee attacks must telegraph before impact")
+    player.global_position += Vector2(80, 0)
+    melee_attacker._resolve_pending(1.0)
+    assert(player.hp == player.MAX_HP,
+        "Moving outside the enemy's melee reach during wind-up must evade the hit")
+    player.global_position = player_position_before_evade
+    melee_attacker.queue_free()
+
     var archer = enemy_script.new()
     archer.setup(data_db.enemies["archer"], main.world, main.flow, player)
     assert(archer.role == "ranged" and archer.preferred_range > 0.0,
@@ -124,10 +142,28 @@ func _initialize() -> void:
     archer.position = player.global_position + Vector2(90, 0)
     main.world.entities.add_child(archer)
     archer.set_physics_process(false)
+    var player_position_before_shot: Vector2 = player.global_position
+    var player_hp_before_shot: int = player.hp
+    var expected_projectile_aim: Vector2 = player.global_position + Vector2(0, -5)
     archer._tick_ranged(0.016)
+    assert(archer.combat_feedback.windup_projectile,
+        "An archer must show a projectile telegraph before firing")
+    player.global_position += Vector2(0, 80)
     archer._resolve_pending(1.0)
     assert(get_nodes_in_group("enemy_projectiles").size() > 0,
         "Archer attack must create a hostile projectile")
+    var bolt = get_first_node_in_group("enemy_projectiles")
+    assert(bolt.aim_position.distance_to(expected_projectile_aim) < 0.01,
+        "An archer shot must preserve the aim point shown when its wind-up began")
+    var bolt_start: Vector2 = bolt.global_position
+    var expected_direction := (expected_projectile_aim - bolt_start).normalized()
+    bolt._physics_process(0.1)
+    assert((bolt.global_position - bolt_start).normalized().dot(expected_direction) > 0.999,
+        "A fired arrow must travel toward its locked aim point instead of homing onto a moving player")
+    assert(player.hp == player_hp_before_shot,
+        "Moving out of an archer's telegraphed line must avoid the fired projectile")
+    bolt.queue_free()
+    player.global_position = player_position_before_shot
 
     var brute = enemy_script.new()
     brute.setup(data_db.enemies["brute"], main.world, main.flow, player)
@@ -153,5 +189,5 @@ func _initialize() -> void:
     assert(save_system._valid_save(snapshot),
         "Combat-enabled save payload must pass validation")
 
-    print("PASS: XP, level unlocks, dash, locked directional melee/Cleave, rally buff, ranged projectile, brute armor, combat save")
+    print("PASS: XP, level unlocks, dash, locked directional melee/Cleave, enemy melee and ranged dodge, rally buff, brute armor, combat save")
     quit()
