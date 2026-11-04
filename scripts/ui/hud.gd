@@ -403,8 +403,18 @@ func _build_jobs() -> void:
         row.font = _font
         row.position = Vector2(2, 3 + i * 12)
         row.size = Vector2(72, 12)
-        if JOBS[i] == "blacksmith":
-            row.tooltip_text = "Blacksmith: crafts individual soldier equipment at a Forge"
+        var job_descriptions := {
+            "woodcutter": "Woodcutter — gathers timber",
+            "miner": "Miner — extracts stone and ore",
+            "farmer": "Farmer — produces food",
+            "builder": "Builder — constructs and repairs buildings",
+            "hunter": "Hunter — supplies food from wildlife",
+            "scout": "Scout — explores and reveals territory",
+            "healer": "Healer — restores injured units",
+            "blacksmith": "Blacksmith — crafts soldier equipment at a Forge",
+            "soldier": "Soldier — defends the settlement"
+        }
+        row.tooltip_text = String(job_descriptions.get(JOBS[i], JOBS[i])) + "  ·  Left click −/+ quota, right click priority"
         row.adjust.connect(_on_job_adjust)
         row.priority_adjust.connect(_on_job_priority_adjust)
         _jobs_panel.add_child(row)
@@ -723,9 +733,9 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _people_icon.position.x = _viewport_size.x - 144.0
     _pop.position.x = _viewport_size.x - 131.0
 
-    _map_button.position.x = _viewport_size.x - 110.0
-    _jobs_button.position.x = _viewport_size.x - 71.0
-    _tech_btn.position.x = _viewport_size.x - 32.0
+    _map_button.position.x = _viewport_size.x - 70.0
+    _jobs_button.position.x = _viewport_size.x - 48.0
+    _tech_btn.position.x = _viewport_size.x - 26.0
 
     _vitals_panel.position = Vector2(4, 22)
     _stage_panel.position = Vector2((_viewport_size.x - _stage_panel.size.x) * 0.5, 22)
@@ -744,10 +754,9 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _help.position = Vector2((_viewport_size.x - _help.size.x) * 0.5, (_viewport_size.y - help_height) * 0.5)
 
     var build_y := _viewport_size.y - SLOT_H - 2.0
-    var hint_y := build_y - 14.0
-    _queue_button.position = Vector2(5, hint_y - 1.0)
-    _build_left_hint.position = Vector2(46, hint_y)
-    _build_right_hint.position = Vector2(_viewport_size.x - 132.0, hint_y)
+    _queue_button.position = Vector2(5, build_y - 18.0)
+    _build_left_hint.position = Vector2(46, build_y - 14.0)
+    _build_right_hint.position = Vector2(_viewport_size.x - 132.0, build_y - 14.0)
     _build_right_hint.size = Vector2(127.0, 10)
     _build_right_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
@@ -911,6 +920,7 @@ func _on_stage_changed(stage_id: String, stage_name: String, day: int) -> void:
     _stage_panel.tooltip_text = "%s — %s  ·  Day %d\n%s" % [
         String(stage_id).to_upper(), stage_name, day, stage_summary
     ]
+    _stage_icon.tooltip_text = _stage_panel.tooltip_text
     _banner.text = "%s  %s  ·  HARI %d\n%s" % [
         String(stage_id).to_upper(), stage_name, day, stage_summary
     ]
