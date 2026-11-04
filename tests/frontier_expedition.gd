@@ -19,6 +19,27 @@ func _initialize() -> void:
     DirAccess.remove_absolute("user://save.tmp")
     DirAccess.remove_absolute("user://save.bak")
 
+    var title_script: Script = load("res://scripts/ui/title_screen.gd")
+    var title_screen = title_script.new()
+    root.add_child(title_screen)
+    await process_frame
+    var campaign_options = title_screen.find_child("CampaignOptions", true, false)
+    assert(campaign_options != null and campaign_options.get_child_count() == 3,
+        "The title screen must expose Classic, Frontier and Frontier Expedition")
+    var selected_profile := [""]
+    title_screen.mode_selected.connect(func(profile_id: String) -> void:
+        selected_profile[0] = profile_id
+    )
+    var expected_profiles := ["classic", "frontier", "frontier_expedition"]
+    for index in expected_profiles.size():
+        var card = campaign_options.get_child(index)
+        var enter_button := card.get_child(0).get_child(3) as Button
+        enter_button.pressed.emit()
+        assert(selected_profile[0] == expected_profiles[index],
+            "Title-screen campaign card %d must select %s" % [index + 1, expected_profiles[index]])
+    title_screen.queue_free()
+    await process_frame
+
     var previous_profile: String = settings.world_profile
     assert(world_config.apply_profile("frontier_expedition"),
         "Frontier Expedition must be selectable as a new world profile")
