@@ -77,6 +77,22 @@ func _initialize() -> void:
         "Ordinary feedback must retain its compact two-second lifetime")
     assert(is_equal_approx(hud._message_duration("Raja lawan mendekat! Bersiap."), 4.0),
         "The final boss warning must remain visible for its full four-second telegraph")
+
+    assert(hud._clock_widget.size.y == 18,
+        "The clock must reserve a second line for the next phase countdown")
+    game_clock.time_of_day = 0.5
+    assert(hud._clock_widget.countdown_text() == "NIGHT 00:18",
+        "The clock must display the exact time remaining until night")
+    game_clock.time_of_day = 0.75
+    assert(hud._clock_widget.countdown_text() == "DAWN 00:27",
+        "The clock must display the exact time remaining until dawn")
+    main.spawner.start_wave(1)
+    hud._process(0.2)
+    assert(hud._foes.text == "0+6" and hud._foes.visible,
+        "The hostile counter must expose queued wave enemies before the first spawn")
+    assert(hud._foes.tooltip_text.find("6 remaining") >= 0,
+        "The hostile counter must explain active versus queued enemies")
+    main.spawner.end_wave()
     var player = get_first_node_in_group("player")
     assert(player != null and player.camera.zoom == Vector2.ONE,
         "The wider field of view must come from viewport dimensions, not gameplay camera zoom")
