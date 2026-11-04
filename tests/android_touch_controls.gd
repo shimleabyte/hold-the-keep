@@ -31,12 +31,18 @@ func _run() -> void:
     var attack_center: Vector2 = controls.button_center("attack")
     assert(controls.handle_touch_press(2, attack_center),
         "A second finger must be able to press attack while movement remains held")
+    assert(controls.handle_touch_press(3, attack_center),
+        "Two fingers may hold the same action without corrupting its state")
     assert(Input.is_action_pressed("attack"),
         "Attack touch must press the existing attack action")
     assert(controls.handle_touch_release(2),
-        "Releasing the attack finger must be consumed")
+        "Releasing the first attack finger must be consumed")
+    assert(Input.is_action_pressed("attack"),
+        "Attack must stay pressed while another finger still holds the same button")
+    assert(controls.handle_touch_release(3),
+        "Releasing the final attack finger must be consumed")
     assert(not Input.is_action_pressed("attack"),
-        "Releasing the attack finger must release attack without cancelling movement")
+        "Releasing the final attack finger must release attack without cancelling movement")
     assert(Input.get_action_strength("move_right") > 0.95,
         "Releasing an action button must not release another finger's movement")
 
