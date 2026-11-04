@@ -7,6 +7,7 @@ const ATTACK_HIT_DELAY := 0.14
 const Corpse := preload("res://scripts/entities/corpse.gd")
 
 var _enemy: Variant
+var _pending_aim_position := Vector2.ZERO
 
 
 func configure(enemy: Variant) -> void:
@@ -43,7 +44,8 @@ func begin_ranged_attack(target: Node2D) -> void:
     enemy._pending = target
     enemy._pending_is_projectile = true
     enemy._pending_t = 0.14
-    if enemy.anim.face(target.position - enemy.position):
+    _pending_aim_position = target.global_position + Vector2(0, -5)
+    if enemy.anim.face(_pending_aim_position - enemy.global_position):
         enemy.queue_redraw()
     enemy.anim.play("attack", true)
     enemy.combat_feedback.begin_windup(target.position - enemy.position, enemy._pending_t, true)
@@ -67,12 +69,15 @@ func resolve_pending(delta: float) -> void:
         enemy._pending_is_projectile = false
         var bolt := ENEMY_BOLT.new()
         bolt.global_position = enemy.global_position + Vector2(0, -8)
-        bolt.setup(target, enemy.damage, enemy.projectile_speed)
+        bolt.setup(target, enemy.damage, enemy.projectile_speed, _pending_aim_position)
         enemy.world.entities.add_child(bolt)
         return
     enemy._pending_is_projectile = false
-    if enemy.role == "pouncer" and enemy.position.distance_to(target.position) > 36.0:
-        return
+    if target == enemy.player or target.is_in_group("defenders"):
+        var target_still_exposed: bool = bool(target.visible)
+        var allowed_reach := maxf(enemy._attack_reach(), 36.0 if enemy.role == "pouncer" else 0.0)
+        if not target_still_exposed or enemy.global_position.distance_to(target.global_position) > allowed_reach:
+            return
     if (enemy.is_supply_raider or enemy.is_faction_raider) and target.is_in_group("depots"):
         enemy.supply_raid_hits += 1
         if enemy.supply_raid_hits % 2 == 0:
