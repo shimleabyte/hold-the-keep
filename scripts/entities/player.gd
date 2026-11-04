@@ -19,6 +19,7 @@ const HIT_DELAY := 0.14  # frame ke-3 pada 14 fps
 const MAX_HP := 100
 const ATTACK_RANGE := 24.0
 const ATTACK_DAMAGE := 9
+const ATTACK_ARC_MIN_DOT := 0.5 # 120-degree forward sector, matching the readable melee swing
 const ATTACK_COOLDOWN := 0.45
 const REGEN_DELAY := 4.0
 const REGEN_PER_SEC := 3.0
@@ -265,25 +266,41 @@ func _attack() -> void:
     queue_redraw()
 
 
-## Dipanggil di frame benturan: kena semua musuh dalam jangkauan.
+## A normal swing only connects inside the visible forward-facing attack sector.
+func _is_inside_attack_arc(origin: Vector2, target_position: Vector2) -> bool:
+    var offset := target_position - origin
+    var distance_squared := offset.length_squared()
+    if distance_squared > ATTACK_RANGE * ATTACK_RANGE:
+        return false
+    if distance_squared <= 0.0001:
+        return true
+    var attack_direction := facing.normalized()
+    if attack_direction.length_squared() <= 0.0001:
+        return false
+    return offset.normalized().dot(attack_direction) >= ATTACK_ARC_MIN_DOT
+
+
+## Resolve damage on the impact frame; enemies and objectives share the same attack sector.
 func _apply_attack() -> void:
     combat_feedback.end_windup()
     var origin := global_position + Vector2(0, -6)
     for e in get_tree().get_nodes_in_group("enemies"):
         var n := e as Node2D
-        if origin.distance_to(n.global_position + Vector2(0, -4)) <= ATTACK_RANGE:
-            var hit_damage := _player_damage(ATTACK_DAMAGE)
-            if n.has_method("take_damage_from"):
-                n.take_damage_from(hit_damage, global_position)
-            else:
-                n.take_damage(hit_damage)
+        if not _is_inside_attack_arc(origin, n.global_position + Vector2(0, -4)):
+            continue
+        var hit_damage := _player_damage(ATTACK_DAMAGE)
+        if n.has_method("take_damage_from"):
+            n.take_damage_from(hit_damage, global_position)
+        else:
+            n.take_damage(hit_damage)
     for target in get_tree().get_nodes_in_group("campaign_targets"):
-        if is_instance_valid(target) and origin.distance_to(target.global_position) <= ATTACK_RANGE:
-            var site_damage := roundi(float(_player_damage(ATTACK_DAMAGE)) * Tech.stat("campaign.site_damage", 1.0))
-            target.take_damage(maxi(1, site_damage))
+        if not is_instance_valid(target) or not _is_inside_attack_arc(origin, target.global_position):
+            continue
+        var site_damage := roundi(float(_player_damage(ATTACK_DAMAGE)) * Tech.stat("campaign.site_damage", 1.0))
+        target.take_damage(maxi(1, site_damage))
     var campaign = get_tree().get_first_node_in_group("campaign")
     for stronghold in get_tree().get_nodes_in_group("enemy_strongholds"):
-        if not is_instance_valid(stronghold) or origin.distance_to(stronghold.global_position) > ATTACK_RANGE:
+        if not is_instance_valid(stronghold) or not _is_inside_attack_arc(origin, stronghold.global_position):
             continue
         if campaign != null and not campaign.is_current_objective(stronghold.stronghold_id):
             continue
