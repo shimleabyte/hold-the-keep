@@ -248,6 +248,36 @@ func assign_nearest_garrison_guard(garrison) -> bool:
     return true
 
 
+func assign_nearest_archer(archery_range) -> bool:
+    if not is_instance_valid(archery_range) or String(archery_range.id) != "archery_range":
+        return false
+    if archery_range.free_slots("archer") <= 0:
+        return false
+    var best = null
+    var best_path_length := INF
+    for soldier in villagers():
+        if soldier.job != "soldier" or soldier.is_archer() or soldier.is_outpost_guard() or soldier.is_expeditioning() or soldier.is_recalling_expedition():
+            continue
+        if soldier.workplace != null:
+            continue
+        var path: PackedVector2Array = nav.path_adjacent(soldier.position, archery_range.cells())
+        if path.is_empty() and soldier.position.distance_to(archery_range.position) > 45.0:
+            continue
+        var route_length := float(path.size()) if not path.is_empty() else 0.0
+        if route_length < best_path_length:
+            best_path_length = route_length
+            best = soldier
+    return best != null and best.set_job("archer", archery_range)
+
+
+func release_archer(archery_range) -> bool:
+    if not is_instance_valid(archery_range) or String(archery_range.id) != "archery_range":
+        return false
+    for soldier in villagers():
+        if soldier.is_archer() and soldier.workplace == archery_range:
+            return soldier.set_job("soldier")
+    return false
+
 func release_outpost_guard(outpost) -> bool:
     return release_garrison_guard(outpost)
 
