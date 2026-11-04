@@ -81,10 +81,10 @@ func _initialize() -> void:
     assert(hud._clock_widget.size.y == 18,
         "The clock must reserve a second line for the next phase countdown")
     game_clock.time_of_day = 0.5
-    assert(hud._clock_widget.countdown_text() == "NIGHT 00:18",
+    assert(hud._clock_widget.countdown_text() == "MALAM 00:18",
         "The clock must display the exact time remaining until night")
     game_clock.time_of_day = 0.75
-    assert(hud._clock_widget.countdown_text() == "DAWN 00:27",
+    assert(hud._clock_widget.countdown_text() == "FAJAR 00:27",
         "The clock must display the exact time remaining until dawn")
     main.spawner.start_wave(1)
     hud._process(0.2)
