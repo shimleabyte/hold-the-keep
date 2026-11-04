@@ -130,10 +130,19 @@ func _run() -> void:
     var enemy = _spawn_test_enemy(main, archer.position + Vector2(112, 0), data_db)
     enemy.set_physics_process(false)
     var enemy_hp_before: int = enemy.hp
+    enemy.position = archer.position + Vector2(40, 0)
+    archer._atk_cd = 10.0
+    archer._scan_t = 0.0
+    archer._tick_fight(0.1)
+    require(archer.position.distance_to(enemy.position) > 40.0,
+        "An archer inside minimum range must retreat before attempting another shot")
+    enemy.position = archer.position + Vector2(112, 0)
     archer._atk_cd = 0.0
     archer._scan_t = 0.0
     archer._tick_fight(0.016)
     require(archer._pending_foe == null, "Archer attacks must not schedule melee hit windows")
+    require(is_equal_approx(archer._atk_cd, 1.15),
+        "Archer firing cadence must retain its 1.15-second base cooldown")
     await ticks(45)
     require(enemy.hp < enemy_hp_before, "An archer inside its 150-pixel combat range must damage enemies with an arrow projectile")
     enemy.queue_free()
