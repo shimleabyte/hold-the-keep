@@ -672,6 +672,10 @@ func _tick_working(delta: float) -> void:
         _hit_done = false
 
 
+func is_unavailable_for_healing() -> bool:
+    return state in [State.HIDDEN, State.FLEEING]
+
+
 func is_expeditioning() -> bool:
     return _expeditioning
 
