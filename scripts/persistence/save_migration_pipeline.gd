@@ -13,6 +13,7 @@ func build_restore_plan(snapshot: Dictionary, world: Node, target_version: int) 
         "villagers": [],
         "enemies": [],
         "restore_building_stockpiles": false,
+        "restore_equipment_state": false,
         "building_stockpiles": [],
         "player_combat_state": {},
         "frontier_campaign_state": {},
@@ -73,7 +74,7 @@ func _migrate_v8_campaign_state(snapshot: Dictionary, world: Node, plan: Diction
     var legacy_state: Dictionary = legacy_value.duplicate(true) if legacy_value is Dictionary else {}
     if String(legacy_state.get("region", "")).is_empty():
         var legacy_cell := Vector2i(int(legacy_state.get("cx", -1)), int(legacy_state.get("cy", -1)))
-        legacy_state["region"] = world.region_id(legacy_cell) if legacy_cell.x >= 0 and legacy_cell.y >= 0 else "HEARTHLAND"
+        legacy_state["region"] = String(world.call("region_id", legacy_cell)) if legacy_cell.x >= 0 and legacy_cell.y >= 0 else "HEARTHLAND"
     if not legacy_state.has("faction"):
         legacy_state["faction"] = "legacy_raiders"
     plan["legacy_stronghold"] = legacy_state
@@ -138,6 +139,7 @@ func _migrate_v13_supply_state(snapshot: Dictionary, plan: Dictionary) -> void:
 
 func _migrate_v17_equipment_and_events(snapshot: Dictionary, plan: Dictionary) -> void:
     var source_version := int(plan["source_version"])
+    plan["restore_equipment_state"] = source_version >= 17
     var saved_villagers: Variant = snapshot.get("villagers", [])
     var normalized_villagers: Array = plan["villagers"]
     if saved_villagers is Array:
