@@ -11,6 +11,7 @@ const IRON_SCRIPT := preload("res://scripts/entities/iron_ore.gd")
 const WILDLIFE_SCRIPT := preload("res://scripts/entities/wildlife_node.gd")
 const FRONTIER_DECORATION_SCRIPT := preload("res://scripts/entities/frontier_decoration.gd")
 const FRONTIER_REGION_GENERATOR := preload("res://scripts/world/generation/frontier_region_generator.gd")
+const FRONTIER_TERRAIN_GENERATOR := preload("res://scripts/world/generation/frontier_terrain_generator.gd")
 
 const TILES_TEX := preload("res://assets/sprites/tiles.svg")
 const TILES_FRONTIER_TEX := preload("res://assets/sprites/tiles_frontier.svg")
@@ -198,11 +199,6 @@ func _generate_classic() -> void:
 func _generate_frontier() -> void:
     _build_frontier_regions()
 
-    var water_noise := FastNoiseLite.new()
-    water_noise.seed = map_seed + 303
-    water_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
-    water_noise.frequency = 0.043
-
     var resource_patch_noise := FastNoiseLite.new()
     resource_patch_noise.seed = map_seed + 1907
     resource_patch_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
@@ -210,6 +206,13 @@ func _generate_frontier() -> void:
 
     var resource_rng := RandomNumberGenerator.new()
     resource_rng.seed = map_seed + 1001
+    var terrain_layout := FRONTIER_TERRAIN_GENERATOR.generate(
+        map_size, map_seed, safe_radius, _frontier_regions, resource_rng
+    )
+    if terrain_layout.size() != map_size * map_size:
+        push_error("WorldMap: Frontier terrain generation returned an incomplete layout")
+        return
+
     var center := Vector2(map_size, map_size) / 2.0
     var clearing_radius := maxf(safe_radius + 7.0, float(map_size) * 0.15)
 
@@ -217,24 +220,10 @@ func _generate_frontier() -> void:
         for x in map_size:
             var cell := Vector2i(x, y)
             var position := Vector2(x, y)
-            var edge := x == 0 or y == 0 or x == map_size - 1 or y == map_size - 1
             var home_clearing := position.distance_to(center) < clearing_radius
-            var water := edge or (not home_clearing and water_noise.get_noise_2d(x, y) > 0.58)
+            var tile := int(terrain_layout[y * map_size + x])
+            var water := tile == T_WATER
             var region := int(_frontier_regions[y * map_size + x])
-            var tile := T_WATER
-
-            if not water:
-                match region:
-                    REGION_GREENWOOD:
-                        tile = T_FOREST
-                    REGION_HIGHLANDS:
-                        tile = T_HIGHLAND
-                    REGION_FENLANDS:
-                        tile = T_MARSH
-                    REGION_ASHEN_MARCH:
-                        tile = T_ASHEN
-                    _:
-                        tile = T_GRASS_ALT if resource_rng.randf() < 0.22 else T_GRASS
 
             _layer.set_cell(cell, 0, Vector2i(tile, 0))
             if water or home_clearing:

@@ -2,6 +2,7 @@ extends SceneTree
 ## Frontier profile integration: deterministic regions, traversal, resources and Keep footprint.
 
 const FRONTIER_REGION_GENERATOR := preload("res://scripts/world/generation/frontier_region_generator.gd")
+const FRONTIER_TERRAIN_GENERATOR := preload("res://scripts/world/generation/frontier_terrain_generator.gd")
 
 const DIRS4: Array[Vector2i] = [
     Vector2i(1, 0), Vector2i(-1, 0),
@@ -105,6 +106,34 @@ func _initialize() -> void:
         and expedition_region_layout == FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed),
         "The same deterministic region stage must support the 192x192 Expedition profile")
 
+    var terrain_rng := RandomNumberGenerator.new()
+    terrain_rng.seed = world_config.world_seed + 1001
+    var terrain_layout := FRONTIER_TERRAIN_GENERATOR.generate(
+        128, world_config.world_seed, world_config.safe_radius, region_layout, terrain_rng
+    )
+    var repeated_terrain_rng := RandomNumberGenerator.new()
+    repeated_terrain_rng.seed = world_config.world_seed + 1001
+    var repeated_terrain_layout := FRONTIER_TERRAIN_GENERATOR.generate(
+        128, world_config.world_seed, world_config.safe_radius, region_layout, repeated_terrain_rng
+    )
+    assert(terrain_layout.size() == 128 * 128
+        and terrain_layout == repeated_terrain_layout,
+        "The Frontier terrain stage must produce deterministic row-major tile layouts")
+    for tile_id in terrain_layout:
+        assert(tile_id >= 0 and tile_id <= 6,
+            "The Frontier terrain stage must emit only registered terrain atlas ids")
+    assert(is_equal_approx(terrain_rng.randf(), repeated_terrain_rng.randf()),
+        "The terrain stage must advance its supplied RNG deterministically for legacy resource placement")
+    var expedition_terrain_rng := RandomNumberGenerator.new()
+    expedition_terrain_rng.seed = world_config.world_seed + 1001
+    var expedition_terrain_layout := FRONTIER_TERRAIN_GENERATOR.generate(
+        192, world_config.world_seed, world_config.safe_radius, expedition_region_layout, expedition_terrain_rng
+    )
+    assert(expedition_terrain_layout.size() == 192 * 192,
+        "The Frontier terrain stage must support the 192x192 Expedition profile")
+    assert(FRONTIER_TERRAIN_GENERATOR.generate(0, world_config.world_seed, world_config.safe_radius, PackedByteArray(), RandomNumberGenerator.new()).is_empty(),
+        "Invalid terrain-stage dimensions must return an empty layout")
+
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main
@@ -114,6 +143,13 @@ func _initialize() -> void:
     var world = main.world
     assert(world._frontier_regions == region_layout,
         "WorldMap must consume the isolated region generator without changing its output")
+    assert(world._layer.get_used_cells().size() == 128 * 128,
+        "Frontier terrain stage must assign every logical map cell")
+    for y in world_config.map_size:
+        for x in world_config.map_size:
+            var terrain_cell := Vector2i(x, y)
+            assert(world.tile_type_at(terrain_cell) == int(terrain_layout[y * world_config.map_size + x]),
+                "WorldMap must consume the isolated Frontier terrain layout at %s" % terrain_cell)
     var hud = get_first_node_in_group("hud")
     assert(hud != null, "The Frontier scene must create the HUD")
     hud._layout_viewport(Vector2(480, 270))
