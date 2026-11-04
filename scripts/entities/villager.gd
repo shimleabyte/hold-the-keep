@@ -10,6 +10,7 @@ const ArcherCombat := preload("res://scripts/entities/villager_archer_combat.gd"
 const ScoutBehavior := preload("res://scripts/entities/villager_scout_behavior.gd")
 const HealerBehavior := preload("res://scripts/entities/villager_healer_behavior.gd")
 const BlacksmithBehavior := preload("res://scripts/entities/villager_blacksmith_behavior.gd")
+const BuilderBehavior := preload("res://scripts/entities/villager_builder_behavior.gd")
 
 enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING, SCOUTING, SCOUT_RETURNING }
 
@@ -109,6 +110,7 @@ var _archer_combat := ArcherCombat.new()
 var _scout_behavior = ScoutBehavior.new()
 var _healer_behavior = HealerBehavior.new()
 var _blacksmith_behavior = BlacksmithBehavior.new()
+var _builder_behavior = BuilderBehavior.new()
 var _hurt_t := 0.0
 var _pending_foe = null
 var _pending_t := 0.0
@@ -130,6 +132,7 @@ func _ready() -> void:
     _scout_behavior.configure(self)
     _healer_behavior.configure(self)
     _blacksmith_behavior.configure(self)
+    _builder_behavior.configure(self)
     add_to_group("villagers")
     Events.tech_researched.connect(_on_tech)
     _decide_t = randf_range(0.0, 1.0)
@@ -594,24 +597,7 @@ func _tick_working(delta: float) -> void:
         _healer_behavior.tick(delta)
         return
     if job == "builder":
-        if target.has_method("is_construction_site") and target.is_construction_site():
-            anim.face(target.position - position)
-            return
-        if int(target.hp) <= 0 or int(target.hp) >= int(target.max_hp):
-            _release()
-            state = State.IDLE
-            return
-        anim.face(target.position - position)
-        _work_t += delta
-        if _work_t >= BUILDER_REPAIR_INTERVAL:
-            _work_t = 0.0
-            if not target.repair(BUILDER_REPAIR_AMOUNT):
-                _release()
-                state = State.IDLE
-                return
-            if int(target.hp) >= int(target.max_hp):
-                _release()
-                state = State.IDLE
+        _builder_behavior.tick(delta)
         return
     if job == "farmer":
         anim.face(target.position - position)
@@ -1177,6 +1163,19 @@ func blacksmith_behavior_release(recheck_delay: float) -> void:
     _release()
     state = State.IDLE
     _decide_t = recheck_delay
+
+
+func builder_behavior_advance_work(delta: float) -> bool:
+    _work_t += delta
+    if _work_t < BUILDER_REPAIR_INTERVAL:
+        return false
+    _work_t = 0.0
+    return true
+
+
+func builder_behavior_release() -> void:
+    _release()
+    state = State.IDLE
 
 
 func _release_heal_target() -> void:
