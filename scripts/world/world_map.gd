@@ -12,6 +12,7 @@ const WILDLIFE_SCRIPT := preload("res://scripts/entities/wildlife_node.gd")
 const FRONTIER_DECORATION_SCRIPT := preload("res://scripts/entities/frontier_decoration.gd")
 const FRONTIER_REGION_GENERATOR := preload("res://scripts/world/generation/frontier_region_generator.gd")
 const FRONTIER_TERRAIN_GENERATOR := preload("res://scripts/world/generation/frontier_terrain_generator.gd")
+const FRONTIER_RESOURCE_GENERATOR := preload("res://scripts/world/generation/frontier_resource_generator.gd")
 
 const TILES_TEX := preload("res://assets/sprites/tiles.svg")
 const TILES_FRONTIER_TEX := preload("res://assets/sprites/tiles_frontier.svg")
@@ -199,11 +200,6 @@ func _generate_classic() -> void:
 func _generate_frontier() -> void:
     _build_frontier_regions()
 
-    var resource_patch_noise := FastNoiseLite.new()
-    resource_patch_noise.seed = map_seed + 1907
-    resource_patch_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-    resource_patch_noise.frequency = 0.105
-
     var resource_rng := RandomNumberGenerator.new()
     resource_rng.seed = map_seed + 1001
     var terrain_layout := FRONTIER_TERRAIN_GENERATOR.generate(
@@ -213,29 +209,30 @@ func _generate_frontier() -> void:
         push_error("WorldMap: Frontier terrain generation returned an incomplete layout")
         return
 
-    var center := Vector2(map_size, map_size) / 2.0
-    var clearing_radius := maxf(safe_radius + 7.0, float(map_size) * 0.15)
+    var resource_layout := FRONTIER_RESOURCE_GENERATOR.generate(
+        map_size, map_seed, safe_radius, _frontier_regions, terrain_layout, resource_rng
+    )
+    var resource_by_cell: Dictionary = {}
+    for placement in resource_layout:
+        var placement_cell: Vector2i = placement["cell"]
+        resource_by_cell[placement_cell] = String(placement["kind"])
 
+    # Keep TileMap mutation and scene-node creation in WorldMap. Applying the
+    # returned row-major placements during this loop preserves node creation order.
     for y in map_size:
         for x in map_size:
             var cell := Vector2i(x, y)
-            var position := Vector2(x, y)
-            var home_clearing := position.distance_to(center) < clearing_radius
             var tile := int(terrain_layout[y * map_size + x])
-            var water := tile == T_WATER
-            var region := int(_frontier_regions[y * map_size + x])
-
             _layer.set_cell(cell, 0, Vector2i(tile, 0))
-            if water or home_clearing:
+            if not resource_by_cell.has(cell):
                 continue
 
-            var patch := clampf(0.5 + resource_patch_noise.get_noise_2d(x, y) * 0.42, 0.08, 0.95)
-            var tree_density := _frontier_tree_density(region) * (0.45 + patch)
-            var rock_density := _frontier_rock_density(region) * (0.45 + (1.0 - patch) * 0.9)
+            var kind := String(resource_by_cell[cell])
+            var region := int(_frontier_regions[y * map_size + x])
             var foot := Vector2(x * tile_size + tile_size / 2.0, y * tile_size + tile_size)
+            generated_resource_layout.append({"cell": cell, "kind": kind})
 
-            if resource_rng.randf() < tree_density:
-                generated_resource_layout.append({"cell": cell, "kind": "wood"})
+            if kind == "wood":
                 if generate_resource_nodes:
                     var tree := TREE_SCRIPT.new()
                     tree.regional_style = _frontier_tree_style(region)
@@ -244,8 +241,7 @@ func _generate_frontier() -> void:
                     occupied[cell] = tree
                 else:
                     occupied[cell] = true
-            elif resource_rng.randf() < rock_density:
-                generated_resource_layout.append({"cell": cell, "kind": "stone"})
+            elif kind == "stone":
                 if generate_resource_nodes:
                     var rock := ROCK_SCRIPT.new()
                     rock.regional_style = _frontier_rock_style(region)
@@ -378,21 +374,6 @@ func _build_frontier_regions() -> void:
     _frontier_regions = FRONTIER_REGION_GENERATOR.generate(map_size, map_seed)
 
 
-func _frontier_tree_density(region: int) -> float:
-    match region:
-        REGION_GREENWOOD:
-            return 0.082
-        REGION_FENLANDS:
-            return 0.045
-        REGION_HEARTHLAND:
-            return 0.034
-        REGION_HIGHLANDS:
-            return 0.016
-        REGION_ASHEN_MARCH:
-            return 0.009
-    return 0.025
-
-
 func _frontier_tree_style(region: int) -> String:
     match region:
         REGION_GREENWOOD:
@@ -411,21 +392,6 @@ func _frontier_rock_style(region: int) -> String:
         REGION_ASHEN_MARCH:
             return "ashen_march"
     return "hearthland"
-
-
-func _frontier_rock_density(region: int) -> float:
-    match region:
-        REGION_HIGHLANDS:
-            return 0.061
-        REGION_ASHEN_MARCH:
-            return 0.048
-        REGION_HEARTHLAND:
-            return 0.023
-        REGION_FENLANDS:
-            return 0.016
-        REGION_GREENWOOD:
-            return 0.009
-    return 0.02
 
 
 func _classic_region_id(cell: Vector2i) -> String:
