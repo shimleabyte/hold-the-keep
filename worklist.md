@@ -1,6 +1,6 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `adf23c9ea0438fba4367d6569069cdb19c51e1db` (2026-11-04)  
+**Audit baseline:** `main` at `5e09248a447f223a44be54dbe6b03ce0147948b0` (2026-11-04)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
@@ -9,9 +9,9 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ## Live execution status — 2026-11-04 (post specialist, events and logistics integration)
 
-**Current main:** `adf23c9ea0438fba4367d6569069cdb19c51e1db` (PR #78 Barracks defensive garrison merged; save schema remains v17).  
+**Current main:** `5e09248a447f223a44be54dbe6b03ce0147948b0` (PR #81 SaveMigrationPipeline merged after PR #78; save schema remains v17).  
 **Current save schema:** v17.  
-**Open pull requests:** #79 DEV-H world generation and #81 DEV-E save migration. PR #80 is the superseded pre-Barracks migration branch and is being closed.
+**Open pull requests:** #79 DEV-H world generation remains open. PR #80 is closed as superseded; PR #81 DEV-E save migration is merged.
 
 | Worklist item | Live disposition |
 |---|---|
@@ -25,14 +25,15 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-I enemy controller decomposition | Patrol movement extraction integrated through PR #74 as `EnemyPatrolMovement`; do not duplicate this controller. |
 | DEV-J decision-based events | Integrated through PR #72: choice UI, affordability, cancellation, delayed consequences and optional v17 event-state persistence. JSON numeric round-trip handling is covered. |
 | DEV-K input command registry | Integrated through PR #76: 39 rebindable keyboard commands, gamepad defaults, duplicate detection and restore defaults. |
-| DEV-E save and migration architecture | Phase 1 validation extracted through PR #77; Phase 2 restore pipeline is in progress on PR #81, rebased on the current Barracks-aware main. No v17 schema bump. |
+| DEV-E save and migration architecture | Phase 1 validation extracted through PR #77; Phase 2 in-memory restore pipeline merged through PR #81. Schema remains v17; canonical on-disk conversion and file I/O/recovery decomposition remain pending. |
 | DEV-L Barracks garrison vertical slice | Integrated through PR #78 at `adf23c9`; 4-slot Military Drill-unlocked Barracks, soldier assignments, extended garrison save fields and regression coverage are on main. Godot 4.7 CI and Campaign Simulation QA passed. |
 
 ### Verified merge and CI results
 
 - PR #76 input registry merged; workflow #41742044153 passed 30/30 Godot 4.7 jobs, with the campaign simulation workflow also passing.
 - PR #77 SaveValidator extraction merged at `6545e2eddd6d7ead907e27be6e58fef9b58b88ab`; workflow #41742799385 passed; campaign simulation workflow #41742799266 passed.
-- PR #78 Barracks defensive garrison merged at `adf23c9ea0438fba4367d6569069cdb19c51e1db`; latest main Godot 4.7 workflow #41755090508 passed 51/51 jobs; Campaign Simulation QA #41755090308 passed 1/1.
+- PR #78 Barracks defensive garrison merged at `adf23c9ea0438fba4367d6569069cdb19c51e1db`; main Godot 4.7 workflow #41755090508 passed 51/51 jobs; Campaign Simulation QA #41755090308 passed 1/1.
+- PR #81 SaveMigrationPipeline merged at `5e09248a447f223a44be54dbe6b03ce0147948b0`; PR Godot 4.7 workflow #41755640170 passed 52/52 jobs; Campaign Simulation QA #41755639985 passed 1/1.
 
 - PR #72 merged as `064b0f5e984b301f2ac1aaef2c31a39b24583204`. Its updated Godot 4.7 workflow passed 50/50 jobs; the Classic/Frontier campaign simulation workflow passed 1/1.
 - PR #74 merged as `dde5370612ef8550644debdcf31bd360b58da6ed`. Its Godot 4.7 workflow passed 49/49 jobs.
@@ -41,7 +42,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ### Next ownership boundaries
 
-- DEV-E Phase 1 is integrated through PR #77 (`SaveValidator` extraction). Phase 2 on PR #81 moves existing restore-time version gates into an in-memory sequential adapter; preserve current Barracks `guard_garrison` data, v17 events/supply state and Classic v1–v17 / Frontier v7–v17 compatibility. This does not rewrite historical disk files to v17. Save-file I/O/recovery decomposition remains pending.
+- DEV-E Phase 1 is integrated through PR #77 (`SaveValidator` extraction); Phase 2 is integrated through PR #81 (`SaveMigrationPipeline`). Preserve Barracks `guard_garrison`, v17 events/supply state and Classic v1–v17 / Frontier v7–v17 compatibility. This adapter builds a scene-restore plan in memory; it does not rewrite historical disk files into canonical v17. Save-file I/O/recovery decomposition remains pending.
 - DEV-G HUD modularization is now unblocked. The decision panel from #72 is part of current main; extract it through its established interface rather than rebuilding or moving its gameplay rules into the HUD.
 - DEV-D may continue only with separately scoped shipment, graph or pressure slices. Do not re-open cost-source behavior already extracted by #75; keep `SupplyNetwork` method signatures stable.
 - DEV-F villager roles and DEV-H world generation remain independent candidates after checking their current file ownership and interfaces.
@@ -340,7 +341,7 @@ Suggested modules:
 
 ### DEV-E — Save and migration architecture
 
-**Status:** Phase 1 complete through PR #77: snapshot validation is extracted to `scripts/persistence/save_validator.gd`; `SaveSystem._valid_save()` remains the compatibility façade. Phase 2 restore migration is isolated in `scripts/persistence/save_migration_pipeline.gd` on PR #81. This is an in-memory scene-restore adapter, not an on-disk rewrite of historical saves; save-file I/O, recovery and canonical v17 conversion remain later slices.
+**Status:** Phase 1 complete through PR #77: snapshot validation is extracted to `scripts/persistence/save_validator.gd`; `SaveSystem._valid_save()` remains the compatibility façade. Phase 2 complete through PR #81: `scripts/persistence/save_migration_pipeline.gd` builds an in-memory scene-restore plan and owns the restore-time version gates. This is not an on-disk rewrite of historical saves; save-file I/O/recovery decomposition and canonical v17 conversion remain later slices.
 
 **Priority:** Critical  
 **Primary owner files:**
