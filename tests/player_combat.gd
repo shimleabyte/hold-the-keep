@@ -46,13 +46,53 @@ func _initialize() -> void:
     main.world.entities.add_child(rear_enemy)
     rear_enemy.set_physics_process(false)
 
-    player.facing = Vector2.RIGHT
+    player.facing = Vector2.LEFT
     var forward_hp: int = forward_enemy.hp
     var rear_hp: int = rear_enemy.hp
     assert(player.activate_ability("cleave"), "Cleave should activate after unlocking")
+    assert(player._cleave_direction == Vector2.RIGHT,
+        "Cleave must lock the nearest target direction before its wind-up")
+    assert(player.combat_feedback.ability_direction == Vector2.RIGHT,
+        "Cleave's contextual cue must preserve the same locked direction")
+    player.facing = Vector2.LEFT
     await ticks(20)
-    assert(forward_enemy.hp < forward_hp, "Cleave must damage enemies in its forward arc")
+    assert(forward_enemy.hp < forward_hp,
+        "Cleave must hit inside its locked forward arc after the player turns")
     assert(rear_enemy.hp == rear_hp, "Cleave must not damage enemies behind the player")
+
+    var normal_front = enemy_script.new()
+    normal_front.setup(sturdy_bandit, main.world, main.flow, player)
+    normal_front.global_position = player.global_position + Vector2(20, 0)
+    main.world.entities.add_child(normal_front)
+    normal_front.set_physics_process(false)
+    var normal_rear = enemy_script.new()
+    normal_rear.setup(sturdy_bandit, main.world, main.flow, player)
+    normal_rear.global_position = player.global_position + Vector2(-20, 0)
+    main.world.entities.add_child(normal_rear)
+    normal_rear.set_physics_process(false)
+    var normal_flank = enemy_script.new()
+    normal_flank.setup(sturdy_bandit, main.world, main.flow, player)
+    normal_flank.global_position = player.global_position + Vector2(0, -20)
+    main.world.entities.add_child(normal_flank)
+    normal_flank.set_physics_process(false)
+
+    player.facing = Vector2.LEFT
+    var normal_front_hp: int = normal_front.hp
+    var normal_rear_hp: int = normal_rear.hp
+    var normal_flank_hp: int = normal_flank.hp
+    player._attack()
+    assert(player._attack_direction == Vector2.RIGHT,
+        "Normal melee must lock to the selected target before its wind-up")
+    assert(player.combat_feedback.windup_direction == Vector2.RIGHT,
+        "Normal melee anticipation must use the same locked direction as its hit resolver")
+    player.facing = Vector2.LEFT
+    await ticks(12)
+    assert(normal_front.hp < normal_front_hp,
+        "A normal melee swing must damage an enemy inside its forward attack sector")
+    assert(normal_rear.hp == normal_rear_hp,
+        "A normal melee swing must not damage an enemy directly behind the player")
+    assert(normal_flank.hp == normal_flank_hp,
+        "A normal melee swing must not damage an enemy outside its visible forward sector")
 
     player.gain_experience(player.combat_status()["next_xp"])
     assert(player.level == 3 and player.combat_status()["rally_unlocked"],
@@ -113,5 +153,5 @@ func _initialize() -> void:
     assert(save_system._valid_save(snapshot),
         "Combat-enabled save payload must pass validation")
 
-    print("PASS: XP, level unlocks, dash, directional cleave, rally buff, ranged projectile, brute armor, combat save")
+    print("PASS: XP, level unlocks, dash, locked directional melee/Cleave, rally buff, ranged projectile, brute armor, combat save")
     quit()
