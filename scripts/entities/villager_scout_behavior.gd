@@ -24,7 +24,7 @@ func find_work() -> void:
     var best_cell := Vector2i(-1, -1)
     var best_path := PackedVector2Array()
     var best_score: float = -INF
-    var best_direction := _villager._scout_cursor
+    var best_direction: int = int(_villager._scout_cursor)
     var work_radius: float = float(_villager.workplace.data.get("work_radius", _villager.DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
 
     for radius in _villager.SCOUT_SEARCH_RADII:
