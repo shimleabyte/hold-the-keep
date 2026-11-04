@@ -3,6 +3,7 @@ extends SceneTree
 var world_config
 var game_clock
 var data_db
+var _night_warning_count := 0
 
 ## Deterministic campaign difficulty matrix: schedule, wave growth and act rosters.
 
@@ -10,6 +11,30 @@ var data_db
 func ticks(count: int) -> void:
     for i in range(count):
         await physics_frame
+
+
+func _on_build_feedback(message: String) -> void:
+    if message.begins_with("Senja mendekat."):
+        _night_warning_count += 1
+
+
+func verify_night_warning() -> void:
+    game_clock.set_process(false)
+    game_clock.reset()
+    game_clock.time_of_day = GameClock.NIGHT_START - GameClock.NIGHT_WARNING_LEAD - 0.001
+    game_clock._process(0.5)
+    assert(_night_warning_count == 1,
+        "The player must receive a preparation warning before the night phase")
+    game_clock._process(0.5)
+    assert(_night_warning_count == 1,
+        "The same night warning must not repeat every frame")
+
+    game_clock.time_of_day = 0.999
+    game_clock._process(0.5)
+    game_clock.time_of_day = GameClock.NIGHT_START - GameClock.NIGHT_WARNING_LEAD - 0.001
+    game_clock._process(0.5)
+    assert(_night_warning_count == 2,
+        "The warning must become available again on the next day")
 
 
 func pool_has(pool: Array, enemy_id: String) -> bool:
@@ -80,13 +105,27 @@ func run_profile(profile: String, expected: Dictionary) -> void:
     main.spawner.start_wave(final_day)
     assert(main.spawner._boss_pending,
         "%s must queue the final boss on its configured final day" % profile)
+    assert(main.spawner._boss_t < 0.0,
+        "%s final boss must wait behind the regular wave instead of appearing immediately" % profile)
+    var final_wave_count: int = main.spawner.wave_size(final_day)
+    var reveal_remaining := floori(float(final_wave_count) * 0.25)
+    main.spawner._to_spawn = reveal_remaining + 1
+    main.spawner._process(0.1)
+    assert(main.spawner._boss_t < 0.0,
+        "%s boss warning must not start before at least 75%% of regular enemies are deployed" % profile)
+    main.spawner._to_spawn = reveal_remaining
+    main.spawner._process(0.1)
+    assert(is_equal_approx(main.spawner._boss_t, 4.0),
+        "%s boss must announce itself with a four-second warning after the wave reaches its reveal threshold" % profile)
 
-    print("PASS: %s schedule and wave matrix (final day %d)" % [profile, final_day])
+    print("PASS: %s schedule, wave and final-boss pacing matrix (final day %d)" % [profile, final_day])
     main.queue_free()
     await ticks(3)
 
 
 func _run() -> void:
+    var events = root.get_node("Events")
+    events.build_feedback.connect(_on_build_feedback)
     await run_profile("classic", {
         "final_day": 15,
         "days": {
@@ -106,6 +145,9 @@ func _run() -> void:
             20: {"stage":"act_4", "wave":65}
         }
     })
+    verify_night_warning()
+    events.build_feedback.disconnect(_on_build_feedback)
+    print("PASS: once-per-night preparation warning and next-day reset")
     quit(0)
 
 
