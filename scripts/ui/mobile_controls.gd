@@ -111,7 +111,6 @@ func _refresh_layout() -> void:
 
 
 func _apply_layout() -> void:
-    size = _viewport_size
     var safe := Rect2(Vector2.ZERO, _viewport_size)
     if OS.get_name() == "Android":
         safe = safe_bounds_for_viewport(
