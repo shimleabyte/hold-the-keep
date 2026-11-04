@@ -600,7 +600,7 @@ func _trim_shipment_history() -> void:
 
 
 func export_state() -> Dictionary:
-    var orders := _shipment_ledger.orders.duplicate(true)
+    var orders: Array[Dictionary] = _shipment_ledger.snapshot()
     for index in orders.size():
         var order: Dictionary = orders[index]
         var carrier = _carriers.get(int(order.get("id", -1)), null)
