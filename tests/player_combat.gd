@@ -52,6 +52,8 @@ func _initialize() -> void:
     assert(player.activate_ability("cleave"), "Cleave should activate after unlocking")
     assert(player._cleave_direction == Vector2.RIGHT,
         "Cleave must lock the nearest target direction before its wind-up")
+    assert(player.combat_feedback.ability_direction == Vector2.RIGHT,
+        "Cleave's contextual cue must preserve the same locked direction")
     player.facing = Vector2.LEFT
     await ticks(20)
     assert(forward_enemy.hp < forward_hp,
@@ -81,6 +83,8 @@ func _initialize() -> void:
     player._attack()
     assert(player._attack_direction == Vector2.RIGHT,
         "Normal melee must lock to the selected target before its wind-up")
+    assert(player.combat_feedback.windup_direction == Vector2.RIGHT,
+        "Normal melee anticipation must use the same locked direction as its hit resolver")
     player.facing = Vector2.LEFT
     await ticks(12)
     assert(normal_front.hp < normal_front_hp,
