@@ -296,7 +296,7 @@ func migrate_snapshot_to_current(snapshot: Dictionary, main: Node, target_versio
     migrated["job_priority"] = priority
 
     if source_version < 11:
-        migrated["frontier_campaign"] = _default_frontier_campaign(profile)
+        migrated["frontier_campaign"] = _default_frontier_campaign(profile, data_db)
     elif not migrated.has("frontier_campaign"):
         return null
     if source_version < 13:
@@ -318,7 +318,7 @@ func migrate_snapshot_to_current(snapshot: Dictionary, main: Node, target_versio
     return migrated
 
 
-func _default_frontier_campaign(profile: String) -> Dictionary:
+func _default_frontier_campaign(profile: String, data_db: Node) -> Dictionary:
     if profile == "classic":
         return {
             "profile": "classic",
@@ -328,7 +328,6 @@ func _default_frontier_campaign(profile: String) -> Dictionary:
             "camps": {"records": []}
         }
     var records: Array[Dictionary] = []
-    var data_db: Node = get_tree().root.get_node("DataDB")
     for definition in data_db.frontier_objectives:
         records.append({
             "id": String(definition.get("id", "")),
