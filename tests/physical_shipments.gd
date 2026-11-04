@@ -57,7 +57,7 @@ func _initialize() -> void:
     var queued_order := order_for(main.supply.get_shipment_orders(), shipment_id)
     require(String(queued_order.get("status", "")) == "in_transit",
         "An available route must dispatch a physical courier immediately")
-    var exposed_orders := main.supply.get_shipment_orders()
+    var exposed_orders: Array[Dictionary] = main.supply.get_shipment_orders()
     exposed_orders[0]["cargo"] = 999
     require(int(order_for(main.supply.get_shipment_orders(), shipment_id)["cargo"]) == 10,
         "Shipment history snapshots must not allow callers to mutate reserved ledger cargo")
