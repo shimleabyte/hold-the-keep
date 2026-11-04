@@ -11,7 +11,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 **Current main:** `df80c3deae9a526d71c29faae1179f1a8e2eb03d` — includes the integrated Priority 1 architecture slices and PR #125 P0 enemy-counterplay/final-wave pacing fixes. Save schema remains v17.  
 **Current save schema:** v17.  
-**Open implementation pull requests:** #127 HUD countdowns; #128 Android ARMv7/touch controls; #129 distinct Builder/Archer/Brute sprites; #130 rendered Frontier same-seed QA.
+**Open implementation pull requests:** #127 HUD countdowns; #128 Android ARMv7/touch controls; #129 distinct Builder/Archer/Brute sprites; #130 rendered Frontier same-seed QA; #131 this live-worklist refresh.
 
 | Workstream | Current disposition |
 |---|---|
