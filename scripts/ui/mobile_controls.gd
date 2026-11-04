@@ -38,16 +38,15 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-    if not visible:
-        return
+    var should_show := force_enabled or _device_has_touchscreen()
     var pause_menu = get_tree().get_first_node_in_group("pause_menu")
     if pause_menu != null and pause_menu.has_method("is_open") and pause_menu.is_open():
+        should_show = false
+    if visible and not should_show:
         _release_all_touches()
-        visible = false
-        return
-    if not force_enabled and not _device_has_touchscreen():
-        _release_all_touches()
-        visible = false
+    if visible != should_show:
+        visible = should_show
+        queue_redraw()
 
 
 func _input(event: InputEvent) -> void:
@@ -290,8 +289,8 @@ func _draw() -> void:
 
 func _draw_joystick() -> void:
     draw_circle(_joystick_center, JOYSTICK_RADIUS, Color(0.035, 0.045, 0.045, 0.54))
-    draw_arc(_joystick_center, JOYSTICK_RADIUS - 1.0, 0.0, TAU, 40, Color("#b08a58", 0.66), 1.5)
-    draw_arc(_joystick_center, JOYSTICK_RADIUS - 11.0, 0.0, TAU, 40, Color("#8d795b", 0.22), 1.0)
+    draw_arc(_joystick_center, JOYSTICK_RADIUS - 1.0, 0.0, TAU, 40, Color("#b08a58").with_alpha(0.66), 1.5)
+    draw_arc(_joystick_center, JOYSTICK_RADIUS - 11.0, 0.0, TAU, 40, Color("#8d795b").with_alpha(0.22), 1.0)
     var knob_position := _joystick_center + _stick_value * JOYSTICK_MAX_TRAVEL
     draw_circle(knob_position, JOYSTICK_KNOB_RADIUS + 2.0, Color(0.01, 0.015, 0.015, 0.72))
     draw_circle(knob_position, JOYSTICK_KNOB_RADIUS, Color("#89704d", 0.93))
