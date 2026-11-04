@@ -32,7 +32,7 @@ class ClockWidget extends Control:
         var night: bool = GameClock.darkness() > 0.5
         draw_texture(moon if night else sun, Vector2(0, 0))
         var final_day := int(DataDB.waves.get("final_day", 0))
-        draw_string(font, Vector2(13, 9), "HARI %d/%d" % [GameClock.day, final_day],
+        draw_string(font, Vector2(13, 9), "%d/%d" % [GameClock.day, final_day],
             HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE)
         var tx := 76.0
         var tw := 64.0
@@ -91,7 +91,7 @@ class JobRow extends Control:
         if assigned < quota:
             col = Color("#ffb347")  # kuota belum terisi
         draw_string(font, Vector2(27, 9), "%d/%d" % [assigned, quota], HORIZONTAL_ALIGNMENT_CENTER, 19, 7, col)
-        draw_string(font, Vector2(48, 9), "P%d" % priority_rank, HORIZONTAL_ALIGNMENT_CENTER, 9, 6, Color("#d7ba7a"))
+        draw_string(font, Vector2(48, 9), str(priority_rank), HORIZONTAL_ALIGNMENT_CENTER, 9, 6, Color("#d7ba7a"))
 
 
 
