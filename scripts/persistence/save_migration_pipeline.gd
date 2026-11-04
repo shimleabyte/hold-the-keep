@@ -154,9 +154,6 @@ func _migrate_v17_equipment_and_events(snapshot: Dictionary, plan: Dictionary) -
     plan["events_state"] = snapshot.get("events", {})
 
 
-const CAMPAIGN_SCRIPT := preload("res://scripts/systems/campaign.gd")
-
-
 ## Return a complete current-schema snapshot without changing the source dictionary.
 ## A null result means the old snapshot is valid but cannot be upgraded losslessly.
 func migrate_snapshot_to_current(snapshot: Dictionary, main: Node, target_version: int) -> Variant:
