@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const HUD_WIDGETS := preload("res://scripts/ui/hud_widgets.gd")
+const CONSTRUCTION_QUEUE_PANEL_SCRIPT := preload("res://scripts/ui/construction_queue_panel.gd")
 ## HUD: panel atas (sumber daya, jam, musuh, penduduk), vitals, kuota job (bisa diklik),
 ## bar boss, bar bangunan (bisa diklik), bantuan (H), dan layar game over / menang.
 
@@ -96,6 +97,7 @@ var _queue_backdrop: ColorRect
 var _queue_panel: Panel
 var _queue_count_label: Label
 var _queue_list: VBoxContainer
+var _queue_panel_component = CONSTRUCTION_QUEUE_PANEL_SCRIPT.new()
 var _blockers: Array[Control] = []
 
 var _wood: Label
@@ -156,6 +158,7 @@ var _scan_t := 0.0
 
 
 func _ready() -> void:
+    _queue_panel_component.configure(self)
     process_mode = Node.PROCESS_MODE_ALWAYS  # supaya tombol R/H jalan saat tree di-pause
     add_to_group("hud")
     _font = PIXEL_FONT.get_font()
@@ -1076,125 +1079,35 @@ func _toggle_outposts() -> void:
 
 
 func _build_construction_queue_panel() -> void:
-    _queue_backdrop = ColorRect.new()
-    _queue_backdrop.color = Color(0.015, 0.02, 0.028, 0.86)
-    _queue_backdrop.size = _viewport_size
-    _queue_backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
-    _queue_backdrop.gui_input.connect(_on_queue_backdrop_input)
-    _queue_backdrop.visible = false
-    add_child(_queue_backdrop)
-    _blockers.append(_queue_backdrop)
-
-    _queue_panel = _panel(Vector2.ZERO, Vector2(356, 220))
-    _queue_panel.visible = false
-    var title := _label(_queue_panel, "ANTREAN KONSTRUKSI", Vector2(10, 7), GOLD)
-    title.add_theme_font_size_override("font_size", 9)
-    _queue_count_label = _label(_queue_panel, "0 PROYEK", Vector2(10, 22), Color("#c9b99d"))
-    _queue_count_label.add_theme_font_size_override("font_size", 6)
-
-    var close := HUD_WIDGETS.HudChip.new()
-    close.label = "X"
-    close.font = _font
-    close.position = Vector2(330, 4)
-    close.size = Vector2(19, 15)
-    close.pressed.connect(_toggle_construction_queue)
-    _queue_panel.add_child(close)
-
-    var scroll := ScrollContainer.new()
-    scroll.position = Vector2(8, 36)
-    scroll.size = Vector2(340, 176)
-    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    scroll.mouse_filter = Control.MOUSE_FILTER_STOP
-    _queue_panel.add_child(scroll)
-
-    _queue_list = VBoxContainer.new()
-    _queue_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _queue_list.add_theme_constant_override("separation", 3)
-    scroll.add_child(_queue_list)
+    _queue_panel_component.build()
 
 
 func _on_queue_backdrop_input(event: InputEvent) -> void:
-    if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-        _close_construction_queue()
+    _queue_panel_component.on_backdrop_input(event)
 
 
 func _toggle_construction_queue() -> void:
-    var opening: bool = not _queue_panel.visible
-    if opening:
-        _map_panel.visible = false
-        _map_backdrop.visible = false
-        _map_button.active = false
-        _map_button.queue_redraw()
-        _jobs_panel.visible = false
-        _jobs_button.active = false
-        _jobs_button.queue_redraw()
-        _outpost_panel.visible = false
-        _outpost_backdrop.visible = false
-        _outpost_button.active = false
-        _outpost_button.queue_redraw()
-        _help.visible = false
-        _refresh_construction_queue()
-    _queue_panel.visible = opening
-    _queue_backdrop.visible = opening
-    _queue_button.active = opening
-    _queue_button.queue_redraw()
+    _queue_panel_component.toggle()
 
 
 func _close_construction_queue() -> void:
-    _queue_panel.visible = false
-    _queue_backdrop.visible = false
-    _queue_button.active = false
-    _queue_button.queue_redraw()
+    _queue_panel_component.close()
 
 
 func _on_construction_queue_changed() -> void:
-    if _queue_panel.visible:
-        _refresh_construction_queue()
+    _queue_panel_component.on_changed()
 
 
 func _refresh_construction_queue() -> void:
-    if _queue_list == null:
-        return
-    for child in _queue_list.get_children():
-        child.queue_free()
-    var main_node = get_tree().get_first_node_in_group("main")
-    if main_node == null or main_node.build == null:
-        _queue_count_label.text = "GAME BELUM SIAP"
-        return
-    var sites: Array = main_node.build.construction_queue()
-    _queue_count_label.text = "%d PROYEK AKTIF" % sites.size()
-    if sites.is_empty():
-        var empty := _label(_queue_list, "BELUM ADA BLUEPRINT. PILIH BANGUNAN DAN TEMPATKAN DI PETA.", Vector2.ZERO, Color("#c9b99d"))
-        empty.add_theme_font_size_override("font_size", 7)
-        empty.custom_minimum_size = Vector2(320, 28)
-        return
-    for index in sites.size():
-        var site = sites[index]
-        if not is_instance_valid(site):
-            continue
-        var row := HUD_WIDGETS.ConstructionQueueRow.new()
-        row.site = site
-        row.font = _font
-        row.order_index = index
-        row.can_move_up = index > 0
-        row.can_move_down = index < sites.size() - 1
-        row.custom_minimum_size = Vector2(328, 32)
-        row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-        row.move_requested.connect(_on_queue_move_requested)
-        row.cancel_requested.connect(_on_queue_cancel_requested)
-        _queue_list.add_child(row)
+    _queue_panel_component.refresh()
 
 
 func _on_queue_move_requested(site, direction: int) -> void:
-    var main_node = get_tree().get_first_node_in_group("main")
-    if main_node != null:
-        main_node.build.move_construction_site(site, direction)
+    _queue_panel_component.move_requested(site, direction)
 
 
 func _on_queue_cancel_requested(site) -> void:
-    var main_node = get_tree().get_first_node_in_group("main")
-    if main_node != null:
-        main_node.build.cancel_site(site)
+    _queue_panel_component.cancel_requested(site)
 
 
 func _build_help() -> void:
