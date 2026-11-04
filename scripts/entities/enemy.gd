@@ -109,6 +109,7 @@ var _stagger_t := 0.0
 var _pending = null
 var _pending_t := 0.0
 var _pending_is_projectile := false
+var _pending_direction := Vector2.DOWN
 var _pounce_windup_t := 0.0
 var _pounce_t := 0.0
 var _pounce_dir := Vector2.ZERO
