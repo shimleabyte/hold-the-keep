@@ -13,7 +13,6 @@ const COST_TRANSACTIONS_SCRIPT := preload("res://scripts/systems/supply_cost_tra
 const SHIPMENT_LEDGER_SCRIPT := preload("res://scripts/systems/supply_shipment_ledger.gd")
 const ROAD_GRAPH_SCRIPT := preload("res://scripts/systems/supply_road_graph.gd")
 const SUPPLY_PRESSURE_SCRIPT := preload("res://scripts/systems/supply_pressure_controller.gd")
-const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
 const PRESSURE_WARNING_SECONDS := 30.0
 const PRESSURE_RAID_SECONDS := 60.0
 const PRESSURE_REPEAT_SECONDS := 150.0
