@@ -31,7 +31,28 @@ func _run() -> void:
         quit(1)
         return
 
-    var legacy_v4 := snapshot.duplicate(true)
+    # A compact, valid snapshot keeps per-version validator checks bounded.
+    # Full entity/resource round-trips remain covered by their own integration suites.
+    var migration_baseline: Dictionary = snapshot.duplicate(true)
+    var saved_keep: Dictionary = {}
+    for building_value in migration_baseline.get("buildings", []):
+        if String(building_value.get("id", "")) == "keep":
+            saved_keep = building_value.duplicate(true)
+            break
+    _require(not saved_keep.is_empty(), "The canonical migration fixture must retain its Keep")
+    migration_baseline["buildings"] = [saved_keep] if not saved_keep.is_empty() else []
+    var baseline_villagers: Array = migration_baseline.get("villagers", [])
+    migration_baseline["villagers"] = [baseline_villagers[0].duplicate(true)] if not baseline_villagers.is_empty() else []
+    migration_baseline["enemies"] = []
+    migration_baseline["resources"] = []
+    migration_baseline["construction_sites"] = []
+    migration_baseline["fog"] = {"cells": []}
+    if pipeline == null:
+        push_error("SaveMigrationPipeline failed to instantiate")
+        quit(1)
+        return
+
+    var legacy_v4: Dictionary = migration_baseline.duplicate(true)
     legacy_v4["version"] = 4
     legacy_v4.erase("world")
     legacy_v4.erase("campaign")
@@ -96,7 +117,7 @@ func _run() -> void:
     _require(v6_plan["player_combat_state"] == {"level": 3, "xp": 17},
         "The v6 migration boundary must preserve player combat progression")
 
-    var v8 := snapshot.duplicate(true)
+    var v8: Dictionary = migration_baseline.duplicate(true)
     v8["version"] = 8
     v8.erase("frontier_campaign")
     v8.erase("supply")
@@ -104,7 +125,7 @@ func _run() -> void:
     _require(String(v8_plan["campaign_mode"]) == "campaign" and v8_plan["campaign_state"] == v8["campaign"],
         "The v8 migration boundary must select the campaign snapshot path")
 
-    var v9 := snapshot.duplicate(true)
+    var v9: Dictionary = migration_baseline.duplicate(true)
     v9["version"] = 9
     v9["villagers"][0]["job"] = "woodcutter"
     v9["villagers"][0]["occupation"] = "builder"
@@ -113,35 +134,35 @@ func _run() -> void:
     _require(String(v9_plan["villagers"][0]["job"]) == "builder",
         "The v9 migration boundary must restore occupation-based villager roles")
 
-    var v10 := snapshot.duplicate(true)
+    var v10: Dictionary = migration_baseline.duplicate(true)
     v10["version"] = 10
     v10["enemies"] = [{"id": "raider", "faction": "wolves"}]
     var v10_plan: Dictionary = pipeline.build_restore_plan(v10, main.world, save_system.VERSION)
     _require(String(v10_plan["enemies"][0]["faction"]) == "wolves",
         "The v10 migration boundary must preserve saved enemy faction identity")
 
-    var v11 := snapshot.duplicate(true)
+    var v11: Dictionary = migration_baseline.duplicate(true)
     v11["version"] = 11
     v11.erase("supply")
     var v11_plan: Dictionary = pipeline.build_restore_plan(v11, main.world, save_system.VERSION)
     _require(v11_plan["frontier_campaign_state"] == v11["frontier_campaign"],
         "The v11 migration boundary must preserve Frontier objective state")
 
-    var v12 := snapshot.duplicate(true)
+    var v12: Dictionary = migration_baseline.duplicate(true)
     v12["version"] = 12
     v12["buildings"][0]["stockpile"] = {"wood": 4}
     var v12_plan: Dictionary = pipeline.build_restore_plan(v12, main.world, save_system.VERSION)
     _require(bool(v12_plan["restore_building_stockpiles"]) and v12_plan["building_stockpiles"][0] == {"wood": 4},
         "The v12 migration boundary must preserve saved building stockpiles")
 
-    var v13 := snapshot.duplicate(true)
+    var v13: Dictionary = migration_baseline.duplicate(true)
     v13["version"] = 13
     v13["supply"] = {"next_id": 3, "orders": []}
     var v13_plan: Dictionary = pipeline.build_restore_plan(v13, main.world, save_system.VERSION)
     _require(v13_plan["supply_state"] == v13["supply"],
         "The v13 migration boundary must preserve logistics state")
 
-    var current := snapshot.duplicate(true)
+    var current: Dictionary = migration_baseline.duplicate(true)
     current["villagers"][0]["job"] = "soldier"
     current["villagers"][0]["occupation"] = ""
     current["villagers"][0]["military_specialization"] = "soldier"
@@ -167,7 +188,7 @@ func _run() -> void:
     # the restore adapter and the canonical v17 conversion path.
     var classic_v1_for_storage: Dictionary = {}
     for source_version in range(1, 18):
-        var classic_fixture: Dictionary = snapshot.duplicate(true)
+        var classic_fixture: Dictionary = migration_baseline.duplicate(true)
         classic_fixture["version"] = source_version
         if source_version < 5:
             for villager in classic_fixture["villagers"]:
@@ -277,7 +298,7 @@ func _run() -> void:
 
     if load_requested:
         await _ticks(8)
-        var restored_main: Node = root.get_first_node_in_group("main")
+        var restored_main: Node = current_scene
         _require(restored_main != null and restored_main.campaign != null and restored_main.campaign.objectives_in_order().size() == 1,
             "The canonical v17 replacement must restore the original legacy stronghold campaign")
         if restored_main != null:
@@ -288,7 +309,7 @@ func _run() -> void:
     # and convert a validated Classic snapshot into a structurally valid
     # Frontier snapshot instead of generating another 128x128 world here.
     main.world.map_size = 128
-    var frontier_snapshot: Dictionary = snapshot.duplicate(true)
+    var frontier_snapshot: Dictionary = migration_baseline.duplicate(true)
     frontier_snapshot["world"]["profile"] = "frontier"
     frontier_snapshot["world"]["map_size"] = 128
     frontier_snapshot["world"]["tile_size"] = 16
