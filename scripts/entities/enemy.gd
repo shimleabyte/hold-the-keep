@@ -446,12 +446,12 @@ func _faction_raid_target_valid(target, supply) -> bool:
     return raid_behavior.faction_raid_target_valid(target, supply)
 
 
-func _tick_faction_raid(delta: float) -> :
-    return raid_behavior.tick_faction_raid(delta)
+func _tick_faction_raid(delta: float) -> void:
+    raid_behavior.tick_faction_raid(delta)
 
 
-func _tick_supply_raid(delta: float) -> :
-    return raid_behavior.tick_supply_raid(delta)
+func _tick_supply_raid(delta: float) -> void:
+    raid_behavior.tick_supply_raid(delta)
 
 
 func _tick_flow(delta: float) -> void:
