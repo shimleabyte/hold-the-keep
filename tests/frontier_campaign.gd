@@ -120,6 +120,11 @@ func _run() -> void:
     var siege_target = main.campaign.current_target_node()
     var stronghold_hp_before: int = siege_target.hp
     main.player.position = siege_target.position + Vector2(0, 18)
+    # This probe isolates Siegecraft's damage modifier. The resolver is invoked directly,
+    # so set the same locked aim direction captured by a real attack wind-up.
+    main.player._attack_direction = (
+        siege_target.global_position - (main.player.global_position + Vector2(0, -6))
+    ).normalized()
     var siege_damage := roundi(float(main.player._player_damage(main.player.ATTACK_DAMAGE)) * tech.stat("campaign.site_damage", 1.0))
     main.player._apply_attack()
     assert(siege_target.hp == stronghold_hp_before - siege_damage,
