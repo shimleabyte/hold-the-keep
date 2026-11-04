@@ -82,7 +82,7 @@ func run_profile(profile: String, expected: Dictionary) -> void:
         "%s must queue the final boss on its configured final day" % profile)
     assert(main.spawner._boss_t < 0.0,
         "%s final boss must wait behind the regular wave instead of appearing immediately" % profile)
-    var final_wave_count := main.spawner.wave_size(final_day)
+    var final_wave_count: int = main.spawner.wave_size(final_day)
     var reveal_remaining := floori(float(final_wave_count) * 0.25)
     main.spawner._to_spawn = reveal_remaining + 1
     main.spawner._process(0.1)
