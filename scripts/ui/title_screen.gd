@@ -101,6 +101,7 @@ func _build_screen() -> void:
     continue_row.alignment = BoxContainer.ALIGNMENT_CENTER
     title_block.add_child(continue_row)
     _continue_button = Button.new()
+    _continue_button.name = "ContinueButton"
     _continue_button.text = "CONTINUE LAST CAMPAIGN"
     _continue_button.custom_minimum_size = Vector2(210, 25)
     _style_button(_continue_button, false)
@@ -135,6 +136,7 @@ func _build_screen() -> void:
     footer.add_child(note)
 
     var settings := Button.new()
+    settings.name = "SettingsButton"
     settings.text = "SETTINGS"
     settings.custom_minimum_size = Vector2(76, 24)
     _style_button(settings, false)
@@ -155,6 +157,7 @@ func _build_screen() -> void:
 
 func _build_settings_panel() -> void:
     _settings_layer = Control.new()
+    _settings_layer.name = "SettingsPanel"
     _settings_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     _settings_layer.visible = false
     _settings_layer.process_mode = Node.PROCESS_MODE_ALWAYS
