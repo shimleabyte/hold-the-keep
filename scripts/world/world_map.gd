@@ -10,6 +10,7 @@ const ROCK_CHANCE := 0.02
 const IRON_SCRIPT := preload("res://scripts/entities/iron_ore.gd")
 const WILDLIFE_SCRIPT := preload("res://scripts/entities/wildlife_node.gd")
 const FRONTIER_DECORATION_SCRIPT := preload("res://scripts/entities/frontier_decoration.gd")
+const FRONTIER_REGION_GENERATOR := preload("res://scripts/world/generation/frontier_region_generator.gd")
 
 const TILES_TEX := preload("res://assets/sprites/tiles.svg")
 const TILES_FRONTIER_TEX := preload("res://assets/sprites/tiles_frontier.svg")
@@ -385,42 +386,7 @@ func _record_frontier_decoration(cell: Vector2i, kind: String, variation: int, l
 
 
 func _build_frontier_regions() -> void:
-    _frontier_regions.resize(WorldConfig.map_cells)
-
-    var warp_x := FastNoiseLite.new()
-    warp_x.seed = map_seed + 1709
-    warp_x.noise_type = FastNoiseLite.TYPE_SIMPLEX
-    warp_x.frequency = 0.021
-
-    var warp_y := FastNoiseLite.new()
-    warp_y.seed = map_seed + 1721
-    warp_y.noise_type = FastNoiseLite.TYPE_SIMPLEX
-    warp_y.frequency = 0.021
-
-    var center := Vector2(map_size, map_size) * 0.5
-    var anchors: Array[Vector2] = [
-        Vector2(map_size * 0.19, map_size * 0.20),
-        Vector2(map_size * 0.81, map_size * 0.20),
-        Vector2(map_size * 0.19, map_size * 0.80),
-        Vector2(map_size * 0.81, map_size * 0.80)
-    ]
-    var hearthland_radius := float(map_size) * 0.15
-
-    for y in map_size:
-        for x in map_size:
-            var warped := Vector2(x, y) + Vector2(
-                warp_x.get_noise_2d(x, y),
-                warp_y.get_noise_2d(x, y)
-            ) * 12.0
-            var region := REGION_HEARTHLAND
-            if warped.distance_to(center) >= hearthland_radius:
-                var nearest_distance := INF
-                for i in anchors.size():
-                    var distance := warped.distance_squared_to(anchors[i])
-                    if distance < nearest_distance:
-                        nearest_distance = distance
-                        region = REGION_GREENWOOD + i
-            _frontier_regions[y * map_size + x] = region
+    _frontier_regions = FRONTIER_REGION_GENERATOR.generate(map_size, map_seed)
 
 
 func _frontier_tree_density(region: int) -> float:
