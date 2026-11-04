@@ -109,12 +109,12 @@ func _simulate_profile(profile_id: String) -> Dictionary:
     _clock._process(2.0)
     var expected_wave: int = int(main.spawner.wave_size(WAVE_DAY))
     _require(profile_id, bool(_clock.is_night), "Crossing NIGHT_START must enter the night phase")
-    _require(profile_id, int(main.spawner._to_spawn) == expected_wave,
+    _require(profile_id, main.spawner.remaining_wave_spawns() == expected_wave,
         "Night transition must schedule the profile's configured wave budget")
 
     var interval: float = float(main.spawner._interval)
     for _index in range(expected_wave * 4):
-        if int(main.spawner._to_spawn) <= 0:
+        if main.spawner.remaining_wave_spawns() <= 0:
             break
         main.spawner._process(interval + 0.02)
 
@@ -141,7 +141,7 @@ func _simulate_profile(profile_id: String) -> Dictionary:
     _clock.is_night = true
     _clock._process(0.6)
     _require(profile_id, not bool(_clock.is_night), "Crossing NIGHT_END must end the wave")
-    _require(profile_id, int(main.spawner._to_spawn) == 0, "Dawn must cancel all unspawned wave units")
+    _require(profile_id, main.spawner.remaining_wave_spawns() == 0, "Dawn must cancel all unspawned wave units")
 
     var day_before_rollover: int = int(_clock.day)
     _clock.time_of_day = 0.999
