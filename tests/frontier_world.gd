@@ -3,6 +3,7 @@ extends SceneTree
 
 const FRONTIER_REGION_GENERATOR := preload("res://scripts/world/generation/frontier_region_generator.gd")
 const FRONTIER_TERRAIN_GENERATOR := preload("res://scripts/world/generation/frontier_terrain_generator.gd")
+const FRONTIER_RESOURCE_GENERATOR := preload("res://scripts/world/generation/frontier_resource_generator.gd")
 
 const DIRS4: Array[Vector2i] = [
     Vector2i(1, 0), Vector2i(-1, 0),
@@ -23,6 +24,15 @@ func resource_signature(world: Node) -> Array[String]:
     signature.sort()
     return signature
 
+
+
+func resource_layout_signature(layout: Array[Dictionary]) -> Array[String]:
+    var signature: Array[String] = []
+    for entry in layout:
+        var cell: Vector2i = entry["cell"]
+        signature.append("%d,%d:%s" % [cell.x, cell.y, String(entry["kind"])])
+    signature.sort()
+    return signature
 
 
 func wildlife_signature(world: Node) -> Array[String]:
@@ -134,6 +144,65 @@ func _initialize() -> void:
     assert(FRONTIER_TERRAIN_GENERATOR.generate(0, world_config.world_seed, world_config.safe_radius, PackedByteArray(), RandomNumberGenerator.new()).is_empty(),
         "Invalid terrain-stage dimensions must return an empty layout")
 
+    var resource_rng := RandomNumberGenerator.new()
+    resource_rng.seed = world_config.world_seed + 1001
+    var resource_terrain := FRONTIER_TERRAIN_GENERATOR.generate(
+        128, world_config.world_seed, world_config.safe_radius, region_layout, resource_rng
+    )
+    var frontier_resource_layout := FRONTIER_RESOURCE_GENERATOR.generate(
+        128, world_config.world_seed, world_config.safe_radius,
+        region_layout, resource_terrain, resource_rng
+    )
+    var repeated_resource_rng := RandomNumberGenerator.new()
+    repeated_resource_rng.seed = world_config.world_seed + 1001
+    var repeated_resource_terrain := FRONTIER_TERRAIN_GENERATOR.generate(
+        128, world_config.world_seed, world_config.safe_radius, region_layout, repeated_resource_rng
+    )
+    var repeated_resource_layout := FRONTIER_RESOURCE_GENERATOR.generate(
+        128, world_config.world_seed, world_config.safe_radius,
+        region_layout, repeated_resource_terrain, repeated_resource_rng
+    )
+    assert(frontier_resource_layout.size() >= 200
+        and frontier_resource_layout == repeated_resource_layout,
+        "The isolated Frontier resource stage must produce substantial deterministic placements")
+    var resource_rng_next := resource_rng.randf()
+    var repeated_resource_rng_next := repeated_resource_rng.randf()
+    assert(is_equal_approx(resource_rng_next, repeated_resource_rng_next),
+        "The resource stage must advance its supplied shared RNG deterministically")
+
+    var generated_kind_counts := {"wood": 0, "stone": 0}
+    var generated_resource_cells: Dictionary = {}
+    var resource_center := Vector2(128, 128) * 0.5
+    var resource_clearing_radius := maxf(
+        world_config.safe_radius + 7.0, 128.0 * 0.15
+    )
+    for placement in frontier_resource_layout:
+        var cell: Vector2i = placement["cell"]
+        var kind := String(placement["kind"])
+        assert(kind == "wood" or kind == "stone",
+            "The resource stage must emit only wood and stone placement kinds")
+        assert(not generated_resource_cells.has(cell),
+            "A resource stage must not place two harvestables on the same cell")
+        generated_resource_cells[cell] = true
+        assert(int(resource_terrain[cell.y * 128 + cell.x]) != 2,
+            "Resources must be placed only on dry Frontier terrain")
+        assert(Vector2(cell).distance_to(resource_center) >= resource_clearing_radius,
+            "Resources must remain outside the protected starting clearing")
+        generated_kind_counts[kind] += 1
+    assert(int(generated_kind_counts["wood"]) >= 100
+        and int(generated_kind_counts["stone"]) >= 100,
+        "The resource stage must retain substantial wood and stone supplies")
+    assert(FRONTIER_RESOURCE_GENERATOR.generate(
+        0, world_config.world_seed, world_config.safe_radius,
+        PackedByteArray(), PackedByteArray(), RandomNumberGenerator.new()
+    ).is_empty(),
+        "Invalid resource-stage dimensions must return an empty layout")
+    assert(FRONTIER_RESOURCE_GENERATOR.generate(
+        128, world_config.world_seed, world_config.safe_radius,
+        region_layout, PackedByteArray(), RandomNumberGenerator.new()
+    ).is_empty(),
+        "Mismatched resource-stage terrain buffers must return an empty layout")
+
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main
@@ -150,6 +219,15 @@ func _initialize() -> void:
             var terrain_cell := Vector2i(x, y)
             assert(world.tile_type_at(terrain_cell) == int(terrain_layout[y * world_config.map_size + x]),
                 "WorldMap must consume the isolated Frontier terrain layout at %s" % terrain_cell)
+    var integrated_wood_stone_layout: Array[Dictionary] = []
+    for entry in world.generated_resource_layout:
+        var kind := String(entry["kind"])
+        if kind == "wood" or kind == "stone":
+            integrated_wood_stone_layout.append(entry)
+    assert(resource_layout_signature(integrated_wood_stone_layout)
+        == resource_layout_signature(frontier_resource_layout),
+        "WorldMap must consume the isolated resource stage without changing placement output")
+
     var hud = get_first_node_in_group("hud")
     assert(hud != null, "The Frontier scene must create the HUD")
     hud._layout_viewport(Vector2(480, 270))
