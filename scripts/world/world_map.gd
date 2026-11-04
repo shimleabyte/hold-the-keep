@@ -42,6 +42,7 @@ var _expedition_unlocked_regions: Dictionary = {}
 var generated_resource_layout: Array[Dictionary] = []
 var generated_wildlife_layout: Array[Dictionary] = []
 var generated_decoration_layout: Array[Dictionary] = []
+var generated_decoration_eligibility := PackedByteArray()
 var generate_resource_nodes := true
 
 var map_seed := 1337
@@ -257,9 +258,9 @@ func _generate_frontier() -> void:
 ## The decoration RNG is independent of terrain/resource RNG to preserve existing generation.
 func _spawn_frontier_decorations() -> void:
     generated_decoration_layout.clear()
-    var eligible_cells := _frontier_decoration_eligibility()
+    generated_decoration_eligibility = _frontier_decoration_eligibility()
     var decoration_layout := FRONTIER_DECORATION_GENERATOR.generate(
-        map_size, map_seed, safe_radius, _frontier_regions, eligible_cells
+        map_size, map_seed, safe_radius, _frontier_regions, generated_decoration_eligibility
     )
     for entry in decoration_layout:
         var cell: Vector2i = entry["cell"]
