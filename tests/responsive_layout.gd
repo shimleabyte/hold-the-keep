@@ -93,6 +93,21 @@ func _initialize() -> void:
     assert(hud._foes.tooltip_text.find("6 remaining") >= 0,
         "The hostile counter must explain active versus queued enemies")
     main.spawner.end_wave()
+
+    game_clock.time_of_day = 0.75
+    game_clock.is_night = true
+    hud._scan_t = 0.0
+    hud._process(0.2)
+    assert(hud._jobs["woodcutter"].sheltering and not hud._jobs["soldier"].sheltering,
+        "Non-soldier job rows must visibly indicate night shelter while soldiers remain active")
+    assert(hud._jobs["woodcutter"].tooltip_text.find("produksi berhenti") >= 0,
+        "The job tooltip must explain that non-soldier production pauses during night")
+    game_clock.time_of_day = 0.95
+    game_clock.is_night = false
+    hud._scan_t = 0.0
+    hud._process(0.2)
+    assert(not hud._jobs["woodcutter"].sheltering,
+        "Job rows must return to their normal state at dawn")
     var player = get_first_node_in_group("player")
     assert(player != null and player.camera.zoom == Vector2.ONE,
         "The wider field of view must come from viewport dimensions, not gameplay camera zoom")
