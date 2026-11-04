@@ -23,7 +23,7 @@ func build() -> void:
 
     _hud._queue_panel = _hud._panel(Vector2.ZERO, Vector2(356, 220))
     _hud._queue_panel.visible = false
-    var title := _hud._label(_hud._queue_panel, "ANTREAN KONSTRUKSI", Vector2(10, 7), Color("#ffd23f"))
+    var title: Label = _hud._label(_hud._queue_panel, "ANTREAN KONSTRUKSI", Vector2(10, 7), Color("#ffd23f"))
     title.add_theme_font_size_override("font_size", 9)
     _hud._queue_count_label = _hud._label(_hud._queue_panel, "0 PROYEK", Vector2(10, 22), Color("#c9b99d"))
     _hud._queue_count_label.add_theme_font_size_override("font_size", 6)
@@ -100,7 +100,7 @@ func refresh() -> void:
     var sites: Array = main_node.build.construction_queue()
     _hud._queue_count_label.text = "%d PROYEK AKTIF" % sites.size()
     if sites.is_empty():
-        var empty := _hud._label(_hud._queue_list, "BELUM ADA BLUEPRINT. PILIH BANGUNAN DAN TEMPATKAN DI PETA.", Vector2.ZERO, Color("#c9b99d"))
+        var empty: Label = _hud._label(_hud._queue_list, "BELUM ADA BLUEPRINT. PILIH BANGUNAN DAN TEMPATKAN DI PETA.", Vector2.ZERO, Color("#c9b99d"))
         empty.add_theme_font_size_override("font_size", 7)
         empty.custom_minimum_size = Vector2(320, 28)
         return
