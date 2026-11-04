@@ -4,11 +4,11 @@ extends RefCounted
 
 const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
 
-var _network: Node
+var _network: Variant
 var records: Dictionary = {}
 
 
-func configure(network: Node) -> void:
+func configure(network: Variant) -> void:
     _network = network
 
 
