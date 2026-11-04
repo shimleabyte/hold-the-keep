@@ -104,19 +104,34 @@ func run_profile(profile: String, expected: Dictionary) -> void:
     main.spawner.end_wave()
     main.spawner.start_wave(final_day)
     game_clock.day = final_day
-    assert(main.spawner._boss_pending,
-        "%s must queue the final boss on its configured final day" % profile)
-    assert(main.spawner._boss_t < 0.0,
-        "%s final boss must wait behind the regular wave instead of appearing immediately" % profile)
+    assert(main.spawner._boss_pending and main.spawner._boss_waiting_for_reveal,
+        "%s must queue the final boss behind the regular wave on its configured final day" % profile)
+    assert(main.spawner._boss_t == 0.0,
+        "%s boss reveal wait must not be represented by a negative countdown" % profile)
+    var staged_state: Dictionary = main.spawner.export_state()
+    assert(bool(staged_state.get("boss_waiting", false)),
+        "%s save state must persist the boss reveal wait" % profile)
+    main.spawner.import_state(staged_state)
+    assert(main.spawner._boss_waiting_for_reveal and main.spawner._boss_pending,
+        "%s boss reveal wait must survive a save-state round trip" % profile)
+    var legacy_state: Dictionary = staged_state.duplicate(true)
+    legacy_state.erase("boss_waiting")
+    legacy_state["boss_t"] = 2.0
+    main.spawner.import_state(legacy_state)
+    assert(not main.spawner._boss_waiting_for_reveal and is_equal_approx(main.spawner._boss_t, 2.0),
+        "%s legacy boss countdown saves must continue loading without the new field" % profile)
+    main.spawner.start_wave(final_day)
+    game_clock.day = final_day
     var final_wave_count: int = main.spawner.wave_size(final_day)
     var reveal_remaining := floori(float(final_wave_count) * 0.25)
     main.spawner._to_spawn = reveal_remaining + 1
     main.spawner._process(0.1)
-    assert(main.spawner._boss_t < 0.0,
+    assert(main.spawner._boss_waiting_for_reveal and main.spawner._boss_t == 0.0,
         "%s boss warning must not start before at least 75%% of regular enemies are deployed" % profile)
     main.spawner._to_spawn = reveal_remaining
     main.spawner._process(0.1)
-    assert(is_equal_approx(main.spawner._boss_t, 4.0),
+    assert(not main.spawner._boss_waiting_for_reveal
+        and is_equal_approx(main.spawner._boss_t, 4.0),
         "%s boss must announce itself with a four-second warning after the wave reaches its reveal threshold" % profile)
 
     print("PASS: %s schedule, wave and final-boss pacing matrix (final day %d)" % [profile, final_day])
