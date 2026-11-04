@@ -90,7 +90,7 @@ func resolve_pending(delta: float) -> void:
 
 func apply_stagger(duration: float) -> void:
     var enemy: Variant = _enemy
-    var effective_duration := duration * (1.0 - enemy.stagger_resistance)
+    var effective_duration: float = duration * (1.0 - enemy.stagger_resistance)
     enemy._stagger_t = maxf(enemy._stagger_t, effective_duration)
     enemy.combat_feedback.register_stagger(effective_duration)
     enemy._pending = null
@@ -136,7 +136,7 @@ func _take_damage_from(amount: int, source_position: Vector2) -> void:
     var enemy: Variant = _enemy
     if enemy.hp <= 0:
         return
-    var damage_multiplier := 1.0 - enemy.armor
+    var damage_multiplier: float = 1.0 - enemy.armor
     var blocked_by_shield: bool = enemy.archetype == "shieldbearer" and enemy.shield_behavior.blocks_hit_from(source_position)
     if blocked_by_shield:
         damage_multiplier *= enemy.shield_behavior.block_damage_multiplier
