@@ -3,6 +3,7 @@ extends RefCounted
 ## Does not apply damage, movement, cooldowns, status effects or gameplay state.
 
 const HIT_DURATION := 0.16
+const CLEAVE_HALF_ANGLE := 1.2
 
 var windup_remaining := 0.0
 var windup_total := 0.0
@@ -138,7 +139,7 @@ func draw(canvas: CanvasItem, frame_height: int, faction_tint: Color = Color.WHI
                     canvas.draw_line(p + direction * 3.0, p + side * 3.0, tint, 1.2)
             "cleave":
                 var angle := ability_direction.angle()
-                canvas.draw_arc(center, 13.0 + progress * 9.0, angle - 0.95, angle + 0.95,
+                canvas.draw_arc(center, 13.0 + progress * 9.0, angle - CLEAVE_HALF_ANGLE, angle + CLEAVE_HALF_ANGLE,
                     12, Color(1.0, 0.82, 0.42, alpha), 1.5)
             "rally":
                 canvas.draw_arc(center, 9.0 + progress * 10.0, 0.0, TAU, 16,
