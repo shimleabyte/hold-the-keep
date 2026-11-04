@@ -74,7 +74,7 @@ func resolve_pending(delta: float) -> void:
         return
     enemy._pending_is_projectile = false
     if target == enemy.player or target.is_in_group("defenders"):
-        var target_still_exposed := target.visible
+        var target_still_exposed: bool = bool(target.visible)
         var allowed_reach := maxf(enemy._attack_reach(), 36.0 if enemy.role == "pouncer" else 0.0)
         if not target_still_exposed or enemy.global_position.distance_to(target.global_position) > allowed_reach:
             return
