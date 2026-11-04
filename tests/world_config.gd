@@ -75,7 +75,7 @@ func _initialize() -> void:
     assert(main.world != null,
         "Selecting Classic from the title screen must initialize the gameplay world")
 
-    var hud = root.get_first_node_in_group("hud")
+    var hud = main.get_tree().get_first_node_in_group("hud")
     assert(hud != null, "Gameplay must create its HUD")
     assert(hud._map_button.icon != null and hud._map_button.label.is_empty(),
         "The world-map control must use an icon without a permanent text label")
