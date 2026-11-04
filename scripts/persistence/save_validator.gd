@@ -448,6 +448,32 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             var outpost_limit := int(DataDB.buildings["outpost"].get("guard_slots", 0))
             if int(outpost_guard_counts[guard_key]) > outpost_limit:
                 return false
+        var garrison_data: Variant = villager.get("guard_garrison", null)
+        if guard_data != null and garrison_data != null:
+            return false
+        if garrison_data != null:
+            if not (garrison_data is Dictionary) or not garrison_data.has("id") or not garrison_data.has("cx") or not garrison_data.has("cy"):
+                return false
+            if String(villager.get("job", "")) != "soldier" or bool(villager.get("expedition", false)) or bool(villager.get("recalling", false)):
+                return false
+            var garrison_id := String(garrison_data["id"])
+            if not DataDB.buildings.has(garrison_id):
+                return false
+            var garrison_limit := int(DataDB.buildings[garrison_id].get("guard_slots", 0))
+            if garrison_limit <= 0:
+                return false
+            var garrison_cell := Vector2i(int(garrison_data["cx"]), int(garrison_data["cy"]))
+            var garrison_exists := false
+            for saved_building in buildings:
+                if String(saved_building.get("id", "")) == garrison_id and int(saved_building.get("cx", -1)) == garrison_cell.x and int(saved_building.get("cy", -1)) == garrison_cell.y:
+                    garrison_exists = true
+                    break
+            if not garrison_exists:
+                return false
+            var garrison_key := "%s:%d:%d" % [garrison_id, garrison_cell.x, garrison_cell.y]
+            outpost_guard_counts[garrison_key] = int(outpost_guard_counts.get(garrison_key, 0)) + 1
+            if int(outpost_guard_counts[garrison_key]) > garrison_limit:
+                return false
     for enemy in enemies:
         if not (enemy is Dictionary) or not enemy.has("id") or not enemy.has("x") or not enemy.has("y") or not enemy.has("hp"):
             return false

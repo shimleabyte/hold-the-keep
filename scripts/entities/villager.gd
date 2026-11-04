@@ -660,23 +660,27 @@ func is_outpost_guard() -> bool:
 
 
 func assign_outpost_guard(outpost) -> bool:
-    if job != "soldier" or not is_instance_valid(outpost) or String(outpost.id) != "outpost":
+    return assign_garrison_guard(outpost)
+
+
+func assign_garrison_guard(garrison) -> bool:
+    if job != "soldier" or not is_instance_valid(garrison) or int(garrison.guard_capacity) <= 0:
         return false
     if _expeditioning or state == State.RECALLING:
         return false
     if is_outpost_guard():
-        return guard_outpost == outpost
-    if not outpost.has_method("claim_guard"):
+        return guard_outpost == garrison
+    if not garrison.has_method("claim_guard"):
         return false
 
-    var cells: Array[Vector2i] = outpost.cells()
+    var cells: Array[Vector2i] = garrison.cells()
     var path: PackedVector2Array = nav.path_adjacent(position, cells)
-    if path.is_empty() and position.distance_to(outpost.position) > OUTPOST_GUARD_ARRIVAL_RADIUS:
+    if path.is_empty() and position.distance_to(garrison.position) > OUTPOST_GUARD_ARRIVAL_RADIUS:
         return false
-    if not outpost.claim_guard(self):
+    if not garrison.claim_guard(self):
         return false
 
-    guard_outpost = outpost
+    guard_outpost = garrison
     _expeditioning = false
     _expedition_target = null
     _foe = null
@@ -726,7 +730,7 @@ func on_guard_outpost_lost(outpost) -> void:
 
 
 func _tick_outpost_guard(delta: float) -> void:
-    if not is_outpost_guard() or String(guard_outpost.id) != "outpost" or int(guard_outpost.hp) <= 0:
+    if not is_outpost_guard() or int(guard_outpost.guard_capacity) <= 0 or int(guard_outpost.hp) <= 0:
         if guard_outpost != null:
             on_guard_outpost_lost(guard_outpost)
         return
@@ -1335,7 +1339,7 @@ func _nearest_enemy():
     var candidates := get_tree().get_nodes_in_group("enemy_garrison") if _expeditioning else get_tree().get_nodes_in_group("enemies")
     for e in candidates:
         var enemy := e as Node2D
-        if is_outpost_guard() and enemy.position.distance_to(guard_outpost.position) > OUTPOST_GUARD_RADIUS:
+        if is_outpost_guard() and enemy.position.distance_to(guard_outpost.position) > float(guard_outpost.data.get("guard_radius", OUTPOST_GUARD_RADIUS)):
             continue
         var d := position.distance_to(enemy.position)
         if d < best_d:

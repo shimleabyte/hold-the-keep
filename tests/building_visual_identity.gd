@@ -5,7 +5,7 @@ const BuildingVisual := preload("res://scripts/entities/building_visual_identity
 
 const EXPECTED_BUILDINGS := [
     "keep", "house", "wall", "tower", "granary", "storage", "farm", "outpost",
-    "stone_wall", "forge", "lumber_camp", "quarry", "hunting_lodge", "scout_post", "infirmary", "road", "bridge"
+    "stone_wall", "forge", "lumber_camp", "quarry", "hunting_lodge", "scout_post", "infirmary", "road", "bridge", "barracks"
 ]
 
 
@@ -16,7 +16,7 @@ func _initialize() -> void:
 func _run() -> void:
     var data_db = root.get_node("DataDB")
     assert(data_db.buildings.size() == EXPECTED_BUILDINGS.size(),
-        "The visual pass must cover every currently shipped building definition")
+        "Every shipped building must have a validated visual identity profile")
 
     var features: Dictionary = {}
     for building_id in EXPECTED_BUILDINGS:
@@ -74,5 +74,8 @@ func _run() -> void:
     var building_script := load("res://scripts/entities/building.gd") as GDScript
     assert(building_script != null and building_script.can_instantiate(),
         "Building rendering must compile with the new Frontier visual helper")
-    print("PASS: 17 distinct building materials/details, Frontier-only rendering and four deterministic damage states")
+    var building_constants: Dictionary = building_script.get_script_constant_map()
+    var building_textures: Dictionary = building_constants.get("TEXTURES", {})
+    assert(building_textures.has("barracks"), "Barracks must have its own base sprite texture")
+    print("PASS: 18 distinct building materials/details, Frontier-only rendering and four deterministic damage states")
     quit(0)

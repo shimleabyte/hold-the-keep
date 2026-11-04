@@ -40,6 +40,7 @@ const ICONS := {
     "scout_post": preload("res://assets/sprites/icon_scout_post.svg"),
     "compass": preload("res://assets/sprites/icon_compass.svg"),
     "infirmary": preload("res://assets/sprites/icon_infirmary.svg"),
+    "barracks": preload("res://assets/sprites/icon_barracks.svg"),
     "healer": preload("res://assets/sprites/icon_healer.svg"),
 }
 const JOBS := ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "healer", "blacksmith", "soldier"]
@@ -531,7 +532,7 @@ func _build_outpost_panel() -> void:
 
     _outpost_panel = _panel(Vector2.ZERO, Vector2(356, 238))
     _outpost_panel.visible = false
-    var title := _label(_outpost_panel, "LOGISTIK & PENYIMPANAN", Vector2(10, 7), GOLD)
+    var title := _label(_outpost_panel, "LOGISTIK & GARRISON", Vector2(10, 7), GOLD)
     title.add_theme_font_size_override("font_size", 9)
 
     var close := HudChip.new()
@@ -644,47 +645,54 @@ func _refresh_outpost_panel() -> void:
     for child in _outpost_list.get_children():
         child.free()
 
-    var depots: Array = []
+    var structures: Array = []
     for depot in get_tree().get_nodes_in_group("depots"):
         if is_instance_valid(depot) and ["outpost", "storage", "granary"].has(String(depot.id)):
-            depots.append(depot)
-    depots.sort_custom(func(a, b) -> bool:
-        var priority := {"outpost": 0, "storage": 1, "granary": 2}
+            structures.append(depot)
+    for garrison in get_tree().get_nodes_in_group("garrisons"):
+        if is_instance_valid(garrison) and String(garrison.id) == "barracks":
+            structures.append(garrison)
+    structures.sort_custom(func(a, b) -> bool:
+        var priority := {"outpost": 0, "barracks": 1, "storage": 2, "granary": 3}
         if String(a.id) != String(b.id):
-            return int(priority.get(String(a.id), 3)) < int(priority.get(String(b.id), 3))
+            return int(priority.get(String(a.id), 4)) < int(priority.get(String(b.id), 4))
         if a.cell.y != b.cell.y:
             return a.cell.y < b.cell.y
         return a.cell.x < b.cell.x
     )
 
-    if depots.is_empty():
-        var empty := _label(_outpost_list, "Belum ada Outpost, Storage, atau Lumbung.", Vector2.ZERO, Color("#c9b99d"))
+    if structures.is_empty():
+        var empty := _label(_outpost_list, "Belum ada Outpost, Barak, Storage, atau Lumbung.", Vector2.ZERO, Color("#c9b99d"))
         empty.add_theme_font_size_override("font_size", 8)
     else:
-        for depot in depots:
+        for structure in structures:
             var row := HBoxContainer.new()
             row.custom_minimum_size = Vector2(276, 38)
             row.add_theme_constant_override("separation", 5)
             _outpost_list.add_child(row)
-    
+
             var details := VBoxContainer.new()
             details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
             details.add_theme_constant_override("separation", 1)
             row.add_child(details)
-    
+
+            var structure_id := String(structure.id)
+            var is_garrison := ["outpost", "barracks"].has(structure_id)
             var heading := Label.new()
             heading.add_theme_font_override("font", _font)
             heading.add_theme_font_size_override("font_size", 7)
             heading.add_theme_color_override("font_color", Color("#f0d39a"))
-            if String(depot.id) == "outpost":
-                heading.text = "POS %d,%d  ·  PENJAGA %d/%d" % [depot.cell.x, depot.cell.y, depot.guard_count(), depot.guard_capacity]
-            elif String(depot.id) == "granary":
-                heading.text = "LUMBUNG %d,%d" % [depot.cell.x, depot.cell.y]
+            if structure_id == "outpost":
+                heading.text = "POS %d,%d  ·  PENJAGA %d/%d" % [structure.cell.x, structure.cell.y, structure.guard_count(), structure.guard_capacity]
+            elif structure_id == "barracks":
+                heading.text = "BARAK %d,%d  ·  GARRISON %d/%d" % [structure.cell.x, structure.cell.y, structure.guard_count(), structure.guard_capacity]
+            elif structure_id == "granary":
+                heading.text = "LUMBUNG %d,%d" % [structure.cell.x, structure.cell.y]
             else:
-                heading.text = "GUDANG %d,%d" % [depot.cell.x, depot.cell.y]
+                heading.text = "GUDANG %d,%d" % [structure.cell.x, structure.cell.y]
             var main_node = get_tree().get_first_node_in_group("main")
-            if main_node != null and main_node.supply != null:
-                var pressure: Dictionary = main_node.supply.depot_pressure_state(depot)
+            if structure.is_in_group("depots") and main_node != null and main_node.supply != null:
+                var pressure: Dictionary = main_node.supply.depot_pressure_state(structure)
                 var pressure_status := String(pressure.get("status", "connected"))
                 var pressure_label := String(pressure.get("label", ""))
                 if pressure_status != "connected":
@@ -692,44 +700,45 @@ func _refresh_outpost_panel() -> void:
                     heading.add_theme_color_override("font_color", Color("#ef8e73") if pressure_status in ["vulnerable", "raiding"] else Color("#d6b36d"))
                 heading.tooltip_text = "Pemulihan: sambungkan jalan ke Keep atau amankan wilayah. Penjaga Outpost dapat menahan saboteur; Builder dapat memperbaiki depot menggunakan sumber biaya aktif."
             details.add_child(heading)
-    
+
             var stock := Label.new()
             stock.add_theme_font_override("font", _font)
             stock.add_theme_font_size_override("font_size", 6)
             stock.add_theme_color_override("font_color", Color("#c4c0b5"))
-            if String(depot.id) == "granary":
-                stock.text = "PANGAN %d / %d" % [depot.stockpile_amount("food"), depot.stockpile_capacity]
+            if structure_id == "barracks":
+                stock.text = "EMPAT SLOT PENJAGA  ·  RADIUS %d" % int(structure.data.get("guard_radius", 128))
+            elif structure_id == "granary":
+                stock.text = "PANGAN %d / %d" % [structure.stockpile_amount("food"), structure.stockpile_capacity]
             else:
                 stock.text = "KAYU %d  BATU %d  PANGAN %d  BESI %d  / %d" % [
-                    depot.stockpile_amount("wood"), depot.stockpile_amount("stone"),
-                    depot.stockpile_amount("food"), depot.stockpile_amount("iron"),
-                    depot.stockpile_capacity
+                    structure.stockpile_amount("wood"), structure.stockpile_amount("stone"),
+                    structure.stockpile_amount("food"), structure.stockpile_amount("iron"),
+                    structure.stockpile_capacity
                 ]
             details.add_child(stock)
-    
-            if String(depot.id) == "outpost":
+
+            if is_garrison:
                 var release := Button.new()
                 release.text = "-"
                 release.custom_minimum_size = Vector2(25, 22)
-                release.disabled = depot.guard_count() <= 0
-                release.tooltip_text = "Tarik satu penjaga dari Outpost"
+                release.disabled = structure.guard_count() <= 0
+                release.tooltip_text = "Tarik satu penjaga dari " + ("Barak" if structure_id == "barracks" else "Outpost")
                 release.add_theme_font_override("font", _font)
                 release.add_theme_font_size_override("font_size", 8)
-                release.pressed.connect(_release_outpost_guard.bind(depot))
+                release.pressed.connect(_release_outpost_guard.bind(structure))
                 row.add_child(release)
-    
+
                 var assign := Button.new()
                 assign.text = "+"
                 assign.custom_minimum_size = Vector2(25, 22)
-                assign.disabled = depot.free_guard_slots() <= 0
-                assign.tooltip_text = "Tugaskan prajurit terdekat yang belum menjaga Outpost"
+                assign.disabled = structure.free_guard_slots() <= 0
+                assign.tooltip_text = "Tugaskan prajurit terdekat yang belum menjaga struktur ini"
                 assign.add_theme_font_override("font", _font)
                 assign.add_theme_font_size_override("font_size", 8)
-                assign.pressed.connect(_assign_outpost_guard.bind(depot))
+                assign.pressed.connect(_assign_outpost_guard.bind(structure))
                 row.add_child(assign)
 
     _refresh_shipment_controls()
-
 
 func _depot_option_cell(option: OptionButton) -> Vector2i:
     if option == null or option.get_selected() < 0:
@@ -976,16 +985,17 @@ func _cancel_shipment_order(order_id: int) -> void:
 
 func _assign_outpost_guard(outpost) -> void:
     var main_node = get_tree().get_first_node_in_group("main")
-    if main_node == null or not main_node.village.assign_nearest_outpost_guard(outpost):
+    var structure_name := "Barak" if String(outpost.id) == "barracks" else "Outpost"
+    if main_node == null or not main_node.village.assign_nearest_garrison_guard(outpost):
         _show_message("Tidak ada prajurit yang tersedia atau slot penjaga penuh")
     else:
-        _show_message("Prajurit ditugaskan menjaga Outpost")
+        _show_message("Prajurit ditugaskan menjaga " + structure_name)
     _refresh_outpost_panel()
 
 
 func _release_outpost_guard(outpost) -> void:
     var main_node = get_tree().get_first_node_in_group("main")
-    if main_node == null or not main_node.village.release_outpost_guard(outpost):
+    if main_node == null or not main_node.village.release_garrison_guard(outpost):
         _show_message("Tidak ada penjaga untuk ditarik")
     else:
         _show_message("Penjaga kembali ke pertahanan umum")

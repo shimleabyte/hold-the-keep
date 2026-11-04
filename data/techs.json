@@ -191,11 +191,14 @@
     },
     "time": 35,
     "requires": [],
-    "desc": "Damage prajurit +25%.",
+    "desc": "Damage prajurit +25% dan membuka Barak untuk empat penjaga.",
     "effects": {
       "mult": {
         "soldier.damage": 1.25
-      }
+      },
+      "unlock_building": [
+        "barracks"
+      ]
     }
   },
   {

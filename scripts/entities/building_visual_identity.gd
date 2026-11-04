@@ -6,7 +6,8 @@ const SUPPORTED_FEATURES := [
     "keep_banner", "house_gable", "wall_stakes", "tower_battlements",
     "storage_shutters", "farm_crop_rows", "stone_mortar", "forge_embers",
     "outpost_signal", "road_ruts", "bridge_planks", "lumber_logs", "quarry_cart", "granary_wheat_sacks",
-    "hunting_lodge_trophy_rack", "scout_post_map_board", "infirmary_medicine_rack"
+    "hunting_lodge_trophy_rack", "scout_post_map_board", "infirmary_medicine_rack",
+    "barracks_training_yard"
 ]
 
 
@@ -172,6 +173,17 @@ static func draw_identity(
             canvas.draw_rect(Rect2(-2.0, top + 22.0, 4.0, 9.0), shadow)
             canvas.draw_rect(Rect2(-1.0, top + 23.0, 2.0, 7.0), accent)
             canvas.draw_rect(Rect2(-3.0, top + 25.0, 6.0, 2.0), accent)
+        "barracks_training_yard":
+            var gate_y := top + 15.0
+            canvas.draw_rect(Rect2(-half_width + 5.0, gate_y - 10.0, sprite_size.x - 10.0, 18.0), shadow)
+            canvas.draw_rect(Rect2(-half_width + 7.0, gate_y - 8.0, sprite_size.x - 14.0, 14.0), primary)
+            canvas.draw_rect(Rect2(-7.0, gate_y - 8.0, 14.0, 16.0), shadow)
+            canvas.draw_rect(Rect2(-5.0, gate_y - 7.0, 10.0, 15.0), Color("#302821"))
+            for target_x in [-half_width + 11.0, half_width - 11.0]:
+                canvas.draw_line(Vector2(target_x, gate_y - 18.0), Vector2(target_x, gate_y - 3.0), shadow, 2.0)
+                canvas.draw_line(Vector2(target_x - 4.0, gate_y - 12.0), Vector2(target_x + 4.0, gate_y - 12.0), accent, 1.5)
+                canvas.draw_circle(Vector2(target_x, gate_y - 20.0), 2.5, accent)
+            canvas.draw_line(Vector2(-half_width + 8.0, top + 6.0), Vector2(half_width - 8.0, top + 6.0), accent, 1.0)
 
     _draw_damage(canvas, building_id, visual, half_width, top, sprite_size.y, stage)
 
