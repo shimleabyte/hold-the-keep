@@ -66,6 +66,8 @@ class JobRow extends Control:
     signal priority_adjust(job: String, delta: int)
     var job := ""
     var icon: Texture2D
+    var shelter_icon: Texture2D
+    var sheltering := false
     var font: Font
     var assigned := 0
     var quota := 0
@@ -92,7 +94,9 @@ class JobRow extends Control:
             accept_event()
 
     func _draw() -> void:
-        draw_texture(icon, Vector2(2, 1))
+        draw_texture(icon, Vector2(2, 1), Color("#a0a0a0") if sheltering else Color.WHITE)
+        if sheltering and shelter_icon != null:
+            draw_texture_rect(shelter_icon, Rect2(51, 1, 6, 6), false, Color("#9eafd8"))
         for box in [Rect2(15, 1, 10, 10), Rect2(58, 1, 10, 10)]:
             draw_rect(box, Color(0.2, 0.18, 0.22))
             draw_rect(box, Color("#6b5a40"), false, 1.0)
@@ -102,6 +106,8 @@ class JobRow extends Control:
         var col := Color.WHITE
         if assigned < quota:
             col = Color("#ffb347")  # kuota belum terisi
+        elif sheltering:
+            col = Color("#a0a0a0")
         draw_string(font, Vector2(27, 9), "%d/%d" % [assigned, quota], HORIZONTAL_ALIGNMENT_CENTER, 19, 7, col)
         draw_string(font, Vector2(48, 9), str(priority_rank), HORIZONTAL_ALIGNMENT_CENTER, 9, 6, Color("#d7ba7a"))
 
