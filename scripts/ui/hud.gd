@@ -1,4 +1,6 @@
 extends CanvasLayer
+
+const HUD_WIDGETS := preload("res://scripts/ui/hud_widgets.gd")
 ## HUD: panel atas (sumber daya, jam, musuh, penduduk), vitals, kuota job (bisa diklik),
 ## bar boss, bar bangunan (bisa diklik), bantuan (H), dan layar game over / menang.
 
@@ -83,13 +85,13 @@ const HELP_ROWS := [
 var _font: Font
 var _viewport_size := Vector2(480, 270)
 var _top_bar: Panel
-var _clock_widget: ClockWidget
+var _clock_widget: HUD_WIDGETS.ClockWidget
 var _people_icon: TextureRect
 var _vitals_panel: Panel
 var _stage_panel: Panel
 var _build_left_hint: Label
 var _build_right_hint: Label
-var _queue_button: HudChip
+var _queue_button: HUD_WIDGETS.HudChip
 var _queue_backdrop: ColorRect
 var _queue_panel: Panel
 var _queue_count_label: Label
@@ -105,11 +107,11 @@ var _foes: Label
 var _fps: Label
 var _iron: Label
 var _iron_icon: TextureRect
-var _tech_btn: TechButton
-var _map_button: HudChip
-var _jobs_button: HudChip
+var _tech_btn: HUD_WIDGETS.TechButton
+var _map_button: HUD_WIDGETS.HudChip
+var _jobs_button: HUD_WIDGETS.HudChip
 var _jobs_panel: Panel
-var _outpost_button: HudChip
+var _outpost_button: HUD_WIDGETS.HudChip
 var _outpost_backdrop: ColorRect
 var _outpost_panel: Panel
 var _outpost_list: VBoxContainer
@@ -125,18 +127,18 @@ var _outpost_refresh_t := 0.0
 var _map_backdrop: ColorRect
 var _map_panel
 var _stage_label: Label
-var _stage_bar: StatBar
+var _stage_bar: HUD_WIDGETS.StatBar
 var _research_panel: Panel
 var _research_name: Label
-var _research_bar: StatBar
+var _research_bar: HUD_WIDGETS.StatBar
 var _slot_nodes: Array = []
-var _hp_bar: StatBar
+var _hp_bar: HUD_WIDGETS.StatBar
 var _hp_text: Label
-var _keep_bar: StatBar
+var _keep_bar: HUD_WIDGETS.StatBar
 var _keep_text: Label
-var _combat_bar: CombatBar
+var _combat_bar: HUD_WIDGETS.CombatBar
 var _boss_panel: Panel
-var _boss_bar: StatBar
+var _boss_bar: HUD_WIDGETS.StatBar
 var _boss_title: Label
 var _jobs: Dictionary = {}
 var _slots: Dictionary = {}
@@ -278,7 +280,7 @@ func _build_top_bar() -> void:
         divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
         bar.add_child(divider)
 
-    _clock_widget = ClockWidget.new()
+    _clock_widget = HUD_WIDGETS.ClockWidget.new()
     _clock_widget.font = _font
     _clock_widget.sun = ICONS["sun"]
     _clock_widget.moon = ICONS["moon"]
@@ -294,7 +296,7 @@ func _build_top_bar() -> void:
     _people_icon = _icon(bar, "people", Vector2(336, 3))
     _pop = _label(bar, "0/0", Vector2(349, 1), Color("#a9c9bf"))
 
-    _map_button = HudChip.new()
+    _map_button = HUD_WIDGETS.HudChip.new()
     _map_button.label = "MAP"
     _map_button.font = _font
     _map_button.position = Vector2(370, 1)
@@ -302,7 +304,7 @@ func _build_top_bar() -> void:
     _map_button.pressed.connect(_toggle_map)
     bar.add_child(_map_button)
 
-    _jobs_button = HudChip.new()
+    _jobs_button = HUD_WIDGETS.HudChip.new()
     _jobs_button.label = "JOBS"
     _jobs_button.font = _font
     _jobs_button.position = Vector2(409, 1)
@@ -310,7 +312,7 @@ func _build_top_bar() -> void:
     _jobs_button.pressed.connect(_toggle_jobs)
     bar.add_child(_jobs_button)
 
-    _tech_btn = TechButton.new()
+    _tech_btn = HUD_WIDGETS.TechButton.new()
     _tech_btn.icon = ICONS["tech"]
     _tech_btn.font = _font
     _tech_btn.position = Vector2(448, 1)
@@ -320,7 +322,7 @@ func _build_top_bar() -> void:
 
     _research_panel = _panel(Vector2(4, 45), Vector2(126, 12))
     _research_name = _label(_research_panel, "", Vector2(3, 1), Color("#ffd23f"))
-    _research_bar = StatBar.new()
+    _research_bar = HUD_WIDGETS.StatBar.new()
     _research_bar.position = Vector2(77, 3)
     _research_bar.size = Vector2(45, 6)
     _research_bar.fill = Color("#6fcf5a")
@@ -334,14 +336,14 @@ func _build_vitals() -> void:
     _vitals_panel = _panel(Vector2(4, 22), Vector2(122, 20))
     var p := _vitals_panel
     _icon(p, "heart", Vector2(3, 2))
-    _hp_bar = StatBar.new()
+    _hp_bar = HUD_WIDGETS.StatBar.new()
     _hp_bar.position = Vector2(17, 3)
     _hp_bar.size = Vector2(45, 5)
     _hp_bar.fill = Color("#d63a3a")
     p.add_child(_hp_bar)
     _hp_text = _label(p, "100", Vector2(66, 1))
     _icon(p, "keep", Vector2(3, 10))
-    _keep_bar = StatBar.new()
+    _keep_bar = HUD_WIDGETS.StatBar.new()
     _keep_bar.position = Vector2(17, 11)
     _keep_bar.size = Vector2(45, 5)
     _keep_bar.fill = GOLD
@@ -353,7 +355,7 @@ func _build_stage_bar() -> void:
     var p := _stage_panel
     _stage_label = _label(p, "BAB I  PERBATASAN", Vector2(3, 1), Color("#f0d39a"))
     _stage_label.add_theme_font_size_override("font_size", 9)
-    _stage_bar = StatBar.new()
+    _stage_bar = HUD_WIDGETS.StatBar.new()
     _stage_bar.position = Vector2(3, 13)
     _stage_bar.size = Vector2(199, 4)
     _stage_bar.fill = Color("#b98c4a")
@@ -361,7 +363,7 @@ func _build_stage_bar() -> void:
 
 
 func _build_combat_bar() -> void:
-    _combat_bar = CombatBar.new()
+    _combat_bar = HUD_WIDGETS.CombatBar.new()
     _combat_bar.font = _font
     _combat_bar.position = Vector2(151, 219)
     _combat_bar.size = Vector2(178, 18)
@@ -371,7 +373,7 @@ func _build_combat_bar() -> void:
 func _build_jobs() -> void:
     _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 132))
     for i in JOBS.size():
-        var row := JobRow.new()
+        var row := HUD_WIDGETS.JobRow.new()
         row.job = JOBS[i]
         row.icon = ICONS[JOB_ICONS[JOBS[i]]]
         row.font = _font
@@ -383,7 +385,7 @@ func _build_jobs() -> void:
         row.priority_adjust.connect(_on_job_priority_adjust)
         _jobs_panel.add_child(row)
         _jobs[JOBS[i]] = row
-    _outpost_button = HudChip.new()
+    _outpost_button = HUD_WIDGETS.HudChip.new()
     _outpost_button.label = "POS"
     _outpost_button.font = _font
     _outpost_button.position = Vector2(2, 116)
@@ -397,7 +399,7 @@ func _build_boss_bar() -> void:
     _boss_title = _label(_boss_panel, "RAJA LAWAN", Vector2(0, 0), Color("#ff8a7a"))
     _boss_title.size = Vector2(200, 9)
     _boss_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    _boss_bar = StatBar.new()
+    _boss_bar = HUD_WIDGETS.StatBar.new()
     _boss_bar.position = Vector2(6, 10)
     _boss_bar.size = Vector2(188, 6)
     _boss_bar.fill = Color("#c0392b")
@@ -406,7 +408,7 @@ func _build_boss_bar() -> void:
 
 
 func _build_build_bar() -> void:
-    _queue_button = HudChip.new()
+    _queue_button = HUD_WIDGETS.HudChip.new()
     _queue_button.label = "QUEUE"
     _queue_button.font = _font
     _queue_button.position = Vector2(4, 211)
@@ -436,7 +438,7 @@ func _rebuild_build_bar() -> void:
     var x0 := int((_viewport_size.x - total) / 2.0)
     for i in n:
         var id: String = ids[i]
-        var slot := BuildSlot.new()
+        var slot := HUD_WIDGETS.BuildSlot.new()
         slot.id = id
         slot.font = _font
         slot.key_text = str(i + 1)
@@ -536,7 +538,7 @@ func _build_outpost_panel() -> void:
     var title := _label(_outpost_panel, "LOGISTIK & GARRISON", Vector2(10, 7), GOLD)
     title.add_theme_font_size_override("font_size", 9)
 
-    var close := HudChip.new()
+    var close := HUD_WIDGETS.HudChip.new()
     close.label = "X"
     close.font = _font
     close.position = Vector2(330, 4)
@@ -1090,7 +1092,7 @@ func _build_construction_queue_panel() -> void:
     _queue_count_label = _label(_queue_panel, "0 PROYEK", Vector2(10, 22), Color("#c9b99d"))
     _queue_count_label.add_theme_font_size_override("font_size", 6)
 
-    var close := HudChip.new()
+    var close := HUD_WIDGETS.HudChip.new()
     close.label = "X"
     close.font = _font
     close.position = Vector2(330, 4)
@@ -1170,7 +1172,7 @@ func _refresh_construction_queue() -> void:
         var site = sites[index]
         if not is_instance_valid(site):
             continue
-        var row := ConstructionQueueRow.new()
+        var row := HUD_WIDGETS.ConstructionQueueRow.new()
         row.site = site
         row.font = _font
         row.order_index = index
@@ -1300,7 +1302,7 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _over_label.size.x = _viewport_size.x
 
     for slot_index in _slot_nodes.size():
-        var slot: BuildSlot = _slot_nodes[slot_index]
+        var slot: HUD_WIDGETS.BuildSlot = _slot_nodes[slot_index]
         var total_width := 0.0
         for current in _slot_nodes:
             total_width += current.size.x
@@ -1515,7 +1517,7 @@ func _refresh_resources() -> void:
 
 func _refresh_slots() -> void:
     for id in _slots:
-        var slot: BuildSlot = _slots[id]
+        var slot: HUD_WIDGETS.BuildSlot = _slots[id]
         slot.selected = id == _selected
         var cost: Dictionary = DataDB.cost_of(id)
         var supply = get_tree().get_first_node_in_group("supply_network")
@@ -1586,314 +1588,3 @@ func _show_message(text: String) -> void:
     _msg_tween.tween_interval(1.8)
     _msg_tween.tween_property(_msg, "modulate:a", 0.0, 0.5)
 
-
-# ---------------------------------------------------------------- widget
-
-## Bar horizontal untuk HP.
-class StatBar extends Control:
-    var value := 1.0
-    var fill := Color("#d63a3a")
-
-    func set_value(v: float) -> void:
-        value = clampf(v, 0.0, 1.0)
-        queue_redraw()
-
-    func _draw() -> void:
-        draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 0.6))
-        var w := (size.x - 2.0) * value
-        draw_rect(Rect2(1, 1, w, size.y - 2.0), fill)
-        draw_rect(Rect2(1, 1, w, 1), fill.lightened(0.35))
-        draw_rect(Rect2(Vector2.ZERO, size), Color("#1a1410"), false, 1.0)
-
-
-## Ikon matahari/bulan, "HARI n/N", dan lintasan waktu dengan penanda.
-class ClockWidget extends Control:
-    var font: Font
-    var sun: Texture2D
-    var moon: Texture2D
-
-    func _process(_delta: float) -> void:
-        queue_redraw()
-
-    func _draw() -> void:
-        var night: bool = GameClock.darkness() > 0.5
-        draw_texture(moon if night else sun, Vector2(0, 0))
-        var final_day := int(DataDB.waves.get("final_day", 0))
-        draw_string(font, Vector2(13, 9), "HARI %d/%d" % [GameClock.day, final_day],
-            HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE)
-        var tx := 76.0
-        var tw := 64.0
-        var ty := 3.0
-        var th := 5.0
-        var ns: float = GameClock.NIGHT_START
-        var ne: float = GameClock.NIGHT_END
-        draw_rect(Rect2(tx, ty, tw * ns, th), Color("#d9b84a"))
-        draw_rect(Rect2(tx + tw * ns, ty, tw * (ne - ns), th), Color("#3b4f8a"))
-        draw_rect(Rect2(tx + tw * ne, ty, tw * (1.0 - ne), th), Color("#d98a4a"))
-        draw_rect(Rect2(tx - 1, ty - 1, tw + 2, th + 2), Color("#1a1410"), false, 1.0)
-        var mx: float = tx + tw * GameClock.time_of_day
-        draw_rect(Rect2(mx - 1, ty - 2, 2, th + 4), Color.WHITE)
-
-
-## Satu baris job: ikon, tombol -, "terisi/kuota", tombol +. Bisa diklik.
-class JobRow extends Control:
-    signal adjust(job: String, delta: int)
-    signal priority_adjust(job: String, delta: int)
-    var job := ""
-    var icon: Texture2D
-    var font: Font
-    var assigned := 0
-    var quota := 0
-    var priority_rank := 1
-
-    func _ready() -> void:
-        mouse_filter = Control.MOUSE_FILTER_STOP
-
-    func set_counts(a: int, q: int, rank: int = 1) -> void:
-        assigned = a
-        quota = q
-        priority_rank = rank
-        queue_redraw()
-
-    func _gui_input(event: InputEvent) -> void:
-        if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-            if Rect2(15, 1, 10, 10).has_point(event.position):
-                adjust.emit(job, -1)
-            elif Rect2(58, 1, 10, 10).has_point(event.position):
-                adjust.emit(job, 1)
-            accept_event()
-        elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
-            priority_adjust.emit(job, 1 if event.shift_pressed else -1)
-            accept_event()
-
-    func _draw() -> void:
-        draw_texture(icon, Vector2(2, 1))
-        for box in [Rect2(15, 1, 10, 10), Rect2(58, 1, 10, 10)]:
-            draw_rect(box, Color(0.2, 0.18, 0.22))
-            draw_rect(box, Color("#6b5a40"), false, 1.0)
-        draw_rect(Rect2(17, 5, 6, 2), Color.WHITE)
-        draw_rect(Rect2(60, 5, 6, 2), Color.WHITE)
-        draw_rect(Rect2(62, 3, 2, 6), Color.WHITE)
-        var col := Color.WHITE
-        if assigned < quota:
-            col = Color("#ffb347")  # kuota belum terisi
-        draw_string(font, Vector2(27, 9), "%d/%d" % [assigned, quota], HORIZONTAL_ALIGNMENT_CENTER, 19, 7, col)
-        draw_string(font, Vector2(48, 9), "P%d" % priority_rank, HORIZONTAL_ALIGNMENT_CENTER, 9, 6, Color("#d7ba7a"))
-
-
-
-## Level, XP, and active-skill cooldowns.
-class CombatBar extends Control:
-    var font: Font
-    var state: Dictionary = {}
-
-    func update_state(value: Dictionary) -> void:
-        state = value
-        queue_redraw()
-
-    func _draw() -> void:
-        draw_rect(Rect2(Vector2.ZERO, size), Color("#111319", 0.88))
-        draw_rect(Rect2(Vector2.ZERO, size), Color("#6b5a40"), false, 1.0)
-        var level := int(state.get("level", 1))
-        var xp := int(state.get("xp", 0))
-        var next_xp := int(state.get("next_xp", 0))
-        draw_string(font, Vector2(4, 10), "LV%d" % level, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("#ffd23f"))
-        var ratio := float(xp) / float(maxi(1, next_xp)) if next_xp > 0 else 1.0
-        draw_rect(Rect2(25, 4, 25, 7), Color("#29231d"))
-        draw_rect(Rect2(26, 5, 23.0 * clampf(ratio, 0.0, 1.0), 5), Color("#d39b42"))
-        var abilities := [
-            ["Q", "DASH", true, float(state.get("dash_cd", 0.0))],
-            ["C", "TEBAS", bool(state.get("cleave_unlocked", false)), float(state.get("cleave_cd", 0.0))],
-            ["V", "SERUAN", bool(state.get("rally_unlocked", false)), float(state.get("rally_cd", 0.0))]
-        ]
-        for i in abilities.size():
-            var item: Array = abilities[i]
-            var x := 54.0 + i * 40.0
-            var unlocked := bool(item[2])
-            var cooldown := float(item[3])
-            var ready := unlocked and cooldown <= 0.05
-            var tint := Color("#ffd23f") if ready else (Color("#a99a83") if unlocked else Color("#665d52"))
-            draw_rect(Rect2(x, 2, 38, 12), Color("#211b19"))
-            draw_rect(Rect2(x, 2, 38, 12), Color("#6b5a40"), false, 1.0)
-            var status := "OK" if ready else ("--" if not unlocked else "%.0f" % cooldown)
-            draw_string(font, Vector2(x + 3, 10), String(item[0]) + " " + status,
-                HORIZONTAL_ALIGNMENT_LEFT, -1, 7, tint)
-
-
-## Slot bar bangunan: ikon, nomor + nama, biaya. Bisa diklik.
-class ConstructionQueueRow extends Control:
-    signal move_requested(site, direction: int)
-    signal cancel_requested(site)
-    var site: Node
-    var font: Font
-    var order_index := 0
-    var can_move_up := false
-    var can_move_down := false
-    var _last_progress := -1.0
-
-    func _ready() -> void:
-        mouse_filter = Control.MOUSE_FILTER_STOP
-        tooltip_text = "UP: dahulukan  ·  DN: tunda  ·  X: batalkan dan kembalikan biaya belum terpakai"
-
-    func _process(_delta: float) -> void:
-        if site == null or not is_instance_valid(site):
-            return
-        var progress: float = site.progress_ratio()
-        if absf(progress - _last_progress) >= 0.002:
-            _last_progress = progress
-            queue_redraw()
-
-    func _gui_input(event: InputEvent) -> void:
-        if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
-            return
-        var x := size.x
-        if Rect2(x - 61.0, 1.0, 19.0, 14.0).has_point(event.position):
-            if can_move_up:
-                move_requested.emit(site, -1)
-            accept_event()
-        elif Rect2(x - 40.0, 1.0, 19.0, 14.0).has_point(event.position):
-            if can_move_down:
-                move_requested.emit(site, 1)
-            accept_event()
-        elif Rect2(x - 19.0, 1.0, 18.0, 14.0).has_point(event.position):
-            cancel_requested.emit(site)
-            accept_event()
-
-    func _draw() -> void:
-        if site == null or not is_instance_valid(site):
-            return
-        draw_rect(Rect2(Vector2.ZERO, size), Color("#191a18"))
-        draw_rect(Rect2(Vector2.ZERO, size), Color("#554a37"), false, 1.0)
-        var building_name := String(site.data.get("short", site.data.get("name", site.id)))
-        draw_string(font, Vector2(6, 10), "%02d  %s" % [order_index + 1, building_name],
-            HORIZONTAL_ALIGNMENT_LEFT, maxf(80.0, size.x - 72.0), 7, Color("#e5d7bb"))
-        var progress: float = float(site.progress_ratio())
-        draw_rect(Rect2(6, 17, 72, 5), Color("#090b0b"))
-        draw_rect(Rect2(7, 18, 70.0 * progress, 3), Color("#d6bc78"))
-        var cost_text := ""
-        for pair in [["wood", "W"], ["stone", "S"], ["iron", "I"], ["food", "F"]]:
-            if site.paid_cost.has(pair[0]):
-                if not cost_text.is_empty():
-                    cost_text += " "
-                cost_text += "%s%d" % [String(pair[1]), int(site.paid_cost[pair[0]])]
-        var detail := "%d%%  %s" % [roundi(progress * 100.0), cost_text]
-        draw_string(font, Vector2(86, 22), detail, HORIZONTAL_ALIGNMENT_LEFT,
-            maxf(70.0, size.x - 154.0), 6, Color("#c5b99f"))
-        _draw_action_button(Rect2(size.x - 61.0, 1.0, 19.0, 14.0), "UP", can_move_up)
-        _draw_action_button(Rect2(size.x - 40.0, 1.0, 19.0, 14.0), "DN", can_move_down)
-        _draw_action_button(Rect2(size.x - 19.0, 1.0, 18.0, 14.0), "X", true)
-
-    func _draw_action_button(rect: Rect2, caption: String, enabled: bool) -> void:
-        draw_rect(rect, Color("#373126") if enabled else Color("#242321"))
-        draw_rect(rect, Color("#88734d") if enabled else Color("#49443b"), false, 1.0)
-        draw_string(font, rect.position + Vector2(3, 10), caption, HORIZONTAL_ALIGNMENT_LEFT,
-            rect.size.x - 3.0, 6, Color("#ead7ae") if enabled else Color("#777064"))
-
-
-## Slot bar bangunan: ikon, nomor + nama, biaya. Bisa diklik.
-class BuildSlot extends Control:
-    signal pressed(id: String)
-    var id := ""
-    var key_text := ""
-    var title := ""
-    var icon: Texture2D
-    var costs: Array = []
-    var font: Font
-    var selected := false
-    var affordable := true
-    var hover := false
-
-    func _ready() -> void:
-        mouse_filter = Control.MOUSE_FILTER_STOP
-        mouse_entered.connect(func() -> void:
-            hover = true
-            queue_redraw())
-        mouse_exited.connect(func() -> void:
-            hover = false
-            queue_redraw())
-
-    func _gui_input(event: InputEvent) -> void:
-        if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-            pressed.emit(id)
-            accept_event()
-
-    func _draw() -> void:
-        var bg := Color(0.09, 0.08, 0.11, 0.88)
-        if hover:
-            bg = bg.lightened(0.18)
-        draw_rect(Rect2(Vector2.ZERO, size), bg)
-        draw_rect(Rect2(Vector2.ZERO, size), Color("#ffd23f") if selected else Color("#6b5a40"), false, 1.0)
-        var a := 1.0 if affordable else 0.45
-        # baris atas: nomor, ikon, nama; baris bawah: biaya
-        draw_string(font, Vector2(3, 11), key_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 1, 1, a * 0.6))
-        draw_texture(icon, Vector2(10, 2), Color(1, 1, 1, a))
-        var title_col := Color("#ffd23f") if selected else Color.WHITE
-        title_col.a = a
-        draw_string(font, Vector2(29, 11), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, title_col)
-        var x := 4.0
-        for c in costs:
-            draw_texture(c[0], Vector2(x, 18), Color(1, 1, 1, a))
-            x += 11.0
-            var t := str(c[1])
-            draw_string(font, Vector2(x, 27), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 1, 1, a))
-            x += font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 4.0
-
-## Compact top-bar button for secondary panels.
-class HudChip extends Control:
-    signal pressed
-    var label := ""
-    var font: Font
-    var active := false
-    var hover := false
-
-    func _ready() -> void:
-        mouse_filter = Control.MOUSE_FILTER_STOP
-        mouse_entered.connect(func() -> void:
-            hover = true
-            queue_redraw())
-        mouse_exited.connect(func() -> void:
-            hover = false
-            queue_redraw())
-
-    func _gui_input(event: InputEvent) -> void:
-        if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-            pressed.emit()
-            accept_event()
-
-    func _draw() -> void:
-        var bg := Color("#51432f") if active else Color("#201d1a")
-        if hover:
-            bg = bg.lightened(0.18)
-        draw_rect(Rect2(Vector2.ZERO, size), bg)
-        draw_rect(Rect2(Vector2.ZERO, size), Color("#e0b969") if active else Color("#6b5a40"), false, 1.0)
-        draw_string(font, Vector2(size.x / 2.0, 9), label, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color("#f0e2c7"))
-
-
-## Tombol "RISET [Y]" di panel atas.
-class TechButton extends Control:
-    signal pressed
-    var icon: Texture2D
-    var font: Font
-    var hover := false
-    var busy := false
-
-    func _ready() -> void:
-        mouse_filter = Control.MOUSE_FILTER_STOP
-        mouse_entered.connect(func() -> void:
-            hover = true
-            queue_redraw())
-        mouse_exited.connect(func() -> void:
-            hover = false
-            queue_redraw())
-
-    func _gui_input(event: InputEvent) -> void:
-        if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-            pressed.emit()
-            accept_event()
-
-    func _draw() -> void:
-        var bg := Color(0.2, 0.17, 0.1, 0.9) if hover else Color(0.12, 0.1, 0.08, 0.9)
-        draw_rect(Rect2(Vector2.ZERO, size), bg)
-        draw_rect(Rect2(Vector2.ZERO, size), Color("#ffd23f") if busy else Color("#6b5a40"), false, 1.0)
-        draw_texture(icon, Vector2(2, 1))
-        draw_string(font, Vector2(14, 10), "Y", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE)
