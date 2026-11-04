@@ -151,7 +151,7 @@ func _build_screen() -> void:
     footer.add_child(quit)
 
     _build_settings_panel()
-    _main_first_focus = _continue_button.disabled         ? modes.get_child(0).get_child(0).get_child(3)         : _continue_button
+    _main_first_focus = modes.get_child(0).get_child(0).get_child(3) if _continue_button.disabled else _continue_button
     call_deferred("_grab_initial_focus")
 
 
