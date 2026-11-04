@@ -317,7 +317,7 @@ func _refresh_cost_source_controls(depots: Array) -> void:
         if not connected:
             label += " · PUTUS"
         _hud._cost_source_option.add_item(label)
-        var index := _hud._cost_source_option.item_count - 1
+        var index: int = _hud._cost_source_option.item_count - 1
         _hud._cost_source_option.set_item_metadata(index, {"cx": cell.x, "cy": cell.y})
         if not connected and cell != selected_cell:
             _hud._cost_source_option.set_item_disabled(index, true)
@@ -394,7 +394,7 @@ func _refresh_shipment_controls() -> void:
         return
     var orders: Array[Dictionary] = main_node.supply.get_shipment_orders()
     if orders.is_empty():
-        var empty := _hud._label(_hud._shipment_orders_list, "Belum ada perintah pengiriman.", Vector2.ZERO, Color("#c9b99d"))
+        var empty: Label = _hud._label(_hud._shipment_orders_list, "Belum ada perintah pengiriman.", Vector2.ZERO, Color("#c9b99d"))
         empty.add_theme_font_size_override("font_size", 7)
         return
     var shown := 0
