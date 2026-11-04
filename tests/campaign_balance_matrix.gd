@@ -103,6 +103,7 @@ func run_profile(profile: String, expected: Dictionary) -> void:
         "%s must not queue its final boss one day early" % profile)
     main.spawner.end_wave()
     main.spawner.start_wave(final_day)
+    game_clock.day = final_day
     assert(main.spawner._boss_pending,
         "%s must queue the final boss on its configured final day" % profile)
     assert(main.spawner._boss_t < 0.0,
