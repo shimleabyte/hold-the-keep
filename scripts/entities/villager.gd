@@ -1168,25 +1168,7 @@ func _release() -> void:
     _hit_done = false
 
 
-## Public bridge for the healer component; target/state ownership remains in Villager.
-func healer_behavior_target_valid() -> bool:
-    if not has_valid_workplace() or target == null or not is_instance_valid(target):
-        return false
-    return String(target.job) == "soldier" and int(target.hp) > 0 \
-        and int(target.hp) < int(target.max_hp) and not target.is_expeditioning() \
-        and not target.is_recalling_expedition() \
-        and target.state not in [State.HIDDEN, State.FLEEING] \
-        and _is_in_workplace_radius(target)
-
-
-func healer_behavior_face_target() -> void:
-    anim.face(target.position - position)
-
-
-func healer_behavior_apply_heal(amount: int) -> bool:
-    return target.heal(amount) > 0 and int(target.hp) < int(target.max_hp)
-
-
+## Public bridge for the healer component to release its host-owned work claim.
 func healer_behavior_release(recheck_delay: float) -> void:
     _release()
     state = State.IDLE
