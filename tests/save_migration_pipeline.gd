@@ -26,6 +26,10 @@ func _run() -> void:
 
     var snapshot: Dictionary = save_system.collect(main)
     var pipeline = SAVE_MIGRATION_SCRIPT.new()
+    if pipeline == null:
+        push_error("SaveMigrationPipeline failed to instantiate")
+        quit(1)
+        return
 
     var legacy_v4 := snapshot.duplicate(true)
     legacy_v4["version"] = 4
