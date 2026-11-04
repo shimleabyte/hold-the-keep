@@ -470,4 +470,6 @@ func _apply_save(d: Dictionary) -> void:
 
 
 func _process(_delta: float) -> void:
+    if _tint == null:
+        return
     _tint.color = Color.WHITE.lerp(NIGHT_TINT, GameClock.darkness())
