@@ -1081,6 +1081,74 @@ func _return_to_scout_post() -> void:
     _scout_behavior.return_to_post()
 
 
+## Public bridge used by VillagerScoutBehavior; movement and private state stay host-owned.
+func scout_behavior_cursor() -> int:
+    return _scout_cursor
+
+
+func scout_behavior_reserved_cell() -> Vector2i:
+    return _scout_target_cell
+
+
+func scout_behavior_start_survey(cell: Vector2i, direction_index: int, path: PackedVector2Array) -> void:
+    _scout_target_cell = cell
+    _scout_cursor = (direction_index + 1) % SCOUT_DIRECTIONS.size()
+    _scout_survey_t = 0.0
+    _scout_revealed_at_target = false
+    _goal_cells = [cell]
+    _set_path(path)
+    state = State.SCOUTING
+
+
+func scout_behavior_reset_survey() -> void:
+    _scout_target_cell = Vector2i(-1, -1)
+    _scout_survey_t = 0.0
+    _scout_revealed_at_target = false
+
+
+func scout_behavior_repath_if_needed() -> bool:
+    if nav.version != _path_ver:
+        _repath()
+    return state == State.SCOUTING
+
+
+func scout_behavior_has_arrived() -> bool:
+    return _pi >= _path.size()
+
+
+func scout_behavior_move(delta: float) -> void:
+    _move_along(delta)
+
+
+func scout_behavior_is_revealed() -> bool:
+    return _scout_revealed_at_target
+
+
+func scout_behavior_mark_revealed() -> void:
+    _scout_revealed_at_target = true
+
+
+func scout_behavior_advance_survey(delta: float) -> bool:
+    _scout_survey_t += delta
+    return _scout_survey_t >= SCOUT_SURVEY_SECONDS
+
+
+func scout_behavior_finish_survey() -> void:
+    scout_behavior_reset_survey()
+    scout_behavior_wait_for_scout()
+
+
+func scout_behavior_wait_for_scout() -> void:
+    state = State.IDLE
+    _decide_t = SCOUT_RECHECK_SECONDS
+
+
+func scout_behavior_set_return_path(cells: Array[Vector2i], path: PackedVector2Array) -> void:
+    _goal_cells = cells
+    _set_path(path)
+    state = State.SCOUT_RETURNING
+
+
 func _cells_of(n) -> Array[Vector2i]:
     if n.has_method("cells"):
         return n.cells()
