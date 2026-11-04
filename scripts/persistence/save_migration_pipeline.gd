@@ -151,3 +151,199 @@ func _migrate_v17_equipment_and_events(snapshot: Dictionary, plan: Dictionary) -
             normalized_villagers[index]["armor_equipped"] = bool(saved_villager.get("armor_equipped", false))
     # Decision-event state is additive and optional, including for older saves.
     plan["events_state"] = snapshot.get("events", {})
+
+
+const CAMPAIGN_SCRIPT := preload("res://scripts/systems/campaign.gd")
+
+
+## Return a complete current-schema snapshot without changing the source dictionary.
+## A null result means the old snapshot is valid but cannot be upgraded losslessly.
+func migrate_snapshot_to_current(snapshot: Dictionary, main: Node, target_version: int) -> Variant:
+    var source_version := int(snapshot.get("version", 0))
+    if source_version < 1 or source_version > target_version or main == null or main.world == null:
+        return null
+    if source_version == target_version:
+        return snapshot.duplicate(true)
+
+    var migrated: Dictionary = snapshot.duplicate(true)
+    var profile := WorldConfig.profile_id
+    if source_version < 7:
+        # The pre-v7 format only represented the original 64x64 Classic world.
+        profile = "classic"
+        migrated["world"] = {
+            "profile": "classic",
+            "map_size": 64,
+            "tile_size": WorldConfig.TILE_SIZE,
+            "seed": WorldConfig.world_seed
+        }
+    else:
+        var saved_world: Variant = migrated.get("world", {})
+        if not (saved_world is Dictionary):
+            return null
+        profile = String(saved_world.get("profile", ""))
+        if profile != WorldConfig.profile_id:
+            return null
+
+    var restore_plan: Dictionary = build_restore_plan(snapshot, main.world, target_version)
+    if source_version < 8:
+        var legacy_state: Dictionary = restore_plan["legacy_stronghold"].duplicate(true)
+        if legacy_state.is_empty():
+            # The old loader generated a new target only after restoring buildings.
+            # Do not guess a replacement cell in the pre-load world.
+            return null
+        var legacy_cell := Vector2i(int(legacy_state.get("cx", -1)), int(legacy_state.get("cy", -1)))
+        var destroyed := bool(legacy_state.get("destroyed", false))
+        if not WorldConfig.is_valid_cell(legacy_cell):
+            if not destroyed:
+                return null
+            legacy_cell = WorldConfig.starting_keep_cell()
+        legacy_state["cx"] = legacy_cell.x
+        legacy_state["cy"] = legacy_cell.y
+        if destroyed:
+            legacy_state["hp"] = 0
+        else:
+            var saved_hp := int(legacy_state.get("hp", 0))
+            if saved_hp < 1 or saved_hp > 900:
+                return null
+        if String(legacy_state.get("id", "")).is_empty():
+            legacy_state["id"] = "classic_enemy_keep" if profile == "classic" else "legacy_frontier_keep"
+        if String(legacy_state.get("region", "")).is_empty():
+            legacy_state["region"] = String(main.world.region_id(legacy_cell))
+        if String(legacy_state.get("faction", "")).is_empty():
+            if not snapshot.get("stronghold", {}).has("faction"):
+                legacy_state["faction"] = "legacy_raiders"
+            else:
+                return null
+        var legacy_campaign = CAMPAIGN_SCRIPT.new()
+        legacy_campaign.configure_legacy(profile, legacy_state)
+        migrated["campaign"] = legacy_campaign.export_state()
+        legacy_campaign.free()
+
+    var player_state: Variant = migrated.get("player", {})
+    if not (player_state is Dictionary):
+        return null
+    if source_version < 6:
+        player_state["combat"] = {"level": 1, "xp": 0}
+    migrated["player"] = player_state
+
+    var saved_buildings: Variant = migrated.get("buildings", [])
+    if not (saved_buildings is Array):
+        return null
+    for building_value in saved_buildings:
+        if not (building_value is Dictionary):
+            return null
+        if source_version < 12:
+            building_value["stockpile"] = {}
+
+    var saved_villagers: Variant = migrated.get("villagers", [])
+    if not (saved_villagers is Array):
+        return null
+    var normalized_villagers: Array = restore_plan["villagers"]
+    if normalized_villagers.size() != saved_villagers.size():
+        return null
+    for index in range(saved_villagers.size()):
+        var villager_value: Variant = saved_villagers[index]
+        if not (villager_value is Dictionary):
+            return null
+        var villager: Dictionary = villager_value
+        var normalized: Dictionary = normalized_villagers[index]
+        var restored_job := String(normalized.get("job", ""))
+        villager["job"] = restored_job
+        villager["expedition"] = bool(normalized.get("expedition", false))
+        villager["recalling"] = bool(normalized.get("recalling", false))
+        villager["occupation"] = "" if restored_job == "soldier" else restored_job
+        villager["military_specialization"] = "soldier" if restored_job == "soldier" else ""
+        if source_version < 17:
+            villager["weapon_equipped"] = false
+            villager["armor_equipped"] = false
+        else:
+            villager["weapon_equipped"] = bool(villager.get("weapon_equipped", false))
+            villager["armor_equipped"] = bool(villager.get("armor_equipped", false))
+        saved_villagers[index] = villager
+    migrated["villagers"] = saved_villagers
+
+    var saved_enemies: Variant = migrated.get("enemies", [])
+    if not (saved_enemies is Array):
+        return null
+    if source_version < 10:
+        for enemy_value in saved_enemies:
+            if not (enemy_value is Dictionary):
+                return null
+            enemy_value["faction"] = ""
+    migrated["enemies"] = saved_enemies
+
+    var quota_value: Variant = migrated.get("quota", {})
+    if not (quota_value is Dictionary):
+        return null
+    var quota: Dictionary = quota_value.duplicate(true)
+    var current_jobs := ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "healer", "blacksmith", "soldier"]
+    for job_name in current_jobs:
+        if not quota.has(job_name):
+            quota[job_name] = 1 if job_name == "woodcutter" else 0
+    migrated["quota"] = quota
+
+    var priority_value: Variant = migrated.get("job_priority", [])
+    var priority: Array = []
+    if priority_value is Array:
+        for value in priority_value:
+            var job_name := String(value)
+            if current_jobs.has(job_name) and not priority.has(job_name):
+                priority.append(job_name)
+    for job_name in ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "healer", "blacksmith", "soldier"]:
+        if not priority.has(job_name):
+            priority.append(job_name)
+    migrated["job_priority"] = priority
+
+    if source_version < 11:
+        migrated["frontier_campaign"] = _default_frontier_campaign(profile)
+    elif not migrated.has("frontier_campaign"):
+        return null
+    if source_version < 13:
+        migrated["supply"] = {
+            "next_id": 1,
+            "orders": [],
+            "cost_source": null,
+            "pressure": []
+        }
+    elif not migrated.has("supply"):
+        return null
+    if not migrated.has("events"):
+        migrated["events"] = {
+            "pending_event_id": "",
+            "scheduled_consequences": []
+        }
+
+    migrated["version"] = target_version
+    return migrated
+
+
+func _default_frontier_campaign(profile: String) -> Dictionary:
+    if profile == "classic":
+        return {
+            "profile": "classic",
+            "objectives": [],
+            "final_boss_defeated": false,
+            "unlocked_act": 1,
+            "camps": {"records": []}
+        }
+    var records: Array[Dictionary] = []
+    for definition in DataDB.frontier_objectives:
+        records.append({
+            "id": String(definition.get("id", "")),
+            "completed": false,
+            "cell_x": -1,
+            "cell_y": -1,
+            "state": "waiting",
+            "hp": 0,
+            "x": 0.0,
+            "y": 0.0,
+            "path_index": 0,
+            "saw_night": false
+        })
+    return {
+        "profile": profile,
+        "objectives": records,
+        "final_boss_defeated": false,
+        "unlocked_act": 1,
+        "camps": {"records": []}
+    }
