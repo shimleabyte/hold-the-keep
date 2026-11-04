@@ -50,6 +50,9 @@ var _tint: CanvasModulate
 func _ready() -> void:
     add_to_group("main")
     Audio.silence(1000)
+    if OS.get_environment("HTK_AUTO_START_GAME") == "1":
+        _start_campaign(WorldConfig.profile_id)
+        return
     var title_screen = TITLE_SCREEN_SCRIPT.new()
     title_screen.mode_selected.connect(_start_campaign)
     add_child(title_screen)
