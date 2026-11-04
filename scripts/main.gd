@@ -51,21 +51,22 @@ func _ready() -> void:
     add_to_group("main")
     Audio.silence(1000)
     if OS.get_environment("HTK_AUTO_START_GAME") == "1":
-        _start_campaign(WorldConfig.profile_id)
+        _start_campaign(WorldConfig.profile_id, true)
         return
     var title_screen = TITLE_SCREEN_SCRIPT.new()
     title_screen.mode_selected.connect(_start_campaign)
     add_child(title_screen)
 
 
-func _start_campaign(profile_id: String) -> void:
+func _start_campaign(profile_id: String, preserve_runtime_state := false) -> void:
     if not WorldConfig.apply_profile(profile_id):
         return
     Settings.set_world_profile(profile_id)
-    Inventory.reset()
-    GameClock.reset()
-    Tech.reset()
-    SaveSystem.pending.clear()
+    if not preserve_runtime_state:
+        Inventory.reset()
+        GameClock.reset()
+        Tech.reset()
+        SaveSystem.pending.clear()
     get_tree().paused = false
 
     var title_screen := get_node_or_null("TitleScreen")
