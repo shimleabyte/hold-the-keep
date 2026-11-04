@@ -6,6 +6,7 @@ extends Node2D
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
+const ArrowProjectile := preload("res://scripts/entities/arrow.gd")
 
 enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING, SCOUTING, SCOUT_RETURNING }
 
@@ -38,6 +39,11 @@ const WORKER_HP := 20
 const SOLDIER_DAMAGE := 8
 const SOLDIER_INTERVAL := 0.8
 const SOLDIER_SEARCH := 300.0
+const ARCHER_SEARCH := 260.0
+const ARCHER_ATTACK_RANGE := 150.0
+const ARCHER_MIN_RANGE := 52.0
+const ARCHER_DAMAGE_MULT := 0.68
+const ARCHER_ATTACK_INTERVAL := 1.15
 const OUTPOST_GUARD_RADIUS := 128.0
 const OUTPOST_GUARD_ARRIVAL_RADIUS := 45.0
 const REACH := 11.0
@@ -63,10 +69,10 @@ var occupation := ""
 var military_specialization := ""
 var job: String:
     get:
-        return military_specialization if not military_specialization.is_empty() else occupation
+        return "soldier" if not military_specialization.is_empty() else occupation
     set(value):
-        if value == "soldier":
-            military_specialization = "soldier"
+        if value in ["soldier", "archer"]:
+            military_specialization = value
             occupation = ""
         else:
             occupation = value
@@ -209,8 +215,12 @@ func _mine_kind() -> String:
     return "stone"
 
 
-func set_job(j: String) -> bool:
-    if j == job:
+func set_job(j: String, preferred_workplace = null) -> bool:
+    if j == "archer" and is_archer():
+        return true
+    if j == "soldier" and job == "soldier" and not is_archer():
+        return true
+    if j != "archer" and j != "soldier" and j == job:
         return true
     release_outpost_guard()
     _release()
@@ -221,10 +231,18 @@ func set_job(j: String) -> bool:
     _scout_survey_t = 0.0
     _scout_revealed_at_target = false
     var old_max := max_hp
-    if job == "soldier" and j != "soldier":
+    if job == "soldier" and not ["soldier", "archer"].has(j):
         weapon_equipped = false
         armor_equipped = false
     job = j
+    if j == "archer" and not _claim_workplace("archer", preferred_workplace):
+        job = "soldier"
+        add_to_group("defenders")
+        max_hp = _hp_cap_for("soldier")
+        hp = clampi(roundi(float(hp) * max_hp / maxi(1, old_max)), 1, max_hp)
+        state = State.IDLE
+        queue_redraw()
+        return false
     if job in ["builder", "hunter", "scout", "healer", "blacksmith"] and not _claim_workplace(job):
         job = ""
         remove_from_group("defenders")
@@ -248,20 +266,26 @@ func set_job(j: String) -> bool:
     queue_redraw()
     return true
 
-
 func has_valid_workplace() -> bool:
-    return workplace != null and is_instance_valid(workplace) and workplace_job == job
+    var expected_job := "archer" if is_archer() else job
+    return workplace != null and is_instance_valid(workplace) and workplace_job == expected_job
 
 
-func _claim_workplace(work_job: String) -> bool:
+func is_archer() -> bool:
+    return job == "soldier" and military_specialization == "archer"
+
+
+func _claim_workplace(work_job: String, preferred_workplace = null) -> bool:
     var best = null
     var best_path_length := INF
     for candidate in get_tree().get_nodes_in_group("buildings"):
+        if preferred_workplace != null and candidate != preferred_workplace:
+            continue
         if not candidate.has_method("free_slots") or candidate.free_slots(work_job) <= 0:
             continue
         var cells: Array[Vector2i] = candidate.cells()
         var path: PackedVector2Array = nav.path_adjacent(position, cells)
-        if path.is_empty():
+        if path.is_empty() and (work_job != "archer" or position.distance_to(candidate.position) > OUTPOST_GUARD_ARRIVAL_RADIUS):
             continue
         if float(path.size()) < best_path_length:
             best_path_length = float(path.size())
@@ -283,18 +307,31 @@ func _release_workplace() -> void:
 func on_workplace_lost(building) -> void:
     if workplace != building:
         return
+    var was_archer := is_archer() and workplace_job == "archer"
     _release()
     workplace = null
     workplace_job = ""
     _scout_target_cell = Vector2i(-1, -1)
     _scout_survey_t = 0.0
     _scout_revealed_at_target = false
+    if was_archer:
+        military_specialization = "soldier"
+        add_to_group("defenders")
+        max_hp = _hp_cap_for("soldier")
+        hp = clampi(hp, 1, max_hp)
+        _path = PackedVector2Array()
+        _pi = 0
+        if _expeditioning and is_instance_valid(_expedition_target):
+            state = State.EXPEDITION
+        elif state != State.HIDDEN and state != State.FLEEING:
+            state = State.IDLE
+        queue_redraw()
+        return
     if job == "scout":
         _path = PackedVector2Array()
         _pi = 0
         _decide_t = SCOUT_RECHECK_SECONDS
     state = State.IDLE
-
 
 func on_repair_target_lost(building) -> void:
     if target == building:
@@ -664,7 +701,7 @@ func assign_outpost_guard(outpost) -> bool:
 
 
 func assign_garrison_guard(garrison) -> bool:
-    if job != "soldier" or not is_instance_valid(garrison) or int(garrison.guard_capacity) <= 0:
+    if job != "soldier" or is_archer() or not is_instance_valid(garrison) or int(garrison.guard_capacity) <= 0:
         return false
     if _expeditioning or state == State.RECALLING:
         return false
@@ -866,7 +903,19 @@ func _tick_fight(delta: float) -> void:
             state = State.EXPEDITION if _expeditioning and is_instance_valid(_expedition_target) else State.IDLE
         return
     var dist := position.distance_to(_foe.position)
-    if dist < REACH:
+    if is_archer() and dist <= ARCHER_ATTACK_RANGE:
+        if anim.face(_foe.position - position):
+            queue_redraw()
+        if dist < ARCHER_MIN_RANGE:
+            var retreat: Vector2 = (position - _foe.position).normalized()
+            if retreat.length_squared() > 0.0:
+                position += retreat * SPEED * 0.8 * delta
+        if _atk_cd <= 0.0:
+            _atk_cd = ARCHER_ATTACK_INTERVAL * (_rally_interval_mult if _rally_t > 0.0 else 1.0)
+            _fire_archer_arrow(_foe)
+            anim.play("attack", true)
+        return
+    if not is_archer() and dist < REACH:
         if anim.face(_foe.position - position):
             queue_redraw()
         if _atk_cd <= 0.0:
@@ -886,6 +935,14 @@ func _tick_fight(delta: float) -> void:
     else:
         position += (_foe.position - position).normalized() * (RUN_SPEED if dist > RUN_DISTANCE else SPEED) * delta
 
+
+func _fire_archer_arrow(enemy) -> void:
+    if not is_instance_valid(enemy) or world == null or world.entities == null:
+        return
+    var projectile = ArrowProjectile.new()
+    projectile.setup(enemy, maxi(1, roundi(float(_soldier_damage()) * ARCHER_DAMAGE_MULT)))
+    world.entities.add_child(projectile)
+    projectile.global_position = global_position + Vector2(0, -7)
 
 # ---------------------------------------------------------------- jobs
 
@@ -1335,7 +1392,7 @@ func _hide() -> void:
 
 func _nearest_enemy():
     var best = null
-    var best_d := SOLDIER_SEARCH
+    var best_d := ARCHER_SEARCH if is_archer() else SOLDIER_SEARCH
     var candidates := get_tree().get_nodes_in_group("enemy_garrison") if _expeditioning else get_tree().get_nodes_in_group("enemies")
     for e in candidates:
         var enemy := e as Node2D
@@ -1440,12 +1497,17 @@ func _job_color() -> Color:
 
 func _draw() -> void:
     anim.draw(self, TEXTURES.get(job, TEXTURES[""]), FW, FH)
+    if is_archer():
+        draw_arc(Vector2(7, -9), 7.0, -PI * 0.45, PI * 0.45, 12, Color("#a9824d"), 1.6)
+        draw_line(Vector2(2, -14), Vector2(2, -4), Color("#d4bd8e"), 0.7)
+        draw_line(Vector2(2, -9), Vector2(10, -9), Color("#c7a36e"), 0.8)
+        draw_line(Vector2(-6, -14), Vector2(-4, -18), Color("#87603b"), 1.4)
     if job == "soldier" and armor_equipped:
         draw_rect(Rect2(-3, -13, 6, 5), Color("#64727b"))
         draw_rect(Rect2(-2, -12, 4, 3), Color("#c0c6c2"))
         draw_rect(Rect2(-4, -10, 1, 3), Color("#8e9aa0"))
         draw_rect(Rect2(3, -10, 1, 3), Color("#8e9aa0"))
-    if job == "soldier" and weapon_equipped:
+    if job == "soldier" and weapon_equipped and not is_archer():
         draw_line(Vector2(6, -8), Vector2(10, -15), Color("#d6dde0"), 1.5)
         draw_line(Vector2(5, -9), Vector2(8, -8), Color("#c58a42"), 1.5)
     if job == "builder":

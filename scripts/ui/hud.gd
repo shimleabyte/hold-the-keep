@@ -41,6 +41,7 @@ const ICONS := {
     "compass": preload("res://assets/sprites/icon_compass.svg"),
     "infirmary": preload("res://assets/sprites/icon_infirmary.svg"),
     "barracks": preload("res://assets/sprites/icon_barracks.svg"),
+    "archery_range": preload("res://assets/sprites/icon_archery_range.svg"),
     "healer": preload("res://assets/sprites/icon_healer.svg"),
 }
 const JOBS := ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "healer", "blacksmith", "soldier"]
@@ -652,17 +653,20 @@ func _refresh_outpost_panel() -> void:
     for garrison in get_tree().get_nodes_in_group("garrisons"):
         if is_instance_valid(garrison) and String(garrison.id) == "barracks":
             structures.append(garrison)
+    for archery_range in get_tree().get_nodes_in_group("archery_ranges"):
+        if is_instance_valid(archery_range):
+            structures.append(archery_range)
     structures.sort_custom(func(a, b) -> bool:
-        var priority := {"outpost": 0, "barracks": 1, "storage": 2, "granary": 3}
+        var priority := {"outpost": 0, "barracks": 1, "archery_range": 2, "storage": 3, "granary": 4}
         if String(a.id) != String(b.id):
-            return int(priority.get(String(a.id), 4)) < int(priority.get(String(b.id), 4))
+            return int(priority.get(String(a.id), 5)) < int(priority.get(String(b.id), 5))
         if a.cell.y != b.cell.y:
             return a.cell.y < b.cell.y
         return a.cell.x < b.cell.x
     )
 
     if structures.is_empty():
-        var empty := _label(_outpost_list, "Belum ada Outpost, Barak, Storage, atau Lumbung.", Vector2.ZERO, Color("#c9b99d"))
+        var empty := _label(_outpost_list, "Belum ada Outpost, Barak, Lapangan Panah, Storage, atau Lumbung.", Vector2.ZERO, Color("#c9b99d"))
         empty.add_theme_font_size_override("font_size", 8)
     else:
         for structure in structures:
@@ -678,6 +682,7 @@ func _refresh_outpost_panel() -> void:
 
             var structure_id := String(structure.id)
             var is_garrison := ["outpost", "barracks"].has(structure_id)
+            var is_archery_range := structure_id == "archery_range"
             var heading := Label.new()
             heading.add_theme_font_override("font", _font)
             heading.add_theme_font_size_override("font_size", 7)
@@ -686,6 +691,11 @@ func _refresh_outpost_panel() -> void:
                 heading.text = "POS %d,%d  ·  PENJAGA %d/%d" % [structure.cell.x, structure.cell.y, structure.guard_count(), structure.guard_capacity]
             elif structure_id == "barracks":
                 heading.text = "BARAK %d,%d  ·  GARRISON %d/%d" % [structure.cell.x, structure.cell.y, structure.guard_count(), structure.guard_capacity]
+            elif is_archery_range:
+                var workplace_data: Dictionary = structure.data.get("workplaces", {})
+                var capacity := int(workplace_data.get("archer", 0))
+                var assigned: int = capacity - structure.free_slots("archer")
+                heading.text = "LAPANGAN PANAH %d,%d  ·  PEMANAH %d/%d" % [structure.cell.x, structure.cell.y, assigned, capacity]
             elif structure_id == "granary":
                 heading.text = "LUMBUNG %d,%d" % [structure.cell.x, structure.cell.y]
             else:
@@ -707,6 +717,8 @@ func _refresh_outpost_panel() -> void:
             stock.add_theme_color_override("font_color", Color("#c4c0b5"))
             if structure_id == "barracks":
                 stock.text = "EMPAT SLOT PENJAGA  ·  RADIUS %d" % int(structure.data.get("guard_radius", 128))
+            elif is_archery_range:
+                stock.text = "DUA SLOT PEMANAH  ·  JARAK TEMBAK 150"
             elif structure_id == "granary":
                 stock.text = "PANGAN %d / %d" % [structure.stockpile_amount("food"), structure.stockpile_capacity]
             else:
@@ -737,6 +749,26 @@ func _refresh_outpost_panel() -> void:
                 assign.add_theme_font_size_override("font_size", 8)
                 assign.pressed.connect(_assign_outpost_guard.bind(structure))
                 row.add_child(assign)
+            elif is_archery_range:
+                var release_archer_button := Button.new()
+                release_archer_button.text = "-"
+                release_archer_button.custom_minimum_size = Vector2(25, 22)
+                release_archer_button.disabled = int(structure.data.get("workplaces", {}).get("archer", 0)) == structure.free_slots("archer")
+                release_archer_button.tooltip_text = "Kembalikan satu pemanah ke prajurit biasa"
+                release_archer_button.add_theme_font_override("font", _font)
+                release_archer_button.add_theme_font_size_override("font_size", 8)
+                release_archer_button.pressed.connect(_release_archer.bind(structure))
+                row.add_child(release_archer_button)
+
+                var assign_archer_button := Button.new()
+                assign_archer_button.text = "+"
+                assign_archer_button.custom_minimum_size = Vector2(25, 22)
+                assign_archer_button.disabled = structure.free_slots("archer") <= 0
+                assign_archer_button.tooltip_text = "Latih prajurit tersedia menjadi pemanah"
+                assign_archer_button.add_theme_font_override("font", _font)
+                assign_archer_button.add_theme_font_size_override("font_size", 8)
+                assign_archer_button.pressed.connect(_assign_archer.bind(structure))
+                row.add_child(assign_archer_button)
 
     _refresh_shipment_controls()
 
@@ -999,6 +1031,24 @@ func _release_outpost_guard(outpost) -> void:
         _show_message("Tidak ada penjaga untuk ditarik")
     else:
         _show_message("Penjaga kembali ke pertahanan umum")
+    _refresh_outpost_panel()
+
+
+func _assign_archer(archery_range) -> void:
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node == null or not main_node.village.assign_nearest_archer(archery_range):
+        _show_message("Tidak ada prajurit tersedia atau slot pemanah penuh")
+    else:
+        _show_message("Prajurit dilatih menjadi pemanah")
+    _refresh_outpost_panel()
+
+
+func _release_archer(archery_range) -> void:
+    var main_node = get_tree().get_first_node_in_group("main")
+    if main_node == null or not main_node.village.release_archer(archery_range):
+        _show_message("Tidak ada pemanah untuk dikembalikan")
+    else:
+        _show_message("Pemanah kembali menjadi prajurit biasa")
     _refresh_outpost_panel()
 
 

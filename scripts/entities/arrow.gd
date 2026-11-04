@@ -15,7 +15,7 @@ func setup(t: Node2D, dmg: int) -> void:
 
 
 func _physics_process(delta: float) -> void:
-    if target == null or not is_instance_valid(target) or not target.is_in_group("enemies"):
+    if target == null or not is_instance_valid(target) or not target.is_in_group("enemies") and not target.is_in_group("enemy_garrison"):
         queue_free()
         return
     var aim := target.global_position + Vector2(0, -6)

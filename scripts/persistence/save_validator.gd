@@ -383,6 +383,12 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 if not WorldConfig.is_valid_cell(cell) or occupied_cells.has(cell) or site_cells.has(cell):
                     return false
                 site_cells[cell] = true
+    var archery_capacity := 0
+    for saved_building in buildings:
+        if String(saved_building.get("id", "")) == "archery_range":
+            var archery_workplaces: Dictionary = DataDB.buildings["archery_range"].get("workplaces", {})
+            archery_capacity += int(archery_workplaces.get("archer", 0))
+    var archer_specialization_count := 0
     var outpost_guard_counts: Dictionary = {}
     for villager in villagers:
         if not (villager is Dictionary):
@@ -408,9 +414,13 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 allowed_occupations.append("blacksmith")
             if not allowed_occupations.has(occupation):
                 return false
-            if not ["", "soldier"].has(specialization):
+            if not ["", "soldier", "archer"].has(specialization):
                 return false
-            var legacy_job := specialization if not specialization.is_empty() else occupation
+            if specialization == "archer":
+                if version < 17:
+                    return false
+                archer_specialization_count += 1
+            var legacy_job := "soldier" if specialization == "archer" else (specialization if not specialization.is_empty() else occupation)
             if String(villager["job"]) != legacy_job or (not occupation.is_empty() and not specialization.is_empty()):
                 return false
         if version >= 17:
@@ -433,7 +443,7 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         if guard_data != null:
             if not (guard_data is Dictionary) or not guard_data.has("cx") or not guard_data.has("cy"):
                 return false
-            if String(villager.get("job", "")) != "soldier" or bool(villager.get("expedition", false)) or bool(villager.get("recalling", false)):
+            if String(villager.get("job", "")) != "soldier" or String(villager.get("military_specialization", "")) == "archer" or bool(villager.get("expedition", false)) or bool(villager.get("recalling", false)):
                 return false
             var guard_cell := Vector2i(int(guard_data["cx"]), int(guard_data["cy"]))
             var outpost_exists := false
@@ -454,7 +464,7 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         if garrison_data != null:
             if not (garrison_data is Dictionary) or not garrison_data.has("id") or not garrison_data.has("cx") or not garrison_data.has("cy"):
                 return false
-            if String(villager.get("job", "")) != "soldier" or bool(villager.get("expedition", false)) or bool(villager.get("recalling", false)):
+            if String(villager.get("job", "")) != "soldier" or String(villager.get("military_specialization", "")) == "archer" or bool(villager.get("expedition", false)) or bool(villager.get("recalling", false)):
                 return false
             var garrison_id := String(garrison_data["id"])
             if not DataDB.buildings.has(garrison_id):
@@ -474,6 +484,8 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             outpost_guard_counts[garrison_key] = int(outpost_guard_counts.get(garrison_key, 0)) + 1
             if int(outpost_guard_counts[garrison_key]) > garrison_limit:
                 return false
+    if archer_specialization_count > archery_capacity:
+        return false
     for enemy in enemies:
         if not (enemy is Dictionary) or not enemy.has("id") or not enemy.has("x") or not enemy.has("y") or not enemy.has("hp"):
             return false

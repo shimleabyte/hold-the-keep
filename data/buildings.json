@@ -491,5 +491,31 @@
       "accent": "#d1b276",
       "shadow": "#403126"
     }
+  },
+  {
+    "id": "archery_range",
+    "name": "Lapangan Panah",
+    "short": "PANAH",
+    "size": [
+      2,
+      2
+    ],
+    "cost": {
+      "wood": 30,
+      "stone": 18
+    },
+    "hp": 190,
+    "color": "#816647",
+    "locked": true,
+    "workplaces": {
+      "archer": 2
+    },
+    "visual": {
+      "material": "fortified timber, hide and straw targets",
+      "feature": "archery_range_target_yard",
+      "primary": "#94724c",
+      "accent": "#d5b77c",
+      "shadow": "#3a2c20"
+    }
   }
 ]
