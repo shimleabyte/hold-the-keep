@@ -171,6 +171,86 @@ func raid_steal_from(depot: Node) -> String:
     return _pressure_manager.raid_steal_from(depot)
 
 
+## Create a reserved shipment. Cargo leaves its source immediately and remains
+## owned by the order until delivery, cancellation/refund, or explicit recovery.
+## Returns the order ID, or -1 when any precondition fails.
+func create_shipment(source_cell: Vector2i, destination_cell: Vector2i, kind: String, amount: int) -> int:
+    if not WorldConfig.is_frontier_profile() or not TRANSFER_KINDS.has(kind):
+        return -1
+    if amount <= 0 or amount > MAX_SHIPMENT_AMOUNT or source_cell == destination_cell:
+        return -1
+    if _shipment_ledger.active_count() >= MAX_ACTIVE_SHIPMENTS:
+        return -1
+    _ensure_current()
+    var source = _find_depot(source_cell)
+    var destination = _find_depot(destination_cell)
+    if source == null or destination == null or source == destination:
+        return -1
+    if not is_depot_connected(source) or not is_depot_connected(destination):
+        return -1
+    if destination.id != "keep":
+        if not destination.accepts_resource(kind):
+            return -1
+        var reserved := _reserved_capacity(destination_cell)
+        if destination.stockpile_total() + reserved + amount > destination.stockpile_capacity:
+            return -1
+
+    var withdrawn: bool = Inventory.spend(kind, amount) if source.id == "keep" else source.take_resource(kind, amount)
+    if not withdrawn:
+        return -1
+
+    var order_id: int = _shipment_ledger.allocate_id()
+    _shipment_ledger.append_order({
+        "id": order_id,
+        "source_x": source.cell.x,
+        "source_y": source.cell.y,
+        "destination_x": destination.cell.x,
+        "destination_y": destination.cell.y,
+        "kind": kind,
+        "amount": amount,
+        "cargo": amount,
+        "status": "queued",
+        "x": source.position.x,
+        "y": source.position.y
+    })
+    _trim_shipment_history()
+    advance_shipment_orders()
+    return order_id
+
+
+func cancel_shipment(order_id: int) -> bool:
+    var index := _shipment_ledger.order_index(order_id)
+    if index < 0:
+        return false
+    var order: Dictionary = _shipment_ledger.orders[index]
+    if not _shipment_ledger.is_active_order(order):
+        return false
+    _remove_carrier(order_id)
+    _recover_cargo(order, "cancelled")
+    return true
+
+
+func get_shipment_orders() -> Array[Dictionary]:
+    return _shipment_ledger.snapshot()
+
+
+func get_shipment_status_label(status: String) -> String:
+    match status:
+        "queued":
+            return "ANTRE"
+        "in_transit":
+            return "DI JALAN"
+        "blocked":
+            return "TERPUTUS"
+        "delivered":
+            return "TIBA"
+        "cancelled":
+            return "DIBATALKAN"
+        "recovered":
+            return "DIPULIHKAN"
+    return "TIDAK DIKETAHUI"
+
+
 func advance_shipment_orders() -> void:
     _shipment_dispatch.advance(self)
 
