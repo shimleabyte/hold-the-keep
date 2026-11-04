@@ -62,6 +62,18 @@ func _run() -> void:
         assert(not Input.is_action_pressed(action),
             "Movement and sprint must be released when the joystick finger lifts: " + action)
 
+    controls.configure_viewport(Vector2(480.0, 270.0))
+    var compact_joystick: Vector2 = controls.joystick_center()
+    assert(compact_joystick.x - MOBILE_CONTROLS.JOYSTICK_RADIUS >= 0.0
+        and compact_joystick.y + MOBILE_CONTROLS.JOYSTICK_RADIUS <= 270.0,
+        "The movement pad must remain inside a minimum 480x270 viewport")
+    for action in ["attack", "interact", "ability_dash", "ability_cleave", "ability_rally"]:
+        var center: Vector2 = controls.button_center(action)
+        assert(center.x >= 0.0 and center.y >= 0.0
+            and center.x <= 480.0 and center.y <= 270.0,
+            "Touch buttons must stay inside the minimum viewport: " + action)
+
+    controls.configure_viewport(Vector2(800.0, 450.0))
     var safe := MOBILE_CONTROLS.safe_bounds_for_viewport(
         Vector2(800.0, 450.0),
         Rect2i(32, 12, 736, 426),
