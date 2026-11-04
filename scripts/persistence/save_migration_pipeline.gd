@@ -75,7 +75,7 @@ func _migrate_v8_campaign_state(snapshot: Dictionary, world: Node, plan: Diction
     var legacy_state: Dictionary = legacy_value.duplicate(true) if legacy_value is Dictionary else {}
     if String(legacy_state.get("region", "")).is_empty():
         var legacy_cell := Vector2i(int(legacy_state.get("cx", -1)), int(legacy_state.get("cy", -1)))
-        legacy_state["region"] = String(world.call("region_id", legacy_cell)) if WorldConfig.is_valid_cell(legacy_cell) else "HEARTHLAND"
+        legacy_state["region"] = String(world.call("region_id", legacy_cell)) if _is_valid_cell_for_world(world, legacy_cell) else "HEARTHLAND"
     if not legacy_state.has("faction"):
         legacy_state["faction"] = "legacy_raiders"
     plan["legacy_stronghold"] = legacy_state
@@ -164,22 +164,24 @@ func migrate_snapshot_to_current(snapshot: Dictionary, main: Node, target_versio
         return snapshot.duplicate(true)
 
     var migrated: Dictionary = snapshot.duplicate(true)
-    var profile := WorldConfig.profile_id
+    var world_config: Node = main.get_tree().root.get_node("WorldConfig")
+    var data_db: Node = main.get_tree().root.get_node("DataDB")
+    var profile := String(world_config.profile_id)
     if source_version < 7:
         # The pre-v7 format only represented the original 64x64 Classic world.
         profile = "classic"
         migrated["world"] = {
             "profile": "classic",
             "map_size": 64,
-            "tile_size": WorldConfig.TILE_SIZE,
-            "seed": WorldConfig.world_seed
+            "tile_size": int(main.world.tile_size),
+            "seed": int(main.world.map_seed)
         }
     else:
         var saved_world: Variant = migrated.get("world", {})
         if not (saved_world is Dictionary):
             return null
         profile = String(saved_world.get("profile", ""))
-        if profile != WorldConfig.profile_id:
+        if profile != String(world_config.profile_id):
             return null
 
     var restore_plan: Dictionary = build_restore_plan(snapshot, main.world, target_version)
@@ -191,10 +193,10 @@ func migrate_snapshot_to_current(snapshot: Dictionary, main: Node, target_versio
             return null
         var legacy_cell := Vector2i(int(legacy_state.get("cx", -1)), int(legacy_state.get("cy", -1)))
         var destroyed := bool(legacy_state.get("destroyed", false))
-        if not WorldConfig.is_valid_cell(legacy_cell):
+        if not _is_valid_cell_for_world(main.world, legacy_cell):
             if not destroyed:
                 return null
-            legacy_cell = WorldConfig.starting_keep_cell()
+            legacy_cell = main.world.starting_keep_cell()
         legacy_state["cx"] = legacy_cell.x
         legacy_state["cy"] = legacy_cell.y
         if destroyed:
@@ -326,7 +328,8 @@ func _default_frontier_campaign(profile: String) -> Dictionary:
             "camps": {"records": []}
         }
     var records: Array[Dictionary] = []
-    for definition in DataDB.frontier_objectives:
+    var data_db: Node = get_tree().root.get_node("DataDB")
+    for definition in data_db.frontier_objectives:
         records.append({
             "id": String(definition.get("id", "")),
             "completed": false,
@@ -346,3 +349,8 @@ func _default_frontier_campaign(profile: String) -> Dictionary:
         "unlocked_act": 1,
         "camps": {"records": []}
     }
+
+
+func _is_valid_cell_for_world(world: Node, cell: Vector2i) -> bool:
+    var size := int(world.get("map_size"))
+    return cell.x >= 0 and cell.y >= 0 and cell.x < size and cell.y < size
