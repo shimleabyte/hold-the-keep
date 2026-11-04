@@ -266,7 +266,8 @@ func _icon(parent: Node, icon_name: String, pos: Vector2) -> TextureRect:
 func _stat(parent: Node, icon_name: String, pos: Vector2) -> Label:
     _icon(parent, icon_name, pos + Vector2(0, 2))
     var value := _label(parent, "0", pos + Vector2(13, 0))
-    value.tooltip_text = "%s resource stock" % icon_name.capitalize()
+    value.tooltip_text = "%s tersimpan" % icon_name.capitalize()
+    value.mouse_filter = Control.MOUSE_FILTER_STOP
     return value
 
 
@@ -281,6 +282,8 @@ func _build_top_bar() -> void:
     _food.add_theme_color_override("font_color", Color("#e2cb78"))
     _iron_icon = _icon(bar, "iron", Vector2(111, 3))
     _iron = _label(bar, "0", Vector2(124, 1), Color("#e19a68"))
+    _iron.tooltip_text = "Besi tersimpan"
+    _iron.mouse_filter = Control.MOUSE_FILTER_STOP
     for divider_x in [35.0, 71.0, 107.0, 145.0]:
         var divider := ColorRect.new()
         divider.position = Vector2(divider_x, 4)
@@ -295,7 +298,7 @@ func _build_top_bar() -> void:
     _clock_widget.moon = ICONS["moon"]
     _clock_widget.position = Vector2(151, 2)
     _clock_widget.size = Vector2(142, 11)
-    _clock_widget.tooltip_text = "Day progress and day/night cycle"
+    _clock_widget.tooltip_text = "Hari dan siklus siang / malam"
     bar.add_child(_clock_widget)
 
     _foes_icon = _icon(bar, "skull", Vector2(300, 3))
@@ -307,12 +310,13 @@ func _build_top_bar() -> void:
 
     _people_icon = _icon(bar, "people", Vector2(336, 3))
     _pop = _label(bar, "0/0", Vector2(349, 1), Color("#a9c9bf"))
-    _pop.tooltip_text = "Population / housing capacity"
+    _pop.tooltip_text = "Jumlah warga / kapasitas rumah"
+    _pop.mouse_filter = Control.MOUSE_FILTER_STOP
 
     _map_button = HUD_WIDGETS.HudChip.new()
     _map_button.icon = ICONS["compass"]
     _map_button.font = _font
-    _map_button.tooltip_text = "World map  ·  TAB"
+    _map_button.tooltip_text = "Peta wilayah  ·  TAB"
     _map_button.position = Vector2(410, 1)
     _map_button.size = Vector2(18, 14)
     _map_button.pressed.connect(_toggle_map)
@@ -321,7 +325,7 @@ func _build_top_bar() -> void:
     _jobs_button = HUD_WIDGETS.HudChip.new()
     _jobs_button.icon = ICONS["people"]
     _jobs_button.font = _font
-    _jobs_button.tooltip_text = "Villager jobs and priorities"
+    _jobs_button.tooltip_text = "Pekerjaan dan prioritas warga"
     _jobs_button.position = Vector2(432, 1)
     _jobs_button.size = Vector2(18, 14)
     _jobs_button.pressed.connect(_toggle_jobs)
@@ -330,7 +334,7 @@ func _build_top_bar() -> void:
     _tech_btn = HUD_WIDGETS.TechButton.new()
     _tech_btn.icon = ICONS["tech"]
     _tech_btn.font = _font
-    _tech_btn.tooltip_text = "Research and technology  ·  Y"
+    _tech_btn.tooltip_text = "Riset teknologi  ·  Y"
     _tech_btn.position = Vector2(454, 1)
     _tech_btn.size = Vector2(22, 14)
     _tech_btn.pressed.connect(func() -> void: Events.tech_panel_requested.emit())
@@ -340,7 +344,7 @@ func _build_top_bar() -> void:
     _research_name = _label(_research_panel, "", Vector2(3, 1), Color("#ffd23f"))
     _research_name.visible = false
     _icon(_research_panel, "tech", Vector2(3, 0))
-    _research_panel.tooltip_text = "Current research progress"
+    _research_panel.tooltip_text = "Progres riset aktif"
     _research_bar = HUD_WIDGETS.StatBar.new()
     _research_bar.position = Vector2(22, 3)
     _research_bar.size = Vector2(99, 6)
@@ -353,7 +357,7 @@ func _build_top_bar() -> void:
 
 func _build_vitals() -> void:
     _vitals_panel = _panel(Vector2(4, 22), Vector2(122, 20))
-    _vitals_panel.tooltip_text = "Player health and keep integrity"
+    _vitals_panel.tooltip_text = "Kesehatan pemain dan ketahanan benteng"
     var p := _vitals_panel
     _icon(p, "heart", Vector2(3, 2))
     _hp_bar = HUD_WIDGETS.StatBar.new()
@@ -392,7 +396,7 @@ func _build_combat_bar() -> void:
     _combat_bar.position = Vector2(151, 219)
     _combat_bar.size = Vector2(158, 18)
     _combat_bar.ability_icons = [ICONS["compass"], ICONS["sword"], ICONS["people"]]
-    _combat_bar.tooltip_text = "Q · Dash    C · Cleave    V · Rally — icons show unlock and cooldown state"
+    _combat_bar.tooltip_text = "Q · Dash    C · Tebas    V · Seruan — ikon menunjukkan status dan cooldown"
     _combat_bar.mouse_filter = Control.MOUSE_FILTER_STOP
     add_child(_combat_bar)
     _blockers.append(_combat_bar)
@@ -407,15 +411,15 @@ func _build_jobs() -> void:
         row.position = Vector2(2, 3 + i * 12)
         row.size = Vector2(72, 12)
         var job_descriptions := {
-            "woodcutter": "Woodcutter — gathers timber",
-            "miner": "Miner — extracts stone and ore",
-            "farmer": "Farmer — produces food",
-            "builder": "Builder — constructs and repairs buildings",
-            "hunter": "Hunter — supplies food from wildlife",
-            "scout": "Scout — explores and reveals territory",
-            "healer": "Healer — restores injured units",
-            "blacksmith": "Blacksmith — crafts soldier equipment at a Forge",
-            "soldier": "Soldier — defends the settlement"
+            "woodcutter": "Penebang — mengumpulkan kayu",
+            "miner": "Penambang — mengambil batu dan bijih",
+            "farmer": "Petani — menghasilkan makanan",
+            "builder": "Pembangun — membangun dan memperbaiki",
+            "hunter": "Pemburu — memasok makanan dari satwa",
+            "scout": "Pengintai — membuka wilayah",
+            "healer": "Penyembuh — memulihkan unit terluka",
+            "blacksmith": "Pandai besi — membuat perlengkapan prajurit",
+            "soldier": "Prajurit — mempertahankan permukiman"
         }
         row.tooltip_text = String(job_descriptions.get(JOBS[i], JOBS[i])) + "  ·  Left click −/+ quota, right click priority"
         row.adjust.connect(_on_job_adjust)
@@ -809,6 +813,9 @@ func _process(delta: float) -> void:
     _research_panel.visible = Tech.current != ""
     if Tech.current != "":
         _research_name.text = Tech.tech_name(Tech.current).substr(0, 12)
+        _research_panel.tooltip_text = "%s — progres riset %d%%" % [
+            Tech.tech_name(Tech.current), roundi(Tech.progress_ratio() * 100.0)
+        ]
         _research_bar.set_value(Tech.progress_ratio())
     _tech_btn.busy = Tech.current != ""
     _tech_btn.queue_redraw()
@@ -849,6 +856,7 @@ func _process(delta: float) -> void:
     if boss != null:
         _boss_title.text = "RAJA LAWAN"
         _boss_title.add_theme_color_override("font_color", Color("#ff8a7a"))
+        _boss_panel.tooltip_text = "Raja lawan — ketahanan"
         _boss_panel.visible = true
         _boss_bar.set_value(float(boss.hp) / boss.max_hp)
     else:
