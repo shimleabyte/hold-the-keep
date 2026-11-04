@@ -408,9 +408,9 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 allowed_occupations.append("blacksmith")
             if not allowed_occupations.has(occupation):
                 return false
-            if not ["", "soldier"].has(specialization):
+            if not ["", "soldier", "archer"].has(specialization):
                 return false
-            var legacy_job := specialization if not specialization.is_empty() else occupation
+            var legacy_job := "soldier" if specialization == "archer" else (specialization if not specialization.is_empty() else occupation)
             if String(villager["job"]) != legacy_job or (not occupation.is_empty() and not specialization.is_empty()):
                 return false
         if version >= 17:
