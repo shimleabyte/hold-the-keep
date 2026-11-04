@@ -49,8 +49,11 @@ func _initialize() -> void:
     assert(feedback.ability_kind == "dash" and feedback.is_active(),
         "Dash must resolve to its directional trail cue")
     feedback.register_ability("cleave", Vector2.DOWN, 0.42)
-    assert(feedback.ability_kind == "cleave",
-        "Cleave must resolve to its distinct arc cue")
+    assert(feedback.ability_kind == "cleave"
+        and feedback.ability_direction == Vector2.DOWN,
+        "Cleave must retain its locked direction in the ability cue")
+    assert(is_equal_approx(CombatVisualFeedback.CLEAVE_HALF_ANGLE, 1.2),
+        "Cleave anticipation must use the same half-angle as the damaging player arc")
     feedback.register_ability("rally", Vector2.ZERO, 0.35)
     assert(feedback.ability_kind == "rally",
         "Rally must resolve to its distinct radial cue")
