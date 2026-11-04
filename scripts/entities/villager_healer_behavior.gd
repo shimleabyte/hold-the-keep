@@ -24,3 +24,14 @@ func tick(delta: float) -> void:
     _treatment_timer = 0.0
     if _villager.target.heal(_villager.HEAL_AMOUNT) <= 0 or int(_villager.target.hp) >= int(_villager.target.max_hp):
         _villager.healer_behavior_release(0.15)
+
+
+func _target_valid() -> bool:
+    var target = _villager.target
+    if not _villager.has_valid_workplace() or target == null or not is_instance_valid(target):
+        return false
+    return String(target.job) == "soldier" and int(target.hp) > 0 \
+        and int(target.hp) < int(target.max_hp) and not target.is_expeditioning() \
+        and not target.is_recalling_expedition() \
+        and target.state not in [_villager.State.HIDDEN, _villager.State.FLEEING] \
+        and _villager._is_in_workplace_radius(target)
