@@ -17,7 +17,7 @@ Dari akar proyek:
 Skrip observasi lama yang hanya mencetak hasil tanpa assertion dipisahkan ke `run_diagnostics.sh`;
 jalankan saat meninjau animasi, pertarungan, efek, ekonomi atau alur save/menu.
 
-GitHub Actions menjalankan import/parse on Godot 4.7 only, 49 assertion regression suites on Godot 4.7 only, plus Frontier and Frontier Expedition performance diagnostics. Windows/Linux release exports are deferred until the release phase. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Riwayat pipeline multi-engine/export dari PR #57 (workflow #490, 78/78) adalah bukti historis untuk konfigurasi sebelumnya, bukan gate aktif. Saat ini hanya hasil Godot 4.7 yang menjadi acceptance CI.
+GitHub Actions menjalankan import/parse on Godot 4.7 only, 50 assertion regression suites on Godot 4.7 only, plus Frontier and Frontier Expedition performance diagnostics. Windows/Linux release exports are deferred until the release phase. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Riwayat pipeline multi-engine/export dari PR #57 (workflow #490, 78/78) adalah bukti historis untuk konfigurasi sebelumnya, bukan gate aktif. Saat ini hanya hasil Godot 4.7 yang menjadi acceptance CI.
 
 | Skrip | Menguji |
 |---|---|
@@ -56,8 +56,9 @@ GitHub Actions menjalankan import/parse on Godot 4.7 only, 49 assertion regressi
 | campaign_reload_hardening.gd | Act I–IV Frontier reloads, completed regional objectives, active escort recovery, three conquered strongholds, damaged final stronghold, day-20 King gate and persisted victory reload |
 | campaign_balance_matrix.gd | Classic 15-day and Frontier 20-day schedules, act wave budgets, faction rosters and final-boss gate |
 | campaign_combat_simulation.gd | Scripted sample engagements for Frontier Acts I–IV and the day-20 King assault; JSON metrics for Keep damage, population loss, player downs, enemy survivors and simulated time. Uses real damage/cooldown transactions but does not simulate pathfinding, autonomous AI or complete waves |
-| release_hardening.gd | Classic v1–v17 and Frontier v7–v17 save migration, interrupted writes and backup recovery; release exports are deferred |
+| release_hardening.gd | Classic v1–v17 and Frontier v7–v17 historical save-schema validation, interrupted writes and backup recovery; release exports are deferred |
 | save_validator.gd | Dedicated SaveValidator contract: facade parity, schema bounds, optional v17 event state, nested references, JSON round-trip and non-mutating validation |
+| save_migration_pipeline.gd | Versioned in-memory restore adapters for historical Classic v4–v17 save boundaries: legacy stronghold, villager roles, combat/equipment, faction identity, stockpiles, Frontier campaign and supply state; source snapshots stay unchanged |
 | data_db_validation.gd | DataDB static JSON contract validation: record shapes, unique IDs, numeric bounds, cross-file references, prerequisite cycles and contiguous campaign stages |
 | decision_events.gd | Player event choices, atomic requirements, pause/cancel flow, absolute-day delayed consequences, exactly-once resolution, and event-state save/restore |
 | anim_sync.gd | pukulan penebang jatuh di frame benturan; pelarian memakai klip lari |

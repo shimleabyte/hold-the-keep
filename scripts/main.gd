@@ -18,6 +18,7 @@ const HUD_SCRIPT := preload("res://scripts/ui/hud.gd")
 const TECH_PANEL_SCRIPT := preload("res://scripts/ui/tech_panel.gd")
 const MENU_SCRIPT := preload("res://scripts/ui/pause_menu.gd")
 const FRONTIER_CAMPAIGN_SCRIPT := preload("res://scripts/systems/frontier_campaign.gd")
+const SAVE_MIGRATION_SCRIPT := preload("res://scripts/persistence/save_migration_pipeline.gd")
 const FRONTIER_OBJECTIVE_PANEL_SCRIPT := preload("res://scripts/ui/frontier_objective_panel.gd")
 
 const NIGHT_TINT := Color(0.45, 0.5, 0.75)
@@ -40,6 +41,7 @@ var supply
 var village
 var events
 var frontier_campaign
+var _save_restore_plan: Dictionary = {}
 
 var _tint: CanvasModulate
 
@@ -133,7 +135,7 @@ func _ready() -> void:
 
     frontier_campaign = FRONTIER_CAMPAIGN_SCRIPT.new()
     add_child(frontier_campaign)
-    frontier_campaign.setup(self, save.get("frontier_campaign", {}) if not save.is_empty() else {})
+    frontier_campaign.setup(self, _save_restore_plan.get("frontier_campaign_state", {}) if not save.is_empty() else {})
     var objective_panel = FRONTIER_OBJECTIVE_PANEL_SCRIPT.new()
     objective_panel.campaign = frontier_campaign
     add_child(objective_panel)
@@ -322,6 +324,7 @@ func add_child_to_world_fx() -> void:
 
 
 func _apply_save(d: Dictionary) -> void:
+    _save_restore_plan = SAVE_MIGRATION_SCRIPT.new().build_restore_plan(d, world, SaveSystem.VERSION)
     var inv: Dictionary = {}
     for k in d["inventory"]:
         inv[k] = int(d["inventory"][k])
@@ -342,11 +345,12 @@ func _apply_save(d: Dictionary) -> void:
     GameClock.day = int(c["day"])
     GameClock.is_night = bool(c["night"])
 
-    for b in d["buildings"]:
+    for building_index in range(d["buildings"].size()):
+        var b: Dictionary = d["buildings"][building_index]
         var node = build.place_raw(b["id"], Vector2i(int(b["cx"]), int(b["cy"])))
         node.hp = int(b["hp"])
-        if int(d.get("version", 0)) >= 12:
-            node.import_stockpile(b.get("stockpile", {}))
+        if bool(_save_restore_plan["restore_building_stockpiles"]):
+            node.import_stockpile(_save_restore_plan["building_stockpiles"][building_index])
         node.queue_redraw()
         if node.id == "keep":
             Events.keep_hp_changed.emit(node.hp, node.max_hp)
@@ -361,21 +365,15 @@ func _apply_save(d: Dictionary) -> void:
         )
         if site == null:
             push_warning("Save: could not restore a construction site at %d,%d" % [int(saved_site["cx"]), int(saved_site["cy"])])
-    var save_version := int(d.get("version", 0))
-    if save_version >= 8 and d.get("campaign", {}) is Dictionary:
-        campaign.import_state(d["campaign"])
+    if String(_save_restore_plan["campaign_mode"]) == "campaign":
+        campaign.import_state(_save_restore_plan["campaign_state"])
         campaign.restore_conquered_regions()
         for objective in campaign.objectives_in_order():
             if not bool(objective.get("destroyed", false)):
                 _spawn_enemy_keep(objective, false)
         campaign.sync_completion()
     else:
-        var stronghold_state: Dictionary = d.get("stronghold", {})
-        if String(stronghold_state.get("region", "")).is_empty():
-            var legacy_cell := Vector2i(int(stronghold_state.get("cx", -1)), int(stronghold_state.get("cy", -1)))
-            stronghold_state["region"] = world.region_id(legacy_cell) if legacy_cell.x >= 0 and legacy_cell.y >= 0 else "HEARTHLAND"
-        if not stronghold_state.has("faction"):
-            stronghold_state["faction"] = "legacy_raiders"
+        var stronghold_state: Dictionary = _save_restore_plan["legacy_stronghold"]
         campaign.configure_legacy(WorldConfig.profile_id, stronghold_state)
         campaign.restore_conquered_regions()
         if stronghold_state.is_empty():
@@ -391,24 +389,22 @@ func _apply_save(d: Dictionary) -> void:
             village.quota[j] = int(q[j])
     village.restore_job_priority(d.get("job_priority", []))
     var pending_outpost_guards: Array[Dictionary] = []
-    for v in d["villagers"]:
+    for villager_index in range(d["villagers"].size()):
+        var v: Dictionary = d["villagers"][villager_index]
+        var restored_villager: Dictionary = _save_restore_plan["villagers"][villager_index]
         var n = village.spawn_villager(Vector2(float(v["x"]), float(v["y"])))
-        var restored_job := String(v["job"])
-        if save_version >= 9:
-            var saved_specialization := String(v.get("military_specialization", ""))
-            restored_job = saved_specialization if not saved_specialization.is_empty() else String(v.get("occupation", ""))
-        n.set_job(restored_job)
-        if save_version >= 17 and n.job == "soldier":
-            n.weapon_equipped = bool(v.get("weapon_equipped", false))
-            n.armor_equipped = bool(v.get("armor_equipped", false))
+        n.set_job(String(restored_villager["job"]))
+        if bool(_save_restore_plan["restore_equipment_state"]) and n.job == "soldier":
+            n.weapon_equipped = bool(restored_villager["weapon_equipped"])
+            n.armor_equipped = bool(restored_villager["armor_equipped"])
             n.max_hp = n._hp_cap_for(n.job)
             n.queue_redraw()
         n.hp = clampi(int(v["hp"]), 1, n.max_hp)
         if int(v["carry"]) > 0:
             n.receive(String(v["kind"]), int(v["carry"]))
-        if bool(v.get("expedition", false)) and is_instance_valid(enemy_keep):
+        if bool(restored_villager["expedition"]) and is_instance_valid(enemy_keep):
             n.start_expedition(enemy_keep)
-        elif bool(v.get("recalling", false)):
+        elif bool(restored_villager["recalling"]):
             n.recall_expedition()
         var guard_data: Variant = v.get("guard_outpost", null)
         if guard_data is Dictionary:
@@ -437,18 +433,18 @@ func _apply_save(d: Dictionary) -> void:
     var pl: Dictionary = d["player"]
     player.position = Vector2(float(pl["x"]), float(pl["y"]))
     player.hp = int(pl["hp"])
-    player.import_combat_state(pl.get("combat", {}))
+    player.import_combat_state(_save_restore_plan["player_combat_state"])
     Events.player_hp_changed.emit(player.hp, player.MAX_HP)
 
     spawner.import_state(d.get("spawner", {}))
-    for e in d["enemies"]:
-        spawner.restore_enemy(e)
+    for enemy_state in _save_restore_plan["enemies"]:
+        spawner.restore_enemy(enemy_state)
     village.assign_jobs()
     nav.rebuild()
     supply.rebuild()
-    supply.import_state(d.get("supply", {}))
+    supply.import_state(_save_restore_plan["supply_state"])
     supply.advance_shipment_orders()
-    events.import_state(d.get("events", {}))
+    events.import_state(_save_restore_plan["events_state"])
     Events.build_feedback.emit("Game dimuat")
 
 
