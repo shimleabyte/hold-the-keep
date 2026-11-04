@@ -136,6 +136,49 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     var enemy_script: Script = load("res://scripts/entities/enemy.gd")
     assert(enemy_script != null, "Enemy script must load after autoload initialization")
 
+    # A visible wind-up must be dodgeable: leaving range or crossing behind the locked
+    # attack direction before impact cancels melee damage. A stationary in-range target
+    # must still receive the hit.
+    var probe_enemy = enemy_script.new()
+    probe_enemy.setup(data_db.enemies["bandit"], main.world, main.flow, player)
+    probe_enemy.global_position = player.global_position + Vector2(10, 0)
+    main.world.entities.add_child(probe_enemy)
+    probe_enemy.set_process(false)
+    probe_enemy.set_physics_process(false)
+    player.hp = player.MAX_HP
+    player._invuln = 0.0
+    var probe_hp: int = player.hp
+    probe_enemy._begin_attack(player, player.global_position - probe_enemy.global_position)
+    assert(probe_enemy.combat_feedback.windup_remaining > 0.0,
+        "Enemy melee must expose a readable wind-up before impact")
+    player.global_position += Vector2(100, 0)
+    probe_enemy._resolve_pending(0.15)
+    assert(player.hp == probe_hp,
+        "A player who dodges outside melee range during wind-up must avoid damage")
+
+    probe_enemy._atk_cd = 0.0
+    player.global_position = probe_enemy.global_position + Vector2(10, 0)
+    probe_hp = player.hp
+    probe_enemy._begin_attack(player, player.global_position - probe_enemy.global_position)
+    player.global_position = probe_enemy.global_position + Vector2(-10, 0)
+    probe_enemy._resolve_pending(0.15)
+    assert(player.hp == probe_hp,
+        "A player who crosses behind the locked melee direction must avoid damage")
+
+    probe_enemy._atk_cd = 0.0
+    player.global_position = probe_enemy.global_position + Vector2(10, 0)
+    probe_hp = player.hp
+    probe_enemy._begin_attack(player, player.global_position - probe_enemy.global_position)
+    probe_enemy._resolve_pending(0.15)
+    assert(player.hp < probe_hp,
+        "A stationary target inside the locked melee sector must still take damage")
+    probe_enemy.queue_free()
+    await ticks(1)
+    player.global_position = keep.global_position + Vector2(0.0, 16.0)
+    player.spawn_pos = player.global_position
+    player.hp = player.MAX_HP
+    player._invuln = 0.0
+
     var villagers := get_nodes_in_group("villagers")
     var population_start := villagers.size()
     var soldier = null
