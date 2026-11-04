@@ -31,12 +31,16 @@ const DASH_COOLDOWN := 5.5
 const CLEAVE_COOLDOWN := 8.0
 const RALLY_COOLDOWN := 18.0
 const CLEAVE_RANGE := 56.0
+const BASIC_ATTACK_ARC_HALF_ANGLE := 1.9 # Matches the visible basic slash sweep.
+const CLEAVE_HALF_ANGLE := 1.2 # Matches the visible Cleave sweep.
 const RALLY_RADIUS := 144.0
 const MAX_LEVEL := 10
 const XP_REWARDS := {"bandit": 10, "wolf": 9, "soldier": 20, "archer": 18, "brute": 32, "king": 150}
 
 var camera: Camera2D
 var facing := Vector2.DOWN
+var _attack_direction := Vector2.DOWN
+var _cleave_direction := Vector2.DOWN
 var hp := MAX_HP
 var spawn_pos := Vector2.ZERO
 var anim := SpriteAnim.new()
@@ -257,33 +261,58 @@ func _attack() -> void:
     if foe != null:
         facing = (foe.global_position - global_position).normalized()
         anim.face(foe.global_position - global_position)
+    _attack_direction = facing.normalized() if facing.length_squared() > 0.001 else Vector2.DOWN
     anim.play("attack", true)
     _pending_attack = HIT_DELAY
-    combat_feedback.begin_windup(facing, HIT_DELAY, false)
+    combat_feedback.begin_windup(_attack_direction, HIT_DELAY, false)
     _swing = SWING_TIME
     Events.player_attacked.emit()
     queue_redraw()
 
 
-## Dipanggil di frame benturan: kena semua musuh dalam jangkauan.
+func _is_target_in_arc(
+    target_position: Vector2,
+    origin: Vector2,
+    direction: Vector2,
+    max_range: float,
+    min_forward_dot: float
+) -> bool:
+    var offset := target_position - origin
+    var distance_squared := offset.length_squared()
+    if distance_squared > max_range * max_range:
+        return false
+    if distance_squared <= 0.01:
+        return true
+    return offset.normalized().dot(direction) >= min_forward_dot
+
+
+## Resolve damage against targets covered by the same directional sweep shown to the player.
 func _apply_attack() -> void:
     combat_feedback.end_windup()
     var origin := global_position + Vector2(0, -6)
+    var minimum_dot := cos(BASIC_ATTACK_ARC_HALF_ANGLE)
     for e in get_tree().get_nodes_in_group("enemies"):
         var n := e as Node2D
-        if origin.distance_to(n.global_position + Vector2(0, -4)) <= ATTACK_RANGE:
-            var hit_damage := _player_damage(ATTACK_DAMAGE)
-            if n.has_method("take_damage_from"):
-                n.take_damage_from(hit_damage, global_position)
-            else:
-                n.take_damage(hit_damage)
+        var target_position := n.global_position + Vector2(0, -4)
+        if not _is_target_in_arc(target_position, origin, _attack_direction, ATTACK_RANGE, minimum_dot):
+            continue
+        var hit_damage := _player_damage(ATTACK_DAMAGE)
+        if n.has_method("take_damage_from"):
+            n.take_damage_from(hit_damage, global_position)
+        else:
+            n.take_damage(hit_damage)
     for target in get_tree().get_nodes_in_group("campaign_targets"):
-        if is_instance_valid(target) and origin.distance_to(target.global_position) <= ATTACK_RANGE:
-            var site_damage := roundi(float(_player_damage(ATTACK_DAMAGE)) * Tech.stat("campaign.site_damage", 1.0))
-            target.take_damage(maxi(1, site_damage))
+        if not is_instance_valid(target):
+            continue
+        if not _is_target_in_arc(target.global_position, origin, _attack_direction, ATTACK_RANGE, minimum_dot):
+            continue
+        var site_damage := roundi(float(_player_damage(ATTACK_DAMAGE)) * Tech.stat("campaign.site_damage", 1.0))
+        target.take_damage(maxi(1, site_damage))
     var campaign = get_tree().get_first_node_in_group("campaign")
     for stronghold in get_tree().get_nodes_in_group("enemy_strongholds"):
-        if not is_instance_valid(stronghold) or origin.distance_to(stronghold.global_position) > ATTACK_RANGE:
+        if not is_instance_valid(stronghold):
+            continue
+        if not _is_target_in_arc(stronghold.global_position, origin, _attack_direction, ATTACK_RANGE, minimum_dot):
             continue
         if campaign != null and not campaign.is_current_objective(stronghold.stronghold_id):
             continue
@@ -348,10 +377,11 @@ func _use_cleave() -> bool:
     if foe != null:
         facing = (foe.global_position - global_position).normalized()
         anim.face(facing)
+    _cleave_direction = facing.normalized() if facing.length_squared() > 0.001 else Vector2.DOWN
     _cleave_cd = CLEAVE_COOLDOWN
     _cleave_pending = 0.22
     _cleave_t = 0.42
-    combat_feedback.register_ability("cleave", facing, _cleave_t)
+    combat_feedback.register_ability("cleave", _cleave_direction, _cleave_t)
     Audio.play("cleave", 1.0, -5.0)
     _pending_attack = -1.0
     anim.play("attack", true)
@@ -363,12 +393,11 @@ func _use_cleave() -> bool:
 
 func _apply_cleave() -> void:
     var origin := global_position + Vector2(0, -6)
+    var minimum_dot := cos(CLEAVE_HALF_ANGLE)
     for e in get_tree().get_nodes_in_group("enemies"):
         var foe := e as Node2D
-        var to_foe := foe.global_position + Vector2(0, -4) - origin
-        if to_foe.length() > CLEAVE_RANGE:
-            continue
-        if to_foe.length_squared() > 0.01 and to_foe.normalized().dot(facing) < 0.34:
+        var target_position := foe.global_position + Vector2(0, -4)
+        if not _is_target_in_arc(target_position, origin, _cleave_direction, CLEAVE_RANGE, minimum_dot):
             continue
         var hit_damage := _player_damage(20 + level * 3)
         if foe.has_method("take_damage_from"):
@@ -557,7 +586,7 @@ func _draw() -> void:
 func _draw_cleave() -> void:
     var progress := 1.0 - _cleave_t / 0.42
     var radius := CLEAVE_RANGE * (0.72 + progress * 0.28)
-    var base := facing.angle()
+    var base := _cleave_direction.angle()
     var fade := 1.0 - maxf(0.0, progress - 0.72) / 0.28
     for i in 9:
         var angle := lerpf(-1.2, 1.2, progress) - i * 0.18
@@ -569,11 +598,11 @@ func _draw_cleave() -> void:
 ## Busur tebasan: menyapu dari belakang ke depan lalu ke sisi lain, dengan ekor memudar.
 func _draw_slash() -> void:
     var t := 1.0 - _swing / SWING_TIME
-    var base := facing.angle()
-    var head := lerpf(-1.9, 1.9, t)
+    var base := _attack_direction.angle()
+    var head := lerpf(-BASIC_ATTACK_ARC_HALF_ANGLE, BASIC_ATTACK_ARC_HALF_ANGLE, t)
     var center := Vector2(0, -6)
     var fade := 1.0 - maxf(0.0, t - 0.7) / 0.3
     for i in 7:
         var a1 := head - i * 0.26
         var alpha := (1.0 - i / 7.0) * fade
-        draw_arc(center, ATTACK_RANGE * 0.85, base + a1 - 0.26, base + a1, 5, Color(1, 1, 1, alpha * 0.9), 2.0 if i < 3 else 1.0)
+        draw_arc(center, ATTACK_RANGE, base + a1 - 0.26, base + a1, 5, Color(1, 1, 1, alpha * 0.9), 2.0 if i < 3 else 1.0)
