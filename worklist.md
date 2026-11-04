@@ -1,6 +1,6 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `4730fcd53fdefcd7a24ca27311c6d0f682b3e623` (2026-11-04)  
+**Audit baseline:** `main` at `0e6ad6cf569df4c8baa541e2ae9e7f6b6c1c1b61` (2026-11-04)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
@@ -9,9 +9,9 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ## Live execution status — 2026-11-04 (post PR #87 Archery Range integration)
 
-**Current main:** `${sha}` — includes PR #87 Archery Range, PR #89 canonical save migration/file-store extraction, PR #91 VillagerArcherCombat, PR #94 SupplyShipmentLedger, PR #96 SupplyShipmentDispatch, PR #97 SupplyRoadGraph, PR #99 SupplyPressureController, PR #100 VillagerScoutBehavior and PR #86 deterministic Frontier decoration/landmarks; save schema remains v17.  
+**Current main:** `0e6ad6cf569df4c8baa541e2ae9e7f6b6c1c1b61` — includes PR #87 Archery Range, PR #89 canonical save migration/file-store extraction, PR #91 VillagerArcherCombat, PR #94 SupplyShipmentLedger, PR #96 SupplyShipmentDispatch, PR #97 SupplyRoadGraph, PR #99 SupplyPressureController, PR #100 VillagerScoutBehavior, PR #103 VillagerHealerBehavior and PR #86 deterministic Frontier decoration/landmarks; save schema remains v17.  
 **Current save schema:** v17.  
-**Open implementation pull requests observed in the latest repository search:** #103 DEV-F healer behavior extraction. Re-check live state before taking action.
+**Open implementation pull requests observed in the latest repository search:** none. PR #104 is this documentation reconciliation. Re-check live state before taking action.
 
 | Workstream | Current disposition |
 |---|---|
@@ -21,7 +21,7 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-C campaign simulation QA | Integrated through PR #73. This is deterministic campaign simulation/diagnostics, not a substitute for human playtesting. |
 | DEV-D supply network decomposition | Partial: PR #75 extracted cost-source transactions; PR #94 added `SupplyShipmentLedger` for order IDs, active-order accounting, destination reservations, bounded history and save restoration. PR #96 integrated route availability, carrier dispatch/re-dispatch and blocked-carrier callbacks into `SupplyShipmentDispatch`; PR #97 extracted Keep-rooted road/depot connectivity into `SupplyRoadGraph`. PR #99 extracted Frontier isolation, warning cadence, saboteur dispatch/retry/recall and pressure save snapshot/restore into `SupplyPressureController`. Mainline `supply_network.gd` is now 458 lines. Remaining supply pressure concerns are now limited to the raid resource-theft hook and public façade. |
 | DEV-E save/migration architecture | Complete through #89: canonical v17 conversion for supported Classic v1–v17 / Frontier v7–v17 saves and `SaveFileStore` parsing, temp verification, backup rotation and rollback are integrated. Schema remains v17; #84 and #88 were closed as superseded duplicates. |
-| DEV-F villager role architecture | Two slices integrated: #91 extracted `VillagerArcherCombat`; #100 extracted `VillagerScoutBehavior` for survey selection, reservation, fog reveal and return-to-post behavior. Villager retains movement, navigation, workplace and state ownership. Host is 1472 lines on the audited mainline; #103 proposes healer treatment cadence/eligibility extraction. Preserve movement, workplace, carrying and save contracts. |
+| DEV-F villager role architecture | Three slices integrated: #91 extracted `VillagerArcherCombat`; #100 extracted `VillagerScoutBehavior` for survey selection, reservation, fog reveal and return-to-post behavior; #103 extracted `VillagerHealerBehavior` for target eligibility and treatment cadence. Villager retains movement, navigation, workplace and state ownership. Host is 1471 lines on the audited mainline. Preserve movement, workplace, carrying and save contracts. |
 | DEV-G HUD modularization | Not started. Decision-based event panel is already integrated through #72; extract it through its existing interface. |
 | DEV-H world generation | Generator decomposition integrated through #86: deterministic region, terrain, resource, decoration and landmark selection are isolated. Godot 4.7 regression and Campaign Simulation QA passed; manual same-seed rendered comparison remains part of visual acceptance. |
 | DEV-I enemy controller | Partial. Patrol movement is already extracted through #74 as `EnemyPatrolMovement`; other shared host responsibilities remain. |
@@ -33,7 +33,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ### Current open-PR disposition
 
-- **#103 — DEV-F healer behavior:** open against current main. Extracts healer target eligibility and 3.2-second / 10-HP treatment cadence; Godot 4.7 import/parse, full regression matrix, `healer_infirmary` and Campaign Simulation QA must pass before merge.
+- **#103 — DEV-F healer behavior:** merged into main at `0e6ad6c`; Godot 4.7 import/parse, all 53 regression jobs including `healer_infirmary`, and Campaign Simulation QA passed on the final head.
 - **#100 — DEV-F Scout behavior:** merged into main after 53 Godot 4.7 CI jobs and Campaign Simulation QA passed. `scout_specialist` passed on the final head.
 - **#99 — DEV-D pressure extraction:** merged into main at `af2a83f`; Godot 4.7 import/parse, all 53 CI jobs (including `supply_pressure`, `regional_control_roads`, `physical_shipments` and `saboteur_disruption`) and Campaign Simulation QA passed on the final head.
 - **#97 — DEV-D road graph extraction:** merged into main at `e5b13d6`; Godot 4.7 import/parse, all 53 CI jobs and Campaign Simulation QA passed on the final head.
