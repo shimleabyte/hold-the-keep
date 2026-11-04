@@ -35,6 +35,15 @@ func _process(delta: float) -> void:
         Events.phase_changed.emit(is_night)
 
 
+## Seconds until the next night/dawn boundary, rounded up for a stable player countdown.
+func seconds_until_phase_change() -> int:
+    var night_now := time_of_day >= NIGHT_START and time_of_day < NIGHT_END
+    var remaining := NIGHT_END - time_of_day if night_now else NIGHT_START - time_of_day
+    if not night_now and remaining <= 0.0:
+        remaining += 1.0
+    return maxi(0, ceili(remaining * DAY_LENGTH))
+
+
 ## 0.0 = siang penuh, 1.0 = malam penuh, dengan transisi senja/fajar.
 func darkness() -> float:
     var t := time_of_day
