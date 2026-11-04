@@ -18,6 +18,19 @@ func _on_build_feedback(message: String) -> void:
         _night_warning_count += 1
 
 
+func verify_phase_countdown() -> void:
+    game_clock.set_process(false)
+    game_clock.time_of_day = 0.5
+    assert(game_clock.seconds_until_phase_change() == 18,
+        "The player must see 18 seconds until night at the 0.5 day-cycle point")
+    game_clock.time_of_day = 0.75
+    assert(game_clock.seconds_until_phase_change() == 27,
+        "The player must see 27 seconds until dawn at the 0.75 day-cycle point")
+    game_clock.time_of_day = 0.95
+    assert(game_clock.seconds_until_phase_change() == 117,
+        "The countdown must wrap through dawn into the next night without going negative")
+
+
 func verify_night_warning() -> void:
     game_clock.set_process(false)
     game_clock.reset()
@@ -99,6 +112,8 @@ func run_profile(profile: String, expected: Dictionary) -> void:
 
     var final_day := int(rules["final_day"])
     main.spawner.start_wave(final_day - 1)
+    assert(main.spawner.remaining_wave_spawns() == main.spawner.wave_size(final_day - 1),
+        "%s HUD wave counter must expose the full regular wave before spawning" % profile)
     assert(not main.spawner._boss_pending,
         "%s must not queue its final boss one day early" % profile)
     main.spawner.end_wave()
@@ -162,6 +177,7 @@ func _run() -> void:
         }
     })
     verify_night_warning()
+    verify_phase_countdown()
     events.build_feedback.disconnect(_on_build_feedback)
     print("PASS: once-per-night preparation warning and next-day reset")
     quit(0)
