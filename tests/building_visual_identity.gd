@@ -5,7 +5,7 @@ const BuildingVisual := preload("res://scripts/entities/building_visual_identity
 
 const EXPECTED_BUILDINGS := [
     "keep", "house", "wall", "tower", "granary", "storage", "farm", "outpost",
-    "stone_wall", "forge", "lumber_camp", "quarry", "hunting_lodge", "scout_post", "infirmary", "road", "bridge", "barracks", "archery_range"
+    "stone_wall", "forge", "lumber_camp", "quarry", "hunting_lodge", "scout_post", "infirmary", "road", "bridge", "barracks", "archery_range", "archery_range"
 ]
 
 
@@ -77,6 +77,7 @@ func _run() -> void:
     var building_constants: Dictionary = building_script.get_script_constant_map()
     var building_textures: Dictionary = building_constants.get("TEXTURES", {})
     assert(building_textures.has("barracks"), "Barracks must have its own base sprite texture")
+    assert(building_textures.has("archery_range"), "Archery Range must have its own base sprite texture")
     assert(building_textures.has("archery_range"), "Archery Range must have its own base sprite texture")
     print("PASS: 19 distinct building materials/details, Frontier-only rendering and four deterministic damage states")
     quit(0)

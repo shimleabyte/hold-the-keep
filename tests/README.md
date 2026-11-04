@@ -17,7 +17,7 @@ Dari akar proyek:
 Skrip observasi lama yang hanya mencetak hasil tanpa assertion dipisahkan ke `run_diagnostics.sh`;
 jalankan saat meninjau animasi, pertarungan, efek, ekonomi atau alur save/menu.
 
-GitHub Actions menjalankan import/parse on Godot 4.7 only, 49 assertion regression suites on Godot 4.7 only, plus Frontier and Frontier Expedition performance diagnostics. Windows/Linux release exports are deferred until the release phase. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Riwayat pipeline multi-engine/export dari PR #57 (workflow #490, 78/78) adalah bukti historis untuk konfigurasi sebelumnya, bukan gate aktif. Saat ini hanya hasil Godot 4.7 yang menjadi acceptance CI.
+GitHub Actions menjalankan import/parse on Godot 4.7 only, 50 assertion regression suites on Godot 4.7 only, plus Frontier and Frontier Expedition performance diagnostics. Windows/Linux release exports are deferred until the release phase. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Riwayat pipeline multi-engine/export dari PR #57 (workflow #490, 78/78) adalah bukti historis untuk konfigurasi sebelumnya, bukan gate aktif. Saat ini hanya hasil Godot 4.7 yang menjadi acceptance CI.
 
 | Skrip | Menguji |
 |---|---|
@@ -125,3 +125,5 @@ PR #42 merged the Beast Rider charge and its regression coverage. The test verif
 
 
 PR #43 merged Phase 06.3 camp/patrol coverage. `faction_camps_patrols` passed on Godot 4.7. It checks deterministic placement in enemy territory, fog-gated activation, A* path/leash bounds, return behavior, active cap and finite reinforcement budget, camp destruction cleanup, and v15 save/restore persistence.
+
+| `archery_range` | Fletching unlock, two archer training slots, ranged projectile combat, soldier specialization compatibility, save/load and workplace-loss fallback |

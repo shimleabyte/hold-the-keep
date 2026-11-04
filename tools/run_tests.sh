@@ -30,6 +30,7 @@ tests=(
     scout_specialist
     healer_infirmary
     blacksmith_forge
+    archery_range
     production_worksites
     construction_sites
     watchtower_vision

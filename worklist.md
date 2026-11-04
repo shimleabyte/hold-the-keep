@@ -9,9 +9,9 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ## Live execution status — 2026-11-04 (post specialist, events and logistics integration)
 
-**Current main:** `e4c56ae8ae5f2aa0f6c6895d7d8a3211ce9b3554` (PR #77 SaveValidator extraction merged).  
+**Current main baseline:** `adf23c9ea0438fba4367d6569069cdb19c51e1db` (PR #78 Barracks garrison merged).  
 **Current save schema:** v17.  
-**Open pull requests:** none returned by the latest open-PR scan. Re-check before assigning work.
+**Open pull requests:** PR #79 Frontier region generation is open; avoid its world-generation file ownership.
 
 | Worklist item | Live disposition |
 |---|---|
@@ -26,9 +26,12 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-J decision-based events | Integrated through PR #72: choice UI, affordability, cancellation, delayed consequences and optional v17 event-state persistence. JSON numeric round-trip handling is covered. |
 | DEV-K input command registry | Integrated through PR #76: 39 rebindable keyboard commands, gamepad defaults, duplicate detection and restore defaults. |
 | DEV-E save validation extraction | First phase integrated through PR #77: SaveValidator owns snapshot validation; v17 schema unchanged. Sequential migration pipeline remains. |
-| DEV-L Barracks garrison vertical slice | Implementation in `work/dev-l-barracks-garrison`: 4-slot military-drill-unlocked Barracks, local soldier defense, UI assignment, save/load and regression coverage; awaiting current-main rebase and Godot 4.7 CI. |
+| DEV-L Barracks garrison vertical slice | Complete through PR #78: Military Drill-unlocked 4-slot Barracks, soldier garrison and save/load lifecycle; 51/51 Godot 4.7 jobs plus campaign simulation passed. |
+| DEV-L Archery Range vertical slice | Implementation in `work/dev-l-archery-range-ranged-training`: Fletching-unlocked two-slot archer training, ranged combat, role-compatible save/load and UI; Godot 4.7 CI pending. |
 
 ### Verified merge and CI results
+
+- PR #78 Barracks garrison merged as `adf23c9ea0438fba4367d6569069cdb19c51e1db`; Godot 4.7 workflow #41754648792 passed 51/51 jobs and campaign simulation passed.
 
 - PR #76 input registry merged; workflow #41742044153 passed 30/30 Godot 4.7 jobs, with the campaign simulation workflow also passing.
 - PR #77 SaveValidator extraction merged at `6545e2eddd6d7ead907e27be6e58fef9b58b88ab`; workflow #41742799385 passed; campaign simulation workflow #41742799266 passed.
