@@ -49,6 +49,7 @@ Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 
 - Keep memiliki 1000 HP. Jika hancur, permainan berakhir.
 - Satu siklus siang-malam berlangsung 180 detik; fase serangan malam berlangsung sekitar 54 detik.
 - Gelombang dimulai dari 6 musuh dan bertambah 3 per hari, hingga batas 120. Peringatan senja muncul 9 detik sebelum fase serangan malam.
+- Pada malam terakhir, Raja Lawan memberi peringatan tersendiri setelah 75% pasukan reguler dikerahkan, lalu muncul setelah empat detik.
 - Kampanye dibagi menjadi tiga bab: Hari 1–5 **Perbatasan**, Hari 6–10 **Pawai Hitam**, Hari 11–15 **Pengepungan Akhir**. Bab II menambah tekanan pemanah; Bab III memperbesar peluang pemanah dan penghancur lapis baja.
 - Bandit muncul sejak awal, serigala hari 2, prajurit hari 4, pemanah hari 6, dan penghancur lapis baja hari 9.
 - Serigala menerjang setelah jeda serangan; pemanah menjaga jarak dan menembakkan proyektil; penghancur lebih tahan tetapi menghantam bangunan lebih keras.
@@ -57,7 +58,7 @@ Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 
 ### Combat dan progression
 Pemain memperoleh XP saat musuh mati. Level 1 membuka Dash (Q), level 2 membuka Cleave (C), dan level 3 membuka Rally (V). Dash memberi perpindahan cepat serta invulnerability singkat; Cleave menyerang area depan dan memberi stagger; Rally memperkuat damage pemain dan prajurit dalam radius selama delapan detik. Level up memulihkan sebagian HP. Progress level/XP tersimpan.
 
-Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis pertahanan, serigala menerjang, pemanah menjaga jarak dan menembakkan proyektil, sedangkan penghancur berzirah bergerak lambat tetapi memberi damage pengepungan tinggi pada bangunan.
+Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis pertahanan, serigala menerjang, pemanah menjaga jarak dan menembakkan proyektil, sedangkan penghancur berzirah bergerak lambat tetapi memberi damage pengepungan tinggi pada bangunan. Serangan melee musuh memiliki wind-up yang bisa dihindari dengan keluar dari jangkauan; panah diarahkan ke posisi sasaran saat telegraph, bukan mengikuti pemain terus-menerus.
 
 ### Desa dan ekonomi
 - Penduduk awal: 2. Keep memberi kapasitas 2; setiap rumah menambah 2 kapasitas.
