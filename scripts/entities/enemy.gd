@@ -5,11 +5,10 @@ extends Node2D
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const FactionVisual := preload("res://scripts/entities/enemy_faction_visual.gd")
 const CombatVisualFeedback := preload("res://scripts/entities/combat_visual_feedback.gd")
-const Corpse := preload("res://scripts/entities/corpse.gd")
-const ENEMY_BOLT := preload("res://scripts/entities/enemy_bolt.gd")
 const ENEMY_TARGETING := preload("res://scripts/systems/enemy_targeting.gd")
 const PATROL_MOVEMENT_SCRIPT := preload("res://scripts/behaviors/enemies/enemy_patrol_movement.gd")
 const RAID_BEHAVIOR_SCRIPT := preload("res://scripts/behaviors/enemies/enemy_raid_behavior.gd")
+const ENEMY_COMBAT_LIFECYCLE_SCRIPT := preload("res://scripts/behaviors/enemies/enemy_combat_lifecycle.gd")
 const WarShamanSupportBehavior := preload("res://scripts/behaviors/war_shaman_support_behavior.gd")
 const BeastRiderBehavior := preload("res://scripts/behaviors/beast_rider_behavior.gd")
 const ShieldbearerBehavior := preload("res://scripts/behaviors/shieldbearer_behavior.gd")
@@ -99,6 +98,7 @@ var anim := SpriteAnim.new()
 var combat_feedback = CombatVisualFeedback.new()
 var patrol_movement = PATROL_MOVEMENT_SCRIPT.new()
 var raid_behavior = RAID_BEHAVIOR_SCRIPT.new()
+var combat_lifecycle = ENEMY_COMBAT_LIFECYCLE_SCRIPT.new()
 
 var _offset := Vector2.ZERO
 var _atk_cd := 0.0
@@ -250,6 +250,7 @@ func export_patrol_state() -> Dictionary:
 
 func _ready() -> void:
     raid_behavior.configure(self)
+    combat_lifecycle.configure(self)
     add_to_group("enemies")
     if is_patrol:
         add_to_group("enemy_patrols")
@@ -600,100 +601,19 @@ func _nearest_guard_target() -> Node2D:
 
 
 func _begin_attack(target, direction: Vector2) -> void:
-    if _atk_cd > 0.0:
-        return
-    _atk_cd = attack_interval
-    _pending = target
-    _pending_is_projectile = false
-    if anim.face(direction):
-        queue_redraw()
-    anim.play("attack", true)
-    if role == "pouncer":
-        _pending_t = 0.28
-        _pounce_dir = direction.normalized()
-        _pounce_windup_t = 0.12
-        _pounce_t = 0.16
-        Events.fx_burst.emit("dust", position + Vector2(0, -2), -_pounce_dir, 1.3)
-    else:
-        _pending_t = ATTACK_HIT_DELAY
-    combat_feedback.begin_windup(direction, _pending_t, false)
-    Audio.play("charge" if role == "pouncer" else "windup", 1.0, -9.0)
+    combat_lifecycle.begin_attack(target, direction)
 
 
 func _begin_ranged_attack(target: Node2D) -> void:
-    if _atk_cd > 0.0:
-        return
-    _atk_cd = attack_interval
-    _pending = target
-    _pending_is_projectile = true
-    _pending_t = ATTACK_HIT_DELAY
-    if anim.face(target.position - position):
-        queue_redraw()
-    anim.play("attack", true)
-    combat_feedback.begin_windup(target.position - position, _pending_t, true)
-    Audio.play("projectile", 1.0, -9.0)
+    combat_lifecycle.begin_ranged_attack(target)
 
 
 func _resolve_pending(delta: float) -> void:
-    if _pending == null:
-        return
-    _pending_t -= delta
-    if _pending_t > 0.0:
-        return
-    var target = _pending
-    _pending = null
-    combat_feedback.end_windup()
-    if not is_instance_valid(target):
-        _pending_is_projectile = false
-        return
-    if _pending_is_projectile:
-        _pending_is_projectile = false
-        var bolt := ENEMY_BOLT.new()
-        bolt.global_position = global_position + Vector2(0, -8)
-        bolt.setup(target, damage, projectile_speed)
-        world.entities.add_child(bolt)
-        return
-    _pending_is_projectile = false
-    if role == "pouncer" and position.distance_to(target.position) > 36.0:
-        return
-    if (is_supply_raider or is_faction_raider) and target.is_in_group("depots"):
-        supply_raid_hits += 1
-        if supply_raid_hits % 2 == 0:
-            var supply = get_tree().get_first_node_in_group("supply_network")
-            if supply != null:
-                supply.raid_steal_from(target)
-    var final_damage := damage
-    if target.is_in_group("buildings"):
-        final_damage = roundi(float(damage) * structure_damage_mult)
-    if target.has_method("take_damage_from"):
-        target.take_damage_from(final_damage, global_position)
-    else:
-        target.take_damage(final_damage)
+    combat_lifecycle.resolve_pending(delta)
 
 
 func apply_stagger(duration: float) -> void:
-    var effective_duration := duration * (1.0 - stagger_resistance)
-    _stagger_t = maxf(_stagger_t, effective_duration)
-    combat_feedback.register_stagger(effective_duration)
-    _pending = null
-    _pending_is_projectile = false
-    _pending_t = 0.0
-    combat_feedback.end_windup()
-    _pounce_windup_t = 0.0
-    _pounce_t = 0.0
-    if archetype == "shieldbearer":
-        shield_behavior.interrupt()
-    if archetype == "scout":
-        scout_behavior.interrupt()
-    if archetype == "saboteur":
-        saboteur_behavior.interrupt()
-    if archetype == "siege_engine":
-        siege_behavior.interrupt()
-    if archetype == "beast_rider":
-        beast_behavior.interrupt()
-    _hurt_t = maxf(_hurt_t, duration * 0.5)
-    anim.play("hurt", true)
-    Audio.play("stagger", 1.0, -8.0)
+    combat_lifecycle.apply_stagger(duration)
 
 
 func _footsteps(delta: float) -> void:
@@ -749,61 +669,19 @@ func _patrol_cell_allowed(cell: Vector2i) -> bool:
 func _move_patrol_toward(target: Vector2, delta: float) -> void:
     patrol_movement.move_toward(target, delta)
 func receive_healing(amount: int) -> void:
-    if hp <= 0 or amount <= 0:
-        return
-    var previous_hp := hp
-    hp = mini(max_hp, hp + amount)
-    if hp != previous_hp:
-        queue_redraw()
+    combat_lifecycle.receive_healing(amount)
 
 
 func take_damage(amount: int) -> void:
-    _take_damage_from(amount, Vector2.ZERO)
+    combat_lifecycle.take_damage(amount)
 
 
 func take_damage_from(amount: int, source_position: Vector2) -> void:
-    _take_damage_from(amount, source_position)
+    combat_lifecycle.take_damage_from(amount, source_position)
 
 
 func _take_damage_from(amount: int, source_position: Vector2) -> void:
-    if hp <= 0:
-        return
-    var damage_multiplier := 1.0 - armor
-    var blocked_by_shield := archetype == "shieldbearer" and shield_behavior.blocks_hit_from(source_position)
-    if blocked_by_shield:
-        damage_multiplier *= shield_behavior.block_damage_multiplier
-    var applied := maxi(1, roundi(float(amount) * damage_multiplier))
-    hp -= applied
-    if blocked_by_shield:
-        Events.fx_burst.emit("stone", position + Vector2(0, -_fh * 0.4), -shield_behavior.brace_direction, 0.8)
-        Audio.play("block", 1.0, -5.0)
-    else:
-        Events.fx_burst.emit("impact", position + Vector2(0, -_fh * 0.4), Vector2.ZERO, 2.0 if is_boss else 1.0)
-        Audio.play("impact_hit", 1.0, -9.0)
-    modulate = Color(1.8, 1.8, 1.8)
-    combat_feedback.register_hit(source_position, global_position, 2.0 if is_boss else 1.0)
-    create_tween().tween_property(self, "modulate", _faction_tint, 0.12)
-    queue_redraw()
-    if hp <= 0:
-        remove_from_group("enemies")
-        remove_from_group("enemy_garrison")
-        remove_from_group("enemy_patrols")
-        remove_from_group("ranged_enemies")
-        remove_from_group("supply_raiders")
-        remove_from_group("faction_raiders")
-        Events.enemy_killed.emit(id)
-        if is_boss:
-            if WorldConfig.is_frontier_profile():
-                Events.frontier_final_boss_defeated.emit(GameClock.day)
-            else:
-                Events.game_won.emit(GameClock.day)
-        Events.fx_burst.emit("puff" if is_boss else "dust", position + Vector2(0, -2), Vector2.ZERO, 2.0 if is_boss else 1.5)
-        if is_boss:
-            Events.screen_shake.emit(3.0, 0.6)
-        Corpse.spawn(get_parent(), _tex, _fw, _fh, anim.view, anim.flip, position)
-        queue_free()
-    elif not is_boss and not (anim.clip == "attack" and not anim.finished):
-        _hurt_t = 0.18
+    combat_lifecycle.take_damage_from(amount, source_position)
 
 
 func retreat() -> void:
