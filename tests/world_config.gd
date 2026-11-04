@@ -83,6 +83,10 @@ func _initialize() -> void:
         "The jobs control must use an icon without a permanent text label")
     assert(hud._tech_btn.icon != null,
         "Research must remain discoverable through its icon")
+    assert(hud._map_button.focus_mode == Control.FOCUS_ALL
+        and hud._jobs_button.focus_mode == Control.FOCUS_ALL
+        and hud._tech_btn.focus_mode == Control.FOCUS_ALL,
+        "Icon-only navigation controls must remain keyboard/controller focusable")
     assert(not hud._hp_text.visible and not hud._keep_text.visible,
         "Persistent vitals must use bars and icons rather than numeric text")
     assert(not hud._build_left_hint.visible and not hud._build_right_hint.visible,
