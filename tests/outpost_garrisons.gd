@@ -33,6 +33,33 @@ func _find_outpost_cell(main, keep, config) -> Vector2i:
     return Vector2i(-1, -1)
 
 
+func _find_nearby_garrison_cell(main, origin: Vector2i, config) -> Vector2i:
+    var offsets: Array[Vector2i] = [
+        Vector2i(0, -4), Vector2i(4, 0), Vector2i(0, 4), Vector2i(-4, 0),
+        Vector2i(0, -6), Vector2i(6, 0), Vector2i(0, 6), Vector2i(-6, 0),
+        Vector2i(4, -4), Vector2i(4, 4), Vector2i(-4, 4), Vector2i(-4, -4)
+    ]
+    for offset in offsets:
+        var anchor := origin + offset
+        var cells: Array[Vector2i] = []
+        var valid := true
+        for cy in 2:
+            for cx in 2:
+                var cell := anchor + Vector2i(cx, cy)
+                if cell.x < 1 or cell.y < 1 or cell.x >= int(config.map_size) - 1 or cell.y >= int(config.map_size) - 1:
+                    valid = false
+                    break
+                if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
+                    valid = false
+                    break
+                cells.append(cell)
+            if not valid:
+                break
+        if valid and not main.nav.path_adjacent(main.player.position, cells).is_empty():
+            return anchor
+    return Vector2i(-1, -1)
+
+
 func _spawn_test_enemy(main, position_world: Vector2, data_db):
     var script = load("res://scripts/entities/enemy.gd")
     var enemy = script.new()
@@ -75,7 +102,7 @@ func _initialize() -> void:
     assert(outpost.guard_count() == 0 and outpost.free_guard_slots() == 2,
         "A new Outpost must start with all guard slots free")
 
-    var barracks_cell := _find_outpost_cell(main, keep, config)
+    var barracks_cell := _find_nearby_garrison_cell(main, outpost_cell, config)
     assert(barracks_cell.x >= 0, "Test must find a second reachable 2x2 site for Barracks")
     var barracks = main.build.place_raw("barracks", barracks_cell)
     await ticks(4)
