@@ -282,18 +282,25 @@ func _run() -> void:
             "The canonical v17 replacement must restore the original legacy stronghold campaign")
         if restored_main != null:
             main = restored_main
-    if is_instance_valid(main):
-        main.queue_free()
-    await _ticks(3)
+    _require(is_instance_valid(main), "The restored Classic scene must remain available as a migration context")
     world_config.apply_profile("frontier")
-    var frontier_main = load("res://scenes/main.tscn").instantiate()
-    root.add_child(frontier_main)
-    current_scene = frontier_main
-    await _ticks(10)
-    game_clock.set_process(false)
-    var frontier_snapshot: Dictionary = save_system.collect(frontier_main)
+    # Canonical migration is data-only. Reuse the already-running scene context
+    # and convert a validated Classic snapshot into a structurally valid
+    # Frontier snapshot instead of generating another 128x128 world here.
+    main.world.map_size = 128
+    var frontier_snapshot: Dictionary = snapshot.duplicate(true)
+    frontier_snapshot["world"]["profile"] = "frontier"
+    frontier_snapshot["world"]["map_size"] = 128
+    frontier_snapshot["world"]["tile_size"] = 16
+    frontier_snapshot["world"]["seed"] = world_config.world_seed
+    var frontier_campaign_state: Dictionary = frontier_snapshot["campaign"].duplicate(true)
+    frontier_campaign_state["profile"] = "frontier"
+    frontier_snapshot["campaign"] = frontier_campaign_state
+    frontier_snapshot["frontier_campaign"] = pipeline._default_frontier_campaign(
+        "frontier", root.get_node("DataDB")
+    )
     _require(String(frontier_snapshot["world"]["profile"]) == "frontier",
-        "Frontier migration fixtures must be collected from a Frontier world")
+        "Canonical migration fixtures must use the Frontier profile contract")
     for source_version in range(7, 18):
         var frontier_fixture: Dictionary = frontier_snapshot.duplicate(true)
         frontier_fixture["version"] = source_version
@@ -355,7 +362,7 @@ func _run() -> void:
         if source_version < 17 and frontier_fixture.has("job_priority"):
             frontier_fixture["job_priority"].erase("blacksmith")
         var frontier_before_canonical := JSON.stringify(frontier_fixture)
-        var canonical_frontier: Variant = pipeline.migrate_snapshot_to_current(frontier_fixture, frontier_main, save_system.VERSION)
+        var canonical_frontier: Variant = pipeline.migrate_snapshot_to_current(frontier_fixture, main, save_system.VERSION)
         _require(canonical_frontier is Dictionary,
             "Frontier v%d must be eligible for canonical v17 conversion" % source_version)
         if canonical_frontier is Dictionary:
@@ -375,7 +382,8 @@ func _run() -> void:
         _require(not frontier_plan["supply_state"].is_empty() or source_version < 13,
             "Frontier v%d must preserve the v13 supply-state boundary" % source_version)
 
-    frontier_main.queue_free()
+    if is_instance_valid(main):
+        main.queue_free()
     await _ticks(2)
     if failures.is_empty():
         print("PASS: Classic v1-v17 and Frontier v7-v17 restore plans, version boundaries, legacy defaults and source immutability")
