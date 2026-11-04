@@ -1,4 +1,6 @@
 extends SceneTree
+
+const FRONTIER_DECORATION_GENERATOR := preload("res://scripts/world/generation/frontier_decoration_generator.gd")
 ## Frontier Expedition: larger world, discovery-gated marches, permanent fog and v15 save validation.
 
 func ticks(count: int) -> void:
@@ -44,6 +46,29 @@ func _initialize() -> void:
         "Main scene must use the Expedition world dimensions")
     assert(main.world._expedition_gate_cells.size() == 4,
         "The expanded map must create one crossing for each outer march")
+
+    var expedition_eligible_cells: PackedByteArray = main.world.generated_decoration_eligibility
+    var expected_expedition_decorations := FRONTIER_DECORATION_GENERATOR.generate(
+        main.world.map_size, main.world.map_seed, main.world.safe_radius,
+        main.world._frontier_regions, expedition_eligible_cells
+    )
+    assert(expected_expedition_decorations == main.world.generated_decoration_layout,
+        "Expedition decoration must match the isolated generator after gates and reservations are applied")
+    var expedition_landmark_regions: Dictionary = {}
+    var expedition_decoration_cells: Dictionary = {}
+    for entry in main.world.generated_decoration_layout:
+        var decoration_cell: Vector2i = entry["cell"]
+        assert(main.world.is_buildable(decoration_cell)
+            and not main.world.occupied.has(decoration_cell)
+            and not main.world.is_expedition_reserved_cell(decoration_cell),
+            "Expedition decoration must avoid barriers, resources and reserved gate landings")
+        assert(not expedition_decoration_cells.has(decoration_cell),
+            "Expedition decoration and landmarks must not share a tile")
+        expedition_decoration_cells[decoration_cell] = true
+        if bool(entry["landmark"]):
+            expedition_landmark_regions[main.world.region_id(decoration_cell)] = true
+    assert(expedition_landmark_regions.size() == 5,
+        "The 192x192 Expedition must retain one landmark in each generated region")
     assert(main.frontier_campaign.objectives.size() == 11,
         "The larger map must retain the existing four-act regional campaign")
     var core_reachable: Dictionary = main.nav.reachable_cells(main.nav.cell_of(main.world.spawn_point()))

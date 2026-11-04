@@ -4,6 +4,7 @@ extends SceneTree
 const FRONTIER_REGION_GENERATOR := preload("res://scripts/world/generation/frontier_region_generator.gd")
 const FRONTIER_TERRAIN_GENERATOR := preload("res://scripts/world/generation/frontier_terrain_generator.gd")
 const FRONTIER_RESOURCE_GENERATOR := preload("res://scripts/world/generation/frontier_resource_generator.gd")
+const FRONTIER_DECORATION_GENERATOR := preload("res://scripts/world/generation/frontier_decoration_generator.gd")
 
 const DIRS4: Array[Vector2i] = [
     Vector2i(1, 0), Vector2i(-1, 0),
@@ -227,6 +228,28 @@ func _initialize() -> void:
     assert(resource_layout_signature(integrated_wood_stone_layout)
         == resource_layout_signature(frontier_resource_layout),
         "WorldMap must consume the isolated resource stage without changing placement output")
+
+    var decoration_eligibility: PackedByteArray = world.generated_decoration_eligibility
+    var expected_decoration_layout := FRONTIER_DECORATION_GENERATOR.generate(
+        world.map_size, world.map_seed, world.safe_radius,
+        world._frontier_regions, decoration_eligibility
+    )
+    assert(expected_decoration_layout == world.generated_decoration_layout,
+        "WorldMap must consume the isolated decoration stage without changing its layout or order")
+    assert(FRONTIER_DECORATION_GENERATOR.generate(
+        world.map_size, world.map_seed, world.safe_radius,
+        world._frontier_regions, decoration_eligibility
+    ) == expected_decoration_layout,
+        "The isolated decoration stage must repeat exactly for the same seed and eligibility mask")
+    assert(FRONTIER_DECORATION_GENERATOR.generate(
+        0, world.map_seed, world.safe_radius, PackedByteArray(), PackedByteArray()
+    ).is_empty(),
+        "Invalid decoration-stage dimensions must return an empty layout")
+    assert(FRONTIER_DECORATION_GENERATOR.generate(
+        world.map_size, world.map_seed, world.safe_radius,
+        world._frontier_regions, PackedByteArray()
+    ).is_empty(),
+        "Mismatched decoration eligibility must return an empty layout")
 
     var hud = get_first_node_in_group("hud")
     assert(hud != null, "The Frontier scene must create the HUD")
