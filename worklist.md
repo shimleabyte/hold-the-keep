@@ -1,17 +1,17 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `af2a83f3df2a8651b346a59c2373aed1a5020791` (2026-11-04)  
+**Audit baseline:** `main` at `0e6ad6cf569df4c8baa541e2ae9e7f6b6c1c1b61` (2026-11-04)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
 
 This is an execution worklist, not a claim that every item is already implemented. Re-check the live branch/PR state before starting each assignment.
 
-## Live execution status — 2026-11-04 (post PR #87 Archery Range integration)
+## Live execution status — 2026-11-04 (Priority 1 architecture integration)
 
-**Current main:** `af2a83f3df2a8651b346a59c2373aed1a5020791` — includes PR #87 Archery Range, PR #89 canonical save migration/file-store extraction, PR #91 VillagerArcherCombat, PR #94 SupplyShipmentLedger, PR #96 SupplyShipmentDispatch, PR #97 SupplyRoadGraph, PR #99 SupplyPressureController and PR #86 deterministic Frontier decoration/landmarks; save schema remains v17.  
+**Current main:** `0e6ad6cf569df4c8baa541e2ae9e7f6b6c1c1b61` — includes PR #87 Archery Range, #89 save migration/file-store extraction, #91 VillagerArcherCombat, #94/#96/#97 supply ledger/dispatch/road graph, #99 SupplyPressureController, #100 VillagerScoutBehavior, #101 HudWidgets, #102 EnemyRaidBehavior, #103 VillagerHealerBehavior and #86 deterministic Frontier decoration/landmarks. Save schema remains v17.  
 **Current save schema:** v17.  
-**Open implementation pull requests observed in the latest repository search:** none. PR #95 is the documentation reconciliation for this snapshot. Re-check live state before taking action.
+**Open implementation pull requests:** none observed. PR #104 is documentation-only and updates this worklist.
 
 | Workstream | Current disposition |
 |---|---|
@@ -19,12 +19,12 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-A data contract validation | Complete through PR #71 replacement. |
 | DEV-B faction camp architecture | Integrated through PR #70. Preserve public camp/patrol/raid interfaces. |
 | DEV-C campaign simulation QA | Integrated through PR #73. This is deterministic campaign simulation/diagnostics, not a substitute for human playtesting. |
-| DEV-D supply network decomposition | Partial: PR #75 extracted cost-source transactions; PR #94 added `SupplyShipmentLedger` for order IDs, active-order accounting, destination reservations, bounded history and save restoration. PR #96 integrated route availability, carrier dispatch/re-dispatch and blocked-carrier callbacks into `SupplyShipmentDispatch`; PR #97 extracted Keep-rooted road/depot connectivity into `SupplyRoadGraph`. PR #99 extracted Frontier isolation, warning cadence, saboteur dispatch/retry/recall and pressure save snapshot/restore into `SupplyPressureController`. Mainline `supply_network.gd` is now 458 lines. Remaining supply pressure concerns are now limited to the raid resource-theft hook and public façade. |
+| DEV-D supply network decomposition | **Priority 1 complete.** PR #75 extracted cost transactions; #94 shipment ledger; #96 dispatch/recovery; #97 road graph; #99 supply pressure controller. Mainline `supply_network.gd` is approximately 458 lines. The remaining deterministic raid stock-theft hook is intentionally retained as a small façade operation: its fixed resource priority, successful-hit cadence and feedback are covered by `supply_pressure`. No further split is justified without a larger cohesive responsibility. |
 | DEV-E save/migration architecture | Complete through #89: canonical v17 conversion for supported Classic v1–v17 / Frontier v7–v17 saves and `SaveFileStore` parsing, temp verification, backup rotation and rollback are integrated. Schema remains v17; #84 and #88 were closed as superseded duplicates. |
-| DEV-F villager role architecture | First slice integrated through #91: `VillagerArcherCombat` owns ranged attack policy while the villager retains state/cooldown/animation/world ownership. Host reduced from 1530 to 1509 lines. Further role-specific extraction remains; preserve movement, workplace, carrying and save contracts. |
-| DEV-G HUD modularization | Not started. Decision-based event panel is already integrated through #72; extract it through its existing interface. |
+| DEV-F villager role architecture | Three role slices integrated: #91 `VillagerArcherCombat`, #100 `VillagerScoutBehavior`, and #103 `VillagerHealerBehavior`. The villager retains shared movement, navigation, workplace claims, carrying, animation and persistence ownership. Host is approximately 1471 lines; further extraction must target a cohesive role or lifecycle boundary rather than split methods mechanically. |
+| DEV-G HUD modularization | First extraction integrated through #101: eight reusable widget classes now live in `scripts/ui/hud_widgets.gd`; `hud.gd` remains the composition/layout coordinator. Further panel extraction is still required. |
 | DEV-H world generation | Generator decomposition integrated through #86: deterministic region, terrain, resource, decoration and landmark selection are isolated. Godot 4.7 regression and Campaign Simulation QA passed; manual same-seed rendered comparison remains part of visual acceptance. |
-| DEV-I enemy controller | Partial. Patrol movement is already extracted through #74 as `EnemyPatrolMovement`; other shared host responsibilities remain. |
+| DEV-I enemy controller | Patrol movement is extracted through #74 and faction/supply raid targeting, validation and movement through #102 `EnemyRaidBehavior`. Existing archetype behaviors and `EnemyTargeting` remain separate. `enemy.gd` is approximately 863 lines; further work should target a clear shared combat/lifecycle boundary without duplicating archetype policy. |
 | DEV-J decision-based events | Integrated through PR #72. |
 | DEV-K input command registry | Integrated through PR #76. |
 | DEV-L Barracks | Integrated through PR #78. |
@@ -33,6 +33,10 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ### Current open-PR disposition
 
+- **#103 — DEV-F healer behavior:** merged into main at `0e6ad6c`; all 54 Godot 4.7 check runs and Campaign Simulation QA passed on the final head, including healer, workplace, scout, save/migration and campaign checks.
+- **#102 — DEV-I enemy raid behavior:** merged into main at `4730fcd`; Godot 4.7 import/parse, full regression matrix and Campaign Simulation QA passed.
+- **#101 — DEV-G HUD widget extraction:** merged into main at `555a182`; Godot 4.7 import/parse, full regression matrix and Campaign Simulation QA passed.
+- **#100 — DEV-F Scout behavior:** merged into main after 53 Godot 4.7 CI jobs and Campaign Simulation QA passed. `scout_specialist` passed on the final head.
 - **#99 — DEV-D pressure extraction:** merged into main at `af2a83f`; Godot 4.7 import/parse, all 53 CI jobs (including `supply_pressure`, `regional_control_roads`, `physical_shipments` and `saboteur_disruption`) and Campaign Simulation QA passed on the final head.
 - **#97 — DEV-D road graph extraction:** merged into main at `e5b13d6`; Godot 4.7 import/parse, all 53 CI jobs and Campaign Simulation QA passed on the final head.
 - **#96 — DEV-D shipment dispatch extraction:** merged into main at `6662d2d`; Godot 4.7 import/parse, all 53 CI jobs and Campaign Simulation QA passed on the final head.
@@ -44,12 +48,14 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ### Recommended execution order
 
-1. DEV-F: continue villager decomposition in small, independently testable slices, next isolating one non-archer role behavior without changing shared contracts. Avoid broad rewrites.
-2. DEV-D: review the remaining supply façade and raid stock-theft hook; do not split further unless a concrete responsibility boundary and regression coverage justify it.
-4. DEV-G: modularize HUD components without changing layout contracts or gameplay rules.
-5. DEV-H and DEV-I: finish generation and enemy-host decomposition after checking current file ownership and API dependencies.
-6. DEV-M: replace remaining unrelated placeholder textures and perform rendered gameplay/audio QA.
-7. Only then expand facilities or rebalance campaign pacing based on observed playtest evidence.
+Priority 1 is complete on main: supply/logistics decomposition is stable, villager role extraction has archer/scout/healer slices, HUD reusable widgets are separated, and enemy patrol/raid behavior is separated. Do not reopen these tracks with broad rewrites.
+
+1. DEV-F: identify the next high-value villager boundary (builder/blacksmith/work lifecycle) only after defining a focused regression test and confirming shared state ownership.
+2. DEV-G: extract complete HUD panels incrementally while preserving layout, input hitboxes and gameplay command boundaries.
+3. DEV-I: assess shared combat resolution and damage lifecycle; extract only with a stable API and tests for attack timing, projectile resolution, stagger, death and save compatibility.
+4. DEV-H: perform deterministic same-seed rendered comparison; generator architecture itself is integrated.
+5. DEV-M: replace remaining placeholder textures and perform rendered gameplay/audio QA.
+6. Only then expand facilities or rebalance campaign pacing based on observed playtest evidence.
 
 ### Validation and release boundaries
 
@@ -297,7 +303,7 @@ Use explicit seeds and bounded workloads. Do not turn an excessively long or uns
 
 ### DEV-D — Supply network decomposition
 
-**Status:** Partially complete through PR #75; cost transactions have been extracted. Continue only with distinct shipment, graph or pressure responsibilities.
+**Status:** Priority 1 decomposition complete through PRs #75, #94, #96, #97 and #99. Keep the stable `SupplyNetwork` façade; do not split the stock-theft hook into a separate module merely to reduce line count.
 
 **Priority:** High  
 **Start:** After INT-0 and after PR #37 is reconciled  
@@ -307,7 +313,7 @@ Use explicit seeds and bounded workloads. Do not turn an excessively long or uns
 - New focused modules under `scripts/systems/`
 - Focused logistics regression tests
 
-**Problem:** The current 805-line `SupplyNetwork` façade still coordinates depot connectivity, stockpile transfers, shipment orders, cargo recovery and supply pressure. Cost-source selection, affordability, payment and refunds have already been extracted into `SupplyCostTransactions` by PR #75.
+**Problem (historical):** The original 805-line façade has been reduced to approximately 458 lines. Connectivity, cost transactions, shipment ledger/dispatch and supply pressure are now owned by focused modules.
 
 **Scope:** Retain `SupplyNetwork` as a stable façade while moving responsibilities into explicit services.
 
@@ -394,7 +400,7 @@ Suggested modules:
 - New role behavior modules under `scripts/behaviors/villagers/` or another agreed directory
 - Focused role regression tests
 
-**Problem:** `villager.gd` is 1,530 lines and combines movement, pathing, work selection, gathering, construction, combat, guarding, expeditions, carrying and delivery.
+**Problem (historical):** `villager.gd` was approximately 1,530 lines. Archer, Scout and Healer role slices are now separate; the host still owns shared movement, pathing, workplace lifecycle, construction, guarding, expeditions, carrying and delivery. Current size is approximately 1,471 lines.
 
 **Scope:**
 
@@ -520,7 +526,7 @@ Preserve the fully generated/loaded world model. Do not introduce runtime chunk 
 
 ### DEV-I — Enemy controller decomposition
 
-**Status:** Patrol movement is complete through PR #74. Further work must not reimplement `EnemyPatrolMovement`.
+**Status:** Patrol movement is complete through PR #74; faction/supply raid targeting, validation and movement are extracted through PR #102 `EnemyRaidBehavior`. Do not reimplement either component.
 
 **Priority:** Medium  
 **Primary owner files:**
@@ -529,7 +535,7 @@ Preserve the fully generated/loaded world model. Do not introduce runtime chunk 
 - New modules under `scripts/behaviors/enemies/` or the existing `scripts/behaviors/`
 - Focused enemy lifecycle regression tests
 
-**Problem:** `enemy.gd` is approximately 975 lines. The project already has six archetype behavior modules; the next step is to reduce host responsibilities without reimplementing those behaviors.
+**Problem (historical):** `enemy.gd` was approximately 975 lines; after raid extraction it is approximately 863 lines. The host still owns shared combat lifecycle, attack resolution, animation, damage/death and orchestration. Archetype-specific policy remains in dedicated behavior modules.
 
 **Scope:**
 
