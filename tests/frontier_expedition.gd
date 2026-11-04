@@ -47,7 +47,7 @@ func _initialize() -> void:
     assert(main.world._expedition_gate_cells.size() == 4,
         "The expanded map must create one crossing for each outer march")
 
-    var expedition_eligible_cells: PackedByteArray = main.world._frontier_decoration_eligibility()
+    var expedition_eligible_cells: PackedByteArray = main.world.generated_decoration_eligibility
     var expected_expedition_decorations := FRONTIER_DECORATION_GENERATOR.generate(
         main.world.map_size, main.world.map_seed, main.world.safe_radius,
         main.world._frontier_regions, expedition_eligible_cells
