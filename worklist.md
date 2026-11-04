@@ -1,17 +1,17 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `0e6ad6cf569df4c8baa541e2ae9e7f6b6c1c1b61` (2026-11-04)  
+**Audit baseline:** `main` at `50d0f36f37e9a8127a4350cb9e140720bae782cf` (2026-11-04)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
 
 This is an execution worklist, not a claim that every item is already implemented. Re-check the live branch/PR state before starting each assignment.
 
-## Live execution status — 2026-11-04 (Priority 1 architecture integration)
+## Live execution status — 2026-11-04 (Priority 1 architecture stabilized)
 
-**Current main:** `0e6ad6cf569df4c8baa541e2ae9e7f6b6c1c1b61` — includes PR #87 Archery Range, #89 save migration/file-store extraction, #91 VillagerArcherCombat, #94/#96/#97 supply ledger/dispatch/road graph, #99 SupplyPressureController, #100 VillagerScoutBehavior, #101 HudWidgets, #102 EnemyRaidBehavior, #103 VillagerHealerBehavior and #86 deterministic Frontier decoration/landmarks. Save schema remains v17.  
+**Current main:** `50d0f36f37e9a8127a4350cb9e140720bae782cf` — includes PR #87 Archery Range, #89 save migration/file-store extraction, #91 VillagerArcherCombat, #94/#96/#97 supply ledger/dispatch/road graph, #99 SupplyPressureController, #100 VillagerScoutBehavior, #101 HudWidgets, #102 EnemyRaidBehavior, #103 VillagerHealerBehavior, #105 VillagerBlacksmithBehavior, #106 ConstructionQueuePanel, #107 VillagerBuilderBehavior, #108 EnemyCombatLifecycle and #109 OutpostPanel, plus #86 deterministic Frontier decoration/landmarks. Save schema remains v17.  
 **Current save schema:** v17.  
-**Open implementation pull requests:** none observed. PR #104 is documentation-only and updates this worklist.
+**Open implementation pull requests:** none.
 
 | Workstream | Current disposition |
 |---|---|
@@ -21,41 +21,34 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-C campaign simulation QA | Integrated through PR #73. This is deterministic campaign simulation/diagnostics, not a substitute for human playtesting. |
 | DEV-D supply network decomposition | **Priority 1 complete.** PR #75 extracted cost transactions; #94 shipment ledger; #96 dispatch/recovery; #97 road graph; #99 supply pressure controller. Mainline `supply_network.gd` is approximately 458 lines. The remaining deterministic raid stock-theft hook is intentionally retained as a small façade operation: its fixed resource priority, successful-hit cadence and feedback are covered by `supply_pressure`. No further split is justified without a larger cohesive responsibility. |
 | DEV-E save/migration architecture | Complete through #89: canonical v17 conversion for supported Classic v1–v17 / Frontier v7–v17 saves and `SaveFileStore` parsing, temp verification, backup rotation and rollback are integrated. Schema remains v17; #84 and #88 were closed as superseded duplicates. |
-| DEV-F villager role architecture | Three role slices integrated: #91 `VillagerArcherCombat`, #100 `VillagerScoutBehavior`, and #103 `VillagerHealerBehavior`. The villager retains shared movement, navigation, workplace claims, carrying, animation and persistence ownership. Host is approximately 1471 lines; further extraction must target a cohesive role or lifecycle boundary rather than split methods mechanically. |
-| DEV-G HUD modularization | First extraction integrated through #101: eight reusable widget classes now live in `scripts/ui/hud_widgets.gd`; `hud.gd` remains the composition/layout coordinator. Further panel extraction is still required. |
+| DEV-F villager role architecture | Five focused role slices integrated: #91 `VillagerArcherCombat`, #100 `VillagerScoutBehavior`, #103 `VillagerHealerBehavior`, #105 `VillagerBlacksmithBehavior` and #107 `VillagerBuilderBehavior`. The villager retains shared movement, navigation, workplace claims, carrying, animation and persistence ownership. Host is approximately 1470 lines; do not extract tiny role fragments without a stronger responsibility boundary. |
+| DEV-G HUD modularization | Main panel boundaries extracted: #101 eight reusable widgets (`hud_widgets.gd`), #106 construction queue (`construction_queue_panel.gd`) and #109 outpost/garrison/logistics (`outpost_panel.gd`). Existing world map and event-decision panels are separate. `hud.gd` is approximately 1031 lines and remains the global composition/layout coordinator. |
 | DEV-H world generation | Generator decomposition integrated through #86: deterministic region, terrain, resource, decoration and landmark selection are isolated. Godot 4.7 regression and Campaign Simulation QA passed; manual same-seed rendered comparison remains part of visual acceptance. |
-| DEV-I enemy controller | Patrol movement is extracted through #74 and faction/supply raid targeting, validation and movement through #102 `EnemyRaidBehavior`. Existing archetype behaviors and `EnemyTargeting` remain separate. `enemy.gd` is approximately 863 lines; further work should target a clear shared combat/lifecycle boundary without duplicating archetype policy. |
+| DEV-I enemy controller | Shared patrol movement (#74), raid targeting/navigation (#102 `EnemyRaidBehavior`) and attack/damage/death lifecycle (#108 `EnemyCombatLifecycle`) are extracted. Existing archetype behaviors and `EnemyTargeting` remain separate. `enemy.gd` is approximately 741 lines. Core controller decomposition is complete for this milestone. |
 | DEV-J decision-based events | Integrated through PR #72. |
 | DEV-K input command registry | Integrated through PR #76. |
 | DEV-L Barracks | Integrated through PR #78. |
 | Archery Range / ranged soldiers | Integrated through PR #87. Preserve soldier-role, garrison, expedition and v17 save compatibility. |
 | DEV-M visual identity / rendered QA | Partial. Distinct silhouettes, rendered gameplay review, audio listening and visual readability checks remain. |
 
-### Current open-PR disposition
+### Recent Priority 1 integrations
 
-- **#103 — DEV-F healer behavior:** merged into main at `0e6ad6c`; all 54 Godot 4.7 check runs and Campaign Simulation QA passed on the final head, including healer, workplace, scout, save/migration and campaign checks.
-- **#102 — DEV-I enemy raid behavior:** merged into main at `4730fcd`; Godot 4.7 import/parse, full regression matrix and Campaign Simulation QA passed.
-- **#101 — DEV-G HUD widget extraction:** merged into main at `555a182`; Godot 4.7 import/parse, full regression matrix and Campaign Simulation QA passed.
-- **#100 — DEV-F Scout behavior:** merged into main after 53 Godot 4.7 CI jobs and Campaign Simulation QA passed. `scout_specialist` passed on the final head.
-- **#99 — DEV-D pressure extraction:** merged into main at `af2a83f`; Godot 4.7 import/parse, all 53 CI jobs (including `supply_pressure`, `regional_control_roads`, `physical_shipments` and `saboteur_disruption`) and Campaign Simulation QA passed on the final head.
-- **#97 — DEV-D road graph extraction:** merged into main at `e5b13d6`; Godot 4.7 import/parse, all 53 CI jobs and Campaign Simulation QA passed on the final head.
-- **#96 — DEV-D shipment dispatch extraction:** merged into main at `6662d2d`; Godot 4.7 import/parse, all 53 CI jobs and Campaign Simulation QA passed on the final head.
-- **#86 — deterministic Frontier decoration/landmarks:** merged into main at `a2fb9c3`. Godot 4.7 import/parse, all 53 CI jobs and Campaign Simulation QA passed after tests were changed to compare against the exact generation-time eligibility snapshot. Manual identical-seed rendered comparison remains a separate visual acceptance task.
-- **#94 — DEV-D shipment ledger extraction:** merged into main at `96cfe01`; Godot 4.7 import/parse, all 53 CI jobs and Campaign Simulation QA passed on the final head.
-- **#91 — DEV-F archer combat extraction:** merged into main at `11176db`; Godot 4.7 import/parse, all 29 regression/performance jobs and Campaign Simulation QA passed on the final head.
-- **#89 — canonical save migration/file store:** merged into main at `bad437f`; Godot 4.7 regression jobs and Campaign Simulation QA passed. #84 and #88 were closed as superseded duplicates.
-- **#87 — Archery Range:** merged into main before the current baseline.
+- **#109 — DEV-G OutpostPanel:** merged at `50d0f36`; all 54 Godot 4.7 checks and Campaign Simulation QA passed. Extracts depot management, cost-source selection, physical shipments, guard assignment and archer assignment UI.
+- **#108 — DEV-I EnemyCombatLifecycle:** merged at `120711c`; all 54 Godot 4.7 checks and Campaign Simulation QA passed. Extracts shared attack timing, projectile/melee resolution, stagger, damage mitigation, healing and death cleanup.
+- **#107 — DEV-F VillagerBuilderBehavior:** merged at `3c58902`; all 54 Godot 4.7 checks and Campaign Simulation QA passed.
+- **#106 — DEV-G ConstructionQueuePanel:** merged at `37557a2`; all 54 Godot 4.7 checks and Campaign Simulation QA passed.
+- **#105 — DEV-F VillagerBlacksmithBehavior:** merged at `972899e`; all 54 Godot 4.7 checks and Campaign Simulation QA passed.
+- Earlier foundations remain integrated: #101/#102/#103/#100, #99/#97/#96/#94, #91 and #89. All these integrations retain save schema v17.
 
 ### Recommended execution order
 
-Priority 1 is complete on main: supply/logistics decomposition is stable, villager role extraction has archer/scout/healer slices, HUD reusable widgets are separated, and enemy patrol/raid behavior is separated. Do not reopen these tracks with broad rewrites.
+**Priority 1 is complete on main.** Supply/logistics, five villager role slices, the major HUD panel boundaries and shared enemy combat lifecycle are integrated. The remaining large controllers now have stable ownership boundaries; avoid further extraction solely to reduce line counts.
 
-1. DEV-F: identify the next high-value villager boundary (builder/blacksmith/work lifecycle) only after defining a focused regression test and confirming shared state ownership.
-2. DEV-G: extract complete HUD panels incrementally while preserving layout, input hitboxes and gameplay command boundaries.
-3. DEV-I: assess shared combat resolution and damage lifecycle; extract only with a stable API and tests for attack timing, projectile resolution, stagger, death and save compatibility.
-4. DEV-H: perform deterministic same-seed rendered comparison; generator architecture itself is integrated.
-5. DEV-M: replace remaining placeholder textures and perform rendered gameplay/audio QA.
-6. Only then expand facilities or rebalance campaign pacing based on observed playtest evidence.
+1. DEV-H: perform deterministic same-seed rendered comparison; generator architecture itself is integrated.
+2. DEV-M: replace remaining placeholder textures and perform rendered gameplay/audio QA.
+3. Run extended Classic and Frontier human playthroughs; record pacing, recovery, difficulty spikes and confusing UI interactions.
+4. Tune campaign pacing and economic pressure only from reproducible playtest evidence.
+5. Expand facilities or archetypes only when a specific gameplay gap is demonstrated.
 
 ### Validation and release boundaries
 
@@ -397,10 +390,10 @@ Suggested modules:
 **Primary owner files:**
 
 - `scripts/entities/villager.gd`
-- New role behavior modules under `scripts/behaviors/villagers/` or another agreed directory
+- Role behavior modules under `scripts/entities/villager_*_behavior.gd` and `scripts/entities/villager_archer_combat.gd`
 - Focused role regression tests
 
-**Problem (historical):** `villager.gd` was approximately 1,530 lines. Archer, Scout and Healer role slices are now separate; the host still owns shared movement, pathing, workplace lifecycle, construction, guarding, expeditions, carrying and delivery. Current size is approximately 1,471 lines.
+**Problem (historical):** `villager.gd` was approximately 1,530 lines. Archer, Scout, Healer, Blacksmith and Builder role behaviors are now separate; the host still owns shared movement, pathing, workplace lifecycle, farming/gathering, guarding, expeditions, carrying and delivery. Current size is approximately 1,470 lines.
 
 **Scope:**
 
@@ -440,7 +433,7 @@ Role components should define task selection, work action and role-specific stat
 - Path invalidation and save/reload remain correct.
 - Existing workplace, production, construction, specialist and combat tests pass.
 
-**Conflict warning:** Do not start while PRs #64–#68 are still being integrated. They modify `villager.gd`, job definitions, UI and save state.
+**Conflict warning:** Avoid parallel edits to `villager.gd`. Add one role component at a time, preserve host-owned movement/workplace/persistence state and validate the corresponding role test.
 
 ### DEV-G — HUD modularization
 
@@ -448,10 +441,10 @@ Role components should define task selection, work action and role-specific stat
 **Primary owner files:**
 
 - `scripts/ui/hud.gd`
-- New components under `scripts/ui/components/` or an agreed directory
+- Components under `scripts/ui/` such as `hud_widgets.gd`, `construction_queue_panel.gd` and `outpost_panel.gd`
 - Focused UI regression tests
 
-**Problem:** `hud.gd` is approximately 1,900 lines and builds/coordinates nearly every UI feature.
+**Problem (historical):** `hud.gd` was approximately 1,900 lines. Reusable widgets, construction queue and outpost/logistics panels are now separate; world map and event-decision panels were already separate. The remaining 1,031-line HUD is primarily the root layout/composition coordinator plus smaller panels.
 
 **Scope:**
 
@@ -483,7 +476,7 @@ Preserve the existing controls and mouse-blocking behavior.
 - No duplicate event subscriptions or leaked controls.
 - Existing HUD click, responsive layout, input and map tests pass.
 
-**Conflict warning:** Specialist PRs add job rows and controls to `hud.gd`. Wait for INT-0.
+**Conflict warning:** Avoid multiple simultaneous edits to `hud.gd`; extract a complete panel on a dedicated branch, preserve the public HUD callbacks, and validate click/resize behavior.
 
 ### DEV-H — World generation architecture
 
@@ -526,7 +519,7 @@ Preserve the fully generated/loaded world model. Do not introduce runtime chunk 
 
 ### DEV-I — Enemy controller decomposition
 
-**Status:** Patrol movement is complete through PR #74; faction/supply raid targeting, validation and movement are extracted through PR #102 `EnemyRaidBehavior`. Do not reimplement either component.
+**Status:** Complete for Priority 1 through PR #74 `EnemyPatrolMovement`, #102 `EnemyRaidBehavior` and #108 `EnemyCombatLifecycle`.
 
 **Priority:** Medium  
 **Primary owner files:**
@@ -535,7 +528,7 @@ Preserve the fully generated/loaded world model. Do not introduce runtime chunk 
 - New modules under `scripts/behaviors/enemies/` or the existing `scripts/behaviors/`
 - Focused enemy lifecycle regression tests
 
-**Problem (historical):** `enemy.gd` was approximately 975 lines; after raid extraction it is approximately 863 lines. The host still owns shared combat lifecycle, attack resolution, animation, damage/death and orchestration. Archetype-specific policy remains in dedicated behavior modules.
+**Problem (historical):** `enemy.gd` was approximately 975 lines; it is now approximately 741 lines after patrol, raid and combat lifecycle extraction. The host retains identity, archetype state, navigation, animation and orchestration; archetype-specific policy remains in dedicated behavior modules.
 
 **Scope:**
 
