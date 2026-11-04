@@ -179,6 +179,21 @@ func _read_valid_save(path: String) -> Variant:
     return _read_saved_data(path, true)
 
 
+## Return the profile recorded by the newest structurally valid save.
+## Legacy saves without world metadata stay on the currently selected profile.
+func saved_profile_id() -> String:
+    for candidate in [PATH, BACKUP]:
+        var data: Variant = _read_saved_data(candidate, false)
+        if not (data is Dictionary):
+            continue
+        var world_data: Variant = data.get("world", {})
+        if world_data is Dictionary:
+            var profile_id := String(world_data.get("profile", WorldConfig.profile_id))
+            if WorldConfig.PROFILES.has(profile_id):
+                return profile_id
+    return WorldConfig.profile_id
+
+
 ## Load the primary save, falling back to the last known-good copy when necessary.
 func request_load() -> bool:
     var parsed: Variant = null
