@@ -58,7 +58,7 @@ Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 
 ### Combat dan progression
 Pemain memperoleh XP saat musuh mati. Level 1 membuka Dash (Q), level 2 membuka Cleave (C), dan level 3 membuka Rally (V). Dash memberi perpindahan cepat serta invulnerability singkat; Cleave menyerang area depan dan memberi stagger; Rally memperkuat damage pemain dan prajurit dalam radius selama delapan detik. Level up memulihkan sebagian HP. Progress level/XP tersimpan.
 
-Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis pertahanan, serigala menerjang, pemanah menjaga jarak dan menembakkan proyektil, sedangkan penghancur berzirah bergerak lambat tetapi memberi damage pengepungan tinggi pada bangunan.
+Musuh memiliki pola yang berbeda, bukan hanya statistik: bandit menyerbu garis pertahanan, serigala menerjang, pemanah menjaga jarak dan menembakkan proyektil, sedangkan penghancur berzirah bergerak lambat tetapi memberi damage pengepungan tinggi pada bangunan. Serangan melee musuh memiliki wind-up yang bisa dihindari dengan keluar dari jangkauan; panah diarahkan ke posisi sasaran saat telegraph, bukan mengikuti pemain terus-menerus.
 
 ### Desa dan ekonomi
 - Penduduk awal: 2. Keep memberi kapasitas 2; setiap rumah menambah 2 kapasitas.
