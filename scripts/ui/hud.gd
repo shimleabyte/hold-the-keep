@@ -883,9 +883,9 @@ func _process(delta: float) -> void:
             _map_panel.configure(main_node.world, main_node.fog, main_node.territory, _font)
 
     var foes := get_tree().get_nodes_in_group("enemies")
-    var queued_spawns := main_node.spawner.remaining_wave_spawns() if main_node != null else 0
+    var queued_spawns: int = main_node.spawner.remaining_wave_spawns() if main_node != null else 0
     _foes.text = "%d+%d" % [foes.size(), queued_spawns] if queued_spawns > 0 else str(foes.size())
-    var hostile_pressure := foes.size() + queued_spawns
+    var hostile_pressure: int = foes.size() + queued_spawns
     _foes.tooltip_text = "%d active enemies · %d remaining in this wave" % [foes.size(), queued_spawns]
     _foes_icon.tooltip_text = _foes.tooltip_text
     _foes.visible = hostile_pressure > 0
