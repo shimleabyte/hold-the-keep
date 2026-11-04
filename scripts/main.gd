@@ -394,7 +394,7 @@ func _apply_save(d: Dictionary) -> void:
         var restored_villager: Dictionary = _save_restore_plan["villagers"][villager_index]
         var n = village.spawn_villager(Vector2(float(v["x"]), float(v["y"])))
         n.set_job(String(restored_villager["job"]))
-        if n.job == "soldier":
+        if bool(_save_restore_plan["restore_equipment_state"]) and n.job == "soldier":
             n.weapon_equipped = bool(restored_villager["weapon_equipped"])
             n.armor_equipped = bool(restored_villager["armor_equipped"])
             n.max_hp = n._hp_cap_for(n.job)
