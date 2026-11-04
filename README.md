@@ -49,6 +49,7 @@ Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 
 - Keep memiliki 1000 HP. Jika hancur, permainan berakhir.
 - Satu siklus siang-malam berlangsung 180 detik; fase serangan malam berlangsung sekitar 54 detik.
 - Gelombang dimulai dari 6 musuh dan bertambah 3 per hari, hingga batas 120. Peringatan senja muncul 9 detik sebelum fase serangan malam.
+- Pada malam terakhir, Raja Lawan memberi peringatan tersendiri setelah 75% pasukan reguler dikerahkan, lalu muncul setelah empat detik.
 - Kampanye dibagi menjadi tiga bab: Hari 1–5 **Perbatasan**, Hari 6–10 **Pawai Hitam**, Hari 11–15 **Pengepungan Akhir**. Bab II menambah tekanan pemanah; Bab III memperbesar peluang pemanah dan penghancur lapis baja.
 - Bandit muncul sejak awal, serigala hari 2, prajurit hari 4, pemanah hari 6, dan penghancur lapis baja hari 9.
 - Serigala menerjang setelah jeda serangan; pemanah menjaga jarak dan menembakkan proyektil; penghancur lebih tahan tetapi menghantam bangunan lebih keras.
