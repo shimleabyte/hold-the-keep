@@ -58,7 +58,7 @@ GitHub Actions menjalankan import/parse on Godot 4.7 only, 50 assertion regressi
 | campaign_combat_simulation.gd | Scripted sample engagements for Frontier Acts I–IV and the day-20 King assault; JSON metrics for Keep damage, population loss, player downs, enemy survivors and simulated time. Uses real damage/cooldown transactions but does not simulate pathfinding, autonomous AI or complete waves |
 | release_hardening.gd | Classic v1–v17 and Frontier v7–v17 historical save-schema validation, interrupted writes and backup recovery; release exports are deferred |
 | save_validator.gd | Dedicated SaveValidator contract: facade parity, schema bounds, optional v17 event state, nested references, JSON round-trip and non-mutating validation |
-| save_migration_pipeline.gd | Versioned in-memory restore adapters for historical Classic v4–v17 save boundaries: legacy stronghold, villager roles, combat/equipment, faction identity, stockpiles, Frontier campaign and supply state; source snapshots stay unchanged |
+| save_migration_pipeline.gd | Classic v1–v17 and Frontier v7–v17 restore plans and canonical v17 conversions; source snapshots stay unchanged, migrated primary writes are revalidated and the original primary is retained as rollback backup |
 | data_db_validation.gd | DataDB static JSON contract validation: record shapes, unique IDs, numeric bounds, cross-file references, prerequisite cycles and contiguous campaign stages |
 | decision_events.gd | Player event choices, atomic requirements, pause/cancel flow, absolute-day delayed consequences, exactly-once resolution, and event-state save/restore |
 | anim_sync.gd | pukulan penebang jatuh di frame benturan; pelarian memakai klip lari |
