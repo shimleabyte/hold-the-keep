@@ -23,7 +23,7 @@ func build() -> void:
 
     _hud._queue_panel = _hud._panel(Vector2.ZERO, Vector2(356, 220))
     _hud._queue_panel.visible = false
-    var title := _hud._label(_hud._queue_panel, "ANTREAN KONSTRUKSI", Vector2(10, 7), _hud.GOLD)
+    var title := _hud._label(_hud._queue_panel, "ANTREAN KONSTRUKSI", Vector2(10, 7), Color("#ffd23f"))
     title.add_theme_font_size_override("font_size", 9)
     _hud._queue_count_label = _hud._label(_hud._queue_panel, "0 PROYEK", Vector2(10, 22), Color("#c9b99d"))
     _hud._queue_count_label.add_theme_font_size_override("font_size", 6)
