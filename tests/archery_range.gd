@@ -116,6 +116,15 @@ func _run() -> void:
             require(soldier.is_in_group("defenders") and soldier.workplace == archery_range and soldier.workplace_job == "archer",
                 "An archer must remain a defender while claiming an archer training slot")
     require(archers.size() == 2, "Exactly two soldiers must become archers")
+    require(main.village.release_archer(archery_range), "The logistics release action must return one archer to regular soldier duty")
+    require(archers[0].job == "soldier" and not archers[0].is_archer(), "Released archer must keep soldier status and lose the archer specialization")
+    require(archery_range.free_slots("archer") == 1, "Releasing an archer must return one training slot")
+    require(main.village.assign_nearest_archer(archery_range), "A released training slot must accept a soldier again")
+    archers.clear()
+    for soldier in soldiers:
+        if soldier.is_archer():
+            archers.append(soldier)
+    require(archers.size() == 2, "Archery Range must return to exactly two trained soldiers after reassignment")
 
     var archer = archers[0]
     var enemy = _spawn_test_enemy(main, archer.position + Vector2(112, 0), data_db)

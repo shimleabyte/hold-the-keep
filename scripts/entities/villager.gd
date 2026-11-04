@@ -285,7 +285,7 @@ func _claim_workplace(work_job: String, preferred_workplace = null) -> bool:
             continue
         var cells: Array[Vector2i] = candidate.cells()
         var path: PackedVector2Array = nav.path_adjacent(position, cells)
-        if path.is_empty():
+        if path.is_empty() and (work_job != "archer" or position.distance_to(candidate.position) > OUTPOST_GUARD_ARRIVAL_RADIUS):
             continue
         if float(path.size()) < best_path_length:
             best_path_length = float(path.size())
@@ -321,7 +321,10 @@ func on_workplace_lost(building) -> void:
         hp = clampi(hp, 1, max_hp)
         _path = PackedVector2Array()
         _pi = 0
-        state = State.IDLE
+        if _expeditioning and is_instance_valid(_expedition_target):
+            state = State.EXPEDITION
+        elif state != State.HIDDEN and state != State.FLEEING:
+            state = State.IDLE
         queue_redraw()
         return
     if job == "scout":
@@ -938,8 +941,8 @@ func _fire_archer_arrow(enemy) -> void:
         return
     var projectile = ArrowProjectile.new()
     projectile.setup(enemy, maxi(1, roundi(float(_soldier_damage()) * ARCHER_DAMAGE_MULT)))
-    projectile.global_position = global_position + Vector2(0, -7)
     world.entities.add_child(projectile)
+    projectile.global_position = global_position + Vector2(0, -7)
 
 # ---------------------------------------------------------------- jobs
 

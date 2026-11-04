@@ -233,7 +233,7 @@ func assign_nearest_garrison_guard(garrison) -> bool:
     var best = null
     var best_path_length := INF
     for soldier in villagers():
-        if soldier.job != "soldier" or soldier.is_outpost_guard() or soldier.is_expeditioning() or soldier.is_recalling_expedition():
+        if soldier.job != "soldier" or soldier.is_archer() or soldier.is_outpost_guard() or soldier.is_expeditioning() or soldier.is_recalling_expedition():
             continue
         var path: PackedVector2Array = nav.path_adjacent(soldier.position, garrison.cells())
         if path.is_empty() and soldier.position.distance_to(garrison.position) > 45.0:
@@ -275,6 +275,8 @@ func release_archer(archery_range) -> bool:
         return false
     for soldier in villagers():
         if soldier.is_archer() and soldier.workplace == archery_range:
+            if soldier.is_expeditioning() or soldier.is_recalling_expedition():
+                continue
             return soldier.set_job("soldier")
     return false
 
