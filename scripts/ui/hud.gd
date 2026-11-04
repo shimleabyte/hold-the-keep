@@ -338,9 +338,12 @@ func _build_top_bar() -> void:
 
     _research_panel = _panel(Vector2(4, 45), Vector2(126, 12))
     _research_name = _label(_research_panel, "", Vector2(3, 1), Color("#ffd23f"))
+    _research_name.visible = false
+    _icon(_research_panel, "tech", Vector2(3, 0))
+    _research_panel.tooltip_text = "Current research progress"
     _research_bar = HUD_WIDGETS.StatBar.new()
-    _research_bar.position = Vector2(77, 3)
-    _research_bar.size = Vector2(45, 6)
+    _research_bar.position = Vector2(22, 3)
+    _research_bar.size = Vector2(99, 6)
     _research_bar.fill = Color("#6fcf5a")
     _research_panel.add_child(_research_bar)
     _research_panel.visible = false
@@ -433,10 +436,11 @@ func _build_boss_bar() -> void:
     _boss_panel = _panel(Vector2(140, 46), Vector2(200, 18))
     _boss_title = _label(_boss_panel, "RAJA LAWAN", Vector2(0, 0), Color("#ff8a7a"))
     _boss_title.size = Vector2(200, 9)
-    _boss_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _boss_title.visible = false
+    _icon(_boss_panel, "skull", Vector2(4, 3))
     _boss_bar = HUD_WIDGETS.StatBar.new()
-    _boss_bar.position = Vector2(6, 10)
-    _boss_bar.size = Vector2(188, 6)
+    _boss_bar.position = Vector2(23, 5)
+    _boss_bar.size = Vector2(170, 8)
     _boss_bar.fill = Color("#c0392b")
     _boss_panel.add_child(_boss_bar)
     _boss_panel.visible = false
@@ -477,7 +481,7 @@ func _rebuild_build_bar() -> void:
         var slot := HUD_WIDGETS.BuildSlot.new()
         slot.id = id
         slot.font = _font
-        slot.key_text = str(i + 1)
+        slot.key_text = str((i + 1) % 10)
         var data: Dictionary = DataDB.buildings[id]
         slot.title = String(data.get("short", data["name"]))
         slot.icon = ICONS[id]
@@ -488,7 +492,7 @@ func _rebuild_build_bar() -> void:
                 cost_parts.append("%s %d" % [kind.capitalize(), int(cost[kind])])
         slot.tooltip_text = "%s  ·  %s\n%s" % [
             String(data["name"]), slot.key_text,
-            "  ".join(cost_parts) if not cost_parts.is_empty() else "No resource cost"
+            ", ".join(PackedStringArray(cost_parts)) if not cost_parts.is_empty() else "No resource cost"
         ]
         slot.position = Vector2(x0 + i * (w + 3), _viewport_size.y - SLOT_H - 2)
         slot.size = Vector2(w, SLOT_H)
@@ -856,6 +860,7 @@ func _process(delta: float) -> void:
         if discovered:
             _boss_title.text = String(stronghold.faction_id).replace("_", " ").to_upper()
             _boss_title.add_theme_color_override("font_color", Color("#d97868"))
+            _boss_panel.tooltip_text = "%s stronghold integrity" % String(stronghold.faction_id).replace("_", " ").capitalize()
             _boss_bar.set_value(float(stronghold.hp) / stronghold.max_hp)
 
 
