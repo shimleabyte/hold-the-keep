@@ -223,6 +223,7 @@ class BuildSlot extends Control:
 
     func _ready() -> void:
         mouse_filter = Control.MOUSE_FILTER_STOP
+        focus_mode = Control.FOCUS_ALL
         mouse_entered.connect(func() -> void:
             hover = true
             queue_redraw())
@@ -232,6 +233,9 @@ class BuildSlot extends Control:
 
     func _gui_input(event: InputEvent) -> void:
         if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+            pressed.emit(id)
+            accept_event()
+        elif event.is_action_pressed("ui_accept"):
             pressed.emit(id)
             accept_event()
 
@@ -263,6 +267,7 @@ class HudChip extends Control:
 
     func _ready() -> void:
         mouse_filter = Control.MOUSE_FILTER_STOP
+        focus_mode = Control.FOCUS_ALL
         mouse_entered.connect(func() -> void:
             hover = true
             queue_redraw())
@@ -272,6 +277,9 @@ class HudChip extends Control:
 
     func _gui_input(event: InputEvent) -> void:
         if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+            pressed.emit()
+            accept_event()
+        elif event.is_action_pressed("ui_accept"):
             pressed.emit()
             accept_event()
 
@@ -298,6 +306,7 @@ class TechButton extends Control:
 
     func _ready() -> void:
         mouse_filter = Control.MOUSE_FILTER_STOP
+        focus_mode = Control.FOCUS_ALL
         mouse_entered.connect(func() -> void:
             hover = true
             queue_redraw())
@@ -307,6 +316,9 @@ class TechButton extends Control:
 
     func _gui_input(event: InputEvent) -> void:
         if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+            pressed.emit()
+            accept_event()
+        elif event.is_action_pressed("ui_accept"):
             pressed.emit()
             accept_event()
 
