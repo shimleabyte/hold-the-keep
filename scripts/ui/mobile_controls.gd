@@ -43,6 +43,26 @@ func _process(_delta: float) -> void:
     var pause_menu = get_tree().get_first_node_in_group("pause_menu")
     if pause_menu != null and pause_menu.has_method("is_open") and pause_menu.is_open():
         should_show = false
+
+    var hud := get_parent()
+    if hud != null:
+        for overlay_property in [
+            "_map_panel",
+            "_outpost_panel",
+            "_queue_panel",
+            "_help",
+            "_over",
+            "_event_decision_panel"
+        ]:
+            var overlay = hud.get(overlay_property) as Control
+            if overlay != null and overlay.visible:
+                should_show = false
+                break
+
+    var technology_panel = get_tree().get_first_node_in_group("tech_panel")
+    if technology_panel != null and technology_panel.has_method("is_open") and technology_panel.is_open():
+        should_show = false
+
     if visible and not should_show:
         _release_all_touches()
     if visible != should_show:
