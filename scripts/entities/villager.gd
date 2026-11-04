@@ -8,6 +8,7 @@ const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
 const ArcherCombat := preload("res://scripts/entities/villager_archer_combat.gd")
 const ScoutBehavior := preload("res://scripts/entities/villager_scout_behavior.gd")
+const HealerBehavior := preload("res://scripts/entities/villager_healer_behavior.gd")
 
 enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING, SCOUTING, SCOUT_RETURNING }
 
@@ -105,6 +106,7 @@ var _foe = null
 var anim := SpriteAnim.new()
 var _archer_combat := ArcherCombat.new()
 var _scout_behavior = ScoutBehavior.new()
+var _healer_behavior = HealerBehavior.new()
 var _hurt_t := 0.0
 var _pending_foe = null
 var _pending_t := 0.0
@@ -124,6 +126,7 @@ var _smith_recipe := ""
 
 func _ready() -> void:
     _scout_behavior.configure(self)
+    _healer_behavior.configure(self)
     add_to_group("villagers")
     Events.tech_researched.connect(_on_tech)
     _decide_t = randf_range(0.0, 1.0)
@@ -612,22 +615,7 @@ func _tick_working(delta: float) -> void:
             _decide_t = 0.2
         return
     if job == "healer":
-        if not has_valid_workplace() or String(target.job) != "soldier" or int(target.hp) <= 0 \
-                or int(target.hp) >= int(target.max_hp) or target.is_expeditioning() \
-                or target.is_recalling_expedition() or target.state in [State.HIDDEN, State.FLEEING] \
-                or not _is_in_workplace_radius(target):
-            _release()
-            state = State.IDLE
-            _decide_t = 0.15
-            return
-        anim.face(target.position - position)
-        _work_t += delta
-        if _work_t >= HEAL_INTERVAL:
-            _work_t = 0.0
-            if target.heal(HEAL_AMOUNT) <= 0 or int(target.hp) >= int(target.max_hp):
-                _release()
-                state = State.IDLE
-                _decide_t = 0.15
+        _healer_behavior.tick(delta)
         return
     if job == "builder":
         if target.has_method("is_construction_site") and target.is_construction_site():
@@ -1178,6 +1166,31 @@ func _release() -> void:
     target = null
     _work_t = 0.0
     _hit_done = false
+
+
+## Public bridge for the healer component; target/state ownership remains in Villager.
+func healer_behavior_target_valid() -> bool:
+    if not has_valid_workplace() or target == null or not is_instance_valid(target):
+        return false
+    return String(target.job) == "soldier" and int(target.hp) > 0 \
+        and int(target.hp) < int(target.max_hp) and not target.is_expeditioning() \
+        and not target.is_recalling_expedition() \
+        and target.state not in [State.HIDDEN, State.FLEEING] \
+        and _is_in_workplace_radius(target)
+
+
+func healer_behavior_face_target() -> void:
+    anim.face(target.position - position)
+
+
+func healer_behavior_apply_heal(amount: int) -> bool:
+    return target.heal(amount) > 0 and int(target.hp) < int(target.max_hp)
+
+
+func healer_behavior_release(recheck_delay: float) -> void:
+    _release()
+    state = State.IDLE
+    _decide_t = recheck_delay
 
 
 func _release_heal_target() -> void:
