@@ -60,6 +60,13 @@ func _initialize() -> void:
         "Launching the project must show the title screen without constructing a gameplay world")
     assert(main.get_node_or_null("TitleScreen") != null,
         "The main scene must present the title screen before gameplay")
+    var title_screen = main.get_node("TitleScreen")
+    assert(title_screen.find_child("ContinueButton", true, false) != null,
+        "The title screen must expose a Continue action")
+    assert(title_screen.find_child("SettingsButton", true, false) != null,
+        "The title screen must expose Settings")
+    assert(title_screen.get_node_or_null("SettingsPanel") != null,
+        "The title screen must provide an in-menu settings panel")
     main._start_campaign("classic")
     await process_frame
     await process_frame

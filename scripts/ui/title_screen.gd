@@ -12,6 +12,15 @@ const GOLD := Color("#d4ad70")
 const TEXT := Color("#eadfc9")
 const MUTED := Color("#a59b88")
 
+var _continue_button: Button
+var _settings_layer: Control
+var _settings_center: CenterContainer
+var _fullscreen_button: Button
+var _vsync_button: Button
+var _shake_button: Button
+var _volume_slider: HSlider
+var _main_first_focus: Control
+
 
 func _ready() -> void:
     name = "TitleScreen"
@@ -50,7 +59,7 @@ func _build_screen() -> void:
     content.offset_top = 24
     content.offset_right = -34
     content.offset_bottom = -22
-    content.add_theme_constant_override("separation", 8)
+    content.add_theme_constant_override("separation", 6)
     root.add_child(content)
 
     var top_line := HBoxContainer.new()
@@ -88,6 +97,19 @@ func _build_screen() -> void:
     choose.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     title_block.add_child(choose)
 
+    var continue_row := HBoxContainer.new()
+    continue_row.alignment = BoxContainer.ALIGNMENT_CENTER
+    title_block.add_child(continue_row)
+    _continue_button = Button.new()
+    _continue_button.name = "ContinueButton"
+    _continue_button.text = "CONTINUE LAST CAMPAIGN"
+    _continue_button.custom_minimum_size = Vector2(210, 25)
+    _style_button(_continue_button, false)
+    _continue_button.disabled = not SaveSystem.has_save()
+    _continue_button.tooltip_text = "Resume the most recent valid save" if not _continue_button.disabled else "No valid save was found"
+    _continue_button.pressed.connect(_continue_campaign)
+    continue_row.add_child(_continue_button)
+
     var modes := HBoxContainer.new()
     modes.alignment = BoxContainer.ALIGNMENT_CENTER
     modes.add_theme_constant_override("separation", 12)
@@ -112,12 +134,143 @@ func _build_screen() -> void:
     var note := _label("NO ROAD IS SAFE. NO WINTER IS KIND.", 7, MUTED)
     note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     footer.add_child(note)
+
+    var settings := Button.new()
+    settings.name = "SettingsButton"
+    settings.text = "SETTINGS"
+    settings.custom_minimum_size = Vector2(76, 24)
+    _style_button(settings, false)
+    settings.pressed.connect(_open_settings)
+    footer.add_child(settings)
+
     var quit := Button.new()
     quit.text = "QUIT"
     quit.custom_minimum_size = Vector2(64, 24)
     _style_button(quit, false)
     quit.pressed.connect(func() -> void: get_tree().quit())
     footer.add_child(quit)
+
+    _build_settings_panel()
+    _main_first_focus = modes.get_child(0).get_child(0).get_child(3) if _continue_button.disabled else _continue_button
+    call_deferred("_grab_initial_focus")
+
+
+func _build_settings_panel() -> void:
+    _settings_layer = Control.new()
+    _settings_layer.name = "SettingsPanel"
+    _settings_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _settings_layer.visible = false
+    _settings_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+    add_child(_settings_layer)
+
+    var dim := ColorRect.new()
+    dim.color = Color(0.01, 0.015, 0.018, 0.88)
+    dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _settings_layer.add_child(dim)
+
+    _settings_center = CenterContainer.new()
+    _settings_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    _settings_layer.add_child(_settings_center)
+
+    var panel := PanelContainer.new()
+    panel.custom_minimum_size = Vector2(280, 0)
+    var panel_style := StyleBoxFlat.new()
+    panel_style.bg_color = PANEL
+    panel_style.border_color = EDGE
+    panel_style.set_border_width_all(1)
+    panel_style.content_margin_left = 18
+    panel_style.content_margin_right = 18
+    panel_style.content_margin_top = 14
+    panel_style.content_margin_bottom = 14
+    panel.add_theme_stylebox_override("panel", panel_style)
+    _settings_center.add_child(panel)
+
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", 8)
+    panel.add_child(box)
+
+    var heading := _label("FIELD SETTINGS", 13, GOLD)
+    heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    box.add_child(heading)
+
+    _fullscreen_button = _settings_toggle(box, "FULLSCREEN", func() -> void:
+        Settings.set_fullscreen(not Settings.fullscreen)
+        _refresh_settings())
+    _vsync_button = _settings_toggle(box, "VERTICAL SYNC", func() -> void:
+        Settings.set_vsync(not Settings.vsync)
+        _refresh_settings())
+    _shake_button = _settings_toggle(box, "SCREEN SHAKE", func() -> void:
+        Settings.set_screen_shake(not Settings.screen_shake)
+        _refresh_settings())
+
+    var volume_label := _label("MASTER VOLUME", 8, MUTED)
+    box.add_child(volume_label)
+    _volume_slider = HSlider.new()
+    _volume_slider.min_value = 0.0
+    _volume_slider.max_value = 1.0
+    _volume_slider.step = 0.05
+    _volume_slider.value = Settings.volume
+    _volume_slider.custom_minimum_size = Vector2(230, 20)
+    _volume_slider.value_changed.connect(func(value: float) -> void:
+        Settings.set_volume(value))
+    box.add_child(_volume_slider)
+
+    var back := Button.new()
+    back.text = "RETURN TO TITLE"
+    back.custom_minimum_size = Vector2(0, 27)
+    _style_button(back, true)
+    back.pressed.connect(_close_settings)
+    box.add_child(back)
+    _refresh_settings()
+
+
+func _settings_toggle(parent: VBoxContainer, caption: String, callback: Callable) -> Button:
+    var button := Button.new()
+    button.custom_minimum_size = Vector2(0, 27)
+    _style_button(button, false)
+    button.pressed.connect(callback)
+    parent.add_child(button)
+    return button
+
+
+func _refresh_settings() -> void:
+    if _fullscreen_button == null:
+        return
+    _fullscreen_button.text = "FULLSCREEN  /  %s" % ("ON" if Settings.fullscreen else "OFF")
+    _vsync_button.text = "VERTICAL SYNC  /  %s" % ("ON" if Settings.vsync else "OFF")
+    _shake_button.text = "SCREEN SHAKE  /  %s" % ("ON" if Settings.screen_shake else "OFF")
+    _volume_slider.set_value_no_signal(Settings.volume)
+
+
+func _open_settings() -> void:
+    _refresh_settings()
+    _settings_layer.visible = true
+    _fullscreen_button.grab_focus()
+
+
+func _close_settings() -> void:
+    _settings_layer.visible = false
+    if is_instance_valid(_main_first_focus):
+        _main_first_focus.grab_focus()
+
+
+func _continue_campaign() -> void:
+    var profile_id := SaveSystem.saved_profile_id()
+    if not WorldConfig.apply_profile(profile_id):
+        return
+    Settings.set_world_profile(profile_id)
+    SaveSystem.request_load()
+
+
+func _grab_initial_focus() -> void:
+    if is_instance_valid(_main_first_focus):
+        _main_first_focus.grab_focus()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+    if _settings_layer != null and _settings_layer.visible and event.is_action_pressed("ui_cancel"):
+        _close_settings()
+        get_viewport().set_input_as_handled()
 
 
 func _mode_card(kicker: String, heading: String, description: String, button_text: String, profile_id: String) -> PanelContainer:
@@ -162,6 +315,7 @@ func _label(value: String, size: int, color: Color) -> Label:
 
 
 func _style_button(button: Button, primary: bool) -> void:
+    button.focus_mode = Control.FOCUS_ALL
     button.add_theme_font_override("font", PIXEL_FONT.get_font())
     button.add_theme_font_size_override("font_size", 8)
     button.add_theme_color_override("font_color", TEXT)
