@@ -229,7 +229,7 @@ func _initialize() -> void:
         == resource_layout_signature(frontier_resource_layout),
         "WorldMap must consume the isolated resource stage without changing placement output")
 
-    var decoration_eligibility := world._frontier_decoration_eligibility()
+    var decoration_eligibility: PackedByteArray = world._frontier_decoration_eligibility()
     var expected_decoration_layout := FRONTIER_DECORATION_GENERATOR.generate(
         world.map_size, world.map_seed, world.safe_radius,
         world._frontier_regions, decoration_eligibility
