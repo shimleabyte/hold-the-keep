@@ -47,11 +47,6 @@ func _run() -> void:
     migration_baseline["resources"] = []
     migration_baseline["construction_sites"] = []
     migration_baseline["fog"] = {"cells": []}
-    if pipeline == null:
-        push_error("SaveMigrationPipeline failed to instantiate")
-        quit(1)
-        return
-
     var legacy_v4: Dictionary = migration_baseline.duplicate(true)
     legacy_v4["version"] = 4
     legacy_v4.erase("world")
