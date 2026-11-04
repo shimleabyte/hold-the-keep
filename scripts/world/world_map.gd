@@ -209,6 +209,10 @@ func _generate_frontier() -> void:
     var terrain_layout := FRONTIER_TERRAIN_GENERATOR.generate(
         map_size, map_seed, safe_radius, _frontier_regions, resource_rng
     )
+    if terrain_layout.size() != map_size * map_size:
+        push_error("WorldMap: Frontier terrain generation returned an incomplete layout")
+        return
+
     var center := Vector2(map_size, map_size) / 2.0
     var clearing_radius := maxf(safe_radius + 7.0, float(map_size) * 0.15)
 
