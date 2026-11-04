@@ -24,6 +24,7 @@ var _stick_value := Vector2.ZERO
 var _joystick_touch_id := -1
 var _pause_touch_id := -1
 var _touch_actions: Dictionary = {}
+var _touch_action_counts: Dictionary = {}
 var _pressed_actions: Dictionary = {}
 var _button_layout: Array[Dictionary] = []
 
@@ -203,8 +204,11 @@ func handle_touch_press(touch_id: int, position: Vector2) -> bool:
             continue
         var action := String(button["action"])
         _touch_actions[touch_id] = action
+        var touch_count := int(_touch_action_counts.get(action, 0)) + 1
+        _touch_action_counts[action] = touch_count
         _pressed_actions[action] = true
-        Input.action_press(action)
+        if touch_count == 1:
+            Input.action_press(action)
         queue_redraw()
         return true
 
@@ -230,8 +234,13 @@ func handle_touch_release(touch_id: int) -> bool:
     if _touch_actions.has(touch_id):
         var action := String(_touch_actions[touch_id])
         _touch_actions.erase(touch_id)
-        _pressed_actions.erase(action)
-        Input.action_release(action)
+        var touch_count := int(_touch_action_counts.get(action, 1)) - 1
+        if touch_count <= 0:
+            _touch_action_counts.erase(action)
+            _pressed_actions.erase(action)
+            Input.action_release(action)
+        else:
+            _touch_action_counts[action] = touch_count
         queue_redraw()
         return true
 
@@ -268,9 +277,10 @@ func _set_axis_action(action: String, strength: float) -> void:
 
 
 func _release_all_touches() -> void:
-    for action_value in _touch_actions.values():
+    for action_value in _touch_action_counts.keys():
         Input.action_release(String(action_value))
     _touch_actions.clear()
+    _touch_action_counts.clear()
     _pressed_actions.clear()
     _joystick_touch_id = -1
     _pause_touch_id = -1
