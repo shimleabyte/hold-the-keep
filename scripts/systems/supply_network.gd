@@ -10,7 +10,6 @@ const TRANSFER_INTERVAL := 3.0
 const TRANSFER_BUDGET_PER_DEPOT := 6
 const TRANSFER_KINDS: Array[String] = ["wood", "stone", "food", "iron"]
 const MAX_SHIPMENT_AMOUNT := 60
-const MAX_SHIPMENT_HISTORY := 16
 const MAX_ACTIVE_SHIPMENTS := 8
 const SHIPMENT_TICK := 0.2
 const CARRIER_SCRIPT := preload("res://scripts/entities/supply_carrier.gd")
@@ -424,7 +423,7 @@ func cancel_shipment(order_id: int) -> bool:
 
 
 func get_shipment_orders() -> Array[Dictionary]:
-    return _shipment_ledger.orders.duplicate(true)
+    return _shipment_ledger.snapshot()
 
 
 func get_shipment_status_label(status: String) -> String:
