@@ -3,6 +3,8 @@ extends Node
 
 const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
 const SPAWN_WINDOW := 0.6  # bagian malam di mana musuh muncul
+const BOSS_REVEAL_REMAINING_RATIO := 0.25
+const BOSS_WARNING_SECONDS := 4.0
 
 var world
 var flow
@@ -14,6 +16,7 @@ var _interval := 1.0
 var _timer := 0.0
 var _pool: Array = []
 var _boss_pending := false
+var _boss_waiting_for_reveal := false
 var _boss_t := 0.0
 var _active_stage_id := ""
 
@@ -105,7 +108,14 @@ func _pool_for(day: int) -> Array:
 
 
 func export_state() -> Dictionary:
-    return {"to_spawn": _to_spawn, "interval": _interval, "timer": _timer, "boss": _boss_pending, "boss_t": _boss_t}
+    return {
+        "to_spawn": _to_spawn,
+        "interval": _interval,
+        "timer": _timer,
+        "boss": _boss_pending,
+        "boss_waiting": _boss_waiting_for_reveal,
+        "boss_t": _boss_t
+    }
 
 
 func import_state(d: Dictionary) -> void:
@@ -113,7 +123,9 @@ func import_state(d: Dictionary) -> void:
     _interval = float(d.get("interval", 1.0))
     _timer = float(d.get("timer", 0.0))
     _boss_pending = bool(d.get("boss", false))
-    _boss_t = float(d.get("boss_t", 0.0))
+    # Older saves only stored boss/boss_t. Preserve their countdown behavior.
+    _boss_waiting_for_reveal = bool(d.get("boss_waiting", false))
+    _boss_t = maxf(0.0, float(d.get("boss_t", 0.0)))
     _pool = _pool_for(GameClock.day)
     _sync_stage(GameClock.day)
 
@@ -157,11 +169,14 @@ func start_wave(day: int) -> void:
     var night_secs := (GameClock.NIGHT_END - GameClock.NIGHT_START) * GameClock.DAY_LENGTH
     _interval = maxf(0.1, night_secs * SPAWN_WINDOW / count)
     Events.wave_started.emit(day, count)
+    _boss_pending = false
+    _boss_waiting_for_reveal = false
+    _boss_t = 0.0
     var rules := _campaign_rules()
     if day == int(rules.get("final_day", DataDB.waves.get("final_day", 15))):
         _boss_pending = true
-        _boss_t = 4.0
-        Events.build_feedback.emit("Malam terakhir! Raja lawan datang bersama %d prajurit" % count)
+        _boss_waiting_for_reveal = true
+        Events.build_feedback.emit("Malam terakhir! Raja lawan mengintai di balik gelombang pasukan.")
     else:
         Events.build_feedback.emit("Malam tiba! %d musuh menyerang" % count)
 
@@ -184,12 +199,19 @@ func end_wave() -> void:
 
 func _process(delta: float) -> void:
     if _boss_pending:
-        _boss_t -= delta
-        if _boss_t <= 0.0:
-            if spawn_one(String(DataDB.waves.get("boss", "king"))):
-                _boss_pending = false
-            else:
-                _boss_t = 1.0
+        if _boss_waiting_for_reveal:
+            var reveal_remaining := floori(float(wave_size(GameClock.day)) * BOSS_REVEAL_REMAINING_RATIO)
+            if _to_spawn <= reveal_remaining:
+                _boss_waiting_for_reveal = false
+                _boss_t = BOSS_WARNING_SECONDS
+                Events.build_feedback.emit("Raja lawan mendekat! Bersiap menghadapi serangan terakhir.")
+        else:
+            _boss_t = maxf(0.0, _boss_t - delta)
+            if _boss_t <= 0.0:
+                if spawn_one(String(DataDB.waves.get("boss", "king"))):
+                    _boss_pending = false
+                else:
+                    _boss_t = 1.0
     if _to_spawn <= 0:
         return
     _timer += delta
