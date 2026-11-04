@@ -26,6 +26,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Validate asset generator syntax
+        run: python3 -m py_compile tools/gen_assets.py
+
       - name: Install Godot
         uses: chickensoft-games/setup-godot@v2
         with:
