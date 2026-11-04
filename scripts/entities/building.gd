@@ -19,6 +19,7 @@ const TEXTURES := {
     "hunting_lodge": preload("res://assets/sprites/hunting_lodge.svg"),
     "scout_post": preload("res://assets/sprites/scout_post.svg"),
     "infirmary": preload("res://assets/sprites/infirmary.svg"),
+    "barracks": preload("res://assets/sprites/barracks.svg"),
 }
 const ARROW_SCRIPT := preload("res://scripts/entities/arrow.gd")
 const BuildingVisual := preload("res://scripts/entities/building_visual_identity.gd")
@@ -191,6 +192,8 @@ func _ready() -> void:
         add_to_group("farms")
     if id == "granary":
         add_to_group("granaries")
+    if guard_capacity > 0:
+        add_to_group("garrisons")
     set_physics_process(_range > 0.0)
     set_process(false)
     if id == "keep":
@@ -251,10 +254,15 @@ func take_damage(amount: int) -> void:
 
 
 func _leave_groups() -> void:
+    for guard in guards.duplicate():
+        if is_instance_valid(guard) and guard.has_method("on_guard_outpost_lost"):
+            guard.on_guard_outpost_lost(self)
+    guards.clear()
     remove_from_group("buildings")
     remove_from_group("depots")
     remove_from_group("farms")
     remove_from_group("granaries")
+    remove_from_group("garrisons")
     remove_from_group("roads")
 
 
@@ -419,7 +427,9 @@ func free_guard_slots() -> int:
 
 
 func claim_guard(soldier) -> bool:
-    if is_sabotaged() or id != "outpost" or guard_capacity <= 0 or not is_instance_valid(soldier):
+    if is_sabotaged() or guard_capacity <= 0 or not is_instance_valid(soldier):
+        return false
+    if String(soldier.job) != "soldier":
         return false
     if guards.has(soldier):
         return true

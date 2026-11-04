@@ -221,9 +221,13 @@ func adjust_quota(job: String, delta: int) -> void:
 
 
 func assign_nearest_outpost_guard(outpost) -> bool:
-    if not is_instance_valid(outpost) or String(outpost.id) != "outpost":
+    return assign_nearest_garrison_guard(outpost)
+
+
+func assign_nearest_garrison_guard(garrison) -> bool:
+    if not is_instance_valid(garrison) or int(garrison.guard_capacity) <= 0:
         return false
-    if outpost.free_guard_slots() <= 0:
+    if garrison.free_guard_slots() <= 0:
         return false
 
     var best = null
@@ -231,26 +235,30 @@ func assign_nearest_outpost_guard(outpost) -> bool:
     for soldier in villagers():
         if soldier.job != "soldier" or soldier.is_outpost_guard() or soldier.is_expeditioning() or soldier.is_recalling_expedition():
             continue
-        var path: PackedVector2Array = nav.path_adjacent(soldier.position, outpost.cells())
-        if path.is_empty() and soldier.position.distance_to(outpost.position) > 45.0:
+        var path: PackedVector2Array = nav.path_adjacent(soldier.position, garrison.cells())
+        if path.is_empty() and soldier.position.distance_to(garrison.position) > 45.0:
             continue
         var route_length := float(path.size()) if not path.is_empty() else 0.0
         if route_length < best_path_length:
             best_path_length = route_length
             best = soldier
 
-    if best == null or not best.assign_outpost_guard(outpost):
+    if best == null or not best.assign_garrison_guard(garrison):
         return false
     return true
 
 
 func release_outpost_guard(outpost) -> bool:
-    if not is_instance_valid(outpost) or String(outpost.id) != "outpost":
+    return release_garrison_guard(outpost)
+
+
+func release_garrison_guard(garrison) -> bool:
+    if not is_instance_valid(garrison) or int(garrison.guard_capacity) <= 0:
         return false
-    outpost.guards = outpost.guards.filter(func(guard): return is_instance_valid(guard))
-    if outpost.guards.is_empty():
+    garrison.guards = garrison.guards.filter(func(guard): return is_instance_valid(guard))
+    if garrison.guards.is_empty():
         return false
-    var soldier = outpost.guards.back()
+    var soldier = garrison.guards.back()
     soldier.release_outpost_guard()
     return true
 

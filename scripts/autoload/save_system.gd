@@ -119,14 +119,19 @@ func collect(main: Node) -> Dictionary:
     var villagers: Array = []
     for villager in get_tree().get_nodes_in_group("villagers"):
         var guard_outpost: Variant = null
+        var guard_garrison: Variant = null
         if villager.is_outpost_guard():
-            guard_outpost = {"cx": villager.guard_outpost.cell.x, "cy": villager.guard_outpost.cell.y}
+            var guard_building = villager.guard_outpost
+            if String(guard_building.id) == "outpost":
+                guard_outpost = {"cx": guard_building.cell.x, "cy": guard_building.cell.y}
+            else:
+                guard_garrison = {"id": String(guard_building.id), "cx": guard_building.cell.x, "cy": guard_building.cell.y}
         villagers.append({"x": villager.position.x, "y": villager.position.y, "job": villager.job,
             "occupation": villager.occupation, "military_specialization": villager.military_specialization,
             "hp": villager.hp, "carry": villager.carry, "kind": villager.carry_kind,
             "weapon_equipped": villager.weapon_equipped, "armor_equipped": villager.armor_equipped,
             "expedition": villager.is_expeditioning(), "recalling": villager.is_recalling_expedition(),
-            "guard_outpost": guard_outpost})
+            "guard_outpost": guard_outpost, "guard_garrison": guard_garrison})
 
     var enemies: Array = []
     for enemy in get_tree().get_nodes_in_group("enemies"):

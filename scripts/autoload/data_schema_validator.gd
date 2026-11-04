@@ -116,7 +116,7 @@ func _validate_buildings(records: Dictionary, errors: Array[String]) -> void:
 		for numeric_field in [
 			"capacity", "stockpile_capacity", "work_radius", "claim_radius",
 			"vision_radius", "range", "damage", "fire_interval", "workers",
-			"guard_slots"
+			"guard_slots", "guard_radius"
 		]:
 			_validate_optional_number_field(
 				record, numeric_field, path, errors, 0.0, false

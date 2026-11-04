@@ -414,17 +414,25 @@ func _apply_save(d: Dictionary) -> void:
         if guard_data is Dictionary:
             pending_outpost_guards.append({
                 "villager": n,
+                "building_id": "outpost",
                 "cell": Vector2i(int(guard_data.get("cx", -1)), int(guard_data.get("cy", -1)))
+            })
+        var garrison_data: Variant = v.get("guard_garrison", null)
+        if garrison_data is Dictionary:
+            pending_outpost_guards.append({
+                "villager": n,
+                "building_id": String(garrison_data.get("id", "")),
+                "cell": Vector2i(int(garrison_data.get("cx", -1)), int(garrison_data.get("cy", -1)))
             })
 
     for guard_record in pending_outpost_guards:
         var target_outpost = null
         for building in get_tree().get_nodes_in_group("buildings"):
-            if building.id == "outpost" and building.cell == guard_record["cell"]:
+            if String(building.id) == String(guard_record["building_id"]) and building.cell == guard_record["cell"]:
                 target_outpost = building
                 break
-        if target_outpost == null or not guard_record["villager"].assign_outpost_guard(target_outpost):
-            push_warning("Save: failed to restore an Outpost guard assignment")
+        if target_outpost == null or not guard_record["villager"].assign_garrison_guard(target_outpost):
+            push_warning("Save: failed to restore a garrison guard assignment")
 
     var pl: Dictionary = d["player"]
     player.position = Vector2(float(pl["x"]), float(pl["y"]))

@@ -466,5 +466,30 @@
       "accent": "#d3c69c",
       "shadow": "#3c453d"
     }
+  },
+  {
+    "id": "barracks",
+    "name": "Barak",
+    "short": "BARAK",
+    "size": [
+      2,
+      2
+    ],
+    "cost": {
+      "wood": 40,
+      "stone": 30
+    },
+    "hp": 260,
+    "color": "#8a7358",
+    "locked": true,
+    "guard_slots": 4,
+    "guard_radius": 144,
+    "visual": {
+      "material": "fortified timber and stone",
+      "feature": "barracks_training_yard",
+      "primary": "#8c7458",
+      "accent": "#d1b276",
+      "shadow": "#403126"
+    }
   }
 ]

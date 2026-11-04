@@ -9,7 +9,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ## Live execution status — 2026-11-04 (post specialist, events and logistics integration)
 
-**Current main:** `ea34ee1071f2ddbc49572584e2da9409053c520a` (PR #75 merged).  
+**Current main:** `e4c56ae8ae5f2aa0f6c6895d7d8a3211ce9b3554` (PR #77 SaveValidator extraction merged).  
 **Current save schema:** v17.  
 **Open pull requests:** none returned by the latest open-PR scan. Re-check before assigning work.
 
@@ -24,13 +24,19 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-D supply network decomposition | First extraction integrated through PR #75: `SupplyCostTransactions` now owns cost-source selection, affordability, payment and refunds behind the `SupplyNetwork` façade. Shipment lifecycle, graph and supply-pressure responsibilities remain in the host and are separate follow-up slices. |
 | DEV-I enemy controller decomposition | Patrol movement extraction integrated through PR #74 as `EnemyPatrolMovement`; do not duplicate this controller. |
 | DEV-J decision-based events | Integrated through PR #72: choice UI, affordability, cancellation, delayed consequences and optional v17 event-state persistence. JSON numeric round-trip handling is covered. |
+| DEV-K input command registry | Integrated through PR #76: 39 rebindable keyboard commands, gamepad defaults, duplicate detection and restore defaults. |
+| DEV-E save validation extraction | First phase integrated through PR #77: SaveValidator owns snapshot validation; v17 schema unchanged. Sequential migration pipeline remains. |
+| DEV-L Barracks garrison vertical slice | Implementation in `work/dev-l-barracks-garrison`: 4-slot military-drill-unlocked Barracks, local soldier defense, UI assignment, save/load and regression coverage; awaiting current-main rebase and Godot 4.7 CI. |
 
 ### Verified merge and CI results
+
+- PR #76 input registry merged; workflow #41742044153 passed 30/30 Godot 4.7 jobs, with the campaign simulation workflow also passing.
+- PR #77 SaveValidator extraction merged at `6545e2eddd6d7ead907e27be6e58fef9b58b88ab`; workflow #41742799385 passed; campaign simulation workflow #41742799266 passed.
 
 - PR #72 merged as `064b0f5e984b301f2ac1aaef2c31a39b24583204`. Its updated Godot 4.7 workflow passed 50/50 jobs; the Classic/Frontier campaign simulation workflow passed 1/1.
 - PR #74 merged as `dde5370612ef8550644debdcf31bd360b58da6ed`. Its Godot 4.7 workflow passed 49/49 jobs.
 - PR #75 merged as `ea34ee1071f2ddbc49572584e2da9409053c520a`. Its Godot 4.7 workflow passed 49/49 jobs; the campaign simulation workflow passed 1/1.
-- The latest main push after PR #75 has a pending Godot 4.7 run and a completed-success campaign simulation run. Confirm the main push run finishes green before calling the latest mainline fully validated.
+- The latest main push after PR #77 is tracked by workflow #41743244122; confirm it finishes green before calling the current mainline fully validated.
 
 ### Next ownership boundaries
 
