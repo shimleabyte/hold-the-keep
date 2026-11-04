@@ -1,6 +1,6 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `83187b840d0413e15791cce34d6d1e3abc1e370b` (2026-11-03)  
+**Audit baseline:** `main` at `e4c56ae8ae5f2aa0f6c6895d7d8a3211ce9b3554` (2026-11-04)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
@@ -9,7 +9,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ## Live execution status — 2026-11-04 (post specialist, events and logistics integration)
 
-**Current main:** `ea34ee1071f2ddbc49572584e2da9409053c520a` (PR #75 merged).  
+**Current main:** `e4c56ae8ae5f2aa0f6c6895d7d8a3211ce9b3554` (PR #77 merged).  
 **Current save schema:** v17.  
 **Open pull requests:** none returned by the latest open-PR scan. Re-check before assigning work.
 
@@ -24,17 +24,19 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-D supply network decomposition | First extraction integrated through PR #75: `SupplyCostTransactions` now owns cost-source selection, affordability, payment and refunds behind the `SupplyNetwork` façade. Shipment lifecycle, graph and supply-pressure responsibilities remain in the host and are separate follow-up slices. |
 | DEV-I enemy controller decomposition | Patrol movement extraction integrated through PR #74 as `EnemyPatrolMovement`; do not duplicate this controller. |
 | DEV-J decision-based events | Integrated through PR #72: choice UI, affordability, cancellation, delayed consequences and optional v17 event-state persistence. JSON numeric round-trip handling is covered. |
+| DEV-E save architecture | Phase 1 validator extraction merged through PR #77. Phase 2 restore-migration pipeline is in progress on `work/dev-e-sequential-migration-pipeline`; no save schema bump. |
 
 ### Verified merge and CI results
 
 - PR #72 merged as `064b0f5e984b301f2ac1aaef2c31a39b24583204`. Its updated Godot 4.7 workflow passed 50/50 jobs; the Classic/Frontier campaign simulation workflow passed 1/1.
 - PR #74 merged as `dde5370612ef8550644debdcf31bd360b58da6ed`. Its Godot 4.7 workflow passed 49/49 jobs.
 - PR #75 merged as `ea34ee1071f2ddbc49572584e2da9409053c520a`. Its Godot 4.7 workflow passed 49/49 jobs; the campaign simulation workflow passed 1/1.
-- The latest main push after PR #75 has a pending Godot 4.7 run and a completed-success campaign simulation run. Confirm the main push run finishes green before calling the latest mainline fully validated.
+- PR #77 merged as `6545e2eddd6d7ead907e27be6e58fef9b58b88ab`; latest main is `e4c56ae8ae5f2aa0f6c6895d7d8a3211ce9b3554`. Mainline Godot 4.7 workflow #41743244122 passed 51/51 jobs; Campaign Simulation QA #41743219893 passed 1/1.
+- PR #77 extracted snapshot validation into `scripts/persistence/save_validator.gd`; `SaveSystem._valid_save()` remains the compatibility façade. Persisted schema remains v17.
 
 ### Next ownership boundaries
 
-- DEV-E first phase is integrated through PR #77 (`SaveValidator` extraction); next phase is the sequential migration pipeline. Preserve v17 event-state data from #72, current supply state, and historical Classic/Frontier fixtures. Do not change the version without a complete migration plan and fixtures.
+- DEV-E Phase 1 is integrated through PR #77 (`SaveValidator` extraction). Phase 2 extracts versioned restore compatibility into an in-memory sequential pipeline while preserving the source save version and on-disk v17 schema. This does not rewrite historical files into v17; legacy and campaign restore paths remain explicit. Preserve v17 event-state data from #72, current supply state, and Classic/Frontier fixtures.
 - DEV-G HUD modularization is now unblocked. The decision panel from #72 is part of current main; extract it through its established interface rather than rebuilding or moving its gameplay rules into the HUD.
 - DEV-D may continue only with separately scoped shipment, graph or pressure slices. Do not re-open cost-source behavior already extracted by #75; keep `SupplyNetwork` method signatures stable.
 - DEV-F villager roles and DEV-H world generation remain independent candidates after checking their current file ownership and interfaces.
@@ -333,7 +335,7 @@ Suggested modules:
 
 ### DEV-E — Save and migration architecture
 
-**Status:** First slice complete through PR #77: snapshot validation is extracted to `scripts/persistence/save_validator.gd`; `SaveSystem._valid_save()` remains as the compatibility façade. Sequential migration extraction and save-file I/O/recovery decomposition remain pending.
+**Status:** Phase 1 complete through PR #77: snapshot validation is extracted to `scripts/persistence/save_validator.gd`; `SaveSystem._valid_save()` remains as the compatibility façade. Phase 2 now extracts versioned restore compatibility into `scripts/persistence/save_migration_pipeline.gd`; full canonical on-disk rewrites and save-file I/O/recovery decomposition remain separate pending slices.
 
 **Priority:** Critical  
 **Primary owner files:**
@@ -342,7 +344,7 @@ Suggested modules:
 - New persistence/migration modules under `scripts/autoload/` or `scripts/persistence/`
 - New migration-focused tests
 
-**Problem:** `save_system.gd` is 834 lines. Its `_valid_save()` function alone is approximately 460 lines and combines many validation responsibilities.
+**Problem:** `scripts/autoload/save_system.gd` is now 243 lines after PR #77. Snapshot validation moved to `scripts/persistence/save_validator.gd` (747 lines); versioned restore branching previously remained embedded in `scripts/main.gd`.
 
 **Scope:**
 
