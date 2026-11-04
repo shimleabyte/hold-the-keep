@@ -81,7 +81,10 @@ func resolve_pending(delta: float) -> void:
             return
     else:
         var target_offset: Vector2 = target.global_position - enemy.global_position
-        if target_offset.length() > enemy._attack_reach():
+        var allowed_reach: float = enemy._attack_reach()
+        if enemy.is_supply_raider or enemy.is_faction_raider:
+            allowed_reach = maxf(allowed_reach, 28.0)
+        if target_offset.length() > allowed_reach:
             return
         if target_offset.length_squared() > 0.0001 and target_offset.normalized().dot(locked_direction) < 0.5:
             return
