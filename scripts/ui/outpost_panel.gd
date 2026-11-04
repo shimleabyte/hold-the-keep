@@ -25,7 +25,7 @@ func _build_outpost_panel() -> void:
 
     _hud._outpost_panel = _hud._panel(Vector2.ZERO, Vector2(356, 238))
     _hud._outpost_panel.visible = false
-    var title := _hud._label(_hud._outpost_panel, "LOGISTIK & GARRISON", Vector2(10, 7), GOLD)
+    var title: Label = _hud._label(_hud._outpost_panel, "LOGISTIK & GARRISON", Vector2(10, 7), GOLD)
     title.add_theme_font_size_override("font_size", 9)
 
     var close := HUD_WIDGETS.HudChip.new()
@@ -36,7 +36,7 @@ func _build_outpost_panel() -> void:
     close.pressed.connect(_toggle_outposts)
     _hud._outpost_panel.add_child(close)
 
-    var source_hint := _hud._label(_hud._outpost_panel, "SUMBER BIAYA", Vector2(10, 22), Color("#c9b99d"))
+    var source_hint: Label = _hud._label(_hud._outpost_panel, "SUMBER BIAYA", Vector2(10, 22), Color("#c9b99d"))
     source_hint.add_theme_font_size_override("font_size", 6)
     source_hint.size = Vector2(88, 12)
 
@@ -61,7 +61,7 @@ func _build_outpost_panel() -> void:
     _hud._outpost_list.add_theme_constant_override("separation", 3)
     depot_scroll.add_child(_hud._outpost_list)
 
-    var shipment_title := _hud._label(_hud._outpost_panel, "PERINTAH ANGKUT FISIK", Vector2(10, 105), GOLD)
+    var shipment_title: Label = _hud._label(_hud._outpost_panel, "PERINTAH ANGKUT FISIK", Vector2(10, 105), GOLD)
     shipment_title.add_theme_font_size_override("font_size", 7)
     _hud._label(_hud._outpost_panel, "ASAL", Vector2(10, 116), Color("#c9b99d")).add_theme_font_size_override("font_size", 6)
     _hud._label(_hud._outpost_panel, "TUJUAN", Vector2(183, 116), Color("#c9b99d")).add_theme_font_size_override("font_size", 6)
@@ -158,7 +158,7 @@ func _refresh_outpost_panel() -> void:
     )
 
     if structures.is_empty():
-        var empty := _hud._label(_hud._outpost_list, "Belum ada Outpost, Barak, Lapangan Panah, Storage, atau Lumbung.", Vector2.ZERO, Color("#c9b99d"))
+        var empty: Label = _hud._label(_hud._outpost_list, "Belum ada Outpost, Barak, Lapangan Panah, Storage, atau Lumbung.", Vector2.ZERO, Color("#c9b99d"))
         empty.add_theme_font_size_override("font_size", 8)
     else:
         for structure in structures:
