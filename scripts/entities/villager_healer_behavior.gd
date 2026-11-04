@@ -11,16 +11,16 @@ func configure(villager: Variant) -> void:
 
 
 func tick(delta: float) -> void:
-    if not _villager.healer_behavior_target_valid():
+    if not _target_valid():
         _treatment_timer = 0.0
         _villager.healer_behavior_release(0.15)
         return
 
-    _villager.healer_behavior_face_target()
+    _villager.anim.face(_villager.target.position - _villager.position)
     _treatment_timer += delta
     if _treatment_timer < _villager.HEAL_INTERVAL:
         return
 
     _treatment_timer = 0.0
-    if not _villager.healer_behavior_apply_heal(_villager.HEAL_AMOUNT):
+    if _villager.target.heal(_villager.HEAL_AMOUNT) <= 0 or int(_villager.target.hp) >= int(_villager.target.max_hp):
         _villager.healer_behavior_release(0.15)
