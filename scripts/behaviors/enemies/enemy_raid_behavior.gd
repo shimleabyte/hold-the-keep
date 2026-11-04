@@ -60,9 +60,9 @@ func faction_raid_target_valid(target, supply):
 
 func tick_faction_raid(delta: float):
     var enemy: Variant = _enemy
-    var target = _find_faction_raid_target()
+    var target = find_faction_raid_target()
     var supply = enemy.get_tree().get_first_node_in_group("supply_network")
-    if not _faction_raid_target_valid(target, supply):
+    if not faction_raid_target_valid(target, supply):
         enemy.retreat()
         return
 
@@ -110,7 +110,7 @@ func tick_faction_raid(delta: float):
 
 func tick_supply_raid(delta: float):
     var enemy: Variant = _enemy
-    var depot = _find_raid_depot()
+    var depot = find_raid_depot()
     if depot == null:
         enemy.retreat()
         return
