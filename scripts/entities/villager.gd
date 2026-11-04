@@ -701,7 +701,7 @@ func assign_outpost_guard(outpost) -> bool:
 
 
 func assign_garrison_guard(garrison) -> bool:
-    if job != "soldier" or not is_instance_valid(garrison) or int(garrison.guard_capacity) <= 0:
+    if job != "soldier" or is_archer() or not is_instance_valid(garrison) or int(garrison.guard_capacity) <= 0:
         return false
     if _expeditioning or state == State.RECALLING:
         return false

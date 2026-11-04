@@ -417,6 +417,8 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             if not ["", "soldier", "archer"].has(specialization):
                 return false
             if specialization == "archer":
+                if version < 17:
+                    return false
                 archer_specialization_count += 1
             var legacy_job := "soldier" if specialization == "archer" else (specialization if not specialization.is_empty() else occupation)
             if String(villager["job"]) != legacy_job or (not occupation.is_empty() and not specialization.is_empty()):
@@ -441,7 +443,7 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         if guard_data != null:
             if not (guard_data is Dictionary) or not guard_data.has("cx") or not guard_data.has("cy"):
                 return false
-            if String(villager.get("job", "")) != "soldier" or bool(villager.get("expedition", false)) or bool(villager.get("recalling", false)):
+            if String(villager.get("job", "")) != "soldier" or String(villager.get("military_specialization", "")) == "archer" or bool(villager.get("expedition", false)) or bool(villager.get("recalling", false)):
                 return false
             var guard_cell := Vector2i(int(guard_data["cx"]), int(guard_data["cy"]))
             var outpost_exists := false

@@ -157,6 +157,11 @@ func _run() -> void:
     require(not save_system._valid_save(invalid_capacity),
         "SaveValidator must reject archer specializations when no Archery Range capacity is saved")
 
+    var invalid_legacy_archers := snapshot.duplicate(true)
+    invalid_legacy_archers["version"] = 16
+    require(not save_system._valid_save(invalid_legacy_archers),
+        "Archery specialization must not appear in historical saves before schema v17")
+
     require(save_system.save_current(true), "Campaign with trained archers must save")
     require(save_system.request_load(), "Campaign with trained archers must reload")
     await ticks(12)
