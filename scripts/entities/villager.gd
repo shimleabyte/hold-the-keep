@@ -5,6 +5,7 @@ extends Node2D
 ## Origin node = kaki (untuk Y-sort).
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
+const VillagerRoleRegistry := preload("res://scripts/behaviors/villagers/villager_role_registry.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
 const ArrowProjectile := preload("res://scripts/entities/arrow.gd")
 
@@ -77,6 +78,7 @@ var job: String:
         else:
             occupation = value
             military_specialization = ""
+        _refresh_role_behavior()
 var workplace = null
 var workplace_job := ""
 var state := State.IDLE
@@ -114,22 +116,33 @@ var _running := false
 var _rally_t := 0.0
 var _rally_damage_mult := 1.0
 var _rally_interval_mult := 1.0
-var _scout_target_cell := Vector2i(-1, -1)
-var _scout_cursor := 0
-var _scout_survey_t := 0.0
-var _scout_revealed_at_target := false
+var role_behavior: Variant = null
+var _scout_target_cell: Vector2i:
+    get:
+        return role_behavior.get_scout_target_cell() if role_behavior != null else Vector2i(-1, -1)
+    set(value):
+        if role_behavior != null:
+            role_behavior.set_scout_target_cell(value)
+var _smith_recipe: String:
+    get:
+        return role_behavior.get_smith_recipe() if role_behavior != null else ""
+    set(value):
+        if role_behavior != null:
+            role_behavior.set_smith_recipe(value)
 var weapon_equipped := false
 var armor_equipped := false
-var _smith_recipe := ""
 
 
 func _ready() -> void:
+    _refresh_role_behavior()
     add_to_group("villagers")
     Events.tech_researched.connect(_on_tech)
     _decide_t = randf_range(0.0, 1.0)
 
 
-## Stat dinamis dari teknologi.
+func _refresh_role_behavior() -> void:
+    role_behavior = VillagerRoleRegistry.create(job, self)
+
 func _carry_cap() -> int:
     return roundi(Tech.stat("villager.carry", float(CARRY_CAP)))
 
@@ -189,14 +202,9 @@ func equip_armor() -> bool:
 
 
 func _blacksmith_recipe_for(soldier: Variant) -> String:
-    if not is_instance_valid(soldier) or String(soldier.job) != "soldier" or int(soldier.hp) <= 0:
+    if role_behavior == null or job != "blacksmith":
         return ""
-    if Tech.is_done("iron_weapons") and not bool(soldier.weapon_equipped):
-        return "weapon"
-    if Tech.is_done("iron_armor") and not bool(soldier.armor_equipped):
-        return "armor"
-    return ""
-
+    return role_behavior.recipe_for(soldier)
 
 func _on_tech(_tech_id: String) -> void:
     var old := max_hp
@@ -208,12 +216,7 @@ func _on_tech(_tech_id: String) -> void:
 
 ## Penambang memilih besi bila stoknya kurang dari separuh batu (dan ada bijih yang bisa ditambang).
 func _mine_kind() -> String:
-    if Tech.has_flag("iron_mining") and Inventory.get_amount("iron") <= Inventory.get_amount("stone") * 0.5:
-        for n in get_tree().get_nodes_in_group("harvestable"):
-            if n.yield_kind == "iron":
-                return "iron"
-    return "stone"
-
+    return role_behavior.mine_kind() if role_behavior != null else "stone"
 
 func set_job(j: String, preferred_workplace = null) -> bool:
     if j == "archer" and is_archer():
@@ -227,9 +230,8 @@ func set_job(j: String, preferred_workplace = null) -> bool:
     _release_workplace()
     _expeditioning = false
     _expedition_target = null
-    _scout_target_cell = Vector2i(-1, -1)
-    _scout_survey_t = 0.0
-    _scout_revealed_at_target = false
+    if role_behavior != null:
+        role_behavior.reset_scout_state()
     var old_max := max_hp
     if job == "soldier" and not ["soldier", "archer"].has(j):
         weapon_equipped = false
@@ -311,9 +313,8 @@ func on_workplace_lost(building) -> void:
     _release()
     workplace = null
     workplace_job = ""
-    _scout_target_cell = Vector2i(-1, -1)
-    _scout_survey_t = 0.0
-    _scout_revealed_at_target = false
+    if role_behavior != null:
+        role_behavior.reset_scout_state()
     if was_archer:
         military_specialization = "soldier"
         add_to_group("defenders")
@@ -426,28 +427,16 @@ func _physics_process(delta: float) -> void:
                 _release()
                 state = State.IDLE
                 _decide_t = 0.15
-            elif job == "healer" and (String(target.job) != "soldier"
-                    or int(target.hp) <= 0 or int(target.hp) >= int(target.max_hp)
-                    or target.is_expeditioning() or target.is_recalling_expedition()
-                    or target.state in [State.HIDDEN, State.FLEEING]
-                    or not _is_in_workplace_radius(target)):
+            elif role_behavior != null and not role_behavior.target_is_valid():
                 _release()
                 state = State.IDLE
-                _decide_t = 0.15
-            elif job == "blacksmith" and (not has_valid_workplace()
-                    or String(target.job) != "soldier" or _blacksmith_recipe_for(target) == ""
-                    or target.is_expeditioning() or target.is_recalling_expedition()
-                    or target.state in [State.HIDDEN, State.FLEEING, State.FIGHT]
-                    or not _is_in_workplace_radius(target)):
-                _release()
-                state = State.IDLE
-                _decide_t = 0.2
+                _decide_t = role_behavior.invalid_target_retry_seconds()
             elif _move_along(delta):
                 state = State.WORKING
                 _work_t = 0.0
                 _hit_done = false
-                if job == "builder" and target.has_method("is_construction_site") and target.is_construction_site():
-                    target.worker_arrived(self)
+                if role_behavior != null:
+                    role_behavior.on_target_arrived()
         State.WORKING:
             _tick_working(delta)
         State.TO_DEPOT:
@@ -540,16 +529,12 @@ func _tick_idle(delta: float) -> void:
         return
     if _pi < _path.size():
         _move_along(delta)
-    if job == "soldier":
-        _scan_t -= delta
-        if _scan_t <= 0.0:
-            _scan_t = 0.3
-            _foe = _nearest_enemy()
-            if _foe != null:
-                state = State.FIGHT
-                _path = PackedVector2Array()
-                _pi = 0
-                return
+    if job == "soldier" and role_behavior != null:
+        if role_behavior.tick_idle(delta):
+            state = State.FIGHT
+            _path = PackedVector2Array()
+            _pi = 0
+            return
     elif job != "":
         _decide_t -= delta
         if _decide_t <= 0.0:
@@ -560,7 +545,6 @@ func _tick_idle(delta: float) -> void:
         _wander_t -= delta
         if _wander_t <= 0.0:
             _wander()
-
 
 func _facility_sabotaged(facility: Variant) -> bool:
     if facility == null or not is_instance_valid(facility):
@@ -581,108 +565,11 @@ func _tick_working(delta: float) -> void:
         state = State.IDLE
         _decide_t = 0.15
         return
-    if job == "blacksmith":
-        var recipe := _blacksmith_recipe_for(target)
-        if not has_valid_workplace() or String(target.job) != "soldier" or recipe == "" \
-                or recipe != _smith_recipe or target.is_expeditioning() or target.is_recalling_expedition() \
-                or target.state in [State.HIDDEN, State.FLEEING, State.FIGHT] \
-                or not _is_in_workplace_radius(target):
-            _release()
-            state = State.IDLE
-            _decide_t = 0.2
-            return
-        anim.face(target.position - position)
-        _work_t += delta
-        if _work_t >= SMITH_WORK_SECONDS:
-            var cost: Dictionary = BLACKSMITH_WEAPON_COST if recipe == "weapon" else BLACKSMITH_ARMOR_COST
-            var supply = get_tree().get_first_node_in_group("supply_network")
-            var paid: bool = supply.pay_cost(cost) if supply != null else Inventory.spend_all(cost)
-            if not paid:
-                _release()
-                state = State.IDLE
-                _decide_t = 4.0
-                Events.build_feedback.emit("Bahan tempa tidak cukup")
-                return
-            var equipped: bool = target.equip_weapon() if recipe == "weapon" else target.equip_armor()
-            if equipped:
-                Events.build_feedback.emit("Senjata besi selesai: damage prajurit +20%" if recipe == "weapon"
-                    else "Zirah besi selesai: HP maksimum prajurit +20%")
-            _release()
-            state = State.IDLE
-            _decide_t = 0.2
+    if role_behavior != null and role_behavior.perform_work(delta):
         return
-    if job == "healer":
-        if not has_valid_workplace() or String(target.job) != "soldier" or int(target.hp) <= 0 \
-                or int(target.hp) >= int(target.max_hp) or target.is_expeditioning() \
-                or target.is_recalling_expedition() or target.state in [State.HIDDEN, State.FLEEING] \
-                or not _is_in_workplace_radius(target):
-            _release()
-            state = State.IDLE
-            _decide_t = 0.15
-            return
-        anim.face(target.position - position)
-        _work_t += delta
-        if _work_t >= HEAL_INTERVAL:
-            _work_t = 0.0
-            if target.heal(HEAL_AMOUNT) <= 0 or int(target.hp) >= int(target.max_hp):
-                _release()
-                state = State.IDLE
-                _decide_t = 0.15
-        return
-    if job == "builder":
-        if target.has_method("is_construction_site") and target.is_construction_site():
-            anim.face(target.position - position)
-            return
-        if int(target.hp) <= 0 or int(target.hp) >= int(target.max_hp):
-            _release()
-            state = State.IDLE
-            return
-        anim.face(target.position - position)
-        _work_t += delta
-        if _work_t >= BUILDER_REPAIR_INTERVAL:
-            _work_t = 0.0
-            if not target.repair(BUILDER_REPAIR_AMOUNT):
-                _release()
-                state = State.IDLE
-                return
-            if int(target.hp) >= int(target.max_hp):
-                _release()
-                state = State.IDLE
-        return
-    if job == "farmer":
-        anim.face(target.position - position)
-        _work_t += delta
-        if _work_t >= FARM_CYCLE:
-            _work_t = 0.0
-            receive("food", roundi(Tech.stat("farm.yield", float(FARM_YIELD))))
-            if carry >= _carry_cap():
-                _go_depot()
-        return
-    if not target.is_available(self):
-        if carry > 0:
-            _go_depot()
-        else:
-            _release()
-            state = State.IDLE
-        return
-    anim.face(target.position - position)
-    _work_t += delta
-    if not _hit_done and _work_t >= _hit_interval() * 0.5:
-        _hit_done = true  # frame benturan: alat mengenai sasaran
-        target.hit(self)
-        if carry >= _carry_cap() or not target.is_available(self):
-            _hit_done = false
-            _work_t = 0.0
-            if carry > 0:
-                _go_depot()
-            else:
-                _release()
-                state = State.IDLE
-            return
-    if _work_t >= _hit_interval():
-        _work_t = 0.0
-        _hit_done = false
-
+    _release()
+    state = State.IDLE
+    _decide_t = 0.15
 
 func is_expeditioning() -> bool:
     return _expeditioning
@@ -888,61 +775,20 @@ func _tick_expedition(delta: float) -> void:
 
 
 func _tick_fight(delta: float) -> void:
-    _scan_t -= delta
-    if _scan_t <= 0.0:
-        _scan_t = 0.3
-        _foe = _nearest_enemy()
-    if _foe == null or not is_instance_valid(_foe):
-        _foe = null
-        if is_outpost_guard():
-            _path = PackedVector2Array()
-            _pi = 0
-            _guard_repath_t = 0.0
-            state = State.IDLE
-        else:
-            state = State.EXPEDITION if _expeditioning and is_instance_valid(_expedition_target) else State.IDLE
+    if role_behavior != null and role_behavior.tick_fight(delta):
         return
-    var dist := position.distance_to(_foe.position)
-    if is_archer() and dist <= ARCHER_ATTACK_RANGE:
-        if anim.face(_foe.position - position):
-            queue_redraw()
-        if dist < ARCHER_MIN_RANGE:
-            var retreat: Vector2 = (position - _foe.position).normalized()
-            if retreat.length_squared() > 0.0:
-                position += retreat * SPEED * 0.8 * delta
-        if _atk_cd <= 0.0:
-            _atk_cd = ARCHER_ATTACK_INTERVAL * (_rally_interval_mult if _rally_t > 0.0 else 1.0)
-            _fire_archer_arrow(_foe)
-            anim.play("attack", true)
-        return
-    if not is_archer() and dist < REACH:
-        if anim.face(_foe.position - position):
-            queue_redraw()
-        if _atk_cd <= 0.0:
-            _atk_cd = _soldier_attack_interval()
-            _pending_foe = _foe
-            _pending_t = ATTACK_HIT_DELAY
-            anim.play("attack", true)
-        return
-    _repath_t -= delta
-    if _repath_t <= 0.0:
-        _repath_t = 0.5
-        var p: PackedVector2Array = nav.path_to(position, nav.cell_of(_foe.position))
-        if not p.is_empty():
-            _set_path(p)
-    if _pi < _path.size():
-        _move_along(delta)
+    _foe = null
+    if is_outpost_guard():
+        _path = PackedVector2Array()
+        _pi = 0
+        _guard_repath_t = 0.0
+        state = State.IDLE
     else:
-        position += (_foe.position - position).normalized() * (RUN_SPEED if dist > RUN_DISTANCE else SPEED) * delta
-
+        state = State.EXPEDITION if _expeditioning and is_instance_valid(_expedition_target) else State.IDLE
 
 func _fire_archer_arrow(enemy) -> void:
-    if not is_instance_valid(enemy) or world == null or world.entities == null:
-        return
-    var projectile = ArrowProjectile.new()
-    projectile.setup(enemy, maxi(1, roundi(float(_soldier_damage()) * ARCHER_DAMAGE_MULT)))
-    world.entities.add_child(projectile)
-    projectile.global_position = global_position + Vector2(0, -7)
+    if role_behavior != null:
+        role_behavior.fire_archer_arrow(enemy)
 
 # ---------------------------------------------------------------- jobs
 
@@ -953,259 +799,45 @@ func _find_work() -> void:
     if job == "scout":
         _find_scout_work()
         return
-    var cands: Array = []
-    match job:
-        "woodcutter", "miner":
-            if not has_valid_workplace():
-                _release_workplace()
-                _claim_workplace(job)
-            # Once a matching worksite exists, its capacity is authoritative.
-            # Keep the old connected-depot radius only when no specialty site exists.
-            if not has_valid_workplace() and _has_specialized_workplace(job):
-                return
-            var kind := "wood" if job == "woodcutter" else _mine_kind()
-            for n in get_tree().get_nodes_in_group("harvestable"):
-                var in_work_area := _is_in_workplace_radius(n) if has_valid_workplace() else _is_in_work_radius(n)
-                if n.yield_kind == kind and n.is_available(self) and in_work_area and not _bad.has(n):
-                    cands.append(n)
-        "hunter":
-            if not has_valid_workplace():
-                _release_workplace()
-                if not _claim_workplace("hunter"):
-                    return
-            for wildlife in get_tree().get_nodes_in_group("wildlife"):
-                if wildlife.yield_kind == "food" and wildlife.is_available(self) \
-                        and _is_in_workplace_radius(wildlife) and not _bad.has(wildlife):
-                    cands.append(wildlife)
-        "farmer":
-            for f in get_tree().get_nodes_in_group("farms"):
-                if f.free_slots("farmer") > 0 and _is_in_work_radius(f) and not _bad.has(f):
-                    cands.append(f)
-        "blacksmith":
-            if not has_valid_workplace():
-                _release_workplace()
-                if not _claim_workplace("blacksmith"):
-                    return
-            if _facility_sabotaged(workplace):
-                return
-            for soldier in get_tree().get_nodes_in_group("villagers"):
-                if soldier == self or not is_instance_valid(soldier) or String(soldier.job) != "soldier":
-                    continue
-                if _blacksmith_recipe_for(soldier) == "" or soldier.is_expeditioning() \
-                        or soldier.is_recalling_expedition() or soldier.state in [State.HIDDEN, State.FLEEING, State.FIGHT]:
-                    continue
-                if not _is_in_workplace_radius(soldier) or workplace.is_blacksmith_target_reserved(soldier, self):
-                    continue
-                cands.append(soldier)
-        "healer":
-            if not has_valid_workplace():
-                _release_workplace()
-                if not _claim_workplace("healer"):
-                    return
-            for patient in get_tree().get_nodes_in_group("villagers"):
-                if patient == self or not is_instance_valid(patient) or String(patient.job) != "soldier":
-                    continue
-                if int(patient.hp) <= 0 or int(patient.hp) >= int(patient.max_hp):
-                    continue
-                if patient.is_expeditioning() or patient.is_recalling_expedition() \
-                        or patient.state in [State.HIDDEN, State.FLEEING]:
-                    continue
-                if not _is_in_workplace_radius(patient) or workplace.is_heal_target_reserved(patient, self):
-                    continue
-                cands.append(patient)
-        "builder":
-            if not has_valid_workplace():
-                _release_workplace()
-                if not _claim_workplace("builder"):
-                    return
-            var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
-            var construction_sites: Array = get_tree().get_nodes_in_group("construction_sites")
-            construction_sites.sort_custom(func(a, b) -> bool:
-                return int(a.queue_order) < int(b.queue_order)
-            )
-            for site in construction_sites:
-                if site.has_method("can_claim") and site.can_claim(self) and not _bad.has(site) \
-                        and workplace.position.distance_squared_to(site.position) <= radius * radius:
-                    cands.append(site)
-            for building in get_tree().get_nodes_in_group("buildings"):
-                if building.hp <= 0 or building.hp >= building.max_hp or _bad.has(building):
-                    continue
-                if workplace.position.distance_squared_to(building.position) > radius * radius:
-                    continue
-                if building.can_assign_repairer(self):
-                    cands.append(building)
-    cands.sort_custom(func(a, b) -> bool:
-        var a_is_site: bool = a.has_method("is_construction_site") and a.is_construction_site()
-        var b_is_site: bool = b.has_method("is_construction_site") and b.is_construction_site()
-        if job == "healer":
-            var a_ratio := float(a.hp) / float(maxi(1, a.max_hp))
-            var b_ratio := float(b.hp) / float(maxi(1, b.max_hp))
-            if not is_equal_approx(a_ratio, b_ratio):
-                return a_ratio < b_ratio
-        if a_is_site != b_is_site:
-            return a_is_site
-        if a_is_site and b_is_site and int(a.queue_order) != int(b.queue_order):
-            return int(a.queue_order) < int(b.queue_order)
-        return a.position.distance_squared_to(position) < b.position.distance_squared_to(position)
+    if role_behavior == null:
+        return
+
+    var candidates: Array = role_behavior.collect_candidates()
+    candidates.sort_custom(func(a, b) -> bool:
+        return role_behavior.precedes(a, b)
     )
-    for i in mini(8, cands.size()):
-        var n = cands[i]
-        var cells := _cells_of(n)
-        var p: PackedVector2Array = nav.path_adjacent(position, cells)
-        if p.is_empty():
-            _bad.append(n)
+    for index in mini(8, candidates.size()):
+        var candidate: Variant = candidates[index]
+        var cells: Array[Vector2i] = _cells_of(candidate)
+        var path: PackedVector2Array = nav.path_adjacent(position, cells)
+        if path.is_empty():
+            _bad.append(candidate)
             continue
-        if job == "builder":
-            if n.has_method("is_construction_site") and n.is_construction_site():
-                if not n.claim(self):
-                    continue
-            elif not n.claim_repairer(self):
-                continue
-        elif job == "healer":
-            if not workplace.claim_heal_target(self, n):
-                continue
-        elif job == "blacksmith":
-            if not workplace.claim_blacksmith_target(self, n):
-                continue
-            _smith_recipe = _blacksmith_recipe_for(n)
-            if _smith_recipe == "":
-                workplace.release_blacksmith_target(self)
-                continue
-        elif not _claim(n):
+        if not role_behavior.claim_target(candidate):
             continue
-        target = n
+        target = candidate
         _goal_cells = cells
-        _set_path(p)
+        _set_path(path)
         _bad.clear()
         state = State.TO_WORK
         return
-    if cands.is_empty():
+    if candidates.is_empty():
         _bad.clear()
 
-
 func _find_scout_work() -> void:
-    if not has_valid_workplace():
-        _release_workplace()
-        if not _claim_workplace("scout"):
-            return
-    if _facility_sabotaged(workplace):
-        return
-
-    var fog = get_tree().get_first_node_in_group("fog_of_war")
-    if fog == null:
-        return
-    var origin: Vector2i = nav.cell_of(workplace.position)
-    var best_cell := Vector2i(-1, -1)
-    var best_path := PackedVector2Array()
-    var best_score := -INF
-    var best_direction := _scout_cursor
-    var work_radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
-
-    for radius in SCOUT_SEARCH_RADII:
-        for offset in SCOUT_DIRECTIONS.size():
-            var direction_index := (_scout_cursor + offset) % SCOUT_DIRECTIONS.size()
-            var direction: Vector2i = SCOUT_DIRECTIONS[direction_index]
-            var candidate: Vector2i = origin + direction * radius
-            if workplace.position.distance_squared_to(nav.center_of(candidate)) > work_radius * work_radius:
-                continue
-            if not nav.is_walkable(candidate) or _scout_target_reserved(candidate):
-                continue
-            var path: PackedVector2Array = nav.path_to(position, candidate)
-            if path.is_empty() or path.size() > SCOUT_MAX_PATH_CELLS:
-                continue
-            var unexplored := 0
-            for y in range(candidate.y - 5, candidate.y + 6):
-                for x in range(candidate.x - 5, candidate.x + 6):
-                    if x < 0 or y < 0 or x >= WorldConfig.map_size or y >= WorldConfig.map_size:
-                        continue
-                    if not fog.is_revealed_cell(Vector2i(x, y)):
-                        unexplored += 1
-            if unexplored <= 0:
-                continue
-            var score := float(unexplored) * 8.0 - float(path.size()) * 1.5 + float(radius)
-            if score > best_score:
-                best_score = score
-                best_cell = candidate
-                best_path = path
-                best_direction = direction_index
-
-    if best_cell.x < 0:
-        _return_to_scout_post()
-        return
-
-    _scout_target_cell = best_cell
-    _scout_cursor = (best_direction + 1) % SCOUT_DIRECTIONS.size()
-    _scout_survey_t = 0.0
-    _scout_revealed_at_target = false
-    _goal_cells = [best_cell]
-    _set_path(best_path)
-    state = State.SCOUTING
-
+    if role_behavior != null:
+        role_behavior.find_scout_work()
 
 func _scout_target_reserved(cell: Vector2i) -> bool:
-    for other in get_tree().get_nodes_in_group("villagers"):
-        if other == self or not is_instance_valid(other):
-            continue
-        if String(other.job) != "scout":
-            continue
-        var reserved_cell: Vector2i = other.get("_scout_target_cell")
-        if reserved_cell.x < 0:
-            continue
-        if Vector2(reserved_cell).distance_to(Vector2(cell)) < 8.0:
-            return true
-    return false
-
+    return role_behavior != null and role_behavior.scout_target_reserved(cell)
 
 func _tick_scouting(delta: float) -> void:
-    if not has_valid_workplace() or _facility_sabotaged(workplace):
-        _scout_target_cell = Vector2i(-1, -1)
-        _scout_survey_t = 0.0
-        _scout_revealed_at_target = false
-        state = State.IDLE
-        _decide_t = SCOUT_RECHECK_SECONDS
-        return
-    if nav.version != _path_ver:
-        _repath()
-        if state != State.SCOUTING:
-            return
-    if _pi < _path.size():
-        _move_along(delta)
-        return
-    if not _scout_revealed_at_target:
-        var fog = get_tree().get_first_node_in_group("fog_of_war")
-        if fog != null:
-            fog.reveal_position(global_position, SCOUT_REVEAL_RADIUS)
-        _scout_revealed_at_target = true
-    _scout_survey_t += delta
-    if _scout_survey_t >= SCOUT_SURVEY_SECONDS:
-        _scout_target_cell = Vector2i(-1, -1)
-        _scout_survey_t = 0.0
-        _scout_revealed_at_target = false
-        state = State.IDLE
-        _decide_t = SCOUT_RECHECK_SECONDS
-
+    if role_behavior != null:
+        role_behavior.tick_scouting(delta)
 
 func _return_to_scout_post() -> void:
-    if not has_valid_workplace():
-        _scout_target_cell = Vector2i(-1, -1)
-        state = State.IDLE
-        return
-    _scout_target_cell = Vector2i(-1, -1)
-    _scout_revealed_at_target = false
-    var cells: Array[Vector2i] = workplace.cells()
-    if position.distance_to(workplace.position) <= OUTPOST_GUARD_ARRIVAL_RADIUS:
-        state = State.IDLE
-        _decide_t = SCOUT_RECHECK_SECONDS
-        return
-    var path: PackedVector2Array = nav.path_adjacent(position, cells)
-    if path.is_empty():
-        state = State.IDLE
-        _decide_t = SCOUT_RECHECK_SECONDS
-        return
-    _goal_cells = cells
-    _set_path(path)
-    state = State.SCOUT_RETURNING
-
+    if role_behavior != null:
+        role_behavior.return_to_scout_post()
 
 func _cells_of(n) -> Array[Vector2i]:
     if n.has_method("cells"):
@@ -1222,21 +854,16 @@ func _claim(n) -> bool:
 
 
 func _release() -> void:
-    if job == "healer":
-        _release_heal_target()
-    elif job == "blacksmith":
-        _release_blacksmith_target()
+    if role_behavior != null:
+        role_behavior.release_target()
     elif target != null and is_instance_valid(target):
-        if target.has_method("release_repairer") and job == "builder":
-            target.release_repairer(self)
-        elif target.has_method("release"):
+        if target.has_method("release"):
             target.release(self)
         elif target.get("worker") == self:
             target.worker = null
     target = null
     _work_t = 0.0
     _hit_done = false
-
 
 func _release_heal_target() -> void:
     if workplace != null and is_instance_valid(workplace) and workplace.has_method("release_heal_target"):
@@ -1368,9 +995,8 @@ func _find_keep():
 
 func _begin_flee() -> void:
     _release()
-    _scout_target_cell = Vector2i(-1, -1)
-    _scout_survey_t = 0.0
-    _scout_revealed_at_target = false
+    if role_behavior != null:
+        role_behavior.reset_scout_state()
     var keep = _find_keep()
     state = State.FLEEING
     if keep == null:
@@ -1391,19 +1017,7 @@ func _hide() -> void:
 
 
 func _nearest_enemy():
-    var best = null
-    var best_d := ARCHER_SEARCH if is_archer() else SOLDIER_SEARCH
-    var candidates := get_tree().get_nodes_in_group("enemy_garrison") if _expeditioning else get_tree().get_nodes_in_group("enemies")
-    for e in candidates:
-        var enemy := e as Node2D
-        if is_outpost_guard() and enemy.position.distance_to(guard_outpost.position) > float(guard_outpost.data.get("guard_radius", OUTPOST_GUARD_RADIUS)):
-            continue
-        var d := position.distance_to(enemy.position)
-        if d < best_d:
-            best_d = d
-            best = e
-    return best
-
+    return role_behavior.nearest_enemy() if role_behavior != null else null
 
 # ---------------------------------------------------------------- gerak
 
@@ -1448,13 +1062,36 @@ func _repath() -> void:
                 Events.build_feedback.emit("Prajurit tidak menemukan jalur pulang")
             State.SCOUTING, State.SCOUT_RETURNING:
                 _scout_target_cell = Vector2i(-1, -1)
-                _scout_survey_t = 0.0
+                if role_behavior != null:
+                    role_behavior.reset_scout_state()
                 state = State.IDLE
                 _decide_t = SCOUT_RECHECK_SECONDS
             _:
                 state = State.IDLE
         return
     _set_path(p)
+
+
+func _path_to_scout_cell(cell: Vector2i) -> PackedVector2Array:
+    return nav.path_to(position, cell)
+
+
+func _path_adjacent_to_cells(cells: Array[Vector2i]) -> PackedVector2Array:
+    return nav.path_adjacent(position, cells)
+
+
+func _pursue_combat_target(foe: Node2D, delta: float) -> void:
+    _repath_t -= delta
+    if _repath_t <= 0.0:
+        _repath_t = 0.5
+        var path: PackedVector2Array = nav.path_to(position, nav.cell_of(foe.position))
+        if not path.is_empty():
+            _set_path(path)
+    if _pi < _path.size():
+        _move_along(delta)
+    else:
+        var distance: float = position.distance_to(foe.position)
+        position += (foe.position - position).normalized() * (RUN_SPEED if distance > RUN_DISTANCE else SPEED) * delta
 
 
 ## true jika sudah sampai di ujung jalur.

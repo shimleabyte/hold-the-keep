@@ -26,6 +26,7 @@ tests=(
     campaign_assault
     campaign_multi_stronghold
     workplace_assignments
+    villager_role_architecture
     hunting_lodge
     scout_specialist
     healer_infirmary
