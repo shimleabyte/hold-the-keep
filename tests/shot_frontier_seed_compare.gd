@@ -17,12 +17,17 @@ func _capture_frontier(seed: int, label: String) -> Image:
         "The Frontier profile must be available for rendered generation QA")
     world_config.world_seed = seed
 
+    var container := SubViewportContainer.new()
+    container.size = root.get_visible_rect().size
+    container.stretch = true
+    root.add_child(container)
+
     var preview := SubViewport.new()
     preview.size = VIEWPORT_SIZE
     preview.own_world_2d = true
     preview.render_target_update_mode = SubViewport.UPDATE_ALWAYS
     preview.transparent_bg = false
-    root.add_child(preview)
+    container.add_child(preview)
 
     var world_host := Node2D.new()
     preview.add_child(world_host)
@@ -48,11 +53,18 @@ func _capture_frontier(seed: int, label: String) -> Image:
     assert(image.get_size() == VIEWPORT_SIZE,
         "The render must preserve the 1024x1024 full-map capture bounds")
 
+    var sampled_colors: Dictionary = {}
+    for y in range(0, VIEWPORT_SIZE.y, 16):
+        for x in range(0, VIEWPORT_SIZE.x, 16):
+            sampled_colors[image.get_pixel(x, y)] = true
+    assert(sampled_colors.size() > 8,
+        "The captured viewport must contain varied world pixels, not a blank frame")
+
     var output_path := "%s/frontier-%d-%s.png" % [OUTPUT_DIR, seed, label]
     var save_error := image.save_png(output_path)
     assert(save_error == OK, "Could not save rendered QA image: %s" % output_path)
 
-    preview.queue_free()
+    container.queue_free()
     await process_frame
     await RenderingServer.frame_post_draw
     return image
@@ -90,10 +102,8 @@ func _initialize() -> void:
     var byte_identical := first.get_data() == repeated.get_data()
     if not byte_identical:
         var difference_count := _write_difference(first, repeated, FRONTIER_SEED)
-        push_error(
-            "Same-seed Frontier render changed across runs: %d differing pixels. "
-            + "Inspect %s/frontier-%d-diff.png" % [difference_count, OUTPUT_DIR, FRONTIER_SEED]
-        )
+        push_error("Same-seed Frontier render changed across runs: %d differing pixels. Inspect %s/frontier-%d-diff.png"
+            % [difference_count, OUTPUT_DIR, FRONTIER_SEED])
         quit(1)
         return
 
