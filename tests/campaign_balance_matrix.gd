@@ -90,7 +90,7 @@ func run_profile(profile: String, expected: Dictionary) -> void:
         "%s boss warning must not start before at least 75%% of regular enemies are deployed" % profile)
     main.spawner._to_spawn = reveal_remaining
     main.spawner._process(0.1)
-    assert(is_equal_approx(main.spawner._boss_t, main.spawner.BOSS_WARNING_SECONDS),
+    assert(is_equal_approx(main.spawner._boss_t, 4.0),
         "%s boss must announce itself with a four-second warning after the wave reaches its reveal threshold" % profile)
 
     print("PASS: %s schedule and wave matrix (final day %d)" % [profile, final_day])
