@@ -157,10 +157,87 @@ func _run() -> void:
     _require(JSON.stringify(current) == current_before,
         "Building a current restore plan must not mutate the caller's persisted snapshot")
 
+    # Exercise every officially supported Classic source version through the
+    # same restore-plan entry point, not merely the version-boundary examples.
+    for source_version in range(1, 18):
+        var classic_fixture: Dictionary = snapshot.duplicate(true)
+        classic_fixture["version"] = source_version
+        if source_version < 5:
+            for villager in classic_fixture["villagers"]:
+                villager.erase("expedition")
+                villager.erase("recalling")
+        if source_version < 6:
+            classic_fixture["player"].erase("combat")
+        if source_version < 7:
+            classic_fixture.erase("world")
+        if source_version < 8:
+            classic_fixture.erase("campaign")
+        if source_version < 9:
+            classic_fixture.erase("job_priority")
+            for villager in classic_fixture["villagers"]:
+                villager.erase("occupation")
+                villager.erase("military_specialization")
+        if source_version < 10:
+            for enemy in classic_fixture["enemies"]:
+                enemy.erase("faction")
+        if source_version < 11:
+            classic_fixture.erase("frontier_campaign")
+        if source_version < 12:
+            for building in classic_fixture["buildings"]:
+                building.erase("stockpile")
+        if source_version < 13:
+            classic_fixture.erase("supply")
+        if source_version < 17:
+            for villager in classic_fixture["villagers"]:
+                villager.erase("weapon_equipped")
+                villager.erase("armor_equipped")
+        var classic_plan: Dictionary = pipeline.build_restore_plan(classic_fixture, main.world, save_system.VERSION)
+        _require(int(classic_plan["source_version"]) == source_version,
+            "Classic v%d must produce a restore plan tagged with its source version" % source_version)
+        _require((String(classic_plan["campaign_mode"]) == "campaign") == (source_version >= 8),
+            "Classic v%d must retain the correct legacy/campaign restore mode" % source_version)
+
     main.queue_free()
+    await _ticks(3)
+    world_config.apply_profile("frontier")
+    var frontier_main = load("res://scenes/main.tscn").instantiate()
+    root.add_child(frontier_main)
+    current_scene = frontier_main
+    await _ticks(10)
+    game_clock.set_process(false)
+    var frontier_snapshot: Dictionary = save_system.collect(frontier_main)
+    _require(String(frontier_snapshot["world"]["profile"]) == "frontier",
+        "Frontier migration fixtures must be collected from a Frontier world")
+    for source_version in range(7, 18):
+        var frontier_fixture: Dictionary = frontier_snapshot.duplicate(true)
+        frontier_fixture["version"] = source_version
+        if source_version < 8:
+            frontier_fixture.erase("campaign")
+        if source_version < 11:
+            frontier_fixture.erase("frontier_campaign")
+        if source_version < 12:
+            for building in frontier_fixture["buildings"]:
+                building.erase("stockpile")
+        if source_version < 13:
+            frontier_fixture.erase("supply")
+        if source_version < 17:
+            for villager in frontier_fixture["villagers"]:
+                villager.erase("weapon_equipped")
+                villager.erase("armor_equipped")
+        var frontier_plan: Dictionary = pipeline.build_restore_plan(frontier_fixture, frontier_main.world, save_system.VERSION)
+        _require(int(frontier_plan["source_version"]) == source_version,
+            "Frontier v%d must produce a restore plan tagged with its source version" % source_version)
+        _require((String(frontier_plan["campaign_mode"]) == "campaign") == (source_version >= 8),
+            "Frontier v%d must retain the correct legacy/campaign restore mode" % source_version)
+        _require(bool(frontier_plan["restore_building_stockpiles"]) == (source_version >= 12),
+            "Frontier v%d must gate stockpile restore at v12" % source_version)
+        _require(not frontier_plan["supply_state"].is_empty() or source_version < 13,
+            "Frontier v%d must preserve the v13 supply-state boundary" % source_version)
+
+    frontier_main.queue_free()
     await _ticks(2)
     if failures.is_empty():
-        print("PASS: SaveMigrationPipeline version boundaries v4-v17, legacy defaults, restore state and source immutability")
+        print("PASS: Classic v1-v17 and Frontier v7-v17 restore plans, version boundaries, legacy defaults and source immutability")
         quit(0)
     else:
         for failure in failures:
