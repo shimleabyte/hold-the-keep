@@ -99,16 +99,18 @@ func configure_viewport(viewport_size: Vector2) -> void:
     if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
         return
     _viewport_size = viewport_size
-    size = viewport_size
-    _refresh_layout()
+    _apply_layout()
 
 
 func _refresh_layout() -> void:
     var visible_size := get_viewport().get_visible_rect().size
     if visible_size.x > 0.0 and visible_size.y > 0.0:
         _viewport_size = visible_size
-    size = _viewport_size
+    _apply_layout()
 
+
+func _apply_layout() -> void:
+    size = _viewport_size
     var safe := Rect2(Vector2.ZERO, _viewport_size)
     if OS.get_name() == "Android":
         safe = safe_bounds_for_viewport(
