@@ -110,7 +110,7 @@ func _initialize() -> void:
         "Barracks must provide four central garrison slots")
     assert(barracks.is_in_group("garrisons"), "Barracks must register with the garrison inspection group")
 
-    main.village.quota["soldier"] = 2
+    main.village.quota["soldier"] = 3
     var soldier_a = main.village.spawn_villager(keep.position + Vector2(0, 18))
     var soldier_b = main.village.spawn_villager(keep.position + Vector2(10, 18))
     assert(soldier_a.set_job("soldier") and soldier_b.set_job("soldier"),
@@ -305,7 +305,6 @@ func _initialize() -> void:
     for soldier in get_nodes_in_group("villagers"):
         if soldier.is_outpost_guard() and soldier.guard_outpost == restored_barracks:
             restored_barracks_guard_count += 1
-    print("BARRACKS_RESTORE_DIAGNOSTIC: guards=%d, capacity=%d" % [restored_barracks.guard_count(), restored_barracks.guard_capacity])
     assert(restored_barracks_guard_count == 1 and restored_barracks.guard_count() == 1,
         "Save/load must restore the Barracks guard reference and building slot ownership")
     for soldier in get_nodes_in_group("villagers"):
