@@ -29,7 +29,7 @@ func find_work() -> void:
 
     for radius in _villager.SCOUT_SEARCH_RADII:
         for offset in _villager.SCOUT_DIRECTIONS.size():
-            var direction_index: int = (_villager._scout_cursor + offset) % _villager.SCOUT_DIRECTIONS.size()
+            var direction_index: int = (_villager.scout_behavior_cursor() + offset) % _villager.SCOUT_DIRECTIONS.size()
             var direction: Vector2i = _villager.SCOUT_DIRECTIONS[direction_index]
             var candidate: Vector2i = origin + direction * radius
             if _villager.workplace.position.distance_squared_to(_villager.nav.center_of(candidate)) > work_radius * work_radius:
@@ -59,14 +59,7 @@ func find_work() -> void:
         return_to_post()
         return
 
-    _villager._scout_target_cell = best_cell
-    _villager._scout_cursor = (best_direction + 1) % _villager.SCOUT_DIRECTIONS.size()
-    _villager._scout_survey_t = 0.0
-    _villager._scout_revealed_at_target = false
-    var goal_cells: Array[Vector2i] = [best_cell]
-    _villager._goal_cells = goal_cells
-    _villager._set_path(best_path)
-    _villager.state = _villager.State.SCOUTING
+    _villager.scout_behavior_start_survey(best_cell, best_direction, best_path)
 
 
 func target_reserved(cell: Vector2i) -> bool:
