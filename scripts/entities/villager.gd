@@ -1507,7 +1507,7 @@ func _draw() -> void:
         draw_rect(Rect2(-2, -12, 4, 3), Color("#c0c6c2"))
         draw_rect(Rect2(-4, -10, 1, 3), Color("#8e9aa0"))
         draw_rect(Rect2(3, -10, 1, 3), Color("#8e9aa0"))
-    if job == "soldier" and weapon_equipped:
+    if job == "soldier" and weapon_equipped and not is_archer():
         draw_line(Vector2(6, -8), Vector2(10, -15), Color("#d6dde0"), 1.5)
         draw_line(Vector2(5, -9), Vector2(8, -8), Color("#c58a42"), 1.5)
     if job == "builder":
