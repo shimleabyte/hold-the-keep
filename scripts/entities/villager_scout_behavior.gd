@@ -63,7 +63,8 @@ func find_work() -> void:
     _villager._scout_cursor = (best_direction + 1) % _villager.SCOUT_DIRECTIONS.size()
     _villager._scout_survey_t = 0.0
     _villager._scout_revealed_at_target = false
-    _villager._goal_cells = [best_cell]
+    var goal_cells: Array[Vector2i] = [best_cell]
+    _villager._goal_cells = goal_cells
     _villager._set_path(best_path)
     _villager.state = _villager.State.SCOUTING
 
