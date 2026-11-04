@@ -372,7 +372,7 @@ func _run() -> void:
                 "Frontier v%d canonical output must satisfy the current SaveValidator" % source_version)
         _require(JSON.stringify(frontier_fixture) == frontier_before_canonical,
             "Frontier v%d canonical conversion must not mutate the source fixture" % source_version)
-        var frontier_plan: Dictionary = pipeline.build_restore_plan(frontier_fixture, frontier_main.world, save_system.VERSION)
+        var frontier_plan: Dictionary = pipeline.build_restore_plan(frontier_fixture, main.world, save_system.VERSION)
         _require(int(frontier_plan["source_version"]) == source_version,
             "Frontier v%d must produce a restore plan tagged with its source version" % source_version)
         _require((String(frontier_plan["campaign_mode"]) == "campaign") == (source_version >= 8),
