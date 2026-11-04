@@ -6,7 +6,7 @@ extends Node2D
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
-const ArrowProjectile := preload("res://scripts/entities/arrow.gd")
+const ArcherCombat := preload("res://scripts/entities/villager_archer_combat.gd")
 
 enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING, SCOUTING, SCOUT_RETURNING }
 
@@ -40,10 +40,6 @@ const SOLDIER_DAMAGE := 8
 const SOLDIER_INTERVAL := 0.8
 const SOLDIER_SEARCH := 300.0
 const ARCHER_SEARCH := 260.0
-const ARCHER_ATTACK_RANGE := 150.0
-const ARCHER_MIN_RANGE := 52.0
-const ARCHER_DAMAGE_MULT := 0.68
-const ARCHER_ATTACK_INTERVAL := 1.15
 const OUTPOST_GUARD_RADIUS := 128.0
 const OUTPOST_GUARD_ARRIVAL_RADIUS := 45.0
 const REACH := 11.0
@@ -106,6 +102,7 @@ var _scan_t := 0.0
 var _repath_t := 0.0
 var _foe = null
 var anim := SpriteAnim.new()
+var _archer_combat := ArcherCombat.new()
 var _hurt_t := 0.0
 var _pending_foe = null
 var _pending_t := 0.0
@@ -903,17 +900,7 @@ func _tick_fight(delta: float) -> void:
             state = State.EXPEDITION if _expeditioning and is_instance_valid(_expedition_target) else State.IDLE
         return
     var dist := position.distance_to(_foe.position)
-    if is_archer() and dist <= ARCHER_ATTACK_RANGE:
-        if anim.face(_foe.position - position):
-            queue_redraw()
-        if dist < ARCHER_MIN_RANGE:
-            var retreat: Vector2 = (position - _foe.position).normalized()
-            if retreat.length_squared() > 0.0:
-                position += retreat * SPEED * 0.8 * delta
-        if _atk_cd <= 0.0:
-            _atk_cd = ARCHER_ATTACK_INTERVAL * (_rally_interval_mult if _rally_t > 0.0 else 1.0)
-            _fire_archer_arrow(_foe)
-            anim.play("attack", true)
+    if _archer_combat.tick(self, _foe, delta):
         return
     if not is_archer() and dist < REACH:
         if anim.face(_foe.position - position):
@@ -935,14 +922,6 @@ func _tick_fight(delta: float) -> void:
     else:
         position += (_foe.position - position).normalized() * (RUN_SPEED if dist > RUN_DISTANCE else SPEED) * delta
 
-
-func _fire_archer_arrow(enemy) -> void:
-    if not is_instance_valid(enemy) or world == null or world.entities == null:
-        return
-    var projectile = ArrowProjectile.new()
-    projectile.setup(enemy, maxi(1, roundi(float(_soldier_damage()) * ARCHER_DAMAGE_MULT)))
-    world.entities.add_child(projectile)
-    projectile.global_position = global_position + Vector2(0, -7)
 
 # ---------------------------------------------------------------- jobs
 
