@@ -7,6 +7,7 @@ extends Node2D
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
 const ArcherCombat := preload("res://scripts/entities/villager_archer_combat.gd")
+const ScoutBehavior := preload("res://scripts/entities/villager_scout_behavior.gd")
 
 enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING, SCOUTING, SCOUT_RETURNING }
 
@@ -103,6 +104,7 @@ var _repath_t := 0.0
 var _foe = null
 var anim := SpriteAnim.new()
 var _archer_combat := ArcherCombat.new()
+var _scout_behavior = ScoutBehavior.new()
 var _hurt_t := 0.0
 var _pending_foe = null
 var _pending_t := 0.0
@@ -121,6 +123,7 @@ var _smith_recipe := ""
 
 
 func _ready() -> void:
+    _scout_behavior.configure(self)
     add_to_group("villagers")
     Events.tech_researched.connect(_on_tech)
     _decide_t = randf_range(0.0, 1.0)
@@ -1063,127 +1066,19 @@ func _find_work() -> void:
 
 
 func _find_scout_work() -> void:
-    if not has_valid_workplace():
-        _release_workplace()
-        if not _claim_workplace("scout"):
-            return
-    if _facility_sabotaged(workplace):
-        return
-
-    var fog = get_tree().get_first_node_in_group("fog_of_war")
-    if fog == null:
-        return
-    var origin: Vector2i = nav.cell_of(workplace.position)
-    var best_cell := Vector2i(-1, -1)
-    var best_path := PackedVector2Array()
-    var best_score := -INF
-    var best_direction := _scout_cursor
-    var work_radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
-
-    for radius in SCOUT_SEARCH_RADII:
-        for offset in SCOUT_DIRECTIONS.size():
-            var direction_index := (_scout_cursor + offset) % SCOUT_DIRECTIONS.size()
-            var direction: Vector2i = SCOUT_DIRECTIONS[direction_index]
-            var candidate: Vector2i = origin + direction * radius
-            if workplace.position.distance_squared_to(nav.center_of(candidate)) > work_radius * work_radius:
-                continue
-            if not nav.is_walkable(candidate) or _scout_target_reserved(candidate):
-                continue
-            var path: PackedVector2Array = nav.path_to(position, candidate)
-            if path.is_empty() or path.size() > SCOUT_MAX_PATH_CELLS:
-                continue
-            var unexplored := 0
-            for y in range(candidate.y - 5, candidate.y + 6):
-                for x in range(candidate.x - 5, candidate.x + 6):
-                    if x < 0 or y < 0 or x >= WorldConfig.map_size or y >= WorldConfig.map_size:
-                        continue
-                    if not fog.is_revealed_cell(Vector2i(x, y)):
-                        unexplored += 1
-            if unexplored <= 0:
-                continue
-            var score := float(unexplored) * 8.0 - float(path.size()) * 1.5 + float(radius)
-            if score > best_score:
-                best_score = score
-                best_cell = candidate
-                best_path = path
-                best_direction = direction_index
-
-    if best_cell.x < 0:
-        _return_to_scout_post()
-        return
-
-    _scout_target_cell = best_cell
-    _scout_cursor = (best_direction + 1) % SCOUT_DIRECTIONS.size()
-    _scout_survey_t = 0.0
-    _scout_revealed_at_target = false
-    _goal_cells = [best_cell]
-    _set_path(best_path)
-    state = State.SCOUTING
+    _scout_behavior.find_work()
 
 
 func _scout_target_reserved(cell: Vector2i) -> bool:
-    for other in get_tree().get_nodes_in_group("villagers"):
-        if other == self or not is_instance_valid(other):
-            continue
-        if String(other.job) != "scout":
-            continue
-        var reserved_cell: Vector2i = other.get("_scout_target_cell")
-        if reserved_cell.x < 0:
-            continue
-        if Vector2(reserved_cell).distance_to(Vector2(cell)) < 8.0:
-            return true
-    return false
+    return _scout_behavior.target_reserved(cell)
 
 
 func _tick_scouting(delta: float) -> void:
-    if not has_valid_workplace() or _facility_sabotaged(workplace):
-        _scout_target_cell = Vector2i(-1, -1)
-        _scout_survey_t = 0.0
-        _scout_revealed_at_target = false
-        state = State.IDLE
-        _decide_t = SCOUT_RECHECK_SECONDS
-        return
-    if nav.version != _path_ver:
-        _repath()
-        if state != State.SCOUTING:
-            return
-    if _pi < _path.size():
-        _move_along(delta)
-        return
-    if not _scout_revealed_at_target:
-        var fog = get_tree().get_first_node_in_group("fog_of_war")
-        if fog != null:
-            fog.reveal_position(global_position, SCOUT_REVEAL_RADIUS)
-        _scout_revealed_at_target = true
-    _scout_survey_t += delta
-    if _scout_survey_t >= SCOUT_SURVEY_SECONDS:
-        _scout_target_cell = Vector2i(-1, -1)
-        _scout_survey_t = 0.0
-        _scout_revealed_at_target = false
-        state = State.IDLE
-        _decide_t = SCOUT_RECHECK_SECONDS
+    _scout_behavior.tick(delta)
 
 
 func _return_to_scout_post() -> void:
-    if not has_valid_workplace():
-        _scout_target_cell = Vector2i(-1, -1)
-        state = State.IDLE
-        return
-    _scout_target_cell = Vector2i(-1, -1)
-    _scout_revealed_at_target = false
-    var cells: Array[Vector2i] = workplace.cells()
-    if position.distance_to(workplace.position) <= OUTPOST_GUARD_ARRIVAL_RADIUS:
-        state = State.IDLE
-        _decide_t = SCOUT_RECHECK_SECONDS
-        return
-    var path: PackedVector2Array = nav.path_adjacent(position, cells)
-    if path.is_empty():
-        state = State.IDLE
-        _decide_t = SCOUT_RECHECK_SECONDS
-        return
-    _goal_cells = cells
-    _set_path(path)
-    state = State.SCOUT_RETURNING
+    _scout_behavior.return_to_post()
 
 
 func _cells_of(n) -> Array[Vector2i]:
