@@ -52,6 +52,8 @@ const JOBS := ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "h
 const JOB_ICONS := {"woodcutter": "axe", "miner": "pick", "farmer": "wheat", "builder": "hammer", "hunter": "bow", "scout": "compass", "healer": "healer", "blacksmith": "forge", "soldier": "sword"}
 const PANEL_BG := Color(0.09, 0.08, 0.11, 0.82)
 const PANEL_BORDER := Color("#6b5a40")
+const FEEDBACK_MESSAGE_SECONDS := 2.0
+const BOSS_WARNING_MESSAGE_SECONDS := 4.0
 const GOLD := Color("#ffd23f")
 const SLOT_W := 70
 const SLOT_H := 30
@@ -1104,6 +1106,12 @@ func _on_campaign_won(day: int) -> void:
     get_tree().paused = true
 
 
+func _message_duration(message: String) -> float:
+    if message.begins_with("Raja lawan mendekat!"):
+        return BOSS_WARNING_MESSAGE_SECONDS
+    return FEEDBACK_MESSAGE_SECONDS
+
+
 func _show_message(text: String) -> void:
     _msg.text = text
     _msg_bubble.visible = true
@@ -1111,7 +1119,7 @@ func _show_message(text: String) -> void:
     if _msg_tween != null:
         _msg_tween.kill()
     _msg_tween = create_tween()
-    _msg_tween.tween_interval(2.0)
+    _msg_tween.tween_interval(_message_duration(text))
     _msg_tween.tween_property(_msg_bubble, "modulate:a", 0.0, 0.45)
     _msg_tween.tween_callback(func() -> void: _msg_bubble.visible = false)
 
