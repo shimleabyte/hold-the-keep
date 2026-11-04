@@ -57,6 +57,22 @@ func _initialize() -> void:
 
     var hud = get_first_node_in_group("hud")
     assert(hud != null, "The main scene must create the HUD")
+    assert(hud._msg_bubble is Panel and hud._msg.get_parent() == hud._msg_bubble,
+        "Transient gameplay feedback must use a compact bubble, not full-width floating text")
+    assert(hud._msg_bubble.mouse_filter == Control.MOUSE_FILTER_IGNORE,
+        "The feedback bubble must never block world interaction")
+    assert(not hud._stage_label.visible and not hud._boss_title.visible,
+        "Stage and boss names must remain contextual rather than permanent text")
+    for job_id in hud._jobs:
+        var job_row = hud._jobs[job_id]
+        assert(job_row.icon != null and not job_row.tooltip_text.is_empty(),
+            "Icon-first job rows must retain an accessible text description")
+    for slot in hud._slot_nodes:
+        assert(not slot.tooltip_text.is_empty(),
+            "Icon-only building slots must expose names, costs and hotkeys on demand")
+    hud._show_message("HUD bubble accessibility check")
+    assert(hud._msg_bubble.visible and hud._msg.text == "HUD bubble accessibility check",
+        "Gameplay feedback must appear in the contextual bubble")
     var player = get_first_node_in_group("player")
     assert(player != null and player.camera.zoom == Vector2.ONE,
         "The wider field of view must come from viewport dimensions, not gameplay camera zoom")
