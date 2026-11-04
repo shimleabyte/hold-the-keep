@@ -435,7 +435,9 @@ func _build_jobs() -> void:
             "blacksmith": "Pandai besi — membuat perlengkapan prajurit",
             "soldier": "Prajurit — mempertahankan permukiman"
         }
-        row.tooltip_text = String(job_descriptions.get(JOBS[i], JOBS[i])) + "  ·  Left click −/+ quota, right click priority"
+        var shelter_note := "" if JOBS[i] == "soldier" else "  ·  Berlindung di Keep saat malam; produksi berhenti"
+        row.tooltip_text = String(job_descriptions.get(JOBS[i], JOBS[i])) + shelter_note + "  ·  Left click −/+ quota, right click priority"
+        row.shelter_icon = ICONS["moon"]
         row.adjust.connect(_on_job_adjust)
         row.priority_adjust.connect(_on_job_priority_adjust)
         _jobs_panel.add_child(row)
@@ -848,6 +850,12 @@ func _process(delta: float) -> void:
     var player = get_tree().get_first_node_in_group("player")
     if player != null:
         _combat_bar.update_state(player.combat_status())
+    for job_id in JOBS:
+        var job_row: HUD_WIDGETS.JobRow = _jobs[job_id]
+        var sheltering_now: bool = GameClock.is_night and job_id != "soldier"
+        if job_row.sheltering != sheltering_now:
+            job_row.sheltering = sheltering_now
+            job_row.queue_redraw()
     _research_panel.visible = Tech.current != ""
     if Tech.current != "":
         _research_name.text = Tech.tech_name(Tech.current).substr(0, 12)
