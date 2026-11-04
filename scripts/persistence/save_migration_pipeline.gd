@@ -1,6 +1,7 @@
 extends RefCounted
-## Adapts historical save snapshots into the current scene-restoration contract.
-## This is an in-memory import pipeline: it never rewrites the source save or its version.
+## Adapts validated historical snapshots and can build a canonical current-schema copy.
+
+const CAMPAIGN_SCRIPT := preload("res://scripts/systems/campaign.gd")
 
 func build_restore_plan(snapshot: Dictionary, world: Node, target_version: int) -> Dictionary:
     var source_version := int(snapshot.get("version", 0))
@@ -74,7 +75,7 @@ func _migrate_v8_campaign_state(snapshot: Dictionary, world: Node, plan: Diction
     var legacy_state: Dictionary = legacy_value.duplicate(true) if legacy_value is Dictionary else {}
     if String(legacy_state.get("region", "")).is_empty():
         var legacy_cell := Vector2i(int(legacy_state.get("cx", -1)), int(legacy_state.get("cy", -1)))
-        legacy_state["region"] = String(world.call("region_id", legacy_cell)) if legacy_cell.x >= 0 and legacy_cell.y >= 0 else "HEARTHLAND"
+        legacy_state["region"] = String(world.call("region_id", legacy_cell)) if WorldConfig.is_valid_cell(legacy_cell) else "HEARTHLAND"
     if not legacy_state.has("faction"):
         legacy_state["faction"] = "legacy_raiders"
     plan["legacy_stronghold"] = legacy_state
@@ -210,7 +211,8 @@ func migrate_snapshot_to_current(snapshot: Dictionary, main: Node, target_versio
         if String(legacy_state.get("region", "")).is_empty():
             legacy_state["region"] = String(main.world.region_id(legacy_cell))
         if String(legacy_state.get("faction", "")).is_empty():
-            if not snapshot.get("stronghold", {}).has("faction"):
+            var original_stronghold: Dictionary = snapshot.get("stronghold", {})
+            if not original_stronghold.has("faction"):
                 legacy_state["faction"] = "legacy_raiders"
             else:
                 return null
