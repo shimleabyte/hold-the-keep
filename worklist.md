@@ -1,6 +1,6 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `83187b840d0413e15791cce34d6d1e3abc1e370b` (2026-11-03)  
+**Audit baseline:** `main` at `adf23c9ea0438fba4367d6569069cdb19c51e1db` (2026-11-04)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
@@ -9,9 +9,9 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ## Live execution status — 2026-11-04 (post specialist, events and logistics integration)
 
-**Current main:** `e4c56ae8ae5f2aa0f6c6895d7d8a3211ce9b3554` (PR #77 SaveValidator extraction merged).  
+**Current main:** `adf23c9ea0438fba4367d6569069cdb19c51e1db` (PR #78 Barracks defensive garrison merged; save schema remains v17).  
 **Current save schema:** v17.  
-**Open pull requests:** none returned by the latest open-PR scan. Re-check before assigning work.
+**Open pull requests:** #79 DEV-H world generation and #81 DEV-E save migration. PR #80 is the superseded pre-Barracks migration branch and is being closed.
 
 | Worklist item | Live disposition |
 |---|---|
@@ -25,22 +25,23 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-I enemy controller decomposition | Patrol movement extraction integrated through PR #74 as `EnemyPatrolMovement`; do not duplicate this controller. |
 | DEV-J decision-based events | Integrated through PR #72: choice UI, affordability, cancellation, delayed consequences and optional v17 event-state persistence. JSON numeric round-trip handling is covered. |
 | DEV-K input command registry | Integrated through PR #76: 39 rebindable keyboard commands, gamepad defaults, duplicate detection and restore defaults. |
-| DEV-E save validation extraction | First phase integrated through PR #77: SaveValidator owns snapshot validation; v17 schema unchanged. Sequential migration pipeline remains. |
-| DEV-L Barracks garrison vertical slice | Implementation in `work/dev-l-barracks-garrison`: 4-slot military-drill-unlocked Barracks, local soldier defense, UI assignment, save/load and regression coverage; awaiting current-main rebase and Godot 4.7 CI. |
+| DEV-E save and migration architecture | Phase 1 validation extracted through PR #77; Phase 2 restore pipeline is in progress on PR #81, rebased on the current Barracks-aware main. No v17 schema bump. |
+| DEV-L Barracks garrison vertical slice | Integrated through PR #78 at `adf23c9`; 4-slot Military Drill-unlocked Barracks, soldier assignments, extended garrison save fields and regression coverage are on main. Godot 4.7 CI and Campaign Simulation QA passed. |
 
 ### Verified merge and CI results
 
 - PR #76 input registry merged; workflow #41742044153 passed 30/30 Godot 4.7 jobs, with the campaign simulation workflow also passing.
 - PR #77 SaveValidator extraction merged at `6545e2eddd6d7ead907e27be6e58fef9b58b88ab`; workflow #41742799385 passed; campaign simulation workflow #41742799266 passed.
+- PR #78 Barracks defensive garrison merged at `adf23c9ea0438fba4367d6569069cdb19c51e1db`; latest main Godot 4.7 workflow #41755090508 passed 51/51 jobs; Campaign Simulation QA #41755090308 passed 1/1.
 
 - PR #72 merged as `064b0f5e984b301f2ac1aaef2c31a39b24583204`. Its updated Godot 4.7 workflow passed 50/50 jobs; the Classic/Frontier campaign simulation workflow passed 1/1.
 - PR #74 merged as `dde5370612ef8550644debdcf31bd360b58da6ed`. Its Godot 4.7 workflow passed 49/49 jobs.
 - PR #75 merged as `ea34ee1071f2ddbc49572584e2da9409053c520a`. Its Godot 4.7 workflow passed 49/49 jobs; the campaign simulation workflow passed 1/1.
-- The latest main push after PR #77 is tracked by workflow #41743244122; confirm it finishes green before calling the current mainline fully validated.
+- Current main after PR #78 is fully validated by workflow #41755090508 (51/51 jobs) and Campaign Simulation QA #41755090308 (1/1).
 
 ### Next ownership boundaries
 
-- DEV-E first phase is integrated through PR #77 (`SaveValidator` extraction); next phase is the sequential migration pipeline. Preserve v17 event-state data from #72, current supply state, and historical Classic/Frontier fixtures. Do not change the version without a complete migration plan and fixtures.
+- DEV-E Phase 1 is integrated through PR #77 (`SaveValidator` extraction). Phase 2 on PR #81 moves existing restore-time version gates into an in-memory sequential adapter; preserve current Barracks `guard_garrison` data, v17 events/supply state and Classic v1–v17 / Frontier v7–v17 compatibility. This does not rewrite historical disk files to v17. Save-file I/O/recovery decomposition remains pending.
 - DEV-G HUD modularization is now unblocked. The decision panel from #72 is part of current main; extract it through its established interface rather than rebuilding or moving its gameplay rules into the HUD.
 - DEV-D may continue only with separately scoped shipment, graph or pressure slices. Do not re-open cost-source behavior already extracted by #75; keep `SupplyNetwork` method signatures stable.
 - DEV-F villager roles and DEV-H world generation remain independent candidates after checking their current file ownership and interfaces.
@@ -339,7 +340,7 @@ Suggested modules:
 
 ### DEV-E — Save and migration architecture
 
-**Status:** First slice complete through PR #77: snapshot validation is extracted to `scripts/persistence/save_validator.gd`; `SaveSystem._valid_save()` remains as the compatibility façade. Sequential migration extraction and save-file I/O/recovery decomposition remain pending.
+**Status:** Phase 1 complete through PR #77: snapshot validation is extracted to `scripts/persistence/save_validator.gd`; `SaveSystem._valid_save()` remains the compatibility façade. Phase 2 restore migration is isolated in `scripts/persistence/save_migration_pipeline.gd` on PR #81. This is an in-memory scene-restore adapter, not an on-disk rewrite of historical saves; save-file I/O, recovery and canonical v17 conversion remain later slices.
 
 **Priority:** Critical  
 **Primary owner files:**
@@ -348,7 +349,7 @@ Suggested modules:
 - New persistence/migration modules under `scripts/autoload/` or `scripts/persistence/`
 - New migration-focused tests
 
-**Problem:** `save_system.gd` is 834 lines. Its `_valid_save()` function alone is approximately 460 lines and combines many validation responsibilities.
+**Problem:** `scripts/autoload/save_system.gd` is now 248 lines after PR #77 and the Barracks garrison save-field addition on PR #78. Snapshot validation is in `scripts/persistence/save_validator.gd` (773 lines); restore-time version branching was still embedded in `scripts/main.gd` before this phase.
 
 **Scope:**
 
