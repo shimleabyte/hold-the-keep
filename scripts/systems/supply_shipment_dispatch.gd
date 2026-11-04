@@ -9,13 +9,13 @@ func advance(network: Variant) -> void:
     if not WorldConfig.is_frontier_profile():
         return
     network._ensure_current()
-    var ledger = network._shipment_ledger
+    var ledger: Variant = network._shipment_ledger
     for index in range(ledger.orders.size()):
         var order: Dictionary = ledger.orders[index]
         if not ledger.is_active_order(order):
             continue
         var order_id := int(order["id"])
-        var destination = network._find_depot(
+        var destination: Variant = network._find_depot(
             Vector2i(int(order["destination_x"]), int(order["destination_y"]))
         )
         if destination == null:
@@ -31,7 +31,7 @@ func advance(network: Variant) -> void:
             ledger.orders[index] = order
             continue
 
-        var carrier = network._carriers.get(order_id, null)
+        var carrier: Variant = network._carriers.get(order_id, null)
         if is_instance_valid(carrier):
             continue
         var start := Vector2(float(order["x"]), float(order["y"]))
