@@ -204,7 +204,7 @@ These assignments have the clearest ownership boundaries. Developers A and B can
 - New focused modules under `scripts/systems/`
 - New focused regression test if necessary
 
-**Problem:** The current 632-line manager combines deterministic camp placement, patrol generation, reinforcement lifecycle, target discovery, faction raids, timers and persistence-facing state.
+**Problem:** The current 465-line manager combines deterministic camp placement, patrol generation, reinforcement lifecycle, target discovery, faction raids, timers and persistence-facing state.
 
 **Scope:** Split internal responsibilities while preserving the manager's existing public interface.
 
@@ -391,7 +391,7 @@ Suggested modules:
 - New role behavior modules under `scripts/behaviors/villagers/` or another agreed directory
 - Focused role regression tests
 
-**Problem:** `villager.gd` is 1,075 lines and combines movement, pathing, work selection, gathering, construction, combat, guarding, expeditions, carrying and delivery.
+**Problem:** `villager.gd` is 1,530 lines and combines movement, pathing, work selection, gathering, construction, combat, guarding, expeditions, carrying and delivery.
 
 **Scope:**
 
@@ -442,7 +442,7 @@ Role components should define task selection, work action and role-specific stat
 - New components under `scripts/ui/components/` or an agreed directory
 - Focused UI regression tests
 
-**Problem:** `hud.gd` is approximately 1,820 lines and builds/coordinates nearly every UI feature.
+**Problem:** `hud.gd` is approximately 1,900 lines and builds/coordinates nearly every UI feature.
 
 **Scope:**
 
@@ -485,7 +485,7 @@ Preserve the existing controls and mouse-blocking behavior.
 - New modules under `scripts/world/generation/`
 - Focused world-generation regression tests
 
-**Problem:** `world_map.gd` contains Classic and Frontier terrain, resource placement, biome decoration, landmarks, iron veins and Expedition barrier logic.
+**Problem:** `world_map.gd` is 822 lines and contains Classic and Frontier terrain, resource placement, biome decoration, landmarks, iron veins and Expedition barrier logic.
 
 **Scope:**
 
@@ -526,7 +526,7 @@ Preserve the fully generated/loaded world model. Do not introduce runtime chunk 
 - New modules under `scripts/behaviors/enemies/` or the existing `scripts/behaviors/`
 - Focused enemy lifecycle regression tests
 
-**Problem:** `enemy.gd` is approximately 1,035 lines. The project already has six archetype behavior modules; the next step is to reduce host responsibilities without reimplementing those behaviors.
+**Problem:** `enemy.gd` is approximately 975 lines. The project already has six archetype behavior modules; the next step is to reduce host responsibilities without reimplementing those behaviors.
 
 **Scope:**
 
