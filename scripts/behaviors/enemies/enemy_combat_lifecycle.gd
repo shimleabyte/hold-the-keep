@@ -20,18 +20,20 @@ func begin_attack(target, direction: Vector2) -> void:
     enemy._atk_cd = enemy.attack_interval
     enemy._pending = target
     enemy._pending_is_projectile = false
-    if enemy.anim.face(direction):
+    var locked_direction := direction.normalized() if direction.length_squared() > 0.001 else Vector2.DOWN
+    enemy._pending_direction = locked_direction
+    if enemy.anim.face(locked_direction):
         enemy.queue_redraw()
     enemy.anim.play("attack", true)
     if enemy.role == "pouncer":
         enemy._pending_t = 0.28
-        enemy._pounce_dir = direction.normalized()
+        enemy._pounce_dir = locked_direction
         enemy._pounce_windup_t = 0.12
         enemy._pounce_t = 0.16
         Events.fx_burst.emit("dust", enemy.position + Vector2(0, -2), -enemy._pounce_dir, 1.3)
     else:
         enemy._pending_t = ATTACK_HIT_DELAY
-    enemy.combat_feedback.begin_windup(direction, enemy._pending_t, false)
+    enemy.combat_feedback.begin_windup(locked_direction, enemy._pending_t, false)
     Audio.play("charge" if enemy.role == "pouncer" else "windup", 1.0, -9.0)
 
 
@@ -43,10 +45,11 @@ func begin_ranged_attack(target: Node2D) -> void:
     enemy._pending = target
     enemy._pending_is_projectile = true
     enemy._pending_t = 0.14
-    if enemy.anim.face(target.position - enemy.position):
+    enemy._pending_direction = (target.global_position - enemy.global_position).normalized()
+    if enemy.anim.face(enemy._pending_direction):
         enemy.queue_redraw()
     enemy.anim.play("attack", true)
-    enemy.combat_feedback.begin_windup(target.position - enemy.position, enemy._pending_t, true)
+    enemy.combat_feedback.begin_windup(enemy._pending_direction, enemy._pending_t, true)
     Audio.play("projectile", 1.0, -9.0)
 
 
@@ -59,6 +62,8 @@ func resolve_pending(delta: float) -> void:
         return
     var target = enemy._pending
     enemy._pending = null
+    var locked_direction: Vector2 = enemy._pending_direction
+    enemy._pending_direction = Vector2.DOWN
     enemy.combat_feedback.end_windup()
     if not is_instance_valid(target):
         enemy._pending_is_projectile = false
@@ -71,8 +76,15 @@ func resolve_pending(delta: float) -> void:
         enemy.world.entities.add_child(bolt)
         return
     enemy._pending_is_projectile = false
-    if enemy.role == "pouncer" and enemy.position.distance_to(target.position) > 36.0:
-        return
+    if enemy.role == "pouncer":
+        if enemy.global_position.distance_to(target.global_position) > 36.0:
+            return
+    else:
+        var target_offset: Vector2 = target.global_position - enemy.global_position
+        if target_offset.length() > enemy._attack_reach():
+            return
+        if target_offset.length_squared() > 0.0001 and target_offset.normalized().dot(locked_direction) < 0.5:
+            return
     if (enemy.is_supply_raider or enemy.is_faction_raider) and target.is_in_group("depots"):
         enemy.supply_raid_hits += 1
         if enemy.supply_raid_hits % 2 == 0:
@@ -96,6 +108,7 @@ func apply_stagger(duration: float) -> void:
     enemy._pending = null
     enemy._pending_is_projectile = false
     enemy._pending_t = 0.0
+    enemy._pending_direction = Vector2.DOWN
     enemy.combat_feedback.end_windup()
     enemy._pounce_windup_t = 0.0
     enemy._pounce_t = 0.0
