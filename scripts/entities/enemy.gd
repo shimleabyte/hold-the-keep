@@ -19,8 +19,8 @@ const TEXTURES := {
     "bandit": preload("res://assets/sprites/enemy_bandit.svg"),
     "wolf": preload("res://assets/sprites/enemy_wolf.svg"),
     "soldier": preload("res://assets/sprites/enemy_soldier.svg"),
-    "archer": preload("res://assets/sprites/enemy_bandit.svg"),
-    "brute": preload("res://assets/sprites/enemy_soldier.svg"),
+    "archer": preload("res://assets/sprites/enemy_archer.svg"),
+    "brute": preload("res://assets/sprites/enemy_brute.svg"),
     "king": preload("res://assets/sprites/enemy_king.svg"),
 }
 const PLAYER_REACH := 12.0
