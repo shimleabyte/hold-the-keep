@@ -20,6 +20,7 @@ const TEXTURES := {
     "scout_post": preload("res://assets/sprites/scout_post.svg"),
     "infirmary": preload("res://assets/sprites/infirmary.svg"),
     "barracks": preload("res://assets/sprites/barracks.svg"),
+    "archery_range": preload("res://assets/sprites/archery_range.svg"),
 }
 const ARROW_SCRIPT := preload("res://scripts/entities/arrow.gd")
 const BuildingVisual := preload("res://scripts/entities/building_visual_identity.gd")
@@ -194,6 +195,8 @@ func _ready() -> void:
         add_to_group("granaries")
     if guard_capacity > 0:
         add_to_group("garrisons")
+    if id == "archery_range":
+        add_to_group("archery_ranges")
     set_physics_process(_range > 0.0)
     set_process(false)
     if id == "keep":
@@ -263,6 +266,7 @@ func _leave_groups() -> void:
     remove_from_group("farms")
     remove_from_group("granaries")
     remove_from_group("garrisons")
+    remove_from_group("archery_ranges")
     remove_from_group("roads")
 
 
