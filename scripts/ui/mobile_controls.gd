@@ -45,7 +45,7 @@ func _process(_delta: float) -> void:
         should_show = false
 
     var hud := get_parent()
-    if hud != null:
+    if hud is CanvasLayer:
         for overlay_property in [
             "_map_panel",
             "_outpost_panel",
