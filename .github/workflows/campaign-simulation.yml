@@ -49,6 +49,7 @@ jobs:
       - name: Run deterministic campaign simulation
         env:
           HTK_AUTO_RESOLVE_EVENTS: "1"
+          HTK_AUTO_START_GAME: "1"
         run: |
           mkdir -p build/diagnostics
           set -o pipefail

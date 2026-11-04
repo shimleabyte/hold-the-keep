@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 export HTK_AUTO_RESOLVE_EVENTS="${HTK_AUTO_RESOLVE_EVENTS:-1}"
+export HTK_AUTO_START_GAME="${HTK_AUTO_START_GAME:-1}"
 GODOT_BIN="${GODOT:-godot}"
 TIMEOUT_BIN="${TIMEOUT_BIN:-timeout}"
 TEST_TIMEOUT_SECONDS="${TEST_TIMEOUT_SECONDS:-120}"

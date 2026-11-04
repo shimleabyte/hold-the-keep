@@ -115,6 +115,7 @@ jobs:
       - name: Run ${{ matrix.test }}
         env:
           HTK_AUTO_RESOLVE_EVENTS: "1"
+          HTK_AUTO_START_GAME: "1"
         run: timeout 180s godot --headless --fixed-fps 60 --path . --script "res://tests/${{ matrix.test }}.gd"
 
   performance-diagnostic:
@@ -137,6 +138,7 @@ jobs:
 
       - name: Run reference Frontier workload
         env:
+          HTK_AUTO_START_GAME: "1"
           PROFILE: frontier
           ENEMIES: "96"
           VILLAGERS: "80"
@@ -150,6 +152,7 @@ jobs:
 
       - name: Run Frontier Expedition reference workload
         env:
+          HTK_AUTO_START_GAME: "1"
           PROFILE: frontier_expedition
           ENEMIES: "96"
           VILLAGERS: "80"

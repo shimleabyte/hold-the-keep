@@ -20,6 +20,7 @@ const MENU_SCRIPT := preload("res://scripts/ui/pause_menu.gd")
 const FRONTIER_CAMPAIGN_SCRIPT := preload("res://scripts/systems/frontier_campaign.gd")
 const SAVE_MIGRATION_SCRIPT := preload("res://scripts/persistence/save_migration_pipeline.gd")
 const FRONTIER_OBJECTIVE_PANEL_SCRIPT := preload("res://scripts/ui/frontier_objective_panel.gd")
+const TITLE_SCREEN_SCRIPT := preload("res://scripts/ui/title_screen.gd")
 
 const NIGHT_TINT := Color(0.45, 0.5, 0.75)
 const DIRS4: Array[Vector2i] = [
@@ -49,6 +50,33 @@ var _tint: CanvasModulate
 func _ready() -> void:
     add_to_group("main")
     Audio.silence(1000)
+    if OS.get_environment("HTK_AUTO_START_GAME") == "1":
+        _start_campaign(WorldConfig.profile_id, true)
+        return
+    var title_screen = TITLE_SCREEN_SCRIPT.new()
+    title_screen.mode_selected.connect(_start_campaign)
+    add_child(title_screen)
+
+
+func _start_campaign(profile_id: String, preserve_runtime_state := false) -> void:
+    if not WorldConfig.apply_profile(profile_id):
+        return
+    Settings.set_world_profile(profile_id)
+    if not preserve_runtime_state:
+        Inventory.reset()
+        GameClock.reset()
+        Tech.reset()
+        SaveSystem.pending.clear()
+    get_tree().paused = false
+
+    var title_screen := get_node_or_null("TitleScreen")
+    if title_screen != null:
+        title_screen.queue_free()
+
+    _initialize_game()
+
+
+func _initialize_game() -> void:
     _tint = CanvasModulate.new()
     add_child(_tint)
 
@@ -115,11 +143,9 @@ func _ready() -> void:
     # Keep paling akhir, supaya HUD sudah mendengarkan event HP-nya.
     var save := SaveSystem.take_pending()
     if save.is_empty():
-        Tech.reset()
         build.place_raw("keep", world.starting_keep_cell())
         campaign.configure_new(WorldConfig.profile_id)
         _spawn_campaign_strongholds()
-        # Dua penduduk awal, relative to the configured Keep position.
         var keep_position: Vector2 = world.keep_center_position()
         for i in 2:
             village.spawn_villager(keep_position + Vector2((i * 2 - 1) * 8.0, 10.0))
@@ -139,7 +165,6 @@ func _ready() -> void:
     var objective_panel = FRONTIER_OBJECTIVE_PANEL_SCRIPT.new()
     objective_panel.campaign = frontier_campaign
     add_child(objective_panel)
-
 
 func _on_campaign_won(_day: int) -> void:
     campaign_conquered = true
@@ -449,4 +474,6 @@ func _apply_save(d: Dictionary) -> void:
 
 
 func _process(_delta: float) -> void:
+    if _tint == null:
+        return
     _tint.color = Color.WHITE.lerp(NIGHT_TINT, GameClock.darkness())

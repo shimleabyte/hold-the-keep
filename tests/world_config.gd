@@ -50,13 +50,23 @@ func _initialize() -> void:
         and not world_config.is_frontier_profile("classic"),
         "Both Frontier profiles must use shared campaign systems without changing Classic")
 
+    OS.set_environment("HTK_AUTO_START_GAME", "0")
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main
     await process_frame
     await process_frame
+    assert(main.world == null,
+        "Launching the project must show the title screen without constructing a gameplay world")
+    assert(main.get_node_or_null("TitleScreen") != null,
+        "The main scene must present the title screen before gameplay")
+    main._start_campaign("classic")
+    await process_frame
+    await process_frame
     await process_frame
     game_clock.set_process(false)
+    assert(main.world != null,
+        "Selecting Classic from the title screen must initialize the gameplay world")
 
     var current_save: Dictionary = save_system.collect(main)
     assert(current_save["world"]["profile"] == "classic",
