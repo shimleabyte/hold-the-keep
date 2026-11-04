@@ -7,50 +7,55 @@
 
 This is an execution worklist, not a claim that every item is already implemented. Re-check the live branch/PR state before starting each assignment.
 
-## Live execution status — 2026-11-04 (post specialist, events and logistics integration)
+## Live execution status — 2026-11-04 (post PR #87 Archery Range integration)
 
-**Current main:** `8d11d130355775ddc48a3a5bacce9c65368299d2` (PR #87 Archery Range merged after PR #85 Frontier resource stage; save schema remains v17).  
+**Current main:** `8d11d130355775ddc48a3a5bacce9c65368299d2` — PR #87 merged; adds Fletching-unlocked Archery Range, two archer workplaces, ranged projectile combat, logistics assignment/release, and v17 persistence coverage.  
 **Current save schema:** v17.  
-**Open pull requests:** #86 DEV-H Frontier decoration remains open. PR #84 and #88 are superseded DEV-E migration branches; final latest-main reapplication is pending PR creation.
+**Open pull requests observed in the latest repository search:** #84, #86, #88 and #89. Re-check live state before taking action.
 
-| Worklist item | Live disposition |
+| Workstream | Current disposition |
 |---|---|
-| INT-0 specialist integration | Complete: #64 Hunter, #65 Scout, #67 Healer and #68 Blacksmith merged; duplicate #66 closed. |
-| PR #37 depot cost sources | Reconciled: equivalent source-selection and local-payment behavior is integrated; do not replay its stale branch. |
-| PR #49 Phase 06 documentation | Superseded by corrected mainline documentation; do not restore its old snapshot. |
-| DEV-A data contract validation | Complete through replacement PR #71; original #69 was superseded and closed. |
-| DEV-B faction camp architecture | Integrated through PR #70. Preserve its public camp/patrol/raid interfaces. |
-| DEV-C campaign simulation QA | Integrated through PR #73. Deterministic Classic/Frontier simulation workflow and manual diagnostic are present. |
-| DEV-D supply network decomposition | First extraction integrated through PR #75: `SupplyCostTransactions` now owns cost-source selection, affordability, payment and refunds behind the `SupplyNetwork` façade. Shipment lifecycle, graph and supply-pressure responsibilities remain in the host and are separate follow-up slices. |
-| DEV-I enemy controller decomposition | Patrol movement extraction integrated through PR #74 as `EnemyPatrolMovement`; do not duplicate this controller. |
-| DEV-J decision-based events | Integrated through PR #72: choice UI, affordability, cancellation, delayed consequences and optional v17 event-state persistence. JSON numeric round-trip handling is covered. |
-| DEV-K input command registry | Integrated through PR #76: 39 rebindable keyboard commands, gamepad defaults, duplicate detection and restore defaults. |
-| DEV-E save and migration architecture | Phases 1–2 are merged (#77, #81). Phase 3 canonical v17 migration and `SaveFileStore` I/O/rollback extraction are reapplied on `work/dev-e-canonical-save-migration-latest` over Archery Range main; Godot 4.7 CI pending. |
-| DEV-L Barracks garrison vertical slice | Integrated through PR #78 at `adf23c9`; 4-slot Military Drill-unlocked Barracks, soldier assignments, extended garrison save fields and regression coverage are on main. Godot 4.7 CI and Campaign Simulation QA passed. |
+| INT-0 specialist integration | Complete: Hunter, Scout, Healer and Blacksmith integrations are on main. |
+| DEV-A data contract validation | Complete through PR #71 replacement. |
+| DEV-B faction camp architecture | Integrated through PR #70. Preserve public camp/patrol/raid interfaces. |
+| DEV-C campaign simulation QA | Integrated through PR #73. This is deterministic campaign simulation/diagnostics, not a substitute for human playtesting. |
+| DEV-D supply network decomposition | Partial: PR #75 extracted cost-source selection, affordability, payment and refunds into `SupplyCostTransactions`. Shipment lifecycle, depot graph/ledger and supply pressure remain. |
+| DEV-E save/migration architecture | `SaveValidator` and in-memory `SaveMigrationPipeline` are integrated through #77/#81. Canonical on-disk conversion and file I/O/recovery extraction are proposed in #84/#88/#89. #89 is the latest reapplication against current main; treat #84 and #88 as competing older iterations, not additional work to merge. |
+| DEV-F villager role architecture | Not started. `villager.gd` remains a high-conflict host; extract behavior incrementally while preserving shared movement, workplace, carrying and save contracts. |
+| DEV-G HUD modularization | Not started. Decision-based event panel is already integrated through #72; extract it through its existing interface. |
+| DEV-H world generation | Partial. Existing terrain/resource/region generation extraction is on main; #86 proposes deterministic decoration/landmark extraction and still requires Godot 4.7 validation plus rendered parity review. |
+| DEV-I enemy controller | Partial. Patrol movement is already extracted through #74 as `EnemyPatrolMovement`; other shared host responsibilities remain. |
+| DEV-J decision-based events | Integrated through PR #72. |
+| DEV-K input command registry | Integrated through PR #76. |
+| DEV-L Barracks | Integrated through PR #78. |
+| Archery Range / ranged soldiers | Integrated through PR #87. Preserve soldier-role, garrison, expedition and v17 save compatibility. |
+| DEV-M visual identity / rendered QA | Partial. Distinct silhouettes, rendered gameplay review, audio listening and visual readability checks remain. |
 
-### Verified merge and CI results
+### Current open-PR disposition
 
-- PR #76 input registry merged; workflow #41742044153 passed 30/30 Godot 4.7 jobs, with the campaign simulation workflow also passing.
-- PR #77 SaveValidator extraction merged at `6545e2eddd6d7ead907e27be6e58fef9b58b88ab`; workflow #41742799385 passed; campaign simulation workflow #41742799266 passed.
-- PR #78 Barracks defensive garrison merged at `adf23c9ea0438fba4367d6569069cdb19c51e1db`; main Godot 4.7 workflow #41755090508 passed 51/51 jobs; Campaign Simulation QA #41755090308 passed 1/1.
-- PR #81 SaveMigrationPipeline merged at `5e09248a447f223a44be54dbe6b03ce0147948b0`; PR Godot 4.7 workflow #41755640170 passed 52/52 jobs; Campaign Simulation QA #41755639985 passed 1/1.
-- PR #85 Frontier resource placement merged at `fb5bd6696963df5a2f167f875ad164196558b599`; PR #87 Archery Range merged at `8d11d130355775ddc48a3a5bacce9c65368299d2`. Current main Godot 4.7 workflow #41769601564 is queued; Campaign Simulation QA #41769601574 passed 1/1.
+- **#89 — canonical save migration/file store:** latest DEV-E reapplication against `8d11d13`. Review and require its own Godot 4.7 regression matrix and campaign simulation checks before merge.
+- **#88 and #84 — canonical save migration/file store:** older competing iterations of the same DEV-E slice. Do not merge alongside #89. After confirming #89 contains all unique changes and is validated, close the superseded PRs with a clear explanation; do not delete branches until unique commits are reconciled.
+- **#86 — deterministic Frontier decoration/landmarks:** separate DEV-H slice. Require Godot 4.7 import/parse, full regression, Frontier/Expedition tests and performance diagnostics. Manual identical-seed rendered comparison remains mandatory.
+- **#87 — Archery Range:** merged into main at `8d11d13`.
 
-- PR #72 merged as `064b0f5e984b301f2ac1aaef2c31a39b24583204`. Its updated Godot 4.7 workflow passed 50/50 jobs; the Classic/Frontier campaign simulation workflow passed 1/1.
-- PR #74 merged as `dde5370612ef8550644debdcf31bd360b58da6ed`. Its Godot 4.7 workflow passed 49/49 jobs.
-- PR #75 merged as `ea34ee1071f2ddbc49572584e2da9409053c520a`. Its Godot 4.7 workflow passed 49/49 jobs; the campaign simulation workflow passed 1/1.
-- Current main after PR #78 is fully validated by workflow #41755090508 (51/51 jobs) and Campaign Simulation QA #41755090308 (1/1).
+### Recommended execution order
 
-### Next ownership boundaries
+1. Stabilize integration: validate #89 and #86 independently; reconcile duplicate save PRs; confirm the current mainline CI state.
+2. DEV-F: begin villager decomposition in small, independently testable slices. Avoid broad rewrites.
+3. DEV-D: extract shipment lifecycle first, then depot graph/ledger and supply-pressure responsibilities as separate slices.
+4. DEV-G: modularize HUD components without changing layout contracts or gameplay rules.
+5. DEV-H and DEV-I: finish generation and enemy-host decomposition after checking current file ownership and API dependencies.
+6. DEV-M: replace remaining unrelated placeholder textures and perform rendered gameplay/audio QA.
+7. Only then expand facilities or rebalance campaign pacing based on observed playtest evidence.
 
-- DEV-E Phase 1 is integrated through PR #77 (`SaveValidator` extraction); Phase 2 through PR #81 (`SaveMigrationPipeline`). Phase 3 on `work/dev-e-canonical-save-migration-latest` converts supported Classic v1–v17 / Frontier v7–v17 snapshots to canonical v17, validates before writing and delegates JSON/temp/backup/rollback to `SaveFileStore`. Preserve Archery Range / Barracks save fields and latest validator changes; schema remains v17.
-- DEV-G HUD modularization is now unblocked. The decision panel from #72 is part of current main; extract it through its established interface rather than rebuilding or moving its gameplay rules into the HUD.
-- DEV-D may continue only with separately scoped shipment, graph or pressure slices. Do not re-open cost-source behavior already extracted by #75; keep `SupplyNetwork` method signatures stable.
-- DEV-F villager roles and DEV-H world generation remain independent candidates after checking their current file ownership and interfaces.
-- DEV-I may continue with other enemy-host responsibilities, but patrol movement is already extracted. Coordinate faction-camp callers before changing enemy-facing contracts.
-- DEV-C and DEV-J are complete for the current worklist scope. Do not assign duplicate implementations.
+### Validation and release boundaries
 
-This status block is a live execution snapshot, not a substitute for checking GitHub again. Workflow run states and PR heads can change after this commit.
+- Development CI targets **Godot 4.7 only**. Do not add Godot 4.3 or Windows export jobs to feature CI.
+- Automated campaign simulation is useful diagnostic coverage, but it does not prove full-wave balance, player-facing readability or campaign fun.
+- Remaining acceptance work includes full-wave autonomous-AI balance tests, human playthrough across all Frontier acts, target-hardware profiling, rendered resolution/fullscreen review, audio listening, and later Windows runtime/clean-machine release checks.
+- Do not claim a feature is complete solely because headless tests pass. Record rendered/manual QA separately.
+
+This snapshot supersedes the previous live-status block. Re-check PR heads, workflow runs and main before each merge or assignment; repository state can change after this commit.
 
 ---
 
@@ -199,7 +204,7 @@ These assignments have the clearest ownership boundaries. Developers A and B can
 - New focused modules under `scripts/systems/`
 - New focused regression test if necessary
 
-**Problem:** The current 632-line manager combines deterministic camp placement, patrol generation, reinforcement lifecycle, target discovery, faction raids, timers and persistence-facing state.
+**Problem:** The current 465-line manager combines deterministic camp placement, patrol generation, reinforcement lifecycle, target discovery, faction raids, timers and persistence-facing state.
 
 **Scope:** Split internal responsibilities while preserving the manager's existing public interface.
 
@@ -342,7 +347,7 @@ Suggested modules:
 
 ### DEV-E — Save and migration architecture
 
-**Status:** Phase 1 complete through PR #77 (`SaveValidator`); Phase 2 complete through PR #81 (`SaveMigrationPipeline`); Phase 3 implemented on `work/dev-e-canonical-save-migration-latest`. `migrate_snapshot_to_current()` synthesizes missing v17 fields; the current validator must accept the result before writes. `request_load()` installs a canonical copy only after the temp file is reread and verified; `SaveFileStore` owns parsing, temp writes, backup rotation and rollback. Unsupported/lossy historical conversions leave the source untouched.
+**Status:** Phase 1 complete through PR #77: snapshot validation is extracted to `scripts/persistence/save_validator.gd`; `SaveSystem._valid_save()` remains the compatibility façade. Phase 2 complete through PR #81: `scripts/persistence/save_migration_pipeline.gd` builds an in-memory scene-restore plan and owns the restore-time version gates. This is not an on-disk rewrite of historical saves; save-file I/O/recovery decomposition and canonical v17 conversion remain later slices.
 
 **Priority:** Critical  
 **Primary owner files:**
@@ -386,7 +391,7 @@ Suggested modules:
 - New role behavior modules under `scripts/behaviors/villagers/` or another agreed directory
 - Focused role regression tests
 
-**Problem:** `villager.gd` is 1,075 lines and combines movement, pathing, work selection, gathering, construction, combat, guarding, expeditions, carrying and delivery.
+**Problem:** `villager.gd` is 1,530 lines and combines movement, pathing, work selection, gathering, construction, combat, guarding, expeditions, carrying and delivery.
 
 **Scope:**
 
@@ -437,7 +442,7 @@ Role components should define task selection, work action and role-specific stat
 - New components under `scripts/ui/components/` or an agreed directory
 - Focused UI regression tests
 
-**Problem:** `hud.gd` is approximately 1,820 lines and builds/coordinates nearly every UI feature.
+**Problem:** `hud.gd` is approximately 1,900 lines and builds/coordinates nearly every UI feature.
 
 **Scope:**
 
@@ -480,7 +485,7 @@ Preserve the existing controls and mouse-blocking behavior.
 - New modules under `scripts/world/generation/`
 - Focused world-generation regression tests
 
-**Problem:** `world_map.gd` contains Classic and Frontier terrain, resource placement, biome decoration, landmarks, iron veins and Expedition barrier logic.
+**Problem:** `world_map.gd` is 822 lines and contains Classic and Frontier terrain, resource placement, biome decoration, landmarks, iron veins and Expedition barrier logic.
 
 **Scope:**
 
@@ -521,7 +526,7 @@ Preserve the fully generated/loaded world model. Do not introduce runtime chunk 
 - New modules under `scripts/behaviors/enemies/` or the existing `scripts/behaviors/`
 - Focused enemy lifecycle regression tests
 
-**Problem:** `enemy.gd` is approximately 1,035 lines. The project already has six archetype behavior modules; the next step is to reduce host responsibilities without reimplementing those behaviors.
+**Problem:** `enemy.gd` is approximately 975 lines. The project already has six archetype behavior modules; the next step is to reduce host responsibilities without reimplementing those behaviors.
 
 **Scope:**
 
