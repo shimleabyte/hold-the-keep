@@ -20,7 +20,7 @@ func _initialize() -> void:
     if not check(InputMap.has_action("game_cancel") and InputMap.has_action("restart_game"),
         "Context-only system actions must also be registered"):
         return
-    if not check(settings.binding_label("move_up").contains("W") and settings.binding_label("move_up").contains("↑"),
+    if not check(settings.binding_label("move_up").contains("W") and settings.binding_label("move_up").contains("UP"),
         "The controls UI must show both WASD and arrow-key defaults"):
         return
     if not check(settings.binding_label("interact").contains("SPACE") and settings.binding_label("interact").contains("E"),
@@ -87,7 +87,7 @@ func _initialize() -> void:
     if not check(settings.get_key_binding("move_up") == KEY_W,
         "Restore defaults must restore the first movement key"):
         return
-    if not check(settings.binding_label("move_up").contains("↑"),
+    if not check(settings.binding_label("move_up").contains("UP"),
         "Restoring defaults must restore and display secondary movement keys"):
         return
     if not check(settings.get_key_binding("ability_dash") == KEY_Q,

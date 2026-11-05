@@ -194,13 +194,13 @@ func get_key_binding(action: String) -> int:
 func _format_key_label(code: int) -> String:
     match code:
         KEY_UP:
-            return "↑"
+            return "UP"
         KEY_DOWN:
-            return "↓"
+            return "DOWN"
         KEY_LEFT:
-            return "←"
+            return "LEFT"
         KEY_RIGHT:
-            return "→"
+            return "RIGHT"
         KEY_SPACE:
             return "SPACE"
         KEY_ESCAPE:

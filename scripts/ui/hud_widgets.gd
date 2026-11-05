@@ -267,7 +267,7 @@ class BuildSlot extends Control:
         draw_rect(Rect2(Vector2.ZERO, size), Color("#ffd23f") if selected else Color("#6b5a40"), false, 1.0)
         var a := 1.0 if affordable else 0.45
         # Permanent labels/costs are intentionally removed; details remain available by tooltip.
-        draw_string(font, Vector2(3, 9), key_text, HORIZONTAL_ALIGNMENT_LEFT, 10, 6, Color(1, 1, 1, a * 0.8))
+        draw_string(font, Vector2(3, 9), key_text, HORIZONTAL_ALIGNMENT_LEFT, 22, 6, Color(1, 1, 1, a * 0.8))
         var icon_size := Vector2(icon.get_size())
         var icon_pos := Vector2((size.x - icon_size.x) * 0.5, (size.y - icon_size.y) * 0.5)
         draw_texture(icon, icon_pos, Color(1, 1, 1, a))
