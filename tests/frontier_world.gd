@@ -479,8 +479,14 @@ func _initialize() -> void:
                 break
     assert(navigation_probe_cell.x >= 0,
         "The incremental navigation test must find an empty walkable cell")
+    main.territory.rebuild()
+    main.supply.rebuild()
     var navigation_version := main.nav.version
     var probe_wall = main.build.place_raw("wall", navigation_probe_cell)
+    assert(not main.territory._dirty,
+        "Placing a wall with no claim radius must not trigger a full territory rebuild")
+    assert(not main.supply._dirty,
+        "Placing a wall must not rebuild Keep-rooted road/depot connectivity")
     assert(main.nav._dirty_cells.size() == 1 and not main.nav._dirty,
         "Placing a one-cell wall must queue one cell instead of a full-grid rebuild")
     await ticks(1)
@@ -490,6 +496,8 @@ func _initialize() -> void:
     assert(main.build.demolish_at(navigation_probe_cell),
         "The navigation probe wall must be removable after the first update")
     await ticks(1)
+    assert(not main.territory._dirty and not main.supply._dirty,
+        "Removing an ordinary wall must not trigger unrelated territory or depot-graph rebuilds")
     assert(not main.nav.astar.is_point_solid(navigation_probe_cell)
         and main.nav.version == navigation_version + 2,
         "Removing the wall must restore walkability with another local update")
