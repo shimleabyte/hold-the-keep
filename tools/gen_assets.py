@@ -439,6 +439,47 @@ def render_humanoid(look, view, pose, svg, ox, oy):
     draw_tool(r, kind, hx, hy, dx, dy, sc)
 
 
+# Small profession-specific accents are baked into existing work cells. This keeps
+# the runtime on one 440x60 texture per worker with no extra draw calls or nodes.
+WORK_ART = {
+    "woodcutter": {
+        1: [(13, 8, 3, 1, "#b9c6c6"), (14, 9, 2, 1, "#d4dddd")],
+        2: [(13, 12, 1, 1, "#c08a4e"), (15, 13, 1, 1, "#d4a46a"), (12, 11, 1, 1, "#8a6338")],
+    },
+    "miner": {
+        1: [(13, 6, 1, 3, "#cfd6e2"), (14, 7, 1, 2, "#8a8f98")],
+        2: [(13, 12, 1, 1, "#aeb3b9"), (15, 13, 1, 1, "#cfd6e2"), (12, 13, 1, 1, "#7a7f85")],
+    },
+    "builder": {
+        1: [(13, 7, 3, 1, "#d6d0c4"), (15, 8, 1, 2, "#aeb3b9")],
+        2: [(13, 13, 1, 1, "#d5c5a4"), (14, 14, 2, 1, "#a77a45"), (12, 13, 1, 1, "#c9b58b")],
+    },
+    "blacksmith": {
+        1: [(13, 8, 2, 1, "#f3d484"), (14, 9, 1, 1, "#f1a64d")],
+        2: [(13, 11, 1, 1, "#ffcf54"), (15, 12, 1, 1, "#e77c32"), (14, 13, 1, 1, "#fff0b5")],
+    },
+    "farmer": {
+        1: [(13, 10, 2, 1, "#a98557"), (15, 9, 1, 2, "#d6bd75")],
+        2: [(13, 13, 2, 1, "#8b6b43"), (15, 12, 1, 1, "#6a9a54")],
+    },
+}
+
+WORK_ART_SPRITES = {
+    "villager_woodcutter": "woodcutter",
+    "villager_miner": "miner",
+    "villager_blacksmith": "blacksmith",
+    "villager_farmer": "farmer",
+}
+
+
+def _work_art_rects(style, step, row):
+    x_shift = -2 if row == 2 else 0
+    return [
+        (x + x_shift, y, w, h, fill)
+        for x, y, w, h, fill in WORK_ART.get(style, {}).get(step, [])
+    ]
+
+
 def humanoid_sheet(name, look):
     sheet = Svg(look.fw * NF, look.fh * len(VIEWS))
     col = 0
@@ -448,6 +489,21 @@ def humanoid_sheet(name, look):
             for row, view in enumerate(VIEWS):
                 render_humanoid(look, view, pose, sheet, col * look.fw, row * look.fh)
             col += 1
+
+    # Bake subtle debris/contact marks into frames 15 and 16 of the existing work clip.
+    # Sheet dimensions, frame count, and runtime texture count remain unchanged.
+    style = WORK_ART_SPRITES.get(name, "")
+    if style:
+        for frame in range(14, 18):
+            for row in range(len(VIEWS)):
+                for x, y, w, h, fill in _work_art_rects(style, frame - 14, row):
+                    sheet.rect(
+                        frame * look.fw + look.mx + _rr(x * look.k),
+                        row * look.fh + look.my + _rr(y * look.k),
+                        max(1, _rr((x + w) * look.k) - _rr(x * look.k)),
+                        max(1, _rr((y + h) * look.k) - _rr(y * look.k)),
+                        fill,
+                    )
     sheet.save(name)
 
 
@@ -560,6 +616,19 @@ def make_role_variant(source_name, output_name, kind):
                 '<g transform="translate(%d %d)">%s</g>'
                 % (frame * fw, row * fh, "".join(rects))
             )
+
+    if kind == "builder":
+        for row in range(len(VIEWS)):
+            for frame in range(14, 18):
+                effect_rects = [
+                    _role_sprite_rect(x, y, w, h, fill)
+                    for x, y, w, h, fill in _work_art_rects("builder", frame - 14, row)
+                ]
+                if effect_rects:
+                    groups.append(
+                        '<g transform="translate(%d %d)">%s</g>'
+                        % (frame * fw, row * fh, "".join(effect_rects))
+                    )
 
     output = source.replace("</svg>", "\n".join(groups) + "\n</svg>")
     if kind == "builder":
@@ -680,8 +749,6 @@ def make_characters():
     humanoid_sheet("villager_idle", Look("#d9d2c3", "#b3ab9a"))
     humanoid_sheet("villager_woodcutter", Look("#4e9a4a", "#3b7a38", hat="wood", tool_a="axe"))
     humanoid_sheet("villager_miner", Look("#8a8f98", "#6e737b", hat="miner", tool_a="pick"))
-    humanoid_sheet("villager_builder", Look("#b77935", "#825329", pants="#574532", hat="builder",
-                                             tool_a="hammer", tool_w="hammer", apron=True, trim="#d89a4e"))
     humanoid_sheet("villager_blacksmith", Look("#985c3d", "#6f3e2a", pants="#3c3029", hat="band",
                                                 tool_a="hammer", tool_w="hammer", beard="#4a3024",
                                                 trim="#e19a55"))
