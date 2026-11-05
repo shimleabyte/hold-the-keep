@@ -9,27 +9,27 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ## Live execution status — 2026-11-05 (Priority 1 architecture stabilized)
 
-**Current main:** `9bdbaeca9c08249aee3ad4d76b7677c7a20de664` — includes the integrated Priority 1 architecture, PR #125 P0 counterplay/final-wave pacing fixes, and the DEV-H rendered-comparison SceneTree harness. The QA harness is test-only; no gameplay, asset or save behavior changed. Save schema remains v17.  
+**Current main:** `6bce640a5708aa342bdf43d80f4924f47fdcbc6e` — includes the integrated Priority 1 architecture, PR #125 P0 counterplay/final-wave pacing fixes, and the DEV-H rendered-comparison SceneTree harness. The QA harness is test-only; no gameplay, asset or save behavior changed. Save schema remains v17.  
 **Current save schema:** v17.  
-**Open implementation pull requests:** #127 HUD countdowns; #128 Android ARMv7/touch controls; #129 distinct Builder/Archer/Brute sprites; #131 live worklist refresh; #133 rendered Frontier QA workflow. PRs #130 and #132 were closed as superseded duplicates.
+**Open implementation pull requests:** #127 HUD countdowns; #128 Android ARMv7/touch controls; #129 distinct Builder/Archer/Brute sprites; #131 live worklist refresh; #133 rendered Frontier QA workflow; #134 autonomous full-wave diagnostic. PRs #130 and #132 were closed as superseded duplicates.
 
 | Workstream | Current disposition |
 |---|---|
 | INT-0 specialist integration | Complete: Hunter, Scout, Healer and Blacksmith integrations are on main. |
 | DEV-A data contract validation | Complete through PR #71 replacement. |
 | DEV-B faction camp architecture | Integrated through PR #70. Preserve public camp/patrol/raid interfaces. |
-| DEV-C campaign simulation QA | Integrated through PR #73. Deterministic diagnostics are not a substitute for human playtesting. |
+| DEV-C campaign simulation QA | Earlier deterministic simulation coverage is integrated through PR #73. PR #134 adds a bounded real-runtime night-wave diagnostic for Classic and Frontier; current CI runs are blocked before any runner step by GitHub Actions allocation (`runner_id=0`, zero steps). No code-test result is claimed for PR #134 yet. |
 | DEV-D supply network decomposition | **Priority 1 complete.** PR #75 extracted cost transactions; #94 shipment ledger; #96 dispatch/recovery; #97 road graph; #99 supply pressure controller. Keep the stable façade unless a new cohesive responsibility is demonstrated. |
 | DEV-E save/migration architecture | Complete through #89: canonical v17 conversion and file-store recovery are integrated. Schema remains v17. |
 | DEV-F villager role architecture | Five role slices integrated: Archer, Scout, Healer, Blacksmith and Builder. Shared movement, navigation, workplace claims, carrying, animation and persistence remain host-owned. |
 | DEV-G HUD modularization | Main widget, construction queue and outpost/logistics boundaries are integrated. `hud.gd` remains the root composition/layout coordinator. |
-| DEV-H world generation / rendered QA | Generator decomposition integrated through #86. The fixed-seed 1024×1024 render comparison passed on Godot 4.7 + Xvfb/Mesa. Both PNGs have identical SHA-256 and 0 differing pixels; the rendered image shows populated regional terrain and the protected starting clearing. PR #133's dedicated rendered workflow passed, and its Godot 4.7 regression matrix passed 53/53 jobs; retain the workflow as a repeatable QA gate. |
+| DEV-H world generation / rendered QA | Generator decomposition integrated through #86. The fixed-seed 1024×1024 render comparison passed on Godot 4.7 + Xvfb/Mesa. Both PNGs have identical SHA-256 and 0 differing pixels; the rendered image shows regional terrain, resources, decorations and the protected starting clearing. PR #133's dedicated rendered workflow and 53/53 Godot regression jobs passed. Retain it as a repeatable QA gate. |
 | DEV-I enemy controller | Patrol movement, raid behavior and shared combat lifecycle are integrated. Archetype behavior modules remain separate. |
 | DEV-J decision-based events | Integrated through PR #72. |
 | DEV-K input command registry | Integrated through PR #76. |
 | DEV-L Barracks | Integrated through PR #78. |
 | Archery Range / ranged soldiers | Integrated through PR #87. |
-| DEV-M visual identity / rendered QA | PR #129 gives Builder, Archer and Brute dedicated sprite sheets and a reproducible generator path. Contact sheets and a real 640×360 gameplay capture were inspected; all three roles are distinguishable at normal gameplay zoom, with Brute's data-driven 1.45× size applied. The Role Sprite Visual QA workflow and Campaign Simulation QA passed on the latest head. Full 54-job regression matrix is running after the final scale/duplicate-hammer fixes. |
+| DEV-M visual identity / rendered QA | PR #129 gives Builder, Archer and Brute dedicated sprite sheets and an exactly reproducible generator path. Real 640×360 gameplay capture was inspected; all three roles are distinguishable at normal gameplay zoom, and Brute's data-driven 1.45× scale is applied. Role Sprite Visual QA, Campaign Simulation QA and the full 54/54 Godot 4.7 regression matrix passed on head `0067f235`. PR remains open; do not merge without review. |
 
 ### Recent Priority 1 integrations
 
@@ -44,20 +44,20 @@ This is an execution worklist, not a claim that every item is already implemente
 
 **Priority 1 architecture is complete on main.** Do not start more extraction work to reduce line counts.
 
-1. DEV-H / PR #133: rendered same-seed comparison and 53/53 Godot CI jobs passed. Preserve the workflow as a regression gate; no further generator architecture work is justified without a specific defect.
-2. DEV-M / PR #129: normal-zoom gameplay capture and role-sprite rendering check passed. Keep the dedicated visual workflow; await the latest full regression matrix before treating the slice as ready for merge.
-3. Review PR #127 and #128 independently. HUD changes must be checked for panel overlap; Android work still requires export and physical-device validation.
-4. Run extended Classic and Frontier playthroughs; record pacing, recovery, difficulty spikes and confusing interactions.
-5. Tune campaign pacing and economic pressure only from reproducible playtest evidence. Add facilities/archetypes only for demonstrated gameplay gaps.
+1. DEV-C / PR #134: finish the real-runtime Classic/Frontier night-wave diagnostic. The code and isolated workflow are in an open PR, but GitHub-hosted runner allocation has failed before any step began. Re-run only once a runner can be allocated; do not treat runner provisioning failures as code failures.
+2. DEV-M / PR #129: role identity, normal-zoom gameplay capture and automated regression all passed. Review the final diff and merge only after explicit integration approval.
+3. DEV-H / PR #133: rendered same-seed comparison passed with pixel-identical captures and 53/53 Godot CI jobs. Preserve the workflow as a regression gate; no further generator architecture work is justified without a specific defect.
+4. Review PR #127 and #128 independently. HUD changes must be checked for panel overlap; Android work still requires export and physical-device validation.
+5. Run extended human Classic and Frontier playthroughs; record pacing, recovery, difficulty spikes and confusing interactions before tuning values or adding facilities.
 
 ### Validation and release boundaries
 
 - Development CI targets **Godot 4.7 only**. Do not add Godot 4.3 or Windows export jobs to feature CI.
-- Campaign Simulation QA is deterministic diagnostic coverage, not proof of complete-wave balance or player-facing readability.
-- Remaining acceptance work includes full-wave autonomous-AI balance, human playthroughs across Classic and Frontier acts, target-hardware profiling, fullscreen/resolution review, audio listening and later clean-machine release checks.
+- Campaign Simulation QA and the new autonomous player bot are diagnostic coverage, not proof of campaign balance or player experience. The bot is deliberately simple and not a substitute for human playtesting.
+- Remaining acceptance work includes a successful full-wave runtime diagnostic, human playthroughs across Classic and Frontier acts, target-hardware profiling, fullscreen/resolution review, audio listening and later clean-machine release checks.
 - Do not claim a feature complete solely because headless tests pass. Record rendered/manual QA separately.
 
-This snapshot records the live PR state as of 2026-11-05. Re-check PR heads, workflow runs and `main` before each merge or assignment; repository state can change after this commit.
+This snapshot records the live PR and runner state as of 2026-11-05. Re-check PR heads, workflow runs and `main` before each merge or assignment; repository state can change after this commit.
 ---
 
 ## 0. Ground rules and current baseline
