@@ -311,7 +311,7 @@ func _initialize() -> void:
     var landmark_regions := {}
     assert(world.generated_decoration_layout.size() >= 100,
         "Frontier must receive a meaningful amount of non-blocking regional dressing")
-    var decoration_batches := get_tree().get_nodes_in_group("frontier_decoration_batches")
+    var decoration_batches: Array = get_nodes_in_group("frontier_decoration_batches")
     assert(decoration_batches.size() < world.generated_decoration_layout.size()
         and decoration_batches.size() <= world.map_size * 2,
         "Regional decoration visuals must be batched by world row and z-layer")
@@ -490,7 +490,7 @@ func _initialize() -> void:
         "The incremental navigation test must find an empty walkable cell")
     main.territory.rebuild()
     main.supply.rebuild()
-    var navigation_version := main.nav.version
+    var navigation_version: int = int(main.nav.version)
     var probe_wall = main.build.place_raw("wall", navigation_probe_cell)
     assert(not main.territory._dirty,
         "Placing a wall with no claim radius must not trigger a full territory rebuild")
