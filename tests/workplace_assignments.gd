@@ -41,6 +41,14 @@ func _initialize() -> void:
     await ticks(8)
     clock.set_process(false)
     main.village.set_process(false)
+
+    # Partial quota dictionaries are valid during setup and benchmark reconfiguration.
+    # Village assignment and HUD job rows must default absent role counts to zero.
+    var complete_quota: Dictionary = main.village.quota.duplicate(true)
+    main.village.quota = {"woodcutter": 0}
+    main.village.assign_jobs()
+    main.village.quota = complete_quota
+    main.village.assign_jobs()
     main.village.quota["builder"] = 0
 
     var keep = null
