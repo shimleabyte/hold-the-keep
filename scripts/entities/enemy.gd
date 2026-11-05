@@ -32,6 +32,11 @@ const BEAST_TARGET_ISOLATION_RADIUS := 76.0
 const WALK_BASE_SPEED := 32.0
 const RUN_BASE_SPEED := 58.0
 
+
+static func visual_scale_for(data: Dictionary) -> Vector2:
+    return Vector2.ONE * float(data.get("scale", 1.0))
+
+
 var id := ""
 var hp := 10
 var max_hp := 10
@@ -126,6 +131,7 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     attack_interval = float(data["attack_interval"])
     color = Color(data["color"])
     scale_f = float(data.get("scale", 1.0))
+    scale = visual_scale_for(data)
     is_boss = bool(data.get("boss", false))
     runs = bool(data.get("run", false))
     role = String(data.get("role", "pouncer" if id == "wolf" else "melee"))
