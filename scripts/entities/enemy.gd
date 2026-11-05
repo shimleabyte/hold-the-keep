@@ -184,6 +184,7 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     saboteur_behavior.configure(self, data)
     siege_behavior.configure(self, data)
     _offset = Vector2(randf_range(-4.0, 4.0), randf_range(-3.0, 3.0))
+    scale = Vector2.ONE * scale_f
     _tex = TEXTURES.get(id, TEXTURES["bandit"])
     _fw = int(_tex.get_width() / float(SpriteAnim.FRAMES))
     _fh = int(_tex.get_height() / 3.0)
