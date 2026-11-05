@@ -347,6 +347,28 @@ func _initialize() -> void:
     main.fog.import_state({"cells": [far_index]})
     assert(main.fog.is_revealed_cell(far_cell),
         "Frontier fog data must accept the final valid row-major map index")
+    var expected_fog_chunks := ceili(float(world_config.map_size) / 16.0)
+    expected_fog_chunks *= expected_fog_chunks
+    assert(main.fog._fog_chunks.size() == expected_fog_chunks,
+        "Fog must be split into 16x16 chunks instead of one full-map draw item")
+    var original_fog_state: Dictionary = main.fog.export_state()
+    main.fog.discovered.fill(0)
+    main.fog._dirty_chunk_indices.clear()
+    var local_reveal := Vector2(6 * world_config.tile_size + 8, 6 * world_config.tile_size + 8)
+    assert(main.fog.reveal_position(local_reveal, 1.0),
+        "A newly explored tile must change the fog state")
+    assert(main.fog._dirty_chunk_indices.size() == 1,
+        "Exploring one tile must invalidate only its containing fog chunk")
+    main.fog._flush_dirty_chunks()
+    var boundary_reveal := Vector2(16 * world_config.tile_size + 8, 16 * world_config.tile_size + 8)
+    assert(main.fog.reveal_position(boundary_reveal, 24.0),
+        "Exploring a chunk boundary must reveal new neighboring cells")
+    assert(main.fog._dirty_chunk_indices.size() == 4,
+        "Exploring across a four-chunk corner must invalidate exactly those four chunks")
+    main.fog._flush_dirty_chunks()
+    assert(main.fog._dirty_chunk_indices.is_empty(),
+        "Fog dirty-chunk tracking must clear after invalidation")
+    main.fog.import_state(original_fog_state)
     var frontier_save: Dictionary = save_system.collect(main)
     assert(frontier_save["world"]["profile"] == "frontier"
         and int(frontier_save["world"]["map_size"]) == 128
