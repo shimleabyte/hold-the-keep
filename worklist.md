@@ -22,7 +22,7 @@ This is an execution worklist, not a claim that every item is already implemente
 | P0 idle resources | Healthy trees, rocks, iron and wildlife disable _process; depleted/restored nodes enable it only while regrowing | Save/regrowth assertions added; Godot run pending |
 | P1 scenery | Frontier decoration draw items batch by world row and z-layer; deterministic landmark selection uses one map scan | Batch coverage assertions added; Godot/render review pending |
 | P1 path invalidation | AStar updates only changed building footprints; roads do not dirty AStar or enemy flow field | Wall/road placement and removal assertions added; Godot run pending |
-| P1 territory/logistics | Ordinary non-claim buildings do not rebuild territory; only Keep/road/bridge/depot changes invalidate logistics | Source integration is on main; regression assertions pending/available in Frontier test |
+| P1 territory/logistics | Ordinary non-claim buildings do not rebuild territory; logistics invalidation is limited to Keep/road/bridge/granary/storage/outpost changes | P0 source filter is on main; P1 road-specific assertions are in this branch |
 | P1 AI | Common defender scans plus Saboteur/Siege Engine intercept scans refresh at 120 ms; current targets are validated each tick | Faction warfare cadence assertions added; Godot run pending |
 | P1 village | One job-count pass per assignment; local counters are updated through quota removal and assignment | Villager economy quota assertions added; Godot run pending |
 | P2 generation | Wildlife selection retains at most 9×target-count candidates in a max-heap before sorting; RNG traversal and greedy spacing retained | Full-sort reference comparison added; Godot run pending |
