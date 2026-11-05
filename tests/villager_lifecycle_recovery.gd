@@ -1,9 +1,6 @@
 extends SceneTree
 ## Regression: job reassignment, destroyed workplaces, depleted resources and night recall.
 
-const TREE_SCRIPT := preload("res://scripts/entities/resource_tree.gd")
-const ROCK_SCRIPT := preload("res://scripts/entities/rock.gd")
-
 
 func ticks(count: int) -> void:
     for _index in range(count):
@@ -32,7 +29,8 @@ func find_build_site(main: Node, origin: Vector2i, footprint: Vector2i) -> Vecto
                             break
                     if not clear:
                         break
-                if clear and not main.nav.path_adjacent(main.player.position, [anchor]).is_empty():
+                var target_cells: Array[Vector2i] = [anchor]
+                if clear and not main.nav.path_adjacent(main.player.position, target_cells).is_empty():
                     return anchor
     return Vector2i(-1, -1)
 
@@ -76,6 +74,8 @@ func spawn_resource_near(main: Node, script: Script, worker, reserved: Dictionar
 func _initialize() -> void:
     var world_config = root.get_node("WorldConfig")
     var game_clock = root.get_node("GameClock")
+    var events = root.get_node("Events")
+    var RockScript: Script = load("res://scripts/entities/rock.gd")
     assert(world_config.apply_profile("classic"), "Classic profile must be selectable")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
@@ -134,14 +134,15 @@ func _initialize() -> void:
         "Destroying a workplace must clear the worker's workplace reference")
     assert(worker.state == worker.State.IDLE,
         "A worker whose workplace is destroyed must leave its stale work state")
+    await ticks(2)
     worker._find_work()
     assert(worker.workplace != null and worker.workplace != claimed_quarry
             and worker.workplace.id == "quarry",
         "Worker must recover by claiming another valid Quarry")
 
     var reserved: Dictionary = {}
-    var depleted = spawn_resource_near(main, ROCK_SCRIPT, worker, reserved)
-    var alternate = spawn_resource_near(main, ROCK_SCRIPT, worker, reserved)
+    var depleted = spawn_resource_near(main, RockScript, worker, reserved)
+    var alternate = spawn_resource_near(main, RockScript, worker, reserved)
     assert(depleted != null and alternate != null,
         "Quarry must have two reachable resource targets inside its work radius")
     worker._find_work()
