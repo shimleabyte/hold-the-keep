@@ -14,6 +14,7 @@ const DIRS: Array[Vector2i] = [
 
 var world
 var target_pos := Vector2.ZERO
+var version := 0
 
 var _cost := PackedInt32Array()
 var _next := PackedInt32Array()
