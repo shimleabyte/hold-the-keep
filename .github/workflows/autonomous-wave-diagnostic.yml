@@ -72,8 +72,8 @@ jobs:
             echo "Diagnostic emitted a runtime or script error." >&2
             exit 1
           fi
-          grep -q '^AUTONOMOUS_WAVE_CASE {"profile":"classic"' build/diagnostics/autonomous-wave.txt
-          grep -q '^AUTONOMOUS_WAVE_CASE {"profile":"frontier"' build/diagnostics/autonomous-wave.txt
+          grep -q '^AUTONOMOUS_WAVE_CASE .*"profile":"classic"' build/diagnostics/autonomous-wave.txt
+          grep -q '^AUTONOMOUS_WAVE_CASE .*"profile":"frontier"' build/diagnostics/autonomous-wave.txt
           grep -q '^AUTONOMOUS_WAVE_REPORT .*"result":"passed"' build/diagnostics/autonomous-wave.txt
 
       - name: Upload autonomous wave report
