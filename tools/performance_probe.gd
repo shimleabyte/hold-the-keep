@@ -11,6 +11,10 @@ const WARMUP_FRAMES := 30
 const IDLE_SAMPLE_FRAMES := 120
 const WAVE_SAMPLE_FRAMES := 180
 const SYSTEM_REPEATS := 3
+# Keep this value aligned with GameClock.NIGHT_START. Avoid a static autoload
+# reference here: --script runs this SceneTree script outside the normal main
+# scene parse context, where static autoload symbol resolution can fail.
+const NIGHT_START := 0.6
 
 var _cases: Array[Dictionary] = []
 var _world_config
@@ -59,7 +63,7 @@ func _run() -> void:
 
         var idle_samples := await _capture_frames(IDLE_SAMPLE_FRAMES)
         clock.day = 6
-        clock.time_of_day = GameClock.NIGHT_START
+        clock.time_of_day = NIGHT_START
         clock.is_night = true
         main.spawner.start_wave(6)
         var wave_samples := await _capture_frames(WAVE_SAMPLE_FRAMES)
@@ -91,7 +95,7 @@ func _run() -> void:
         "system_timing_repeats": SYSTEM_REPEATS,
         "cases": _cases
     }
-    var output := JSON.stringify(report, "\t")
+    var output := JSON.stringify(report, "\\t")
     var file := FileAccess.open("user://performance_probe.json", FileAccess.WRITE)
     if file == null:
         push_error("Performance probe: could not write user://performance_probe.json")
