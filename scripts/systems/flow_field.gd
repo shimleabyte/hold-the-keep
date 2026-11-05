@@ -1,5 +1,7 @@
 extends Node
 ## Satu flow field untuk semua musuh: Dijkstra dari tile keep ke seluruh peta.
+
+signal rebuilt(version: int)
 ## Tembok/bangunan boleh "dilewati" dengan biaya tinggi (musuh akan menghancurkannya);
 ## pohon, batu, dan air tidak bisa dilewati.
 
@@ -59,6 +61,10 @@ func rebuild() -> void:
     # Keep the public refresh entry point non-blocking.
     _requested_revision += 1
     _dirty = true
+
+
+func is_current() -> bool:
+    return version > 0 and not _dirty and not _build_active
 
 
 func _begin_rebuild() -> void:
@@ -135,6 +141,7 @@ func _process_rebuild_budget() -> void:
     _build_next = PackedInt32Array()
     _build_active = false
     version += 1
+    rebuilt.emit(version)
 
 
 func is_reachable(cell: Vector2i) -> bool:
