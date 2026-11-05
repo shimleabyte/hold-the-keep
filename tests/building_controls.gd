@@ -34,6 +34,12 @@ func _initialize() -> void:
     build._unhandled_input(wheel_up)
     assert(build.active == String(available[0]), "Wheel up must select the previous unlocked building")
 
+    build._set_active(String(available[available.size() - 1]))
+    wheel_down.position = Vector2(240, 150)
+    build._unhandled_input(wheel_down)
+    assert(build.active == String(available[0]), "Wheel down from the last building must wrap to the first")
+
+    build._set_active(String(available[0]))
     wheel_up.position = hud._top_bar.position + Vector2(12, 4)
     build._unhandled_input(wheel_up)
     assert(build.active == String(available[0]), "Scrolling over unrelated HUD panels must not change the building")

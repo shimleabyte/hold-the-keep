@@ -679,9 +679,6 @@ func _current_help_rows() -> Array:
     var movement_horizontal := "%s  %s" % [
         Settings.binding_label("move_left"), Settings.binding_label("move_right")
     ]
-    var build_keys := PackedStringArray()
-    for slot_index in 10:
-        build_keys.append(Settings.binding_short_label("build_slot_%d" % (slot_index + 1)))
     var job_keys := PackedStringArray()
     for job in JOBS:
         job_keys.append(Settings.binding_short_label("job_" + job))
@@ -696,7 +693,7 @@ func _current_help_rows() -> Array:
         [Settings.binding_label("ability_rally"), "SERUAN (LEVEL 3)"],
         ["HOTBAR / SCROLL", "PILIH / GANTI BANGUNAN"],
         ["KLIK KIRI", "PASANG / TARIK GARIS"],
-        ["KLIK KANAN", "BATALKAN PILIHAN"],
+        ["KLIK KANAN", "BATAL / TANPA MODE: BONGKAR"],
         ["SHIFT + KANAN", "BONGKAR SAAT MODE BANGUN"],
         [" ".join(job_keys), "PILIH JOB"],
         ["SHIFT + JOB", "KURANGI KUOTA"],
