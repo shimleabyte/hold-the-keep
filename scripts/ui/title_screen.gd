@@ -122,30 +122,38 @@ func _build_screen() -> void:
     var modes := HFlowContainer.new()
     modes.name = "CampaignOptions"
     modes.alignment = FlowContainer.ALIGNMENT_CENTER
+    modes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     modes.add_theme_constant_override("h_separation", 12)
     modes.add_theme_constant_override("v_separation", 10)
     title_block.add_child(modes)
+
+    # Fit all three campaign choices on the default 640px logical viewport.
+    # Narrower screens still wrap naturally instead of clipping the option.
+    var available_mode_width := get_viewport().get_visible_rect().size.x - 68.0
+    var mode_card_width := clampf((available_mode_width - 36.0) / 3.0, 120.0, 220.0)
     modes.add_child(_mode_card(
         "01  /  CLASSIC",
         "THE LAST HOLD",
         "A compact 64 × 64 frontier. Build your keep, develop your village and survive a focused campaign.",
         "ENTER CLASSIC",
-        "classic"
+        "classic",
+        mode_card_width
     ))
     modes.add_child(_mode_card(
         "02  /  FRONTIER",
         "A WIDER WAR",
         "A 128 × 128 world of five regions. Expand outward, secure supply lines and conquer rival strongholds.",
         "ENTER FRONTIER",
-        "frontier"
+        "frontier",
+        mode_card_width
     ))
-
     modes.add_child(_mode_card(
-        "03  /  EXPEDITION",
+        "03  /  FRONTIER: EXPEDITION",
         "BEYOND THE FRONTIER",
         "A vast 192 × 192 world. Survey sealed crossings, uncover four outer marches and establish routes to rival strongholds.",
-        "ENTER EXPEDITION",
-        "frontier_expedition"
+        "FRONTIER: EXPEDITION",
+        "frontier_expedition",
+        mode_card_width
     ))
 
     var footer := HBoxContainer.new()
@@ -292,9 +300,17 @@ func _unhandled_input(event: InputEvent) -> void:
         get_viewport().set_input_as_handled()
 
 
-func _mode_card(kicker: String, heading: String, description: String, button_text: String, profile_id: String) -> PanelContainer:
+func _mode_card(
+    kicker: String,
+    heading: String,
+    description: String,
+    button_text: String,
+    profile_id: String,
+    card_width: float
+) -> PanelContainer:
     var card := PanelContainer.new()
-    card.custom_minimum_size = Vector2(220, 126)
+    card.name = "CampaignCard_" + profile_id
+    card.custom_minimum_size = Vector2(card_width, 136)
     var card_style := StyleBoxFlat.new()
     card_style.bg_color = PANEL
     card_style.border_color = EDGE
@@ -309,13 +325,15 @@ func _mode_card(kicker: String, heading: String, description: String, button_tex
     body.add_theme_constant_override("separation", 5)
     card.add_child(body)
     body.add_child(_label(kicker, 7, GOLD))
-    body.add_child(_label(heading, 15, TEXT))
-    var copy := _label(description, 8, MUTED)
+    body.add_child(_label(heading, 12, TEXT))
+    var copy := _label(description, 7, MUTED)
     copy.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     copy.size_flags_vertical = Control.SIZE_EXPAND_FILL
     body.add_child(copy)
 
     var enter := Button.new()
+    enter.name = "Select_" + profile_id
+    enter.set_meta("campaign_profile_id", profile_id)
     enter.text = button_text
     enter.custom_minimum_size = Vector2(0, 27)
     _style_button(enter, true)

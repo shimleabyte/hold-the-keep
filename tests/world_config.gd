@@ -71,6 +71,19 @@ func _initialize() -> void:
     var campaign_options = title_screen.find_child("CampaignOptions", true, false)
     assert(campaign_options is HFlowContainer,
         "Campaign choices must wrap instead of overflowing horizontally")
+    assert(campaign_options.get_child_count() == 3,
+        "The title screen must expose Classic, Frontier and Frontier: Expedition")
+    var expedition_card := campaign_options.get_node_or_null("CampaignCard_frontier_expedition")
+    assert(expedition_card is PanelContainer,
+        "Frontier: Expedition must have its own campaign card")
+    var expedition_button := expedition_card.get_node_or_null("Select_frontier_expedition")
+    assert(expedition_button is Button
+        and expedition_button.text == "FRONTIER: EXPEDITION"
+        and String(expedition_button.get_meta("campaign_profile_id", "")) == "frontier_expedition",
+        "The Frontier: Expedition button must select the 192x192 Expedition profile")
+    var campaign_scroll_rect: Rect2 = title_scroll.get_global_rect()
+    assert(campaign_scroll_rect.encloses(expedition_button.get_global_rect()),
+        "Frontier: Expedition must be visible without scrolling on the default title viewport")
     assert(title_screen.get_node_or_null("SettingsPanel") != null,
         "The title screen must provide an in-menu settings panel")
     main._start_campaign("classic")
