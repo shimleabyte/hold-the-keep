@@ -69,6 +69,21 @@ func _initialize() -> void:
         "Builder construction must emit a work impact when its interval completes")
     assert(builder._work_t < 1.6,
         "Builder construction animation progress must wrap into the next work cycle")
+
+    builder._work_t = 0.0
+    var forge := Node2D.new()
+    builder.workplace = forge
+    var spark_count := [0]
+    var spark_callback := func(kind: String, _at: Vector2, _dir: Vector2, _amount: float) -> void:
+        if kind == "spark":
+            spark_count[0] += 1
+    Events.fx_burst.connect(spark_callback)
+    assert(not builder.blacksmith_behavior_advance_work(1.5), "Forging must continue before its completion interval")
+    assert(not builder.blacksmith_behavior_advance_work(1.5), "Forging must continue through its second hammer strike")
+    assert(builder.blacksmith_behavior_advance_work(1.5), "Forging must complete after its third hammer strike")
+    Events.fx_burst.disconnect(spark_callback)
+    assert(spark_count[0] == 3, "Blacksmith must emit one spark burst for each hammer impact")
+    forge.free()
     builder.free()
 
     var player = Player.new()
