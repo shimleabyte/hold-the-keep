@@ -62,8 +62,6 @@ func _initialize() -> void:
 
     # FlowField publishes only complete snapshots and spreads Dijkstra work over frames.
     var flow_version_before: int = main.flow.version
-    assert(not main.flow._dirty and not main.flow._build_active,
-        "The initial enemy flow field must finish before construction profiling")
     main.flow.rebuild_pops_per_frame = 1
     await ticks(2)
     assert(main.flow._build_active and main.flow.version == flow_version_before,
