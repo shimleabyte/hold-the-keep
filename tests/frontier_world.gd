@@ -331,6 +331,19 @@ func _initialize() -> void:
         assert(bool(landmark_regions[region]),
             "Landmark placement must be recorded for " + String(region))
 
+    var animated_landmarks: Dictionary = {}
+    for landmark in get_tree().get_nodes_in_group("frontier_landmarks"):
+        var kind := String(landmark.prop_kind)
+        var should_animate: bool = kind == "fen_reeds" or kind == "hearth_shrine"
+        assert(landmark.is_processing() == should_animate,
+            "Only the Fenlands reed and Hearthland shrine landmarks may run ambient animation")
+        if should_animate:
+            animated_landmarks[kind] = true
+    assert(animated_landmarks.size() == 2
+        and animated_landmarks.has("fen_reeds")
+        and animated_landmarks.has("hearth_shrine"),
+        "Exactly two of the five Frontier landmarks should use the low-frequency ambient animator")
+
     # The entire initial Keep footprint must be inside the generated home clearing.
     var keep_cell: Vector2i = world.starting_keep_cell()
     for y in 3:
