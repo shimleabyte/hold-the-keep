@@ -1168,7 +1168,14 @@ func blacksmith_behavior_assigned_recipe() -> String:
 
 
 func blacksmith_behavior_advance_work(delta: float) -> bool:
+    var previous_work_t := _work_t
     _work_t += delta
+    var strike_interval := SMITH_WORK_SECONDS / 3.0
+    var previous_strikes := floori(previous_work_t / strike_interval)
+    var current_strikes := floori(_work_t / strike_interval)
+    if workplace != null and is_instance_valid(workplace):
+        for strike in range(previous_strikes, current_strikes):
+            Events.fx_burst.emit("spark", workplace.global_position + Vector2(0, -7), Vector2.UP, 0.65)
     return _work_t >= SMITH_WORK_SECONDS
 
 
