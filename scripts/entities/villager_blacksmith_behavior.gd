@@ -29,7 +29,6 @@ func tick(delta: float) -> void:
 
     var equipped: bool = _villager.target.equip_weapon() if recipe == "weapon" else _villager.target.equip_armor()
     if equipped:
-        Events.fx_burst.emit("spark", _villager.workplace.global_position + Vector2(0, -7), Vector2.UP, 0.9)
         Events.build_feedback.emit("Senjata besi selesai: damage prajurit +20%" if recipe == "weapon"
             else "Zirah besi selesai: HP maksimum prajurit +20%")
     _villager.blacksmith_behavior_release(0.2)
