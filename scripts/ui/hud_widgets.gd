@@ -24,6 +24,8 @@ class ClockWidget extends Control:
     var font: Font
     var sun: Texture2D
     var moon: Texture2D
+    var _last_countdown_seconds := -1
+    var _last_night_icon := false
 
     func countdown_text() -> String:
         var seconds: int = GameClock.seconds_until_phase_change()
@@ -34,6 +36,12 @@ class ClockWidget extends Control:
         return ("Fajar dalam " if night_now else "Malam dimulai dalam ") + countdown_text()
 
     func _process(_delta: float) -> void:
+        var seconds := GameClock.seconds_until_phase_change()
+        var night_icon := GameClock.darkness() > 0.5
+        if seconds == _last_countdown_seconds and night_icon == _last_night_icon:
+            return
+        _last_countdown_seconds = seconds
+        _last_night_icon = night_icon
         tooltip_text = countdown_tooltip()
         queue_redraw()
 
