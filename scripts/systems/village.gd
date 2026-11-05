@@ -27,7 +27,8 @@ var quota := {"woodcutter": 1, "miner": 0, "farmer": 0, "builder": 0, "hunter": 
 var job_priority: Array[String] = ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "healer", "blacksmith", "soldier"]
 
 var _spawn_t := 0.0
-var _assign_t := 0.0
+var _assignment_dirty := true
+var _assignment_pass_count := 0
 
 
 func _ready() -> void:
@@ -38,6 +39,7 @@ func _ready() -> void:
     Events.building_placed.connect(_on_workplace_changed)
     Events.building_removed.connect(_on_workplace_changed)
     Events.building_destroyed.connect(_on_building_destroyed)
+    Events.villager_died.connect(_on_villager_died)
     Events.campaign_objective_completed.connect(_on_campaign_objective_completed)
 
 
@@ -72,6 +74,7 @@ func spawn_villager(pos: Vector2) -> Node:
     v.world = world
     v.position = pos
     world.entities.add_child(v)
+    _request_job_assignment()
     return v
 
 
@@ -142,13 +145,17 @@ func _process(delta: float) -> void:
     if _spawn_t >= SPAWN_INTERVAL:
         _spawn_t = 0.0
         try_spawn()
-    _assign_t += delta
-    if _assign_t >= 1.0:
-        _assign_t = 0.0
+    if _assignment_dirty:
         assign_jobs()
 
 
+func _request_job_assignment() -> void:
+    _assignment_dirty = true
+
+
 func assign_jobs() -> void:
+    _assignment_dirty = false
+    _assignment_pass_count += 1
     var vs := villagers()
     var job_counts: Dictionary = {}
     for job_name in JOBS:
@@ -218,11 +225,17 @@ func adjust_job_priority(job_name: String, delta: int) -> void:
 
 
 func _on_workplace_changed(_id: String, _cell: Vector2i) -> void:
-    assign_jobs()
+    # Construction completion emits removal + placement in one call stack.
+    # Defer assignment so both notifications collapse into one pass.
+    _request_job_assignment()
 
 
 func _on_building_destroyed(_id: String, _cell: Vector2i) -> void:
-    assign_jobs()
+    _request_job_assignment()
+
+
+func _on_villager_died() -> void:
+    _request_job_assignment()
 
 
 func _emit(assigned_counts: Dictionary = {}) -> void:
@@ -412,4 +425,5 @@ func remove_one() -> bool:
     if leaver == null:
         leaver = vs[0]
     leaver.leave()
+    _request_job_assignment()
     return true
