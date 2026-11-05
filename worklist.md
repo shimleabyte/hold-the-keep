@@ -1,6 +1,6 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `ef9dd51281551ff98013505614eb99d0f1d61004` (2026-11-05)  
+**Audit baseline:** `main` at `89d8c7bc6da9e41d20d4c48aed1f950e5e9425e8` (2026-11-05)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
@@ -9,10 +9,11 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ## Live execution status — 2026-11-05 (Actions paused; HUD slice in progress)
 
-**Current main:** `ef9dd51281551ff98013505614eb99d0f1d61004` — one documentation-only commit after `a10a039c64fa2d69ef0712bc7ba68d3d8c67b028`; the gameplay source base is unchanged from PR #136's last rebase. It includes the Priority 1 architecture, deterministic Frontier render harness, PR #129's dedicated Builder/Archer/Brute sprite identities, and PR #138's rendered same-seed QA workflow. Save schema remains v17.  
+**Current main:** `89d8c7bc6da9e41d20d4c48aed1f950e5e9425e8` (2026-11-05). It includes the current worker-role architecture, PR #129's dedicated Builder/Archer/Brute sprite identities, PR #138's rendered same-seed QA workflow, and the merged player harvest-release / profession work-cycle fixes from PR #140 and #141. Save schema remains v17.  
 **Current save schema:** v17.  
 **Open pull requests:** #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls. PR #127's text-first HUD implementation is closed as superseded by the icon-first replacement branch. PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.  
 **Active code branch:** `feat/icon-first-night-wave-awareness`, based on the current `main`. It contains the next-phase countdown and active-plus-queued enemy pressure indicator, with focused campaign/responsive assertions. The implementation keeps the HUD icon-first and excludes unrelated night-shelter job badges from old PR #127. No PR or workflow has been created for this branch; Godot validation has not been run.
+**Active animation/performance branch:** `feat/low-cost-profession-sprite-art-mainline`, based on the current `main`. It bakes profession contact accents into the existing 22-frame × 3-direction worker sheets, aligns Builder/Blacksmith contact timing with frame 16, and removes repeated AI-worker hit particles/tweens while keeping player hit feedback. It is not a PR yet; Godot and rendered validation remain pending because Actions minutes are exhausted.
 
 | Workstream | Current disposition |
 |---|---|
@@ -34,6 +35,9 @@ This is an execution worklist, not a claim that every item is already implemente
 | Android ARMv7 / touch controls | PR #136 ports the Android ARMv7-only debug export, safe-area-aware virtual controls and multi-touch regression onto current main while retaining role-sprite CI checks. CI validation is deferred because the repository owner has exhausted the available GitHub Actions minutes. Godot parse, APK export, ABI verification and physical-device behavior are **not validated**. PR #128 is closed as superseded. |
 
 ### Recent integrations
+
+- **#141 — Profession work-cycle animations:** merged at `c071637`. Adds per-role work-cycle timing for Builder, Woodcutter, Miner, Blacksmith and Farmer.
+- **#140 — Harvest input release / Builder work cycle:** merged at `7165bef`. Clears the player's pending harvesting animation on Interact release and advances Builder construction work cycles.
 
 - **#138 — DEV-H rendered Frontier QA workflow:** merged at `6f1886c`. Adds a Godot 4.7 + Xvfb/Mesa same-seed render workflow only. The same workflow passed on the original PR #133 head with a real runner. Current-main verification is deferred until GitHub Actions minutes are available.
 - **#129 — DEV-M visual identity:** merged at `9e3d626`. Dedicated Builder, Archer and Brute sprite sheets, reproducible generator output, role identity tests and Brute visual scaling. Godot 4.7 regression 54/54, Campaign Simulation QA and Role Sprite Visual QA passed on the PR head before merge.
