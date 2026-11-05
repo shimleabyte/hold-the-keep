@@ -11,7 +11,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 **Current main:** `5cc1b391dbb3eaebcd09bb7eda80f5552be48e37` — includes the Priority 1 architecture, deterministic Frontier render harness, PR #129's dedicated Builder/Archer/Brute sprite identities, and PR #138's rendered same-seed QA workflow. PR #129 passed Godot 4.7 regression (54/54), Campaign Simulation QA and Role Sprite Visual QA on its tested head. PR #138 is workflow-only; its original PR #133 head passed the render job, but the new-base runs failed before runner allocation. Save schema remains v17.  
 **Current save schema:** v17.  
-**Open pull requests:** #127 HUD countdowns (old base; rebase/review required); #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls on current main. PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.
+**Open pull requests:** #140 player harvest-release / Builder work-cycle fix (targets `main`); #141 profession work-cycle animation (stacked on #140); #127 HUD countdowns (old base; rebase/review required); #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls on current main. PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.
 
 | Workstream | Current disposition |
 |---|---|
@@ -60,6 +60,19 @@ The repository owner has confirmed that the GitHub Actions minute budget is exha
 - Do not claim a feature complete solely because headless tests pass. Record rendered/manual QA separately.
 
 This snapshot records the live repository state after PR #129 and #138 merged and PR #136 was rebased onto the `a10a039` mainline. GitHub Actions validation is deferred until the minute budget is available. Re-check PR heads, workflow runs and `main` before each merge or assignment; repository state can change after this commit.
+
+### Worker animation and performance follow-up — 2026-11-05
+
+**Active branch:** `feat/low-cost-profession-sprite-art`, stacked on PR #141, which is stacked on PR #140. This branch is deliberately kept separate so the art/performance pass can be reviewed independently.
+
+- Preserve the shared `SpriteAnim` controller and the existing 22-frame × 3-direction sheets. Every worker sheet remains 440×60 pixels; no new runtime texture or per-worker animation node is introduced.
+- Bake small profession-specific motion/contact accents into existing work cells for woodcutter, miner, Builder, Blacksmith and Farmer. The asset generator and reproducibility check cover the five sheets.
+- Align the visible contact frame with work impact timing. Builder construction and repair timers now advance continuously and resolve at the midpoint of each cycle; Blacksmith forging cycles use the same contact-frame convention.
+- Skip per-hit particle bursts and tweens for autonomous worker harvesting/resource hits. Player harvesting retains its existing feedback. Worker contact accents are baked into the sprite sheets.
+- Godot 4.7 parse/regression, sprite reproducibility execution, rendered gameplay review and Android ARMv7 performance profiling are **not validated**. Do not open a PR or trigger Actions until the exhausted GitHub Actions minute budget is available; the repository workflow runs on pull requests targeting `feat/**` as well as `main`.
+
+**Acceptance sequence:** run `python3 -m py_compile tools/gen_assets.py`, `python3 tools/check_role_sprite_reproducibility.py`, project import/parse and `animation_motion` under Godot 4.7; then capture rendered Builder/woodcutter/miner/Blacksmith/Farmer cycles and profile Classic/Frontier populations at 10, 25, 50 and 100 villagers on desktop and the 32-bit Android target.
+
 ---
 
 ## 0. Ground rules and current baseline
