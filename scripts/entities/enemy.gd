@@ -3,6 +3,7 @@ extends Node2D
 ## Normal raiders follow the flow field; garrison units defend their stronghold radius.
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
+const EnemyVisualScale := preload("res://scripts/entities/enemy_visual_scale.gd")
 const FactionVisual := preload("res://scripts/entities/enemy_faction_visual.gd")
 const CombatVisualFeedback := preload("res://scripts/entities/combat_visual_feedback.gd")
 const ENEMY_TARGETING := preload("res://scripts/systems/enemy_targeting.gd")
@@ -31,10 +32,6 @@ const BEAST_TARGET_SCAN_LIMIT := 24
 const BEAST_TARGET_ISOLATION_RADIUS := 76.0
 const WALK_BASE_SPEED := 32.0
 const RUN_BASE_SPEED := 58.0
-
-
-static func visual_scale_for(data: Dictionary) -> Vector2:
-    return Vector2.ONE * float(data.get("scale", 1.0))
 
 
 var id := ""
@@ -131,7 +128,7 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     attack_interval = float(data["attack_interval"])
     color = Color(data["color"])
     scale_f = float(data.get("scale", 1.0))
-    scale = visual_scale_for(data)
+    scale = EnemyVisualScale.from_data(data)
     is_boss = bool(data.get("boss", false))
     runs = bool(data.get("run", false))
     role = String(data.get("role", "pouncer" if id == "wolf" else "melee"))
