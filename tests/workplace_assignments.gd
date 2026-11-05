@@ -41,6 +41,12 @@ func _initialize() -> void:
     await ticks(8)
     clock.set_process(false)
     main.village.set_process(false)
+
+    var complete_quota: Dictionary = main.village.quota.duplicate(true)
+    main.village.quota = {"woodcutter": 0}
+    main.village.assign_jobs()
+    main.village.quota = complete_quota
+    main.village.assign_jobs()
     main.village.quota["builder"] = 0
 
     var keep = null
