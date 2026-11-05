@@ -19,8 +19,11 @@ func setup(kind: String, variation: int, landmark: bool = false) -> void:
 
 
 ## Entries share a world row so their draw calls can be submitted by one CanvasItem.
-func setup_batch(entries: Array[Dictionary], landmark: bool) -> void:
-    _batch_entries = entries.duplicate(true)
+func setup_batch(entries: Array, landmark: bool) -> void:
+    _batch_entries.clear()
+    for entry in entries:
+        if entry is Dictionary:
+            _batch_entries.append(entry.duplicate(true))
     is_landmark = landmark
     z_index = 1 if landmark else 0
     add_to_group("frontier_decorations")
@@ -33,7 +36,8 @@ func setup_batch(entries: Array[Dictionary], landmark: bool) -> void:
 func _draw() -> void:
     if not _batch_entries.is_empty():
         for entry in _batch_entries:
-            draw_set_transform(entry.get("offset", Vector2.ZERO), 0.0, Vector2.ONE)
+            var offset: Vector2 = entry.get("offset", Vector2.ZERO)
+            draw_set_transform(offset, 0.0, Vector2.ONE)
             _draw_prop(String(entry.get("kind", "")), int(entry.get("variant", 0)))
         draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
         return
