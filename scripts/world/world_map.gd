@@ -290,6 +290,8 @@ func _spawn_frontier_decoration_batches() -> void:
         row_batches[batch_index] = batch_entries
 
     for batch_index in row_batches.size():
+        if row_batches[batch_index] == null:
+            continue
         var batch_entries: Array = row_batches[batch_index]
         if batch_entries.is_empty():
             continue
