@@ -2,7 +2,6 @@ extends Node2D
 ## Permanent exploration fog rendered as independently invalidated chunks.
 
 const CHUNK_CELLS := 16
-const UNEXPLORED_COLOR := Color(0.012, 0.016, 0.024, 0.96)
 
 
 class FogChunk extends Node2D:
