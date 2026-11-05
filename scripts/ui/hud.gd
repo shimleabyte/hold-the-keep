@@ -306,8 +306,8 @@ func _build_top_bar() -> void:
     _clock_widget.font = _font
     _clock_widget.sun = ICONS["sun"]
     _clock_widget.moon = ICONS["moon"]
-    _clock_widget.position = Vector2(151, 2)
-    _clock_widget.size = Vector2(142, 11)
+    _clock_widget.position = Vector2(151, 0)
+    _clock_widget.size = Vector2(142, 18)
     _clock_widget.tooltip_text = "Hari dan siklus siang / malam"
     bar.add_child(_clock_widget)
 
@@ -883,9 +883,13 @@ func _process(delta: float) -> void:
             _map_panel.configure(main_node.world, main_node.fog, main_node.territory, _font)
 
     var foes := get_tree().get_nodes_in_group("enemies")
-    _foes.text = str(foes.size())
-    _foes.visible = foes.size() > 0
-    _foes_icon.visible = foes.size() > 0
+    var queued_spawns: int = main_node.spawner.remaining_wave_spawns() if main_node != null else 0
+    _foes.text = "%d+%d" % [foes.size(), queued_spawns] if queued_spawns > 0 else str(foes.size())
+    var hostile_pressure: int = foes.size() + queued_spawns
+    _foes.tooltip_text = "%d musuh aktif · %d tersisa dalam gelombang" % [foes.size(), queued_spawns]
+    _foes_icon.tooltip_text = _foes.tooltip_text
+    _foes.visible = hostile_pressure > 0
+    _foes_icon.visible = hostile_pressure > 0
     var boss = null
     for e in foes:
         if e.is_boss:
