@@ -145,13 +145,13 @@ func _run_profile(profile_id: String) -> void:
     assert(int(rock.export_state().get("hp", 0)) == rock_hp_before - 1,
         profile_id + " extracted resource behavior must apply exactly one synchronized rock hit")
 
-    # The first frontier outpost can be placed at the edge of Keep territory.
-    # Keep builders must be dispatched to that blueprint without extending
-    # their ordinary building-repair radius.
+    # Builders must be dispatched by actual path reachability, not a circular
+    # workplace radius. Keep's Frontier claim edge is 15 tiles (+2 tolerance),
+    # so this fixture deliberately places the blueprint beyond that limit.
     var builder = main.village.spawn_villager(worker_origin + Vector2(-5.0, 0.0))
     assert(builder.set_job("builder"), "Builder must claim a Keep workplace in " + profile_id)
-    var site_cell := _find_reachable_cell(main, builder.position, keep.position, 14.5, 16.5, reserved)
-    assert(site_cell.x >= 0, profile_id + " must expose a reachable initial-claim edge cell")
+    var site_cell := _find_reachable_cell(main, builder.position, keep.position, 18.5, 20.5, reserved)
+    assert(site_cell.x >= 0, profile_id + " must expose a reachable construction task beyond the Keep claim radius")
     var site = main.build.create_construction_site("wall", site_cell, keep.cell)
     main.nav.rebuild()
     assert(keep.position.distance_to(site.position) > 14.0 * WorldConfig.tile_size,
