@@ -11,7 +11,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 **Current main:** `ef9dd51281551ff98013505614eb99d0f1d61004` — one documentation-only commit after `a10a039c64fa2d69ef0712bc7ba68d3d8c67b028`; the gameplay source base is unchanged from PR #136's last rebase. It includes the Priority 1 architecture, deterministic Frontier render harness, PR #129's dedicated Builder/Archer/Brute sprite identities, and PR #138's rendered same-seed QA workflow. Save schema remains v17.  
 **Current save schema:** v17.  
-**Open pull requests:** #127 HUD countdowns (stale predecessor branch; not mergeable against current main); #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls. PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.  
+**Open pull requests:** #127 HUD countdowns (older implementation; GitHub currently reports mergeable, but the clean icon-first replacement branch is preferred for UX); #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls. PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.  
 **Active code branch:** `feat/icon-first-night-wave-awareness`, based on the current `main`. It contains the next-phase countdown and active-plus-queued enemy pressure indicator, with focused campaign/responsive assertions. The implementation keeps the HUD icon-first and excludes unrelated night-shelter job badges from old PR #127. No PR or workflow has been created for this branch; Godot validation has not been run.
 
 | Workstream | Current disposition |
