@@ -1,55 +1,58 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `3e81da46b8d48f8e6e444607b6745b85a14b0d99` (2026-11-05)  
+**Audit baseline:** `main` at `a89243823aed598d1c0c78db06766d7b4ee4e35b` (2026-11-05)  
 **Engine target:** Godot 4.7 only  
-**Release target:** Desktop-first — Windows x86_64 and Linux x86_64. Android is deferred.  
+**Release target:** Desktop-first — Windows x86_64 and Linux x86_64. Android remains deferred.  
 **Current save schema:** v17.
 
-## Live execution status — 2026-11-05 (desktop P0–P2 hardening)
+## Live execution status — 2026-11-05 (P0–P2 desktop pass)
 
-**Current main:** `3e81da46b8d48f8e6e444607b6745b85a14b0d99`. PR #148 and PR #146 are merged. Main has the manual worker-animation redraw correction, time-sliced enemy FlowField rebuilds, complete-snapshot publication, coalesced Village job reassignment, incremental navigation-footprint updates and the existing v17 save system.
+**Current main:** `a89243823aed598d1c0c78db06766d7b4ee4e35b`. The software-side P0–P2 implementation is merged. Current-main changes include time-sliced enemy FlowField rebuilds, complete-snapshot publication, coalesced worker reassignment, worker animation redraw fixes, low-cost baked profession feedback, Builder reachability recovery, multi-cell navigation fallback, desktop resolution coverage, Godot 4.7 export guards, save-file recovery regression coverage, worker lifecycle regression coverage, and partial-quota HUD guards. Save schema remains v17.
 
-### Player-reported P0 findings
+### P0 — gameplay blockers
 
-| Priority | Symptom | Current disposition | Remaining acceptance |
+| Symptom | Merged implementation | Evidence | Remaining acceptance |
 |---|---|---|---|
-| P0 | Building placement/completion can hitch or freeze gameplay | **Source fix merged via PR #146.** Dijkstra is time-sliced (2,048 heap pops/frame default); new fields publish only when complete/current; worker reassignment is coalesced. The construction-transition and Frontier performance diagnostics passed on the tested PR head. | Capture windowed frame-time data on the actual desktop target during placement, completion, demolition and destruction in Classic, Frontier and Expedition. CI-host measurements are not target-PC proof. |
-| P0 | Workers can remain visually stuck on one manually driven work pose | **Source fix merged via PR #148.** SpriteAnim tracks the previous rendered state and requests redraw when the manual work frame/offset/facing changes. Animation-motion CI passed on the tested PR head. | Inspect full profession cycles in a windowed run, including all three directions and work-to-walk/combat transitions. |
-| P0 | Builder does not take distant blueprints with valid routes | **Reachability fix merged via PR #155.** Construction candidates are no longer rejected solely by the workplace's circular radius; bounded A* reachability decides whether they can be reached. | Retest distant reachable and genuinely unreachable blueprints during a real Frontier/Expedition session. Check that no Builder remains stuck on an obsolete target. |
+| Building placement/completion causes a frame hitch | **PR #146:** FlowField Dijkstra is time-sliced (2,048 heap pops/frame default); incomplete paths are not published; Village reassignment is coalesced across construction transitions. | Construction-transition diagnostic and Frontier performance diagnostic passed on the tested PR head. PR #162 and #163 add no production FlowField changes. | Capture frame-time p50/p95/p99 and worst frame on the actual desktop target during place, completion, demolition, destruction and active night waves. CI runner timing is not target-PC proof. |
+| Workers remain visually stuck while doing manual work animation | **PR #148:** SpriteAnim compares the last rendered clip/frame/offset/facing and requests redraw when the manual work frame changes. **PR #158:** adds baked per-profession contact marks without extra runtime textures or draw calls. | Godot 4.7 animation regression and role-sprite visual QA passed on the tested PR head. | Inspect full Woodcutter, Miner, Farmer, Builder and Blacksmith cycles in all three directions in a windowed desktop run. |
+| Builder ignores distant blueprints despite a valid route | **PR #155:** removes the arbitrary workplace-radius rejection for construction-site targets; bounded A* reachability determines whether a blueprint can be reached. | Builder Reachability QA passed on the current-main worker-feedback PR head. Lifecycle regression also passes workplace-loss/recovery behavior. | Retest distant reachable and genuinely unreachable blueprints in Frontier and Expedition during a live session. |
 
-### Remaining P1 engineering work
+### P1 — correctness and reliability
 
-| Area | Current action | Acceptance |
-|---|---|---|
-| Multi-cell navigation | Branch `qa/desktop-release-readiness` adds full-perimeter A* candidate testing and a regression fixture in `tests/construction_sites.gd`. | Run focused construction regression and the full Godot 4.7 matrix; verify one farther connected perimeter cell is found when the nearest four are isolated. |
-| Worker lifecycle | Open PR #151 adds lifecycle recovery assertions but is still draft/unvalidated. | Rebase onto current main, run Godot 4.7 tests, then merge only if recovery/claim-release behavior passes. |
-| Profession contact animations | Open PR #153 adds low-cost baked contact details and removes repeated AI-worker particle/tween bursts. It was green on its tested old head but is not mergeable against current main yet. | Rebase carefully after #148; inspect diff conflicts, run full CI and rendered profession-cycle review. Do not merge on historical CI alone. |
-| Full autonomous night | PR #135 contains a real-runtime night-wave diagnostic but lacks a confirmed successful run. | Obtain Classic and Frontier diagnostic artifacts. A deterministic bot result is diagnostic, not human balance approval. |
-| Session UX | System-level tests do not prove that workers, combat, logistics or player feedback remain understandable in a continuous session. | Complete a 10-minute Classic and Frontier playthrough; record save, profile, location, actor, expected behavior and observed behavior for each defect. |
+| Area | Merged change | Evidence | Remaining acceptance |
+|---|---|---|---|
+| Multi-cell target approach selection | **PR #157:** `NavGrid.path_adjacent()` tests the full sorted walkable perimeter rather than only the nearest four cells; tie-breaking is deterministic. Regression fixture blocks the nearest four and leaves a farther route open. | PR #157 Godot CI passed 55/55. Its corrected `frontier_world` suite waits for the asynchronous FlowField snapshot before measuring road invalidation. | Validate real multi-cell workplace access in a long Frontier/Expedition playthrough. |
+| Autonomous worker lifecycle recovery | **PR #159:** regression for job reassignment, destroyed workplace recovery, depleted resource replacement, night recall and valid v17 save state. | Godot 4.7 CI passed 56/56, including `villager_lifecycle_recovery`. | Keep this suite in the blocking regression matrix; verify no long-session stalls in a manual playthrough. |
+| Profession contact feedback and low-cost AI effects | **PR #158:** baked work contact accents for five professions; AI resource-hit particles/tweens and repeated Builder/Blacksmith/Farmer bursts removed; direct player harvesting retains immediate hit feedback. | Godot CI passed 55/55; Campaign Simulation, Rendered World, Role Sprite Visual and Builder Reachability QA passed on the tested head. | Review profession-cycle readability and contact timing in the actual desktop renderer. |
+| Save-file replacement and rollback | **PR #162:** test-only contract coverage for valid primary replacement, backup promotion, corrupt-primary recovery, unsupported schema rejection, failed temp writes and preservation of durable copies. JSON-decoded snapshots are checked by persisted invariants rather than in-memory container equality. | Godot 4.7 CI passed 57/57, including `save_file_store_recovery`. No production storage behavior or schema changed. | Keep this suite in the blocking regression matrix; destructive failure modes are simulated by the test, not by power-cut testing on a physical disk. |
+| Partial job-quota HUD state | **PR #163:** HUD job rows default absent assigned/quota keys to zero; `workplace_assignments` exercises partial quota reassignment. | Focused `workplace_assignments` passed. PR matrix completed 55/56 successful jobs with no failures; the final `frontier_stress` job remained stuck in checkout and never reached Godot. The post-merge mainline Godot run is the final integration check. | Confirm the post-merge mainline CI result and retain the partial-quota regression. |
+| Autonomous night-wave simulation | **PR #135:** full-runtime Classic/Frontier night-wave diagnostic is integrated. | Autonomous Wave Diagnostic run #42047709997 passed; Campaign Simulation QA passed on the tested current-mainline heads. | A deterministic simulation does not establish campaign balance. Complete a human Classic and Frontier session. |
 
-### Desktop P2 release readiness
+### P2 — desktop release readiness
 
-| Area | Current action | Acceptance |
-|---|---|---|
-| Resolution coverage | Desktop QA branch extends responsive layout coverage to 2560×1440 (1280×720 logical viewport at 2× scale). | Godot 4.7 `responsive_layout` passes at 960×540 through 2560×1440. Windowed/fullscreen still needs manual review. |
-| Release scripts | `tools/build.sh` and `tools/build.ps1` now require Godot 4.7 and matching export templates. | Execute real Windows and Linux exports and verify both artifacts launch on clean desktop environments. Export templates are not installed or tested by the development CI yet. |
-| Documentation | README now contains desktop export commands, artifact paths and desktop QA targets. | Confirm commands on the target OS and ensure README controls/build steps match the shipped build. |
-| Visual/audio | Existing rendered-world and role-sprite workflows provide technical captures; automated checks cannot judge readability, art quality or mix. | Windowed inspection at 1280×720, 1920×1080 and 2560×1440; listen to menu, day/night ambience, combat and warning cues. |
-| Release acceptance | No release package is claimed yet. | Validate keyboard/mouse, gamepad, save/load, windowed/fullscreen, a sustained gameplay session and clean-machine startup. |
+| Area | Merged implementation | Evidence | Remaining acceptance |
+|---|---|---|---|
+| Resolution coverage | **PR #157:** responsive layout regression includes 960×540 through 2560×1440, including a 1280×720 logical viewport at 2× scale. | Godot 4.7 `responsive_layout` passed in the PR #157 55/55 matrix. | Windowed/fullscreen visual inspection at 1280×720, 1920×1080 and 2560×1440 on a real desktop. |
+| Desktop export scripts | **PR #157:** `tools/build.sh` and `tools/build.ps1` require Godot 4.7, run Windows/Linux release exports and check that both output files are non-empty. | Static review and Godot CI; export templates are not installed in the development runner. | Install matching Godot 4.7 export templates and run both scripts on real Windows/Linux environments. Verify the binaries launch on clean machines. No release artifact is claimed yet. |
+| Desktop documentation | **PR #157:** README documents required templates, commands, artifact paths and QA targets. | README is merged on main. | Confirm the commands and actual artifact names against the target machines after exports run. |
+| Input, save/load, audio and sustained play | Existing system suites cover input rebinding, player combat, save/migration, audio identity and campaign systems. | These are represented in the 56/57-job Godot matrices. | Manual keyboard/mouse and gamepad review, windowed/fullscreen transition, save/load, audio listening, and 10-minute Classic plus Frontier playthrough. |
+| Android | Deferred by the desktop-first scope. | No ARMv7 physical-device acceptance is claimed. | Do not treat Android as part of this desktop pass. |
 
 ### Performance measurement policy
 
-Run `godot --path . --script res://tools/performance_probe.gd` in a **windowed** session at a fixed resolution. It reports world creation, navigation/FlowField/territory/job-assignment/fog timings, node/resource/physics counts and idle versus active-wave frame samples. Compare results on the same PC/settings before and after changes. The asynchronous FlowField probe also records construction-transition call time, settle frames and the largest observed frame wall-time.
+Run `godot --path . --script res://tools/performance_probe.gd` in a **windowed** session at a fixed resolution on the target PC. The probe records world creation, navigation/FlowField/territory/job-assignment/fog timings, scene/resource/physics counts, and idle versus active-wave frame samples. Compare before/after on the same PC/settings.
 
-Use 16.67 ms as the 60 FPS frame budget. Report p50/p95/p99 and worst-frame spikes separately; do not use an average alone to hide construction stalls. Do not claim target desktop acceptance from GitHub runner timings.
+Use 16.67 ms as the 60 FPS frame budget. Report p50/p95/p99 and worst-frame spikes separately; averages alone can hide construction hitches. The CI performance diagnostics are useful regression signals, but headless/GitHub runner values do not certify target desktop performance.
 
-### Current CI state
+### Current integration state
 
-- PR #146's corrected Godot 4.7 run passed import/parse, construction-transition diagnostics, Frontier performance diagnostics and its listed regression jobs. Its run-level conclusion was failure because `frontier_world` failed; this is being investigated, not silently disregarded.
-- After PR #146 merged, current-main workflow run #42045620051 was still running at the last status check; confirm the `frontier_world` result before calling the merged mainline fully green.
-- PR #148's tested head passed Godot CI and Campaign Simulation QA before merge.
-- Rendered World QA, Campaign Simulation QA and Role Sprite Visual QA passed on the PR #146 tested head.
-- Do not describe any unrun desktop hardware, real windowed, sound-listening, clean-machine export or human campaign acceptance as complete.
+- Main baseline before the partial-quota merge, `849cdec891108683d4ed6f08f7977500ea9bc213`, passed the full Godot 4.7 matrix 56/56 (run #42052385169).
+- PR #162 passed 57/57 Godot 4.7 jobs on current main, including the save-file recovery test.
+- PR #159 passed 56/56 Godot 4.7 jobs, including worker lifecycle recovery.
+- PR #158 passed 55/55 Godot 4.7 jobs plus Campaign Simulation, Rendered World, Role Sprite Visual and Builder Reachability QA.
+- PR #163's HUD partial-quota regression passed; its matrix had 55 successful jobs and one `frontier_stress` job stalled during checkout. It reported no test failures. The post-merge mainline run is the final integration check.
+- PRs #148, #146, #155, #157, #158, #159, #162 and #163 are merged. Old overlapping branches/PRs #149, #151, #153, #156, #160 and #161 are closed or superseded.
+- No real windowed target-PC acceptance, physical export, clean-machine startup, audio listening or human campaign-balance sign-off is claimed complete.
 
 | Workstream | Current disposition |
 |---|---|
