@@ -217,5 +217,20 @@ func _run() -> void:
     overlay_host.queue_free()
     fake_pause.queue_free()
     await process_frame
-    print("PASS: Android touch hit geometry, multi-touch, overlay/pause release, sprint and safe area")
+
+    var background_controls = MOBILE_CONTROLS.new()
+    background_controls.force_enabled = true
+    root.add_child(background_controls)
+    await process_frame
+    assert(background_controls.handle_touch_press(50, background_controls.button_center("attack")),
+        "A gameplay action must be pressable before application suspension")
+    assert(Input.is_action_pressed("attack"),
+        "The action must remain held before the app is backgrounded")
+    background_controls._notification(Node.NOTIFICATION_APPLICATION_PAUSED)
+    assert(not Input.is_action_pressed("attack") and background_controls._touch_actions.is_empty(),
+        "Application suspension must release all virtual actions and captured fingers")
+    background_controls._notification(Node.NOTIFICATION_APPLICATION_RESUMED)
+    background_controls.queue_free()
+    await process_frame
+    print("PASS: Android touch geometry, multi-touch, overlay/pause/suspend release, sprint and safe area")
     quit(0)
