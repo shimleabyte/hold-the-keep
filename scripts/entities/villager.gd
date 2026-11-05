@@ -519,6 +519,8 @@ func _update_anim(delta: float) -> void:
         anim.play("work")
         if job == "farmer":
             anim.speed_scale = 0.5
+        elif job == "builder":
+            anim.manual_progress = fposmod(_work_t, BUILDER_REPAIR_INTERVAL) / BUILDER_REPAIR_INTERVAL
         else:
             anim.manual_progress = _work_t / _hit_interval()
     elif moving:
@@ -1163,6 +1165,10 @@ func blacksmith_behavior_release(recheck_delay: float) -> void:
     _release()
     state = State.IDLE
     _decide_t = recheck_delay
+
+
+func builder_behavior_advance_construction(delta: float) -> void:
+    _work_t += delta
 
 
 func builder_behavior_advance_work(delta: float) -> bool:
