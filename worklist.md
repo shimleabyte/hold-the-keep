@@ -7,14 +7,14 @@
 
 ## Live execution status — 2026-11-05
 
-**Current main:** `5a3b7b985a583753ff93df9a3b7c5f07d3ca8e27`. The desktop gameplay/system implementation is substantially integrated, but target-PC acceptance is not complete. PR #166 is the active performance/CI correction branch. It contains the FlowField elapsed-time cap, the focused construction regression, and two test-harness fixes exposed by the expanded current-main matrix.
+**Current main:** `5a3b7b985a583753ff93df9a3b7c5f07d3ca8e27`. The desktop gameplay/system implementation is substantially integrated, but target-PC acceptance is not complete. PR #166 contains the FlowField elapsed-time cap and current-main test fixes. PR #167 adds a cached regional land-count path to remove repeated full-map Territory scans. Both branches have passed their latest Godot 4.7 matrices; neither is merged.
 
 ### P0 — construction and worker behavior
 
 | Symptom | Current implementation | Automated evidence | Remaining acceptance |
 |---|---|---|---|
-| Construction placement/completion causes a frame hitch | **Merged PR #146:** FlowField Dijkstra is non-blocking and time-sliced; complete snapshots only; Village job reassignment coalesces events. **PR #166:** adds a 2.5 ms elapsed-time budget between heap pops, retaining the 2,048-pop hard ceiling. | PR #166 Godot CI run #1041 passed 58/58; `construction_sites` and the construction frame-spike diagnostic passed. Latest CI artifact: synchronous completion call 0.28–0.36 ms; FlowField peak frame 2.84 ms Classic, 3.47 ms Frontier, 3.80 ms Expedition. | Measure the actual desktop target during placement, completion, demolition, destruction and active waves. CI headless timing is not target-PC proof. |
-| Builder ignores distant blueprints despite a valid route | **Merged PR #155:** removes the arbitrary workplace-radius rejection for construction-site discovery; bounded A* decides actual reachability. | Builder Reachability QA passed on the current-main implementation. Lifecycle and construction regression suites pass in PR #166 run #1041. | Retest distant reachable and genuinely unreachable blueprints in live Frontier and Expedition sessions. |
+| Construction placement/completion causes a frame hitch | **Merged PR #146:** FlowField Dijkstra is non-blocking and time-sliced; complete snapshots only; Village job reassignment coalesces events. **PR #166:** adds a 2.5 ms elapsed-time budget between heap pops, retaining the 2,048-pop hard ceiling. | PR #166 run #1042 and PR #167 run #1044 each passed 58/58. Synchronous construction completion remained 0.29–0.32 ms. The FlowField scheduler now has a 2.5 ms elapsed-time slice and 2,048-pop ceiling, but the full-frame wall probe still observed 24–27 ms peaks on the construction transition; the budget is not proof that total frame spikes are eliminated. | Measure the actual desktop target during placement, completion, demolition, destruction and active waves. CI headless timing is not target-PC proof. |
+| Builder ignores distant blueprints despite a valid route | **Merged PR #155:** removes the arbitrary workplace-radius rejection for construction-site discovery; bounded A* decides actual reachability. | Builder Reachability QA passed on the current-main implementation. Lifecycle and construction regression suites pass in PR #167 run #1044. | Retest distant reachable and genuinely unreachable blueprints in live Frontier and Expedition sessions. |
 | Workers look static while performing work | **Merged PR #148/#158:** manual animation redraw tracking plus baked profession-specific contact details; autonomous-worker particle/tween spam reduced without removing player-hit feedback. | Animation motion and role-sprite visual checks pass in Godot 4.7 CI; rendered role QA passed on its tested PR head. | Inspect complete Woodcutter, Miner, Farmer, Builder and Blacksmith work cycles in all three directions in a windowed desktop run. |
 
 ### P1 — correctness and reliability
@@ -23,10 +23,11 @@
 |---|---|---|---|
 | Multi-cell target approach | **Merged PR #157:** A* checks the full sorted walkable perimeter rather than only the nearest four approach cells. | Regression fixture blocks nearest cells and leaves a farther reachable approach. Current full regression matrix passes on PR #166. | Verify actual multi-cell workplaces in a longer Frontier/Expedition session. |
 | Villager lifecycle recovery | **Merged PR #159:** reassignment, destroyed workplace recovery, depleted resource replacement, night recall and valid v17 persistence. | Godot 4.7 suite included in PR #166 run #1041 (58/58). | Watch for long-session stalls or orphaned workplace/resource claims during manual play. |
-| Save-file replacement and rollback | **Merged PR #162:** primary replacement, backup promotion, corrupt-primary recovery, unsupported-schema rejection and failed temporary-write preservation. | `save_file_store_recovery` passes in current PR #166 matrix. | Keep the regression in the blocking matrix; power-loss behavior on physical storage has not been tested. |
-| Partial quota HUD state | **Merged PR #163:** missing assigned/quota entries default to zero. | `workplace_assignments` passes in current PR #166 matrix. | Keep partial-quota coverage in CI. |
-| Building controls CI regression | **PR #166:** standalone `SceneTree` test resolves the `Tech` autoload through the root instead of an unresolved global identifier. | `building_controls` passes in run #1041. | Keep this test in the blocking matrix. |
-| Async road/bridge FlowField test regression | **PR #166:** `regional_control_roads` now waits for a current published FlowField snapshot after rebuild and bridge completion before reading reachability. | `regional_control_roads` passes in run #1041. | Keep the snapshot readiness wait; do not replace it with a fixed short tick delay. |
+| Save-file replacement and rollback | **Merged PR #162:** primary replacement, backup promotion, corrupt-primary recovery, unsupported-schema rejection and failed temporary-write preservation. | `save_file_store_recovery` passes in PR #167 run #1044. | Keep the regression in the blocking matrix; power-loss behavior on physical storage has not been tested. |
+| Territory rebuild cost | **PR #167:** cache terrain-only land counts at generation time, update them on Expedition gate changes, skip the no-conquest map scan, and aggregate ownership over claim dictionaries. | Reference-count tests pass in Classic, Frontier and Expedition. Territory rebuild max fell from 7.27/44.15/100.69 ms to 0.68/2.16/2.44 ms in the matching headless diagnostics. | Measure actual Outpost placement, demolition, capture and gate unlock on the target desktop. Keep conquered-region expansion behavior covered. |
+| Partial quota HUD state | **Merged PR #163:** missing assigned/quota entries default to zero. | `workplace_assignments` passes in PR #167 run #1044. | Keep partial-quota coverage in CI. |
+| Building controls CI regression | **PR #166/#167:** standalone `SceneTree` test resolves the `Tech` autoload through the root instead of an unresolved global identifier. | `building_controls` passes in run #1044. | Keep this test in the blocking matrix. |
+| Async road/bridge FlowField test regression | **PR #166/#167:** `regional_control_roads` now waits for a current published FlowField snapshot after rebuild and bridge completion before reading reachability. | `regional_control_roads` passes in run #1044. | Keep the snapshot readiness wait; do not replace it with a fixed short tick delay. |
 | Autonomous night-wave simulation | **PR #135:** deterministic full-runtime Classic/Frontier diagnostic is integrated. | Earlier run #42047709997 reached a terminal state in both profiles. In that diagnostic Classic and Frontier Keeps were destroyed; the bot only attacks the nearest ordinary enemy and does not build, command defenders or use abilities. | Treat this as a constrained runtime diagnostic, not a player-win or balance test. Complete human Classic and Frontier sessions. |
 
 ### P2 — desktop release readiness
@@ -43,21 +44,25 @@
 
 Use **16.67 ms** as the 60 FPS frame budget. Report p50/p95/p99 and worst-frame spikes separately; averages alone hide construction hitches. CI numbers below are headless GitHub-runner signals and are not desktop acceptance.
 
-Latest PR #166 run #1041:
+Latest completed diagnostics on PR #167 run #1044:
 - Godot CI: **58/58 passed**.
-- Campaign Simulation QA run #268: **passed**.
-- Construction completion synchronous call: 0.28 ms Classic, 0.36 ms Frontier, 0.32 ms Expedition.
-- FlowField rebuild peak frame: 2.84 ms Classic, 3.47 ms Frontier, 3.80 ms Expedition.
-- FlowField settle time: approximately 38 ms Classic, 218 ms Frontier and 225 ms Expedition. The previous complete snapshot remains published while the replacement is built.
-- Separate workload wall-frame p99: 7.49 ms Frontier and 12.82 ms Frontier Expedition.
+- Campaign Simulation QA run #271: **passed**.
+- Rendered World QA run #64: **passed**.
+- Synchronous construction completion call: 0.292 ms Classic, 0.321 ms Frontier, 0.306 ms Expedition.
+- Territory rebuild maximum: **0.679 ms Classic, 2.157 ms Frontier, 2.442 ms Expedition**. Baseline on run #1042 was 7.27/44.15/100.69 ms respectively.
+- NavGrid full rebuild maximum: 2.872 ms Classic, 11.103 ms Frontier, 27.579 ms Expedition. The normal build path updates dirty cells incrementally; full rebuild remains a separate worst-case signal.
+- FlowField settle time: about 36 ms Classic, 194 ms Frontier and 202 ms Expedition. The previous complete snapshot remains published while the replacement is built.
+- Separate workload wall-frame p50/p95/p99: Frontier 5.292/9.546/13.867 ms; Frontier Expedition 5.128/7.514/16.602 ms. Expedition p99 is just inside the 16.67 ms 60 FPS budget on this runner.
+- The construction diagnostic's full-frame wall peak during FlowField rebuild was 24.141 ms Classic, 27.706 ms Frontier and 27.386 ms Expedition. The 2.5 ms scheduler budget does not guarantee the entire frame remains under budget; other frame work and probe timing remain to be profiled.
 
-The time budget therefore reduces the measured construction-triggered peak below 4 ms on this runner, at the cost of an asynchronous settle window. The performance probe also reports ObjectDB leak warnings at process exit (12 Frontier instances and 4 Expedition instances in the latest run); these have not been root-caused.
+The territory cache cuts the measured maximum Territory rebuild by approximately 90.6% Classic, 95.1% Frontier and 97.6% Expedition on this runner. These are headless synthetic measurements, not target-PC guarantees. The performance logs still report ObjectDB exit warnings (6 in the construction probe, 13 Frontier workload and 4 Expedition workload); they have not been root-caused.
 
 ### Current integration state
 
 - **Main baseline:** `5a3b7b985a583753ff93df9a3b7c5f07d3ca8e27`.
-- **PR #166:** open, not merged. Head commit `353237e140a335c8005ef215ab7660cbdb0e3508`; Godot CI run #1041 passed 58/58, Campaign Simulation QA run #268 passed, GitHub reports mergeable.
-- The prior PR #166 head exposed two test failures: `building_controls` used an unresolved autoload global, and `regional_control_roads` asserted before the async FlowField snapshot was published. Both are corrected and pass on the latest head.
+- **PR #166:** open, not merged. Latest head `20d3d888468400e2a3fc9cad62bbf1bc36b95792`; Godot CI run #1042 passed 58/58, Campaign Simulation QA run #269 passed, GitHub reports mergeable.
+- **PR #167:** open, not merged. Head `2d96405f23d574fef36f5f1d17cec6e2b01cfd30`; Godot CI run #1044 passed 58/58, Campaign Simulation QA #271 and Rendered World QA #64 passed, GitHub reports mergeable. Includes Territory region-count cache and independent Classic/Frontier/Expedition reference checks.
+- The prior PR #166 head exposed two test failures: `building_controls` used an unresolved autoload global, and `regional_control_roads` asserted before the async FlowField snapshot was published. Both are corrected and pass on PR #167 run #1044.
 - PRs #146, #148, #155, #157, #158, #159, #162 and #163 are merged.
 - Superseded overlapping PRs #149, #151, #153, #160 and #161 are closed.
 - Android PRs #150 and #152 remain separate/deferred.
@@ -65,12 +70,13 @@ The time budget therefore reduces the measured construction-triggered peak below
 
 ### Active execution order
 
-1. **PR #166 — FlowField frame budget and CI fixes:** automated validation is green. Review the performance trade-off and merge only with explicit owner approval.
-2. **Target-PC performance capture:** run the windowed `tools/performance_probe.gd` on the actual desktop. Record p50/p95/p99 and worst spikes for building placement, completion, demolition, destruction and an active night wave. Compare on the same machine/settings.
-3. **Human campaign review:** play a complete Classic and Frontier session. Record pacing, economy recovery, defender effectiveness, difficulty spikes, confusing interactions and player ability usefulness. The deterministic bot is not a substitute.
-4. **Windowed visual review:** inspect five profession work cycles in all directions; verify HUD/tooltips/building controls and camera readability at 1280×720, 1920×1080 and 2560×1440; test windowed/fullscreen transitions.
-5. **Desktop release validation:** install Godot 4.7 export templates, produce Windows/Linux builds, then verify launches on clean environments.
-6. **Android remains deferred:** do not block the desktop pass on PR #150/#152 physical-device work.
+1. **PR #167 — Territory region-count cache:** automated validation is green. Review ownership-ratio/cache semantics and merge only with explicit owner approval.
+2. **PR #166 — FlowField elapsed-time budget:** automated validation is green. Its scheduler is time-sliced, but the construction probe still sees full-frame 24–27 ms peaks; continue profiling before describing all hitches as fixed. Merge only with explicit owner approval.
+3. **Target-PC performance capture:** run the windowed `tools/performance_probe.gd` on the actual desktop. Record p50/p95/p99 and worst spikes for building placement, completion, demolition, destruction and an active night wave. Compare on the same machine/settings.
+4. **Human campaign review:** play a complete Classic and Frontier session. Record pacing, economy recovery, defender effectiveness, difficulty spikes, confusing interactions and player ability usefulness. The deterministic bot is not a substitute.
+5. **Windowed visual review:** inspect five profession work cycles in all directions; verify HUD/tooltips/building controls and camera readability at 1280×720, 1920×1080 and 2560×1440; test windowed/fullscreen transitions.
+6. **Desktop release validation:** install Godot 4.7 export templates, produce Windows/Linux builds, then verify launches on clean environments.
+7. **Android remains deferred:** do not block the desktop pass on PR #150/#152 physical-device work.
 
 ### Validation and release boundaries
 
