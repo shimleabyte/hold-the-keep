@@ -149,7 +149,7 @@ func _nearest_disruptor() -> Node2D:
         if not is_instance_valid(defender) or not defender.visible:
             continue
         var candidate := defender as Node2D
-        var distance_squared := actor.position.distance_squared_to(candidate.position)
+        var distance_squared: float = actor.position.distance_squared_to(candidate.position)
         if distance_squared <= nearest_distance_squared:
             nearest = candidate
             nearest_distance_squared = distance_squared
