@@ -42,7 +42,8 @@ func seconds_until_phase_change() -> int:
     var remaining: float = target_phase_time - time_of_day
     if remaining < 0.0:
         remaining += 1.0
-    return maxi(0, ceili(remaining * DAY_LENGTH))
+    # Avoid showing an extra second when floating-point math lands just above an integer.
+    return maxi(1, ceili(remaining * DAY_LENGTH - 0.000001))
 
 
 ## 0.0 = siang penuh, 1.0 = malam penuh, dengan transisi senja/fajar.
