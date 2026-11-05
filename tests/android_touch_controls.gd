@@ -42,6 +42,28 @@ func verify_button_hit_geometry(controls, viewport_size: Vector2) -> void:
             assert(first_center.distance_to(second_center) >= first_radius + second_radius,
                 "Action hit targets must not overlap and steal neighboring taps")
 
+    var joystick: Vector2 = controls.joystick_center()
+    var joystick_radius: float = MOBILE_CONTROLS.JOYSTICK_HIT_RADIUS
+    assert(joystick.x - joystick_radius >= -0.01
+        and joystick.y + joystick_radius < viewport_size.y - 32.0,
+        "The joystick hit region must not cover the bottom building-slot row")
+    var queue_rect := Rect2(Vector2(4.0, viewport_size.y - 50.0), Vector2(18.0, 16.0))
+    var queue_nearest := Vector2(
+        clampf(joystick.x, queue_rect.position.x, queue_rect.end.x),
+        clampf(joystick.y, queue_rect.position.y, queue_rect.end.y)
+    )
+    assert(joystick.distance_to(queue_nearest) > joystick_radius,
+        "The joystick hit region must not steal taps from the construction-queue button")
+
+    var pause_center: Vector2 = controls._pause_center
+    var research_rect := Rect2(Vector2(4.0, 45.0), Vector2(126.0, 12.0))
+    var research_nearest := Vector2(
+        clampf(pause_center.x, research_rect.position.x, research_rect.end.x),
+        clampf(pause_center.y, research_rect.position.y, research_rect.end.y)
+    )
+    assert(pause_center.distance_to(research_nearest) > 27.0,
+        "The pause touch target must not cover the active-research HUD panel")
+
 
 func _initialize() -> void:
     call_deferred("_run")
@@ -113,10 +135,13 @@ func _run() -> void:
         and compact_joystick.y + MOBILE_CONTROLS.JOYSTICK_RADIUS <= 270.0,
         "The movement pad must remain inside a minimum 480x270 viewport")
     assert(compact_joystick.distance_to(Vector2(
-        MOBILE_CONTROLS.JOYSTICK_HIT_RADIUS,
-        270.0 - MOBILE_CONTROLS.JOYSTICK_HIT_RADIUS
+        MOBILE_CONTROLS.JOYSTICK_EDGE_INSET,
+        270.0 - MOBILE_CONTROLS.JOYSTICK_BOTTOM_INSET
     )) < 0.01,
-        "The full joystick hit circle must remain inside the compact viewport safe bounds")
+        "The joystick must use its inset position in the compact viewport")
+    assert(compact_joystick.x - MOBILE_CONTROLS.JOYSTICK_HIT_RADIUS >= 0.0
+        and compact_joystick.y + MOBILE_CONTROLS.JOYSTICK_HIT_RADIUS <= 270.0,
+        "The complete joystick touch target must remain inside the compact viewport")
     verify_button_hit_geometry(controls, Vector2(480.0, 270.0))
     for action in ["attack", "interact", "ability_dash", "ability_cleave", "ability_rally"]:
         var center: Vector2 = controls.button_center(action)
