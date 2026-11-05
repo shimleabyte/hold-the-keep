@@ -1289,14 +1289,7 @@ func blacksmith_behavior_assigned_recipe() -> String:
 
 
 func blacksmith_behavior_advance_work(delta: float) -> bool:
-    var previous_work_t := _work_t
     _work_t += delta
-    var strike_interval := SMITH_WORK_SECONDS / 3.0
-    var previous_strikes := floori(previous_work_t / strike_interval)
-    var current_strikes := floori(_work_t / strike_interval)
-    if workplace != null and is_instance_valid(workplace):
-        for strike in range(previous_strikes, current_strikes):
-            Events.fx_burst.emit("spark", workplace.global_position + Vector2(0, -7), Vector2.UP, 0.65)
     return _work_t >= SMITH_WORK_SECONDS
 
 
@@ -1307,19 +1300,19 @@ func blacksmith_behavior_release(recheck_delay: float) -> void:
 
 
 func builder_behavior_advance_construction(delta: float) -> bool:
+    var previous_work_t := _work_t
     _work_t += delta
-    if _work_t < BUILDER_REPAIR_INTERVAL:
-        return false
-    _work_t = fposmod(_work_t, BUILDER_REPAIR_INTERVAL)
-    return true
+    var previous_impact := floori((previous_work_t + BUILDER_REPAIR_INTERVAL * 0.5) / BUILDER_REPAIR_INTERVAL)
+    var current_impact := floori((_work_t + BUILDER_REPAIR_INTERVAL * 0.5) / BUILDER_REPAIR_INTERVAL)
+    return current_impact > previous_impact
 
 
 func builder_behavior_advance_work(delta: float) -> bool:
+    var previous_work_t := _work_t
     _work_t += delta
-    if _work_t < BUILDER_REPAIR_INTERVAL:
-        return false
-    _work_t = 0.0
-    return true
+    var previous_impact := floori((previous_work_t + BUILDER_REPAIR_INTERVAL * 0.5) / BUILDER_REPAIR_INTERVAL)
+    var current_impact := floori((_work_t + BUILDER_REPAIR_INTERVAL * 0.5) / BUILDER_REPAIR_INTERVAL)
+    return current_impact > previous_impact
 
 
 func builder_behavior_release(reason: String = "IDLE") -> void:
