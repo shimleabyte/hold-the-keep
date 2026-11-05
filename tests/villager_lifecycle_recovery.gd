@@ -122,6 +122,9 @@ func _initialize() -> void:
     assert(quarry_a.free_slots("miner") > 0 and quarry_b.free_slots("miner") > 0,
         "Both Quarries must expose free Miner slots")
 
+    # Keep the reassigned role stable when workplace destruction triggers quota reconciliation.
+    main.village.quota["woodcutter"] = 0
+    main.village.quota["miner"] = 1
     assert(worker.set_job("miner"), "Worker must be able to change to Miner")
     assert(worker.workplace == null and worker.target == null,
         "Changing jobs must release the previous workplace and resource claim")
