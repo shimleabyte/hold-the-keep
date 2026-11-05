@@ -9,7 +9,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ## Live execution status — 2026-11-05 (Priority 1 architecture stabilized)
 
-**Current main:** `9bdbaeca9c08249aee3ad4d76b7677c7a20de664` — contains the integrated Priority 1 architecture, PR #125 P0 counterplay/final-wave pacing fixes, and the DEV-H rendered-comparison SceneTree harness. The latter is QA-only; no gameplay, asset or save behavior changed. Save schema remains v17.  
+**Current main:** `9bdbaeca9c08249aee3ad4d76b7677c7a20de664` — includes the integrated Priority 1 architecture, PR #125 P0 counterplay/final-wave pacing fixes, and the DEV-H rendered-comparison SceneTree harness. The QA harness is test-only; no gameplay, asset or save behavior changed. Save schema remains v17.  
 **Current save schema:** v17.  
 **Open implementation pull requests:** #127 HUD countdowns; #128 Android ARMv7/touch controls; #129 distinct Builder/Archer/Brute sprites; #131 live worklist refresh; #133 rendered Frontier QA workflow. PRs #130 and #132 were closed as superseded duplicates.
 
@@ -23,13 +23,13 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-E save/migration architecture | Complete through #89: canonical v17 conversion and file-store recovery are integrated. Schema remains v17. |
 | DEV-F villager role architecture | Five role slices integrated: Archer, Scout, Healer, Blacksmith and Builder. Shared movement, navigation, workplace claims, carrying, animation and persistence remain host-owned. |
 | DEV-G HUD modularization | Main widget, construction queue and outpost/logistics boundaries are integrated. `hud.gd` remains the root composition/layout coordinator. |
-| DEV-H world generation / rendered QA | Generator decomposition integrated through #86. The fixed-seed 1024×1024 comparison harness is on main at `9bdbaec`. PR #133 adds the dedicated Godot 4.7 + Xvfb/Mesa workflow; actual rendered comparison and image inspection are pending. |
+| DEV-H world generation / rendered QA | Generator decomposition integrated through #86. The fixed-seed 1024×1024 render comparison passed on Godot 4.7 + Xvfb/Mesa. Both PNGs have identical SHA-256 and 0 differing pixels; the rendered image shows populated regional terrain and the protected starting clearing. PR #133 adds the repeatable workflow; its separate headless regression matrix is still finishing. |
 | DEV-I enemy controller | Patrol movement, raid behavior and shared combat lifecycle are integrated. Archetype behavior modules remain separate. |
 | DEV-J decision-based events | Integrated through PR #72. |
 | DEV-K input command registry | Integrated through PR #76. |
 | DEV-L Barracks | Integrated through PR #78. |
 | Archery Range / ranged soldiers | Integrated through PR #87. |
-| DEV-M visual identity / rendered QA | PR #129 gives Builder, Archer and Brute dedicated sprite sheets and a reproducible generator path. Godot 4.7 CI passed 54/54 jobs, including the asset-reproducibility check; Campaign Simulation QA succeeded. Normal-zoom animation/readability review remains pending. |
+| DEV-M visual identity / rendered QA | PR #129 gives Builder, Archer and Brute dedicated sprite sheets and a reproducible generator path. Godot 4.7 CI passed 54/54 jobs, including exact asset-reproducibility and role-identity tests; Campaign Simulation QA succeeded. Contact sheets confirm distinct equipment/palettes; gameplay-zoom readability review remains pending. |
 
 ### Recent Priority 1 integrations
 
@@ -44,8 +44,8 @@ This is an execution worklist, not a claim that every item is already implemente
 
 **Priority 1 architecture is complete on main.** Do not start more extraction work to reduce line counts.
 
-1. DEV-H / PR #133: complete the Xvfb/Mesa same-seed render run; inspect the two captures and pixel-diff output. Godot parse success alone is insufficient.
-2. DEV-M / PR #129: inspect Builder, Archer and Brute silhouettes and all facing/animation clips at normal gameplay zoom; review day/night and combat readability before merge.
+1. DEV-H / PR #133: rendered same-seed comparison has passed with pixel-identical captures. Finish the separate Godot regression matrix and retain the artifact/log as visual evidence.
+2. DEV-M / PR #129: inspect Builder, Archer and Brute at actual gameplay zoom, all facing/animation clips, and day/night combat. The generated contact sheets and automated identity checks do not prove in-game readability.
 3. Review PR #127 and #128 independently. HUD changes must be checked for panel overlap; Android work still requires export and physical-device validation.
 4. Run extended Classic and Frontier playthroughs; record pacing, recovery, difficulty spikes and confusing interactions.
 5. Tune campaign pacing and economic pressure only from reproducible playtest evidence. Add facilities/archetypes only for demonstrated gameplay gaps.
@@ -54,7 +54,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 - Development CI targets **Godot 4.7 only**. Do not add Godot 4.3 or Windows export jobs to feature CI.
 - Campaign Simulation QA is deterministic diagnostic coverage, not proof of complete-wave balance or player-facing readability.
-- Remaining acceptance work includes same-seed rendered review, role-sprite rendered review, full-wave autonomous-AI balance, human playthroughs across Frontier acts, target-hardware profiling, fullscreen/resolution review, audio listening and later clean-machine release checks.
+- Remaining acceptance work includes gameplay-zoom sprite review, full-wave autonomous-AI balance, human playthroughs across Frontier acts, target-hardware profiling, fullscreen/resolution review, audio listening and later clean-machine release checks.
 - Do not claim a feature complete solely because headless tests pass. Record rendered/manual QA separately.
 
 This snapshot records the live PR state as of 2026-11-05. Re-check PR heads, workflow runs and `main` before each merge or assignment; repository state can change after this commit.
