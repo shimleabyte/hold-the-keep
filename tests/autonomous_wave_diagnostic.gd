@@ -121,7 +121,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
 
     _baseline_enemy_ids.clear()
     _wave_enemy_ids.clear()
-    for enemy in get_nodes_in_group("enemies"):
+    for enemy in get_tree().get_nodes_in_group("enemies"):
         if is_instance_valid(enemy):
             _baseline_enemy_ids[enemy.get_instance_id()] = true
 
@@ -153,7 +153,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
         ticks_run = tick + 1
 
         _record_wave_spawns()
-        var total_enemies := get_nodes_in_group("enemies").size()
+        var total_enemies: int = get_tree().get_nodes_in_group("enemies").size()
         var wave_alive := _count_wave_enemies()
         peak_total_enemies = maxi(peak_total_enemies, total_enemies)
         peak_wave_enemies = maxi(peak_wave_enemies, wave_alive)
@@ -235,7 +235,7 @@ func _drive_player(player) -> void:
         return
     var nearest = null
     var nearest_distance := INF
-    for enemy in get_nodes_in_group("enemies"):
+    for enemy in get_tree().get_nodes_in_group("enemies"):
         if not is_instance_valid(enemy) or enemy.is_queued_for_deletion() or int(enemy.hp) <= 0:
             continue
         if bool(enemy.is_garrison) or bool(enemy.is_patrol):
@@ -280,7 +280,7 @@ func _release_bot_input() -> void:
 
 
 func _record_wave_spawns() -> void:
-    for enemy in get_nodes_in_group("enemies"):
+    for enemy in get_tree().get_nodes_in_group("enemies"):
         if not is_instance_valid(enemy) or enemy.is_queued_for_deletion():
             continue
         # Faction camps and supply pressure run independently from WaveSpawner.
@@ -289,21 +289,21 @@ func _record_wave_spawns() -> void:
             continue
         if bool(enemy.is_supply_raider) or bool(enemy.is_faction_raider):
             continue
-        var instance_id := enemy.get_instance_id()
+        var instance_id: int = enemy.get_instance_id()
         if not _baseline_enemy_ids.has(instance_id):
             _wave_enemy_ids[instance_id] = true
 
 
 func _count_wave_enemies() -> int:
     var count := 0
-    for enemy in get_nodes_in_group("enemies"):
+    for enemy in get_tree().get_nodes_in_group("enemies"):
         if is_instance_valid(enemy) and _wave_enemy_ids.has(enemy.get_instance_id()):
             count += 1
     return count
 
 
 func _find_keep():
-    for building in get_nodes_in_group("buildings"):
+    for building in get_tree().get_nodes_in_group("buildings"):
         if is_instance_valid(building) and String(building.id) == "keep":
             return building
     return null
