@@ -1,5 +1,7 @@
 extends Node2D
 ## Profile-scaled world terrain, collision water and harvestable resource nodes.
+
+signal buildable_cells_changed(cells: Array[Vector2i])
 ## Classic keeps its original atlas; Frontier uses a dedicated weathered regional palette.
 
 const TREE_CHANCE := 0.07
@@ -789,6 +791,7 @@ func _seal_expedition_cell(cell: Vector2i) -> void:
 ## Returns the regions newly opened by a completed discovery objective.
 func apply_expedition_sector_unlocks(discovered_regions: Dictionary) -> Array[String]:
     var opened: Array[String] = []
+    var changed_cells: Array[Vector2i] = []
     if not WorldConfig.is_frontier_expedition():
         return opened
     for region in _expedition_gate_cells:
@@ -803,10 +806,13 @@ func apply_expedition_sector_unlocks(discovered_regions: Dictionary) -> Array[St
             _expedition_barrier_cells.erase(cell)
             _expedition_unlocked_regions[String(region)] = true
             opened.append(String(region))
+            changed_cells.append(cell)
         else:
             _seal_expedition_cell(cell)
             _expedition_unlocked_regions[String(region)] = false
-    if not opened.is_empty():
+            changed_cells.append(cell)
+    if not changed_cells.is_empty():
+        buildable_cells_changed.emit(changed_cells)
         queue_redraw()
     return opened
 

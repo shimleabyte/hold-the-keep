@@ -194,6 +194,10 @@ func _initialize() -> void:
         "FENLANDS": "discover_fenlands",
         "ASHEN_MARCH": "discover_ashen_march"
     }
+    var initial_region_land_cells: Dictionary = {}
+    for region in locked_regions:
+        initial_region_land_cells[region] = int(main.territory.get_region_state(region).get("land_cells", 0))
+
     # Allow all four stages in this isolated probe; each discovery still completes
     # only when the player reaches the inner-side approach to its own sealed gate.
     main.frontier_campaign.unlocked_act = 4
@@ -213,6 +217,9 @@ func _initialize() -> void:
             "Entering the surveyed approach region must complete discovery: " + region)
         assert(main.world.is_expedition_gate_open(region),
             "Matching discovery must persistently open its sector: " + region)
+        var opened_region_land_cells := int(main.territory.get_region_state(region).get("land_cells", 0))
+        assert(opened_region_land_cells == int(initial_region_land_cells[region]) + 1,
+            "Opening an Expedition gate must add exactly one buildable tile to the cached regional land index: " + region)
         assert(main.world.tile_type_at(gate_cell) != 2
             and main.world.is_buildable(gate_cell)
             and main.nav.is_walkable(gate_cell),
@@ -229,6 +236,9 @@ func _initialize() -> void:
     for region in locked_regions:
         assert(main.world.is_expedition_gate_open(region),
             "Completed exploration objectives must restore open crossings: " + region)
+        assert(int(main.territory.get_region_state(region).get("land_cells", 0))
+                == int(initial_region_land_cells[region]) + 1,
+            "Restoring completed gate unlocks must not duplicate cached regional land cells: " + region)
 
     var greenwood_gate: Vector2i = main.world._expedition_gate_cells["GREENWOOD"]
     var beyond_gate := greenwood_gate + Vector2i(0, -1)

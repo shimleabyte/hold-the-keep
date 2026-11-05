@@ -7,10 +7,16 @@ var enemy_claimed_cells: Dictionary = {}
 var region_states: Dictionary = {}
 var conquered_regions: Dictionary = {}
 var _dirty := true
+var _region_land_cells: Dictionary = {}
+var _land_region_by_cell: Dictionary = {}
+var _land_index_ready := false
 
 
 func _ready() -> void:
     z_index = 1
+    _build_region_land_index()
+    if world != null and world.has_signal("buildable_cells_changed"):
+        world.buildable_cells_changed.connect(_on_buildable_cells_changed)
     Events.building_placed.connect(_mark_dirty)
     Events.building_removed.connect(_mark_dirty)
     Events.building_destroyed.connect(_mark_dirty)
@@ -30,6 +36,56 @@ func _mark_enemy_dirty(_cell: Vector2i) -> void:
     _dirty = true
 
 
+func _build_region_land_index() -> void:
+    _region_land_cells.clear()
+    _land_region_by_cell.clear()
+    if world == null:
+        _land_index_ready = false
+        return
+
+    # Terrain and region labels are static for a campaign except for Expedition
+    # survey gates. Cache the land topology once instead of asking TileMapLayer
+    # and WorldMap for every cell on every ownership refresh.
+    for y in WorldConfig.map_size:
+        for x in WorldConfig.map_size:
+            var cell := Vector2i(x, y)
+            if not world.is_buildable(cell):
+                continue
+            var region_id: String = world.region_id(cell)
+            if not _region_land_cells.has(region_id):
+                _region_land_cells[region_id] = []
+            var region_cells: Array = _region_land_cells[region_id]
+            region_cells.append(cell)
+            _region_land_cells[region_id] = region_cells
+            _land_region_by_cell[cell] = region_id
+    _land_index_ready = true
+
+
+func _on_buildable_cells_changed(cells: Array[Vector2i]) -> void:
+    if not _land_index_ready:
+        _build_region_land_index()
+    for cell in cells:
+        var was_indexed := _land_region_by_cell.has(cell)
+        var is_buildable: bool = world.is_buildable(cell)
+        if was_indexed == is_buildable:
+            continue
+        if is_buildable:
+            var region_id: String = world.region_id(cell)
+            if not _region_land_cells.has(region_id):
+                _region_land_cells[region_id] = []
+            var region_cells: Array = _region_land_cells[region_id]
+            region_cells.append(cell)
+            _region_land_cells[region_id] = region_cells
+            _land_region_by_cell[cell] = region_id
+        else:
+            var previous_region: String = String(_land_region_by_cell[cell])
+            var previous_cells: Array = _region_land_cells.get(previous_region, [])
+            previous_cells.erase(cell)
+            _region_land_cells[previous_region] = previous_cells
+            _land_region_by_cell.erase(cell)
+    _dirty = true
+
+
 func _on_campaign_objective_completed(_stronghold_id: String, region_id: String) -> void:
     if not region_id.is_empty():
         conquered_regions[region_id] = true
@@ -42,6 +98,8 @@ func _physics_process(_delta: float) -> void:
 
 
 func rebuild() -> void:
+    if not _land_index_ready:
+        _build_region_land_index()
     _dirty = false
     var next: Dictionary = {}
     var enemy_next: Dictionary = {}
@@ -77,13 +135,14 @@ func rebuild() -> void:
                 if tile_center.distance_squared_to(center) <= radius * radius:
                     enemy_next[Vector2i(x, y)] = true
     # A conquered region becomes player-controlled land, not merely neutral land
-    # after its last stronghold is removed.
-    for y in WorldConfig.map_size:
-        for x in WorldConfig.map_size:
-            var cell := Vector2i(x, y)
-            if conquered_regions.has(world.region_id(cell)) and world.is_buildable(cell):
-                next[cell] = true
-                enemy_next.erase(cell)
+    # after its last stronghold is removed. Reuse the indexed land cells rather
+    # than scanning the entire tile map again.
+    for region_value in conquered_regions:
+        var region_id := String(region_value)
+        var region_cells: Array = _region_land_cells.get(region_id, [])
+        for cell in region_cells:
+            next[cell] = true
+            enemy_next.erase(cell)
     claimed_cells = next
     enemy_claimed_cells = enemy_next
     _rebuild_region_states()
@@ -93,32 +152,38 @@ func rebuild() -> void:
 
 func _rebuild_region_states() -> void:
     var next_states: Dictionary = {}
-    for y in WorldConfig.map_size:
-        for x in WorldConfig.map_size:
-            var cell := Vector2i(x, y)
-            var region_id: String = world.region_id(cell)
-            if not next_states.has(region_id):
-                next_states[region_id] = {
-                    "id": region_id,
-                    "land_cells": 0,
-                    "player_cells": 0,
-                    "enemy_cells": 0,
-                    "contested_cells": 0
-                }
-            if not world.is_buildable(cell):
-                continue
+    for region_value in _region_land_cells:
+        var region_id := String(region_value)
+        var region_cells: Array = _region_land_cells[region_id]
+        next_states[region_id] = {
+            "id": region_id,
+            "land_cells": region_cells.size(),
+            "player_cells": 0,
+            "enemy_cells": 0,
+            "contested_cells": 0
+        }
 
-            var region: Dictionary = next_states[region_id]
-            region["land_cells"] = int(region["land_cells"]) + 1
-            var player_owns: bool = claimed_cells.has(cell)
-            var enemy_owns: bool = enemy_claimed_cells.has(cell)
-            if player_owns:
-                region["player_cells"] = int(region["player_cells"]) + 1
-            if enemy_owns:
-                region["enemy_cells"] = int(region["enemy_cells"]) + 1
-            if player_owns and enemy_owns:
-                region["contested_cells"] = int(region["contested_cells"]) + 1
-            next_states[region_id] = region
+    # Only claim cells carry ownership. Count those against the cached land
+    # region rather than revisiting every water/land tile on the map.
+    for cell_value in claimed_cells:
+        var cell: Vector2i = cell_value
+        var region_id := String(_land_region_by_cell.get(cell, ""))
+        if region_id.is_empty():
+            continue
+        var region: Dictionary = next_states[region_id]
+        region["player_cells"] = int(region["player_cells"]) + 1
+        if enemy_claimed_cells.has(cell):
+            region["contested_cells"] = int(region["contested_cells"]) + 1
+        next_states[region_id] = region
+
+    for cell_value in enemy_claimed_cells:
+        var cell: Vector2i = cell_value
+        var region_id := String(_land_region_by_cell.get(cell, ""))
+        if region_id.is_empty():
+            continue
+        var region: Dictionary = next_states[region_id]
+        region["enemy_cells"] = int(region["enemy_cells"]) + 1
+        next_states[region_id] = region
 
     for region_id in next_states:
         var region: Dictionary = next_states[region_id]
