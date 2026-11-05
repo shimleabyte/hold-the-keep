@@ -133,7 +133,8 @@ func _nearest_interceptor() -> Node2D:
             _interceptor_cache = actor.player
             return _interceptor_cache
     if _interceptor_scan_timer > 0.0 and is_instance_valid(_interceptor_cache):
-        if _interceptor_cache.is_in_group("defenders") and _interceptor_cache.visible                 and actor.position.distance_squared_to(_interceptor_cache.position) <= reach * reach:
+        if _interceptor_cache.is_in_group("defenders") and _interceptor_cache.visible \
+                and actor.position.distance_squared_to(_interceptor_cache.position) <= reach * reach:
             return _interceptor_cache
     if _interceptor_scan_timer > 0.0:
         return null
