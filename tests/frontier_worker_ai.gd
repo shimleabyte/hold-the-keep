@@ -57,6 +57,9 @@ func _run_profile(profile_id: String) -> void:
 
     for job_name in main.village.quota:
         main.village.quota[job_name] = 0
+    main.village.quota["woodcutter"] = 1
+    main.village.quota["miner"] = 1
+    main.village.quota["builder"] = 1
 
     var keep = null
     for building in get_nodes_in_group("buildings"):
