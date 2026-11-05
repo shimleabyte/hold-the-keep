@@ -27,6 +27,12 @@ func _initialize() -> void:
     current_scene = main
     await ticks(10)
     root.get_node("GameClock").set_process(false)
+    var initial_flow_wait := 0
+    while not main.flow.is_current():
+        await ticks(1)
+        initial_flow_wait += 1
+        assert(initial_flow_wait < 180,
+            "Initial enemy flow field must publish before construction profiling")
     main.village.set_process(false)
     main.village.quota["builder"] = 0
 
