@@ -65,6 +65,8 @@ func _initialize() -> void:
 
     assert(main.world.map_size == 192 and main.world.pixel_size == Vector2i(3072, 3072),
         "Main scene must use the Expedition world dimensions")
+    assert(main.fog._fog_chunks.size() == 144,
+        "A 192x192 Expedition must use 144 independently invalidated 16x16 fog chunks")
     assert(main.world._expedition_gate_cells.size() == 4,
         "The expanded map must create one crossing for each outer march")
 

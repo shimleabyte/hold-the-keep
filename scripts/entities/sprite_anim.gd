@@ -8,6 +8,14 @@ const FRAMES := 22
 const FRONT := 0
 const BACK := 1
 const SIDE := 2
+const WORK_FRAME_THRESHOLDS := {
+    "default": [0.25, 0.50, 0.75, 1.0],
+    "woodcutter": [0.22, 0.49, 0.75, 1.0],
+    "miner": [0.34, 0.52, 0.76, 1.0],
+    "builder": [0.28, 0.46, 0.70, 1.0],
+    "blacksmith": [0.42, 0.58, 0.82, 1.0],
+    "farmer": [0.18, 0.44, 0.78, 1.0],
+}
 const CLIPS := {
     "idle": {"start": 0, "count": 2, "fps": 2.0, "loop": true},
     "walk": {"start": 2, "count": 4, "fps": 8.0, "loop": true},
@@ -23,6 +31,8 @@ var view := FRONT
 var flip := false
 var finished := false
 var speed_scale := 1.0
+## Determines the distinct timing and body mechanics used by the shared work clip.
+var work_style := "default"
 ## >= 0: frame ditentukan dari progres 0..1 (misalnya disinkronkan dengan timer kerja), tidak maju sendiri.
 var manual_progress := -1.0
 
@@ -78,6 +88,13 @@ func update(delta: float) -> bool:
 
 func frame_index() -> int:
     if manual_progress >= 0.0:
+        if clip == "work":
+            var thresholds: Array = WORK_FRAME_THRESHOLDS.get(work_style, WORK_FRAME_THRESHOLDS["default"])
+            var progress := clampf(manual_progress, 0.0, 0.9999)
+            for i in thresholds.size():
+                if progress < float(thresholds[i]):
+                    return _start + mini(i, _n - 1)
+            return _start + _n - 1
         return _start + int(clampf(manual_progress, 0.0, 0.9999) * _n)
     return _start + mini(int(_t * _fps), _n - 1)
 
@@ -97,9 +114,7 @@ func motion_offset() -> Vector2:
             var run_lift := absf(sin(progress * TAU))
             return Vector2(0, -roundf(run_lift * 2.0))
         "work":
-            # Bobot badan bergerak maju tepat di sekitar titik pukulan.
-            var strike := 1.0 - absf(progress - 0.5) * 2.0
-            return forward * roundf(clampf(strike, 0.0, 1.0))
+            return _work_motion_offset(progress, forward)
         "attack":
             # Tarik badan sebentar, dorong saat ayunan, lalu kembali ke stance.
             var push := 0.0
@@ -160,3 +175,49 @@ func draw(ci: CanvasItem, tex: Texture2D, fw: int, fh: int) -> void:
     ci.draw_set_transform(motion_offset(), 0.0, Vector2(-1, 1) if flipped else Vector2.ONE)
     ci.draw_texture_rect_region(tex, Rect2(-fw / 2.0, -fh, fw, fh), Rect2(frame_index() * fw, view * fh, fw, fh))
     ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+## Small, pixel-snapped body accents keep each occupation's tool cycle readable.
+## The sprite sheet supplies the tool pose; this profile supplies distinct weight transfer.
+func _work_motion_offset(progress: float, forward: Vector2) -> Vector2:
+    var local_motion := Vector2.ZERO
+    match work_style:
+        "woodcutter":
+            if progress < 0.22:
+                local_motion = Vector2(-1, -1)
+            elif progress < 0.49:
+                local_motion = Vector2(2, -1)
+            elif progress < 0.75:
+                local_motion = Vector2(1, 0)
+        "miner":
+            if progress < 0.34:
+                local_motion = Vector2(0, -1)
+            elif progress < 0.52:
+                local_motion = Vector2(0, 2)
+            elif progress < 0.76:
+                local_motion = Vector2(-1, 1)
+        "builder":
+            if progress < 0.28:
+                local_motion = Vector2(0, -1)
+            elif progress < 0.46:
+                local_motion = Vector2(1, 2)
+            elif progress < 0.70:
+                local_motion = Vector2(1, 1)
+        "blacksmith":
+            if progress < 0.42:
+                local_motion = Vector2(-1, 0)
+            elif progress < 0.58:
+                local_motion = Vector2(0, 1)
+            elif progress < 0.82:
+                local_motion = Vector2(0, -1)
+        "farmer":
+            if progress < 0.18:
+                local_motion = Vector2(0, -1)
+            elif progress < 0.44:
+                local_motion = Vector2(-2, 2)
+            elif progress < 0.78:
+                local_motion = Vector2(-1, 1)
+        _:
+            var strike := 1.0 - absf(progress - 0.5) * 2.0
+            local_motion = Vector2(roundf(clampf(strike, 0.0, 1.0)), 0.0)
+    return forward * local_motion.x + Vector2(0.0, local_motion.y)

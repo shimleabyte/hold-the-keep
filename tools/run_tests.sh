@@ -27,6 +27,7 @@ tests=(
     campaign_assault
     campaign_multi_stronghold
     workplace_assignments
+    frontier_worker_ai
     hunting_lodge
     scout_specialist
     healer_infirmary
@@ -38,6 +39,7 @@ tests=(
     granary_food_storage
     faction_registry
     faction_visual_identity
+    role_sprite_identity
     building_visual_identity
     combat_visual_feedback
     audio_identity

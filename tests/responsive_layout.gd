@@ -77,6 +77,35 @@ func _initialize() -> void:
         "Ordinary feedback must retain its compact two-second lifetime")
     assert(is_equal_approx(hud._message_duration("Raja lawan mendekat! Bersiap."), 4.0),
         "The final boss warning must remain visible for its full four-second telegraph")
+
+    assert(hud._clock_widget.size.y == 18,
+        "The clock must reserve a second compact row for the phase countdown")
+    game_clock.time_of_day = 0.5
+    assert(hud._clock_widget.countdown_text() == "00:18",
+        "The clock must render the remaining time as digits beneath the existing day-cycle bar")
+    assert(hud._clock_widget.countdown_tooltip().begins_with("Malam dimulai"),
+        "The clock tooltip must explain that the timer targets night")
+    game_clock.time_of_day = 0.75
+    assert(hud._clock_widget.countdown_text() == "00:27"
+        and hud._clock_widget.countdown_tooltip().begins_with("Fajar"),
+        "The clock tooltip must identify dawn while the game is in its night phase")
+
+    var active_enemies_before_wave: int = get_nodes_in_group("enemies").size()
+    main.spawner.start_wave(1)
+    var expected_queued_spawns: int = main.spawner.remaining_wave_spawns()
+    hud._scan_t = 0.0
+    hud._process(0.2)
+    assert(expected_queued_spawns == main.spawner.wave_size(1),
+        "Starting a wave must expose its complete spawn queue before the first spawn")
+    assert(hud._foes.text == "%d+%d" % [active_enemies_before_wave, expected_queued_spawns]
+        and hud._foes.visible,
+        "The skull indicator must show active plus queued enemies without a permanent explanatory label")
+    assert(hud._foes.tooltip_text.find("%d tersisa" % expected_queued_spawns) >= 0,
+        "The skull indicator tooltip must explain the queued portion of enemy pressure")
+    main.spawner.end_wave()
+    assert(main.spawner.remaining_wave_spawns() == 0,
+        "Dawn must clear the hostile queue shown by the HUD")
+
     var player = get_first_node_in_group("player")
     assert(player != null and player.camera.zoom == Vector2.ONE,
         "The wider field of view must come from viewport dimensions, not gameplay camera zoom")
@@ -91,6 +120,8 @@ func _initialize() -> void:
             "HUD must reflow when the logical viewport changes")
         assert(is_equal_approx(hud._top_bar.size.x, viewport_size.x),
             "The top bar must span the viewport width")
+        assert(hud._people_icon.position.x - hud._foes.position.x >= 45.0,
+            "The expanded active-plus-queued hostile counter must not collide with population")
         assert(hud._stage_panel.position.x >= 0.0
             and hud._stage_panel.position.x + hud._stage_panel.size.x <= viewport_size.x,
             "The stage panel must stay within the viewport")

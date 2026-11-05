@@ -19,6 +19,7 @@ var _regrow_in := 0.0
 
 
 func _ready() -> void:
+    set_process(false)
     var shape := RectangleShape2D.new()
     shape.size = Vector2(12, 7)
     var col := CollisionShape2D.new()
@@ -44,6 +45,7 @@ func export_state() -> Dictionary:
 func import_state(data: Dictionary) -> void:
     _hp = clampi(int(data.get("hp", MAX_HP)), 0, MAX_HP)
     _regrow_in = maxf(0.0, float(data.get("regrow", 0.0))) if _hp <= 0 else 0.0
+    set_process(_hp <= 0)
     worker = null
     _update_group()
     queue_redraw()
@@ -79,6 +81,7 @@ func hit(by = null) -> void:
         _update_group()
         queue_redraw()
         _regrow_in = REGROW_SECONDS
+        set_process(true)
 
 
 func _give(amount: int, by) -> void:
@@ -91,6 +94,7 @@ func _give(amount: int, by) -> void:
 func _regrow() -> void:
     _hp = MAX_HP
     _regrow_in = 0.0
+    set_process(false)
     _update_group()
     queue_redraw()
 

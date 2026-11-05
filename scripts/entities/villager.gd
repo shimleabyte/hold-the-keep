@@ -19,7 +19,7 @@ const TEXTURES := {
     "woodcutter": preload("res://assets/sprites/villager_woodcutter.svg"),
     "miner": preload("res://assets/sprites/villager_miner.svg"),
     "farmer": preload("res://assets/sprites/villager_farmer.svg"),
-    "builder": preload("res://assets/sprites/villager_miner.svg"),
+    "builder": preload("res://assets/sprites/villager_builder.svg"),
     "hunter": preload("res://assets/sprites/villager_hunter.svg"),
     "scout": preload("res://assets/sprites/villager_scout.svg"),
     "healer": preload("res://assets/sprites/villager_healer.svg"),
@@ -48,6 +48,8 @@ const OUTPOST_GUARD_RADIUS := 128.0
 const OUTPOST_GUARD_ARRIVAL_RADIUS := 45.0
 const REACH := 11.0
 const DEFAULT_WORK_RADIUS := 12.0
+const MAX_WORK_PATH_CHECKS := 8
+const TARGET_RETRY_COOLDOWN := 6.0
 const BUILDER_REPAIR_INTERVAL := 1.6
 const BUILDER_REPAIR_AMOUNT := 12
 const HEAL_INTERVAL := 3.2
@@ -97,7 +99,10 @@ var _path := PackedVector2Array()
 var _pi := 0
 var _path_ver := -1
 var _goal_cells: Array[Vector2i] = []
-var _bad: Array = []
+var _blocked_targets: Dictionary = {}
+var _blocked_nav_version := -1
+var work_ai_status := "UNASSIGNED"
+var work_ai_detail := ""
 var _decide_t := 0.0
 var _work_t := 0.0
 var _wander_t := 2.0
@@ -136,6 +141,7 @@ func _ready() -> void:
     add_to_group("villagers")
     Events.tech_researched.connect(_on_tech)
     _decide_t = randf_range(0.0, 1.0)
+    _blocked_nav_version = nav.version if nav != null else -1
 
 
 ## Stat dinamis dari teknologi.
@@ -258,6 +264,7 @@ func set_job(j: String, preferred_workplace = null) -> bool:
         max_hp = _hp_cap_for("")
         hp = clampi(roundi(float(hp) * max_hp / maxi(1, old_max)), 1, max_hp)
         state = State.IDLE
+        _set_work_status("NO_WORKPLACE", "No reachable workplace slot is available for this occupation")
         return false
     if job == "soldier":
         add_to_group("defenders")
@@ -267,7 +274,9 @@ func set_job(j: String, preferred_workplace = null) -> bool:
         max_hp = _hp_cap_for(job)
     hp = clampi(int(round(float(hp) * max_hp / maxi(1, old_max))), 1, max_hp)
     _work_t = 0.0
-    _bad.clear()
+    _blocked_targets.clear()
+    work_ai_status = "IDLE_READY" if not job.is_empty() else "UNASSIGNED"
+    work_ai_detail = ""
     if state != State.HIDDEN and state != State.FLEEING:
         state = State.IDLE
         _path = PackedVector2Array()
@@ -414,6 +423,7 @@ func _physics_process(delta: float) -> void:
         _rally_damage_mult = 1.0
         _rally_interval_mult = 1.0
     _resolve_pending(delta)
+    _tick_blocked_targets(delta)
 
     if state == State.HIDDEN:
         if not GameClock.is_night:
@@ -435,6 +445,7 @@ func _physics_process(delta: float) -> void:
                 _release()
                 state = State.IDLE
                 _decide_t = 0.15
+                _set_work_status("TARGET_LOST", "Work target was removed before arrival")
             elif job == "healer" and (String(target.job) != "soldier"
                     or int(target.hp) <= 0 or int(target.hp) >= int(target.max_hp)
                     or target.is_expeditioning() or target.is_recalling_expedition()
@@ -517,10 +528,22 @@ func _update_anim(delta: float) -> void:
         anim.play("hurt")
     elif state == State.WORKING:
         anim.play("work")
+        if job in ["woodcutter", "miner", "builder", "blacksmith", "farmer"]:
+            anim.work_style = job
         if job == "farmer":
-            anim.speed_scale = 0.5
+            anim.speed_scale = 1.0
+            var farm_motion_cycle := FARM_CYCLE / 10.0
+            anim.manual_progress = fposmod(_work_t, farm_motion_cycle) / farm_motion_cycle
+        elif job == "blacksmith":
+            anim.speed_scale = 1.0
+            var forge_motion_cycle := SMITH_WORK_SECONDS / 3.0
+            anim.manual_progress = fposmod(_work_t, forge_motion_cycle) / forge_motion_cycle
+        elif job == "builder":
+            anim.speed_scale = 1.0
+            anim.manual_progress = fposmod(_work_t, BUILDER_REPAIR_INTERVAL) / BUILDER_REPAIR_INTERVAL
         else:
-            anim.manual_progress = _work_t / _hit_interval()
+            anim.speed_scale = 1.0
+            anim.manual_progress = fposmod(_work_t, _hit_interval()) / _hit_interval()
     elif moving:
         anim.play("run" if _running else "walk")
         anim.speed_scale = 1.0
@@ -604,6 +627,7 @@ func _tick_working(delta: float) -> void:
         _work_t += delta
         if _work_t >= FARM_CYCLE:
             _work_t = 0.0
+            Events.fx_burst.emit("food", target.global_position + Vector2(0, -6), Vector2.UP, 0.65)
             receive("food", roundi(Tech.stat("farm.yield", float(FARM_YIELD))))
             if carry >= _carry_cap():
                 _go_depot()
@@ -887,12 +911,20 @@ func _tick_fight(delta: float) -> void:
 # ---------------------------------------------------------------- jobs
 
 func _find_work() -> void:
+    if nav.version != _blocked_nav_version:
+        _blocked_targets.clear()
+        _blocked_nav_version = nav.version
+    if job.is_empty():
+        _set_work_status("UNASSIGNED", "No occupation is assigned")
+        return
     if carry > 0:
         _go_depot()
         return
     if job == "scout":
+        _set_work_status("SCOUT_SEARCHING", "Evaluating unexplored cells")
         _find_scout_work()
         return
+    _set_work_status("SEARCHING", "Evaluating eligible work targets")
     var cands: Array = []
     match job:
         "woodcutter", "miner":
@@ -902,31 +934,35 @@ func _find_work() -> void:
             # Once a matching worksite exists, its capacity is authoritative.
             # Keep the old connected-depot radius only when no specialty site exists.
             if not has_valid_workplace() and _has_specialized_workplace(job):
+                _set_work_status("WORKPLACE_UNAVAILABLE", "Matching specialist workplaces are full or unreachable")
                 return
             var kind := "wood" if job == "woodcutter" else _mine_kind()
             for n in get_tree().get_nodes_in_group("harvestable"):
-                var in_work_area := _is_in_workplace_radius(n) if has_valid_workplace() else _is_in_work_radius(n)
-                if n.yield_kind == kind and n.is_available(self) and in_work_area and not _bad.has(n):
+                var in_work_area := _is_in_workplace_radius(n) if has_valid_workplace() else _is_in_gather_radius(n)
+                if n.yield_kind == kind and n.is_available(self) and in_work_area:
                     cands.append(n)
         "hunter":
             if not has_valid_workplace():
                 _release_workplace()
                 if not _claim_workplace("hunter"):
+                    _set_work_status("NO_WORKPLACE", "Hunter requires an available Hunting Lodge")
                     return
             for wildlife in get_tree().get_nodes_in_group("wildlife"):
                 if wildlife.yield_kind == "food" and wildlife.is_available(self) \
-                        and _is_in_workplace_radius(wildlife) and not _bad.has(wildlife):
+                        and _is_in_workplace_radius(wildlife):
                     cands.append(wildlife)
         "farmer":
             for f in get_tree().get_nodes_in_group("farms"):
-                if f.free_slots("farmer") > 0 and _is_in_work_radius(f) and not _bad.has(f):
+                if f.free_slots("farmer") > 0 and _is_in_work_radius(f):
                     cands.append(f)
         "blacksmith":
             if not has_valid_workplace():
                 _release_workplace()
                 if not _claim_workplace("blacksmith"):
+                    _set_work_status("NO_WORKPLACE", "Blacksmith requires an available Forge")
                     return
             if _facility_sabotaged(workplace):
+                _set_work_status("WORKPLACE_SABOTAGED", "Forge is temporarily disabled")
                 return
             for soldier in get_tree().get_nodes_in_group("villagers"):
                 if soldier == self or not is_instance_valid(soldier) or String(soldier.job) != "soldier":
@@ -941,6 +977,7 @@ func _find_work() -> void:
             if not has_valid_workplace():
                 _release_workplace()
                 if not _claim_workplace("healer"):
+                    _set_work_status("NO_WORKPLACE", "Healer requires an available Infirmary")
                     return
             for patient in get_tree().get_nodes_in_group("villagers"):
                 if patient == self or not is_instance_valid(patient) or String(patient.job) != "soldier":
@@ -957,6 +994,7 @@ func _find_work() -> void:
             if not has_valid_workplace():
                 _release_workplace()
                 if not _claim_workplace("builder"):
+                    _set_work_status("NO_WORKPLACE", "Builder requires an available Keep or Outpost slot")
                     return
             var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
             var construction_sites: Array = get_tree().get_nodes_in_group("construction_sites")
@@ -964,11 +1002,11 @@ func _find_work() -> void:
                 return int(a.queue_order) < int(b.queue_order)
             )
             for site in construction_sites:
-                if site.has_method("can_claim") and site.can_claim(self) and not _bad.has(site) \
-                        and workplace.position.distance_squared_to(site.position) <= radius * radius:
+                if site.has_method("can_claim") and site.can_claim(self) \
+                        and _is_builder_site_in_range(site):
                     cands.append(site)
             for building in get_tree().get_nodes_in_group("buildings"):
-                if building.hp <= 0 or building.hp >= building.max_hp or _bad.has(building):
+                if building.hp <= 0 or building.hp >= building.max_hp:
                     continue
                 if workplace.position.distance_squared_to(building.position) > radius * radius:
                     continue
@@ -988,13 +1026,43 @@ func _find_work() -> void:
             return int(a.queue_order) < int(b.queue_order)
         return a.position.distance_squared_to(position) < b.position.distance_squared_to(position)
     )
-    for i in mini(8, cands.size()):
-        var n = cands[i]
-        var cells := _cells_of(n)
-        var p: PackedVector2Array = nav.path_adjacent(position, cells)
-        if p.is_empty():
-            _bad.append(n)
+    var reachable_candidates: Array[Dictionary] = []
+    var checked_candidates := 0
+    var blocked_candidates := 0
+    var unreachable_candidates := 0
+    var candidate_index := 0
+    while candidate_index < cands.size() and checked_candidates < MAX_WORK_PATH_CHECKS:
+        var candidate = cands[candidate_index]
+        candidate_index += 1
+        if _is_target_blocked(candidate):
+            blocked_candidates += 1
             continue
+        checked_candidates += 1
+        var candidate_cells := _cells_of(candidate)
+        var candidate_path: PackedVector2Array = nav.path_adjacent(position, candidate_cells)
+        if candidate_path.is_empty():
+            unreachable_candidates += 1
+            _mark_target_blocked(candidate, "NO_PATH")
+            continue
+        reachable_candidates.append({
+            "target": candidate,
+            "cells": candidate_cells,
+            "path": candidate_path
+        })
+
+    # Preserve Builder queue order and Healer urgency. Other jobs compare actual
+    # A* route lengths among a bounded candidate set instead of straight distance.
+    if job not in ["builder", "healer"]:
+        reachable_candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+            var path_a: PackedVector2Array = a["path"]
+            var path_b: PackedVector2Array = b["path"]
+            return path_a.size() < path_b.size()
+        )
+
+    for route in reachable_candidates:
+        var n = route["target"]
+        var cells: Array[Vector2i] = route["cells"]
+        var p: PackedVector2Array = route["path"]
         if job == "builder":
             if n.has_method("is_construction_site") and n.is_construction_site():
                 if not n.claim(self):
@@ -1016,11 +1084,77 @@ func _find_work() -> void:
         target = n
         _goal_cells = cells
         _set_path(p)
-        _bad.clear()
         state = State.TO_WORK
+        _set_work_status("MOVING_TO_WORK", "Following the shortest valid route to an eligible target")
         return
+
     if cands.is_empty():
-        _bad.clear()
+        _set_work_status("NO_AVAILABLE_TARGET", "No eligible target is available inside the assigned work area")
+    elif reachable_candidates.is_empty():
+        if blocked_candidates > 0 and unreachable_candidates == 0:
+            _set_work_status("TARGET_RETRY_COOLDOWN", "Recent path failures are cooling down before another attempt")
+        else:
+            _set_work_status("NO_REACHABLE_TARGET", "Nearby targets exist, but no tested path is reachable")
+    else:
+        _set_work_status("TARGET_RESERVED", "Reachable targets were claimed by another worker")
+
+
+func _set_work_status(status: String, detail: String = "") -> void:
+    work_ai_status = status
+    work_ai_detail = detail
+
+
+func _is_target_blocked(candidate: Variant) -> bool:
+    if candidate == null or not is_instance_valid(candidate):
+        return false
+    return _blocked_targets.has(candidate.get_instance_id())
+
+
+func _mark_target_blocked(candidate: Variant, reason: String) -> void:
+    if candidate == null or not is_instance_valid(candidate):
+        return
+    _blocked_targets[candidate.get_instance_id()] = {
+        "remaining": TARGET_RETRY_COOLDOWN,
+        "reason": reason
+    }
+
+
+func _tick_blocked_targets(delta: float) -> void:
+    if nav == null:
+        return
+    if nav.version != _blocked_nav_version:
+        _blocked_targets.clear()
+        _blocked_nav_version = nav.version
+        return
+    for target_id in _blocked_targets.keys():
+        var record: Dictionary = _blocked_targets[target_id]
+        var remaining := maxf(0.0, float(record.get("remaining", 0.0)) - delta)
+        if remaining <= 0.0 or not is_instance_valid(instance_from_id(int(target_id))):
+            _blocked_targets.erase(target_id)
+        else:
+            record["remaining"] = remaining
+            _blocked_targets[target_id] = record
+
+
+func worker_ai_diagnostics() -> Dictionary:
+    var target_label := ""
+    if target != null and is_instance_valid(target):
+        target_label = String(target.name)
+    var workplace_label := ""
+    if workplace != null and is_instance_valid(workplace):
+        workplace_label = String(workplace.id)
+    return {
+        "job": job,
+        "state": String(State.keys()[state]),
+        "status": work_ai_status,
+        "detail": work_ai_detail,
+        "target": target_label,
+        "workplace": workplace_label,
+        "carry_kind": carry_kind,
+        "carry": carry,
+        "remaining_path_points": maxi(0, _path.size() - _pi),
+        "temporarily_blocked_targets": _blocked_targets.size()
+    }
 
 
 func _find_scout_work() -> void:
@@ -1155,7 +1289,14 @@ func blacksmith_behavior_assigned_recipe() -> String:
 
 
 func blacksmith_behavior_advance_work(delta: float) -> bool:
+    var previous_work_t := _work_t
     _work_t += delta
+    var strike_interval := SMITH_WORK_SECONDS / 3.0
+    var previous_strikes := floori(previous_work_t / strike_interval)
+    var current_strikes := floori(_work_t / strike_interval)
+    if workplace != null and is_instance_valid(workplace):
+        for strike in range(previous_strikes, current_strikes):
+            Events.fx_burst.emit("spark", workplace.global_position + Vector2(0, -7), Vector2.UP, 0.65)
     return _work_t >= SMITH_WORK_SECONDS
 
 
@@ -1163,6 +1304,14 @@ func blacksmith_behavior_release(recheck_delay: float) -> void:
     _release()
     state = State.IDLE
     _decide_t = recheck_delay
+
+
+func builder_behavior_advance_construction(delta: float) -> bool:
+    _work_t += delta
+    if _work_t < BUILDER_REPAIR_INTERVAL:
+        return false
+    _work_t = fposmod(_work_t, BUILDER_REPAIR_INTERVAL)
+    return true
 
 
 func builder_behavior_advance_work(delta: float) -> bool:
@@ -1173,9 +1322,11 @@ func builder_behavior_advance_work(delta: float) -> bool:
     return true
 
 
-func builder_behavior_release() -> void:
+func builder_behavior_release(reason: String = "IDLE") -> void:
     _release()
     state = State.IDLE
+    _decide_t = 0.5
+    _set_work_status(reason, "Builder released the previous task and will re-evaluate work")
 
 
 func _release_heal_target() -> void:
@@ -1204,6 +1355,42 @@ func _is_in_workplace_radius(candidate) -> bool:
         return false
     var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
     return workplace.position.distance_squared_to(candidate.position) <= radius * radius
+
+
+## Frontier deliberately keeps its starting clearing free of resources. Let the
+## initial Keep depot reach the resource ring; specialist worksite radii remain
+## authoritative once a Lumber Camp or Quarry has been assigned.
+func _is_in_gather_radius(candidate) -> bool:
+    var supply = get_tree().get_first_node_in_group("supply_network")
+    for depot in get_tree().get_nodes_in_group("depots"):
+        if supply != null and not supply.is_depot_connected(depot):
+            continue
+        var radius := float(depot.data.get("work_radius", DEFAULT_WORK_RADIUS))
+        if WorldConfig.is_frontier_profile() and String(depot.id) == "keep":
+            var clearing_radius := maxf(
+                WorldConfig.safe_radius + 7.0,
+                float(WorldConfig.map_size) * 0.15
+            )
+            radius = maxf(radius, clearing_radius + 4.0)
+        radius *= WorldConfig.tile_size
+        if depot.position.distance_squared_to(candidate.position) <= radius * radius:
+            return true
+    return false
+
+
+## Frontier builders can reach construction sites just beyond their depot's
+## claim edge. Repairs remain restricted to the workplace's normal work radius.
+func _is_builder_site_in_range(site) -> bool:
+    if not has_valid_workplace():
+        return false
+    var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS))
+    if WorldConfig.is_frontier_profile():
+        var fallback_claim_radius := WorldConfig.starting_claim_radius if String(workplace.id) == "keep" else 0.0
+        var claim_radius := float(workplace.data.get("claim_radius", fallback_claim_radius))
+        if claim_radius > 0.0:
+            radius = maxf(radius, claim_radius + 2.0)
+    radius *= WorldConfig.tile_size
+    return workplace.position.distance_squared_to(site.position) <= radius * radius
 
 
 func _is_in_work_radius(candidate) -> bool:
@@ -1244,10 +1431,13 @@ func _go_depot() -> void:
             best_path = path
     if _depot == null:
         state = State.IDLE
+        _decide_t = 4.0
+        _set_work_status("NO_REACHABLE_DEPOT", "Cargo is retained; no connected depot has a valid path or capacity")
         return
     _goal_cells = _depot.cells()
     _set_path(best_path)
     state = State.TO_DEPOT
+    _set_work_status("DELIVERING", "Carrying %d %s to %s" % [carry, carry_kind, String(_depot.id)])
 
 
 func _deposit() -> void:
@@ -1282,19 +1472,26 @@ func _return_to_work() -> void:
     if target == null or not is_instance_valid(target):
         target = null
         state = State.IDLE
+        _set_work_status("TARGET_LOST", "Previous target no longer exists after delivery")
         return
     if target.has_method("is_available") and not target.is_available(self):
         _release()
         state = State.IDLE
+        _decide_t = 0.25
+        _set_work_status("TARGET_UNAVAILABLE", "Previous target is no longer available")
         return
     _goal_cells = _cells_of(target)
     var p: PackedVector2Array = nav.path_adjacent(position, _goal_cells)
     if p.is_empty():
+        _mark_target_blocked(target, "RETURN_ROUTE_BLOCKED")
         _release()
         state = State.IDLE
+        _decide_t = 0.25
+        _set_work_status("RETURN_ROUTE_BLOCKED", "Could not route back to previous target; selecting another")
         return
     _set_path(p)
     state = State.TO_WORK
+    _set_work_status("RETURNING_TO_WORK", "Returning to previous target after delivery")
 
 
 # ---------------------------------------------------------------- malam
@@ -1379,8 +1576,11 @@ func _repath() -> void:
             State.FLEEING:
                 _hide()
             State.TO_WORK:
+                _mark_target_blocked(target, "PATH_BLOCKED")
                 _release()
                 state = State.IDLE
+                _decide_t = 0.25
+                _set_work_status("PATH_BLOCKED", "Navigation changed and the assigned target is no longer reachable")
             State.EXPEDITION, State.RECALLING:
                 _expeditioning = false
                 _expedition_target = null
@@ -1393,6 +1593,7 @@ func _repath() -> void:
                 _decide_t = SCOUT_RECHECK_SECONDS
             _:
                 state = State.IDLE
+                _set_work_status("PATH_BLOCKED", "Current navigation goal became unreachable")
         return
     _set_path(p)
 
@@ -1450,10 +1651,6 @@ func _draw() -> void:
     if job == "soldier" and weapon_equipped and not is_archer():
         draw_line(Vector2(6, -8), Vector2(10, -15), Color("#d6dde0"), 1.5)
         draw_line(Vector2(5, -9), Vector2(8, -8), Color("#c58a42"), 1.5)
-    if job == "builder":
-        draw_rect(Rect2(8, -13, 2, 6), Color("#704b2a"))
-        draw_rect(Rect2(7, -15, 5, 2), Color("#aeb5bf"))
-        draw_rect(Rect2(9, -16, 3, 2), Color("#d5dbe3"))
     if carry > 0:
         var cc := Color("#a8743a")
         if carry_kind == "stone":

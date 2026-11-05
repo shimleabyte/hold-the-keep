@@ -1,0 +1,80 @@
+name: Role Sprite Visual QA
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/role-sprite-visual-qa.yml"
+      - "assets/sprites/villager_builder.svg"
+      - "assets/sprites/enemy_archer.svg"
+      - "assets/sprites/enemy_brute.svg"
+      - "scripts/entities/villager.gd"
+      - "scripts/entities/enemy.gd"
+      - "tests/shot_role_sprite_gameplay.gd"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/role-sprite-visual-qa.yml"
+      - "assets/sprites/villager_builder.svg"
+      - "assets/sprites/enemy_archer.svg"
+      - "assets/sprites/enemy_brute.svg"
+      - "scripts/entities/villager.gd"
+      - "scripts/entities/enemy.gd"
+      - "tests/shot_role_sprite_gameplay.gd"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: role-sprite-visual-qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  role-sprite-gameplay-capture:
+    name: Role sprites at gameplay zoom · Godot 4.7
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot 4.7
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Install Xvfb and Mesa
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Render the three role sprites in gameplay
+        env:
+          HTK_AUTO_START_GAME: "1"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/hold-the-keep-role-visual-qa
+          timeout --signal=TERM --kill-after=15s 180s \
+            xvfb-run -a -s "-screen 0 1600x900x24" \
+            godot --path . --rendering-driver opengl3 --fixed-fps 30 \
+            --script res://tests/shot_role_sprite_gameplay.gd \
+            2>&1 | tee /tmp/hold-the-keep-role-visual-qa/render.log
+
+      - name: Upload gameplay captures and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: role-sprite-gameplay-godot-4.7
+          path: |
+            /tmp/hold-the-keep-role-visual-qa/*.png
+            /tmp/hold-the-keep-role-visual-qa/render.log
+          if-no-files-found: warn
+          retention-days: 14

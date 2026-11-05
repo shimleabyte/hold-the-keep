@@ -75,32 +75,41 @@ static func generate(
         "hearth_shrine", "ruin_marker", "standing_stone", "fen_reeds", "ash_pillar"
     ]
 
+    # Regions are mutually exclusive, so all five landmark searches can share
+    # one row-major scan. Strictly-less comparison preserves the original tie order.
+    var best_cells: Array[Vector2i] = []
+    var best_distances: Array[float] = []
     for region_index in regions.size():
-        var target_region := regions[region_index]
-        var best_cell := Vector2i(-1, -1)
-        var best_distance := INF
-        for y in map_size:
-            for x in map_size:
-                var cell := Vector2i(x, y)
-                var index := y * map_size + x
-                if int(frontier_regions[index]) != target_region:
-                    continue
-                if int(eligible_cells[index]) == 0 or used_cells.has(cell):
-                    continue
+        best_cells.append(Vector2i(-1, -1))
+        best_distances.append(INF)
 
-                var distance_from_home := Vector2(cell).distance_to(center)
-                var minimum_home_distance := safe_radius + 3.0 if target_region == REGION_HEARTHLAND else clearing_radius + 4.0
-                if distance_from_home < minimum_home_distance:
-                    continue
+    for y in map_size:
+        for x in map_size:
+            var index := y * map_size + x
+            var region_index := int(frontier_regions[index])
+            if region_index < 0 or region_index >= regions.size():
+                continue
+            if int(eligible_cells[index]) == 0:
+                continue
 
-                var distance_to_target := Vector2(cell).distance_squared_to(targets[region_index])
-                if distance_to_target < best_distance:
-                    best_distance = distance_to_target
-                    best_cell = cell
+            var cell := Vector2i(x, y)
+            if used_cells.has(cell):
+                continue
+            var target_region := regions[region_index]
+            var distance_from_home := Vector2(cell).distance_to(center)
+            var minimum_home_distance := safe_radius + 3.0 if target_region == REGION_HEARTHLAND else clearing_radius + 4.0
+            if distance_from_home < minimum_home_distance:
+                continue
 
+            var distance_to_target := Vector2(cell).distance_squared_to(targets[region_index])
+            if distance_to_target < best_distances[region_index]:
+                best_distances[region_index] = distance_to_target
+                best_cells[region_index] = cell
+
+    for region_index in regions.size():
+        var best_cell := best_cells[region_index]
         if best_cell.x < 0:
             continue
-
         used_cells[best_cell] = true
         layout.append({
             "cell": best_cell,

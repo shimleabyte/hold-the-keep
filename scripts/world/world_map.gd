@@ -267,6 +267,40 @@ func _spawn_frontier_decorations() -> void:
         _record_frontier_decoration(
             cell, String(entry["kind"]), int(entry["variant"]), bool(entry["landmark"])
         )
+    if generate_resource_nodes:
+        _spawn_frontier_decoration_batches()
+
+
+func _spawn_frontier_decoration_batches() -> void:
+    # One CanvasItem per world row and z-layer preserves the original Y-sort foot.
+    var row_batches: Array = []
+    row_batches.resize(map_size * 2)
+    for entry in generated_decoration_layout:
+        var cell: Vector2i = entry["cell"]
+        var landmark := bool(entry["landmark"])
+        var batch_index := cell.y * 2 + (1 if landmark else 0)
+        if row_batches[batch_index] == null:
+            row_batches[batch_index] = []
+        var batch_entries: Array = row_batches[batch_index]
+        batch_entries.append({
+            "kind": String(entry["kind"]),
+            "variant": int(entry["variant"]),
+            "offset": Vector2(cell.x * tile_size + tile_size / 2.0, 0.0)
+        })
+        row_batches[batch_index] = batch_entries
+
+    for batch_index in row_batches.size():
+        if row_batches[batch_index] == null:
+            continue
+        var batch_entries: Array = row_batches[batch_index]
+        if batch_entries.is_empty():
+            continue
+        var row := floori(float(batch_index) / 2.0)
+        var landmark := batch_index % 2 == 1
+        var batch_node = FRONTIER_DECORATION_SCRIPT.new()
+        batch_node.setup_batch(batch_entries, landmark)
+        batch_node.position = Vector2(0.0, (row + 1) * tile_size)
+        entities.add_child(batch_node)
 
 
 ## Snapshot the current map constraints for the pure decoration stage.
@@ -290,15 +324,7 @@ func _record_frontier_decoration(cell: Vector2i, kind: String, variation: int, l
         "variant": variation,
         "landmark": landmark
     })
-    if not generate_resource_nodes:
-        return
-    var prop = FRONTIER_DECORATION_SCRIPT.new()
-    prop.setup(kind, variation, landmark)
-    prop.position = Vector2(
-        cell.x * tile_size + tile_size / 2.0,
-        cell.y * tile_size + tile_size
-    )
-    entities.add_child(prop)
+    # Visual creation is deferred until all deterministic records can be batched.
 
 
 func _build_frontier_regions() -> void:
