@@ -14,7 +14,7 @@ func tick(delta: float) -> void:
         _villager.blacksmith_behavior_release(0.2)
         return
 
-    _villager.anim.face(_villager.target.position - _villager.position)
+    _villager.anim.face(_villager.workplace.position - _villager.position)
     if not _villager.blacksmith_behavior_advance_work(delta):
         return
 

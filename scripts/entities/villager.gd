@@ -517,12 +517,22 @@ func _update_anim(delta: float) -> void:
         anim.play("hurt")
     elif state == State.WORKING:
         anim.play("work")
+        if job in ["woodcutter", "miner", "builder", "blacksmith", "farmer"]:
+            anim.work_style = job
         if job == "farmer":
-            anim.speed_scale = 0.5
+            anim.speed_scale = 1.0
+            var farm_motion_cycle := FARM_CYCLE / 10.0
+            anim.manual_progress = fposmod(_work_t, farm_motion_cycle) / farm_motion_cycle
+        elif job == "blacksmith":
+            anim.speed_scale = 1.0
+            var forge_motion_cycle := SMITH_WORK_SECONDS / 3.0
+            anim.manual_progress = fposmod(_work_t, forge_motion_cycle) / forge_motion_cycle
         elif job == "builder":
+            anim.speed_scale = 1.0
             anim.manual_progress = fposmod(_work_t, BUILDER_REPAIR_INTERVAL) / BUILDER_REPAIR_INTERVAL
         else:
-            anim.manual_progress = _work_t / _hit_interval()
+            anim.speed_scale = 1.0
+            anim.manual_progress = fposmod(_work_t, _hit_interval()) / _hit_interval()
     elif moving:
         anim.play("run" if _running else "walk")
         anim.speed_scale = 1.0
@@ -606,6 +616,7 @@ func _tick_working(delta: float) -> void:
         _work_t += delta
         if _work_t >= FARM_CYCLE:
             _work_t = 0.0
+            Events.fx_burst.emit("food", target.global_position + Vector2(0, -6), Vector2.UP, 0.65)
             receive("food", roundi(Tech.stat("farm.yield", float(FARM_YIELD))))
             if carry >= _carry_cap():
                 _go_depot()
@@ -1157,7 +1168,14 @@ func blacksmith_behavior_assigned_recipe() -> String:
 
 
 func blacksmith_behavior_advance_work(delta: float) -> bool:
+    var previous_work_t := _work_t
     _work_t += delta
+    var strike_interval := SMITH_WORK_SECONDS / 3.0
+    var previous_strikes := floori(previous_work_t / strike_interval)
+    var current_strikes := floori(_work_t / strike_interval)
+    if workplace != null and is_instance_valid(workplace):
+        for strike in range(previous_strikes, current_strikes):
+            Events.fx_burst.emit("spark", workplace.global_position + Vector2(0, -7), Vector2.UP, 0.65)
     return _work_t >= SMITH_WORK_SECONDS
 
 
@@ -1167,8 +1185,12 @@ func blacksmith_behavior_release(recheck_delay: float) -> void:
     _decide_t = recheck_delay
 
 
-func builder_behavior_advance_construction(delta: float) -> void:
+func builder_behavior_advance_construction(delta: float) -> bool:
     _work_t += delta
+    if _work_t < BUILDER_REPAIR_INTERVAL:
+        return false
+    _work_t = fposmod(_work_t, BUILDER_REPAIR_INTERVAL)
+    return true
 
 
 func builder_behavior_advance_work(delta: float) -> bool:
