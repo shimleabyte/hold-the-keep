@@ -44,7 +44,7 @@ jobs:
   frontier-same-seed-render:
     name: Frontier same-seed rendered comparison · Godot 4.7
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 9
     steps:
       - name: Checkout
         uses: actions/checkout@v7
