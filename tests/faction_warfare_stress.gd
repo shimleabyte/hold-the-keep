@@ -283,7 +283,7 @@ func _run() -> void:
         var saboteur_behavior_probe = saboteur_probe.saboteur_behavior
         saboteur_behavior_probe._interceptor_scan_timer = 0.0
         saboteur_behavior_probe._nearest_interceptor()
-        var saboteur_scan_timer := saboteur_behavior_probe._interceptor_scan_timer
+        var saboteur_scan_timer: float = float(saboteur_behavior_probe._interceptor_scan_timer)
         saboteur_behavior_probe._nearest_interceptor()
         require(is_equal_approx(saboteur_scan_timer, 0.12)
             and is_equal_approx(saboteur_behavior_probe._interceptor_scan_timer, saboteur_scan_timer),
@@ -292,7 +292,7 @@ func _run() -> void:
         var siege_behavior_probe = siege_probe.siege_behavior
         siege_behavior_probe._disruptor_scan_timer = 0.0
         siege_behavior_probe._nearest_disruptor()
-        var siege_scan_timer := siege_behavior_probe._disruptor_scan_timer
+        var siege_scan_timer: float = float(siege_behavior_probe._disruptor_scan_timer)
         siege_behavior_probe._nearest_disruptor()
         require(is_equal_approx(siege_scan_timer, 0.12)
             and is_equal_approx(siege_behavior_probe._disruptor_scan_timer, siege_scan_timer),
