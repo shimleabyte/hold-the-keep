@@ -2,7 +2,8 @@ extends SceneTree
 ## Manual performance probe for Classic, Frontier and Frontier Expedition.
 ## Run locally with:
 ##   godot --path . --script res://tools/performance_probe.gd
-## Run windowed at a fixed resolution; headless mode cannot provide meaningful draw-call counts.
+## Windowed runs at a fixed resolution include render counters. Headless runs still measure CPU/frame
+## timing, but draw-call and render-object values are marked unavailable.
 ## This is diagnostic tooling, not a pass/fail test. Compare profiles on the same machine.
 
 const PROFILES: Array[String] = ["classic", "frontier", "frontier_expedition"]
@@ -80,8 +81,10 @@ func _run() -> void:
         await process_frame
 
     OS.set_environment("HTK_AUTO_START_GAME", "0")
+    var headless := DisplayServer.get_name().to_lower() == "headless"
     var report := {
         "engine": Engine.get_version_info(),
+        "render_mode": "headless" if headless else "windowed",
         "warmup_frames": WARMUP_FRAMES,
         "idle_sample_frames": IDLE_SAMPLE_FRAMES,
         "active_wave_sample_frames": WAVE_SAMPLE_FRAMES,
@@ -246,13 +249,14 @@ func _max_int(values: Array[int]) -> int:
 
 func _capture_frames(count: int) -> Array[Dictionary]:
     var samples: Array[Dictionary] = []
+    var has_render_counters := DisplayServer.get_name().to_lower() != "headless"
     for _frame in count:
         await process_frame
         samples.append({
             "process_ms": float(Performance.get_monitor(Performance.TIME_PROCESS)) * 1000.0,
             "physics_ms": float(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)) * 1000.0,
-            "draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
-            "render_objects": int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)),
+            "draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)) if has_render_counters else -1,
+            "render_objects": int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)) if has_render_counters else -1,
             "physics_2d_objects": int(Performance.get_monitor(Performance.PHYSICS_2D_ACTIVE_OBJECTS)),
             "fps": Engine.get_frames_per_second()
         })
