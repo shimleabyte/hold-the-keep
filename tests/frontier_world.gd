@@ -556,13 +556,14 @@ func _initialize() -> void:
         "Placing a wall must not rebuild Keep-rooted road/depot connectivity")
     assert(main.nav._dirty_cells.size() == 1 and not main.nav._dirty,
         "Placing a one-cell wall must queue one cell instead of a full-grid rebuild")
-    await ticks(1)
+    # physics_frame resumes before node _physics_process callbacks; wait through the update frame.
+    await ticks(2)
     assert(main.nav.astar.is_point_solid(navigation_probe_cell)
         and main.nav.version == navigation_version + 1,
         "The incremental navigation update must make the placed wall solid")
     assert(main.build.demolish_at(navigation_probe_cell),
         "The navigation probe wall must be removable after the first update")
-    await ticks(1)
+    await ticks(2)
     assert(not main.territory._dirty and not main.supply._dirty,
         "Removing an ordinary wall must not trigger unrelated territory or depot-graph rebuilds")
     assert(not main.nav.astar.is_point_solid(navigation_probe_cell)
@@ -581,7 +582,7 @@ func _initialize() -> void:
         "Placing a road must not trigger a full enemy flow-field rebuild")
     assert(main.supply._dirty,
         "Placing a road must still invalidate Keep-rooted logistics connectivity")
-    await ticks(1)
+    await ticks(2)
     assert(not main.supply._dirty,
         "The logistics graph must rebuild after a road is placed")
     assert(main.build.demolish_at(navigation_probe_cell),
