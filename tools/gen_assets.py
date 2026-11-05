@@ -12,6 +12,7 @@ Ubah palet di bagian atas lalu jalankan ulang untuk mengganti tampilan.
 import math
 import os
 import random
+import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_OUT = os.path.join(HERE, "..", "assets", "sprites")
@@ -449,6 +450,140 @@ def humanoid_sheet(name, look):
             col += 1
     sheet.save(name)
 
+
+
+
+def _role_sprite_rect(x, y, w, h, fill):
+    return '<rect x="%s" y="%s" width="%s" height="%s" fill="%s"/>' % (x, y, w, h, fill)
+
+
+def make_role_variant(source_name, output_name, kind):
+    """Build a role sheet from a stable base sheet plus role equipment overlays.
+
+    The overlay grid matches the committed 22-frame x 3-direction sheets exactly.
+    This keeps the SVGs reproducible without forking the underlying walk/attack poses.
+    """
+    source_path = os.path.join(OUT, source_name + ".svg")
+    with open(source_path, "r", encoding="utf-8") as source_file:
+        source = source_file.read()
+
+    match = re.search(r'<svg[^>]*width="(\d+)"[^>]*height="(\d+)"[^>]*>', source)
+    if not match:
+        raise ValueError("Could not read dimensions from %s" % source_path)
+    width, height = int(match.group(1)), int(match.group(2))
+    fw, fh = width // NF, height // len(VIEWS)
+    if fw != 20 or fh != 20 or width % NF or height % len(VIEWS):
+        raise ValueError("Unexpected role sprite frame layout: %dx%d" % (width, height))
+
+    groups = []
+    for row in range(len(VIEWS)):
+        for frame in range(NF):
+            rects = []
+            if kind == "builder":
+                rects.extend([
+                    _role_sprite_rect(5, 4, 10, 1, "#3f3024"),
+                    _role_sprite_rect(6, 2, 8, 3, "#dca43a"),
+                    _role_sprite_rect(8, 2, 3, 1, "#fff0b5"),
+                    _role_sprite_rect(6, 5, 8, 1, "#9b682d"),
+                ])
+                if row == 0:
+                    rects.extend([
+                        _role_sprite_rect(6, 12, 8, 4, "#68442d"),
+                        _role_sprite_rect(6, 12, 8, 1, "#bd8950"),
+                        _role_sprite_rect(7, 13, 1, 2, "#e1ad68"),
+                        _role_sprite_rect(12, 13, 1, 2, "#4d3325"),
+                    ])
+                elif row == 1:
+                    rects.extend([
+                        _role_sprite_rect(6, 11, 8, 4, "#68442d"),
+                        _role_sprite_rect(6, 11, 8, 1, "#bd8950"),
+                    ])
+                else:
+                    rects.extend([
+                        _role_sprite_rect(7, 12, 5, 4, "#68442d"),
+                        _role_sprite_rect(7, 12, 5, 1, "#bd8950"),
+                    ])
+                if 14 <= frame <= 17:
+                    hammer_y = [8, 10, 13, 11][frame - 14]
+                elif 10 <= frame <= 13:
+                    hammer_y = [10, 11, 12, 12][frame - 10]
+                else:
+                    hammer_y = 12
+                rects.extend([
+                    _role_sprite_rect(15, hammer_y + 1, 1, max(1, 18 - (hammer_y + 1)), "#6b4a2b"),
+                    _role_sprite_rect(14, hammer_y, 4, 2, "#858f9d"),
+                    _role_sprite_rect(15, hammer_y, 2, 1, "#cfd6e2"),
+                ])
+            elif kind == "archer":
+                quiver_x = 2 if row == 2 else 3
+                shift = [0, 1, 2, 1][frame - 10] if 10 <= frame <= 13 else 0
+                bow_x = 15 + shift % 2
+                rects.extend([
+                    _role_sprite_rect(quiver_x, 8, 3, 6, "#59402b"),
+                    _role_sprite_rect(quiver_x, 8, 3, 1, "#a98557"),
+                    _role_sprite_rect(quiver_x + 1, 6, 1, 7, "#cfd6e2"),
+                    _role_sprite_rect(quiver_x + 2, 7, 1, 6, "#cfd6e2"),
+                    _role_sprite_rect(8, 3, 1, 2, "#d6c18b"),
+                    _role_sprite_rect(9, 2, 1, 2, "#a9bd7b"),
+                    _role_sprite_rect(bow_x, 7, 1, 2, "#8b6b43"),
+                    _role_sprite_rect(bow_x + 1, 9, 1, 3, "#8b6b43"),
+                    _role_sprite_rect(bow_x, 12, 1, 3, "#8b6b43"),
+                    _role_sprite_rect(bow_x - 1, 15, 2, 1, "#8b6b43"),
+                    _role_sprite_rect(bow_x, 8, 1, 7, "#d8d3c3"),
+                ])
+            elif kind == "brute":
+                rects.extend([
+                    _role_sprite_rect(2, 9, 5, 4, "#424953"),
+                    _role_sprite_rect(2, 9, 5, 1, "#b6bdc6"),
+                    _role_sprite_rect(13, 9, 5, 4, "#424953"),
+                    _role_sprite_rect(13, 9, 5, 1, "#b6bdc6"),
+                    _role_sprite_rect(6, 10, 8, 5, "#59616d"),
+                    _role_sprite_rect(7, 11, 6, 1, "#c7cdd5"),
+                    _role_sprite_rect(9, 12, 2, 1, "#9b8250"),
+                    _role_sprite_rect(4, 4, 2, 2, "#9aa3b2"),
+                    _role_sprite_rect(14, 4, 2, 2, "#9aa3b2"),
+                    _role_sprite_rect(6, 3, 8, 3, "#626b75"),
+                    _role_sprite_rect(7, 3, 6, 1, "#cfd6e2"),
+                    _role_sprite_rect(7, 7, 6, 1, "#252a33"),
+                ])
+                mace_y = [8, 10, 12, 11][frame - 10] if 10 <= frame <= 13 else 11
+                rects.extend([
+                    _role_sprite_rect(15, mace_y + 2, 1, max(1, 18 - (mace_y + 2)), "#6b4a2b"),
+                    _role_sprite_rect(14, mace_y, 4, 3, "#68717d"),
+                    _role_sprite_rect(14, mace_y, 4, 1, "#c7cdd5"),
+                    _role_sprite_rect(15, mace_y - 1, 2, 1, "#9b8250"),
+                ])
+            else:
+                raise ValueError("Unknown role sprite variant: %s" % kind)
+
+            groups.append(
+                '<g transform="translate(%d %d)">%s</g>'
+                % (frame * fw, row * fh, "".join(rects))
+            )
+
+    output = source.replace("</svg>", "\n".join(groups) + "\n</svg>")
+    if kind == "builder":
+        output = (output.replace("#8a8f98", "#b77935")
+                        .replace("#6e737b", "#825329")
+                        .replace("#e0b030", "#c98d2c")
+                        .replace("#b8901f", "#9a6b2d"))
+    elif kind == "archer":
+        output = (output.replace("#a33b3b", "#496c54")
+                        .replace("#7d2c2c", "#304b3b")
+                        .replace("#5c1f1f", "#253e32")
+                        .replace("#c0392b", "#557b58"))
+    else:
+        output = (output.replace("#3b4f8a", "#565a63")
+                        .replace("#2d3d6b", "#343943"))
+
+    with open(os.path.join(OUT, output_name + ".svg"), "w", encoding="utf-8") as output_file:
+        output_file.write(output)
+
+
+def make_role_variants():
+    make_role_variant("villager_miner", "villager_builder", "builder")
+    make_role_variant("enemy_bandit", "enemy_archer", "archer")
+    make_role_variant("enemy_soldier", "enemy_brute", "brute")
 
 # ---------------------------------------------------------------- serigala
 
@@ -895,6 +1030,7 @@ def make_tech_assets():
 
 if __name__ == "__main__":
     make_characters()
+    make_role_variants()
     make_nature()
     make_tiles()
     make_buildings()
