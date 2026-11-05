@@ -43,14 +43,16 @@ func _run() -> void:
 
         for _frame in WARMUP_FRAMES:
             await process_frame
+        await _wait_for_flow_snapshot(main.flow)
 
         var system_timings := {
             "navigation_rebuild": _measure_system(main.nav, "rebuild"),
-            "flow_field_rebuild": _measure_system(main.flow, "rebuild"),
+            "flow_field_rebuild": await _measure_flow_rebuild(main.flow),
             "territory_rebuild": _measure_system(main.territory, "rebuild"),
             "village_job_assignment": _measure_system(main.village, "assign_jobs"),
             "fog_source_scan": _measure_system(main.fog, "_scan_sources")
         }
+        var building_completion_timing: Dictionary = await _measure_building_completion(main)
 
         var idle_samples := await _capture_frames(IDLE_SAMPLE_FRAMES)
         clock.day = 6
@@ -65,6 +67,7 @@ func _run() -> void:
             "map_cells": config.map_cells,
             "world_creation_ms": generation_ms,
             "system_timings_ms": system_timings,
+            "building_completion_transition": building_completion_timing,
             "scene_counts": _scene_counts(main),
             "idle_frame_samples": _summarize_frames(idle_samples),
             "active_wave_frame_samples": _summarize_frames(wave_samples)
@@ -110,6 +113,139 @@ func _measure_system(target: Object, method_name: String) -> Dictionary:
         "min": samples[0]
     }
 
+
+
+func _wait_for_flow_snapshot(flow_field: Node, maximum_frames := 600) -> int:
+    var waited := 0
+    while not flow_field.is_current():
+        await process_frame
+        waited += 1
+        if waited >= maximum_frames:
+            push_error("Performance probe: FlowField did not publish a current snapshot")
+            return waited
+    return waited
+
+
+func _measure_flow_rebuild(flow_field: Node) -> Dictionary:
+    var completion_ms: Array[float] = []
+    var completion_frames: Array[int] = []
+    var worst_frame_ms: Array[float] = []
+
+    for _repeat in SYSTEM_REPEATS:
+        var previous_version: int = int(flow_field.version)
+        var started := Time.get_ticks_usec()
+        var waited_frames := 0
+        var peak_frame_ms := 0.0
+        flow_field.rebuild()
+
+        while not flow_field.is_current() or int(flow_field.version) <= previous_version:
+            var frame_started := Time.get_ticks_usec()
+            await process_frame
+            var frame_ms := float(Time.get_ticks_usec() - frame_started) / 1000.0
+            peak_frame_ms = maxf(peak_frame_ms, frame_ms)
+            waited_frames += 1
+            if waited_frames >= 600:
+                push_error("Performance probe: FlowField rebuild timed out")
+                break
+
+        completion_ms.append(float(Time.get_ticks_usec() - started) / 1000.0)
+        completion_frames.append(waited_frames)
+        worst_frame_ms.append(peak_frame_ms)
+
+    return {
+        "schedule_call_ms": _measure_call_only(flow_field, "rebuild"),
+        "completion_ms_avg": _average(completion_ms),
+        "completion_ms_max": _max_float(completion_ms),
+        "completion_frames_avg": _average_int(completion_frames),
+        "completion_frames_max": _max_int(completion_frames),
+        "peak_frame_wall_ms_max": _max_float(worst_frame_ms)
+    }
+
+
+func _measure_call_only(target: Object, method_name: String) -> float:
+    var started := Time.get_ticks_usec()
+    target.call(method_name)
+    var elapsed := float(Time.get_ticks_usec() - started) / 1000.0
+    # The call only schedules a rebuild; it is not the total pathfinding cost.
+    return elapsed
+
+
+func _measure_building_completion(main: Node) -> Dictionary:
+    var keep = null
+    for depot in get_nodes_in_group("depots"):
+        if is_instance_valid(depot) and String(depot.id) == "keep":
+            keep = depot
+            break
+    if keep == null:
+        return {"error": "Keep not found"}
+
+    var probe_cell := _find_build_probe_cell(main, keep.cell)
+    if probe_cell.x < 0:
+        return {"error": "No free construction probe cell"}
+    var site = main.build.create_construction_site("wall", probe_cell, keep.cell)
+    await _wait_for_flow_snapshot(main.flow)
+    var previous_version: int = int(main.flow.version)
+    var started := Time.get_ticks_usec()
+    site._finish()
+    var completion_call_ms := float(Time.get_ticks_usec() - started) / 1000.0
+
+    var settle_started := Time.get_ticks_usec()
+    var settle_frames := 0
+    var peak_frame_ms := 0.0
+    while not main.flow.is_current() or int(main.flow.version) <= previous_version:
+        var frame_started := Time.get_ticks_usec()
+        await process_frame
+        var frame_ms := float(Time.get_ticks_usec() - frame_started) / 1000.0
+        peak_frame_ms = maxf(peak_frame_ms, frame_ms)
+        settle_frames += 1
+        if settle_frames >= 600:
+            push_error("Performance probe: building-completion FlowField did not settle")
+            break
+
+    return {
+        "synchronous_transition_call_ms": completion_call_ms,
+        "flow_settle_ms": float(Time.get_ticks_usec() - settle_started) / 1000.0,
+        "flow_settle_frames": settle_frames,
+        "flow_peak_frame_wall_ms": peak_frame_ms
+    }
+
+
+func _find_build_probe_cell(main: Node, origin: Vector2i) -> Vector2i:
+    for radius in range(3, 20):
+        for y in range(-radius, radius + 1):
+            for x in range(-radius, radius + 1):
+                if maxi(absi(x), absi(y)) != radius:
+                    continue
+                var cell := origin + Vector2i(x, y)
+                if not WorldConfig.is_valid_cell(cell):
+                    continue
+                if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
+                    continue
+                return cell
+    return Vector2i(-1, -1)
+
+
+func _max_float(values: Array[float]) -> float:
+    var maximum := 0.0
+    for value in values:
+        maximum = maxf(maximum, value)
+    return maximum
+
+
+func _average_int(values: Array[int]) -> float:
+    if values.is_empty():
+        return 0.0
+    var total := 0
+    for value in values:
+        total += value
+    return float(total) / float(values.size())
+
+
+func _max_int(values: Array[int]) -> int:
+    var maximum := 0
+    for value in values:
+        maximum = maxi(maximum, value)
+    return maximum
 
 func _capture_frames(count: int) -> Array[Dictionary]:
     var samples: Array[Dictionary] = []
