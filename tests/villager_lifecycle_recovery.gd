@@ -7,7 +7,7 @@ func ticks(count: int) -> void:
         await physics_frame
 
 
-func find_build_site(main: Node, origin: Vector2i, footprint: Vector2i) -> Vector2i:
+func find_build_site(main: Node, origin: Vector2i, footprint: Vector2i, start_position: Vector2 = Vector2.ZERO) -> Vector2i:
     var world_config = root.get_node("WorldConfig")
     var map_size: int = int(world_config.map_size)
     for radius in range(4, 18):
@@ -30,7 +30,8 @@ func find_build_site(main: Node, origin: Vector2i, footprint: Vector2i) -> Vecto
                     if not clear:
                         break
                 var target_cells: Array[Vector2i] = [anchor]
-                if clear and not main.nav.path_adjacent(main.player.position, target_cells).is_empty():
+                var path_origin: Vector2 = start_position if start_position != Vector2.ZERO else main.player.position
+                if clear and not main.nav.path_adjacent(path_origin, target_cells).is_empty():
                     return anchor
     return Vector2i(-1, -1)
 
@@ -101,22 +102,25 @@ func _initialize() -> void:
     var camp = main.build.place_raw("lumber_camp", camp_cell)
     await ticks(2)
 
-    var quarry_cell_a := find_build_site(main, keep.cell, Vector2i(3, 2))
-    assert(quarry_cell_a.x >= 0, "A first reachable Quarry site must exist")
-    var quarry_a = main.build.place_raw("quarry", quarry_cell_a)
-    await ticks(2)
-
-    var quarry_cell_b := find_build_site(main, keep.cell, Vector2i(3, 2))
-    assert(quarry_cell_b.x >= 0, "A second reachable Quarry site must exist")
-    var quarry_b = main.build.place_raw("quarry", quarry_cell_b)
-    await ticks(3)
-
     var worker = main.village.spawn_villager(keep.position + Vector2(0, 24))
     assert(worker.set_job("woodcutter"), "Worker must accept the Woodcutter role")
     worker._find_work()
     assert(worker.workplace == camp and worker.workplace_job == "woodcutter",
         "Woodcutter must claim a Lumber Camp workplace slot")
     assert(camp.free_slots("woodcutter") == 1, "Claim must consume exactly one Lumber Camp slot")
+
+    var quarry_cell_a := find_build_site(main, keep.cell, Vector2i(3, 2), worker.position)
+    assert(quarry_cell_a.x >= 0, "A first Quarry must be reachable from the worker")
+    var quarry_a = main.build.place_raw("quarry", quarry_cell_a)
+    await ticks(2)
+
+    var quarry_cell_b := find_build_site(main, keep.cell, Vector2i(3, 2), worker.position)
+    assert(quarry_cell_b.x >= 0, "A second Quarry must be reachable from the worker")
+    var quarry_b = main.build.place_raw("quarry", quarry_cell_b)
+    await ticks(3)
+    assert(quarry_a != quarry_b, "Lifecycle fixture must create two distinct Quarries")
+    assert(quarry_a.free_slots("miner") > 0 and quarry_b.free_slots("miner") > 0,
+        "Both Quarries must expose free Miner slots")
 
     assert(worker.set_job("miner"), "Worker must be able to change to Miner")
     assert(worker.workplace == null and worker.target == null,
@@ -129,6 +133,10 @@ func _initialize() -> void:
         "Miner must claim a Quarry rather than retaining the old workplace")
 
     var claimed_quarry = worker.workplace
+    var recovery_quarry = quarry_a if claimed_quarry == quarry_b else quarry_b
+    assert(is_instance_valid(recovery_quarry), "The second Quarry must survive the destruction fixture")
+    var recovery_path: PackedVector2Array = main.nav.path_adjacent(worker.position, recovery_quarry.cells())
+    assert(not recovery_path.is_empty(), "The surviving Quarry must have a route from the worker before destruction")
     claimed_quarry.take_damage(claimed_quarry.hp)
     assert(worker.workplace == null and worker.workplace_job.is_empty(),
         "Destroying a workplace must clear the worker's workplace reference")
@@ -136,9 +144,8 @@ func _initialize() -> void:
         "A worker whose workplace is destroyed must leave its stale work state")
     await ticks(2)
     worker._find_work()
-    assert(worker.workplace != null and worker.workplace != claimed_quarry
-            and worker.workplace.id == "quarry",
-        "Worker must recover by claiming another valid Quarry")
+    assert(worker.workplace == recovery_quarry and worker.workplace_job == "miner",
+        "Worker must recover by claiming the other reachable Quarry")
 
     var reserved: Dictionary = {}
     var depleted = spawn_resource_near(main, RockScript, worker, reserved)
