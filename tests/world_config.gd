@@ -78,7 +78,7 @@ func _initialize() -> void:
         "Frontier: Expedition must have its own campaign card")
     var expedition_button := expedition_card.get_node_or_null("Select_frontier_expedition")
     assert(expedition_button is Button
-        and expedition_button.text == "ENTER FRONTIER: EXPEDITION"
+        and expedition_button.text == "FRONTIER: EXPEDITION"
         and String(expedition_button.get_meta("campaign_profile_id", "")) == "frontier_expedition",
         "The Frontier: Expedition button must select the 192x192 Expedition profile")
     var campaign_scroll_rect: Rect2 = title_scroll.get_global_rect()
