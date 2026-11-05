@@ -627,7 +627,6 @@ func _tick_working(delta: float) -> void:
         _work_t += delta
         if _work_t >= FARM_CYCLE:
             _work_t = 0.0
-            Events.fx_burst.emit("food", target.global_position + Vector2(0, -6), Vector2.UP, 0.65)
             receive("food", roundi(Tech.stat("farm.yield", float(FARM_YIELD))))
             if carry >= _carry_cap():
                 _go_depot()
