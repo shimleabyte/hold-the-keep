@@ -530,8 +530,8 @@ func _nearest_contact_target() -> Node2D:
             _contact_target_cache = player
             return _contact_target_cache
     if is_instance_valid(_contact_target_cache):
-        var cached_player := _contact_target_cache == player and player != null and is_instance_valid(player)
-        var cached_defender := _contact_target_cache.is_in_group("defenders")
+        var cached_player: bool = _contact_target_cache == player and player != null and is_instance_valid(player)
+        var cached_defender: bool = _contact_target_cache.is_in_group("defenders")
         if (cached_player or cached_defender) and _contact_target_cache.visible and position.distance_squared_to(_contact_target_cache.position) < reach * reach:
             if _contact_target_scan_t > 0.0:
                 return _contact_target_cache
@@ -556,8 +556,8 @@ func _nearest_shield_target() -> Node2D:
     if is_garrison:
         return _nearest_guard_target()
     if _shield_target_scan_t > 0.0 and is_instance_valid(_shield_target_cache):
-        var cached_player := _shield_target_cache == player and player != null and is_instance_valid(player)
-        var cached_defender := _shield_target_cache.is_in_group("defenders")
+        var cached_player: bool = _shield_target_cache == player and player != null and is_instance_valid(player)
+        var cached_defender: bool = _shield_target_cache.is_in_group("defenders")
         if (cached_player or cached_defender) and _shield_target_cache.visible and position.distance_squared_to(_shield_target_cache.position) <= SHIELD_TARGET_RANGE * SHIELD_TARGET_RANGE:
             return _shield_target_cache
     if _shield_target_scan_t > 0.0:
@@ -617,8 +617,8 @@ func _nearest_ranged_target() -> Node2D:
     if _ranged_target_scan_t > 0.0 and is_instance_valid(_ranged_target_cache):
         var cached_distance := position.distance_squared_to(_ranged_target_cache.position)
         var cached_in_leash := leash_radius <= 0.0 or _ranged_target_cache.position.distance_to(leash_center) <= leash_radius
-        var cached_player := _ranged_target_cache == player and player != null and is_instance_valid(player)
-        var cached_defender := _ranged_target_cache.is_in_group("defenders")
+        var cached_player: bool = _ranged_target_cache == player and player != null and is_instance_valid(player)
+        var cached_defender: bool = _ranged_target_cache.is_in_group("defenders")
         if (cached_player or cached_defender) and _ranged_target_cache.visible and cached_distance <= 165.0 * 165.0 and cached_in_leash:
             return _ranged_target_cache
     if _ranged_target_scan_t > 0.0:
@@ -660,8 +660,8 @@ func _nearest_guard_target() -> Node2D:
     if _guard_target_scan_t > 0.0 and is_instance_valid(_guard_target_cache):
         var cached_distance := position.distance_squared_to(_guard_target_cache.position)
         var cached_in_leash := _guard_target_cache.position.distance_to(leash_center) <= leash_radius
-        var cached_player := _guard_target_cache == player and player != null and is_instance_valid(player)
-        var cached_defender := _guard_target_cache.is_in_group("defenders")
+        var cached_player: bool = _guard_target_cache == player and player != null and is_instance_valid(player)
+        var cached_defender: bool = _guard_target_cache.is_in_group("defenders")
         if (cached_player or cached_defender) and _guard_target_cache.visible and cached_distance <= 150.0 * 150.0 and cached_in_leash:
             return _guard_target_cache
     if _guard_target_scan_t > 0.0:
