@@ -57,6 +57,8 @@ func _initialize() -> void:
     var jobs = []
     for v in vs: jobs.append(v.job)
     print("T2 jobs assigned: ", jobs)
+    assert(vil.count_job("woodcutter") == 1,
+        "The assignment pass must respect the single default Woodcutter quota")
     var wood0 = inv.get_amount("wood")
     var states = {}
     for s in 90:
@@ -87,6 +89,8 @@ func _initialize() -> void:
     vil.quota["farmer"] = 1
     vil.quota["woodcutter"] = 0
     vil.assign_jobs()
+    assert(vil.count_job("farmer") == 1 and vil.count_job("woodcutter") == 0,
+        "Shrinking one quota and growing another must update counts exactly")
     var food0 = inv.get_amount("food")
     await ticks(60 * 70)
     print("T4 food after 70s with 1 farmer: +", inv.get_amount("food") - food0, " farm slots free=", 1 if false else 2 - 0)
@@ -99,6 +103,8 @@ func _initialize() -> void:
     vil.quota["farmer"] = 0
     vil.quota["miner"] = 1
     vil.assign_jobs()
+    assert(vil.count_job("farmer") == 0 and vil.count_job("miner") == 1,
+        "Reassignment must release the prior job and fill the new quota")
     var st0 = inv.get_amount("stone")
     await ticks(60 * 90)
     print("T5 stone after 90s with 1 miner: +", inv.get_amount("stone") - st0)
