@@ -77,6 +77,7 @@ func _initialize() -> void:
     var game_clock = root.get_node("GameClock")
     var events = root.get_node("Events")
     var RockScript: Script = load("res://scripts/entities/rock.gd")
+    var IronOreScript: Script = load("res://scripts/entities/iron_ore.gd")
     assert(world_config.apply_profile("classic"), "Classic profile must be selectable")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
@@ -167,23 +168,66 @@ func _initialize() -> void:
         return
 
     var reserved: Dictionary = {}
-    var depleted = spawn_resource_near(main, RockScript, worker, reserved)
-    var alternate = spawn_resource_near(main, RockScript, worker, reserved)
-    assert(depleted != null and alternate != null,
-        "Quarry must have two reachable resource targets inside its work radius")
+    # Mirror the production miner policy: iron is selected only when the
+    # technology is active and an iron node is currently harvestable.
+    var expected_resource_kind: String = worker._mine_kind()
+    var resource_script: Script = IronOreScript if expected_resource_kind == "iron" else RockScript
+    var depleted = spawn_resource_near(main, resource_script, worker, reserved)
+    var alternate = spawn_resource_near(main, resource_script, worker, reserved)
+    if depleted == null or alternate == null:
+        print("LIFECYCLE_RESOURCE_FIXTURE_FAIL ", {
+            "expected_kind": expected_resource_kind,
+            "workplace": String(worker.workplace.id) if worker.workplace != null else "null",
+            "radius": float(worker.workplace.data.get("work_radius", 0.0)) if worker.workplace != null else 0.0,
+            "reachable_cells": main.nav.reachable_cells(main.nav.cell_of(worker.position)).size(),
+            "first_spawned": depleted != null,
+            "second_spawned": alternate != null
+        })
+        quit(1)
+        return
     worker._find_work()
-    assert(worker.target != null and [depleted, alternate].has(worker.target),
-        "Miner must acquire one of the reachable Quarry resources")
+    if worker.target == null or not [depleted, alternate].has(worker.target):
+        var available_targets: Array[String] = []
+        for candidate in get_nodes_in_group("harvestable"):
+            if candidate.has_method("is_available") and candidate.is_available(worker):
+                available_targets.append("%s:%s" % [String(candidate.yield_kind), String(candidate.name)])
+        print("LIFECYCLE_RESOURCE_CLAIM_FAIL ", {
+            "expected_kind": expected_resource_kind,
+            "worker": worker.worker_ai_diagnostics(),
+            "depleted_kind": String(depleted.yield_kind),
+            "alternate_kind": String(alternate.yield_kind),
+            "depleted_available": depleted.is_available(worker),
+            "alternate_available": alternate.is_available(worker),
+            "depleted_path": main.nav.path_adjacent(worker.position, [main.nav.cell_of(depleted.position)]).size(),
+            "alternate_path": main.nav.path_adjacent(worker.position, [main.nav.cell_of(alternate.position)]).size(),
+            "available_harvestables": available_targets
+        })
+        quit(1)
+        return
     var first_target = worker.target
-    for _hit in range(4):
+    var depletion_hits: int = 6 if String(first_target.yield_kind) == "iron" else 4
+    for _hit in range(depletion_hits):
         first_target.hit()
     worker.state = worker.State.WORKING
     worker._tick_working(0.1)
-    assert(worker.target == null and worker.state == worker.State.IDLE,
-        "A depleted resource must release its worker claim and return it to idle")
+    if worker.target != null or worker.state != worker.State.IDLE:
+        print("LIFECYCLE_RESOURCE_RELEASE_FAIL ", {
+            "resource_kind": String(first_target.yield_kind),
+            "hits": depletion_hits,
+            "worker": worker.worker_ai_diagnostics()
+        })
+        quit(1)
+        return
     worker._find_work()
-    assert(worker.target != null and worker.target != first_target,
-        "Miner must select another available resource after depletion")
+    if worker.target == null or worker.target == first_target:
+        print("LIFECYCLE_ALTERNATE_RESOURCE_FAIL ", {
+            "expected_kind": expected_resource_kind,
+            "worker": worker.worker_ai_diagnostics(),
+            "alternate_available": alternate.is_available(worker),
+            "alternate_path": main.nav.path_adjacent(worker.position, [main.nav.cell_of(alternate.position)]).size()
+        })
+        quit(1)
+        return
 
     var workplace_before_night = worker.workplace
     worker._begin_flee()
