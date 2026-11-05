@@ -73,10 +73,10 @@ func _initialize() -> void:
         "Campaign choices must wrap instead of overflowing horizontally")
     assert(campaign_options.get_child_count() == 3,
         "The title screen must expose Classic, Frontier and Frontier: Expedition")
-    var expedition_card := campaign_options.get_node_or_null("CampaignCard_frontier_expedition")
+    var expedition_card: PanelContainer = campaign_options.get_node_or_null("CampaignCard_frontier_expedition") as PanelContainer
     assert(expedition_card is PanelContainer,
         "Frontier: Expedition must have its own campaign card")
-    var expedition_button := expedition_card.get_node_or_null("Select_frontier_expedition")
+    var expedition_button: Button = expedition_card.find_child("Select_frontier_expedition", true, false) as Button
     assert(expedition_button is Button
         and expedition_button.text == "FRONTIER: EXPEDITION"
         and String(expedition_button.get_meta("campaign_profile_id", "")) == "frontier_expedition",

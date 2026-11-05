@@ -2,11 +2,12 @@ extends SceneTree
 ## Regression checks for pixel-snapped secondary motion across character clips.
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
-const Player := preload("res://scripts/entities/player.gd")
-const Villager := preload("res://scripts/entities/villager.gd")
 
 
 func _initialize() -> void:
+    var events = root.get_node("Events")
+    var VillagerScript: Script = load("res://scripts/entities/villager.gd")
+    var PlayerScript: Script = load("res://scripts/entities/player.gd")
     var anim = SpriteAnim.new()
     anim.face(Vector2.RIGHT)
     anim.play("idle", true)
@@ -62,7 +63,7 @@ func _initialize() -> void:
         "Construction and forging must not use the same hammer timing")
     anim.manual_progress = -1.0
 
-    var builder = Villager.new()
+    var builder = VillagerScript.new()
     assert(not builder.builder_behavior_advance_construction(0.8),
         "Builder construction must not emit an impact before its work interval")
     assert(builder.builder_behavior_advance_construction(0.9),
@@ -77,16 +78,16 @@ func _initialize() -> void:
     var spark_callback := func(kind: String, _at: Vector2, _dir: Vector2, _amount: float) -> void:
         if kind == "spark":
             spark_count[0] += 1
-    Events.fx_burst.connect(spark_callback)
+    events.fx_burst.connect(spark_callback)
     assert(not builder.blacksmith_behavior_advance_work(1.5), "Forging must continue before its completion interval")
     assert(not builder.blacksmith_behavior_advance_work(1.5), "Forging must continue through its second hammer strike")
     assert(builder.blacksmith_behavior_advance_work(1.5), "Forging must complete after its third hammer strike")
-    Events.fx_burst.disconnect(spark_callback)
+    events.fx_burst.disconnect(spark_callback)
     assert(spark_count[0] == 3, "Blacksmith must emit one spark burst for each hammer impact")
     forge.free()
     builder.free()
 
-    var player = Player.new()
+    var player = PlayerScript.new()
     player.anim.play("work", true)
     player._harvest_anim_active = true
     player._pending_harvest = RefCounted.new()

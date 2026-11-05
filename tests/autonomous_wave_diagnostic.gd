@@ -143,7 +143,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     var peak_wave_enemies := 0
     var dawn_reached := false
     var ticks_run := 0
-    var night_start := clock.time_of_day
+    var night_start: float = float(clock.time_of_day)
 
     Engine.time_scale = SIMULATION_TIME_SCALE
     clock.set_process(true)
@@ -239,7 +239,7 @@ func _drive_player(player) -> void:
             continue
         if bool(enemy.is_garrison) or bool(enemy.is_patrol):
             continue
-        var distance := player.global_position.distance_to(enemy.global_position)
+        var distance: float = player.global_position.distance_to(enemy.global_position)
         if distance < nearest_distance:
             nearest = enemy
             nearest_distance = distance
