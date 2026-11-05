@@ -76,7 +76,7 @@ func _initialize() -> void:
     var expedition_card: PanelContainer = campaign_options.get_node_or_null("CampaignCard_frontier_expedition") as PanelContainer
     assert(expedition_card is PanelContainer,
         "Frontier: Expedition must have its own campaign card")
-    var expedition_button: Button = expedition_card.get_node_or_null("Select_frontier_expedition") as Button
+    var expedition_button: Button = expedition_card.find_child("Select_frontier_expedition", true, false) as Button
     assert(expedition_button is Button
         and expedition_button.text == "FRONTIER: EXPEDITION"
         and String(expedition_button.get_meta("campaign_profile_id", "")) == "frontier_expedition",
