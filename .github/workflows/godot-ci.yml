@@ -29,6 +29,9 @@ jobs:
       - name: Validate asset generator syntax
         run: python3 -m py_compile tools/gen_assets.py
 
+      - name: Verify role sprite generator reproducibility
+        run: python3 tools/check_role_sprite_reproducibility.py
+
       - name: Install Godot
         uses: chickensoft-games/setup-godot@v2
         with:
