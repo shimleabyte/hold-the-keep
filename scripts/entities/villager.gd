@@ -103,6 +103,7 @@ var _blocked_targets: Dictionary = {}
 var _blocked_nav_version := -1
 var work_ai_status := "UNASSIGNED"
 var work_ai_detail := ""
+var _desired_resource := ""
 var _decide_t := 0.0
 var _work_t := 0.0
 var _wander_t := 2.0
@@ -309,6 +310,7 @@ func set_job(j: String, preferred_workplace = null) -> bool:
     _blocked_targets.clear()
     work_ai_status = "IDLE_READY" if not job.is_empty() else "UNASSIGNED"
     work_ai_detail = ""
+    _desired_resource = ""
     if state != State.HIDDEN and state != State.FLEEING:
         state = State.IDLE
         _path = PackedVector2Array()
@@ -956,6 +958,7 @@ func _find_work() -> void:
         _set_work_status("SCOUT_SEARCHING", "Evaluating unexplored cells")
         _find_scout_work()
         return
+    _desired_resource = ""
     _set_work_status("SEARCHING", "Evaluating eligible work targets")
     var cands: Array = []
     match job:
@@ -969,6 +972,7 @@ func _find_work() -> void:
                 _set_work_status("WORKPLACE_UNAVAILABLE", "Matching specialist workplaces are full or unreachable")
                 return
             var kind := "wood" if job == "woodcutter" else _mine_kind()
+            _desired_resource = kind
             _set_work_status("SEARCHING_RESOURCE", "Seeking %s inside the assigned work area" % kind)
             for n in get_tree().get_nodes_in_group("harvestable"):
                 var in_work_area := _is_in_workplace_radius(n) if has_valid_workplace() else _is_in_gather_radius(n)
@@ -1122,7 +1126,11 @@ func _find_work() -> void:
         return
 
     if cands.is_empty():
-        _set_work_status("NO_AVAILABLE_TARGET", "No eligible target is available inside the assigned work area")
+        if job in ["woodcutter", "miner"]:
+            _set_work_status("NO_RESOURCE_IN_WORK_AREA",
+                "No available %s node inside the assigned work area; it may be absent, depleted or reserved" % _desired_resource)
+        else:
+            _set_work_status("NO_AVAILABLE_TARGET", "No eligible target is available inside the assigned work area")
     elif reachable_candidates.is_empty():
         if blocked_candidates > 0 and unreachable_candidates == 0:
             _set_work_status("TARGET_RETRY_COOLDOWN", "Recent path failures are cooling down before another attempt")
@@ -1181,6 +1189,8 @@ func worker_ai_diagnostics() -> Dictionary:
         "state": String(State.keys()[state]),
         "status": work_ai_status,
         "detail": work_ai_detail,
+        "desired_resource": _desired_resource,
+        "desired_resource_stock": _resource_stock_amount(_desired_resource) if not _desired_resource.is_empty() else 0,
         "target": target_label,
         "workplace": workplace_label,
         "carry_kind": carry_kind,
