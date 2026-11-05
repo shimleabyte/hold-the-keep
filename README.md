@@ -60,8 +60,8 @@ GODOT=/path/to/godot tools/build.sh
 Windows PowerShell:
 
 ```powershell
-$env:GODOT = "C:\\path\\to\\godot.exe"
-.\\tools\\build.ps1
+$env:GODOT = "C:\path\to\godot.exe"
+.\tools\build.ps1
 ```
 
 Artefak hasil build berada di `build/windows/HoldTheKeep.exe` dan `build/linux/HoldTheKeep.x86_64`. Build script menolak versi engine selain Godot 4.7 dan memeriksa bahwa kedua file hasil export benar-benar dibuat.
