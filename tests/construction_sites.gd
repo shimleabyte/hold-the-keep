@@ -35,7 +35,7 @@ func _initialize() -> void:
     main.village.set_process(true)
     main.village._on_workplace_changed("house", Vector2i.ZERO)
     main.village._on_workplace_changed("house", Vector2i.ZERO)
-    await ticks(2)
+    await ticks(6)
     main.village.set_process(false)
     assert(main.village._assignment_pass_count == assignment_passes_before + 1,
         "Multiple building notifications in one frame must cause one Village assignment pass")
