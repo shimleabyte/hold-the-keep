@@ -129,6 +129,9 @@ func _run_profile(profile_id: String) -> void:
     miner._find_work()
     assert(miner.target == rock and not miner._path.is_empty(),
         profile_id + " miner must acquire and path to stone beyond 14 tiles")
+    var initial_miner_diagnostics: Dictionary = miner.worker_ai_diagnostics()
+    assert(String(initial_miner_diagnostics.get("desired_resource", "")) == "stone",
+        profile_id + " miner diagnostics must expose its current resource decision")
 
     # Mining policy must use the connected economy and the miner's own work area.
     var previous_inventory: Dictionary = Inventory.items.duplicate(true)
@@ -171,10 +174,24 @@ func _run_profile(profile_id: String) -> void:
     assert(local_ore.is_available(miner), profile_id + " local iron must be available to the miner")
     assert(miner._mine_kind() == "iron",
         profile_id + " miner must prioritize local iron while the connected network has a stone surplus")
+    miner._release()
+    miner._find_work()
+    var iron_diagnostics: Dictionary = miner.worker_ai_diagnostics()
+    assert(miner.target == local_ore
+        and String(iron_diagnostics.get("desired_resource", "")) == "iron"
+        and int(iron_diagnostics.get("desired_resource_stock", -1)) == 0,
+        profile_id + " miner must dispatch to local iron and expose the connected iron stock total")
     assert(stockpile.store_resource("iron", 25),
         profile_id + " connected storage must accept the iron reserve")
     assert(miner._mine_kind() == "stone",
         profile_id + " miner must return to stone once connected iron stock is no longer scarce")
+    miner._release()
+    miner._find_work()
+    var stone_diagnostics: Dictionary = miner.worker_ai_diagnostics()
+    assert(miner.target == rock
+        and String(stone_diagnostics.get("desired_resource", "")) == "stone"
+        and int(stone_diagnostics.get("desired_resource_stock", -1)) == 40,
+        profile_id + " miner must return to stone and report the stockpile-aware resource decision")
 
     # The first frontier outpost can be placed at the edge of Keep territory.
     # Keep builders must be dispatched to that blueprint without extending
