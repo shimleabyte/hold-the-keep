@@ -28,8 +28,10 @@ func _ready() -> void:
     Events.building_destroyed.connect(_on_building_event)
 
 
-func _on_building_event(_id: String, _cell: Vector2i) -> void:
-    _dirty = true
+func _on_building_event(id: String, _cell: Vector2i) -> void:
+    # A road neither blocks cells nor changes flow-field traversal cost.
+    if id != "road":
+        _dirty = true
 
 
 func _physics_process(_delta: float) -> void:
