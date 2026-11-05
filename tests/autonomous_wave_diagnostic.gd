@@ -100,6 +100,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     root.add_child(main)
     current_scene = main
     await _ticks(12)
+    root.warp_mouse(Vector2(320, 180))
 
     if main.player == null or main.spawner == null or main.world == null:
         _require(false, "%s: HTK_AUTO_START_GAME=1 must initialize the gameplay scene" % profile)
