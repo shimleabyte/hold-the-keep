@@ -9,27 +9,27 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ## Live execution status — 2026-11-05 (Priority 1 architecture stabilized)
 
-**Current main:** `6bce640a5708aa342bdf43d80f4924f47fdcbc6e` — includes the integrated Priority 1 architecture, PR #125 P0 counterplay/final-wave pacing fixes, and the DEV-H rendered-comparison SceneTree harness. The QA harness is test-only; no gameplay, asset or save behavior changed. Save schema remains v17.  
+**Current main:** `b1a058b968ffb2f34433e008f4765af9ce8c5b4c` — includes the integrated Priority 1 architecture, PR #125 P0 counterplay/final-wave pacing fixes, and the DEV-H rendered-comparison SceneTree harness. The harness is QA-only; no gameplay, asset or save behavior changed. Save schema remains v17.  
 **Current save schema:** v17.  
-**Open implementation pull requests:** #127 HUD countdowns; #128 Android ARMv7/touch controls; #129 distinct Builder/Archer/Brute sprites; #131 live worklist refresh; #133 rendered Frontier QA workflow; #134 autonomous full-wave diagnostic. PRs #130 and #132 were closed as superseded duplicates.
+**Open pull requests:** #127 HUD countdowns; #128 Android ARMv7/touch controls; #129 distinct Builder/Archer/Brute sprites; #131 live worklist refresh; #133 rendered Frontier QA workflow; #135 full runtime night-wave diagnostic. PRs #130, #132 and #134 are closed as superseded duplicates.
 
 | Workstream | Current disposition |
 |---|---|
 | INT-0 specialist integration | Complete: Hunter, Scout, Healer and Blacksmith integrations are on main. |
 | DEV-A data contract validation | Complete through PR #71 replacement. |
 | DEV-B faction camp architecture | Integrated through PR #70. Preserve public camp/patrol/raid interfaces. |
-| DEV-C campaign simulation QA | Earlier deterministic simulation coverage is integrated through PR #73. PR #134 adds a bounded real-runtime night-wave diagnostic for Classic and Frontier; current CI runs are blocked before any runner step by GitHub Actions allocation (`runner_id=0`, zero steps). No code-test result is claimed for PR #134 yet. |
+| DEV-C campaign simulation QA | Deterministic coverage is integrated through PR #73. PR #135 adds a full-runtime Classic/Frontier night-wave diagnostic, but both initial and rerun CI attempts failed before runner allocation: `runner_id=0`, empty runner name and zero steps. This is an infrastructure blocker, not a test result; the diagnostic is not validated yet. |
 | DEV-D supply network decomposition | **Priority 1 complete.** PR #75 extracted cost transactions; #94 shipment ledger; #96 dispatch/recovery; #97 road graph; #99 supply pressure controller. Keep the stable façade unless a new cohesive responsibility is demonstrated. |
 | DEV-E save/migration architecture | Complete through #89: canonical v17 conversion and file-store recovery are integrated. Schema remains v17. |
 | DEV-F villager role architecture | Five role slices integrated: Archer, Scout, Healer, Blacksmith and Builder. Shared movement, navigation, workplace claims, carrying, animation and persistence remain host-owned. |
 | DEV-G HUD modularization | Main widget, construction queue and outpost/logistics boundaries are integrated. `hud.gd` remains the root composition/layout coordinator. |
-| DEV-H world generation / rendered QA | Generator decomposition integrated through #86. The fixed-seed 1024×1024 render comparison passed on Godot 4.7 + Xvfb/Mesa. Both PNGs have identical SHA-256 and 0 differing pixels; the rendered image shows regional terrain, resources, decorations and the protected starting clearing. PR #133's dedicated rendered workflow and 53/53 Godot regression jobs passed. Retain it as a repeatable QA gate. |
+| DEV-H world generation / rendered QA | Generator decomposition integrated through #86. The fixed-seed 1024×1024 render comparison passed on Godot 4.7 + Xvfb/Mesa. Both PNGs have identical SHA-256 and 0 differing pixels; the full map image was inspected. PR #133's dedicated render workflow and 53/53 Godot regression jobs passed on its tested head. Retain the repeatable render workflow as a QA gate. |
 | DEV-I enemy controller | Patrol movement, raid behavior and shared combat lifecycle are integrated. Archetype behavior modules remain separate. |
 | DEV-J decision-based events | Integrated through PR #72. |
 | DEV-K input command registry | Integrated through PR #76. |
 | DEV-L Barracks | Integrated through PR #78. |
 | Archery Range / ranged soldiers | Integrated through PR #87. |
-| DEV-M visual identity / rendered QA | PR #129 gives Builder, Archer and Brute dedicated sprite sheets and an exactly reproducible generator path. Real 640×360 gameplay capture was inspected; all three roles are distinguishable at normal gameplay zoom, and Brute's data-driven 1.45× scale is applied. Role Sprite Visual QA, Campaign Simulation QA and the full 54/54 Godot 4.7 regression matrix passed on head `0067f235`. PR remains open; do not merge without review. |
+| DEV-M visual identity / rendered QA | PR #129 adds dedicated Builder, Archer and Brute sprite sheets and an exactly reproducible generator path. Gameplay-zoom capture was inspected; roles are distinguishable at 640×360 and Brute's data-driven 1.45× visual scale is applied. Role Sprite Visual QA and Campaign Simulation QA passed; Godot 4.7 regression matrix passed 54/54 on head `0067f235067adb1e221bc48d0c842bb94b6b470a`. PR remains open; do not merge without review. |
 
 ### Recent Priority 1 integrations
 
@@ -44,17 +44,17 @@ This is an execution worklist, not a claim that every item is already implemente
 
 **Priority 1 architecture is complete on main.** Do not start more extraction work to reduce line counts.
 
-1. DEV-C / PR #134: finish the real-runtime Classic/Frontier night-wave diagnostic. The code and isolated workflow are in an open PR, but GitHub-hosted runner allocation has failed before any step began. Re-run only once a runner can be allocated; do not treat runner provisioning failures as code failures.
-2. DEV-M / PR #129: role identity, normal-zoom gameplay capture and automated regression all passed. Review the final diff and merge only after explicit integration approval.
-3. DEV-H / PR #133: rendered same-seed comparison passed with pixel-identical captures and 53/53 Godot CI jobs. Preserve the workflow as a regression gate; no further generator architecture work is justified without a specific defect.
-4. Review PR #127 and #128 independently. HUD changes must be checked for panel overlap; Android work still requires export and physical-device validation.
+1. DEV-C / PR #135: keep the full-runtime night-wave diagnostic isolated. Retry only when GitHub Actions allocates a runner; current attempts failed before the first step, so neither parse nor gameplay results are available.
+2. DEV-M / PR #129: visual identity, normal-zoom gameplay capture, generator reproducibility, and 54/54 Godot regression tests passed. Review the final diff and merge only after explicit integration approval.
+3. DEV-H / PR #133: same-seed render comparison passed with pixel-identical captures and its Godot CI matrix passed 53/53 on the tested head. Preserve the workflow; no further generator architecture work is justified without a specific defect.
+4. Review PR #127 and #128 independently. HUD changes must be checked for panel overlap; Android work still requires an exported APK and physical-device validation.
 5. Run extended human Classic and Frontier playthroughs; record pacing, recovery, difficulty spikes and confusing interactions before tuning values or adding facilities.
 
 ### Validation and release boundaries
 
 - Development CI targets **Godot 4.7 only**. Do not add Godot 4.3 or Windows export jobs to feature CI.
-- Campaign Simulation QA and the new autonomous player bot are diagnostic coverage, not proof of campaign balance or player experience. The bot is deliberately simple and not a substitute for human playtesting.
-- Remaining acceptance work includes a successful full-wave runtime diagnostic, human playthroughs across Classic and Frontier acts, target-hardware profiling, fullscreen/resolution review, audio listening and later clean-machine release checks.
+- Campaign Simulation QA and the new autonomous player bot are diagnostic coverage, not proof of campaign balance or player experience. The bot is deliberately simple and is not a substitute for human playtesting.
+- Remaining acceptance work includes a successful full-wave runtime diagnostic, human playthroughs across Classic/Frontier acts, target-hardware profiling, fullscreen/resolution review, audio listening and later clean-machine release checks.
 - Do not claim a feature complete solely because headless tests pass. Record rendered/manual QA separately.
 
 This snapshot records the live PR and runner state as of 2026-11-05. Re-check PR heads, workflow runs and `main` before each merge or assignment; repository state can change after this commit.
