@@ -38,10 +38,15 @@ func _initialize() -> void:
     assert(anim.motion_offset().x < 0.0, "Mirrored attack must lunge left, not right")
 
     anim.play("work", true)
+    anim.work_style = "builder"
     anim.manual_progress = 0.0
+    assert(anim.update(1.0 / 60.0),
+        "Entering a manually synchronized work clip must request a redraw")
     var work_start_frame := anim.frame_index()
     anim.manual_progress = 0.5
     assert(anim.frame_index() != work_start_frame, "Work animation must advance when its work-cycle progress advances")
+    assert(anim.update(1.0 / 60.0),
+        "Changing manual work progress must invalidate the rendered frame")
     assert(anim.motion_offset().x < 0.0, "Work lean must follow left-facing direction")
     anim.manual_progress = -1.0
 

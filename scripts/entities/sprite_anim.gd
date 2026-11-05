@@ -45,6 +45,14 @@ var _start := 0
 var _n := 2
 var _loop := true
 var _total := 1.0
+# Track the last visual state observed by update(). Manual work progress is
+# assigned by the actor before update(), so comparing only pre/post timer
+# values misses frame changes made earlier in the same physics tick.
+var _last_rendered_clip := ""
+var _last_rendered_frame := -1
+var _last_rendered_offset := Vector2(999999.0, 999999.0)
+var _last_rendered_view := -1
+var _last_rendered_flip := false
 
 
 func _init() -> void:
@@ -72,8 +80,6 @@ func is_busy() -> bool:
 
 ## Maju delta detik. Kembali true jika frame atau offset piksel yang terlihat berubah.
 func update(delta: float) -> bool:
-    var before_frame := frame_index()
-    var before_offset := motion_offset()
     _motion_t += delta
     if manual_progress < 0.0:
         _t += delta * speed_scale
@@ -83,7 +89,25 @@ func update(delta: float) -> bool:
             else:
                 _t = _total - 0.0001
                 finished = true
-    return frame_index() != before_frame or motion_offset() != before_offset
+
+    # Work-cycle progress is written by Villager before this method runs.
+    # Compare against the previous rendered state, not a value sampled after
+    # that write, otherwise manually advanced frames never invalidate the draw.
+    var current_frame := frame_index()
+    var current_offset := motion_offset()
+    var changed := (
+        clip != _last_rendered_clip
+        or current_frame != _last_rendered_frame
+        or current_offset != _last_rendered_offset
+        or view != _last_rendered_view
+        or flip != _last_rendered_flip
+    )
+    _last_rendered_clip = clip
+    _last_rendered_frame = current_frame
+    _last_rendered_offset = current_offset
+    _last_rendered_view = view
+    _last_rendered_flip = flip
+    return changed
 
 
 func frame_index() -> int:
