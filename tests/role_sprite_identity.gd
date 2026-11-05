@@ -43,8 +43,11 @@ func _initialize() -> void:
 
     var brute_scale := EnemyVisualScale.from_data({"scale": 1.45})
     var default_scale := EnemyVisualScale.from_data({})
+    var king_scale := EnemyVisualScale.from_data({"scale": 1.8})
     assert(brute_scale.is_equal_approx(Vector2.ONE * 1.45),
         "Siege brute scale must be applied to the visual transform")
+    assert(king_scale.is_equal_approx(Vector2.ONE * 1.8),
+        "Boss scale must be applied to the visual transform")
     assert(default_scale.is_equal_approx(Vector2.ONE),
         "Enemies without a scale override must retain unit visual scale")
 
