@@ -48,7 +48,7 @@ func _run() -> void:
     events.game_over.disconnect(_on_game_over)
     _release_bot_input()
     Engine.time_scale = 1.0
-    get_tree().paused = false
+    paused = false
 
     if not _failures.is_empty():
         for failure in _failures:
@@ -70,7 +70,7 @@ func _run() -> void:
 func _run_case(case_data: Dictionary) -> Dictionary:
     _release_bot_input()
     Engine.time_scale = 1.0
-    get_tree().paused = false
+    paused = false
     _clear_save_files()
 
     var profile := String(case_data["profile"])
@@ -161,7 +161,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
             minimum_keep_hp = mini(minimum_keep_hp, int(keep.hp))
 
         _drive_player(main.player)
-        if _game_over or get_tree().paused:
+        if _game_over or paused:
             break
         if bool(_active_case.get("wave_started", false)) \
                 and not bool(clock.is_night) and clock.time_of_day >= GameClock.NIGHT_END:
@@ -333,7 +333,7 @@ func _ticks(count: int) -> void:
 func _discard_main(main: Node) -> void:
     _release_bot_input()
     Engine.time_scale = 1.0
-    get_tree().paused = false
+    paused = false
     if main != null and is_instance_valid(main):
         main.queue_free()
     current_scene = null
