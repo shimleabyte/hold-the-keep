@@ -19,6 +19,12 @@ func _initialize() -> void:
     current_scene = main
     await ticks(4)
     game_clock.set_process(false)
+    var flow_wait_frames := 0
+    while not main.flow.is_current():
+        await ticks(1)
+        flow_wait_frames += 1
+        assert(flow_wait_frames < 180,
+            "Initial enemy flow field must publish before garrison assertions")
 
     var stronghold = main.enemy_keep
     assert(stronghold != null and is_instance_valid(stronghold),

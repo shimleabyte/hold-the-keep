@@ -7,7 +7,8 @@ const RESOLUTION_CASES := [
     {"window": Vector2i(1280, 800), "viewport": Vector2i(640, 400)},
     {"window": Vector2i(1366, 768), "viewport": Vector2i(683, 384)},
     {"window": Vector2i(1600, 900), "viewport": Vector2i(800, 450)},
-    {"window": Vector2i(1920, 1080), "viewport": Vector2i(960, 540)}
+    {"window": Vector2i(1920, 1080), "viewport": Vector2i(960, 540)},
+    {"window": Vector2i(2560, 1440), "viewport": Vector2i(1280, 720)}
 ]
 
 
@@ -171,5 +172,5 @@ func _initialize() -> void:
     assert(pause._resolution_values.has(settings.windowed_size),
         "The currently saved window size must remain selectable")
 
-    print("PASS: resolution-matched 2x viewport and HUD safe playfield at six desktop resolutions")
+    print("PASS: resolution-matched 2x viewport and HUD safe playfield at seven desktop resolutions")
     quit()

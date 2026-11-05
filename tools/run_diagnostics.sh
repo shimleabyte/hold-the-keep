@@ -18,6 +18,7 @@ diagnostics=(
     tech_tree
     villagers_economy
     frontier_campaign_simulation
+    autonomous_wave_diagnostic
     perf
 )
 

@@ -47,6 +47,32 @@ Bangun desa, kelola penduduk dan sumber daya pada siang hari. Persiapkan pertaha
 
 Panel **JOBS** digunakan untuk mengatur pekerjaan penduduk. Tekan **H** atau **F1** untuk bantuan kontrol. Kontrol keyboard dapat diubah melalui menu jeda, dan gamepad juga didukung.
 
+## Build desktop
+
+Target rilis saat ini adalah desktop **Windows x86_64** dan **Linux x86_64** menggunakan Godot **4.7**. Pasang export templates Godot 4.7 yang cocok dengan editor/CLI sebelum menjalankan export.
+
+Linux (menghasilkan kedua artefak Windows dan Linux):
+
+```bash
+GODOT=/path/to/godot tools/build.sh
+```
+
+Windows PowerShell:
+
+```powershell
+$env:GODOT = "C:\path\to\godot.exe"
+.\tools\build.ps1
+```
+
+Artefak hasil build berada di `build/windows/HoldTheKeep.exe` dan `build/linux/HoldTheKeep.x86_64`. Build script menolak versi engine selain Godot 4.7 dan memeriksa bahwa kedua file hasil export benar-benar dibuat.
+
+## Desktop QA target
+
+- Resolusi windowed: 1280×720 dan 1920×1080.
+- Resolusi high-density: 2560×1440.
+- Mode windowed/fullscreen, keyboard/mouse, gamepad, save/load, dan sesi gameplay berkelanjutan.
+- Ukur frame time ketika bangunan ditempatkan, selesai dibangun, dihancurkan, dan ketika gelombang malam aktif. Hasil headless CI bukan pengganti pengukuran pada PC desktop target.
+
 ## Android ARMv7 (debug build)
 
 Preset **Android ARMv7 Debug** menghasilkan APK 32-bit `armeabi-v7a` untuk pengujian perangkat, bukan release store. Gunakan Godot 4.7, JDK 17, dan Android SDK; jalankan `bash tools/export_android_armv7.sh` dari root repo. APK hasil ekspor berada di `build/android/HoldTheKeep-armv7-debug.apk`. Kontrol landscape menyediakan joystick kiri, Attack/Interact/Dash/Cleave/Rally di kanan, serta tombol jeda. Export CI memverifikasi ABI; instalasi, safe area, lifecycle, dan sesi bermain tetap perlu diuji pada perangkat fisik.
