@@ -1,37 +1,74 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `ef9dd51281551ff98013505614eb99d0f1d61004` (2026-11-05)  
+**Audit baseline:** `main` at `3e81da46b8d48f8e6e444607b6745b85a14b0d99` (2026-11-05)  
 **Engine target:** Godot 4.7 only  
-**Project:** Native desktop, Godot / GDScript  
-**Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
+**Release target:** Desktop-first — Windows x86_64 and Linux x86_64. Android is deferred.  
+**Current save schema:** v17.
 
-This is an execution worklist, not a claim that every item is already implemented. Re-check the live branch/PR state before starting each assignment.
+## Live execution status — 2026-11-05 (desktop P0–P2 hardening)
 
-## Live execution status — 2026-11-05 (Actions paused; HUD slice in progress)
+**Current main:** `3e81da46b8d48f8e6e444607b6745b85a14b0d99`. PR #148 and PR #146 are merged. Main has the manual worker-animation redraw correction, time-sliced enemy FlowField rebuilds, complete-snapshot publication, coalesced Village job reassignment, incremental navigation-footprint updates and the existing v17 save system.
 
-**Current main:** `ef9dd51281551ff98013505614eb99d0f1d61004` — one documentation-only commit after `a10a039c64fa2d69ef0712bc7ba68d3d8c67b028`; the gameplay source base is unchanged from PR #136's last rebase. It includes the Priority 1 architecture, deterministic Frontier render harness, PR #129's dedicated Builder/Archer/Brute sprite identities, and PR #138's rendered same-seed QA workflow. Save schema remains v17.  
-**Current save schema:** v17.  
-**Open pull requests:** #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls. PR #127's text-first HUD implementation is closed as superseded by the icon-first replacement branch. PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.  
-**Active code branch:** `feat/icon-first-night-wave-awareness`, based on the current `main`. It contains the next-phase countdown and active-plus-queued enemy pressure indicator, with focused campaign/responsive assertions. The implementation keeps the HUD icon-first and excludes unrelated night-shelter job badges from old PR #127. No PR or workflow has been created for this branch; Godot validation has not been run.
+### Player-reported P0 findings
+
+| Priority | Symptom | Current disposition | Remaining acceptance |
+|---|---|---|---|
+| P0 | Building placement/completion can hitch or freeze gameplay | **Source fix merged via PR #146.** Dijkstra is time-sliced (2,048 heap pops/frame default); new fields publish only when complete/current; worker reassignment is coalesced. The construction-transition and Frontier performance diagnostics passed on the tested PR head. | Capture windowed frame-time data on the actual desktop target during placement, completion, demolition and destruction in Classic, Frontier and Expedition. CI-host measurements are not target-PC proof. |
+| P0 | Workers can remain visually stuck on one manually driven work pose | **Source fix merged via PR #148.** SpriteAnim tracks the previous rendered state and requests redraw when the manual work frame/offset/facing changes. Animation-motion CI passed on the tested PR head. | Inspect full profession cycles in a windowed run, including all three directions and work-to-walk/combat transitions. |
+| P0 | Builder does not take distant blueprints with valid routes | **Reachability fix merged via PR #155.** Construction candidates are no longer rejected solely by the workplace's circular radius; bounded A* reachability decides whether they can be reached. | Retest distant reachable and genuinely unreachable blueprints during a real Frontier/Expedition session. Check that no Builder remains stuck on an obsolete target. |
+
+### Remaining P1 engineering work
+
+| Area | Current action | Acceptance |
+|---|---|---|
+| Multi-cell navigation | Branch `qa/desktop-release-readiness` adds full-perimeter A* candidate testing and a regression fixture in `tests/construction_sites.gd`. | Run focused construction regression and the full Godot 4.7 matrix; verify one farther connected perimeter cell is found when the nearest four are isolated. |
+| Worker lifecycle | Open PR #151 adds lifecycle recovery assertions but is still draft/unvalidated. | Rebase onto current main, run Godot 4.7 tests, then merge only if recovery/claim-release behavior passes. |
+| Profession contact animations | Open PR #153 adds low-cost baked contact details and removes repeated AI-worker particle/tween bursts. It was green on its tested old head but is not mergeable against current main yet. | Rebase carefully after #148; inspect diff conflicts, run full CI and rendered profession-cycle review. Do not merge on historical CI alone. |
+| Full autonomous night | PR #135 contains a real-runtime night-wave diagnostic but lacks a confirmed successful run. | Obtain Classic and Frontier diagnostic artifacts. A deterministic bot result is diagnostic, not human balance approval. |
+| Session UX | System-level tests do not prove that workers, combat, logistics or player feedback remain understandable in a continuous session. | Complete a 10-minute Classic and Frontier playthrough; record save, profile, location, actor, expected behavior and observed behavior for each defect. |
+
+### Desktop P2 release readiness
+
+| Area | Current action | Acceptance |
+|---|---|---|
+| Resolution coverage | Desktop QA branch extends responsive layout coverage to 2560×1440 (1280×720 logical viewport at 2× scale). | Godot 4.7 `responsive_layout` passes at 960×540 through 2560×1440. Windowed/fullscreen still needs manual review. |
+| Release scripts | `tools/build.sh` and `tools/build.ps1` now require Godot 4.7 and matching export templates. | Execute real Windows and Linux exports and verify both artifacts launch on clean desktop environments. Export templates are not installed or tested by the development CI yet. |
+| Documentation | README now contains desktop export commands, artifact paths and desktop QA targets. | Confirm commands on the target OS and ensure README controls/build steps match the shipped build. |
+| Visual/audio | Existing rendered-world and role-sprite workflows provide technical captures; automated checks cannot judge readability, art quality or mix. | Windowed inspection at 1280×720, 1920×1080 and 2560×1440; listen to menu, day/night ambience, combat and warning cues. |
+| Release acceptance | No release package is claimed yet. | Validate keyboard/mouse, gamepad, save/load, windowed/fullscreen, a sustained gameplay session and clean-machine startup. |
+
+### Performance measurement policy
+
+Run `godot --path . --script res://tools/performance_probe.gd` in a **windowed** session at a fixed resolution. It reports world creation, navigation/FlowField/territory/job-assignment/fog timings, node/resource/physics counts and idle versus active-wave frame samples. Compare results on the same PC/settings before and after changes. The asynchronous FlowField probe also records construction-transition call time, settle frames and the largest observed frame wall-time.
+
+Use 16.67 ms as the 60 FPS frame budget. Report p50/p95/p99 and worst-frame spikes separately; do not use an average alone to hide construction stalls. Do not claim target desktop acceptance from GitHub runner timings.
+
+### Current CI state
+
+- PR #146's corrected Godot 4.7 run passed import/parse, construction-transition diagnostics, Frontier performance diagnostics and its listed regression jobs. Its run-level conclusion was failure because `frontier_world` failed; this is being investigated, not silently disregarded.
+- After PR #146 merged, current-main workflow run #42045620051 was still running at the last status check; confirm the `frontier_world` result before calling the merged mainline fully green.
+- PR #148's tested head passed Godot CI and Campaign Simulation QA before merge.
+- Rendered World QA, Campaign Simulation QA and Role Sprite Visual QA passed on the PR #146 tested head.
+- Do not describe any unrun desktop hardware, real windowed, sound-listening, clean-machine export or human campaign acceptance as complete.
 
 | Workstream | Current disposition |
 |---|---|
 | INT-0 specialist integration | Complete: Hunter, Scout, Healer and Blacksmith integrations are on main. |
 | DEV-A data contract validation | Complete through PR #71 replacement. |
 | DEV-B faction camp architecture | Integrated through PR #70. Preserve public camp/patrol/raid interfaces. |
-| DEV-C campaign and runtime simulation QA | Deterministic campaign simulation is integrated through PR #73. PR #135 adds a full-runtime Classic/Frontier night-wave diagnostic. Execution is deferred because the repository owner has exhausted the available GitHub Actions minutes. No game-test result is available; do not rerun until the Actions-minute budget resets or is replenished. |
+| DEV-C campaign and runtime simulation QA | Deterministic campaign simulation is integrated through PR #73. PR #135 adds a full-runtime Classic/Frontier night-wave diagnostic. Execution remains unverified; a successful Godot 4.7 full-night artifact is still required. |
 | DEV-D supply network decomposition | **Priority 1 complete.** PR #75 extracted cost transactions; #94 shipment ledger; #96 dispatch/recovery; #97 road graph; #99 supply pressure controller. Keep the stable façade unless a new cohesive responsibility is demonstrated. |
 | DEV-E save/migration architecture | Complete through #89: canonical v17 conversion and file-store recovery are integrated. Schema remains v17. |
 | DEV-F villager role architecture | Five role slices integrated: Archer, Scout, Healer, Blacksmith and Builder. Shared movement, navigation, workplace claims, carrying, animation and persistence remain host-owned. |
 | DEV-G HUD modularization | Main widget, construction queue and outpost/logistics boundaries are integrated. `hud.gd` remains the root composition/layout coordinator. |
-| DEV-H world generation / rendered QA | Generator decomposition and deterministic Frontier render harness are on main. PR #138 adds the repeatable Godot 4.7 + Xvfb/Mesa same-seed render workflow. The original workflow passed on PR #133. Current-main verification is deferred because the repository owner has exhausted the available GitHub Actions minutes; do not rerun until the budget resets or is replenished. Do not change generation behavior merely to reduce file size. |
+| DEV-H world generation / rendered QA | Generator decomposition and deterministic Frontier render harness are on main. PR #138 adds the repeatable Godot 4.7 + Xvfb/Mesa same-seed render workflow. The original workflow passed on PR #133. The rendered workflow passed on its tested PR head; verify current-main captures whenever the mainline render workflow runs. Do not change generation behavior merely to reduce file size. |
 | DEV-I enemy controller | Patrol movement, raid behavior and shared combat lifecycle are integrated. Archetype behavior modules remain separate. |
 | DEV-J decision-based events | Integrated through PR #72. |
 | DEV-K input command registry | Integrated through PR #76. |
 | DEV-L Barracks | Integrated through PR #78. |
 | Archery Range / ranged soldiers | Integrated through PR #87. |
 | DEV-M visual identity / rendered QA | PR #129 is merged. Builder, Archer and Brute have dedicated animated sprite sheets; the generator reproduces the committed assets; Brute visual scale is data-driven. The tested head passed 54/54 regression checks, Campaign Simulation QA and rendered gameplay-zoom QA. Continue auditing other role/faction art and audio separately; do not reopen these assets without evidence. |
-| Android ARMv7 / touch controls | PR #136 ports the Android ARMv7-only debug export, safe-area-aware virtual controls and multi-touch regression onto current main while retaining role-sprite CI checks. CI validation is deferred because the repository owner has exhausted the available GitHub Actions minutes. Godot parse, APK export, ABI verification and physical-device behavior are **not validated**. PR #128 is closed as superseded. |
+| Android ARMv7 / touch controls | PR #136 ports the Android ARMv7-only debug export, safe-area-aware virtual controls and multi-touch regression onto current main while retaining role-sprite CI checks. CI validation must be checked on the current PR head; physical Android acceptance remains deferred by the desktop-first release policy. Godot parse, APK export, ABI verification and physical-device behavior are **not validated**. PR #128 is closed as superseded. |
 
 ### Recent integrations
 
@@ -51,7 +88,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ### CI and validation note
 
-The repository owner has confirmed that the GitHub Actions minute budget is exhausted. PR #135, #136 and #138 remain unvalidated where fresh workflow execution is required; the isolated HUD countdown branch is also unvalidated because its focused tests have not been run. Do not trigger, rerun or queue additional Actions workflows until the minute budget resets or is replenished. These checks are deferred, not code-test failures. Existing successful runs on earlier PR heads remain historical evidence only and do not replace validation on current main.
+The repository now has active Godot 4.7 validation for the current performance branch. Historical PR #135/#136 validation notes still need a live-head check before those tasks are resumed. Existing successful runs on earlier PR heads remain historical evidence only and do not replace validation on current main.
 
 ### Validation and release boundaries
 

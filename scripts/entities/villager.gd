@@ -11,6 +11,7 @@ const ScoutBehavior := preload("res://scripts/entities/villager_scout_behavior.g
 const HealerBehavior := preload("res://scripts/entities/villager_healer_behavior.gd")
 const BlacksmithBehavior := preload("res://scripts/entities/villager_blacksmith_behavior.gd")
 const BuilderBehavior := preload("res://scripts/entities/villager_builder_behavior.gd")
+const ResourceWorkBehavior := preload("res://scripts/entities/villager_resource_behavior.gd")
 
 enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING, SCOUTING, SCOUT_RETURNING }
 
@@ -116,6 +117,7 @@ var _scout_behavior = ScoutBehavior.new()
 var _healer_behavior = HealerBehavior.new()
 var _blacksmith_behavior = BlacksmithBehavior.new()
 var _builder_behavior = BuilderBehavior.new()
+var _resource_work_behavior = ResourceWorkBehavior.new()
 var _hurt_t := 0.0
 var _pending_foe = null
 var _pending_t := 0.0
@@ -138,6 +140,7 @@ func _ready() -> void:
     _healer_behavior.configure(self)
     _blacksmith_behavior.configure(self)
     _builder_behavior.configure(self)
+    _resource_work_behavior.configure(self)
     add_to_group("villagers")
     Events.tech_researched.connect(_on_tech)
     _decide_t = randf_range(0.0, 1.0)
@@ -219,15 +222,6 @@ func _on_tech(_tech_id: String) -> void:
     if max_hp != old:
         hp = clampi(roundi(float(hp) * max_hp / old), 1, max_hp)
         queue_redraw()
-
-
-## Penambang memilih besi bila stoknya kurang dari separuh batu (dan ada bijih yang bisa ditambang).
-func _mine_kind() -> String:
-    if Tech.has_flag("iron_mining") and Inventory.get_amount("iron") <= Inventory.get_amount("stone") * 0.5:
-        for n in get_tree().get_nodes_in_group("harvestable"):
-            if n.yield_kind == "iron":
-                return "iron"
-    return "stone"
 
 
 func set_job(j: String, preferred_workplace = null) -> bool:
@@ -613,6 +607,8 @@ func _tick_working(delta: float) -> void:
         state = State.IDLE
         _decide_t = 0.15
         return
+    if _resource_work_behavior.tick(delta):
+        return
     if job == "blacksmith":
         _blacksmith_behavior.tick(delta)
         return
@@ -621,16 +617,6 @@ func _tick_working(delta: float) -> void:
         return
     if job == "builder":
         _builder_behavior.tick(delta)
-        return
-    if job == "farmer":
-        anim.face(target.position - position)
-        _work_t += delta
-        if _work_t >= FARM_CYCLE:
-            _work_t = 0.0
-            Events.fx_burst.emit("food", target.global_position + Vector2(0, -6), Vector2.UP, 0.65)
-            receive("food", roundi(Tech.stat("farm.yield", float(FARM_YIELD))))
-            if carry >= _carry_cap():
-                _go_depot()
         return
     if not target.is_available(self):
         if carry > 0:
@@ -656,7 +642,6 @@ func _tick_working(delta: float) -> void:
     if _work_t >= _hit_interval():
         _work_t = 0.0
         _hit_done = false
-
 
 func is_unavailable_for_blacksmithing() -> bool:
     return state in [State.HIDDEN, State.FLEEING, State.FIGHT]
@@ -926,92 +911,76 @@ func _find_work() -> void:
         return
     _set_work_status("SEARCHING", "Evaluating eligible work targets")
     var cands: Array = []
-    match job:
-        "woodcutter", "miner":
-            if not has_valid_workplace():
-                _release_workplace()
-                _claim_workplace(job)
-            # Once a matching worksite exists, its capacity is authoritative.
-            # Keep the old connected-depot radius only when no specialty site exists.
-            if not has_valid_workplace() and _has_specialized_workplace(job):
-                _set_work_status("WORKPLACE_UNAVAILABLE", "Matching specialist workplaces are full or unreachable")
-                return
-            var kind := "wood" if job == "woodcutter" else _mine_kind()
-            for n in get_tree().get_nodes_in_group("harvestable"):
-                var in_work_area := _is_in_workplace_radius(n) if has_valid_workplace() else _is_in_gather_radius(n)
-                if n.yield_kind == kind and n.is_available(self) and in_work_area:
-                    cands.append(n)
-        "hunter":
-            if not has_valid_workplace():
-                _release_workplace()
-                if not _claim_workplace("hunter"):
-                    _set_work_status("NO_WORKPLACE", "Hunter requires an available Hunting Lodge")
+    if not _resource_work_behavior.append_candidates(cands):
+        match job:
+            "hunter":
+                if not has_valid_workplace():
+                    _release_workplace()
+                    if not _claim_workplace("hunter"):
+                        _set_work_status("NO_WORKPLACE", "Hunter requires an available Hunting Lodge")
+                        return
+                for wildlife in get_tree().get_nodes_in_group("wildlife"):
+                    if wildlife.yield_kind == "food" and wildlife.is_available(self) \
+                            and _is_in_workplace_radius(wildlife):
+                        cands.append(wildlife)
+            "blacksmith":
+                if not has_valid_workplace():
+                    _release_workplace()
+                    if not _claim_workplace("blacksmith"):
+                        _set_work_status("NO_WORKPLACE", "Blacksmith requires an available Forge")
+                        return
+                if _facility_sabotaged(workplace):
+                    _set_work_status("WORKPLACE_SABOTAGED", "Forge is temporarily disabled")
                     return
-            for wildlife in get_tree().get_nodes_in_group("wildlife"):
-                if wildlife.yield_kind == "food" and wildlife.is_available(self) \
-                        and _is_in_workplace_radius(wildlife):
-                    cands.append(wildlife)
-        "farmer":
-            for f in get_tree().get_nodes_in_group("farms"):
-                if f.free_slots("farmer") > 0 and _is_in_work_radius(f):
-                    cands.append(f)
-        "blacksmith":
-            if not has_valid_workplace():
-                _release_workplace()
-                if not _claim_workplace("blacksmith"):
-                    _set_work_status("NO_WORKPLACE", "Blacksmith requires an available Forge")
-                    return
-            if _facility_sabotaged(workplace):
-                _set_work_status("WORKPLACE_SABOTAGED", "Forge is temporarily disabled")
-                return
-            for soldier in get_tree().get_nodes_in_group("villagers"):
-                if soldier == self or not is_instance_valid(soldier) or String(soldier.job) != "soldier":
-                    continue
-                if _blacksmith_recipe_for(soldier) == "" or soldier.is_expeditioning() \
-                        or soldier.is_recalling_expedition() or soldier.state in [State.HIDDEN, State.FLEEING, State.FIGHT]:
-                    continue
-                if not _is_in_workplace_radius(soldier) or workplace.is_blacksmith_target_reserved(soldier, self):
-                    continue
-                cands.append(soldier)
-        "healer":
-            if not has_valid_workplace():
-                _release_workplace()
-                if not _claim_workplace("healer"):
-                    _set_work_status("NO_WORKPLACE", "Healer requires an available Infirmary")
-                    return
-            for patient in get_tree().get_nodes_in_group("villagers"):
-                if patient == self or not is_instance_valid(patient) or String(patient.job) != "soldier":
-                    continue
-                if int(patient.hp) <= 0 or int(patient.hp) >= int(patient.max_hp):
-                    continue
-                if patient.is_expeditioning() or patient.is_recalling_expedition() \
-                        or patient.state in [State.HIDDEN, State.FLEEING]:
-                    continue
-                if not _is_in_workplace_radius(patient) or workplace.is_heal_target_reserved(patient, self):
-                    continue
-                cands.append(patient)
-        "builder":
-            if not has_valid_workplace():
-                _release_workplace()
-                if not _claim_workplace("builder"):
-                    _set_work_status("NO_WORKPLACE", "Builder requires an available Keep or Outpost slot")
-                    return
-            var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
-            var construction_sites: Array = get_tree().get_nodes_in_group("construction_sites")
-            construction_sites.sort_custom(func(a, b) -> bool:
-                return int(a.queue_order) < int(b.queue_order)
-            )
-            for site in construction_sites:
-                if site.has_method("can_claim") and site.can_claim(self) \
-                        and _is_builder_site_in_range(site):
-                    cands.append(site)
-            for building in get_tree().get_nodes_in_group("buildings"):
-                if building.hp <= 0 or building.hp >= building.max_hp:
-                    continue
-                if workplace.position.distance_squared_to(building.position) > radius * radius:
-                    continue
-                if building.can_assign_repairer(self):
-                    cands.append(building)
+                for soldier in get_tree().get_nodes_in_group("villagers"):
+                    if soldier == self or not is_instance_valid(soldier) or String(soldier.job) != "soldier":
+                        continue
+                    if _blacksmith_recipe_for(soldier) == "" or soldier.is_expeditioning() \
+                            or soldier.is_recalling_expedition() or soldier.state in [State.HIDDEN, State.FLEEING, State.FIGHT]:
+                        continue
+                    if not _is_in_workplace_radius(soldier) or workplace.is_blacksmith_target_reserved(soldier, self):
+                        continue
+                    cands.append(soldier)
+            "healer":
+                if not has_valid_workplace():
+                    _release_workplace()
+                    if not _claim_workplace("healer"):
+                        _set_work_status("NO_WORKPLACE", "Healer requires an available Infirmary")
+                        return
+                for patient in get_tree().get_nodes_in_group("villagers"):
+                    if patient == self or not is_instance_valid(patient) or String(patient.job) != "soldier":
+                        continue
+                    if int(patient.hp) <= 0 or int(patient.hp) >= int(patient.max_hp):
+                        continue
+                    if patient.is_expeditioning() or patient.is_recalling_expedition() \
+                            or patient.state in [State.HIDDEN, State.FLEEING]:
+                        continue
+                    if not _is_in_workplace_radius(patient) or workplace.is_heal_target_reserved(patient, self):
+                        continue
+                    cands.append(patient)
+            "builder":
+                if not has_valid_workplace():
+                    _release_workplace()
+                    if not _claim_workplace("builder"):
+                        _set_work_status("NO_WORKPLACE", "Builder requires an available Keep or Outpost slot")
+                        return
+                var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
+                var construction_sites: Array = get_tree().get_nodes_in_group("construction_sites")
+                construction_sites.sort_custom(func(a, b) -> bool:
+                    return int(a.queue_order) < int(b.queue_order)
+                )
+                for site in construction_sites:
+                    # A blueprint is a valid task wherever this Builder can route to it.
+                    # The later bounded A* candidate pass rejects genuinely unreachable sites.
+                    if site.has_method("can_claim") and site.can_claim(self):
+                        cands.append(site)
+                for building in get_tree().get_nodes_in_group("buildings"):
+                    if building.hp <= 0 or building.hp >= building.max_hp:
+                        continue
+                    if workplace.position.distance_squared_to(building.position) > radius * radius:
+                        continue
+                    if building.can_assign_repairer(self):
+                        cands.append(building)
     cands.sort_custom(func(a, b) -> bool:
         var a_is_site: bool = a.has_method("is_construction_site") and a.is_construction_site()
         var b_is_site: bool = b.has_method("is_construction_site") and b.is_construction_site()
@@ -1271,6 +1240,11 @@ func _release() -> void:
     _work_t = 0.0
     _hit_done = false
 
+## Public bridge for resource-role policy to release its shared host-owned target claim.
+func resource_behavior_release_target() -> void:
+    _release()
+    state = State.IDLE
+
 
 ## Public bridge for the healer component to release its host-owned work claim.
 func healer_behavior_release(recheck_delay: float) -> void:
@@ -1289,14 +1263,7 @@ func blacksmith_behavior_assigned_recipe() -> String:
 
 
 func blacksmith_behavior_advance_work(delta: float) -> bool:
-    var previous_work_t := _work_t
     _work_t += delta
-    var strike_interval := SMITH_WORK_SECONDS / 3.0
-    var previous_strikes := floori(previous_work_t / strike_interval)
-    var current_strikes := floori(_work_t / strike_interval)
-    if workplace != null and is_instance_valid(workplace):
-        for strike in range(previous_strikes, current_strikes):
-            Events.fx_burst.emit("spark", workplace.global_position + Vector2(0, -7), Vector2.UP, 0.65)
     return _work_t >= SMITH_WORK_SECONDS
 
 
@@ -1307,19 +1274,19 @@ func blacksmith_behavior_release(recheck_delay: float) -> void:
 
 
 func builder_behavior_advance_construction(delta: float) -> bool:
+    var previous_work_t := _work_t
     _work_t += delta
-    if _work_t < BUILDER_REPAIR_INTERVAL:
-        return false
-    _work_t = fposmod(_work_t, BUILDER_REPAIR_INTERVAL)
-    return true
+    var previous_impact := floori((previous_work_t + BUILDER_REPAIR_INTERVAL * 0.5) / BUILDER_REPAIR_INTERVAL)
+    var current_impact := floori((_work_t + BUILDER_REPAIR_INTERVAL * 0.5) / BUILDER_REPAIR_INTERVAL)
+    return current_impact > previous_impact
 
 
 func builder_behavior_advance_work(delta: float) -> bool:
+    var previous_work_t := _work_t
     _work_t += delta
-    if _work_t < BUILDER_REPAIR_INTERVAL:
-        return false
-    _work_t = 0.0
-    return true
+    var previous_impact := floori((previous_work_t + BUILDER_REPAIR_INTERVAL * 0.5) / BUILDER_REPAIR_INTERVAL)
+    var current_impact := floori((_work_t + BUILDER_REPAIR_INTERVAL * 0.5) / BUILDER_REPAIR_INTERVAL)
+    return current_impact > previous_impact
 
 
 func builder_behavior_release(reason: String = "IDLE") -> void:
@@ -1376,21 +1343,6 @@ func _is_in_gather_radius(candidate) -> bool:
         if depot.position.distance_squared_to(candidate.position) <= radius * radius:
             return true
     return false
-
-
-## Frontier builders can reach construction sites just beyond their depot's
-## claim edge. Repairs remain restricted to the workplace's normal work radius.
-func _is_builder_site_in_range(site) -> bool:
-    if not has_valid_workplace():
-        return false
-    var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS))
-    if WorldConfig.is_frontier_profile():
-        var fallback_claim_radius := WorldConfig.starting_claim_radius if String(workplace.id) == "keep" else 0.0
-        var claim_radius := float(workplace.data.get("claim_radius", fallback_claim_radius))
-        if claim_radius > 0.0:
-            radius = maxf(radius, claim_radius + 2.0)
-    radius *= WorldConfig.tile_size
-    return workplace.position.distance_squared_to(site.position) <= radius * radius
 
 
 func _is_in_work_radius(candidate) -> bool:

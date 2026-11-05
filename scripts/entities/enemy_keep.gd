@@ -27,6 +27,7 @@ var region_id := "HEARTHLAND"
 var faction_id := "classic_raiders"
 var _reinforce_timer := REINFORCE_INTERVAL
 var _spawn_index := 0
+var _initial_garrison_pending := false
 
 
 func setup(world_ref, flow_ref, player_ref, anchor: Vector2i, saved_hp := MAX_HP, identity: Dictionary = {}) -> void:
@@ -79,6 +80,27 @@ func import_state(data: Dictionary) -> void:
 
 
 func spawn_initial_garrison() -> void:
+    if flow != null and flow.has_method("is_current") and not flow.is_current():
+        _initial_garrison_pending = true
+        var callback := Callable(self, "_on_flow_field_rebuilt")
+        if not flow.rebuilt.is_connected(callback):
+            flow.rebuilt.connect(callback)
+        return
+    _spawn_initial_garrison_now()
+
+
+func _on_flow_field_rebuilt(_version: int) -> void:
+    if not _initial_garrison_pending:
+        return
+    _initial_garrison_pending = false
+    var callback := Callable(self, "_on_flow_field_rebuilt")
+    if flow != null and is_instance_valid(flow) and flow.rebuilt.is_connected(callback):
+        flow.rebuilt.disconnect(callback)
+    if hp > 0 and is_inside_tree():
+        _spawn_initial_garrison_now()
+
+
+func _spawn_initial_garrison_now() -> void:
     for i in 3:
         _spawn_guard()
 

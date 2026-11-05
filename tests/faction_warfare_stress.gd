@@ -270,6 +270,34 @@ func _run() -> void:
         if is_instance_valid(defender):
             defender.add_to_group("defenders")
 
+    var saboteur_probe: Node2D
+    var siege_probe: Node2D
+    for garrison in garrisons:
+        if garrison.archetype == "saboteur" and saboteur_probe == null:
+            saboteur_probe = garrison
+        elif garrison.archetype == "siege_engine" and siege_probe == null:
+            siege_probe = garrison
+    require(saboteur_probe != null and siege_probe != null,
+        "The workload must include both specialist interception policies")
+    if saboteur_probe != null:
+        var saboteur_behavior_probe = saboteur_probe.saboteur_behavior
+        saboteur_behavior_probe._interceptor_scan_timer = 0.0
+        saboteur_behavior_probe._nearest_interceptor()
+        var saboteur_scan_timer: float = float(saboteur_behavior_probe._interceptor_scan_timer)
+        saboteur_behavior_probe._nearest_interceptor()
+        require(is_equal_approx(saboteur_scan_timer, 0.12)
+            and is_equal_approx(saboteur_behavior_probe._interceptor_scan_timer, saboteur_scan_timer),
+            "Saboteur defender scans must be throttled to one pass per 120ms")
+    if siege_probe != null:
+        var siege_behavior_probe = siege_probe.siege_behavior
+        siege_behavior_probe._disruptor_scan_timer = 0.0
+        siege_behavior_probe._nearest_disruptor()
+        var siege_scan_timer: float = float(siege_behavior_probe._disruptor_scan_timer)
+        siege_behavior_probe._nearest_disruptor()
+        require(is_equal_approx(siege_scan_timer, 0.12)
+            and is_equal_approx(siege_behavior_probe._disruptor_scan_timer, siege_scan_timer),
+            "Siege Engine defender scans must be throttled to one pass per 120ms")
+
     # Exercise every specialist controller while all 48 garrisons coexist.
     require(garrisons.size() == GARRISONS_PER_FACTION * FACTION_IDS.size(),
         "The integrated AI tick must include all 48 specialist and baseline garrisons")

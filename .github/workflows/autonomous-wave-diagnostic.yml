@@ -1,0 +1,86 @@
+name: Autonomous Wave Diagnostic
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/autonomous-wave-diagnostic.yml"
+      - "tests/autonomous_wave_diagnostic.gd"
+      - "tests/autonomous_wave_diagnostic.tscn"
+      - "scripts/systems/wave_spawner.gd"
+      - "scripts/autoload/game_clock.gd"
+      - "scripts/entities/enemy.gd"
+      - "scripts/entities/player.gd"
+      - "scripts/systems/village.gd"
+      - "scripts/main.gd"
+      - "data/waves.json"
+      - "data/enemies.json"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/autonomous-wave-diagnostic.yml"
+      - "tests/autonomous_wave_diagnostic.gd"
+      - "scripts/systems/wave_spawner.gd"
+      - "scripts/autoload/game_clock.gd"
+      - "scripts/entities/enemy.gd"
+      - "scripts/entities/player.gd"
+      - "scripts/systems/village.gd"
+      - "scripts/main.gd"
+      - "data/waves.json"
+      - "data/enemies.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: autonomous-wave-diagnostic-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  autonomous-night-waves:
+    name: Classic + Frontier autonomous wave diagnostic · Godot 4.7
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot 4.7
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Simulate full Classic and Frontier night waves
+        env:
+          HTK_AUTO_START_GAME: "1"
+          HTK_AUTO_RESOLVE_EVENTS: "1"
+        run: |
+          set -o pipefail
+          mkdir -p build/diagnostics
+          timeout --signal=TERM --kill-after=10s 300s \
+            godot --headless --fixed-fps 60 --path . \
+            res://tests/autonomous_wave_diagnostic.tscn \
+            2>&1 | tee build/diagnostics/autonomous-wave.txt
+          if grep -Eq "^(SCRIPT ERROR:|ERROR:|AUTONOMOUS_WAVE_FAIL:)" build/diagnostics/autonomous-wave.txt; then
+            echo "Diagnostic emitted a runtime or script error." >&2
+            exit 1
+          fi
+          grep -q '^AUTONOMOUS_WAVE_CASE .*"profile":"classic"' build/diagnostics/autonomous-wave.txt
+          grep -q '^AUTONOMOUS_WAVE_CASE .*"profile":"frontier"' build/diagnostics/autonomous-wave.txt
+          grep -q '^AUTONOMOUS_WAVE_REPORT .*"result":"passed"' build/diagnostics/autonomous-wave.txt
+
+      - name: Upload autonomous wave report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: autonomous-wave-classic-frontier-godot-4.7
+          path: build/diagnostics/autonomous-wave.txt
+          if-no-files-found: warn
+          retention-days: 14

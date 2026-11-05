@@ -8,6 +8,7 @@ const SPAWN_INTERVAL := 12.0
 const SPAWN_FOOD := 8
 const UPKEEP := 2  # makanan per penduduk per hari
 const MAX_QUOTA := 20
+const ASSIGNMENT_SETTLE_SECONDS := 0.05
 const JOBS := ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "healer", "blacksmith", "soldier"]
 const JOB_INPUT_ACTIONS := {
     "woodcutter": "job_woodcutter",
@@ -27,7 +28,9 @@ var quota := {"woodcutter": 1, "miner": 0, "farmer": 0, "builder": 0, "hunter": 
 var job_priority: Array[String] = ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "healer", "blacksmith", "soldier"]
 
 var _spawn_t := 0.0
-var _assign_t := 0.0
+var _assignment_dirty := true
+var _assignment_wait_seconds := 0.0
+var _assignment_pass_count := 0
 
 
 func _ready() -> void:
@@ -38,6 +41,7 @@ func _ready() -> void:
     Events.building_placed.connect(_on_workplace_changed)
     Events.building_removed.connect(_on_workplace_changed)
     Events.building_destroyed.connect(_on_building_destroyed)
+    Events.villager_died.connect(_on_villager_died)
     Events.campaign_objective_completed.connect(_on_campaign_objective_completed)
 
 
@@ -72,6 +76,7 @@ func spawn_villager(pos: Vector2) -> Node:
     v.world = world
     v.position = pos
     world.entities.add_child(v)
+    _request_job_assignment()
     return v
 
 
@@ -142,32 +147,62 @@ func _process(delta: float) -> void:
     if _spawn_t >= SPAWN_INTERVAL:
         _spawn_t = 0.0
         try_spawn()
-    _assign_t += delta
-    if _assign_t >= 1.0:
-        _assign_t = 0.0
-        assign_jobs()
+    if _assignment_dirty:
+        _assignment_wait_seconds = maxf(0.0, _assignment_wait_seconds - delta)
+        if _assignment_wait_seconds <= 0.0:
+            assign_jobs()
+
+
+func _request_job_assignment(settle_seconds: float = 0.0) -> void:
+    _assignment_dirty = true
+    _assignment_wait_seconds = maxf(
+        _assignment_wait_seconds,
+        maxf(0.0, settle_seconds)
+    )
 
 
 func assign_jobs() -> void:
+    _assignment_dirty = false
+    _assignment_wait_seconds = 0.0
+    _assignment_pass_count += 1
     var vs := villagers()
+    var job_counts: Dictionary = {}
+    for job_name in JOBS:
+        job_counts[job_name] = 0
+
+    # Validate workplaces and count active occupations in the same population pass.
     for villager in vs:
         if villager.job in ["builder", "hunter", "scout", "healer", "blacksmith"] and not villager.has_valid_workplace():
             villager.set_job("")
+        if job_counts.has(villager.job):
+            job_counts[villager.job] = int(job_counts[villager.job]) + 1
 
+    # Retain the old policy of releasing the last assigned workers when a quota shrinks.
     for job_name in JOBS:
-        var members: Array = vs.filter(func(v) -> bool: return v.job == job_name)
-        while members.size() > int(quota.get(job_name, 0)):
-            members.pop_back().set_job("")
+        var excess := int(job_counts[job_name]) - int(quota.get(job_name, 0))
+        if excess <= 0:
+            continue
+        for villager_index in range(vs.size() - 1, -1, -1):
+            if excess <= 0:
+                break
+            var villager = vs[villager_index]
+            if villager.job != job_name:
+                continue
+            villager.set_job("")
+            job_counts[job_name] = int(job_counts[job_name]) - 1
+            excess -= 1
 
+    # Maintain local counts instead of rescanning the group for every villager/job pair.
     for villager in vs:
         if villager.job != "":
             continue
         for job_name in job_priority:
-            if count_job(job_name) >= int(quota[job_name]):
+            if int(job_counts[job_name]) >= int(quota.get(job_name, 0)):
                 continue
             if villager.set_job(job_name):
+                job_counts[job_name] = int(job_counts[job_name]) + 1
                 break
-    _emit()
+    _emit(job_counts)
 
 
 func restore_job_priority(saved: Variant) -> void:
@@ -199,17 +234,24 @@ func adjust_job_priority(job_name: String, delta: int) -> void:
 
 
 func _on_workplace_changed(_id: String, _cell: Vector2i) -> void:
-    assign_jobs()
+    # Construction completion emits removal + placement in one call stack.
+    # Defer assignment so both notifications collapse into one pass.
+    _request_job_assignment(ASSIGNMENT_SETTLE_SECONDS)
 
 
 func _on_building_destroyed(_id: String, _cell: Vector2i) -> void:
-    assign_jobs()
+    _request_job_assignment(ASSIGNMENT_SETTLE_SECONDS)
 
 
-func _emit() -> void:
-    var assigned := {}
-    for j in JOBS:
-        assigned[j] = count_job(j)
+func _on_villager_died() -> void:
+    _request_job_assignment()
+
+
+func _emit(assigned_counts: Dictionary = {}) -> void:
+    var assigned := assigned_counts.duplicate()
+    if assigned.is_empty():
+        for job_name in JOBS:
+            assigned[job_name] = count_job(job_name)
     Events.village_changed.emit(population(), capacity(), quota.duplicate(), assigned)
 
 
@@ -392,4 +434,5 @@ func remove_one() -> bool:
     if leaver == null:
         leaver = vs[0]
     leaver.leave()
+    _request_job_assignment()
     return true

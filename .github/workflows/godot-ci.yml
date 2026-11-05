@@ -134,6 +134,39 @@ jobs:
           HTK_AUTO_START_GAME: "1"
         run: timeout 180s godot --headless --fixed-fps 60 --path . --script "res://tests/${{ matrix.test }}.gd"
 
+  construction-spike-diagnostic:
+    name: Construction completion frame-spike diagnostic · Godot 4.7
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Measure Classic, Frontier and Expedition construction transitions
+        env:
+          HTK_AUTO_RESOLVE_EVENTS: "1"
+        run: |
+          mkdir -p build/diagnostics
+          timeout 600s godot --headless --fixed-fps 60 --path . --script res://tools/performance_probe.gd 2>&1 | tee build/diagnostics/construction-spikes.txt
+          grep -q '"building_completion_transition"' build/diagnostics/construction-spikes.txt
+
+      - name: Upload construction completion measurements
+        uses: actions/upload-artifact@v4
+        with:
+          name: construction-completion-frame-spikes-godot-4.7
+          path: build/diagnostics/construction-spikes.txt
+          if-no-files-found: error
+
   performance-diagnostic:
     name: Frontier performance diagnostic · Godot 4.7
     needs: validate
@@ -165,6 +198,10 @@ jobs:
           mkdir -p build/diagnostics
           godot --headless --fixed-fps 60 --path . --script res://tests/perf.gd 2>&1 | tee build/diagnostics/frontier-perf.txt
           grep -q "^PERF_REPORT " build/diagnostics/frontier-perf.txt
+          if grep -q "^SCRIPT ERROR:" build/diagnostics/frontier-perf.txt; then
+            echo "Frontier workload emitted GDScript errors"
+            exit 1
+          fi
 
       - name: Run Frontier Expedition reference workload
         env:
@@ -178,6 +215,10 @@ jobs:
         run: |
           godot --headless --fixed-fps 60 --path . --script res://tests/perf.gd 2>&1 | tee build/diagnostics/frontier-expedition-perf.txt
           grep -q "^PERF_REPORT " build/diagnostics/frontier-expedition-perf.txt
+          if grep -q "^SCRIPT ERROR:" build/diagnostics/frontier-expedition-perf.txt; then
+            echo "Frontier Expedition workload emitted GDScript errors"
+            exit 1
+          fi
 
       - name: Upload Frontier Expedition performance report
         uses: actions/upload-artifact@v4

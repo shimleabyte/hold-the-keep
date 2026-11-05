@@ -1,0 +1,45 @@
+name: Builder Reachability QA
+
+on:
+  pull_request:
+    branches:
+      - main
+      - "feat/**"
+    paths:
+      - "scripts/entities/villager.gd"
+      - "tests/frontier_worker_ai.gd"
+      - ".github/workflows/builder-reachability-qa.yml"
+  push:
+    branches:
+      - fix/builder-reach-any-connected-worksite
+
+permissions:
+  contents: read
+
+concurrency:
+  group: builder-reachability-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontier-worker-reachability:
+    name: Frontier worker reachability · Godot 4.7
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Run Frontier and Frontier Expedition worker regression
+        env:
+          HTK_AUTO_RESOLVE_EVENTS: "1"
+          HTK_AUTO_START_GAME: "1"
+        run: timeout 180s godot --headless --fixed-fps 60 --path . --script res://tests/frontier_worker_ai.gd

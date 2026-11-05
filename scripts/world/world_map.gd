@@ -439,6 +439,12 @@ func _spawn_wildlife() -> void:
         safe_radius + (7.0 if frontier else 4.0),
         float(map_size) * (0.15 if frontier else 0.10)
     )
+    var target_count := mini(112, maxi(12, roundi(float(map_size * map_size) / 340.0)))
+    # A selected wildlife node blocks at most eight other candidate cells (its 3x3
+    # neighborhood). Therefore the first 9 * target_count candidates in score order
+    # are sufficient to reproduce the greedy spacing pass; later candidates cannot
+    # be visited before the target count is reached.
+    var candidate_limit := target_count * 9
     var candidates: Array[Dictionary] = []
     for y in range(2, map_size - 2):
         for x in range(2, map_size - 2):
@@ -450,15 +456,29 @@ func _spawn_wildlife() -> void:
             var region := region_id(cell)
             if frontier and not ["GREENWOOD", "FENLANDS"].has(region):
                 continue
-            candidates.append({
-                "cell": cell,
-                "region": region,
-                "score": Vector2(cell).distance_to(center) + rng.randf_range(0.0, 2.0)
-            })
+            var score := Vector2(cell).distance_to(center) + rng.randf_range(0.0, 2.0)
+            var order := y * map_size + x
+            if candidates.size() < candidate_limit:
+                _push_wildlife_candidate(candidates, {
+                    "cell": cell,
+                    "score": score,
+                    "order": order
+                })
+            elif _wildlife_candidate_is_better(score, order, candidates[0]):
+                # Reuse the root dictionary; do not allocate one for every heap replacement.
+                var worst_candidate: Dictionary = candidates[0]
+                worst_candidate["cell"] = cell
+                worst_candidate["score"] = score
+                worst_candidate["order"] = order
+                _sift_wildlife_candidate_heap(candidates, 0)
     candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-        return float(a["score"]) < float(b["score"])
+        var a_score := float(a["score"])
+        var b_score := float(b["score"])
+        if a_score == b_score:
+            return int(a["order"]) < int(b["order"])
+        return a_score < b_score
     )
-    var target_count := mini(112, maxi(12, roundi(float(map_size * map_size) / 340.0)))
+
     var blocked_nearby: Dictionary = {}
     var placed := 0
     for candidate in candidates:
@@ -467,7 +487,7 @@ func _spawn_wildlife() -> void:
         var cell: Vector2i = candidate["cell"]
         if blocked_nearby.has(cell):
             continue
-        var region := String(candidate["region"])
+        var region := region_id(cell)
         generated_wildlife_layout.append({"cell": cell, "region": region})
         if generate_resource_nodes:
             var wildlife = WILDLIFE_SCRIPT.new()
@@ -484,6 +504,52 @@ func _spawn_wildlife() -> void:
             for dx in range(-1, 2):
                 blocked_nearby[cell + Vector2i(dx, dy)] = true
         placed += 1
+
+
+static func _wildlife_candidate_is_worse(a: Dictionary, b: Dictionary) -> bool:
+    var a_score := float(a["score"])
+    var b_score := float(b["score"])
+    if a_score == b_score:
+        return int(a["order"]) > int(b["order"])
+    return a_score > b_score
+
+
+static func _wildlife_candidate_is_better(score: float, order: int, current_worst: Dictionary) -> bool:
+    var worst_score := float(current_worst["score"])
+    if score == worst_score:
+        return order < int(current_worst["order"])
+    return score < worst_score
+
+
+static func _push_wildlife_candidate(heap: Array[Dictionary], candidate: Dictionary) -> void:
+    heap.append(candidate)
+    var index := heap.size() - 1
+    while index > 0:
+        var parent := floori(float(index - 1) / 2.0)
+        if not _wildlife_candidate_is_worse(heap[index], heap[parent]):
+            break
+        var swap_value: Dictionary = heap[parent]
+        heap[parent] = heap[index]
+        heap[index] = swap_value
+        index = parent
+
+
+static func _sift_wildlife_candidate_heap(heap: Array[Dictionary], start_index: int) -> void:
+    var index := start_index
+    while true:
+        var left := index * 2 + 1
+        var right := left + 1
+        var worst := index
+        if left < heap.size() and _wildlife_candidate_is_worse(heap[left], heap[worst]):
+            worst = left
+        if right < heap.size() and _wildlife_candidate_is_worse(heap[right], heap[worst]):
+            worst = right
+        if worst == index:
+            return
+        var swap_value: Dictionary = heap[index]
+        heap[index] = heap[worst]
+        heap[worst] = swap_value
+        index = worst
 
 
 func _place_iron_node(cell: Vector2i) -> void:

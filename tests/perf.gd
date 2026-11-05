@@ -97,13 +97,18 @@ func spawn_workload(main: Node, profile: String, enemy_count: int, villager_coun
             keep_position + Vector2(float(column * 5), float(row * 5))
         )
     var labor_quota := mini(20, floori(float(villager_count) / 4.0))
-    main.village.quota = {
+    main.village.quota = main.village.quota.duplicate(true)
+    main.village.quota.merge({
         "woodcutter": labor_quota,
         "miner": labor_quota,
         "farmer": labor_quota,
         "builder": 0,
+        "hunter": 0,
+        "scout": 0,
+        "healer": 0,
+        "blacksmith": 0,
         "soldier": mini(20, villager_count - 3 * labor_quota)
-    }
+    }, true)
     main.village.assign_jobs()
 
     # Keep at least one ranged unit/projectile in the sampled workload.
@@ -228,6 +233,9 @@ func _run() -> void:
     assert(peak_particles == MAX_PARTICLES,
         "The reference workload must reach the 500-particle ceiling during sampling")
     print("PERF_REPORT " + JSON.stringify(result))
+    main.queue_free()
+    current_scene = null
+    await process_frame
     quit(0)
 
 

@@ -71,10 +71,11 @@ func hit(by = null) -> void:
     if _hp <= 0:
         return
     _hp -= 1
-    Events.fx_burst.emit("stone", global_position + Vector2(0, -5), Vector2.ZERO, 2.0 if _hp == 0 else 1.0)
+    if by == null:
+        Events.fx_burst.emit("stone", global_position + Vector2(0, -5), Vector2.ZERO, 2.0 if _hp == 0 else 1.0)
+        modulate = Color(1.8, 1.8, 1.8)
+        create_tween().tween_property(self, "modulate", Color.WHITE, 0.15)
     _give(IRON_PER_HIT, by)
-    modulate = Color(1.8, 1.8, 1.8)
-    create_tween().tween_property(self, "modulate", Color.WHITE, 0.15)
     if _hp == 0:
         _give(IRON_BONUS, by)
         worker = null
