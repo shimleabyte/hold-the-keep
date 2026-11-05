@@ -524,19 +524,19 @@ func _tick_marked_target(delta: float) -> bool:
 
 func _nearest_contact_target() -> Node2D:
     var reach := _attack_reach()
-    if is_instance_valid(_contact_target_cache):
-        if _contact_target_cache.visible and position.distance_squared_to(_contact_target_cache.position) < reach * reach:
-            return _contact_target_cache
-    _contact_target_cache = null
-    if _contact_target_scan_t > 0.0:
-        return null
-    _contact_target_scan_t = TARGET_REFRESH_INTERVAL
-
-    # Preserve the existing player-first combat targeting rule.
+    # Preserve the existing player-first combat targeting rule every physics tick.
     if player != null and is_instance_valid(player) and player.visible:
         if position.distance_squared_to(player.position) < reach * reach:
             _contact_target_cache = player
             return _contact_target_cache
+    if is_instance_valid(_contact_target_cache):
+        if _contact_target_cache.visible and position.distance_squared_to(_contact_target_cache.position) < reach * reach and _contact_target_cache != player:
+            if _contact_target_scan_t > 0.0:
+                return _contact_target_cache
+    _contact_target_cache = null
+    if _contact_target_scan_t > 0.0:
+        return null
+    _contact_target_scan_t = TARGET_REFRESH_INTERVAL
     for defender in get_tree().get_nodes_in_group("defenders"):
         if not is_instance_valid(defender) or not (defender is Node2D):
             continue
@@ -553,12 +553,12 @@ func _nearest_shield_target() -> Node2D:
         return marked
     if is_garrison:
         return _nearest_guard_target()
-    if is_instance_valid(_shield_target_cache):
+    if _shield_target_scan_t > 0.0 and is_instance_valid(_shield_target_cache):
         if _shield_target_cache.visible and position.distance_squared_to(_shield_target_cache.position) <= SHIELD_TARGET_RANGE * SHIELD_TARGET_RANGE:
             return _shield_target_cache
-    _shield_target_cache = null
     if _shield_target_scan_t > 0.0:
         return null
+    _shield_target_cache = null
     _shield_target_scan_t = TARGET_REFRESH_INTERVAL
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
@@ -610,14 +610,14 @@ func _nearest_ranged_target() -> Node2D:
         return marked
     var leash_center := patrol_origin if is_patrol else guard_origin
     var leash_radius := patrol_radius if is_patrol else (175.0 if is_garrison else 0.0)
-    if is_instance_valid(_ranged_target_cache):
+    if _ranged_target_scan_t > 0.0 and is_instance_valid(_ranged_target_cache):
         var cached_distance := position.distance_squared_to(_ranged_target_cache.position)
         var cached_in_leash := leash_radius <= 0.0 or _ranged_target_cache.position.distance_to(leash_center) <= leash_radius
         if _ranged_target_cache.visible and cached_distance <= 165.0 * 165.0 and cached_in_leash:
             return _ranged_target_cache
-    _ranged_target_cache = null
     if _ranged_target_scan_t > 0.0:
         return null
+    _ranged_target_cache = null
     _ranged_target_scan_t = TARGET_REFRESH_INTERVAL
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
@@ -651,14 +651,14 @@ func _nearest_guard_target() -> Node2D:
         return marked
     var leash_center := patrol_origin if is_patrol else guard_origin
     var leash_radius := patrol_radius if is_patrol else 175.0
-    if is_instance_valid(_guard_target_cache):
+    if _guard_target_scan_t > 0.0 and is_instance_valid(_guard_target_cache):
         var cached_distance := position.distance_squared_to(_guard_target_cache.position)
         var cached_in_leash := _guard_target_cache.position.distance_to(leash_center) <= leash_radius
         if _guard_target_cache.visible and cached_distance <= 150.0 * 150.0 and cached_in_leash:
             return _guard_target_cache
-    _guard_target_cache = null
     if _guard_target_scan_t > 0.0:
         return null
+    _guard_target_cache = null
     _guard_target_scan_t = TARGET_REFRESH_INTERVAL
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
