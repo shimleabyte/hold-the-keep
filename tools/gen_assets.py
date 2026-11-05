@@ -238,7 +238,6 @@ TOOL_ANIM = {None: STAB, "axe": SWING, "pick": SWING, "fork": POKE, "hammer": SW
 WORK_ANIMATIONS = {
     "woodcutter": {"states": ["raised", "swing", "low", "rest"], "by": [-1, 0, 2, 0], "lean": [-2, 1, 2, 0]},
     "miner": {"states": ["back", "raised", "swing", "rest"], "by": [0, -2, 1, 0], "lean": [-1, -2, 2, 0]},
-    "builder": {"states": ["raised", "swing", "low", "rest"], "by": [-2, 0, 2, 0], "lean": [-2, 1, 2, 0]},
     "blacksmith": {"states": ["back", "raised", "low", "rest"], "by": [0, -2, 2, 0], "lean": [-1, -2, 1, 0]},
     "farmer": {"states": ["raised", "low", "thrust", "rest"], "by": [-1, 1, 1, 0], "lean": [0, 1, 1, 0]},
 }
@@ -753,8 +752,6 @@ def make_characters():
                                                         work_style="woodcutter"))
     humanoid_sheet("villager_miner", Look("#8a8f98", "#6e737b", hat="miner", tool_a="pick",
                                            work_style="miner"))
-    humanoid_sheet("villager_builder", Look("#b77935", "#825329", pants="#574532", hat="builder",
-                                             tool_a="hammer", tool_w="hammer", apron=True, trim="#d89a4e"))
     humanoid_sheet("villager_blacksmith", Look("#985c3d", "#6f3e2a", pants="#3c3029", hat="band",
                                                 tool_a="hammer", tool_w="hammer", beard="#4a3024",
                                                 trim="#e19a55", work_style="blacksmith"))
