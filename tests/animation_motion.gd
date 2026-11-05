@@ -126,6 +126,7 @@ func _initialize() -> void:
     assert(forge_fx_count[0] == 0,
         "Blacksmith strikes must use baked sprite accents, not runtime particle bursts")
     builder.free()
+    anim.manual_progress = -1.0
 
     var gatherer = VillagerScript.new()
     var worker_fx_count := [0]
