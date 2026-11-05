@@ -42,15 +42,12 @@ func _initialize() -> void:
     assert(villager_textures["builder"].resource_path.ends_with("villager_builder.svg"),
         "Builders must use their dedicated worker silhouette")
 
-    var brute := EnemyScript.new()
-    brute.setup({
-        "id": "brute", "hp": 110, "speed": 18.0, "damage": 22,
-        "attack_interval": 1.65, "color": "#80543d",
-        "scale": 1.45, "role": "siege"
-    }, null, null, null)
-    assert(brute.scale.is_equal_approx(Vector2.ONE * 1.45),
-        "Enemy data scale must be applied to the visual Node2D transform")
-    brute.free()
+    var brute_scale := EnemyScript.visual_scale_for({"scale": 1.45})
+    var default_scale := EnemyScript.visual_scale_for({})
+    assert(brute_scale.is_equal_approx(Vector2.ONE * 1.45),
+        "Siege brute scale must be applied to the visual transform")
+    assert(default_scale.is_equal_approx(Vector2.ONE),
+        "Enemies without a scale override must retain unit visual scale")
 
     print("PASS: builder, archer and brute use distinct animated sprite sheets and data-driven enemy scale")
     quit(0)
