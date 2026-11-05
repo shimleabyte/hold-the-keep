@@ -59,6 +59,7 @@ var _hurt_t := 0.0
 var _pending_attack := -1.0
 var _pending_harvest = null
 var _harvest_t := 0.0
+var _harvest_anim_active := false
 var _step_t := 0.0
 var _shake_t := 0.0
 var _shake_dur := 0.1
@@ -166,6 +167,8 @@ func _physics_process(delta: float) -> void:
                 queue_redraw()
         move_and_slide()
 
+    if _harvest_anim_active and not Input.is_action_pressed("interact"):
+        _cancel_harvest_animation()
     if Input.is_action_pressed("interact") and _cooldown <= 0.0:
         _try_interact()
     if Input.is_action_pressed("attack") and _atk_cd <= 0.0 and _dash_t <= 0.0 and not _build_mode and not _click_on_hud():
@@ -202,6 +205,15 @@ func _update_anim(delta: float) -> void:
     else:
         anim.play("idle")
     if anim.update(delta):
+        queue_redraw()
+
+
+func _cancel_harvest_animation() -> void:
+    _harvest_anim_active = false
+    _pending_harvest = null
+    _harvest_t = 0.0
+    if anim.clip == "work":
+        anim.play("idle", true)
         queue_redraw()
 
 
@@ -340,6 +352,7 @@ func _use_dash() -> bool:
     _pending_attack = -1.0
     combat_feedback.end_windup()
     _pending_harvest = null
+    _harvest_anim_active = false
     facing = _dash_dir
     anim.face(_dash_dir)
     Events.fx_burst.emit("dust", global_position + Vector2(0, -2), -_dash_dir, 2.0)
@@ -508,6 +521,7 @@ func _die() -> void:
     _pending_attack = -1.0
     combat_feedback.end_windup()
     _pending_harvest = null
+    _harvest_anim_active = false
     _cleave_pending = -1.0
     _dash_t = 0.0
     _rally_t = 0.0
@@ -557,6 +571,7 @@ func _try_interact() -> void:
         facing = (best.global_position - global_position).normalized()
         anim.face(best.global_position - global_position)
         anim.play("work", true, HARVEST_ANIM_FPS)
+        _harvest_anim_active = true
         _pending_harvest = best
         _harvest_t = HIT_DELAY
         queue_redraw()
