@@ -1,8 +1,7 @@
 extends SceneTree
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
-const EnemyScript := preload("res://scripts/entities/enemy.gd")
-const VillagerScript := preload("res://scripts/entities/villager.gd")
+const EnemyVisualScale := preload("res://scripts/entities/enemy_visual_scale.gd")
 const DIRECTIONS := 3
 
 
@@ -33,17 +32,17 @@ func _initialize() -> void:
     _assert_distinct("enemy_archer", "enemy_bandit")
     _assert_distinct("enemy_brute", "enemy_soldier")
 
-    var enemy_textures: Dictionary = EnemyScript.TEXTURES
-    var villager_textures: Dictionary = VillagerScript.TEXTURES
-    assert(enemy_textures["archer"].resource_path.ends_with("enemy_archer.svg"),
+    var enemy_source := FileAccess.get_file_as_string("res://scripts/entities/enemy.gd")
+    var villager_source := FileAccess.get_file_as_string("res://scripts/entities/villager.gd")
+    assert(enemy_source.contains('"archer": preload("res://assets/sprites/enemy_archer.svg")'),
         "Ranged enemies must use the dedicated archer silhouette")
-    assert(enemy_textures["brute"].resource_path.ends_with("enemy_brute.svg"),
+    assert(enemy_source.contains('"brute": preload("res://assets/sprites/enemy_brute.svg")'),
         "Siege brutes must use the dedicated heavy silhouette")
-    assert(villager_textures["builder"].resource_path.ends_with("villager_builder.svg"),
+    assert(villager_source.contains('"builder": preload("res://assets/sprites/villager_builder.svg")'),
         "Builders must use their dedicated worker silhouette")
 
-    var brute_scale := EnemyScript.visual_scale_for({"scale": 1.45})
-    var default_scale := EnemyScript.visual_scale_for({})
+    var brute_scale := EnemyVisualScale.from_data({"scale": 1.45})
+    var default_scale := EnemyVisualScale.from_data({})
     assert(brute_scale.is_equal_approx(Vector2.ONE * 1.45),
         "Siege brute scale must be applied to the visual transform")
     assert(default_scale.is_equal_approx(Vector2.ONE),
