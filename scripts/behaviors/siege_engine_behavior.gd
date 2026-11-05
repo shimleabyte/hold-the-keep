@@ -16,6 +16,7 @@ const TARGET_PRIORITIES := {
 }
 const TARGET_SCAN_LIMIT := 32
 const DISRUPTOR_REFRESH_INTERVAL := 0.12
+const DISRUPTOR_RANGE := 36.0
 
 var actor
 var navigation
@@ -129,14 +130,14 @@ func select_target() -> Node2D:
 
 
 func _nearest_disruptor() -> Node2D:
-    const DISRUPTOR_RANGE := 36.0
     var range_squared := DISRUPTOR_RANGE * DISRUPTOR_RANGE
     if actor.player != null and is_instance_valid(actor.player) and actor.player.visible:
         if actor.position.distance_squared_to(actor.player.position) <= range_squared:
             _disruptor_cache = actor.player
             return _disruptor_cache
     if _disruptor_scan_timer > 0.0 and is_instance_valid(_disruptor_cache):
-        if _disruptor_cache.is_in_group("defenders") and _disruptor_cache.visible                 and actor.position.distance_squared_to(_disruptor_cache.position) <= range_squared:
+        if _disruptor_cache.is_in_group("defenders") and _disruptor_cache.visible \
+                and actor.position.distance_squared_to(_disruptor_cache.position) <= range_squared:
             return _disruptor_cache
     if _disruptor_scan_timer > 0.0:
         return null
