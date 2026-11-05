@@ -146,5 +146,21 @@ func _initialize() -> void:
     assert(legacy_worker.workplace == null,
         "Classic fallback must not require a Lumber Camp to assign resource workers")
 
-    print("PASS: Lumber Camp/Quarry workplaces, slot limits, specialized radius, cleanup and v14 save compatibility")
+    var farm_cell := find_build_site(main, keep.cell, Vector2i(3, 2))
+    assert(farm_cell.x >= 0, "A reachable Farm footprint must exist")
+    var farm = main.build.place_raw("farm", farm_cell)
+    await ticks(2)
+    var farmer = main.village.spawn_villager(keep.position + Vector2(0, 28))
+    assert(farmer.set_job("farmer"), "Farmer must remain assignable without a specialist workplace")
+    assert(farmer._is_in_work_radius(farm), "Farm must be inside a connected depot's work radius")
+    farmer._find_work()
+    assert(farmer.target == farm and not farmer._path.is_empty(),
+        "Farmer role behavior must claim and route to a farm inside the depot work radius")
+    farmer.state = farmer.State.WORKING
+    farmer._work_t = farmer.FARM_CYCLE - 0.1
+    farmer._tick_working(0.2)
+    assert(farmer.carry_kind == "food" and farmer.carry == farmer.FARM_YIELD,
+        "Farmer role behavior must convert one completed farm cycle into the configured food yield")
+
+    print("PASS: Lumber Camp/Quarry workplaces, resource roles, Farmer food cycle, cleanup and v17 save compatibility")
     quit()
