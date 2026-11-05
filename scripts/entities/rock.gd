@@ -96,3 +96,34 @@ func _draw() -> void:
             "highlands": tex = HIGHLANDS_TEX
             "ashen_march": tex = ASHEN_TEX
     draw_texture(tex, Vector2(-tex.get_width() / 2.0, -tex.get_height()))
+    if _hp > 0 and regional_style != "classic":
+        _draw_frontier_rock_dressing()
+
+
+## Small regional fragments are drawn inside the existing rock node footprint.
+## This does not change collision dimensions, occupancy or the harvest lifecycle.
+func _draw_frontier_rock_dressing() -> void:
+    match regional_style:
+        "highlands":
+            draw_colored_polygon(PackedVector2Array([
+                Vector2(-12, -1), Vector2(-9, -4), Vector2(-6, -1)
+            ]), Color("#777b70"))
+            draw_colored_polygon(PackedVector2Array([
+                Vector2(7, -1), Vector2(10, -3), Vector2(13, 0)
+            ]), Color("#626c68"))
+            draw_rect(Rect2(-2, -1, 4, 1), Color("#9a927d"))
+        "ashen_march":
+            draw_colored_polygon(PackedVector2Array([
+                Vector2(-12, 0), Vector2(-9, -3), Vector2(-6, -1)
+            ]), Color("#59483d"))
+            draw_colored_polygon(PackedVector2Array([
+                Vector2(7, -1), Vector2(10, -4), Vector2(13, -1)
+            ]), Color("#8b5d43"))
+            draw_rect(Rect2(-2, -1, 3, 1), Color("#bd8a60"))
+        _:
+            draw_colored_polygon(PackedVector2Array([
+                Vector2(-12, 0), Vector2(-9, -3), Vector2(-6, -1)
+            ]), Color("#536247"))
+            draw_colored_polygon(PackedVector2Array([
+                Vector2(7, -1), Vector2(10, -3), Vector2(13, 0)
+            ]), Color("#716c4f"))
