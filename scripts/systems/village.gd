@@ -181,7 +181,7 @@ func assign_jobs() -> void:
         if villager.job != "":
             continue
         for job_name in job_priority:
-            if int(job_counts[job_name]) >= int(quota[job_name]):
+            if int(job_counts[job_name]) >= int(quota.get(job_name, 0)):
                 continue
             if villager.set_job(job_name):
                 job_counts[job_name] = int(job_counts[job_name]) + 1
