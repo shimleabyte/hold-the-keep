@@ -118,6 +118,8 @@ func _initialize() -> void:
             "HUD must reflow when the logical viewport changes")
         assert(is_equal_approx(hud._top_bar.size.x, viewport_size.x),
             "The top bar must span the viewport width")
+        assert(hud._people_icon.position.x - hud._foes.position.x >= 45.0,
+            "The expanded active-plus-queued hostile counter must not collide with population")
         assert(hud._stage_panel.position.x >= 0.0
             and hud._stage_panel.position.x + hud._stage_panel.size.x <= viewport_size.x,
             "The stage panel must stay within the viewport")
