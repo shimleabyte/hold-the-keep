@@ -29,7 +29,7 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-K input command registry | Integrated through PR #76. |
 | DEV-L Barracks | Integrated through PR #78. |
 | Archery Range / ranged soldiers | Integrated through PR #87. |
-| DEV-M visual identity / rendered QA | PR #129 gives Builder, Archer and Brute dedicated sprite sheets and a reproducible generator path. Godot 4.7 CI passed 54/54 jobs, including exact asset-reproducibility and role-identity tests; Campaign Simulation QA succeeded. Contact sheets confirm distinct equipment/palettes; gameplay-zoom readability review remains pending. |
+| DEV-M visual identity / rendered QA | PR #129 gives Builder, Archer and Brute dedicated sprite sheets and a reproducible generator path. Contact sheets and a real 640×360 gameplay capture were inspected; all three roles are distinguishable at normal gameplay zoom, with Brute's data-driven 1.45× size applied. The Role Sprite Visual QA workflow and Campaign Simulation QA passed on the latest head. Full 54-job regression matrix is running after the final scale/duplicate-hammer fixes. |
 
 ### Recent Priority 1 integrations
 
@@ -45,7 +45,7 @@ This is an execution worklist, not a claim that every item is already implemente
 **Priority 1 architecture is complete on main.** Do not start more extraction work to reduce line counts.
 
 1. DEV-H / PR #133: rendered same-seed comparison and 53/53 Godot CI jobs passed. Preserve the workflow as a regression gate; no further generator architecture work is justified without a specific defect.
-2. DEV-M / PR #129: inspect Builder, Archer and Brute at actual gameplay zoom, all facing/animation clips, and day/night combat. The generated contact sheets and automated identity checks do not prove in-game readability.
+2. DEV-M / PR #129: normal-zoom gameplay capture and role-sprite rendering check passed. Keep the dedicated visual workflow; await the latest full regression matrix before treating the slice as ready for merge.
 3. Review PR #127 and #128 independently. HUD changes must be checked for panel overlap; Android work still requires export and physical-device validation.
 4. Run extended Classic and Frontier playthroughs; record pacing, recovery, difficulty spikes and confusing interactions.
 5. Tune campaign pacing and economic pressure only from reproducible playtest evidence. Add facilities/archetypes only for demonstrated gameplay gaps.
@@ -54,7 +54,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 - Development CI targets **Godot 4.7 only**. Do not add Godot 4.3 or Windows export jobs to feature CI.
 - Campaign Simulation QA is deterministic diagnostic coverage, not proof of complete-wave balance or player-facing readability.
-- Remaining acceptance work includes gameplay-zoom sprite review, full-wave autonomous-AI balance, human playthroughs across Classic and Frontier acts, target-hardware profiling, fullscreen/resolution review, audio listening and later clean-machine release checks.
+- Remaining acceptance work includes full-wave autonomous-AI balance, human playthroughs across Classic and Frontier acts, target-hardware profiling, fullscreen/resolution review, audio listening and later clean-machine release checks.
 - Do not claim a feature complete solely because headless tests pass. Record rendered/manual QA separately.
 
 This snapshot records the live PR state as of 2026-11-05. Re-check PR heads, workflow runs and `main` before each merge or assignment; repository state can change after this commit.
