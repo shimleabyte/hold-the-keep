@@ -63,9 +63,10 @@ func hit(by = null) -> void:
     if _hp <= 0:
         return
     _hp -= 1
-    Events.fx_burst.emit("wood", global_position + Vector2(0, -8), Vector2.ZERO, 2.0 if _hp == 0 else 1.0)
+    if by == null:
+        Events.fx_burst.emit("wood", global_position + Vector2(0, -8), Vector2.ZERO, 2.0 if _hp == 0 else 1.0)
+        _flash()
     _give(WOOD_PER_HIT, by)
-    _flash()
     if _hp == 0:
         _give(WOOD_BONUS, by)
         worker = null
