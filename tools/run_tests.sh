@@ -38,6 +38,7 @@ tests=(
     granary_food_storage
     faction_registry
     faction_visual_identity
+    role_sprite_identity
     building_visual_identity
     combat_visual_feedback
     audio_identity

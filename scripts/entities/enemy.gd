@@ -3,6 +3,7 @@ extends Node2D
 ## Normal raiders follow the flow field; garrison units defend their stronghold radius.
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
+const EnemyVisualScale := preload("res://scripts/entities/enemy_visual_scale.gd")
 const FactionVisual := preload("res://scripts/entities/enemy_faction_visual.gd")
 const CombatVisualFeedback := preload("res://scripts/entities/combat_visual_feedback.gd")
 const ENEMY_TARGETING := preload("res://scripts/systems/enemy_targeting.gd")
@@ -19,8 +20,8 @@ const TEXTURES := {
     "bandit": preload("res://assets/sprites/enemy_bandit.svg"),
     "wolf": preload("res://assets/sprites/enemy_wolf.svg"),
     "soldier": preload("res://assets/sprites/enemy_soldier.svg"),
-    "archer": preload("res://assets/sprites/enemy_bandit.svg"),
-    "brute": preload("res://assets/sprites/enemy_soldier.svg"),
+    "archer": preload("res://assets/sprites/enemy_archer.svg"),
+    "brute": preload("res://assets/sprites/enemy_brute.svg"),
     "king": preload("res://assets/sprites/enemy_king.svg"),
 }
 const PLAYER_REACH := 12.0
@@ -31,6 +32,7 @@ const BEAST_TARGET_SCAN_LIMIT := 24
 const BEAST_TARGET_ISOLATION_RADIUS := 76.0
 const WALK_BASE_SPEED := 32.0
 const RUN_BASE_SPEED := 58.0
+
 
 var id := ""
 var hp := 10
@@ -126,6 +128,7 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     attack_interval = float(data["attack_interval"])
     color = Color(data["color"])
     scale_f = float(data.get("scale", 1.0))
+    scale = EnemyVisualScale.from_data(data)
     is_boss = bool(data.get("boss", false))
     runs = bool(data.get("run", false))
     role = String(data.get("role", "pouncer" if id == "wolf" else "melee"))
@@ -184,6 +187,7 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     saboteur_behavior.configure(self, data)
     siege_behavior.configure(self, data)
     _offset = Vector2(randf_range(-4.0, 4.0), randf_range(-3.0, 3.0))
+    scale = Vector2.ONE * scale_f
     _tex = TEXTURES.get(id, TEXTURES["bandit"])
     _fw = int(_tex.get_width() / float(SpriteAnim.FRAMES))
     _fh = int(_tex.get_height() / 3.0)

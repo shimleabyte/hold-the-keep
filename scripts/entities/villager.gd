@@ -19,7 +19,7 @@ const TEXTURES := {
     "woodcutter": preload("res://assets/sprites/villager_woodcutter.svg"),
     "miner": preload("res://assets/sprites/villager_miner.svg"),
     "farmer": preload("res://assets/sprites/villager_farmer.svg"),
-    "builder": preload("res://assets/sprites/villager_miner.svg"),
+    "builder": preload("res://assets/sprites/villager_builder.svg"),
     "hunter": preload("res://assets/sprites/villager_hunter.svg"),
     "scout": preload("res://assets/sprites/villager_scout.svg"),
     "healer": preload("res://assets/sprites/villager_healer.svg"),
@@ -1450,10 +1450,6 @@ func _draw() -> void:
     if job == "soldier" and weapon_equipped and not is_archer():
         draw_line(Vector2(6, -8), Vector2(10, -15), Color("#d6dde0"), 1.5)
         draw_line(Vector2(5, -9), Vector2(8, -8), Color("#c58a42"), 1.5)
-    if job == "builder":
-        draw_rect(Rect2(8, -13, 2, 6), Color("#704b2a"))
-        draw_rect(Rect2(7, -15, 5, 2), Color("#aeb5bf"))
-        draw_rect(Rect2(9, -16, 3, 2), Color("#d5dbe3"))
     if carry > 0:
         var cc := Color("#a8743a")
         if carry_kind == "stone":
