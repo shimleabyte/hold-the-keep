@@ -125,6 +125,8 @@ func run_profile(profile: String, expected: Dictionary) -> void:
     game_clock.day = final_day
     assert(main.spawner._boss_pending and main.spawner._boss_waiting_for_reveal,
         "%s must queue the final boss behind the regular wave on its configured final day" % profile)
+    assert(main.spawner.remaining_wave_spawns() == main.spawner.wave_size(final_day) + 1,
+        "%s hostile pressure must include the queued final boss" % profile)
     assert(main.spawner._boss_t == 0.0,
         "%s boss reveal wait must not be represented by a negative countdown" % profile)
     var staged_state: Dictionary = main.spawner.export_state()
@@ -144,6 +146,8 @@ func run_profile(profile: String, expected: Dictionary) -> void:
     var final_wave_count: int = main.spawner.wave_size(final_day)
     var reveal_remaining := floori(float(final_wave_count) * 0.25)
     main.spawner._to_spawn = reveal_remaining + 1
+    assert(main.spawner.remaining_wave_spawns() == reveal_remaining + 2,
+        "%s queued hostile count must retain the boss while regular units are still spawning" % profile)
     main.spawner._process(0.1)
     assert(main.spawner._boss_waiting_for_reveal and main.spawner._boss_t == 0.0,
         "%s boss warning must not start before at least 75%% of regular enemies are deployed" % profile)
@@ -152,6 +156,11 @@ func run_profile(profile: String, expected: Dictionary) -> void:
     assert(not main.spawner._boss_waiting_for_reveal
         and is_equal_approx(main.spawner._boss_t, 4.0),
         "%s boss must announce itself with a four-second warning after the wave reaches its reveal threshold" % profile)
+    assert(main.spawner.remaining_wave_spawns() == reveal_remaining + 1,
+        "%s boss must remain in the queued hostile count during its reveal warning" % profile)
+    main.spawner.end_wave()
+    assert(main.spawner.remaining_wave_spawns() == 0 and not main.spawner._boss_pending,
+        "%s dawn must clear regular and pending-boss spawns from the completed wave" % profile)
 
     print("PASS: %s schedule, wave and final-boss pacing matrix (final day %d)" % [profile, final_day])
     main.queue_free()
