@@ -905,7 +905,7 @@ func _find_work() -> void:
                 return
             var kind := "wood" if job == "woodcutter" else _mine_kind()
             for n in get_tree().get_nodes_in_group("harvestable"):
-                var in_work_area := _is_in_workplace_radius(n) if has_valid_workplace() else _is_in_work_radius(n)
+                var in_work_area := _is_in_workplace_radius(n) if has_valid_workplace() else _is_in_gather_radius(n)
                 if n.yield_kind == kind and n.is_available(self) and in_work_area and not _bad.has(n):
                     cands.append(n)
         "hunter":
@@ -965,7 +965,7 @@ func _find_work() -> void:
             )
             for site in construction_sites:
                 if site.has_method("can_claim") and site.can_claim(self) and not _bad.has(site) \
-                        and workplace.position.distance_squared_to(site.position) <= radius * radius:
+                        and _is_builder_site_in_range(site):
                     cands.append(site)
             for building in get_tree().get_nodes_in_group("buildings"):
                 if building.hp <= 0 or building.hp >= building.max_hp or _bad.has(building):
@@ -1204,6 +1204,39 @@ func _is_in_workplace_radius(candidate) -> bool:
         return false
     var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
     return workplace.position.distance_squared_to(candidate.position) <= radius * radius
+
+
+## Frontier deliberately keeps its starting clearing free of resources. Let the
+## initial Keep depot reach the resource ring; specialist worksite radii remain
+## authoritative once a Lumber Camp or Quarry has been assigned.
+func _is_in_gather_radius(candidate) -> bool:
+    var supply = get_tree().get_first_node_in_group("supply_network")
+    for depot in get_tree().get_nodes_in_group("depots"):
+        if supply != null and not supply.is_depot_connected(depot):
+            continue
+        var radius := float(depot.data.get("work_radius", DEFAULT_WORK_RADIUS))
+        if WorldConfig.is_frontier_profile() and String(depot.id) == "keep":
+            var clearing_radius := maxf(
+                WorldConfig.safe_radius + 7.0,
+                float(WorldConfig.map_size) * 0.15
+            )
+            radius = maxf(radius, clearing_radius + 4.0)
+        radius *= WorldConfig.tile_size
+        if depot.position.distance_squared_to(candidate.position) <= radius * radius:
+            return true
+    return false
+
+
+## Keep builders may reach the first construction sites at the edge of the
+## starting claim. Repairs remain restricted to the workplace's normal radius.
+func _is_builder_site_in_range(site) -> bool:
+    if not has_valid_workplace():
+        return false
+    var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS))
+    if WorldConfig.is_frontier_profile() and String(workplace.id) == "keep":
+        radius = maxf(radius, WorldConfig.starting_claim_radius + 2.0)
+    radius *= WorldConfig.tile_size
+    return workplace.position.distance_squared_to(site.position) <= radius * radius
 
 
 func _is_in_work_radius(candidate) -> bool:
