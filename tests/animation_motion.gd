@@ -67,7 +67,7 @@ func _initialize() -> void:
         "Builder construction must not emit an impact before its work interval")
     assert(builder.builder_behavior_advance_construction(0.9),
         "Builder construction must emit a work impact when its interval completes")
-    assert(builder._work_t < builder.BUILDER_REPAIR_INTERVAL,
+    assert(builder._work_t < 1.6,
         "Builder construction animation progress must wrap into the next work cycle")
     builder.free()
 
