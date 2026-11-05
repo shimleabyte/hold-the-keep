@@ -77,9 +77,10 @@ func wave_size(day: int) -> int:
     return mini(int(cfg.get("base", 6)) + int(cfg.get("per_day", 3)) * (day - 1), int(cfg.get("max", 120)))
 
 
-## Number of regular enemies still scheduled to enter the current wave.
+## Number of hostile units still scheduled to enter the current wave, including a pending boss.
 func remaining_wave_spawns() -> int:
-    return maxi(0, _to_spawn)
+    var pending_boss := 1 if _boss_pending else 0
+    return maxi(0, _to_spawn) + pending_boss
 
 
 func _pool_for(day: int) -> Array:
@@ -188,6 +189,10 @@ func start_wave(day: int) -> void:
 
 func end_wave() -> void:
     _to_spawn = 0
+    # A boss that has not entered before dawn belongs to the finished wave.
+    _boss_pending = false
+    _boss_waiting_for_reveal = false
+    _boss_t = 0.0
     var left: Array = []
     for enemy in get_tree().get_nodes_in_group("enemies"):
         if not enemy.is_garrison:
