@@ -12,6 +12,10 @@ GENERATOR = ROOT / "tools" / "gen_assets.py"
 OUTPUT = ROOT / "build" / "generated-role-sprites"
 ROLE_SPRITES = (
     "villager_builder.svg",
+    "villager_woodcutter.svg",
+    "villager_miner.svg",
+    "villager_blacksmith.svg",
+    "villager_farmer.svg",
     "enemy_archer.svg",
     "enemy_brute.svg",
 )
@@ -62,7 +66,7 @@ def main() -> int:
         print(f"Generated candidates retained in {OUTPUT}")
         return 1
 
-    print("PASS: Builder, Archer and Brute SVGs reproduce exactly from tools/gen_assets.py")
+    print("PASS: profession and specialist SVGs reproduce exactly from tools/gen_assets.py")
     return 0
 
 
