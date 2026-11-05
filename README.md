@@ -47,6 +47,10 @@ Bangun desa, kelola penduduk dan sumber daya pada siang hari. Persiapkan pertaha
 
 Panel **JOBS** digunakan untuk mengatur pekerjaan penduduk. Tekan **H** atau **F1** untuk bantuan kontrol. Kontrol keyboard dapat diubah melalui menu jeda, dan gamepad juga didukung.
 
+## Android ARMv7 (debug build)
+
+Preset **Android ARMv7 Debug** menghasilkan APK 32-bit `armeabi-v7a` untuk pengujian perangkat, bukan release store. Gunakan Godot 4.7, JDK 17, dan Android SDK; jalankan `bash tools/export_android_armv7.sh` dari root repo. APK hasil ekspor berada di `build/android/HoldTheKeep-armv7-debug.apk`. Kontrol landscape menyediakan joystick kiri, Attack/Interact/Dash/Cleave/Rally di kanan, serta tombol jeda. Export CI memverifikasi ABI; instalasi, safe area, lifecycle, dan sesi bermain tetap perlu diuji pada perangkat fisik.
+
 ## Teknologi
 
 - Godot 4.7
