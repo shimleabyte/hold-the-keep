@@ -45,6 +45,60 @@ func wildlife_signature(world: Node) -> Array[String]:
     return signature
 
 
+## Slow reference implementation matching the original all-candidate sort.
+## Used only by regression tests to prove the bounded heap preserves placements.
+func reference_wildlife_signature(world: Node) -> Array[String]:
+    var rng := RandomNumberGenerator.new()
+    rng.seed = world.map_seed + 2419
+    var center := Vector2(world.map_size, world.map_size) * 0.5
+    var frontier := WorldConfig.is_frontier_profile()
+    var protected_radius := maxf(
+        world.safe_radius + (7.0 if frontier else 4.0),
+        float(world.map_size) * (0.15 if frontier else 0.10)
+    )
+    var candidates: Array[Dictionary] = []
+    for y in range(2, world.map_size - 2):
+        for x in range(2, world.map_size - 2):
+            var cell := Vector2i(x, y)
+            if Vector2(cell).distance_to(center) < protected_radius:
+                continue
+            if not world.is_buildable(cell) or world._expedition_reserved_cells.has(cell):
+                continue
+            var occupant = world.occupied.get(cell)
+            var occupied_by_resource := occupant != null and is_instance_valid(occupant) \
+                and occupant.is_in_group("resource_nodes") and not occupant.is_in_group("wildlife")
+            if occupied_by_resource:
+                continue
+            var region := world.region_id(cell)
+            if frontier and not ["GREENWOOD", "FENLANDS"].has(region):
+                continue
+            candidates.append({
+                "cell": cell,
+                "region": region,
+                "score": Vector2(cell).distance_to(center) + rng.randf_range(0.0, 2.0)
+            })
+    candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+        return float(a["score"]) < float(b["score"])
+    )
+    var target_count := mini(112, maxi(12, roundi(float(world.map_size * world.map_size) / 340.0)))
+    var blocked_nearby: Dictionary = {}
+    var signature: Array[String] = []
+    var placed := 0
+    for candidate in candidates:
+        if placed >= target_count:
+            break
+        var cell: Vector2i = candidate["cell"]
+        if blocked_nearby.has(cell):
+            continue
+        signature.append("%d,%d:%s" % [cell.x, cell.y, String(candidate["region"])])
+        for dy in range(-1, 2):
+            for dx in range(-1, 2):
+                blocked_nearby[cell + Vector2i(dx, dy)] = true
+        placed += 1
+    signature.sort()
+    return signature
+
+
 func decoration_signature(world: Node) -> Array[String]:
     var signature: Array[String] = []
     for entry in world.generated_decoration_layout:
@@ -540,6 +594,8 @@ func _initialize() -> void:
         "Resource placement must be deterministic for a matching seed/profile")
     assert(wildlife_signature(mirror) == wildlife_signature(world),
         "Wildlife distribution must be deterministic for a matching seed/profile")
+    assert(wildlife_signature(world) == reference_wildlife_signature(world),
+        "Bounded wildlife candidate selection must preserve the original full-sort placement result")
     assert(decoration_signature(mirror) == decoration_signature(world),
         "Biome decoration and landmark placement must be deterministic for a matching seed/profile")
 
