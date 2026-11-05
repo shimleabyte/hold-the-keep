@@ -37,6 +37,25 @@ func verify_night_warning() -> void:
         "The warning must become available again on the next day")
 
 
+func verify_phase_countdown() -> void:
+    game_clock.set_process(false)
+    game_clock.time_of_day = 0.5
+    assert(game_clock.seconds_until_phase_change() == 18,
+        "The countdown must show 18 seconds until night at 0.5 day-cycle progress")
+    game_clock.time_of_day = 0.75
+    assert(game_clock.seconds_until_phase_change() == 27,
+        "The countdown must show 27 seconds until dawn at 0.75 day-cycle progress")
+    game_clock.time_of_day = 0.95
+    assert(game_clock.seconds_until_phase_change() == 117,
+        "The countdown must wrap through dawn to the next night without going negative")
+    game_clock.time_of_day = GameClock.NIGHT_START
+    assert(game_clock.seconds_until_phase_change() == 54,
+        "At night start, the countdown must target dawn rather than report zero")
+    game_clock.time_of_day = GameClock.NIGHT_END
+    assert(game_clock.seconds_until_phase_change() == 126,
+        "At dawn, the countdown must target the next night")
+
+
 func pool_has(pool: Array, enemy_id: String) -> bool:
     for value in pool:
         if String(value.get("id", "")) == enemy_id:
@@ -162,6 +181,7 @@ func _run() -> void:
         }
     })
     verify_night_warning()
+    verify_phase_countdown()
     events.build_feedback.disconnect(_on_build_feedback)
     print("PASS: once-per-night preparation warning and next-day reset")
     quit(0)
