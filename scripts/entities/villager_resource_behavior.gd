@@ -86,8 +86,7 @@ func _tick_gatherer(delta: float) -> void:
         if _villager.carry > 0:
             _villager._go_depot()
         else:
-            _villager._release()
-            _villager.state = _villager.State.IDLE
+            _villager.resource_behavior_release_target()
         return
 
     _villager.anim.face(target.position - _villager.position)
@@ -101,8 +100,7 @@ func _tick_gatherer(delta: float) -> void:
             if _villager.carry > 0:
                 _villager._go_depot()
             else:
-                _villager._release()
-                _villager.state = _villager.State.IDLE
+                _villager.resource_behavior_release_target()
             return
     if _villager._work_t >= _villager._hit_interval():
         _villager._work_t = 0.0
