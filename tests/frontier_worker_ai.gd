@@ -5,6 +5,9 @@ extends SceneTree
 const TREE_SCRIPT := preload("res://scripts/entities/resource_tree.gd")
 const ROCK_SCRIPT := preload("res://scripts/entities/rock.gd")
 
+var world_config
+var game_clock
+
 
 func ticks(count: int) -> void:
     for _index in range(count):
@@ -22,10 +25,10 @@ func _find_reachable_cell(main: Node, start_position: Vector2, distance_origin: 
         if reserved.has(cell) or not main.world.is_buildable(cell) or main.world.occupied.has(cell):
             continue
         var foot := Vector2(
-            float(cell.x * WorldConfig.tile_size) + WorldConfig.tile_size / 2.0,
-            float((cell.y + 1) * WorldConfig.tile_size)
+            float(cell.x * world_config.tile_size) + world_config.tile_size / 2.0,
+            float((cell.y + 1) * world_config.tile_size)
         )
-        var distance := distance_origin.distance_to(foot) / float(WorldConfig.tile_size)
+        var distance := distance_origin.distance_to(foot) / float(world_config.tile_size)
         if distance <= min_radius or distance >= max_radius or distance >= best_distance:
             continue
         best = cell
@@ -58,8 +61,8 @@ func _find_reachable_box(main: Node, origin: Vector2, min_x: int, max_x: int,
 func _spawn_resource(main: Node, script: Script, cell: Vector2i) -> Node:
     var resource = script.new()
     resource.position = Vector2(
-        float(cell.x * WorldConfig.tile_size) + WorldConfig.tile_size / 2.0,
-        float((cell.y + 1) * WorldConfig.tile_size)
+        float(cell.x * world_config.tile_size) + world_config.tile_size / 2.0,
+        float((cell.y + 1) * world_config.tile_size)
     )
     main.world.entities.add_child(resource)
     main.world.occupied[cell] = resource
@@ -68,12 +71,12 @@ func _spawn_resource(main: Node, script: Script, cell: Vector2i) -> Node:
 
 
 func _run_profile(profile_id: String) -> void:
-    assert(WorldConfig.apply_profile(profile_id), "Profile must be selectable: " + profile_id)
+    assert(world_config.apply_profile(profile_id), "Profile must be selectable: " + profile_id)
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main
     await ticks(8)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
     main.village.set_process(false)
     main.nav.rebuild()
 
@@ -97,8 +100,8 @@ func _run_profile(profile_id: String) -> void:
 
     var worker_origin: Vector2 = keep.position + Vector2(0.0, 24.0)
     var clearing_radius := maxf(
-        WorldConfig.safe_radius + 7.0,
-        float(WorldConfig.map_size) * 0.15
+        world_config.safe_radius + 7.0,
+        float(world_config.map_size) * 0.15
     )
     var gather_radius := clearing_radius + 4.0
     var reserved: Dictionary = {}
@@ -154,7 +157,7 @@ func _run_profile(profile_id: String) -> void:
     assert(site_cell.x >= 0, profile_id + " must expose a reachable construction task beyond the Keep claim radius")
     var site = main.build.create_construction_site("wall", site_cell, keep.cell)
     main.nav.rebuild()
-    assert(keep.position.distance_to(site.position) > 14.0 * WorldConfig.tile_size,
+    assert(keep.position.distance_to(site.position) > 14.0 * world_config.tile_size,
         "Builder fixture must sit outside the original Keep work radius")
     builder._find_work()
     assert(builder.target == site and not builder._path.is_empty(),
@@ -179,7 +182,7 @@ func _run_profile(profile_id: String) -> void:
             gap_y = candidate_y
             break
     assert(gap_y >= 0, profile_id + " must expose a traversable route-test barrier gap")
-    for barrier_y in range(maxi(1, route_start.y - 10), mini(WorldConfig.map_size - 1, gap_y + 11)):
+    for barrier_y in range(maxi(1, route_start.y - 10), mini(world_config.map_size - 1, gap_y + 11)):
         if barrier_y == gap_y:
             continue
         main.world._layer.set_cell(Vector2i(barrier_x, barrier_y), 0, Vector2i(2, 0))
@@ -231,6 +234,8 @@ func _run_profile(profile_id: String) -> void:
 
 
 func _initialize() -> void:
+    world_config = root.get_node("WorldConfig")
+    game_clock = root.get_node("GameClock")
     await process_frame
     await _run_profile("frontier")
     await _run_profile("frontier_expedition")
