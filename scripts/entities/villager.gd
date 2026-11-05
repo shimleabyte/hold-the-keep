@@ -970,8 +970,9 @@ func _find_work() -> void:
                     return int(a.queue_order) < int(b.queue_order)
                 )
                 for site in construction_sites:
-                    if site.has_method("can_claim") and site.can_claim(self) \
-                            and _is_builder_site_in_range(site):
+                    # A blueprint is a valid task wherever this Builder can route to it.
+                    # The later bounded A* candidate pass rejects genuinely unreachable sites.
+                    if site.has_method("can_claim") and site.can_claim(self):
                         cands.append(site)
                 for building in get_tree().get_nodes_in_group("buildings"):
                     if building.hp <= 0 or building.hp >= building.max_hp:
@@ -1349,21 +1350,6 @@ func _is_in_gather_radius(candidate) -> bool:
         if depot.position.distance_squared_to(candidate.position) <= radius * radius:
             return true
     return false
-
-
-## Frontier builders can reach construction sites just beyond their depot's
-## claim edge. Repairs remain restricted to the workplace's normal work radius.
-func _is_builder_site_in_range(site) -> bool:
-    if not has_valid_workplace():
-        return false
-    var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS))
-    if WorldConfig.is_frontier_profile():
-        var fallback_claim_radius := WorldConfig.starting_claim_radius if String(workplace.id) == "keep" else 0.0
-        var claim_radius := float(workplace.data.get("claim_radius", fallback_claim_radius))
-        if claim_radius > 0.0:
-            radius = maxf(radius, claim_radius + 2.0)
-    radius *= WorldConfig.tile_size
-    return workplace.position.distance_squared_to(site.position) <= radius * radius
 
 
 func _is_in_work_radius(candidate) -> bool:
