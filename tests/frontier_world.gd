@@ -45,6 +45,66 @@ func wildlife_signature(world: Node) -> Array[String]:
     return signature
 
 
+## Test-only all-candidate reference for the bounded wildlife selector.
+func reference_wildlife_signature(world: Node) -> Array[String]:
+    var rng := RandomNumberGenerator.new()
+    rng.seed = world.map_seed + 2419
+    var center := Vector2(world.map_size, world.map_size) * 0.5
+    # SceneTree scripts are loaded before autoload identifiers are bound.
+    var world_config = root.get_node("WorldConfig")
+    var frontier: bool = bool(world_config.is_frontier_profile())
+    var protected_radius := maxf(
+        world.safe_radius + (7.0 if frontier else 4.0),
+        float(world.map_size) * (0.15 if frontier else 0.10)
+    )
+    var candidates: Array[Dictionary] = []
+    for y in range(2, world.map_size - 2):
+        for x in range(2, world.map_size - 2):
+            var cell := Vector2i(x, y)
+            if Vector2(cell).distance_to(center) < protected_radius:
+                continue
+            if not world.is_buildable(cell) or world._expedition_reserved_cells.has(cell):
+                continue
+            var occupant = world.occupied.get(cell)
+            var occupied_by_resource: bool = occupant != null and is_instance_valid(occupant) \
+                and occupant.is_in_group("resource_nodes") and not occupant.is_in_group("wildlife")
+            if occupied_by_resource:
+                continue
+            var region: String = String(world.region_id(cell))
+            if frontier and not ["GREENWOOD", "FENLANDS"].has(region):
+                continue
+            candidates.append({
+                "cell": cell,
+                "region": region,
+                "score": Vector2(cell).distance_to(center) + rng.randf_range(0.0, 2.0),
+                "order": y * world.map_size + x
+            })
+    candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+        var a_score := float(a["score"])
+        var b_score := float(b["score"])
+        if a_score == b_score:
+            return int(a["order"]) < int(b["order"])
+        return a_score < b_score
+    )
+    var target_count := mini(112, maxi(12, roundi(float(world.map_size * world.map_size) / 340.0)))
+    var blocked_nearby: Dictionary = {}
+    var signature: Array[String] = []
+    var placed := 0
+    for candidate in candidates:
+        if placed >= target_count:
+            break
+        var cell: Vector2i = candidate["cell"]
+        if blocked_nearby.has(cell):
+            continue
+        signature.append("%d,%d:%s" % [cell.x, cell.y, String(candidate["region"])])
+        for dy in range(-1, 2):
+            for dx in range(-1, 2):
+                blocked_nearby[cell + Vector2i(dx, dy)] = true
+        placed += 1
+    signature.sort()
+    return signature
+
+
 func decoration_signature(world: Node) -> Array[String]:
     var signature: Array[String] = []
     for entry in world.generated_decoration_layout:
@@ -498,8 +558,7 @@ func _initialize() -> void:
         "Placing a wall must not rebuild Keep-rooted road/depot connectivity")
     assert(main.nav._dirty_cells.size() == 1 and not main.nav._dirty,
         "Placing a one-cell wall must queue one cell instead of a full-grid rebuild")
-    # physics_frame is emitted before node _physics_process callbacks; wait
-    # through the update frame so the queued NavGrid work has actually run.
+    # physics_frame resumes before node _physics_process callbacks; wait through the update frame.
     await ticks(2)
     assert(main.nav.astar.is_point_solid(navigation_probe_cell)
         and main.nav.version == navigation_version + 1,
@@ -512,6 +571,27 @@ func _initialize() -> void:
     assert(not main.nav.astar.is_point_solid(navigation_probe_cell)
         and main.nav.version == navigation_version + 2,
         "Removing the wall must restore walkability with another local update")
+
+    main.nav.rebuild()
+    main.flow.rebuild()
+    main.supply.rebuild()
+    var road_nav_version: int = int(main.nav.version)
+    var road = main.build.place_raw("road", navigation_probe_cell)
+    assert(not main.nav._dirty and main.nav._dirty_cells.is_empty()
+        and main.nav.version == road_nav_version,
+        "Placing a non-blocking road must not invalidate the navigation grid")
+    assert(not main.flow._dirty,
+        "Placing a road must not trigger a full enemy flow-field rebuild")
+    assert(main.supply._dirty,
+        "Placing a road must still invalidate Keep-rooted logistics connectivity")
+    await ticks(2)
+    assert(not main.supply._dirty,
+        "The logistics graph must rebuild after a road is placed")
+    assert(main.build.demolish_at(navigation_probe_cell),
+        "The non-blocking road probe must be removable")
+    assert(not main.nav._dirty and main.nav._dirty_cells.is_empty()
+        and not main.flow._dirty and main.supply._dirty,
+        "Removing a road must invalidate logistics only, not pathfinding")
 
     assert(main.enemy_keep != null and is_instance_valid(main.enemy_keep),
         "Frontier must place its campaign stronghold")
@@ -542,6 +622,8 @@ func _initialize() -> void:
         "Resource placement must be deterministic for a matching seed/profile")
     assert(wildlife_signature(mirror) == wildlife_signature(world),
         "Wildlife distribution must be deterministic for a matching seed/profile")
+    assert(wildlife_signature(world) == reference_wildlife_signature(world),
+        "Bounded wildlife selection must preserve the sorted greedy placement result")
     assert(decoration_signature(mirror) == decoration_signature(world),
         "Biome decoration and landmark placement must be deterministic for a matching seed/profile")
 

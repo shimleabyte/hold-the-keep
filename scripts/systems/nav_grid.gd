@@ -25,7 +25,8 @@ func _ready() -> void:
 
 
 func _on_building_event(id: String, cell: Vector2i) -> void:
-    if _dirty:
+    # Roads are already walkable and carry no navigation penalty.
+    if id == "road" or _dirty:
         return
     var definition: Dictionary = DataDB.buildings.get(id, {})
     var footprint: Variant = definition.get("size", [1, 1])
