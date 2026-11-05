@@ -60,10 +60,20 @@ func _initialize() -> void:
         profile_frames[style] = anim.frame_index()
     assert(distinct_offsets.size() == work_styles.size(),
         "Each profession must have a distinct body-weight transfer during its work cycle")
-    assert(profile_frames["woodcutter"] != profile_frames["miner"],
-        "Woodcutting and mining must not use the same work-frame timing")
-    assert(profile_frames["builder"] != profile_frames["blacksmith"],
-        "Construction and forging must not use the same hammer timing")
+    anim.work_style = "woodcutter"
+    anim.manual_progress = 0.23
+    var woodcutter_windup_frame := anim.frame_index()
+    anim.work_style = "miner"
+    var miner_windup_frame := anim.frame_index()
+    assert(woodcutter_windup_frame != miner_windup_frame,
+        "Woodcutting and mining must not use the same wind-up frame timing")
+    anim.work_style = "builder"
+    anim.manual_progress = 0.73
+    var builder_recovery_frame := anim.frame_index()
+    anim.work_style = "blacksmith"
+    var smith_recovery_frame := anim.frame_index()
+    assert(builder_recovery_frame != smith_recovery_frame,
+        "Construction and forging must not use the same recovery frame timing")
     anim.manual_progress = -1.0
 
     var builder = Villager.new()
