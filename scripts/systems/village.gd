@@ -150,24 +150,46 @@ func _process(delta: float) -> void:
 
 func assign_jobs() -> void:
     var vs := villagers()
+    var job_counts: Dictionary = {}
+    for job_name in JOBS:
+        job_counts[job_name] = 0
+
+    # Validate specialty workplaces and build the current assignment counts in
+    # the same population pass.
     for villager in vs:
         if villager.job in ["builder", "hunter", "scout", "healer", "blacksmith"] and not villager.has_valid_workplace():
             villager.set_job("")
+        if job_counts.has(villager.job):
+            job_counts[villager.job] = int(job_counts[villager.job]) + 1
 
+    # Preserve the existing policy: remove the last assigned member first when
+    # a quota shrinks.
     for job_name in JOBS:
-        var members: Array = vs.filter(func(v) -> bool: return v.job == job_name)
-        while members.size() > int(quota.get(job_name, 0)):
-            members.pop_back().set_job("")
+        var excess := int(job_counts[job_name]) - int(quota.get(job_name, 0))
+        if excess <= 0:
+            continue
+        for villager_index in range(vs.size() - 1, -1, -1):
+            if excess <= 0:
+                break
+            var villager = vs[villager_index]
+            if villager.job != job_name:
+                continue
+            villager.set_job("")
+            job_counts[job_name] = int(job_counts[job_name]) - 1
+            excess -= 1
 
+    # Use local counts instead of rescanning the scene-tree group for every
+    # villager/job pair.
     for villager in vs:
         if villager.job != "":
             continue
         for job_name in job_priority:
-            if count_job(job_name) >= int(quota[job_name]):
+            if int(job_counts[job_name]) >= int(quota[job_name]):
                 continue
             if villager.set_job(job_name):
+                job_counts[job_name] = int(job_counts[job_name]) + 1
                 break
-    _emit()
+    _emit(job_counts)
 
 
 func restore_job_priority(saved: Variant) -> void:
@@ -206,10 +228,11 @@ func _on_building_destroyed(_id: String, _cell: Vector2i) -> void:
     assign_jobs()
 
 
-func _emit() -> void:
-    var assigned := {}
-    for j in JOBS:
-        assigned[j] = count_job(j)
+func _emit(assigned_counts: Dictionary = {}) -> void:
+    var assigned := assigned_counts.duplicate()
+    if assigned.is_empty():
+        for job_name in JOBS:
+            assigned[job_name] = count_job(job_name)
     Events.village_changed.emit(population(), capacity(), quota.duplicate(), assigned)
 
 
