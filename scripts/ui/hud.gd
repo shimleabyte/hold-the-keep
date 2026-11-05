@@ -1032,7 +1032,7 @@ func _on_village_changed(pop: int, cap: int, quota: Dictionary, assigned: Dictio
     var village = get_tree().get_first_node_in_group("village")
     for j in JOBS:
         var rank: int = (int(village.job_priority.find(j)) + 1) if village != null else JOBS.find(j) + 1
-        _jobs[j].set_counts(int(assigned[j]), int(quota[j]), rank)
+        _jobs[j].set_counts(int(assigned.get(j, 0)), int(quota.get(j, 0)), rank)
 
 
 func _refresh_resources() -> void:
