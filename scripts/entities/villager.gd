@@ -517,12 +517,22 @@ func _update_anim(delta: float) -> void:
         anim.play("hurt")
     elif state == State.WORKING:
         anim.play("work")
+        if job in ["woodcutter", "miner", "builder", "blacksmith", "farmer"]:
+            anim.work_style = job
         if job == "farmer":
-            anim.speed_scale = 0.5
+            anim.speed_scale = 1.0
+            var farm_motion_cycle := FARM_CYCLE / 3.0
+            anim.manual_progress = fposmod(_work_t, farm_motion_cycle) / farm_motion_cycle
+        elif job == "blacksmith":
+            anim.speed_scale = 1.0
+            var forge_motion_cycle := SMITH_WORK_SECONDS / 2.0
+            anim.manual_progress = fposmod(_work_t, forge_motion_cycle) / forge_motion_cycle
         elif job == "builder":
+            anim.speed_scale = 1.0
             anim.manual_progress = fposmod(_work_t, BUILDER_REPAIR_INTERVAL) / BUILDER_REPAIR_INTERVAL
         else:
-            anim.manual_progress = _work_t / _hit_interval()
+            anim.speed_scale = 1.0
+            anim.manual_progress = fposmod(_work_t, _hit_interval()) / _hit_interval()
     elif moving:
         anim.play("run" if _running else "walk")
         anim.speed_scale = 1.0
@@ -1167,8 +1177,12 @@ func blacksmith_behavior_release(recheck_delay: float) -> void:
     _decide_t = recheck_delay
 
 
-func builder_behavior_advance_construction(delta: float) -> void:
+func builder_behavior_advance_construction(delta: float) -> bool:
     _work_t += delta
+    if _work_t < BUILDER_REPAIR_INTERVAL:
+        return false
+    _work_t = fposmod(_work_t, BUILDER_REPAIR_INTERVAL)
+    return true
 
 
 func builder_behavior_advance_work(delta: float) -> bool:
