@@ -27,6 +27,7 @@ tests=(
     campaign_assault
     campaign_multi_stronghold
     workplace_assignments
+    villager_lifecycle_recovery
     frontier_worker_ai
     hunting_lodge
     scout_specialist

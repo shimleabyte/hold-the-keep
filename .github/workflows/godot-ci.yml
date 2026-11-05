@@ -67,6 +67,7 @@ jobs:
           - campaign_assault
           - campaign_multi_stronghold
           - workplace_assignments
+          - villager_lifecycle_recovery
           - hunting_lodge
           - scout_specialist
           - healer_infirmary
