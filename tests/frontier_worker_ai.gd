@@ -144,10 +144,10 @@ func _run_profile(profile_id: String) -> void:
             gap_y = candidate_y
             break
     assert(gap_y >= 0, profile_id + " must expose a traversable route-test barrier gap")
-    for barrier_y in range(maxi(1, route_start.y - 10), mini(WorldConfig.map_size - 1, gap_y + 6)):
+    for barrier_y in range(maxi(1, route_start.y - 10), mini(WorldConfig.map_size - 1, gap_y + 11)):
         if barrier_y == gap_y:
             continue
-        main.world.occupied[Vector2i(barrier_x, barrier_y)] = true
+        main.world._layer.set_cell(Vector2i(barrier_x, barrier_y), 0, Vector2i(2, 0))
 
     var blocked_cell := _find_empty_box(
         main, route_start.x - 4, route_start.x - 2,
@@ -165,7 +165,7 @@ func _run_profile(profile_id: String) -> void:
         profile_id + " must expose three free route-test resource cells")
 
     for direction in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.UP, Vector2i.DOWN]:
-        main.world.occupied[blocked_cell + direction] = true
+        main.world._layer.set_cell(blocked_cell + direction, 0, Vector2i(2, 0))
     main.nav.rebuild()
     var blocked_tree = _spawn_resource(main, TREE_SCRIPT, blocked_cell)
     var detour_tree = _spawn_resource(main, TREE_SCRIPT, detour_cell)

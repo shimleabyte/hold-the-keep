@@ -264,6 +264,7 @@ func set_job(j: String, preferred_workplace = null) -> bool:
         max_hp = _hp_cap_for("")
         hp = clampi(roundi(float(hp) * max_hp / maxi(1, old_max)), 1, max_hp)
         state = State.IDLE
+        _set_work_status("NO_WORKPLACE", "No reachable workplace slot is available for this occupation")
         return false
     if job == "soldier":
         add_to_group("defenders")
