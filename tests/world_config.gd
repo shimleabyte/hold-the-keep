@@ -73,6 +73,8 @@ func _initialize() -> void:
         "Campaign choices must wrap instead of overflowing horizontally")
     assert(title_screen.get_node_or_null("SettingsPanel") != null,
         "The title screen must provide an in-menu settings panel")
+    assert(main.fog._fog_chunks.size() == 16,
+        "A 64x64 Classic world must use sixteen 16x16 fog chunks")
     main._start_campaign("classic")
     await process_frame
     await process_frame
