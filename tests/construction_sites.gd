@@ -15,6 +15,64 @@ func find_house_cell(main, origin: Vector2i) -> Vector2i:
                     return anchor
     return Vector2i(-1, -1)
 
+func assert_multi_cell_approach_fallback(main) -> void:
+    var nav = main.nav
+    nav.rebuild()
+
+    # Sealed navigation fixture: a 3x3 target has twelve walkable perimeter
+    # cells, but the four nearest approaches are isolated from the start.
+    var target_origin := Vector2i(30, 30)
+    var target_cells: Array[Vector2i] = []
+    for y in 3:
+        for x in 3:
+            target_cells.append(target_origin + Vector2i(x, y))
+
+    for y in range(26, 43):
+        for x in range(20, 37):
+            nav.astar.set_point_solid(Vector2i(x, y), true)
+
+    var approach_cells: Array[Vector2i] = []
+    for offset in 3:
+        approach_cells.append(target_origin + Vector2i(-1, offset))
+        approach_cells.append(target_origin + Vector2i(3, offset))
+        approach_cells.append(target_origin + Vector2i(offset, -1))
+        approach_cells.append(target_origin + Vector2i(offset, 3))
+    for approach in approach_cells:
+        nav.astar.set_point_solid(approach, false)
+
+    var start_cell := Vector2i(22, 31)
+    nav.astar.set_point_solid(start_cell, false)
+    for y in range(start_cell.y, 40):
+        nav.astar.set_point_solid(Vector2i(start_cell.x, y), false)
+    for x in range(start_cell.x, 35):
+        nav.astar.set_point_solid(Vector2i(x, 39), false)
+    for y in range(31, 40):
+        nav.astar.set_point_solid(Vector2i(34, y), false)
+
+    approach_cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+        var distance_a := Vector2(a - start_cell).length_squared()
+        var distance_b := Vector2(b - start_cell).length_squared()
+        if not is_equal_approx(distance_a, distance_b):
+            return distance_a < distance_b
+        if a.y != b.y:
+            return a.y < b.y
+        return a.x < b.x
+    )
+    for i in 4:
+        assert(nav.astar.get_point_path(start_cell, approach_cells[i]).is_empty(),
+            "The four closest approach cells must be unreachable in the regression fixture")
+
+    var path: PackedVector2Array = nav.path_adjacent(nav.center_of(start_cell), target_cells)
+    assert(not path.is_empty(),
+        "A 3x3 target must remain reachable through a farther perimeter cell when the nearest four are blocked")
+    var endpoint: Vector2i = nav.cell_of(path[path.size() - 1])
+    assert(endpoint.x == target_origin.x + 3
+        and endpoint.y >= target_origin.y and endpoint.y <= target_origin.y + 2,
+        "Path selection must use the only connected right-side approach")
+
+    nav.rebuild()
+
+
 func _initialize() -> void:
     var config = root.get_node("WorldConfig")
     var inventory = root.get_node("Inventory")
@@ -33,6 +91,7 @@ func _initialize() -> void:
         initial_flow_wait += 1
         assert(initial_flow_wait < 180,
             "Initial enemy flow field must publish before construction profiling")
+    assert_multi_cell_approach_fallback(main)
     main.village.set_process(false)
     main.village.quota["builder"] = 0
 
