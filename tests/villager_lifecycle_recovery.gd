@@ -11,7 +11,8 @@ func ticks(count: int) -> void:
 
 
 func find_build_site(main: Node, origin: Vector2i, footprint: Vector2i) -> Vector2i:
-    var map_size := int(WorldConfig.map_size)
+    var world_config = root.get_node("WorldConfig")
+    var map_size: int = int(world_config.map_size)
     for radius in range(4, 18):
         for y in range(-radius, radius + 1):
             for x in range(-radius, radius + 1):
@@ -37,20 +38,21 @@ func find_build_site(main: Node, origin: Vector2i, footprint: Vector2i) -> Vecto
 
 
 func spawn_resource_near(main: Node, script: Script, worker, reserved: Dictionary) -> Node:
-    var start := main.nav.cell_of(worker.position)
+    var world_config = root.get_node("WorldConfig")
+    var start: Vector2i = main.nav.cell_of(worker.position)
     var reachable: Dictionary = main.nav.reachable_cells(start)
     var candidates: Array[Dictionary] = []
-    var radius := float(worker.workplace.data.get("work_radius", 12.0)) * WorldConfig.tile_size
+    var radius: float = float(worker.workplace.data.get("work_radius", 12.0)) * float(world_config.tile_size)
     for value in reachable:
         var cell: Vector2i = value
         if reserved.has(cell) or not main.world.is_buildable(cell) or main.world.occupied.has(cell):
             continue
         var foot := Vector2(
-            float(cell.x * WorldConfig.tile_size) + WorldConfig.tile_size / 2.0,
-            float((cell.y + 1) * WorldConfig.tile_size)
+            float(cell.x * world_config.tile_size) + float(world_config.tile_size) / 2.0,
+            float((cell.y + 1) * world_config.tile_size)
         )
-        var distance := worker.workplace.position.distance_to(foot)
-        if distance > radius * 0.8 or distance < WorldConfig.tile_size * 2.0:
+        var distance: float = worker.workplace.position.distance_to(foot)
+        if distance > radius * 0.8 or distance < float(world_config.tile_size) * 2.0:
             continue
         candidates.append({"cell": cell, "distance": distance})
     candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
@@ -62,8 +64,8 @@ func spawn_resource_near(main: Node, script: Script, worker, reserved: Dictionar
     reserved[cell] = true
     var resource = script.new()
     resource.position = Vector2(
-        float(cell.x * WorldConfig.tile_size) + WorldConfig.tile_size / 2.0,
-        float((cell.y + 1) * WorldConfig.tile_size)
+        float(cell.x * world_config.tile_size) + float(world_config.tile_size) / 2.0,
+        float((cell.y + 1) * world_config.tile_size)
     )
     main.world.entities.add_child(resource)
     main.world.occupied[cell] = resource
@@ -72,7 +74,9 @@ func spawn_resource_near(main: Node, script: Script, worker, reserved: Dictionar
 
 
 func _initialize() -> void:
-    assert(WorldConfig.apply_profile("classic"), "Classic profile must be selectable")
+    var world_config = root.get_node("WorldConfig")
+    var game_clock = root.get_node("GameClock")
+    assert(world_config.apply_profile("classic"), "Classic profile must be selectable")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
 
@@ -80,7 +84,7 @@ func _initialize() -> void:
     root.add_child(main)
     current_scene = main
     await ticks(8)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
     main.village.set_process(false)
     for existing in main.village.villagers():
         existing.leave()
