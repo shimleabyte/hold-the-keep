@@ -1,6 +1,4 @@
-[gd_resource type="Theme" load_steps=3 format=3]
-
-[ext_resource type="FontFile" path="res://assets/fonts/Silkscreen-Regular.ttf" id="1_font"]
+[gd_resource type="Theme" load_steps=2 format=3]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tooltip"]
 bg_color = Color(0.055, 0.05, 0.043, 0.98)
@@ -16,17 +14,16 @@ corner_radius_bottom_left = 1
 shadow_color = Color(0, 0, 0, 0.55)
 shadow_size = 2
 shadow_offset = Vector2(0, 1)
-content_margin_left = 6.0
-content_margin_top = 4.0
-content_margin_right = 6.0
-content_margin_bottom = 4.0
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
 
 [resource]
 TooltipPanel/type_variation = &"PopupPanel"
 TooltipPanel/styles/panel = SubResource("StyleBoxFlat_tooltip")
 TooltipLabel/type_variation = &"Label"
-TooltipLabel/colors/font_color = Color(0.94, 0.88, 0.75, 1)
-TooltipLabel/fonts/font = ExtResource("1_font")
-TooltipLabel/font_sizes/font_size = 8
-TooltipLabel/constants/line_spacing = 2
-TooltipLabel/constants/paragraph_spacing = 3
+TooltipLabel/colors/font_color = Color(0.96, 0.93, 0.85, 1)
+TooltipLabel/font_sizes/font_size = 14
+TooltipLabel/constants/line_spacing = 3
+TooltipLabel/constants/paragraph_spacing = 4
