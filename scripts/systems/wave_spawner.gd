@@ -77,6 +77,11 @@ func wave_size(day: int) -> int:
     return mini(int(cfg.get("base", 6)) + int(cfg.get("per_day", 3)) * (day - 1), int(cfg.get("max", 120)))
 
 
+## Number of regular enemies still scheduled to enter the current wave.
+func remaining_wave_spawns() -> int:
+    return maxi(0, _to_spawn)
+
+
 func _pool_for(day: int) -> Array:
     var out: Array = []
     var stage := stage_info(day)
