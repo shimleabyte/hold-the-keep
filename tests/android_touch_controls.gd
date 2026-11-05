@@ -18,7 +18,7 @@ class FakePauseMenu extends Node:
         opened = not opened
 
 
-func verify_button_hit_geometry(controls: Control, viewport_size: Vector2) -> void:
+func verify_button_hit_geometry(controls, viewport_size: Vector2) -> void:
     var buttons: Array = controls._button_layout
     for i in range(buttons.size()):
         var first: Dictionary = buttons[i]
@@ -144,6 +144,7 @@ func _run() -> void:
     var overlay_host := TouchHudHost.new()
     root.add_child(overlay_host)
     var jobs_panel := Control.new()
+    jobs_panel.visible = false
     overlay_host._jobs_panel = jobs_panel
     overlay_host.add_child(jobs_panel)
     var overlay_controls = MOBILE_CONTROLS.new()
