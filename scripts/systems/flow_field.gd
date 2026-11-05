@@ -21,6 +21,7 @@ var version := 0
 var _cost := PackedInt32Array()
 var _next := PackedInt32Array()
 const DEFAULT_REBUILD_POPS_PER_FRAME := 2048
+const DEFAULT_REBUILD_BUDGET_USEC := 2500
 
 var _dirty := true
 var _heap_c := PackedInt32Array()
@@ -32,8 +33,9 @@ var _build_active := false
 var _requested_revision := 0
 var _build_revision := -1
 
-# Public for deterministic diagnostics; production uses the default budget.
+# Public for deterministic diagnostics; production uses the defaults.
 var rebuild_pops_per_frame := DEFAULT_REBUILD_POPS_PER_FRAME
+var rebuild_budget_usec := DEFAULT_REBUILD_BUDGET_USEC
 
 
 func _ready() -> void:
@@ -96,8 +98,14 @@ func _begin_rebuild() -> void:
 
 func _process_rebuild_budget() -> void:
     var processed := 0
-    var budget := maxi(1, rebuild_pops_per_frame)
-    while _heap_c.size() > 0 and processed < budget:
+    var pop_limit := maxi(1, rebuild_pops_per_frame)
+    var time_budget_usec := maxi(1, rebuild_budget_usec)
+    var started_usec := Time.get_ticks_usec()
+    while _heap_c.size() > 0 and processed < pop_limit:
+        # One heap pop is the smallest indivisible unit. Check the elapsed-time
+        # budget between pops so a large map cannot monopolize a physics frame.
+        if processed > 0 and Time.get_ticks_usec() - started_usec >= time_budget_usec:
+            break
         var top := _pop()
         var cost := top.x
         var index := top.y

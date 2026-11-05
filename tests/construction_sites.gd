@@ -123,11 +123,12 @@ func _initialize() -> void:
 
     # FlowField publishes only complete snapshots and spreads Dijkstra work over frames.
     var flow_version_before: int = main.flow.version
-    main.flow.rebuild_pops_per_frame = 1
+    main.flow.rebuild_pops_per_frame = main.flow.DEFAULT_REBUILD_POPS_PER_FRAME
+    main.flow.rebuild_budget_usec = 1
     await ticks(2)
     assert(main.flow._build_active and main.flow.version == flow_version_before,
-        "A construction event must not synchronously replace the published flow field")
-    main.flow.rebuild_pops_per_frame = main.flow.DEFAULT_REBUILD_POPS_PER_FRAME
+        "A tiny elapsed-time budget must keep the previous complete field published across frames")
+    main.flow.rebuild_budget_usec = main.flow.DEFAULT_REBUILD_BUDGET_USEC
     var flow_wait_frames := 0
     while main.flow._dirty or main.flow._build_active:
         await ticks(1)
