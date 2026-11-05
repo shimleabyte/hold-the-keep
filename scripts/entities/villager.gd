@@ -943,6 +943,7 @@ func _find_work() -> void:
             if not has_valid_workplace():
                 _release_workplace()
                 if not _claim_workplace("hunter"):
+                    _set_work_status("NO_WORKPLACE", "Hunter requires an available Hunting Lodge")
                     return
             for wildlife in get_tree().get_nodes_in_group("wildlife"):
                 if wildlife.yield_kind == "food" and wildlife.is_available(self) \
@@ -956,8 +957,10 @@ func _find_work() -> void:
             if not has_valid_workplace():
                 _release_workplace()
                 if not _claim_workplace("blacksmith"):
+                    _set_work_status("NO_WORKPLACE", "Blacksmith requires an available Forge")
                     return
             if _facility_sabotaged(workplace):
+                _set_work_status("WORKPLACE_SABOTAGED", "Forge is temporarily disabled")
                 return
             for soldier in get_tree().get_nodes_in_group("villagers"):
                 if soldier == self or not is_instance_valid(soldier) or String(soldier.job) != "soldier":
@@ -972,6 +975,7 @@ func _find_work() -> void:
             if not has_valid_workplace():
                 _release_workplace()
                 if not _claim_workplace("healer"):
+                    _set_work_status("NO_WORKPLACE", "Healer requires an available Infirmary")
                     return
             for patient in get_tree().get_nodes_in_group("villagers"):
                 if patient == self or not is_instance_valid(patient) or String(patient.job) != "soldier":
@@ -988,6 +992,7 @@ func _find_work() -> void:
             if not has_valid_workplace():
                 _release_workplace()
                 if not _claim_workplace("builder"):
+                    _set_work_status("NO_WORKPLACE", "Builder requires an available Keep or Outpost slot")
                     return
             var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
             var construction_sites: Array = get_tree().get_nodes_in_group("construction_sites")
@@ -1465,19 +1470,26 @@ func _return_to_work() -> void:
     if target == null or not is_instance_valid(target):
         target = null
         state = State.IDLE
+        _set_work_status("TARGET_LOST", "Previous target no longer exists after delivery")
         return
     if target.has_method("is_available") and not target.is_available(self):
         _release()
         state = State.IDLE
+        _decide_t = 0.25
+        _set_work_status("TARGET_UNAVAILABLE", "Previous target is no longer available")
         return
     _goal_cells = _cells_of(target)
     var p: PackedVector2Array = nav.path_adjacent(position, _goal_cells)
     if p.is_empty():
+        _mark_target_blocked(target, "RETURN_ROUTE_BLOCKED")
         _release()
         state = State.IDLE
+        _decide_t = 0.25
+        _set_work_status("RETURN_ROUTE_BLOCKED", "Could not route back to previous target; selecting another")
         return
     _set_path(p)
     state = State.TO_WORK
+    _set_work_status("RETURNING_TO_WORK", "Returning to previous target after delivery")
 
 
 # ---------------------------------------------------------------- malam
@@ -1562,8 +1574,11 @@ func _repath() -> void:
             State.FLEEING:
                 _hide()
             State.TO_WORK:
+                _mark_target_blocked(target, "PATH_BLOCKED")
                 _release()
                 state = State.IDLE
+                _decide_t = 0.25
+                _set_work_status("PATH_BLOCKED", "Navigation changed and the assigned target is no longer reachable")
             State.EXPEDITION, State.RECALLING:
                 _expeditioning = false
                 _expedition_target = null
@@ -1576,6 +1591,7 @@ func _repath() -> void:
                 _decide_t = SCOUT_RECHECK_SECONDS
             _:
                 state = State.IDLE
+                _set_work_status("PATH_BLOCKED", "Current navigation goal became unreachable")
         return
     _set_path(p)
 

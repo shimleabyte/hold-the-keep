@@ -144,7 +144,7 @@ func _run_profile(profile_id: String) -> void:
             gap_y = candidate_y
             break
     assert(gap_y >= 0, profile_id + " must expose a traversable route-test barrier gap")
-    for barrier_y in range(maxi(1, route_start.y - 10), mini(int(config.map_size) - 1, gap_y + 6)):
+    for barrier_y in range(maxi(1, route_start.y - 10), mini(WorldConfig.map_size - 1, gap_y + 6)):
         if barrier_y == gap_y:
             continue
         main.world.occupied[Vector2i(barrier_x, barrier_y)] = true
