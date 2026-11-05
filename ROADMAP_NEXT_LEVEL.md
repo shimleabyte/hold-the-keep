@@ -1,6 +1,6 @@
 # Hold the Keep — Next-Level Kingdom Expansion Roadmap
 
-**Status (2026-11-03):** Mainline includes Frontier expansion through Phase 08.7, Phase 09.3, Phase 05 construction/queue management (PRs #58/#59), Watchtower vision (#60), Granary food reserve (#61), and the ordered Phase 04 specialist stack: Hunter #64 (`e59864d`), Scout #65 (`ea9a63c`), Healer #67 (`bf44703`) and Blacksmith/Forge #68 (`1b15f37`). The specialist PRs passed 45/45, 46/46, 47/47 and 48/48 Godot 4.7 jobs respectively (#620, #621, #626, #635). Mainline save schema is now v17. Manual rendered gameplay, equipment visibility, treatment/combat readability, full campaign balance, target-hardware profiling, native Windows runtime and clean-machine acceptance remain open.
+**Status (2026-11-05):** Mainline includes Frontier expansion through Phase 08.7, Phase 09.3, Phase 05 construction/queue management, Watchtower vision, Granary food reserve, and the ordered Phase 04 specialist stack. Mainline save schema is v17. Phase 08 implementation slices 08.2–08.7 are delivered; rendered screenshot review and manual audio level/loop QA remain open. A supplemental draw-only resource-cluster/ambient landmark pass is on `feat/phase-08.3-resource-cluster-dressing`, not yet merged or runtime-validated. Human campaign balance, target-hardware profiling, Android ARMv7 device validation, native Windows runtime and clean-machine acceptance also remain open.
 **Phase 02 merge commits:** PR #31 (`6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`) delivered local depot storage/transfers; PR #32 (`2f94959b497677eae49d4303f72322650fb591c2`) delivered garrisons/inspection; PR #33 (`5d7db56b3a51a25541f541bb46c19b26996d22be`) delivered player-directed physical shipments and save v13. PR #33 validation: [workflow #41323062111](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323062111), 50/50 jobs successful on Godot 4.3/4.7, including 23 regressions per engine, Frontier diagnostic and Windows/Linux export.  
 **Baseline:** Godot 4.7 / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, optional Frontier Expedition world 192×192 / 20 days / 4 acts with a 128×128 starting heartland, `main` save format v17. Classic v1–v16 and Frontier v7–v16 remain supported through migration.
 
@@ -236,15 +236,17 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 **Acceptance gate:** every objective type resolves, rewards/state survive save/load, act transitions follow the Frontier schedule, Classic remains unchanged, player-facing objective/map state is readable, and Frontier victory cannot occur before required objectives and the final encounter.
 
 ### Phase 08 — Visual and audio identity
-**Status:** In progress on `feat/phase-08-visual-audio-identity-mainline`. First slice adds a dedicated seven-cell weathered Frontier terrain atlas, preserves the Classic atlas, and extends the Frontier world regression to verify the selected atlas resource. Remaining biome props, landmarks, faction/unit/building art, combat feedback and audio are not yet delivered.
+**Status:** Implementation slices 08.2–08.7 are merged into `main`: dedicated Frontier terrain atlas, biome props/landmarks/resource silhouettes, faction and specialist identity, building materials/damage states, combat feedback and procedural regional audio. The previous status text describing those systems as undelivered is obsolete. A supplementary draw-only resource-cluster and low-frequency landmark animation pass is isolated on `feat/phase-08.3-resource-cluster-dressing`; it is not merged or runtime-validated.
 
-- Create distinct biome tiles, environmental props, landmarks and faction assets.
-- Give new units unique silhouettes, weapons, animations and hit feedback.
-- Add building art for each new structure rather than reusing generic placeholders.
-- Improve strategic-map overlays for terrain, ownership, resources, roads, supply, enemy settlements and objectives.
-- Add environmental and combat audio after gameplay triggers stabilize.
+- [x] Distinct Frontier ground tiles, regional props/landmarks and biome-specific resource silhouettes.
+- [x] Four faction visual kits, archetype equipment accents and dedicated Builder/Archer/Brute sprite sheets.
+- [x] Distinct building material identity/damage detail and readable combat feedback.
+- [x] Procedural regional/day-night ambience and gameplay-triggered combat/campaign audio.
+- [ ] Review native-scale rendered screenshots across day/night, fog, combat, objectives and strategic map.
+- [ ] Listen-test biome ambience, menu/campaign transitions and combat cues on actual speakers/headphones.
+- [ ] Profile visual/audio load on target hardware; preserve Classic visuals and 2D readability.
 
-**Acceptance gate:** screenshot passes at target desktop resolutions; visual readability under day/night, fog and combat load; no placeholder-only faction identity in release content.
+**Acceptance gate:** screenshot review passes at target desktop resolutions; visual readability under day/night, fog and combat load; manual audio level/loop review passes; no placeholder-only faction identity in release content.
 
 ### Phase 09 — Balance, performance and release hardening
 **Status:** Phase 09.2 scripted campaign combat-budget probes merged through PR #62 (`4cc0420`); workflow [#41564491766](https://github.com/shimleabyte/hold-the-keep/actions/runs/41564491766) passed 86/86 jobs on Godot 4.3/4.7, including Frontier performance diagnostic and Windows/Linux exports. Phase 09.3 late-act reload coverage remains merged through PR #57 (`a1ccebe`). The new probe covers curated samples at Frontier Acts I–IV and the day-20 King encounter using real damage/cooldown transactions, but it does not simulate full waves or autonomous AI. Save schema v13 is unchanged. Target-hardware profiling, full-wave balance validation, human playtesting, native Windows runtime and clean-machine verification remain open.
