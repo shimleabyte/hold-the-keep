@@ -2,6 +2,7 @@ extends SceneTree
 ## Regression checks for pixel-snapped secondary motion across character clips.
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
+const Player := preload("res://scripts/entities/player.gd")
 
 
 func _initialize() -> void:
@@ -35,9 +36,23 @@ func _initialize() -> void:
     assert(anim.motion_offset().x < 0.0, "Mirrored attack must lunge left, not right")
 
     anim.play("work", true)
+    anim.manual_progress = 0.0
+    var work_start_frame := anim.frame_index()
     anim.manual_progress = 0.5
+    assert(anim.frame_index() != work_start_frame, "Work animation must advance when its work-cycle progress advances")
     assert(anim.motion_offset().x < 0.0, "Work lean must follow left-facing direction")
     anim.manual_progress = -1.0
+
+    var player = Player.new()
+    player.anim.play("work", true)
+    player._harvest_anim_active = true
+    player._pending_harvest = RefCounted.new()
+    player._harvest_t = 0.1
+    player._cancel_harvest_animation()
+    assert(not player._harvest_anim_active, "Releasing interact must clear the harvest animation state")
+    assert(player._pending_harvest == null, "Releasing interact must cancel the pending harvest hit")
+    assert(player.anim.clip == "idle" and not player.anim.is_busy(), "Releasing interact must return the player to a non-busy animation")
+    player.free()
 
     anim.play("hurt", true)
     assert(anim.motion_offset().x > 0.0, "Hurt recoil must push opposite the facing direction")
