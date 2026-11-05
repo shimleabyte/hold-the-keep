@@ -25,7 +25,16 @@ class ClockWidget extends Control:
     var sun: Texture2D
     var moon: Texture2D
 
+    func countdown_text() -> String:
+        var seconds: int = GameClock.seconds_until_phase_change()
+        return "%02d:%02d" % [floori(float(seconds) / 60.0), seconds % 60]
+
+    func countdown_tooltip() -> String:
+        var night_now: bool = GameClock.time_of_day >= GameClock.NIGHT_START and GameClock.time_of_day < GameClock.NIGHT_END
+        return ("Fajar dalam " if night_now else "Malam dimulai dalam ") + countdown_text()
+
     func _process(_delta: float) -> void:
+        tooltip_text = countdown_tooltip()
         queue_redraw()
 
     func _draw() -> void:
@@ -46,6 +55,9 @@ class ClockWidget extends Control:
         draw_rect(Rect2(tx - 1, ty - 1, tw + 2, th + 2), Color("#1a1410"), false, 1.0)
         var mx: float = tx + tw * GameClock.time_of_day
         draw_rect(Rect2(mx - 1, ty - 2, 2, th + 4), Color.WHITE)
+        var countdown_color: Color = Color("#9eafd8") if night else Color("#e3bd67")
+        draw_string(font, Vector2(tx, 17), countdown_text(),
+            HORIZONTAL_ALIGNMENT_LEFT, tw, 6, countdown_color)
 
 
 ## Satu baris job: ikon, tombol -, "terisi/kuota", tombol +. Bisa diklik.
