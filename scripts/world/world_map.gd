@@ -463,11 +463,11 @@ func _spawn_wildlife() -> void:
                     "order": order
                 })
             elif _wildlife_candidate_is_better(score, order, candidates[0]):
-                candidates[0] = {
-                    "cell": cell,
-                    "score": score,
-                    "order": order
-                }
+                # Reuse the root dictionary; do not allocate one for every heap replacement.
+                var worst_candidate: Dictionary = candidates[0]
+                worst_candidate["cell"] = cell
+                worst_candidate["score"] = score
+                worst_candidate["order"] = order
                 _sift_wildlife_candidate_heap(candidates, 0)
     candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
         var a_score := float(a["score"])
