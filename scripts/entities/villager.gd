@@ -221,7 +221,6 @@ func _on_tech(_tech_id: String) -> void:
         queue_redraw()
 
 
-## Penambang memilih besi bila stoknya kurang dari separuh batu (dan ada bijih yang bisa ditambang).
 ## Count Keep inventory plus stock held by connected Frontier depots.
 ## Disconnected or sabotaged depots cannot satisfy a worker's production demand.
 func _resource_stock_amount(kind: String) -> int:
@@ -258,7 +257,9 @@ func _mine_kind() -> String:
             break
     if not has_local_iron:
         return "stone"
-    return "iron" if _resource_stock_amount("iron") <= _resource_stock_amount("stone") * 0.5 else "stone"
+    var iron_stock := _resource_stock_amount("iron")
+    var stone_stock := _resource_stock_amount("stone")
+    return "iron" if iron_stock <= stone_stock * 0.5 else "stone"
 
 
 func set_job(j: String, preferred_workplace = null) -> bool:
@@ -968,7 +969,7 @@ func _find_work() -> void:
                 _set_work_status("WORKPLACE_UNAVAILABLE", "Matching specialist workplaces are full or unreachable")
                 return
             var kind := "wood" if job == "woodcutter" else _mine_kind()
-            _set_work_status("SEARCHING_RESOURCE", "Seeking %s; connected stock %d" % [kind, _resource_stock_amount(kind)])
+            _set_work_status("SEARCHING_RESOURCE", "Seeking %s inside the assigned work area" % kind)
             for n in get_tree().get_nodes_in_group("harvestable"):
                 var in_work_area := _is_in_workplace_radius(n) if has_valid_workplace() else _is_in_gather_radius(n)
                 if n.yield_kind == kind and n.is_available(self) and in_work_area:
