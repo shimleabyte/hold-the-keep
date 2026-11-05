@@ -14,7 +14,8 @@ import os
 import random
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.normpath(os.path.join(HERE, "..", "assets", "sprites"))
+DEFAULT_OUT = os.path.join(HERE, "..", "assets", "sprites")
+OUT = os.path.normpath(os.environ.get("HTK_ASSET_OUTPUT_DIR", DEFAULT_OUT))
 
 # ---------------------------------------------------------------- palet
 SKIN, SKIN_D = "#e8c39e", "#c99b73"
