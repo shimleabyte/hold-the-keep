@@ -50,14 +50,12 @@ func _initialize() -> void:
 
     var work_styles := ["woodcutter", "miner", "builder", "blacksmith", "farmer"]
     var distinct_offsets: Array[Vector2] = []
-    var profile_frames: Dictionary = {}
     for style in work_styles:
         anim.work_style = style
         anim.manual_progress = 0.30
         var offset: Vector2 = anim.motion_offset()
         if not distinct_offsets.has(offset):
             distinct_offsets.append(offset)
-        profile_frames[style] = anim.frame_index()
     assert(distinct_offsets.size() == work_styles.size(),
         "Each profession must have a distinct body-weight transfer during its work cycle")
     anim.work_style = "woodcutter"
