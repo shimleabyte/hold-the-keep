@@ -64,11 +64,11 @@ func reference_wildlife_signature(world: Node) -> Array[String]:
             if not world.is_buildable(cell) or world._expedition_reserved_cells.has(cell):
                 continue
             var occupant = world.occupied.get(cell)
-            var occupied_by_resource := occupant != null and is_instance_valid(occupant) \
+            var occupied_by_resource: bool = occupant != null and is_instance_valid(occupant) \
                 and occupant.is_in_group("resource_nodes") and not occupant.is_in_group("wildlife")
             if occupied_by_resource:
                 continue
-            var region := world.region_id(cell)
+            var region: String = String(world.region_id(cell))
             if frontier and not ["GREENWOOD", "FENLANDS"].has(region):
                 continue
             candidates.append({
@@ -369,7 +369,7 @@ func _initialize() -> void:
     var landmark_regions := {}
     assert(world.generated_decoration_layout.size() >= 100,
         "Frontier must receive a meaningful amount of non-blocking regional dressing")
-    var decoration_batches := get_tree().get_nodes_in_group("frontier_decoration_batches")
+    var decoration_batches: Array = get_nodes_in_group("frontier_decoration_batches")
     assert(decoration_batches.size() < world.generated_decoration_layout.size()
         and decoration_batches.size() <= world.map_size * 2,
         "Regional decoration visuals must be batched by world row and z-layer")
@@ -548,7 +548,7 @@ func _initialize() -> void:
         "The incremental navigation test must find an empty walkable cell")
     main.territory.rebuild()
     main.supply.rebuild()
-    var navigation_version := main.nav.version
+    var navigation_version: int = int(main.nav.version)
     var probe_wall = main.build.place_raw("wall", navigation_probe_cell)
     assert(not main.territory._dirty,
         "Placing a wall with no claim radius must not trigger a full territory rebuild")
@@ -572,7 +572,7 @@ func _initialize() -> void:
     main.nav.rebuild()
     main.flow.rebuild()
     main.supply.rebuild()
-    var road_nav_version := main.nav.version
+    var road_nav_version: int = int(main.nav.version)
     var road = main.build.place_raw("road", navigation_probe_cell)
     assert(not main.nav._dirty and main.nav._dirty_cells.is_empty()
         and main.nav.version == road_nav_version,
