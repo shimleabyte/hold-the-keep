@@ -33,6 +33,15 @@ func _find_reachable_cell(main: Node, start_position: Vector2, distance_origin: 
     return best
 
 
+func _find_empty_box(main: Node, min_x: int, max_x: int, min_y: int, max_y: int) -> Vector2i:
+    for y in range(min_y, max_y + 1):
+        for x in range(min_x, max_x + 1):
+            var cell := Vector2i(x, y)
+            if main.world.is_buildable(cell) and not main.world.occupied.has(cell):
+                return cell
+    return Vector2i(-1, -1)
+
+
 func _spawn_resource(main: Node, script: Script, cell: Vector2i) -> Node:
     var resource = script.new()
     resource.position = Vector2(
@@ -121,6 +130,64 @@ func _run_profile(profile_id: String) -> void:
     builder._find_work()
     assert(builder.target == site and not builder._path.is_empty(),
         profile_id + " Keep builder must acquire a blueprint at the starting frontier edge")
+
+    # A nearer tree is reachable only through a long detour; the worker must
+    # compare real A* costs and choose a farther, directly reachable tree.
+    var route_worker = main.village.spawn_villager(worker_origin + Vector2(-3.0, 0.0))
+    assert(route_worker.set_job("woodcutter"), "Route-scoring worker must be assignable")
+    var route_start: Vector2i = main.nav.cell_of(route_worker.position)
+    var barrier_x := route_start.x + 2
+    var gap_y := -1
+    for candidate_y in range(route_start.y + 5, route_start.y + 15):
+        var gap_cell := Vector2i(barrier_x, candidate_y)
+        if main.world.is_buildable(gap_cell) and not main.world.occupied.has(gap_cell):
+            gap_y = candidate_y
+            break
+    assert(gap_y >= 0, profile_id + " must expose a traversable route-test barrier gap")
+    for barrier_y in range(maxi(1, route_start.y - 10), mini(int(config.map_size) - 1, gap_y + 6)):
+        if barrier_y == gap_y:
+            continue
+        main.world.occupied[Vector2i(barrier_x, barrier_y)] = true
+
+    var blocked_cell := _find_empty_box(
+        main, route_start.x - 4, route_start.x - 2,
+        route_start.y - 1, route_start.y + 1
+    )
+    var detour_cell := _find_empty_box(
+        main, route_start.x + 4, route_start.x + 7,
+        route_start.y - 2, route_start.y + 2
+    )
+    var direct_cell := _find_empty_box(
+        main, route_start.x - 2, route_start.x,
+        gap_y + 1, gap_y + 4
+    )
+    assert(blocked_cell.x >= 0 and detour_cell.x >= 0 and direct_cell.x >= 0,
+        profile_id + " must expose three free route-test resource cells")
+
+    for direction in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.UP, Vector2i.DOWN]:
+        main.world.occupied[blocked_cell + direction] = true
+    main.nav.rebuild()
+    var blocked_tree = _spawn_resource(main, TREE_SCRIPT, blocked_cell)
+    var detour_tree = _spawn_resource(main, TREE_SCRIPT, detour_cell)
+    var direct_tree = _spawn_resource(main, TREE_SCRIPT, direct_cell)
+
+    var detour_cells: Array[Vector2i] = [detour_cell]
+    var direct_cells: Array[Vector2i] = [direct_cell]
+    var detour_path: PackedVector2Array = main.nav.path_adjacent(route_worker.position, detour_cells)
+    var direct_path: PackedVector2Array = main.nav.path_adjacent(route_worker.position, direct_cells)
+    assert(detour_path.size() > direct_path.size() and not direct_path.is_empty(),
+        profile_id + " fixture must make the geometrically nearer tree require a longer path")
+
+    route_worker._find_work()
+    assert(route_worker.target == direct_tree,
+        profile_id + " worker must choose the target with the shorter reachable route, not the nearest straight-line target")
+    assert(route_worker._is_target_blocked(blocked_tree),
+        profile_id + " worker must remember an unreachable target during its retry cooldown")
+    var route_diagnostics: Dictionary = route_worker.worker_ai_diagnostics()
+    assert(String(route_diagnostics.get("status", "")) == "MOVING_TO_WORK"
+        and int(route_diagnostics.get("temporarily_blocked_targets", 0)) >= 1
+        and String(route_diagnostics.get("target", "")) == String(direct_tree.name),
+        profile_id + " diagnostics must expose the selected target and failed-path recovery state")
 
     print("PASS: Frontier worker dispatch — " + profile_id)
     main.queue_free()
