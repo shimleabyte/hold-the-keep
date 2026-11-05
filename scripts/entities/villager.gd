@@ -445,6 +445,7 @@ func _physics_process(delta: float) -> void:
                 _release()
                 state = State.IDLE
                 _decide_t = 0.15
+                _set_work_status("TARGET_LOST", "Work target was removed before arrival")
             elif job == "healer" and (String(target.job) != "soldier"
                     or int(target.hp) <= 0 or int(target.hp) >= int(target.max_hp)
                     or target.is_expeditioning() or target.is_recalling_expedition()

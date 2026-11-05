@@ -42,6 +42,19 @@ func _find_empty_box(main: Node, min_x: int, max_x: int, min_y: int, max_y: int)
     return Vector2i(-1, -1)
 
 
+func _find_reachable_box(main: Node, origin: Vector2, min_x: int, max_x: int,
+        min_y: int, max_y: int) -> Vector2i:
+    for y in range(min_y, max_y + 1):
+        for x in range(min_x, max_x + 1):
+            var cell := Vector2i(x, y)
+            if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
+                continue
+            var target_cells: Array[Vector2i] = [cell]
+            if not main.nav.path_adjacent(origin, target_cells).is_empty():
+                return cell
+    return Vector2i(-1, -1)
+
+
 func _spawn_resource(main: Node, script: Script, cell: Vector2i) -> Node:
     var resource = script.new()
     resource.position = Vector2(
@@ -140,7 +153,13 @@ func _run_profile(profile_id: String) -> void:
     var gap_y := -1
     for candidate_y in range(route_start.y + 5, route_start.y + 15):
         var gap_cell := Vector2i(barrier_x, candidate_y)
-        if main.world.is_buildable(gap_cell) and not main.world.occupied.has(gap_cell):
+        var gap_has_clear_approach := true
+        for offset_x in range(-1, 2):
+            var approach := Vector2i(barrier_x + offset_x, candidate_y)
+            if not main.world.is_buildable(approach) or main.world.occupied.has(approach):
+                gap_has_clear_approach = false
+                break
+        if gap_has_clear_approach:
             gap_y = candidate_y
             break
     assert(gap_y >= 0, profile_id + " must expose a traversable route-test barrier gap")
@@ -153,12 +172,13 @@ func _run_profile(profile_id: String) -> void:
         main, route_start.x - 4, route_start.x - 2,
         route_start.y - 1, route_start.y + 1
     )
-    var detour_cell := _find_empty_box(
-        main, route_start.x + 4, route_start.x + 7,
+    main.nav.rebuild()
+    var detour_cell := _find_reachable_box(
+        main, route_worker.position, route_start.x + 4, route_start.x + 7,
         route_start.y - 2, route_start.y + 2
     )
-    var direct_cell := _find_empty_box(
-        main, route_start.x - 2, route_start.x,
+    var direct_cell := _find_reachable_box(
+        main, route_worker.position, route_start.x - 2, route_start.x,
         gap_y + 1, gap_y + 4
     )
     assert(blocked_cell.x >= 0 and detour_cell.x >= 0 and direct_cell.x >= 0,
