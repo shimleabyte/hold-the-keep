@@ -521,11 +521,11 @@ func _update_anim(delta: float) -> void:
             anim.work_style = job
         if job == "farmer":
             anim.speed_scale = 1.0
-            var farm_motion_cycle := FARM_CYCLE / 3.0
+            var farm_motion_cycle := FARM_CYCLE / 10.0
             anim.manual_progress = fposmod(_work_t, farm_motion_cycle) / farm_motion_cycle
         elif job == "blacksmith":
             anim.speed_scale = 1.0
-            var forge_motion_cycle := SMITH_WORK_SECONDS / 2.0
+            var forge_motion_cycle := SMITH_WORK_SECONDS / 3.0
             anim.manual_progress = fposmod(_work_t, forge_motion_cycle) / forge_motion_cycle
         elif job == "builder":
             anim.speed_scale = 1.0
