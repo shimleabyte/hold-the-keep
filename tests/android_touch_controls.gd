@@ -168,6 +168,14 @@ func _run() -> void:
         "Safe-area origin must be mapped into the game viewport")
     assert(safe.size == Vector2(736.0, 426.0),
         "Safe-area dimensions must be preserved in viewport coordinates")
+    var scaled_safe := MOBILE_CONTROLS.safe_bounds_for_viewport(
+        Vector2(400.0, 225.0),
+        Rect2i(32, 12, 736, 426),
+        Vector2i(800, 450)
+    )
+    assert(scaled_safe.position == Vector2(16.0, 6.0)
+        and scaled_safe.size == Vector2(368.0, 213.0),
+        "Physical display insets must scale into the logical viewport without assuming a 1:1 pixel ratio")
 
     var full_screen := MOBILE_CONTROLS.safe_bounds_for_viewport(
         Vector2(640.0, 360.0),
