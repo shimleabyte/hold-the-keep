@@ -14,7 +14,7 @@ func tick(delta: float) -> void:
         _villager.blacksmith_behavior_release(0.2)
         return
 
-    _villager.anim.face(_villager.target.position - _villager.position)
+    _villager.anim.face(_villager.workplace.position - _villager.position)
     if not _villager.blacksmith_behavior_advance_work(delta):
         return
 
@@ -29,6 +29,7 @@ func tick(delta: float) -> void:
 
     var equipped: bool = _villager.target.equip_weapon() if recipe == "weapon" else _villager.target.equip_armor()
     if equipped:
+        Events.fx_burst.emit("spark", _villager.workplace.global_position + Vector2(0, -7), Vector2.UP, 0.9)
         Events.build_feedback.emit("Senjata besi selesai: damage prajurit +20%" if recipe == "weapon"
             else "Zirah besi selesai: HP maksimum prajurit +20%")
     _villager.blacksmith_behavior_release(0.2)
