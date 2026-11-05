@@ -5,7 +5,9 @@ extends Control
 const JOYSTICK_RADIUS := 48.0
 const JOYSTICK_KNOB_RADIUS := 17.0
 const JOYSTICK_MAX_TRAVEL := 31.0
-const JOYSTICK_HIT_RADIUS := 82.0
+const JOYSTICK_HIT_RADIUS := 54.0
+const JOYSTICK_EDGE_INSET := 60.0
+const JOYSTICK_BOTTOM_INSET := 100.0
 const BUTTON_HIT_PADDING := 8.0
 
 const ATTACK_ICON := preload("res://assets/sprites/icon_sword.svg")
@@ -146,10 +148,10 @@ func _apply_layout() -> void:
     var right := safe.end.x
     var bottom := safe.end.y
     _joystick_center = Vector2(
-        left + JOYSTICK_HIT_RADIUS,
-        bottom - JOYSTICK_HIT_RADIUS
+        left + JOYSTICK_EDGE_INSET,
+        bottom - JOYSTICK_BOTTOM_INSET
     )
-    _pause_center = Vector2(left + 28.0, top + 72.0)
+    _pause_center = Vector2(left + 28.0, top + 86.0)
 
     _button_layout = [
         {
