@@ -12,6 +12,7 @@ const TARGET_PRIORITIES := {
     "house": 2
 }
 const TARGET_SCAN_LIMIT := 32
+const INTERCEPTOR_REFRESH_INTERVAL := 0.12
 
 var actor
 var navigation
@@ -26,6 +27,8 @@ var damage_multiplier := 1.5
 var target: Node2D
 var scan_timer := 0.0
 var scan_cursor := 0
+var _interceptor_scan_timer := 0.0
+var _interceptor_cache: Node2D
 var windup_timer := 0.0
 var cooldown := 0.0
 var path := PackedVector2Array()
@@ -49,6 +52,8 @@ func reset() -> void:
     target = null
     scan_timer = 0.0
     scan_cursor = 0
+    _interceptor_scan_timer = 0.0
+    _interceptor_cache = null
     windup_timer = 0.0
     cooldown = 0.0
     path = PackedVector2Array()
@@ -65,6 +70,7 @@ func advance_timers(delta: float) -> void:
     cooldown = maxf(0.0, cooldown - delta)
     scan_timer = maxf(0.0, scan_timer - delta)
     repath_timer = maxf(0.0, repath_timer - delta)
+    _interceptor_scan_timer = maxf(0.0, _interceptor_scan_timer - delta)
 
 
 func target_is_valid(candidate: Node2D) -> bool:
@@ -120,13 +126,26 @@ func select_target() -> Node2D:
 
 
 func _nearest_interceptor() -> Node2D:
-    if actor.player != null and is_instance_valid(actor.player) and actor.position.distance_to(actor.player.position) <= actor._attack_reach() + 4.0:
-        return actor.player
+    var reach := actor._attack_reach() + 4.0
+    # Player interception remains immediate; only the full defender scan is throttled.
+    if actor.player != null and is_instance_valid(actor.player) and actor.player.visible:
+        if actor.position.distance_squared_to(actor.player.position) <= reach * reach:
+            _interceptor_cache = actor.player
+            return _interceptor_cache
+    if _interceptor_scan_timer > 0.0 and is_instance_valid(_interceptor_cache):
+        if _interceptor_cache.is_in_group("defenders") and _interceptor_cache.visible \
+                and actor.position.distance_squared_to(_interceptor_cache.position) <= reach * reach:
+            return _interceptor_cache
+    if _interceptor_scan_timer > 0.0:
+        return null
+    _interceptor_cache = null
+    _interceptor_scan_timer = INTERCEPTOR_REFRESH_INTERVAL
     for defender in actor.get_tree().get_nodes_in_group("defenders"):
         if not is_instance_valid(defender) or not defender.visible:
             continue
-        if actor.position.distance_to(defender.position) <= actor._attack_reach() + 4.0:
-            return defender as Node2D
+        if actor.position.distance_squared_to(defender.position) <= reach * reach:
+            _interceptor_cache = defender as Node2D
+            return _interceptor_cache
     return null
 
 
