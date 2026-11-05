@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -46,6 +47,15 @@ def main() -> int:
         if not generated.is_file() or not committed.is_file():
             failures.append(f"{filename}: generated or committed file is missing")
             continue
+
+        for candidate in (generated, committed):
+            header = re.search(
+                rb'<svg[^>]*width="(\\d+)"[^>]*height="(\\d+)"',
+                candidate.read_bytes(),
+            )
+            if header is None or (int(header.group(1)), int(header.group(2))) != (440, 60):
+                failures.append(f"{filename}: {candidate.name} must remain a 440x60 sprite sheet")
+
         if generated.read_bytes() != committed.read_bytes():
             generated_bytes = generated.read_bytes()
             committed_bytes = committed.read_bytes()
@@ -66,7 +76,7 @@ def main() -> int:
         print(f"Generated candidates retained in {OUTPUT}")
         return 1
 
-    print("PASS: profession and specialist SVGs reproduce exactly from tools/gen_assets.py")
+    print("PASS: profession/specialist SVGs reproduce exactly and worker sheets remain 440x60")
     return 0
 
 
