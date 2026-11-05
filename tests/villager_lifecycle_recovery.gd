@@ -144,8 +144,24 @@ func _initialize() -> void:
         "A worker whose workplace is destroyed must leave its stale work state")
     await ticks(2)
     worker._find_work()
-    assert(worker.workplace == recovery_quarry and worker.workplace_job == "miner",
-        "Worker must recover by claiming the other reachable Quarry")
+    if worker.workplace != recovery_quarry or worker.workplace_job != "miner":
+        var debug_state: Dictionary = worker.worker_ai_diagnostics()
+        var recovery_slots: int = int(recovery_quarry.free_slots("miner")) if is_instance_valid(recovery_quarry) else -1
+        var recovery_path_after: PackedVector2Array = main.nav.path_adjacent(worker.position, recovery_quarry.cells()) if is_instance_valid(recovery_quarry) else PackedVector2Array()
+        print("LIFECYCLE_RECOVERY_DEBUG ", {
+            "job": worker.job,
+            "state": String(worker.State.keys()[worker.state]),
+            "status": worker.work_ai_status,
+            "detail": worker.work_ai_detail,
+            "workplace": String(worker.workplace.id) if worker.workplace != null and is_instance_valid(worker.workplace) else "null",
+            "expected_quarry": String(recovery_quarry.id) if is_instance_valid(recovery_quarry) else "freed",
+            "slots": recovery_slots,
+            "path_points": recovery_path_after.size(),
+            "nav_version": main.nav.version,
+            "diagnostics": debug_state
+        })
+        quit(1)
+        return
 
     var reserved: Dictionary = {}
     var depleted = spawn_resource_near(main, RockScript, worker, reserved)
