@@ -2,10 +2,6 @@ extends SceneTree
 ## Regression checks for pixel-snapped secondary motion across character clips.
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
-const ResourceTree := preload("res://scripts/entities/resource_tree.gd")
-const Rock := preload("res://scripts/entities/rock.gd")
-const IronOre := preload("res://scripts/entities/iron_ore.gd")
-const Wildlife := preload("res://scripts/entities/wildlife_node.gd")
 
 
 func _initialize() -> void:
@@ -14,6 +10,10 @@ func _initialize() -> void:
         "Profession animation must reuse the existing 22-frame sprite sheet")
     var VillagerScript: Script = load("res://scripts/entities/villager.gd")
     var PlayerScript: Script = load("res://scripts/entities/player.gd")
+    var ResourceTreeScript: Script = load("res://scripts/entities/resource_tree.gd")
+    var RockScript: Script = load("res://scripts/entities/rock.gd")
+    var IronOreScript: Script = load("res://scripts/entities/iron_ore.gd")
+    var WildlifeScript: Script = load("res://scripts/entities/wildlife_node.gd")
     var anim = SpriteAnim.new()
     anim.face(Vector2.RIGHT)
     anim.play("idle", true)
@@ -132,10 +132,10 @@ func _initialize() -> void:
     var worker_fx_callback := func(_kind: String, _at: Vector2, _dir: Vector2, _amount: float) -> void:
         worker_fx_count[0] += 1
     events.fx_burst.connect(worker_fx_callback)
-    var tree_node = ResourceTree.new()
-    var rock_node = Rock.new()
-    var ore_node = IronOre.new()
-    var wildlife_node = Wildlife.new()
+    var tree_node = ResourceTreeScript.new()
+    var rock_node = RockScript.new()
+    var ore_node = IronOreScript.new()
+    var wildlife_node = WildlifeScript.new()
     tree_node.hit(gatherer)
     assert(gatherer.carry_kind == "wood" and gatherer.carry == 1,
         "Woodcutter output must be preserved without worker hit particles")
