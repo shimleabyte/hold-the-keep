@@ -754,7 +754,7 @@ func _on_bindings_changed() -> void:
         Settings.binding_label("toggle_map"), Settings.binding_label("toggle_help")
     ]
     for i in JOBS.size():
-        var job_action := "job_" + JOBS[i]
+        var job_action: String = "job_" + String(JOBS[i])
         var row: HUD_WIDGETS.JobRow = _jobs[JOBS[i]]
         var descriptions := {
             "woodcutter": "Penebang — mengumpulkan kayu",
