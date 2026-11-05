@@ -65,7 +65,7 @@ func assert_multi_cell_approach_fallback(main) -> void:
     var path: PackedVector2Array = nav.path_adjacent(nav.center_of(start_cell), target_cells)
     assert(not path.is_empty(),
         "A 3x3 target must remain reachable through a farther perimeter cell when the nearest four are blocked")
-    var endpoint := nav.cell_of(path.back())
+    var endpoint: Vector2i = nav.cell_of(path[path.size() - 1])
     assert(endpoint.x == target_origin.x + 3
         and endpoint.y >= target_origin.y and endpoint.y <= target_origin.y + 2,
         "Path selection must use the only connected right-side approach")
