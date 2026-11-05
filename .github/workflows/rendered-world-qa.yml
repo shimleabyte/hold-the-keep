@@ -1,0 +1,88 @@
+name: Rendered World QA
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/rendered-world-qa.yml"
+      - "scripts/world/**"
+      - "scripts/autoload/world_config.gd"
+      - "scripts/entities/resource_tree.gd"
+      - "scripts/entities/rock.gd"
+      - "scripts/entities/iron_ore.gd"
+      - "scripts/entities/wildlife_node.gd"
+      - "scripts/entities/frontier_decoration.gd"
+      - "assets/sprites/**"
+      - "tools/gen_assets.py"
+      - "tests/shot_frontier_seed_compare.gd"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/rendered-world-qa.yml"
+      - "scripts/world/**"
+      - "scripts/autoload/world_config.gd"
+      - "scripts/entities/resource_tree.gd"
+      - "scripts/entities/rock.gd"
+      - "scripts/entities/iron_ore.gd"
+      - "scripts/entities/wildlife_node.gd"
+      - "scripts/entities/frontier_decoration.gd"
+      - "assets/sprites/**"
+      - "tools/gen_assets.py"
+      - "tests/shot_frontier_seed_compare.gd"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rendered-world-qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontier-same-seed-render:
+    name: Frontier same-seed rendered comparison · Godot 4.7
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot 4.7
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Install Xvfb and Mesa
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Render and compare the Frontier map twice
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/hold-the-keep-rendered-qa
+          touch /tmp/hold-the-keep-rendered-qa/render.log
+          timeout --signal=TERM --kill-after=15s 300s \
+            xvfb-run -a -s "-screen 0 1600x900x24" \
+            godot --path . --rendering-driver opengl3 --fixed-fps 30 \
+            --script res://tests/shot_frontier_seed_compare.gd \
+            2>&1 | tee /tmp/hold-the-keep-rendered-qa/render.log
+
+      - name: Upload rendered captures and difference image
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontier-rendered-seed-1337-godot-4.7
+          path: |
+            /tmp/hold-the-keep-rendered-qa/*.png
+            /tmp/hold-the-keep-rendered-qa/render.log
+          if-no-files-found: warn
+          retention-days: 14
