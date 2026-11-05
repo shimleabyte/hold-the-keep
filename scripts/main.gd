@@ -367,7 +367,7 @@ func _apply_save(d: Dictionary) -> void:
         if not saved_resource.has("cx") or not saved_resource.has("cy"):
             continue
         var resource_cell := Vector2i(int(saved_resource["cx"]), int(saved_resource["cy"]))
-        var resource_node = world.occupied.get(resource_cell)
+        var resource_node = world.resource_node_at(resource_cell)
         if resource_node != null and is_instance_valid(resource_node) and resource_node.has_method("import_state"):
             if String(saved_resource.get("kind", "")) == String(resource_node.yield_kind):
                 resource_node.import_state(saved_resource.get("state", {}))

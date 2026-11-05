@@ -40,6 +40,13 @@ func _initialize() -> void:
     invalid_resources["resources"] = [{"cx": 4, "cy": 5, "kind": "wood", "state": "not a dictionary"}]
     assert(not save_system._valid_save(invalid_resources),
         "Save validation must reject malformed resource state")
+    var invalid_cleared_resource := valid_shape.duplicate(true)
+    invalid_cleared_resource["resources"] = [{
+        "cx": 4, "cy": 5, "kind": "wood",
+        "state": {"hp": 0, "regrow": 0.0, "cleared": "yes"}
+    }]
+    assert(not save_system._valid_save(invalid_cleared_resource),
+        "Save validation must reject a non-boolean cleared-resource marker")
 
     var nodes := {}
     var cells := {}
@@ -61,7 +68,36 @@ func _initialize() -> void:
     assert(nodes["wood"].is_processing() and not nodes["stone"].is_processing()
         and nodes["iron"].is_processing() and nodes["food"].is_processing(),
         "Only depleted resource nodes should process their regrowth timers")
-    assert(save_system.save_current(true), "Initial resource save must succeed")
+    main.nav.rebuild()
+    for kind in ["stone", "iron", "food"]:
+        var residue = nodes[kind]
+        assert(residue.is_in_group("clearable_resource_residues"),
+            "%s should expose its depleted remains for player cleanup" % kind)
+        assert(residue.clear_residue(), "%s residue should be removable" % kind)
+        assert(residue.is_cleared() and not residue.visible and residue.collision_layer == 0,
+            "%s cleanup must hide the residue and disable its collision" % kind)
+        assert(not main.world.occupied.has(cells[kind]),
+            "%s cleanup must free the tile for construction" % kind)
+        await ticks(1)
+        assert(main.nav.is_walkable(cells[kind]),
+            "%s cleanup must release the tile in worker navigation" % kind)
+        residue.import_state({"hp": 0, "regrow": 17.0})
+        await ticks(1)
+        assert(not main.nav.is_walkable(cells[kind]),
+            "%s restoration must restore its navigation blocker" % kind)
+
+    # The player uses the normal interact/work animation to clear a depleted tree stump.
+    main.player.global_position = nodes["wood"].global_position
+    main.player._try_interact()
+    assert(main.player._pending_harvest == nodes["wood"],
+        "Interact should select a nearby depleted stump as a cleanup target")
+    main.player._tick_pending(0.2)
+    assert(nodes["wood"].is_cleared() and not main.world.occupied.has(cells["wood"]),
+        "Completing the interact action must remove stump collision and free its tile")
+    await ticks(1)
+    assert(main.nav.is_walkable(cells["wood"]),
+        "Player cleanup must also release the stump tile in worker navigation")
+    assert(save_system.save_current(true), "Initial resource save must persist a cleared stump")
 
     # Write another valid save so the first save becomes the rollback copy.
     nodes["wood"].import_state({"hp": 2, "regrow": 0.0})
@@ -83,15 +119,18 @@ func _initialize() -> void:
     var restored = current_scene
     for kind in ["wood", "stone", "iron", "food"]:
         var cell: Vector2i = cells[kind]
-        var node = restored.world.occupied.get(cell)
+        var node = restored.world.resource_node_at(cell)
         assert(node != null and node.has_method("export_state"),
-            "Resource node should be regenerated at deterministic cell: " + kind)
+            "Resource node should be addressable at its deterministic cell: " + kind)
         var state: Dictionary = node.export_state()
         if kind == "wood":
-            assert(int(state["hp"]) == 0 and absf(float(state["regrow"]) - 17.5) < 0.2,
-                "Tree depletion and regrowth timer must restore from backup")
-            assert(node.is_processing(),
-                "A restored depleted tree must resume its regrowth timer")
+            assert(int(state["hp"]) == 0 and bool(state.get("cleared", false))
+                and is_zero_approx(float(state["regrow"])),
+                "Cleared stump state must restore from backup without a regrowth timer")
+            assert(not node.is_processing() and not node.visible and node.collision_layer == 0,
+                "A restored cleared stump must stay invisible and non-blocking")
+            assert(not restored.world.occupied.has(cell),
+                "A restored cleared stump must leave the tile available for building")
         elif kind == "stone":
             assert(int(state["hp"]) == 2 and is_equal_approx(float(state["regrow"]), 0.0),
                 "Partially mined rock must restore from backup")

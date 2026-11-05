@@ -342,6 +342,9 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 occupied_cells[Vector2i(int(saved_building["cx"]) + x, int(saved_building["cy"]) + y)] = true
     for saved_resource in resources:
         if saved_resource is Dictionary and saved_resource.has("cx") and saved_resource.has("cy"):
+            var resource_state: Variant = saved_resource.get("state", {})
+            if resource_state is Dictionary and bool(resource_state.get("cleared", false)):
+                continue
             occupied_cells[Vector2i(int(saved_resource["cx"]), int(saved_resource["cy"]))] = true
     var site_cells: Dictionary = {}
     var queue_orders: Dictionary = {}
@@ -637,6 +640,12 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             return false
         if not resource["state"].has("hp") or not resource["state"].has("regrow"):
             return false
+        var resource_state: Dictionary = resource["state"]
+        if resource_state.has("cleared") and typeof(resource_state["cleared"]) != TYPE_BOOL:
+            return false
+        if bool(resource_state.get("cleared", false)):
+            if int(resource_state["hp"]) != 0 or not is_zero_approx(float(resource_state["regrow"])):
+                return false
     return true
 
 

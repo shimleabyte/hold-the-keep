@@ -51,7 +51,8 @@ var tile_size := 16
 var safe_radius := 8.0
 var pixel_size := Vector2i.ZERO
 var entities: Node2D
-var occupied: Dictionary = {}  # Vector2i -> Node (pohon, batu, bangunan)
+var occupied: Dictionary = {}  # Vector2i -> Node (resource, blueprint, building)
+var resource_nodes_by_cell: Dictionary = {}  # Retains cleared nodes for save/load state.
 
 var _layer: TileMapLayer
 
@@ -71,6 +72,8 @@ func _ready() -> void:
     entities.y_sort_enabled = true
     add_child(entities)
 
+    occupied.clear()
+    resource_nodes_by_cell.clear()
     generated_resource_layout.clear()
     generated_wildlife_layout.clear()
     if WorldConfig.is_frontier_profile():
@@ -93,6 +96,34 @@ func is_buildable(cell: Vector2i) -> bool:
     if _expedition_barrier_cells.has(cell):
         return false
     return _layer.get_cell_atlas_coords(cell).x != T_WATER
+
+
+func _register_resource_node(node: Node2D, cell: Vector2i) -> void:
+    node.set("resource_cell", cell)
+    node.set("world_map", self)
+    entities.add_child(node)
+    resource_nodes_by_cell[cell] = node
+    occupied[cell] = node
+
+
+func resource_node_at(cell: Vector2i) -> Node2D:
+    var node: Variant = resource_nodes_by_cell.get(cell)
+    return node as Node2D if is_instance_valid(node) else null
+
+
+func clear_resource_occupancy(node: Node2D) -> void:
+    var cell: Vector2i = node.get("resource_cell")
+    if occupied.get(cell) == node:
+        occupied.erase(cell)
+        Events.resource_occupancy_changed.emit(cell)
+
+
+func restore_resource_occupancy(node: Node2D) -> void:
+    var cell: Vector2i = node.get("resource_cell")
+    var occupant: Variant = occupied.get(cell)
+    if occupant == null:
+        occupied[cell] = node
+        Events.resource_occupancy_changed.emit(cell)
 
 
 func is_bridgeable(cell: Vector2i) -> bool:
@@ -190,13 +221,11 @@ func _generate_classic() -> void:
             if not safe and rng.randf() < TREE_CHANCE:
                 var tree := TREE_SCRIPT.new()
                 tree.position = foot
-                entities.add_child(tree)
-                occupied[cell] = tree
+                _register_resource_node(tree, cell)
             elif Vector2(x, y).distance_to(center) > 5.5 and rng.randf() < ROCK_CHANCE:
                 var rock := ROCK_SCRIPT.new()
                 rock.position = foot
-                entities.add_child(rock)
-                occupied[cell] = rock
+                _register_resource_node(rock, cell)
 
 
 func _generate_frontier() -> void:
@@ -239,8 +268,7 @@ func _generate_frontier() -> void:
                     var tree := TREE_SCRIPT.new()
                     tree.regional_style = _frontier_tree_style(region)
                     tree.position = foot
-                    entities.add_child(tree)
-                    occupied[cell] = tree
+                    _register_resource_node(tree, cell)
                 else:
                     occupied[cell] = true
             elif kind == "stone":
@@ -248,8 +276,7 @@ func _generate_frontier() -> void:
                     var rock := ROCK_SCRIPT.new()
                     rock.regional_style = _frontier_rock_style(region)
                     rock.position = foot
-                    entities.add_child(rock)
-                    occupied[cell] = rock
+                    _register_resource_node(rock, cell)
                 else:
                     occupied[cell] = true
 
@@ -496,8 +523,7 @@ func _spawn_wildlife() -> void:
                 cell.x * tile_size + tile_size / 2.0,
                 cell.y * tile_size + tile_size
             )
-            entities.add_child(wildlife)
-            occupied[cell] = wildlife
+            _register_resource_node(wildlife, cell)
         else:
             occupied[cell] = true
         for dy in range(-1, 2):
@@ -562,8 +588,7 @@ func _place_iron_node(cell: Vector2i) -> void:
         cell.x * tile_size + tile_size / 2.0,
         cell.y * tile_size + tile_size
     )
-    entities.add_child(ore)
-    occupied[cell] = ore
+    _register_resource_node(ore, cell)
 
 
 func _frontier_region_at(cell: Vector2i) -> int:

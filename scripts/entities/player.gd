@@ -227,22 +227,16 @@ func _tick_pending(delta: float) -> void:
         if _harvest_t <= 0.0:
             var n = _pending_harvest
             _pending_harvest = null
-            if is_instance_valid(n) and n.is_in_group("harvestable"):
-                Events.player_harvested.emit(n.yield_kind)
-                n.hit()
+            if is_instance_valid(n):
+                if n.is_in_group("harvestable"):
+                    Events.player_harvested.emit(n.yield_kind)
+                    n.hit()
+                elif n.is_in_group("clearable_resource_residues"):
+                    n.clear_residue()
     if _cleave_pending >= 0.0:
         _cleave_pending -= delta
         if _cleave_pending < 0.0:
             _apply_cleave()
-
-
-## Klik kiri di atas panel HUD tidak boleh jadi serangan (tombol F / gamepad tetap bisa).
-func _click_on_hud() -> bool:
-    if Input.is_physical_key_pressed(KEY_F) or Input.is_joy_button_pressed(0, JOY_BUTTON_X):
-        return false
-    var hud := get_tree().get_first_node_in_group("hud")
-    return hud != null and hud.blocks_mouse(get_viewport().get_mouse_position())
-
 
 func _regen(delta: float) -> void:
     if hp >= MAX_HP or _since_hit < Tech.stat("player.regen_delay", REGEN_DELAY):
@@ -560,12 +554,13 @@ func _try_interact() -> void:
         return
     var best: Node2D = null
     var best_dist := INTERACT_RANGE
-    for n in get_tree().get_nodes_in_group("harvestable"):
-        var node := n as Node2D
-        var d := origin.distance_to(node.global_position + Vector2(0, -4))
-        if d < best_dist:
-            best_dist = d
-            best = node
+    for group_name in ["harvestable", "clearable_resource_residues"]:
+        for n in get_tree().get_nodes_in_group(group_name):
+            var node := n as Node2D
+            var distance := origin.distance_to(node.global_position + Vector2(0, -4))
+            if distance < best_dist:
+                best_dist = distance
+                best = node
     if best != null:
         _cooldown = HIT_COOLDOWN
         facing = (best.global_position - global_position).normalized()
@@ -576,12 +571,13 @@ func _try_interact() -> void:
         _harvest_t = HIT_DELAY
         queue_redraw()
     else:
+        if _harvest_anim_active:
+            _cancel_harvest_animation()
         for n in get_tree().get_nodes_in_group("ore_locked"):
             if origin.distance_to((n as Node2D).global_position + Vector2(0, -4)) < INTERACT_RANGE:
                 _cooldown = 0.8
                 Events.build_feedback.emit("Butuh teknologi: " + Tech.tech_name("iron_mining"))
                 break
-
 
 func _draw() -> void:
     anim.draw(self, SPRITE, FW, FH)

@@ -22,6 +22,7 @@ func _ready() -> void:
     Events.building_placed.connect(_on_building_event)
     Events.building_removed.connect(_on_building_event)
     Events.building_destroyed.connect(_on_building_event)
+    Events.resource_occupancy_changed.connect(_on_resource_occupancy_changed)
 
 
 func _on_building_event(id: String, cell: Vector2i) -> void:
@@ -38,6 +39,12 @@ func _on_building_event(id: String, cell: Vector2i) -> void:
     for y in height:
         for x in width:
             _dirty_cells[cell + Vector2i(x, y)] = true
+
+
+func _on_resource_occupancy_changed(cell: Vector2i) -> void:
+    if _dirty:
+        return
+    _dirty_cells[cell] = true
 
 
 func _physics_process(_delta: float) -> void:

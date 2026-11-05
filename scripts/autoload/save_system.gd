@@ -121,15 +121,17 @@ func collect(main: Node) -> Dictionary:
         })
 
     var resources: Array = []
-    for cell in main.world.occupied:
-        var node = main.world.occupied[cell]
-        if is_instance_valid(node) and node.is_in_group("resource_nodes") and node.has_method("export_state"):
-            resources.append({
-                "cx": cell.x,
-                "cy": cell.y,
-                "kind": node.yield_kind,
-                "state": node.export_state()
-            })
+    for resource_cell in main.world.resource_nodes_by_cell:
+        var node = main.world.resource_nodes_by_cell[resource_cell]
+        if not is_instance_valid(node) or not node.is_in_group("resource_nodes") or not node.has_method("export_state"):
+            continue
+        var cell: Vector2i = resource_cell
+        resources.append({
+            "cx": cell.x,
+            "cy": cell.y,
+            "kind": node.yield_kind,
+            "state": node.export_state()
+        })
 
     var stronghold_state: Dictionary = main.campaign.export_primary_state() if main.campaign != null else {"destroyed": true}
     var campaign_state: Dictionary = main.campaign.export_state() if main.campaign != null else {}

@@ -40,12 +40,18 @@ func _ready() -> void:
     Events.building_placed.connect(_on_building_event)
     Events.building_removed.connect(_on_building_event)
     Events.building_destroyed.connect(_on_building_event)
+    Events.resource_occupancy_changed.connect(_on_resource_occupancy_changed)
 
 
 func _on_building_event(id: String, _cell: Vector2i) -> void:
     # A road neither blocks cells nor changes flow-field traversal cost.
     if id == "road":
         return
+    _requested_revision += 1
+    _dirty = true
+
+
+func _on_resource_occupancy_changed(_cell: Vector2i) -> void:
     _requested_revision += 1
     _dirty = true
 
