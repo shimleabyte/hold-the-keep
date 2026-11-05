@@ -13,8 +13,7 @@ func tick(delta: float) -> void:
     var target = _villager.target
     if target.has_method("is_construction_site") and target.is_construction_site():
         _villager.anim.face(target.position - _villager.position)
-        if _villager.builder_behavior_advance_construction(delta):
-            Events.fx_burst.emit("dust", target.global_position + Vector2(0, -5), Vector2.ZERO, 0.45)
+
         return
     if int(target.hp) <= 0 or int(target.hp) >= int(target.max_hp):
         _villager.builder_behavior_release()
