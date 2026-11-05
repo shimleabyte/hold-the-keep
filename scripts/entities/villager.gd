@@ -222,12 +222,43 @@ func _on_tech(_tech_id: String) -> void:
 
 
 ## Penambang memilih besi bila stoknya kurang dari separuh batu (dan ada bijih yang bisa ditambang).
+## Count Keep inventory plus stock held by connected Frontier depots.
+## Disconnected or sabotaged depots cannot satisfy a worker's production demand.
+func _resource_stock_amount(kind: String) -> int:
+    var total := int(Inventory.get_amount(kind))
+    if not WorldConfig.is_frontier_profile():
+        return total
+    var supply = get_tree().get_first_node_in_group("supply_network")
+    if supply == null:
+        return total
+    for depot in get_tree().get_nodes_in_group("depots"):
+        if not is_instance_valid(depot) or String(depot.id) == "keep":
+            continue
+        if not supply.is_depot_connected(depot) or _facility_sabotaged(depot):
+            continue
+        if depot.has_method("stockpile_amount"):
+            total += int(depot.stockpile_amount(kind))
+    return total
+
+
+## Prefer iron only when an available ore node is inside this miner's actual
+## work area and the connected economy is comparatively short on iron.
 func _mine_kind() -> String:
-    if Tech.has_flag("iron_mining") and Inventory.get_amount("iron") <= Inventory.get_amount("stone") * 0.5:
-        for n in get_tree().get_nodes_in_group("harvestable"):
-            if n.yield_kind == "iron":
-                return "iron"
-    return "stone"
+    if not Tech.has_flag("iron_mining"):
+        return "stone"
+    var has_local_iron := false
+    for node in get_tree().get_nodes_in_group("harvestable"):
+        if not is_instance_valid(node) or String(node.yield_kind) != "iron":
+            continue
+        if not node.is_available(self):
+            continue
+        var in_work_area := _is_in_workplace_radius(node) if has_valid_workplace() else _is_in_gather_radius(node)
+        if in_work_area:
+            has_local_iron = true
+            break
+    if not has_local_iron:
+        return "stone"
+    return "iron" if _resource_stock_amount("iron") <= _resource_stock_amount("stone") * 0.5 else "stone"
 
 
 func set_job(j: String, preferred_workplace = null) -> bool:
@@ -937,6 +968,7 @@ func _find_work() -> void:
                 _set_work_status("WORKPLACE_UNAVAILABLE", "Matching specialist workplaces are full or unreachable")
                 return
             var kind := "wood" if job == "woodcutter" else _mine_kind()
+            _set_work_status("SEARCHING_RESOURCE", "Seeking %s; connected stock %d" % [kind, _resource_stock_amount(kind)])
             for n in get_tree().get_nodes_in_group("harvestable"):
                 var in_work_area := _is_in_workplace_radius(n) if has_valid_workplace() else _is_in_gather_radius(n)
                 if n.yield_kind == kind and n.is_available(self) and in_work_area:

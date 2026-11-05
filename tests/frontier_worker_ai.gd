@@ -4,6 +4,7 @@ extends SceneTree
 
 const TREE_SCRIPT := preload("res://scripts/entities/resource_tree.gd")
 const ROCK_SCRIPT := preload("res://scripts/entities/rock.gd")
+const IRON_ORE_SCRIPT := preload("res://scripts/entities/iron_ore.gd")
 
 
 func ticks(count: int) -> void:
@@ -129,6 +130,52 @@ func _run_profile(profile_id: String) -> void:
     assert(miner.target == rock and not miner._path.is_empty(),
         profile_id + " miner must acquire and path to stone beyond 14 tiles")
 
+    # Mining policy must use the connected economy and the miner's own work area.
+    var previous_inventory: Dictionary = Inventory.items.duplicate(true)
+    var previous_tech: Dictionary = Tech.export_state()
+    Tech.import_state({"done": ["iron_mining"], "current": "", "progress": 0.0})
+    for existing_ore in get_nodes_in_group("harvestable"):
+        if String(existing_ore.yield_kind) == "iron":
+            existing_ore.remove_from_group("harvestable")
+
+    var stockpile_cell: Vector2i = keep.cell + Vector2i(3, 0)
+    var stockpile = main.build.place_raw("storage", stockpile_cell)
+    assert(stockpile != null, profile_id + " must create a connected storage for resource-demand coverage")
+    await ticks(2)
+    main.supply.rebuild()
+    assert(main.supply.is_depot_connected(stockpile),
+        profile_id + " test storage must be connected to the Keep")
+    Inventory.items["stone"] = 0
+    Inventory.items["iron"] = 0
+    assert(stockpile.store_resource("stone", 40),
+        profile_id + " connected storage must accept the stone reserve")
+
+    var remote_iron_cell := _find_reachable_cell(
+        main, worker_origin, keep.position, gather_radius + 1.0, gather_radius + 14.0, reserved
+    )
+    assert(remote_iron_cell.x >= 0, profile_id + " must expose reachable iron outside the miner's work radius")
+    reserved[remote_iron_cell] = true
+    var remote_ore = _spawn_resource(main, IRON_ORE_SCRIPT, remote_iron_cell)
+    assert(remote_ore.is_available(miner), profile_id + " remote iron must be unlocked and available")
+    assert(miner._resource_stock_amount("stone") == 40,
+        profile_id + " miner must include connected local depot stock in resource totals")
+    assert(miner._mine_kind() == "stone",
+        profile_id + " remote iron must not pull a miner away from stone inside its actual work area")
+
+    var local_iron_cell := _find_reachable_cell(
+        main, worker_origin, keep.position, clearing_radius + 0.5, gather_radius - 0.5, reserved
+    )
+    assert(local_iron_cell.x >= 0, profile_id + " must expose a local iron node cell")
+    reserved[local_iron_cell] = true
+    var local_ore = _spawn_resource(main, IRON_ORE_SCRIPT, local_iron_cell)
+    assert(local_ore.is_available(miner), profile_id + " local iron must be available to the miner")
+    assert(miner._mine_kind() == "iron",
+        profile_id + " miner must prioritize local iron while the connected network has a stone surplus")
+    assert(stockpile.store_resource("iron", 25),
+        profile_id + " connected storage must accept the iron reserve")
+    assert(miner._mine_kind() == "stone",
+        profile_id + " miner must return to stone once connected iron stock is no longer scarce")
+
     # The first frontier outpost can be placed at the edge of Keep territory.
     # Keep builders must be dispatched to that blueprint without extending
     # their ordinary building-repair radius.
@@ -208,6 +255,9 @@ func _run_profile(profile_id: String) -> void:
         and int(route_diagnostics.get("temporarily_blocked_targets", 0)) >= 1
         and String(route_diagnostics.get("target", "")) == String(direct_tree.name),
         profile_id + " diagnostics must expose the selected target and failed-path recovery state")
+
+    Tech.import_state(previous_tech)
+    Inventory.items = previous_inventory
 
     print("PASS: Frontier worker dispatch — " + profile_id)
     main.queue_free()
