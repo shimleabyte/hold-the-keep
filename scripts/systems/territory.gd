@@ -19,8 +19,11 @@ func _ready() -> void:
     Events.campaign_objective_completed.connect(_on_campaign_objective_completed)
 
 
-func _mark_dirty(_id: String, _cell: Vector2i) -> void:
-    _dirty = true
+func _mark_dirty(id: String, _cell: Vector2i) -> void:
+    var definition: Dictionary = DataDB.buildings.get(id, {})
+    var fallback := WorldConfig.starting_claim_radius if id == "keep" else 0.0
+    if float(definition.get("claim_radius", fallback)) > 0.0:
+        _dirty = true
 
 
 func _mark_enemy_dirty(_cell: Vector2i) -> void:
