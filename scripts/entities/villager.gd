@@ -1227,14 +1227,17 @@ func _is_in_gather_radius(candidate) -> bool:
     return false
 
 
-## Keep builders may reach the first construction sites at the edge of the
-## starting claim. Repairs remain restricted to the workplace's normal radius.
+## Frontier builders can reach construction sites just beyond their depot's
+## claim edge. Repairs remain restricted to the workplace's normal work radius.
 func _is_builder_site_in_range(site) -> bool:
     if not has_valid_workplace():
         return false
     var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS))
-    if WorldConfig.is_frontier_profile() and String(workplace.id) == "keep":
-        radius = maxf(radius, WorldConfig.starting_claim_radius + 2.0)
+    if WorldConfig.is_frontier_profile():
+        var fallback_claim_radius := WorldConfig.starting_claim_radius if String(workplace.id) == "keep" else 0.0
+        var claim_radius := float(workplace.data.get("claim_radius", fallback_claim_radius))
+        if claim_radius > 0.0:
+            radius = maxf(radius, claim_radius + 2.0)
     radius *= WorldConfig.tile_size
     return workplace.position.distance_squared_to(site.position) <= radius * radius
 
