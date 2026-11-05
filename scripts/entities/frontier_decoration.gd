@@ -126,11 +126,11 @@ func _draw_hearth_shrine() -> void:
         Vector2(-6, -3), Vector2(-5, -11), Vector2(0, -15),
         Vector2(5, -11), Vector2(6, -3)
     ]), Color("#75664c"))
+    var ember_alpha := 0.10 + _ambient_intensity * 0.24
+    draw_circle(Vector2(0, -7), 3.0, Color(0.83, 0.48, 0.2, ember_alpha))
     draw_line(Vector2(0, -13), Vector2(0, -5), Color("#c39b62"), 1.0)
     draw_line(Vector2(-3, -9), Vector2(3, -9), Color("#c39b62"), 1.0)
     draw_circle(Vector2(0, -7), 1.2, Color("#d0a45f"))
-    var ember_alpha := 0.28 + _ambient_intensity * 0.42
-    draw_circle(Vector2(0, -7), 3.0, Color(0.83, 0.48, 0.2, ember_alpha))
 
 
 func _draw_ruin_marker() -> void:
