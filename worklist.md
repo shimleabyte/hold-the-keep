@@ -30,6 +30,7 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-L Barracks | Integrated through PR #78. |
 | Archery Range / ranged soldiers | Integrated through PR #87. |
 | DEV-M visual identity / rendered QA | PR #129 adds dedicated Builder, Archer and Brute sprite sheets and an exactly reproducible generator path. Gameplay-zoom capture was inspected; roles are distinguishable at 640×360 and Brute's data-driven 1.45× visual scale is applied. Role Sprite Visual QA and Campaign Simulation QA passed; Godot 4.7 regression matrix passed 54/54 on head `0067f235067adb1e221bc48d0c842bb94b6b470a`. PR remains open; do not merge without review. |
+| Android ARMv7 / touch controls | PR #128 adds a 32-bit ARM export preset and virtual controls. Godot 4.7 CI found two invalid `Color.with_alpha()` calls in `mobile_controls.gd`; both are fixed using the existing `Color(hex, alpha)` constructor. Post-fix CI attempts have failed before runner allocation (`runner_id=0`, zero steps), so parse, APK export and ABI checks remain unverified. No APK artifact exists yet. |
 
 ### Recent Priority 1 integrations
 
@@ -47,7 +48,7 @@ This is an execution worklist, not a claim that every item is already implemente
 1. DEV-C / PR #135: keep the full-runtime night-wave diagnostic isolated. Retry only when GitHub Actions allocates a runner; current attempts failed before the first step, so neither parse nor gameplay results are available.
 2. DEV-M / PR #129: visual identity, normal-zoom gameplay capture, generator reproducibility, and 54/54 Godot regression tests passed. Review the final diff and merge only after explicit integration approval.
 3. DEV-H / PR #133: same-seed render comparison passed with pixel-identical captures and its Godot CI matrix passed 53/53 on the tested head. Preserve the workflow; no further generator architecture work is justified without a specific defect.
-4. Review PR #127 and #128 independently. HUD changes must be checked for panel overlap; Android work still requires an exported APK and physical-device validation.
+4. Review PR #127 and #128 independently. HUD changes must be checked for panel overlap. Android's known parse defect is fixed in PR #128, but runner allocation currently prevents post-fix validation; APK export, ABI verification and physical-device testing remain pending.
 5. Run extended human Classic and Frontier playthroughs; record pacing, recovery, difficulty spikes and confusing interactions before tuning values or adding facilities.
 
 ### Validation and release boundaries
