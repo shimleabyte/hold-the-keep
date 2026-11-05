@@ -137,11 +137,21 @@ func path_adjacent(from_pos: Vector2, cells: Array[Vector2i]) -> PackedVector2Ar
             var n := c + d
             if is_walkable(n) and not cands.has(n):
                 cands.append(n)
-    cands.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return Vector2(a - s).length_squared() < Vector2(b - s).length_squared())
-    # A resource occupies one tile and may be approached from any of its four
-    # cardinal sides. Checking only three can reject the sole reachable side.
-    for i in mini(4, cands.size()):
-        var p := astar.get_point_path(s, cands[i])
-        if not p.is_empty():
-            return p
+    cands.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+        var distance_a := Vector2(a - s).length_squared()
+        var distance_b := Vector2(b - s).length_squared()
+        if not is_equal_approx(distance_a, distance_b):
+            return distance_a < distance_b
+        if a.y != b.y:
+            return a.y < b.y
+        return a.x < b.x
+    )
+
+    # A multi-cell building can expose more than four walkable approach cells.
+    # Keep nearest-first ordering, but inspect the full perimeter before
+    # declaring the target unreachable.
+    for candidate in cands:
+        var path := astar.get_point_path(s, candidate)
+        if not path.is_empty():
+            return path
     return PackedVector2Array()
