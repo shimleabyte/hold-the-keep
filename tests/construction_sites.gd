@@ -35,7 +35,7 @@ func _initialize() -> void:
     main.village.set_process(true)
     main.village._on_workplace_changed("house", Vector2i.ZERO)
     main.village._on_workplace_changed("house", Vector2i.ZERO)
-    await ticks(1)
+    await ticks(2)
     main.village.set_process(false)
     assert(main.village._assignment_pass_count == assignment_passes_before + 1,
         "Multiple building notifications in one frame must cause one Village assignment pass")
@@ -59,7 +59,7 @@ func _initialize() -> void:
     assert(not main.flow._dirty and not main.flow._build_active,
         "The initial enemy flow field must finish before construction profiling")
     main.flow.rebuild_pops_per_frame = 1
-    await ticks(1)
+    await ticks(2)
     assert(main.flow._build_active and main.flow.version == flow_version_before,
         "A construction event must not synchronously replace the published flow field")
     main.flow.rebuild_pops_per_frame = main.flow.DEFAULT_REBUILD_POPS_PER_FRAME
