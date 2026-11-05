@@ -3,6 +3,7 @@ extends SceneTree
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Player := preload("res://scripts/entities/player.gd")
+const Villager := preload("res://scripts/entities/villager.gd")
 
 
 func _initialize() -> void:
@@ -42,6 +43,33 @@ func _initialize() -> void:
     assert(anim.frame_index() != work_start_frame, "Work animation must advance when its work-cycle progress advances")
     assert(anim.motion_offset().x < 0.0, "Work lean must follow left-facing direction")
     anim.manual_progress = -1.0
+
+    var work_styles := ["woodcutter", "miner", "builder", "blacksmith", "farmer"]
+    var distinct_offsets: Array[Vector2] = []
+    var profile_frames: Dictionary = {}
+    for style in work_styles:
+        anim.work_style = style
+        anim.manual_progress = 0.30
+        var offset: Vector2 = anim.motion_offset()
+        if not distinct_offsets.has(offset):
+            distinct_offsets.append(offset)
+        profile_frames[style] = anim.frame_index()
+    assert(distinct_offsets.size() == work_styles.size(),
+        "Each profession must have a distinct body-weight transfer during its work cycle")
+    assert(profile_frames["woodcutter"] != profile_frames["miner"],
+        "Woodcutting and mining must not use the same work-frame timing")
+    assert(profile_frames["builder"] != profile_frames["blacksmith"],
+        "Construction and forging must not use the same hammer timing")
+    anim.manual_progress = -1.0
+
+    var builder = Villager.new()
+    assert(not builder.builder_behavior_advance_construction(0.8),
+        "Builder construction must not emit an impact before its work interval")
+    assert(builder.builder_behavior_advance_construction(0.9),
+        "Builder construction must emit a work impact when its interval completes")
+    assert(builder._work_t < builder.BUILDER_REPAIR_INTERVAL,
+        "Builder construction animation progress must wrap into the next work cycle")
+    builder.free()
 
     var player = Player.new()
     player.anim.play("work", true)
