@@ -116,6 +116,14 @@ func _run_profile(profile_id: String) -> void:
     assert(woodcutter.target == tree and not woodcutter._path.is_empty(),
         profile_id + " woodcutter must acquire and path to a resource beyond 14 tiles")
 
+    var tree_hp_before := int(tree.export_state().get("hp", 0))
+    woodcutter.state = woodcutter.State.WORKING
+    woodcutter._tick_working(woodcutter._hit_interval() * 0.5 + 0.01)
+    assert(woodcutter.carry == 1 and woodcutter.carry_kind == "wood",
+        profile_id + " extracted resource behavior must transfer each wood hit into worker cargo")
+    assert(int(tree.export_state().get("hp", 0)) == tree_hp_before - 1,
+        profile_id + " extracted resource behavior must apply exactly one synchronized tree hit")
+
     var stone_cell := _find_reachable_cell(
         main, worker_origin, keep.position, clearing_radius + 0.5, gather_radius - 0.5, reserved
     )
@@ -128,6 +136,14 @@ func _run_profile(profile_id: String) -> void:
     miner._find_work()
     assert(miner.target == rock and not miner._path.is_empty(),
         profile_id + " miner must acquire and path to stone beyond 14 tiles")
+
+    var rock_hp_before := int(rock.export_state().get("hp", 0))
+    miner.state = miner.State.WORKING
+    miner._tick_working(miner._hit_interval() * 0.5 + 0.01)
+    assert(miner.carry == 1 and miner.carry_kind == "stone",
+        profile_id + " extracted resource behavior must transfer each stone hit into worker cargo")
+    assert(int(rock.export_state().get("hp", 0)) == rock_hp_before - 1,
+        profile_id + " extracted resource behavior must apply exactly one synchronized rock hit")
 
     # The first frontier outpost can be placed at the edge of Keep territory.
     # Keep builders must be dispatched to that blueprint without extending
