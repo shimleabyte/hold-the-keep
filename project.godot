@@ -37,6 +37,9 @@ file_logging/max_log_files=5
 
 [display]
 
+window/handheld/orientation=0
+window/energy_saving/keep_screen_on=true
+window/frame_pacing/android/enable_frame_pacing=true
 window/size/viewport_width=640
 window/size/viewport_height=360
 window/size/window_width_override=1280
@@ -45,6 +48,10 @@ window/size/initial_position_type=1
 window/stretch/mode="viewport"
 window/stretch/aspect="expand"
 window/stretch/scale_mode="integer"
+
+[input_devices]
+
+pointing/emulate_mouse_from_touch=true
 
 [physics]
 
