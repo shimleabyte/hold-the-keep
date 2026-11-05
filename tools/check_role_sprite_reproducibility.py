@@ -50,7 +50,7 @@ def main() -> int:
 
         for candidate in (generated, committed):
             header = re.search(
-                rb'<svg[^>]*width="(\\d+)"[^>]*height="(\\d+)"',
+                rb'<svg[^>]*width="(\d+)"[^>]*height="(\d+)"',
                 candidate.read_bytes(),
             )
             if header is None or (int(header.group(1)), int(header.group(2))) != (440, 60):
