@@ -100,7 +100,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     root.add_child(main)
     current_scene = main
     await _ticks(12)
-    root.warp_mouse(Vector2(320, 180))
+    Input.warp_mouse(Vector2(320, 180))
 
     if main.player == null or main.spawner == null or main.world == null:
         _require(false, "%s: HTK_AUTO_START_GAME=1 must initialize the gameplay scene" % profile)
@@ -143,7 +143,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     var peak_wave_enemies := 0
     var dawn_reached := false
     var ticks_run := 0
-    var night_start := clock.time_of_day
+    var night_start: float = float(clock.time_of_day)
 
     Engine.time_scale = SIMULATION_TIME_SCALE
     clock.set_process(true)
@@ -175,7 +175,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     var spawned := _wave_enemy_ids.size()
     var wave_budget := int(_active_case.get("wave_budget", 0))
     var remaining := _count_wave_enemies()
-    var elapsed_game_seconds := maxf(0.0, (clock.time_of_day - night_start) * GameClock.DAY_LENGTH)
+    var elapsed_game_seconds: float = maxf(0.0, (float(clock.time_of_day) - night_start) * GameClock.DAY_LENGTH)
     var outcome := "game_over" if _game_over else ("dawn" if dawn_reached else "time_limit")
 
     var report := {
@@ -239,7 +239,7 @@ func _drive_player(player) -> void:
             continue
         if bool(enemy.is_garrison) or bool(enemy.is_patrol):
             continue
-        var distance := player.global_position.distance_to(enemy.global_position)
+        var distance: float = player.global_position.distance_to(enemy.global_position)
         if distance < nearest_distance:
             nearest = enemy
             nearest_distance = distance
