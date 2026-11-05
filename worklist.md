@@ -7,12 +7,21 @@
 
 This is an execution worklist, not a claim that every item is already implemented. Re-check the live branch/PR state before starting each assignment.
 
-## Live execution status — 2026-11-05 (Actions paused; performance pass in progress)
+## Live execution status — 2026-11-05 (construction and performance hardening)
 
-**Current main:** `89d8c7bc6da9e41d20d4c48aed1f950e5e9425e8`. It includes the Priority 1 architecture, deterministic Frontier render harness, dedicated Builder/Archer/Brute sprite identities, rendered same-seed QA workflow, and the first P0 performance reductions: chunked fog, idle resource processing suppression, row-batched Frontier decoration, incremental building-footprint navigation updates, and selective territory/logistics invalidation. Save schema remains v17.  
+**Current main:** `89d8c7bc6da9e41d20d4c48aed1f950e5e9425e8`. It includes chunked fog, idle resource processing suppression, row-batched Frontier decoration, incremental building-footprint navigation updates, selective territory/logistics invalidation and the existing campaign/specialist systems. Save schema remains v17.  
 **Current save schema:** v17.  
-**Open pull requests:** #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls. PR #127's text-first HUD implementation is closed as superseded by the icon-first replacement branch. PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.  
-**Active code branch:** `perf/priority-performance-pass-mainline`, based on current `main` (11 commits ahead, 0 behind at this snapshot). It consolidates bounded specialist interceptor scans, road-change invalidation filtering, one-pass village assignment counters, bounded wildlife candidate selection with a full-sort reference assertion, and a local Classic/Frontier/Expedition performance probe. No PR or workflow has been created; Godot validation and profiler captures have not been run.
+**Relevant open pull requests:** #146 performance and construction-transition hardening (targets `main`); #145 worker behavior refactor; #154 Builder reachability fix, stacked on #145. Check live PR heads before integrating.  
+**Active performance branch:** `perf/priority-performance-pass-mainline`. It now time-slices enemy FlowField Dijkstra rebuilds, publishes only complete path snapshots, coalesces village reassignment after structure transitions and delays initial stronghold garrisons until navigation is ready. Its latest Godot CI run #998 is active; do not merge until every job passes. The new probe also measures asynchronous rebuild completion and construction-completion frame spikes rather than timing only the scheduling call.  
+**Builder reachability branch:** `fix/builder-reach-any-connected-worksite`. It removes the arbitrary workplace-radius filter for construction blueprints and leaves bounded A* reachability as the acceptance test. Dedicated Frontier/Expedition QA #4 and full Godot CI #988 passed 30/30 on the tested PR head. PR #154 remains stacked on #145, so rebase after #145 is integrated.
+
+### Player-playtest findings — 2026-11-05
+
+| Priority | Symptom | Code-level finding | Current action / remaining proof |
+|---|---|---|---|
+| P0 | Brief freeze when a building changes state, especially on completion | The old FlowField rebuilt the whole map synchronously. Completion also emits removal and placement notifications in one transition; Village reassignment used to run immediately for each event. | PR #146 time-slices Dijkstra, publishes complete snapshots only and coalesces Village assignment. Initial garrison spawning now waits for a current FlowField. Godot CI #998 is the acceptance run; a windowed target-device frame-time capture is still required. |
+| P0 | Builder ignores distant blueprints despite a valid route | Construction-site candidates were filtered by straight-line workplace radius before A* could test the route. | PR #154 removes that radius gate for construction tasks; repairs keep their normal work radius. Dedicated Frontier/Expedition test and 30/30 Godot CI passed on the tested head. |
+| P1 | General game feel remains inconsistent | The current tests cover many isolated systems but cannot prove that a five-minute live session has no worker stalls, stale orders, combat interruptions or bad feedback. | After the P0 work merges, run a structured 10-minute Classic and Frontier playthrough and record each failure with profile, save, coordinates, actor role, expected behavior and observed behavior. Do not add more content until this audit is complete. |
 
 ### Performance optimization sequence
 
@@ -29,7 +38,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 **Manual performance probe:** run `godot --path . --script res://tools/performance_probe.gd` in a windowed session at a fixed resolution. It records world creation time, navigation/flow/territory/job-assignment/fog scan timings, node/resource/physics counts, and idle versus active-wave frame samples in `user://performance_probe.json`. Run it before and after this branch on the same machine and settings.
 
-**Validation boundary:** no Godot executable is available in the current engineering environment and the repository owner has exhausted GitHub Actions minutes. Source checks are not runtime validation. Do not open a PR or trigger Actions until local Godot 4.7 checks or the Actions budget is available.
+**Validation boundary:** GitHub Actions is currently available and the latest performance branch run is #998. Treat each commit as unvalidated until its own Godot 4.7 parse, focused tests and full regression matrix pass. Headless tests do not replace the required windowed frame-time capture or physical low-end-device profiling.
 | Workstream | Current disposition |
 |---|---|
 | INT-0 specialist integration | Complete: Hunter, Scout, Healer and Blacksmith integrations are on main. |
@@ -67,7 +76,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ### CI and validation note
 
-The repository owner has confirmed that the GitHub Actions minute budget is exhausted. PR #135, #136 and #138 remain unvalidated where fresh workflow execution is required; the isolated HUD countdown branch is also unvalidated because its focused tests have not been run. Do not trigger, rerun or queue additional Actions workflows until the minute budget resets or is replenished. These checks are deferred, not code-test failures. Existing successful runs on earlier PR heads remain historical evidence only and do not replace validation on current main.
+The repository now has active Godot 4.7 validation for the current performance branch. Historical PR #135/#136 validation notes still need a live-head check before those tasks are resumed. Existing successful runs on earlier PR heads remain historical evidence only and do not replace validation on current main.
 
 ### Validation and release boundaries
 
