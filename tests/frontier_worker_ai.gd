@@ -79,7 +79,7 @@ func _run_profile(profile_id: String) -> void:
     var reserved: Dictionary = {}
 
     var wood_cell := _find_reachable_cell(
-        main, worker_origin, 14.5, gather_radius - 0.5, reserved
+        main, worker_origin, clearing_radius + 0.5, gather_radius - 0.5, reserved
     )
     assert(wood_cell.x >= 0, profile_id + " must have reachable terrain beyond the old Keep gather radius")
     reserved[wood_cell] = true
@@ -92,7 +92,7 @@ func _run_profile(profile_id: String) -> void:
         profile_id + " woodcutter must acquire and path to a resource beyond 14 tiles")
 
     var stone_cell := _find_reachable_cell(
-        main, worker_origin, 14.5, gather_radius - 0.5, reserved
+        main, worker_origin, clearing_radius + 0.5, gather_radius - 0.5, reserved
     )
     assert(stone_cell.x >= 0, profile_id + " must have a second reachable gathering tile")
     reserved[stone_cell] = true
