@@ -318,8 +318,8 @@ func _build_top_bar() -> void:
     _foes_icon.visible = false
     _foes.visible = false
 
-    _people_icon = _icon(bar, "people", Vector2(336, 3))
-    _pop = _label(bar, "0/0", Vector2(349, 1), Color("#a9c9bf"))
+    _people_icon = _icon(bar, "people", Vector2(358, 3))
+    _pop = _label(bar, "0/0", Vector2(371, 1), Color("#a9c9bf"))
     _pop.tooltip_text = "Jumlah warga / kapasitas rumah"
     _pop.mouse_filter = Control.MOUSE_FILTER_STOP
     _people_icon.tooltip_text = "Jumlah warga / kapasitas rumah"
@@ -774,8 +774,8 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _foes_icon.position.x = _viewport_size.x - 180.0
     _foes.position.x = _viewport_size.x - 167.0
     _clock_widget.position.x = 151.0
-    _people_icon.position.x = _viewport_size.x - 144.0
-    _pop.position.x = _viewport_size.x - 131.0
+    _people_icon.position.x = _viewport_size.x - 122.0
+    _pop.position.x = _viewport_size.x - 109.0
 
     _map_button.position.x = _viewport_size.x - 70.0
     _jobs_button.position.x = _viewport_size.x - 48.0
