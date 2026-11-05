@@ -59,6 +59,8 @@ func _initialize() -> void:
     var site = main.world.occupied.get(house_cell)
     assert(site != null and site.is_in_group("construction_sites"),
         "Placing a building must create a construction site, not a finished building")
+    assert(main.flow._dirty or main.flow._build_active,
+        "A newly placed construction site must invalidate the published enemy flow field")
 
     # FlowField publishes only complete snapshots and spreads Dijkstra work over frames.
     var flow_version_before: int = main.flow.version
