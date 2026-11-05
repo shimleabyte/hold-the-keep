@@ -50,7 +50,9 @@ func reference_wildlife_signature(world: Node) -> Array[String]:
     var rng := RandomNumberGenerator.new()
     rng.seed = world.map_seed + 2419
     var center := Vector2(world.map_size, world.map_size) * 0.5
-    var frontier := WorldConfig.is_frontier_profile()
+    # SceneTree scripts are loaded before autoload identifiers are bound.
+    var world_config = root.get_node("WorldConfig")
+    var frontier: bool = bool(world_config.is_frontier_profile())
     var protected_radius := maxf(
         world.safe_radius + (7.0 if frontier else 4.0),
         float(world.map_size) * (0.15 if frontier else 0.10)
