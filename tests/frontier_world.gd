@@ -468,6 +468,32 @@ func _initialize() -> void:
         assert(int(reachable_regions.get(region, 0)) > 50,
             "Every Frontier biome must be reachable from the Keep: " + region)
 
+    var navigation_probe_cell := Vector2i(-1, -1)
+    for y in world_config.map_size:
+        if navigation_probe_cell.x >= 0:
+            break
+        for x in world_config.map_size:
+            var candidate_cell := Vector2i(x, y)
+            if reachable.has(candidate_cell) and world.is_buildable(candidate_cell) and not world.occupied.has(candidate_cell):
+                navigation_probe_cell = candidate_cell
+                break
+    assert(navigation_probe_cell.x >= 0,
+        "The incremental navigation test must find an empty walkable cell")
+    var navigation_version := main.nav.version
+    var probe_wall = main.build.place_raw("wall", navigation_probe_cell)
+    assert(main.nav._dirty_cells.size() == 1 and not main.nav._dirty,
+        "Placing a one-cell wall must queue one cell instead of a full-grid rebuild")
+    await ticks(1)
+    assert(main.nav.astar.is_point_solid(navigation_probe_cell)
+        and main.nav.version == navigation_version + 1,
+        "The incremental navigation update must make the placed wall solid")
+    assert(main.build.demolish_at(navigation_probe_cell),
+        "The navigation probe wall must be removable after the first update")
+    await ticks(1)
+    assert(not main.nav.astar.is_point_solid(navigation_probe_cell)
+        and main.nav.version == navigation_version + 2,
+        "Removing the wall must restore walkability with another local update")
+
     assert(main.enemy_keep != null and is_instance_valid(main.enemy_keep),
         "Frontier must place its campaign stronghold")
     var stronghold_has_reachable_approach := false
