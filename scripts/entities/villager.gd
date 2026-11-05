@@ -1239,6 +1239,11 @@ func _release() -> void:
     _work_t = 0.0
     _hit_done = false
 
+## Public bridge for resource-role policy to release its shared host-owned target claim.
+func resource_behavior_release_target() -> void:
+    _release()
+    state = State.IDLE
+
 
 ## Public bridge for the healer component to release its host-owned work claim.
 func healer_behavior_release(recheck_delay: float) -> void:
