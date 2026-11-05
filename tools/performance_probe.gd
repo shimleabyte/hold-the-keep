@@ -12,6 +12,7 @@ const WAVE_SAMPLE_FRAMES := 180
 const SYSTEM_REPEATS := 3
 
 var _cases: Array[Dictionary] = []
+var _world_config
 
 
 func _initialize() -> void:
@@ -22,6 +23,7 @@ func _run() -> void:
     await process_frame
     OS.set_environment("HTK_AUTO_START_GAME", "1")
     var config = root.get_node("WorldConfig")
+    _world_config = config
     var inventory = root.get_node("Inventory")
     var clock = root.get_node("GameClock")
     var tech = root.get_node("Tech")
@@ -127,6 +129,7 @@ func _wait_for_flow_snapshot(flow_field: Node, maximum_frames := 600) -> int:
 
 
 func _measure_flow_rebuild(flow_field: Node) -> Dictionary:
+    var schedule_call_ms: Array[float] = []
     var completion_ms: Array[float] = []
     var completion_frames: Array[int] = []
     var worst_frame_ms: Array[float] = []
@@ -134,9 +137,10 @@ func _measure_flow_rebuild(flow_field: Node) -> Dictionary:
     for _repeat in SYSTEM_REPEATS:
         var previous_version: int = int(flow_field.version)
         var started := Time.get_ticks_usec()
+        flow_field.rebuild()
+        schedule_call_ms.append(float(Time.get_ticks_usec() - started) / 1000.0)
         var waited_frames := 0
         var peak_frame_ms := 0.0
-        flow_field.rebuild()
 
         while not flow_field.is_current() or int(flow_field.version) <= previous_version:
             var frame_started := Time.get_ticks_usec()
@@ -153,21 +157,14 @@ func _measure_flow_rebuild(flow_field: Node) -> Dictionary:
         worst_frame_ms.append(peak_frame_ms)
 
     return {
-        "schedule_call_ms": _measure_call_only(flow_field, "rebuild"),
+        "schedule_call_ms_avg": _average(schedule_call_ms),
+        "schedule_call_ms_max": _max_float(schedule_call_ms),
         "completion_ms_avg": _average(completion_ms),
         "completion_ms_max": _max_float(completion_ms),
         "completion_frames_avg": _average_int(completion_frames),
         "completion_frames_max": _max_int(completion_frames),
         "peak_frame_wall_ms_max": _max_float(worst_frame_ms)
     }
-
-
-func _measure_call_only(target: Object, method_name: String) -> float:
-    var started := Time.get_ticks_usec()
-    target.call(method_name)
-    var elapsed := float(Time.get_ticks_usec() - started) / 1000.0
-    # The call only schedules a rebuild; it is not the total pathfinding cost.
-    return elapsed
 
 
 func _measure_building_completion(main: Node) -> Dictionary:
@@ -217,7 +214,7 @@ func _find_build_probe_cell(main: Node, origin: Vector2i) -> Vector2i:
                 if maxi(absi(x), absi(y)) != radius:
                     continue
                 var cell := origin + Vector2i(x, y)
-                if not WorldConfig.is_valid_cell(cell):
+                if not _world_config.is_valid_cell(cell):
                     continue
                 if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
                     continue
