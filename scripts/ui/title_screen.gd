@@ -130,7 +130,7 @@ func _build_screen() -> void:
     # Fit all three campaign choices on the default 640px logical viewport.
     # Narrower screens still wrap naturally instead of clipping the option.
     var available_mode_width := get_viewport().get_visible_rect().size.x - 68.0
-    var mode_card_width := clampf((available_mode_width - 24.0) / 3.0, 120.0, 220.0)
+    var mode_card_width := clampf((available_mode_width - 36.0) / 3.0, 120.0, 220.0)
     modes.add_child(_mode_card(
         "01  /  CLASSIC",
         "THE LAST HOLD",
@@ -151,7 +151,7 @@ func _build_screen() -> void:
         "03  /  FRONTIER: EXPEDITION",
         "BEYOND THE FRONTIER",
         "A vast 192 × 192 world. Survey sealed crossings, uncover four outer marches and establish routes to rival strongholds.",
-        "ENTER FRONTIER: EXPEDITION",
+        "FRONTIER: EXPEDITION",
         "frontier_expedition",
         mode_card_width
     ))
