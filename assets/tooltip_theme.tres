@@ -1,4 +1,6 @@
-[gd_resource type="Theme" load_steps=2 format=3]
+[gd_resource type="Theme" load_steps=3 format=3]
+
+[ext_resource type="SystemFont" path="res://assets/tooltip_font.tres" id="1_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tooltip"]
 bg_color = Color(0.055, 0.05, 0.043, 0.98)
@@ -24,6 +26,7 @@ TooltipPanel/type_variation = &"PopupPanel"
 TooltipPanel/styles/panel = SubResource("StyleBoxFlat_tooltip")
 TooltipLabel/type_variation = &"Label"
 TooltipLabel/colors/font_color = Color(0.96, 0.93, 0.85, 1)
+TooltipLabel/fonts/font = ExtResource("1_font")
 TooltipLabel/font_sizes/font_size = 14
 TooltipLabel/constants/line_spacing = 3
 TooltipLabel/constants/paragraph_spacing = 4

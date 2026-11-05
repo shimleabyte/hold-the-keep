@@ -1,0 +1,6 @@
+[gd_resource type="SystemFont" load_steps=1 format=3]
+
+[resource]
+font_names = PackedStringArray("Barlow", "Open Sans")
+font_weight = 500
+allow_system_fallback = true
