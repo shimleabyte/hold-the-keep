@@ -103,6 +103,8 @@ func _initialize() -> void:
     assert(hud._foes.tooltip_text.find("%d tersisa" % expected_queued_spawns) >= 0,
         "The skull indicator tooltip must explain the queued portion of enemy pressure")
     main.spawner.end_wave()
+    assert(main.spawner.remaining_wave_spawns() == 0,
+        "Dawn must clear the hostile queue shown by the HUD")
 
     var player = get_first_node_in_group("player")
     assert(player != null and player.camera.zoom == Vector2.ONE,
