@@ -58,6 +58,8 @@ func _initialize() -> void:
     nodes["stone"].import_state({"hp": 2, "regrow": 0.0})
     nodes["iron"].import_state({"hp": 0, "regrow": 54.0})
     nodes["food"].import_state({"hp": 0, "regrow": 63.0})
+    assert(nodes["wood"].is_processing() and not nodes["stone"].is_processing(),
+        "Only depleted trees and rocks should process their regrowth timers")
     assert(save_system.save_current(true), "Initial resource save must succeed")
 
     # Write another valid save so the first save becomes the rollback copy.
@@ -65,6 +67,8 @@ func _initialize() -> void:
     nodes["stone"].import_state({"hp": 0, "regrow": 31.0})
     nodes["iron"].import_state({"hp": 3, "regrow": 0.0})
     nodes["food"].import_state({"hp": 2, "regrow": 0.0})
+    assert(not nodes["wood"].is_processing() and nodes["stone"].is_processing(),
+        "Resource processing must switch off when regrown and on when depleted")
     assert(save_system.save_current(true), "Second resource save must succeed")
 
     var broken = FileAccess.open("user://save.json", FileAccess.WRITE)
@@ -84,9 +88,13 @@ func _initialize() -> void:
         if kind == "wood":
             assert(int(state["hp"]) == 0 and absf(float(state["regrow"]) - 17.5) < 0.2,
                 "Tree depletion and regrowth timer must restore from backup")
+            assert(node.is_processing(),
+                "A restored depleted tree must resume its regrowth timer")
         elif kind == "stone":
             assert(int(state["hp"]) == 2 and is_equal_approx(float(state["regrow"]), 0.0),
                 "Partially mined rock must restore from backup")
+            assert(not node.is_processing(),
+                "A restored healthy rock must not receive idle process callbacks")
         elif kind == "iron":
             assert(int(state["hp"]) == 0 and absf(float(state["regrow"]) - 54.0) < 0.2,
                 "Iron vein depletion and regrowth timer must restore from backup")
