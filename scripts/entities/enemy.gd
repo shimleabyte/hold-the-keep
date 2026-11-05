@@ -530,7 +530,9 @@ func _nearest_contact_target() -> Node2D:
             _contact_target_cache = player
             return _contact_target_cache
     if is_instance_valid(_contact_target_cache):
-        if _contact_target_cache.visible and position.distance_squared_to(_contact_target_cache.position) < reach * reach and _contact_target_cache != player:
+        var cached_player := _contact_target_cache == player and player != null and is_instance_valid(player)
+        var cached_defender := _contact_target_cache.is_in_group("defenders")
+        if (cached_player or cached_defender) and _contact_target_cache.visible and position.distance_squared_to(_contact_target_cache.position) < reach * reach:
             if _contact_target_scan_t > 0.0:
                 return _contact_target_cache
     _contact_target_cache = null
