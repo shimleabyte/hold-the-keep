@@ -17,9 +17,20 @@ var target_pos := Vector2.ZERO
 
 var _cost := PackedInt32Array()
 var _next := PackedInt32Array()
+const DEFAULT_REBUILD_POPS_PER_FRAME := 2048
+
 var _dirty := true
 var _heap_c := PackedInt32Array()
 var _heap_i := PackedInt32Array()
+var _build_cost := PackedInt32Array()
+var _build_next := PackedInt32Array()
+var _build_target_pos := Vector2.ZERO
+var _build_active := false
+var _requested_revision := 0
+var _build_revision := -1
+
+# Public for deterministic diagnostics; production uses the default budget.
+var rebuild_pops_per_frame := DEFAULT_REBUILD_POPS_PER_FRAME
 
 
 func _ready() -> void:
@@ -30,13 +41,99 @@ func _ready() -> void:
 
 func _on_building_event(id: String, _cell: Vector2i) -> void:
     # A road neither blocks cells nor changes flow-field traversal cost.
-    if id != "road":
-        _dirty = true
+    if id == "road":
+        return
+    _requested_revision += 1
+    _dirty = true
 
 
 func _physics_process(_delta: float) -> void:
     if _dirty:
-        rebuild()
+        _begin_rebuild()
+    if _build_active:
+        _process_rebuild_budget()
+
+
+func rebuild() -> void:
+    # Keep the public refresh entry point non-blocking.
+    _requested_revision += 1
+    _dirty = true
+
+
+func _begin_rebuild() -> void:
+    _dirty = false
+    _build_active = true
+    _build_revision = _requested_revision
+    _build_target_pos = target_pos
+    var n := WorldConfig.map_size * WorldConfig.map_size
+    _build_cost.resize(n)
+    _build_cost.fill(INF_COST)
+    _build_next.resize(n)
+    _build_next.fill(-1)
+    _heap_c.clear()
+    _heap_i.clear()
+
+    for building in get_tree().get_nodes_in_group("buildings"):
+        if String(building.id) != "keep":
+            continue
+        _build_target_pos = building.position + Vector2(
+            0, -building.size.y * WorldConfig.tile_size / 2.0
+        )
+        for cell in building.cells():
+            var index := _idx(cell)
+            if index < 0:
+                continue
+            _build_cost[index] = 0
+            _push(0, index)
+
+
+func _process_rebuild_budget() -> void:
+    var processed := 0
+    var budget := maxi(1, rebuild_pops_per_frame)
+    while _heap_c.size() > 0 and processed < budget:
+        var top := _pop()
+        var cost := top.x
+        var index := top.y
+        processed += 1
+        if cost > _build_cost[index]:
+            continue
+        var here := Vector2i(index % WorldConfig.map_size, index / WorldConfig.map_size)
+        var penalty := _penalty(here)
+        for direction in DIRS:
+            var neighbor := here + direction
+            if not _passable(neighbor):
+                continue
+            var diagonal := direction.x != 0 and direction.y != 0
+            if diagonal and (
+                _solid(here + Vector2i(direction.x, 0))
+                or _solid(here + Vector2i(0, direction.y))
+            ):
+                continue
+            var neighbor_index := _idx(neighbor)
+            if neighbor_index < 0:
+                continue
+            var next_cost := cost + (DIAG if diagonal else STEP) + penalty
+            if next_cost < _build_cost[neighbor_index]:
+                _build_cost[neighbor_index] = next_cost
+                _build_next[neighbor_index] = index
+                _push(next_cost, neighbor_index)
+
+    if not _heap_c.is_empty():
+        return
+
+    # Never publish a field computed against an obsolete occupancy snapshot.
+    if _dirty or _build_revision != _requested_revision:
+        _build_active = false
+        _dirty = true
+        return
+
+    _cost = _build_cost
+    _next = _build_next
+    target_pos = _build_target_pos
+    _build_cost = PackedInt32Array()
+    _build_next = PackedInt32Array()
+    _build_active = false
+    version += 1
 
 
 func is_reachable(cell: Vector2i) -> bool:
@@ -82,49 +179,6 @@ func _penalty(c: Vector2i) -> int:
     if _is_building(occ) and not occ.is_in_group("roads") and occ.id != "keep":
         return BUILD_PENALTY
     return 0
-
-
-@warning_ignore("integer_division")
-func rebuild() -> void:
-    _dirty = false
-    var n := WorldConfig.map_size * WorldConfig.map_size
-    _cost.resize(n)
-    _cost.fill(INF_COST)
-    _next.resize(n)
-    _next.fill(-1)
-    _heap_c.clear()
-    _heap_i.clear()
-
-    for b in get_tree().get_nodes_in_group("buildings"):
-        if b.id != "keep":
-            continue
-        target_pos = b.position + Vector2(0, -b.size.y * WorldConfig.tile_size / 2.0)
-        for c in b.cells():
-            var i := _idx(c)
-            _cost[i] = 0
-            _push(0, i)
-
-    while _heap_c.size() > 0:
-        var top := _pop()
-        var c := top.x
-        var i := top.y
-        if c > _cost[i]:
-            continue
-        var here := Vector2i(i % WorldConfig.map_size, i / WorldConfig.map_size)
-        var pen := _penalty(here)
-        for d in DIRS:
-            var nb := here + d
-            if not _passable(nb):
-                continue
-            var diag := d.x != 0 and d.y != 0
-            if diag and (_solid(here + Vector2i(d.x, 0)) or _solid(here + Vector2i(0, d.y))):
-                continue
-            var ni := _idx(nb)
-            var nc := c + (DIAG if diag else STEP) + pen
-            if nc < _cost[ni]:
-                _cost[ni] = nc
-                _next[ni] = i
-                _push(nc, ni)
 
 
 func _swap(a: int, b: int) -> void:
