@@ -59,10 +59,11 @@ func hit(by = null) -> void:
     if _hp <= 0:
         return
     _hp -= 1
-    Events.fx_burst.emit("food", global_position + Vector2(0, -8), Vector2.ZERO, 1.0)
+    if by == null:
+        Events.fx_burst.emit("food", global_position + Vector2(0, -8), Vector2.ZERO, 1.0)
+        modulate = Color(1.8, 1.8, 1.8)
+        create_tween().tween_property(self, "modulate", Color.WHITE, 0.15)
     _give(FOOD_PER_HIT, by)
-    modulate = Color(1.8, 1.8, 1.8)
-    create_tween().tween_property(self, "modulate", Color.WHITE, 0.15)
     if _hp == 0:
         _give(FOOD_BONUS, by)
         worker = null
