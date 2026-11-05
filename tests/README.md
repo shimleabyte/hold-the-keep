@@ -17,7 +17,7 @@ Dari akar proyek:
 Skrip observasi lama yang hanya mencetak hasil tanpa assertion dipisahkan ke `run_diagnostics.sh`;
 jalankan saat meninjau animasi, pertarungan, efek, ekonomi atau alur save/menu.
 
-GitHub Actions menjalankan import/parse on Godot 4.7 only, 50 assertion regression suites on Godot 4.7 only, plus Frontier and Frontier Expedition performance diagnostics. Windows/Linux release exports are deferred until the release phase. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Riwayat pipeline multi-engine/export dari PR #57 (workflow #490, 78/78) adalah bukti historis untuk konfigurasi sebelumnya, bukan gate aktif. Saat ini hanya hasil Godot 4.7 yang menjadi acceptance CI.
+GitHub Actions menjalankan import/parse on Godot 4.7 only, 53 assertion regression suites on Godot 4.7 only, plus Frontier and Frontier Expedition performance diagnostics. Windows/Linux release exports are deferred until the release phase. Workflow berjalan pada push `main`, pull request ke `main`/`feat/**`, dan workflow manual. Riwayat pipeline multi-engine/export dari PR #57 (workflow #490, 78/78) adalah bukti historis untuk konfigurasi sebelumnya, bukan gate aktif. Saat ini hanya hasil Godot 4.7 yang menjadi acceptance CI.
 
 | Skrip | Menguji |
 |---|---|
@@ -48,6 +48,7 @@ GitHub Actions menjalankan import/parse on Godot 4.7 only, 50 assertion regressi
 | map_stages.gd | empat biome Classic, fog map panel, batas tiga bab, bobot archer/brute per bab |
 | responsive_layout.gd | resolution-to-viewport mapping, exact 2× pixel scale, live synchronization, HUD safe playfield and map/hotbar bounds across six desktop resolutions |
 | player_combat.gd | XP/level, skill unlock/cooldown, Dash/Cleave/Rally, directional attack fairness, dodgeable enemy melee and archer projectiles, brute armor, combat save |
+| android_touch_controls.gd | Android virtual joystick, simultaneous touch actions, input release safety, minimum viewport and display safe-area mapping |
 | input_rebinding.gd | Central InputMap keyboard/gamepad actions, job/build/ability/system shortcut rebinding, duplicate and reserved-key rejection, settings persistence and restore defaults |
 | restart_gameover.gd | layar game over dan restart (R) |
 | fx_shake_settings.gd | batas partikel, guncangan layar, tombol menu, performa dengan efek |
