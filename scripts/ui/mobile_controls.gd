@@ -6,7 +6,7 @@ const JOYSTICK_RADIUS := 48.0
 const JOYSTICK_KNOB_RADIUS := 17.0
 const JOYSTICK_MAX_TRAVEL := 31.0
 const JOYSTICK_HIT_RADIUS := 82.0
-const BUTTON_HIT_PADDING := 14.0
+const BUTTON_HIT_PADDING := 8.0
 
 const ATTACK_ICON := preload("res://assets/sprites/icon_sword.svg")
 const INTERACT_ICON := preload("res://assets/sprites/icon_hammer.svg")
@@ -48,6 +48,7 @@ func _process(_delta: float) -> void:
     if hud is CanvasLayer:
         for overlay_property in [
             "_map_panel",
+            "_jobs_panel",
             "_outpost_panel",
             "_queue_panel",
             "_help",
@@ -144,7 +145,10 @@ func _apply_layout() -> void:
     var top := safe.position.y
     var right := safe.end.x
     var bottom := safe.end.y
-    _joystick_center = Vector2(left + 70.0, bottom - 73.0)
+    _joystick_center = Vector2(
+        left + JOYSTICK_HIT_RADIUS,
+        bottom - JOYSTICK_HIT_RADIUS
+    )
     _pause_center = Vector2(left + 28.0, top + 72.0)
 
     _button_layout = [
