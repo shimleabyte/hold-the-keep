@@ -40,6 +40,14 @@ func _ready() -> void:
     get_viewport().size_changed.connect(_refresh_layout)
 
 
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+        _release_all_touches()
+    elif what == NOTIFICATION_APPLICATION_RESUMED or what == NOTIFICATION_APPLICATION_FOCUS_IN:
+        if is_inside_tree():
+            _refresh_layout()
+
+
 func _process(_delta: float) -> void:
     var should_show := force_enabled or _device_has_touchscreen()
     var pause_menu = get_tree().get_first_node_in_group("pause_menu")
