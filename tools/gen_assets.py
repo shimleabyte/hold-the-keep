@@ -617,6 +617,21 @@ def make_role_variant(source_name, output_name, kind):
                 % (frame * fw, row * fh, "".join(rects))
             )
 
+    # Builder is a role-variant sheet; append baked hammer/dust accents after
+    # equipment overlays, still inside the existing 440x60 texture.
+    if kind == "builder":
+        for row in range(len(VIEWS)):
+            for frame in range(14, 18):
+                effect_rects = [
+                    _role_sprite_rect(x, y, w, h, fill)
+                    for x, y, w, h, fill in _work_art_rects("builder", frame - 14, row)
+                ]
+                if effect_rects:
+                    groups.append(
+                        '<g transform="translate(%d %d)">%s</g>'
+                        % (frame * fw, row * fh, "".join(effect_rects))
+                    )
+
     output = source.replace("</svg>", "\n".join(groups) + "\n</svg>")
     if kind == "builder":
         output = (output.replace("#8a8f98", "#b77935")
