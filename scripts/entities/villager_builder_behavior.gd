@@ -25,6 +25,5 @@ func tick(delta: float) -> void:
     if not target.repair(_villager.BUILDER_REPAIR_AMOUNT):
         _villager.builder_behavior_release()
         return
-    Events.fx_burst.emit("impact", target.global_position + Vector2(0, -8), Vector2.UP, 0.45)
     if int(target.hp) >= int(target.max_hp):
         _villager.builder_behavior_release()
