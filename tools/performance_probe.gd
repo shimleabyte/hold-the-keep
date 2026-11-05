@@ -1,7 +1,8 @@
 extends SceneTree
 ## Manual performance probe for Classic, Frontier and Frontier Expedition.
 ## Run locally with:
-##   godot --headless --path . --script res://tools/performance_probe.gd
+##   godot --path . --script res://tools/performance_probe.gd
+## Run windowed at a fixed resolution; headless runs cannot provide meaningful draw-call counts.
 ## This is diagnostic tooling, not a pass/fail test. Compare profiles on the same machine.
 
 const PROFILES: Array[String] = ["classic", "frontier", "frontier_expedition"]
@@ -159,8 +160,9 @@ func _scene_counts(main: Node) -> Dictionary:
         "active_2d_physics_objects": int(Performance.get_monitor(Performance.PHYSICS_2D_ACTIVE_OBJECTS)),
         "resource_nodes": resource_nodes.size(),
         "resource_nodes_processing": processing_resources,
-        "frontier_decoration_nodes": get_nodes_in_group("frontier_decorations").size(),
-        "frontier_decoration_batches": get_nodes_in_group("frontier_decoration_batches").size(),
+        "frontier_decoration_records": main.world.generated_decoration_layout.size(),
+        "frontier_decoration_batch_nodes": get_nodes_in_group("frontier_decoration_batches").size(),
+        "world_entity_children": main.world.entities.get_child_count(),
         "fog_chunks": main.fog._fog_chunks.size(),
         "villagers": get_nodes_in_group("villagers").size(),
         "enemies": get_nodes_in_group("enemies").size(),
