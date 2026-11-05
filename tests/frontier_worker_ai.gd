@@ -165,6 +165,16 @@ func _run_profile(profile_id: String) -> void:
     assert(miner._mine_kind() == "stone",
         profile_id + " remote iron must not pull a miner away from stone inside its actual work area")
 
+    miner._release()
+    rock.remove_from_group("harvestable")
+    miner._find_work()
+    var idle_miner_diagnostics: Dictionary = miner.worker_ai_diagnostics()
+    assert(miner.target == null
+        and String(idle_miner_diagnostics.get("status", "")) == "NO_RESOURCE_IN_WORK_AREA"
+        and String(idle_miner_diagnostics.get("desired_resource", "")) == "stone",
+        profile_id + " miner diagnostics must explain when no desired resource exists in the assigned work area")
+    rock.add_to_group("harvestable")
+
     var local_iron_cell := _find_reachable_cell(
         main, worker_origin, keep.position, clearing_radius + 0.5, gather_radius - 0.5, reserved
     )
