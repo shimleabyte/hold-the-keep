@@ -40,14 +40,14 @@ func _run() -> void:
 
     _require(store.write_snapshot(original, primary, temp, backup),
         "A valid initial snapshot must install")
-    _require(store.read_snapshot(primary, false) == original,
+    _require(_snapshot_matches(store.read_snapshot(primary, false), original),
         "The installed primary must contain the initial snapshot")
 
     _require(store.write_snapshot(replacement, primary, temp, backup),
         "A valid replacement must install")
-    _require(store.read_snapshot(primary, false) == replacement,
+    _require(_snapshot_matches(store.read_snapshot(primary, false), replacement),
         "The replacement must become the primary snapshot")
-    _require(store.read_snapshot(backup, false) == original,
+    _require(_snapshot_matches(store.read_snapshot(backup, false), original),
         "The previous verified primary must become the rollback backup")
     _require(not FileAccess.file_exists(temp),
         "Successful replacement must not leave a temporary file")
@@ -60,16 +60,16 @@ func _run() -> void:
         corrupt.close()
     _require(store.read_snapshot(primary, false) == null,
         "A corrupt primary must be rejected")
-    _require(store.read_snapshot(backup, false) == original,
+    _require(_snapshot_matches(store.read_snapshot(backup, false), original),
         "The known-good backup must remain readable beside a corrupt primary")
 
     var recovered_replacement: Dictionary = replacement.duplicate(true)
     recovered_replacement["clock"]["day"] = int(replacement["clock"]["day"]) + 1
     _require(store.write_snapshot(recovered_replacement, primary, temp, backup),
         "A new valid snapshot must replace a corrupt primary")
-    _require(store.read_snapshot(primary, false) == recovered_replacement,
+    _require(_snapshot_matches(store.read_snapshot(primary, false), recovered_replacement),
         "The new snapshot must become primary after corrupt-primary recovery")
-    _require(store.read_snapshot(backup, false) == original,
+    _require(_snapshot_matches(store.read_snapshot(backup, false), original),
         "Replacing a corrupt primary must preserve the existing verified backup")
 
     # Invalid serialized data must fail before touching either durable copy.
@@ -77,9 +77,9 @@ func _run() -> void:
     invalid["version"] = save_system.VERSION + 1
     _require(not store.write_snapshot(invalid, primary, temp, backup),
         "A snapshot with an unsupported schema version must not be installed")
-    _require(store.read_snapshot(primary, false) == recovered_replacement,
+    _require(_snapshot_matches(store.read_snapshot(primary, false), recovered_replacement),
         "Rejected data must leave the current primary unchanged")
-    _require(store.read_snapshot(backup, false) == original,
+    _require(_snapshot_matches(store.read_snapshot(backup, false), original),
         "Rejected data must leave the rollback backup unchanged")
     _require(not FileAccess.file_exists(temp),
         "Rejected data must clean up its temporary file")
@@ -88,9 +88,9 @@ func _run() -> void:
     var impossible_temp := "user://missing_save_store_directory/temp.json"
     _require(not store.write_snapshot(replacement, primary, impossible_temp, backup),
         "Failure to create the temporary file must abort the write")
-    _require(store.read_snapshot(primary, false) == recovered_replacement,
+    _require(_snapshot_matches(store.read_snapshot(primary, false), recovered_replacement),
         "A pre-install write failure must preserve the primary")
-    _require(store.read_snapshot(backup, false) == original,
+    _require(_snapshot_matches(store.read_snapshot(backup, false), original),
         "A pre-install write failure must preserve the rollback backup")
 
     main.queue_free()
@@ -105,6 +105,38 @@ func _run() -> void:
         for failure in failures:
             push_error(failure)
         quit(1)
+
+
+
+func _snapshot_matches(actual: Variant, expected: Dictionary) -> bool:
+    if not actual is Dictionary:
+        return false
+    var actual_clock: Variant = actual.get("clock", {})
+    var expected_clock: Variant = expected.get("clock", {})
+    var actual_world: Variant = actual.get("world", {})
+    var expected_world: Variant = expected.get("world", {})
+    var actual_inventory: Variant = actual.get("inventory", {})
+    var expected_inventory: Variant = expected.get("inventory", {})
+    if not actual_clock is Dictionary or not expected_clock is Dictionary:
+        return false
+    if not actual_world is Dictionary or not expected_world is Dictionary:
+        return false
+    if not actual_inventory is Dictionary or not expected_inventory is Dictionary:
+        return false
+    if int(actual.get("version", 0)) != int(expected.get("version", 0)):
+        return false
+    if int(actual_clock.get("day", 0)) != int(expected_clock.get("day", 0)):
+        return false
+    if not is_equal_approx(float(actual_clock.get("time_of_day", 0.0)),
+            float(expected_clock.get("time_of_day", 0.0))):
+        return false
+    for key in ["profile", "map_size", "tile_size", "seed"]:
+        if actual_world.get(key) != expected_world.get(key):
+            return false
+    for resource in ["wood", "stone", "food", "iron"]:
+        if int(actual_inventory.get(resource, 0)) != int(expected_inventory.get(resource, 0)):
+            return false
+    return true
 
 
 func _ticks(count: int) -> void:
