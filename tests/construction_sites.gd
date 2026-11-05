@@ -29,6 +29,16 @@ func _initialize() -> void:
     root.get_node("GameClock").set_process(false)
     main.village.set_process(false)
     main.village.quota["builder"] = 0
+
+    # Placement/removal signals from one construction transition must be coalesced.
+    var assignment_passes_before: int = main.village._assignment_pass_count
+    main.village.set_process(true)
+    main.village._on_workplace_changed("house", Vector2i.ZERO)
+    main.village._on_workplace_changed("house", Vector2i.ZERO)
+    await ticks(1)
+    main.village.set_process(false)
+    assert(main.village._assignment_pass_count == assignment_passes_before + 1,
+        "Multiple building notifications in one frame must cause one Village assignment pass")
     inventory.items = {"wood": 500, "stone": 500, "food": 500, "iron": 0}
     var keep = null
     for depot in get_nodes_in_group("depots"):
@@ -43,6 +53,24 @@ func _initialize() -> void:
     var site = main.world.occupied.get(house_cell)
     assert(site != null and site.is_in_group("construction_sites"),
         "Placing a building must create a construction site, not a finished building")
+
+    # FlowField publishes only complete snapshots and spreads Dijkstra work over frames.
+    var flow_version_before: int = main.flow.version
+    assert(not main.flow._dirty and not main.flow._build_active,
+        "The initial enemy flow field must finish before construction profiling")
+    main.flow.rebuild_pops_per_frame = 1
+    await ticks(1)
+    assert(main.flow._build_active and main.flow.version == flow_version_before,
+        "A construction event must not synchronously replace the published flow field")
+    main.flow.rebuild_pops_per_frame = main.flow.DEFAULT_REBUILD_POPS_PER_FRAME
+    var flow_wait_frames := 0
+    while main.flow._dirty or main.flow._build_active:
+        await ticks(1)
+        flow_wait_frames += 1
+        assert(flow_wait_frames < 100,
+            "A bounded flow-field rebuild must eventually publish its completed snapshot")
+    assert(main.flow.version == flow_version_before + 1,
+        "One blueprint placement must publish exactly one refreshed flow field")
     assert(inventory.get_amount("wood") == wood_before - 12,
         "The selected depot must be charged exactly once when the blueprint is placed")
     assert(not site.is_in_group("buildings") and site.free_slots() == 2,
@@ -62,6 +90,8 @@ func _initialize() -> void:
         "A site must become a real building after an arrived Builder completes its work")
     assert(not completed.is_in_group("construction_sites") and builder.target == null,
         "Completion must remove blueprint state and release its Builder")
+    assert(not main.flow._dirty and not main.flow._build_active,
+        "Construction completion must settle its refreshed enemy flow field without a blocking rebuild")
     builder.set_physics_process(false)
     var second_cell := find_house_cell(main, keep.cell)
     assert(second_cell.x >= 0 and second_cell != house_cell,
