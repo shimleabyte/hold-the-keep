@@ -238,6 +238,14 @@ func _tick_pending(delta: float) -> void:
         if _cleave_pending < 0.0:
             _apply_cleave()
 
+## Klik kiri di atas panel HUD tidak boleh jadi serangan (tombol F / gamepad tetap bisa).
+func _click_on_hud() -> bool:
+    if Input.is_physical_key_pressed(KEY_F) or Input.is_joy_button_pressed(0, JOY_BUTTON_X):
+        return false
+    var hud := get_tree().get_first_node_in_group("hud")
+    return hud != null and hud.blocks_mouse(get_viewport().get_mouse_position())
+
+
 func _regen(delta: float) -> void:
     if hp >= MAX_HP or _since_hit < Tech.stat("player.regen_delay", REGEN_DELAY):
         return
