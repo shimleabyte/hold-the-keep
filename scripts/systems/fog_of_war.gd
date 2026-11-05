@@ -6,6 +6,8 @@ const UNEXPLORED_COLOR := Color(0.012, 0.016, 0.024, 0.96)
 
 
 class FogChunk extends Node2D:
+    const COVER_COLOR := Color(0.012, 0.016, 0.024, 0.96)
+
     var fog_owner: Node
     var chunk_origin := Vector2i.ZERO
     var chunk_cells := 16
@@ -35,7 +37,7 @@ class FogChunk extends Node2D:
                         ),
                         Vector2((x - run_start) * tile_size, tile_size)
                     )
-                    draw_rect(rect, UNEXPLORED_COLOR)
+                    draw_rect(rect, COVER_COLOR)
                     run_start = -1
 
 
