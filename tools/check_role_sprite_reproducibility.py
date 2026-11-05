@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -10,11 +11,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 GENERATOR = ROOT / "tools" / "gen_assets.py"
 OUTPUT = ROOT / "build" / "generated-role-sprites"
-ROLE_SPRITES = (
+REPRODUCIBLE_SPRITES = (
     "villager_builder.svg",
+    "villager_woodcutter.svg",
+    "villager_miner.svg",
+    "villager_farmer.svg",
     "enemy_archer.svg",
     "enemy_brute.svg",
 )
+DIMENSION_ONLY_SPRITES = ("villager_blacksmith.svg",)
+ROLE_SPRITES = REPRODUCIBLE_SPRITES + DIMENSION_ONLY_SPRITES
 
 
 def main() -> int:
@@ -42,6 +48,21 @@ def main() -> int:
         if not generated.is_file() or not committed.is_file():
             failures.append(f"{filename}: generated or committed file is missing")
             continue
+
+        for candidate in (generated, committed):
+            header = re.search(
+                rb'<svg[^>]*width="(\d+)"[^>]*height="(\d+)"',
+                candidate.read_bytes(),
+            )
+            if header is None or (int(header.group(1)), int(header.group(2))) != (440, 60):
+                failures.append(f"{filename}: {candidate.name} must remain a 440x60 sprite sheet")
+
+        # Blacksmith's committed base art predates the current generator's
+        # body palette/pose pass. Keep its layout guarded, but do not claim
+        # byte-for-byte reproducibility until that legacy sheet is regenerated.
+        if filename not in REPRODUCIBLE_SPRITES:
+            continue
+
         if generated.read_bytes() != committed.read_bytes():
             generated_bytes = generated.read_bytes()
             committed_bytes = committed.read_bytes()
@@ -62,7 +83,7 @@ def main() -> int:
         print(f"Generated candidates retained in {OUTPUT}")
         return 1
 
-    print("PASS: Builder, Archer and Brute SVGs reproduce exactly from tools/gen_assets.py")
+    print("PASS: reproducible role SVGs match exactly; all role sheets remain 440x60 (Blacksmith is dimension-only pending legacy regeneration)")
     return 0
 
 

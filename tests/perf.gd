@@ -233,6 +233,9 @@ func _run() -> void:
     assert(peak_particles == MAX_PARTICLES,
         "The reference workload must reach the 500-particle ceiling during sampling")
     print("PERF_REPORT " + JSON.stringify(result))
+    main.queue_free()
+    current_scene = null
+    await process_frame
     quit(0)
 
 

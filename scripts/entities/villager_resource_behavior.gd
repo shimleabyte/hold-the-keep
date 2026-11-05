@@ -70,7 +70,6 @@ func _tick_farmer(delta: float) -> void:
         return
 
     _villager._work_t = 0.0
-    Events.fx_burst.emit("food", target.global_position + Vector2(0, -6), Vector2.UP, 0.65)
     _villager.receive(
         "food",
         roundi(Tech.stat("farm.yield", float(_villager.FARM_YIELD)))
