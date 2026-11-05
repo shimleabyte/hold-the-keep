@@ -12,6 +12,14 @@ class TouchHudHost extends CanvasLayer:
     var _help: Control
     var _over: Control
     var _event_decision_panel: Control
+    var _queue_button: Control
+    var _combat_bar: Control
+    var _tech_btn: Control
+    var _map_button: Control
+    var _jobs_button: Control
+    var _outpost_button: Control
+    var _research_panel: Control
+    var _slot_nodes: Array = []
 
 
 class FakePauseMenu extends Node:
@@ -181,9 +189,22 @@ func _run() -> void:
     var overlay_controls = MOBILE_CONTROLS.new()
     overlay_controls.force_enabled = true
     overlay_host.add_child(overlay_controls)
+    var blocking_combat_bar := Control.new()
+    var interact_center: Vector2 = overlay_controls.button_center("interact")
+    blocking_combat_bar.position = interact_center - Vector2(10.0, 10.0)
+    blocking_combat_bar.size = Vector2(20.0, 20.0)
+    overlay_host._combat_bar = blocking_combat_bar
+    overlay_host.add_child(blocking_combat_bar)
     await process_frame
     assert(overlay_controls.visible,
         "Touch controls must be available before the jobs drawer opens")
+    var hud_tap := InputEventScreenTouch.new()
+    hud_tap.index = 39
+    hud_tap.pressed = true
+    hud_tap.position = overlay_controls.get_global_transform_with_canvas() * interact_center
+    overlay_controls._input(hud_tap)
+    assert(not overlay_controls._touch_actions.has(39),
+        "A touch over a real HUD control must not be captured as the overlapping virtual action")
     assert(overlay_controls.handle_touch_press(40, overlay_controls.button_center("attack")),
         "A gameplay button must be capturable before an overlay opens")
     assert(Input.is_action_pressed("attack"),
