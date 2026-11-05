@@ -63,27 +63,39 @@ func _initialize() -> void:
     anim.manual_progress = -1.0
 
     var builder = Villager.new()
-    assert(not builder.builder_behavior_advance_construction(0.8),
-        "Builder construction must not emit an impact before its work interval")
-    assert(builder.builder_behavior_advance_construction(0.9),
-        "Builder construction must emit a work impact when its interval completes")
-    assert(builder._work_t < 1.6,
-        "Builder construction animation progress must wrap into the next work cycle")
+    assert(not builder.builder_behavior_advance_construction(0.79),
+        "Builder must remain in wind-up before the midpoint of its work cycle")
+    assert(builder.builder_behavior_advance_construction(0.02),
+        "Builder construction impact must trigger at the midpoint of its work cycle")
+    assert(builder._work_t > 0.8 and builder._work_t < 0.9,
+        "Builder work progress must remain continuous through the impact frame")
+    anim.work_style = "builder"
+    anim.manual_progress = fposmod(builder._work_t, 1.6) / 1.6
+    assert(anim.frame_index() == 16,
+        "Builder construction impact must be drawn on the low hammer/contact frame")
 
     builder._work_t = 0.0
-    var forge := Node2D.new()
-    builder.workplace = forge
-    var spark_count := [0]
-    var spark_callback := func(kind: String, _at: Vector2, _dir: Vector2, _amount: float) -> void:
-        if kind == "spark":
-            spark_count[0] += 1
-    Events.fx_burst.connect(spark_callback)
-    assert(not builder.blacksmith_behavior_advance_work(1.5), "Forging must continue before its completion interval")
-    assert(not builder.blacksmith_behavior_advance_work(1.5), "Forging must continue through its second hammer strike")
-    assert(builder.blacksmith_behavior_advance_work(1.5), "Forging must complete after its third hammer strike")
-    Events.fx_burst.disconnect(spark_callback)
-    assert(spark_count[0] == 3, "Blacksmith must emit one spark burst for each hammer impact")
-    forge.free()
+    assert(not builder.builder_behavior_advance_work(0.79),
+        "Builder repair must wind up before its contact frame")
+    assert(builder.builder_behavior_advance_work(0.02),
+        "Builder repair must resolve on the contact frame without resetting its animation timer")
+    anim.manual_progress = fposmod(builder._work_t, 1.6) / 1.6
+    assert(anim.frame_index() == 16,
+        "Builder repair contact must align with the low hammer/contact frame")
+
+    builder._work_t = 0.0
+    assert(not builder.blacksmith_behavior_advance_work(0.75),
+        "Forging must still be active during its first hammer cycle")
+    anim.work_style = "blacksmith"
+    anim.manual_progress = fposmod(builder._work_t, 1.5) / 1.5
+    assert(anim.frame_index() == 16,
+        "Blacksmith sparks/contact art must align with the hammer impact frame")
+    assert(not builder.blacksmith_behavior_advance_work(0.75),
+        "Forging must continue after its first impact")
+    assert(not builder.blacksmith_behavior_advance_work(1.5),
+        "Forging must continue through its second hammer cycle")
+    assert(builder.blacksmith_behavior_advance_work(1.5),
+        "Forging must complete after its third hammer cycle")
     builder.free()
 
     var player = Player.new()
