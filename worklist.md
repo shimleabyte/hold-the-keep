@@ -7,11 +7,11 @@
 
 This is an execution worklist, not a claim that every item is already implemented. Re-check the live branch/PR state before starting each assignment.
 
-## Live execution status — 2026-11-05 (post visual-identity integration)
+## Live execution status — 2026-11-05 (post render-workflow integration)
 
-**Current main:** `9e3d626140f33b700c99afbf9c347c97ae767153` — includes the Priority 1 architecture, the deterministic Frontier render harness and PR #129's dedicated Builder/Archer/Brute sprite identities. PR #129 was squash-merged after its Godot 4.7 regression (54/54), Campaign Simulation QA and Role Sprite Visual QA all passed on the tested head. Save schema remains v17.  
+**Current main:** `6f1886c6918eb7645167db91e8904b60b0accec8` — includes the Priority 1 architecture, deterministic Frontier render harness, PR #129's dedicated Builder/Archer/Brute sprite identities, and PR #138's rendered same-seed QA workflow. PR #129 passed Godot 4.7 regression (54/54), Campaign Simulation QA and Role Sprite Visual QA on its tested head. PR #138 is workflow-only; its original PR #133 head passed the render job, but the new-base runs failed before runner allocation. Save schema remains v17.  
 **Current save schema:** v17.  
-**Open pull requests:** #127 HUD countdowns (old base; mergeable=false); #131 stale worklist refresh (superseded by this update); #133 rendered Frontier QA workflow; #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls ported onto current main. PR #128 is closed as superseded by #136.
+**Open pull requests:** #127 HUD countdowns (old base; rebase/review required); #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls on current main. PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.
 
 | Workstream | Current disposition |
 |---|---|
@@ -23,31 +23,33 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-E save/migration architecture | Complete through #89: canonical v17 conversion and file-store recovery are integrated. Schema remains v17. |
 | DEV-F villager role architecture | Five role slices integrated: Archer, Scout, Healer, Blacksmith and Builder. Shared movement, navigation, workplace claims, carrying, animation and persistence remain host-owned. |
 | DEV-G HUD modularization | Main widget, construction queue and outpost/logistics boundaries are integrated. `hud.gd` remains the root composition/layout coordinator. |
-| DEV-H world generation / rendered QA | Generator decomposition and deterministic Frontier render harness are on main. PR #133 adds a repeatable Godot 4.7 + Xvfb/Mesa render workflow; it is still open and should be revalidated against current main before merge. Do not change generation behavior merely to reduce file size. |
+| DEV-H world generation / rendered QA | Generator decomposition and deterministic Frontier render harness are on main. PR #138 adds the repeatable Godot 4.7 + Xvfb/Mesa same-seed render workflow. The original workflow passed on PR #133; its first run on current main failed before runner allocation (`runner_id=0`, no steps), so current-base render verification remains pending. Do not change generation behavior merely to reduce file size. |
 | DEV-I enemy controller | Patrol movement, raid behavior and shared combat lifecycle are integrated. Archetype behavior modules remain separate. |
 | DEV-J decision-based events | Integrated through PR #72. |
 | DEV-K input command registry | Integrated through PR #76. |
 | DEV-L Barracks | Integrated through PR #78. |
 | Archery Range / ranged soldiers | Integrated through PR #87. |
 | DEV-M visual identity / rendered QA | PR #129 is merged. Builder, Archer and Brute have dedicated animated sprite sheets; the generator reproduces the committed assets; Brute visual scale is data-driven. The tested head passed 54/54 regression checks, Campaign Simulation QA and rendered gameplay-zoom QA. Continue auditing other role/faction art and audio separately; do not reopen these assets without evidence. |
-| Android ARMv7 / touch controls | PR #136 ports the Android ARMv7-only debug export, safe-area-aware virtual controls and multi-touch regression onto current main while retaining the role-sprite CI checks. Its recorded CI attempts have also failed before runner allocation (`runner_id=0`, empty runner name, zero steps). Parse, Android APK export, ABI verification and physical-device behavior are **not validated**. PR #128 is closed as superseded. |
+| Android ARMv7 / touch controls | PR #136 ports the Android ARMv7-only debug export, safe-area-aware virtual controls and multi-touch regression onto current main while retaining role-sprite CI checks. Its CI attempts failed before runner allocation (`runner_id=0`, empty runner name, zero steps). Godot parse, APK export, ABI verification and physical-device behavior are **not validated**. PR #128 is closed as superseded. |
 
 ### Recent integrations
 
+- **#138 — DEV-H rendered Frontier QA workflow:** merged at `6f1886c`. Adds a Godot 4.7 + Xvfb/Mesa same-seed render workflow only. The same workflow passed on the original PR #133 head with a real runner; the current-base run failed before receiving a runner, so do not claim a current-main execution result.
 - **#129 — DEV-M visual identity:** merged at `9e3d626`. Dedicated Builder, Archer and Brute sprite sheets, reproducible generator output, role identity tests and Brute visual scaling. Godot 4.7 regression 54/54, Campaign Simulation QA and Role Sprite Visual QA passed on the PR head before merge.
+- **#137 — worklist refresh:** merged at `6e7609c`; superseded by this live snapshot.
 - Earlier architecture foundations remain integrated: #109/#108/#107/#106/#105, #101/#102/#103/#100, #99/#97/#96/#94, #91 and #89. All preserve save schema v17.
 
 ### Active execution order
 
 1. **PR #136 — Android ARMv7:** do not merge until GitHub Actions actually starts jobs. Required: Godot 4.7 import/parse, full regression, Android debug APK export, and APK ABI inspection proving `armeabi-v7a` only. Then install on the 32-bit Android target and test launch, touch, safe-area behavior, pause/resume, overlays and a sustained gameplay session. No APK or device pass is currently claimed.
 2. **PR #135 — full-night diagnostic:** keep isolated until its Godot 4.7 workflow gets a real runner and produces a diagnostic artifact. The deterministic bot is diagnostic coverage, not human balance testing.
-3. **PR #133 — rendered Frontier QA:** recheck the workflow-only change against current main and merge only after its present-base checks are green.
+3. **Merged #138 — rendered Frontier QA:** execute the workflow on current main and review its images/log when runner allocation resumes. The original PR #133 implementation passed, but current-main verification has not run.
 4. **PR #127 — HUD countdowns:** rebase and review against current HUD layout before considering integration. Preserve the icon-first/minimal-text HUD contract; verify the new countdown and active+queued indicator do not create overlap or clutter at minimum and common viewport sizes.
 5. Run extended human Classic and Frontier playthroughs; record pacing, recovery, difficulty spikes and confusing interactions before tuning values or adding facilities.
 
 ### CI and validation note
 
-Recent PR #135 and #136 workflow attempts have produced failed jobs with `runner_id=0`, an empty runner name and no executed steps. Re-running those attempts produced the same result. GitHub's public status page currently lists Actions as operational; therefore do not attribute these repository runs to a confirmed global incident. Treat them as an unresolved runner-allocation blocker, not as parse, gameplay or export failures. Do not keep retrying indefinitely; once runner allocation recovers, run the required checks and record the actual results.
+Recent PR #135, #136 and #138 workflow attempts have produced failed jobs with `runner_id=0`, an empty runner name and no executed steps. Re-running those attempts produced the same result. GitHub's public status page currently lists Actions as operational; therefore do not attribute these repository runs to a confirmed global incident. Treat them as an unresolved runner-allocation blocker, not as parse, gameplay or export failures. Do not keep retrying indefinitely; once runner allocation recovers, run the required checks and record the actual results.
 
 ### Validation and release boundaries
 
