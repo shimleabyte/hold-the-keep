@@ -1,13 +1,13 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `a89243823aed598d1c0c78db06766d7b4ee4e35b` (2026-11-05)  
+**Audit baseline:** `main` at `de37f433a2f996eb9d5caacabfb1dcb3a5a60b36` (2026-11-05)  
 **Engine target:** Godot 4.7 only  
 **Release target:** Desktop-first — Windows x86_64 and Linux x86_64. Android remains deferred.  
 **Current save schema:** v17.
 
 ## Live execution status — 2026-11-05 (P0–P2 desktop pass)
 
-**Current main:** `a89243823aed598d1c0c78db06766d7b4ee4e35b`. The software-side P0–P2 implementation is merged. Current-main changes include time-sliced enemy FlowField rebuilds, complete-snapshot publication, coalesced worker reassignment, worker animation redraw fixes, low-cost baked profession feedback, Builder reachability recovery, multi-cell navigation fallback, desktop resolution coverage, Godot 4.7 export guards, save-file recovery regression coverage, worker lifecycle regression coverage, and partial-quota HUD guards. Save schema remains v17.
+**Current main:** `de37f433a2f996eb9d5caacabfb1dcb3a5a60b36`. The software-side P0–P2 implementation is merged. Current-main changes include time-sliced enemy FlowField rebuilds, complete-snapshot publication, coalesced worker reassignment, worker animation redraw fixes, low-cost baked profession feedback, Builder reachability recovery, multi-cell navigation fallback, desktop resolution coverage, Godot 4.7 export guards, save-file recovery regression coverage, worker lifecycle regression coverage, and partial-quota HUD guards. Save schema remains v17.
 
 ### P0 — gameplay blockers
 
