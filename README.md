@@ -2,7 +2,7 @@
 
 > Status proyek: [CONTEXT.md](CONTEXT.md). Design bible: [docs/WORLD_AND_GAMEPLAY_BIBLE.md](docs/WORLD_AND_GAMEPLAY_BIBLE.md). Roadmap: [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md). Implementation plans: [Phase 02](docs/plans/phase-02-plan.md), [Phase 04](docs/plans/phase-04-plan.md), [Phase 05](docs/plans/phase-05-plan.md), [Phase 06](docs/plans/phase-06-plan.md), [Phase 08](docs/plans/phase-08-plan.md), [Phase 09](docs/plans/phase-09-plan.md), [Phase 10](docs/plans/phase-10-plan.md). Test guide: [tests/README.md](tests/README.md).
 
-Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.7 (GDScript).
+Game 2D top-down village defense bertema medieval. Godot 4.7 (GDScript), target desktop dan pengujian Android ARMv7.
 
 ## Menjalankan
 1. Buka Godot 4.7 -> Import -> pilih `project.godot`.
@@ -39,6 +39,17 @@ Game 2D top-down village defense bertema medieval. Native desktop, Godot 4.7 (GD
 
 ## Tampilan dan resolusi
 Jendela default 1280×720 dengan minimum 960×540. Menu jeda menyediakan preset 16:9, 16:10, dan 4:3; resolusi jendela tersimpan, sedangkan fullscreen tetap terpisah. Viewport logis mengikuti setengah ukuran jendela pada skala pixel tepat 2×: 640×360 pada 1280×720, 800×450 pada 1600×900, dan 960×540 pada 1920×1080; minimum viewport 480×270. Resolusi lebih tinggi memperlihatkan lebih banyak dunia tanpa mengubah zoom kamera, ukuran tile, kecepatan gerak, jangkauan serangan atau aturan gameplay. HUD tetap pada ukuran logis yang sama di pita atas/bawah sehingga area tengah permainan bertambah. HUD, hotbar, peta, panel teknologi dan menu jeda mengikuti perubahan resolusi/fullscreen.
+
+## Android ARMv7 — build pengujian perangkat
+
+Preset **Android ARMv7 Debug** menghasilkan APK 32-bit `armeabi-v7a` untuk pengujian langsung, bukan release Play Store.
+
+1. Gunakan Godot 4.7 dan pasang OpenJDK 17 serta Android SDK (platform-tools, Android platform dan build-tools).
+2. Jalankan `bash tools/export_android_armv7.sh` dari root repository. Script mengunduh template debug Godot 4.7 yang cocok bila belum tersedia, lalu mengekspor `build/android/HoldTheKeep-armv7-debug.apk`.
+3. Hubungkan perangkat dengan USB debugging aktif dan jalankan `adb install -r build/android/HoldTheKeep-armv7-debug.apk`.
+4. Kontrol landscape: virtual joystick kiri; tombol Attack, Interact, Dash, Cleave dan Rally di kanan; tombol jeda di kiri atas. Sentuhan pada UI biasa diteruskan sebagai klik mouse.
+
+APK CI adalah debug build ARMv7-only. Lulus export, parse dan simulasi headless tidak membuktikan performa atau kompatibilitas perangkat fisik; pengujian install, launch, suhu, frame pacing dan sesi permainan tetap harus dilakukan di HP target.
 
 ## Sistem permainan
 

@@ -1,17 +1,21 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `5cc1b391dbb3eaebcd09bb7eda80f5552be48e37` (2026-11-05)  
+**Audit baseline:** `main` at `ef9dd51281551ff98013505614eb99d0f1d61004` (2026-11-05)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
 
 This is an execution worklist, not a claim that every item is already implemented. Re-check the live branch/PR state before starting each assignment.
 
-## Live execution status — 2026-11-05 (post render-workflow integration)
+## Live execution status — 2026-11-05 (Android touch safety audit)
 
-**Current main:** `5cc1b391dbb3eaebcd09bb7eda80f5552be48e37` — includes the Priority 1 architecture, deterministic Frontier render harness, PR #129's dedicated Builder/Archer/Brute sprite identities, and PR #138's rendered same-seed QA workflow. PR #129 passed Godot 4.7 regression (54/54), Campaign Simulation QA and Role Sprite Visual QA on its tested head. PR #138 is workflow-only; its original PR #133 head passed the render job, but the new-base runs failed before runner allocation. Save schema remains v17.  
+**Current main:** `ef9dd51281551ff98013505614eb99d0f1d61004` — includes the Priority 1 architecture, deterministic Frontier render harness, PR #129's dedicated Builder/Archer/Brute sprite identities, and PR #138's rendered same-seed QA workflow. PR #129 passed Godot 4.7 regression (54/54), Campaign Simulation QA and Role Sprite Visual QA on its tested head. PR #138 is workflow-only; current-main verification is deferred because the repository owner has exhausted GitHub Actions minutes. Save schema remains v17.  
 **Current save schema:** v17.  
-**Open pull requests:** #127 HUD countdowns (old base; rebase/review required); #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls on current main. PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.
+**Open pull requests:** #127 HUD countdowns (older implementation; icon-first replacement branch exists); #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls (still based on `a10a039`, not yet validated). PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.
+
+**Android static hardening branch:** `fix/android-touch-controls-safety-mainline` is based on this `main` snapshot and carries the ARMv7 feature plus hit-target, HUD-priority, overlay, safe-area and app-suspend/resume fixes. Static review only; no Godot parse, APK export or physical-device result is claimed. No PR has been opened and no Actions workflow has been triggered. The original PR #136 remains unchanged.
+
+**HUD awareness branch:** `feat/icon-first-night-wave-awareness` contains the icon-first phase countdown and active-plus-queued hostile count with focused assertions. Static review only; no Godot execution has been claimed.
 
 | Workstream | Current disposition |
 |---|---|
@@ -30,7 +34,7 @@ This is an execution worklist, not a claim that every item is already implemente
 | DEV-L Barracks | Integrated through PR #78. |
 | Archery Range / ranged soldiers | Integrated through PR #87. |
 | DEV-M visual identity / rendered QA | PR #129 is merged. Builder, Archer and Brute have dedicated animated sprite sheets; the generator reproduces the committed assets; Brute visual scale is data-driven. The tested head passed 54/54 regression checks, Campaign Simulation QA and rendered gameplay-zoom QA. Continue auditing other role/faction art and audio separately; do not reopen these assets without evidence. |
-| Android ARMv7 / touch controls | PR #136 ports the Android ARMv7-only debug export, safe-area-aware virtual controls and multi-touch regression onto current main while retaining role-sprite CI checks. CI validation is deferred because the repository owner has exhausted the available GitHub Actions minutes. Godot parse, APK export, ABI verification and physical-device behavior are **not validated**. PR #128 is closed as superseded. |
+| Android ARMv7 / touch controls | PR #136 carries the Android ARMv7-only debug export and virtual touch controls on a branch based on `a10a039`. The isolated `fix/android-touch-controls-safety-mainline` branch adds non-overlapping action hit targets, HUD input priority, jobs-drawer suppression, safe-area/viewport coverage, and application suspend/resume input cleanup. No Godot parse, APK export, ABI verification or physical-device behavior is **validated** because Actions minutes are exhausted. PR #128 is closed as superseded. |
 
 ### Recent integrations
 
@@ -42,15 +46,15 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ### Active execution order
 
-1. **PR #136 — Android ARMv7:** do not merge until GitHub Actions actually starts jobs. Required: Godot 4.7 import/parse, full regression, Android debug APK export, and APK ABI inspection proving `armeabi-v7a` only. Then install on the 32-bit Android target and test launch, touch, safe-area behavior, pause/resume, overlays and a sustained gameplay session. No APK or device pass is currently claimed.
+1. **Android ARMv7 feature + safety follow-up:** inspect `fix/android-touch-controls-safety-mainline` first; it is based on current `main` and does not alter the open PR #136 branch. Keep both unmerged until Actions minutes return. Required: Godot 4.7 import/parse, full regression, Android debug APK export, and APK ABI inspection proving `armeabi-v7a` only. Then install on the 32-bit Android target and test launch, touch, safe-area behavior, pause/resume, overlays and a sustained gameplay session. No APK or device pass is currently claimed.
 2. **PR #135 — full-night diagnostic:** keep isolated until its Godot 4.7 workflow gets a real runner and produces a diagnostic artifact. The deterministic bot is diagnostic coverage, not human balance testing.
 3. **Merged #138 — rendered Frontier QA:** execute the workflow on current main and review its images/log when runner allocation resumes. The original PR #133 implementation passed, but current-main verification has not run.
-4. **PR #127 — HUD countdowns:** rebase and review against current HUD layout before considering integration. Preserve the icon-first/minimal-text HUD contract; verify the new countdown and active+queued indicator do not create overlap or clutter at minimum and common viewport sizes.
+4. **HUD awareness branch:** `feat/icon-first-night-wave-awareness` is the preferred icon-first implementation; PR #127 is an older copy. Preserve minimal text and recheck the responsive HUD assertions once Godot execution is available.
 5. Run extended human Classic and Frontier playthroughs; record pacing, recovery, difficulty spikes and confusing interactions before tuning values or adding facilities.
 
 ### CI and validation note
 
-The repository owner has confirmed that the GitHub Actions minute budget is exhausted. PR #135, #136 and #138 therefore remain unvalidated where fresh workflow execution is required. Do not trigger, rerun or queue additional Actions workflows until the minute budget resets or is replenished. These checks are deferred, not code-test failures. Existing successful runs on earlier PR heads remain historical evidence only and do not replace validation on current main.
+The repository owner has confirmed that the GitHub Actions minute budget is exhausted. PR #135, #136 and #138 remain unvalidated where fresh workflow execution is required. The Android static-hardening and icon-first HUD branches contain new regression assertions that have not been executed. Do not trigger, rerun or queue additional Actions workflows until the minute budget resets or is replenished. These checks are deferred, not code-test failures. Existing successful runs on earlier PR heads remain historical evidence only and do not replace validation on current main.
 
 ### Validation and release boundaries
 
@@ -59,7 +63,7 @@ The repository owner has confirmed that the GitHub Actions minute budget is exha
 - Remaining acceptance work includes a successful full-wave runtime diagnostic, Android ARMv7 build plus physical-device testing, human playthroughs across Classic/Frontier acts, target-hardware profiling, rendered resolution/fullscreen review and audio listening.
 - Do not claim a feature complete solely because headless tests pass. Record rendered/manual QA separately.
 
-This snapshot records the live repository state after PR #129 and #138 merged and PR #136 was rebased onto the `a10a039` mainline. GitHub Actions validation is deferred until the minute budget is available. Re-check PR heads, workflow runs and `main` before each merge or assignment; repository state can change after this commit.
+This snapshot records `main` at `ef9dd51281551ff98013505614eb99d0f1d61004`. The Android feature and safety work remains isolated on `fix/android-touch-controls-safety-mainline`; the icon-first HUD work remains isolated on `feat/icon-first-night-wave-awareness`. GitHub Actions validation is deferred until the minute budget is available. Re-check PR heads, workflow runs and `main` before each merge or assignment; repository state can change after this commit.
 ---
 
 ## 0. Ground rules and current baseline
