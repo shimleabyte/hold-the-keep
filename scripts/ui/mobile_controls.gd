@@ -87,6 +87,8 @@ func _input(event: InputEvent) -> void:
     if event is InputEventScreenTouch:
         var touch_position := _to_local_position(event.position)
         if event.pressed and not event.canceled:
+            if _is_hud_control_at(touch_position):
+                return
             if handle_touch_press(event.index, touch_position):
                 get_viewport().set_input_as_handled()
         elif handle_touch_release(event.index):
@@ -98,6 +100,30 @@ func _input(event: InputEvent) -> void:
 
 func _to_local_position(viewport_position: Vector2) -> Vector2:
     return get_global_transform_with_canvas().affine_inverse() * viewport_position
+
+
+func _is_hud_control_at(position: Vector2) -> bool:
+    var hud := get_parent()
+    if not hud is CanvasLayer:
+        return false
+    for property in [
+        "_queue_button",
+        "_combat_bar",
+        "_tech_btn",
+        "_map_button",
+        "_jobs_button",
+        "_outpost_button",
+        "_research_panel"
+    ]:
+        var control := hud.get(property) as Control
+        if control != null and control.is_visible_in_tree() and control.get_global_rect().has_point(position):
+            return true
+    var slots_value: Variant = hud.get("_slot_nodes")
+    if slots_value is Array:
+        for slot in slots_value:
+            if slot is Control and slot.is_visible_in_tree() and slot.get_global_rect().has_point(position):
+                return true
+    return false
 
 
 func _device_has_touchscreen() -> bool:
@@ -173,7 +199,7 @@ func _apply_layout() -> void:
             "action": "interact",
             "label": "USE",
             "icon": INTERACT_ICON,
-            "center": Vector2(right - 125.0, bottom - 60.0),
+            "center": Vector2(right - 125.0, bottom - 64.0),
             "radius": 23.0
         },
         {
