@@ -13,7 +13,7 @@ func ticks(count: int) -> void:
 
 func _find_reachable_cell(main: Node, start_position: Vector2, distance_origin: Vector2,
         min_radius: float, max_radius: float, reserved: Dictionary) -> Vector2i:
-    var start := main.nav.cell_of(start_position)
+    var start: Vector2i = main.nav.cell_of(start_position)
     var reachable: Dictionary = main.nav.reachable_cells(start)
     var best := Vector2i(-1, -1)
     var best_distance := INF
