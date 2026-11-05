@@ -511,6 +511,27 @@ func _initialize() -> void:
         and main.nav.version == navigation_version + 2,
         "Removing the wall must restore walkability with another local update")
 
+    main.nav.rebuild()
+    main.flow.rebuild()
+    main.supply.rebuild()
+    var road_nav_version := main.nav.version
+    var road = main.build.place_raw("road", navigation_probe_cell)
+    assert(not main.nav._dirty and main.nav._dirty_cells.is_empty()
+        and main.nav.version == road_nav_version,
+        "Placing a non-blocking road must not invalidate the navigation grid")
+    assert(not main.flow._dirty,
+        "Placing a road must not trigger a full enemy flow-field rebuild")
+    assert(main.supply._dirty,
+        "Placing a road must still invalidate Keep-rooted logistics connectivity")
+    await ticks(1)
+    assert(not main.supply._dirty,
+        "The logistics graph must rebuild after a road is placed")
+    assert(main.build.demolish_at(navigation_probe_cell),
+        "The non-blocking road probe must be removable")
+    assert(not main.nav._dirty and main.nav._dirty_cells.is_empty()
+        and not main.flow._dirty and main.supply._dirty,
+        "Removing a road must invalidate logistics only, not pathfinding")
+
     assert(main.enemy_keep != null and is_instance_valid(main.enemy_keep),
         "Frontier must place its campaign stronghold")
     var stronghold_has_reachable_approach := false
