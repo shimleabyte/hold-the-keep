@@ -119,7 +119,7 @@ func _rebuild_region_states() -> void:
         next_states[region_id] = region
 
     for cell in enemy_claimed_cells:
-        if claimed_cells.has(cell) or not world.is_buildable(cell):
+        if not world.is_buildable(cell):
             continue
         var region_id: String = world.region_id(cell)
         if not next_states.has(region_id):
