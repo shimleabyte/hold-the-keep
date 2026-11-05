@@ -6,6 +6,18 @@ func ticks(count: int) -> void:
         await physics_frame
 
 
+func reference_land_counts(world: Node) -> Dictionary:
+    var counts: Dictionary = {}
+    for y in world.map_size:
+        for x in world.map_size:
+            var cell := Vector2i(x, y)
+            if not world.is_buildable(cell):
+                continue
+            var region := String(world.region_id(cell))
+            counts[region] = int(counts.get(region, 0)) + 1
+    return counts
+
+
 func footprint_clear(main, anchor: Vector2i, size: Vector2i) -> bool:
     for y in range(size.y):
         for x in range(size.x):
@@ -25,6 +37,9 @@ func _initialize() -> void:
     game_clock.set_process(false)
     main.build.player = null
     inventory.items = {"wood": 500, "stone": 500, "food": 500, "iron": 0}
+    assert(main.world.region_land_counts == reference_land_counts(main.world),
+        "Classic regional land counts must exactly match the generated buildable terrain")
+    var initial_land_counts: Dictionary = main.world.region_land_counts.duplicate(true)
     main.territory.rebuild()
 
     assert(main.territory.claimed_cells.size() > 250,
@@ -78,6 +93,8 @@ func _initialize() -> void:
     assert(outpost != null and outpost.is_in_group("buildings"),
         "A completed Outpost blueprint must become functional infrastructure")
     main.territory.rebuild()
+    assert(main.world.region_land_counts == initial_land_counts,
+        "Placing an Outpost must not change the region's terrain-only land area")
     assert(main.territory.is_claimed(expansion_target),
         "Outpost must claim tiles beyond the Keep frontier")
     assert(main.territory.can_place("house", expansion_target, Vector2i(2, 2)),
@@ -85,6 +102,8 @@ func _initialize() -> void:
 
     assert(main.build.demolish_at(outpost_cell), "Outpost should be demolishable")
     main.territory.rebuild()
+    assert(main.world.region_land_counts == initial_land_counts,
+        "Demolishing an Outpost must not change regional terrain area")
     assert(not main.territory.is_claimed(expansion_target),
         "Removing Outpost must release its exclusive claim")
 

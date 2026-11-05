@@ -275,11 +275,17 @@ func _initialize() -> void:
         "WorldMap must consume the isolated region generator without changing its output")
     assert(world._layer.get_used_cells().size() == 128 * 128,
         "Frontier terrain stage must assign every logical map cell")
+    var expected_land_counts: Dictionary = {}
     for y in world_config.map_size:
         for x in world_config.map_size:
             var terrain_cell := Vector2i(x, y)
+            if world.is_buildable(terrain_cell):
+                var region_name := String(world.region_id(terrain_cell))
+                expected_land_counts[region_name] = int(expected_land_counts.get(region_name, 0)) + 1
             assert(world.tile_type_at(terrain_cell) == int(terrain_layout[y * world_config.map_size + x]),
                 "WorldMap must consume the isolated Frontier terrain layout at %s" % terrain_cell)
+    assert(world.region_land_counts == expected_land_counts,
+        "Frontier regional land counts must match the generated, buildable terrain")
     var integrated_wood_stone_layout: Array[Dictionary] = []
     for entry in world.generated_resource_layout:
         var kind := String(entry["kind"])

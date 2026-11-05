@@ -78,12 +78,13 @@ func rebuild() -> void:
                     enemy_next[Vector2i(x, y)] = true
     # A conquered region becomes player-controlled land, not merely neutral land
     # after its last stronghold is removed.
-    for y in WorldConfig.map_size:
-        for x in WorldConfig.map_size:
-            var cell := Vector2i(x, y)
-            if conquered_regions.has(world.region_id(cell)) and world.is_buildable(cell):
-                next[cell] = true
-                enemy_next.erase(cell)
+    if not conquered_regions.is_empty():
+        for y in WorldConfig.map_size:
+            for x in WorldConfig.map_size:
+                var cell := Vector2i(x, y)
+                if conquered_regions.has(world.region_id(cell)) and world.is_buildable(cell):
+                    next[cell] = true
+                    enemy_next.erase(cell)
     claimed_cells = next
     enemy_claimed_cells = enemy_next
     _rebuild_region_states()
@@ -92,33 +93,40 @@ func rebuild() -> void:
 
 
 func _rebuild_region_states() -> void:
+    # Terrain land area is static between Expedition gate transitions, so WorldMap
+    # supplies exact per-region totals from its generation pass. Aggregate ownership
+    # only over claimed cells instead of rescanning every TileMap cell on each Outpost.
     var next_states: Dictionary = {}
-    for y in WorldConfig.map_size:
-        for x in WorldConfig.map_size:
-            var cell := Vector2i(x, y)
-            var region_id: String = world.region_id(cell)
-            if not next_states.has(region_id):
-                next_states[region_id] = {
-                    "id": region_id,
-                    "land_cells": 0,
-                    "player_cells": 0,
-                    "enemy_cells": 0,
-                    "contested_cells": 0
-                }
-            if not world.is_buildable(cell):
-                continue
+    for region_id in world.region_land_counts:
+        next_states[String(region_id)] = {
+            "id": String(region_id),
+            "land_cells": int(world.region_land_counts[region_id]),
+            "player_cells": 0,
+            "enemy_cells": 0,
+            "contested_cells": 0
+        }
 
-            var region: Dictionary = next_states[region_id]
-            region["land_cells"] = int(region["land_cells"]) + 1
-            var player_owns: bool = claimed_cells.has(cell)
-            var enemy_owns: bool = enemy_claimed_cells.has(cell)
-            if player_owns:
-                region["player_cells"] = int(region["player_cells"]) + 1
-            if enemy_owns:
-                region["enemy_cells"] = int(region["enemy_cells"]) + 1
-            if player_owns and enemy_owns:
-                region["contested_cells"] = int(region["contested_cells"]) + 1
-            next_states[region_id] = region
+    for cell in claimed_cells:
+        if not world.is_buildable(cell):
+            continue
+        var region_id: String = world.region_id(cell)
+        if not next_states.has(region_id):
+            continue
+        var region: Dictionary = next_states[region_id]
+        region["player_cells"] = int(region["player_cells"]) + 1
+        if enemy_claimed_cells.has(cell):
+            region["contested_cells"] = int(region["contested_cells"]) + 1
+        next_states[region_id] = region
+
+    for cell in enemy_claimed_cells:
+        if claimed_cells.has(cell) or not world.is_buildable(cell):
+            continue
+        var region_id: String = world.region_id(cell)
+        if not next_states.has(region_id):
+            continue
+        var region: Dictionary = next_states[region_id]
+        region["enemy_cells"] = int(region["enemy_cells"]) + 1
+        next_states[region_id] = region
 
     for region_id in next_states:
         var region: Dictionary = next_states[region_id]
@@ -145,7 +153,6 @@ func _rebuild_region_states() -> void:
             Events.region_control_changed.emit(region_id, control)
 
     region_states = next_states
-
 
 func region_ids() -> Array[String]:
     _ensure_current()

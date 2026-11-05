@@ -33,6 +33,8 @@ const REGION_FENLANDS := 3
 const REGION_ASHEN_MARCH := 4
 
 var _frontier_regions := PackedByteArray()
+## Number of currently buildable terrain cells in each region, updated by map generation and Expedition gates.
+var region_land_counts: Dictionary = {}
 var _expedition_barrier_cells: Dictionary = {}
 var _expedition_gate_cells: Dictionary = {}
 var _expedition_gate_original_tiles: Dictionary = {}
@@ -155,6 +157,7 @@ func _build_tileset() -> TileSet:
 
 
 func _generate_classic() -> void:
+    region_land_counts.clear()
     var rng := RandomNumberGenerator.new()
     rng.seed = map_seed
     var noise := FastNoiseLite.new()
@@ -187,6 +190,7 @@ func _generate_classic() -> void:
             var foot := Vector2(x * tile_size + tile_size / 2.0, y * tile_size + tile_size)
             if water:
                 continue
+            region_land_counts[region] = int(region_land_counts.get(region, 0)) + 1
             if not safe and rng.randf() < TREE_CHANCE:
                 var tree := TREE_SCRIPT.new()
                 tree.position = foot
@@ -200,6 +204,7 @@ func _generate_classic() -> void:
 
 
 func _generate_frontier() -> void:
+    region_land_counts.clear()
     _build_frontier_regions()
 
     var resource_rng := RandomNumberGenerator.new()
@@ -224,8 +229,12 @@ func _generate_frontier() -> void:
     for y in map_size:
         for x in map_size:
             var cell := Vector2i(x, y)
-            var tile := int(terrain_layout[y * map_size + x])
+            var tile_index := y * map_size + x
+            var tile := int(terrain_layout[tile_index])
             _layer.set_cell(cell, 0, Vector2i(tile, 0))
+            if tile != T_WATER and x >= 1 and y >= 1 and x <= map_size - 2 and y <= map_size - 2:
+                var region_name := _frontier_region_name(int(_frontier_regions[tile_index]))
+                region_land_counts[region_name] = int(region_land_counts.get(region_name, 0)) + 1
             if not resource_by_cell.has(cell):
                 continue
 
@@ -778,6 +787,9 @@ func _frontier_gate_terrain(region: String) -> int:
 
 
 func _seal_expedition_cell(cell: Vector2i) -> void:
+    if is_buildable(cell):
+        var region_name := region_id(cell)
+        region_land_counts[region_name] = maxi(0, int(region_land_counts.get(region_name, 0)) - 1)
     var occupant: Variant = occupied.get(cell, null)
     if occupant is Node and is_instance_valid(occupant):
         occupant.queue_free()
@@ -801,6 +813,7 @@ func apply_expedition_sector_unlocks(discovered_regions: Dictionary) -> Array[St
             var terrain := int(_expedition_gate_original_tiles.get(String(region), T_GRASS))
             _layer.set_cell(cell, 0, Vector2i(terrain, 0))
             _expedition_barrier_cells.erase(cell)
+            region_land_counts[String(region)] = int(region_land_counts.get(String(region), 0)) + 1
             _expedition_unlocked_regions[String(region)] = true
             opened.append(String(region))
         else:
