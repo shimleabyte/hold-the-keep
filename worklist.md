@@ -1,6 +1,6 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `df80c3deae9a526d71c29faae1179f1a8e2eb03d` (2026-11-05)  
+**Audit baseline:** `main` at `5cc1b391dbb3eaebcd09bb7eda80f5552be48e37` (2026-11-05)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
@@ -9,7 +9,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 ## Live execution status — 2026-11-05 (post render-workflow integration)
 
-**Current main:** `6f1886c6918eb7645167db91e8904b60b0accec8` — includes the Priority 1 architecture, deterministic Frontier render harness, PR #129's dedicated Builder/Archer/Brute sprite identities, and PR #138's rendered same-seed QA workflow. PR #129 passed Godot 4.7 regression (54/54), Campaign Simulation QA and Role Sprite Visual QA on its tested head. PR #138 is workflow-only; its original PR #133 head passed the render job, but the new-base runs failed before runner allocation. Save schema remains v17.  
+**Current main:** `5cc1b391dbb3eaebcd09bb7eda80f5552be48e37` — includes the Priority 1 architecture, deterministic Frontier render harness, PR #129's dedicated Builder/Archer/Brute sprite identities, and PR #138's rendered same-seed QA workflow. PR #129 passed Godot 4.7 regression (54/54), Campaign Simulation QA and Role Sprite Visual QA on its tested head. PR #138 is workflow-only; its original PR #133 head passed the render job, but the new-base runs failed before runner allocation. Save schema remains v17.  
 **Current save schema:** v17.  
 **Open pull requests:** #127 HUD countdowns (old base; rebase/review required); #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls on current main. PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.
 
@@ -36,6 +36,7 @@ This is an execution worklist, not a claim that every item is already implemente
 
 - **#138 — DEV-H rendered Frontier QA workflow:** merged at `6f1886c`. Adds a Godot 4.7 + Xvfb/Mesa same-seed render workflow only. The same workflow passed on the original PR #133 head with a real runner; the current-base run failed before receiving a runner, so do not claim a current-main execution result.
 - **#129 — DEV-M visual identity:** merged at `9e3d626`. Dedicated Builder, Archer and Brute sprite sheets, reproducible generator output, role identity tests and Brute visual scaling. Godot 4.7 regression 54/54, Campaign Simulation QA and Role Sprite Visual QA passed on the PR head before merge.
+- **#139 — worklist refresh:** merged at `5cc1b39`; records PR #138's render-workflow integration and the Android/full-wave runner blocker.
 - **#137 — worklist refresh:** merged at `6e7609c`; superseded by this live snapshot.
 - Earlier architecture foundations remain integrated: #109/#108/#107/#106/#105, #101/#102/#103/#100, #99/#97/#96/#94, #91 and #89. All preserve save schema v17.
 
@@ -58,7 +59,7 @@ Recent PR #135, #136 and #138 workflow attempts have produced failed jobs with `
 - Remaining acceptance work includes a successful full-wave runtime diagnostic, Android ARMv7 build plus physical-device testing, human playthroughs across Classic/Frontier acts, target-hardware profiling, rendered resolution/fullscreen review and audio listening.
 - Do not claim a feature complete solely because headless tests pass. Record rendered/manual QA separately.
 
-This snapshot records the live repository state after PR #129 merged and PR #136 was opened. Re-check PR heads, workflow runs and `main` before each merge or assignment; repository state can change after this commit.
+This snapshot records the live repository state after PR #129 and #138 merged and PR #136 was rebased onto the `5cc1b39` mainline. Re-check PR heads, workflow runs and `main` before each merge or assignment; repository state can change after this commit.
 ---
 
 ## 0. Ground rules and current baseline
