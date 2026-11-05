@@ -233,15 +233,6 @@ STAB = {"states": ["back", "thrust", "thrust", "rest"], "by": [0, 0, 0, 0], "lea
 POKE = {"states": ["raised", "low", "low", "rest"], "by": [-1, 1, 1, 0], "lean": [0, 1, 1, 0]}
 TOOL_ANIM = {None: STAB, "axe": SWING, "pick": SWING, "fork": POKE, "hammer": SWING, "sword": STAB, "esword": STAB, "dagger": STAB, "bow": STAB, "mace": SWING}
 
-# Four authored work poses per profession. These keep the existing 22-frame sheet
-# and 20x20 cells; only the four existing work frames are reshaped.
-WORK_ANIMATIONS = {
-    "woodcutter": {"states": ["raised", "swing", "low", "rest"], "by": [-1, 0, 2, 0], "lean": [-2, 1, 2, 0]},
-    "miner": {"states": ["back", "raised", "swing", "rest"], "by": [0, -2, 1, 0], "lean": [-1, -2, 2, 0]},
-    "blacksmith": {"states": ["back", "raised", "low", "rest"], "by": [0, -2, 2, 0], "lean": [-1, -2, 1, 0]},
-    "farmer": {"states": ["raised", "low", "thrust", "rest"], "by": [-1, 1, 1, 0], "lean": [0, 1, 1, 0]},
-}
-
 # Tiny impact/motion marks are baked into existing sprite-sheet cells. No runtime
 # particles, extra nodes, or additional texture/draw calls are needed.
 WORK_ART = {
@@ -291,11 +282,8 @@ def pose_for(look, anim, i):
             dict(by=0, lean=1, n=(-3, 2), f=(3, 0), arm=2, lg=(0, 2), tool="carry", run=1),
             dict(by=-1, lean=1, n=(0, 2), f=(0, 0), arm=0, lg=(0, 0), tool="carry", run=1),
         ][i]
-    if anim == "attack":
-        seq = TOOL_ANIM[look.tool_a]
-        return dict(tool=seq["states"][i], by=seq["by"][i], lean=seq["lean"][i], act=anim, step=i)
-    if anim == "work":
-        seq = WORK_ANIMATIONS.get(look.work_style, TOOL_ANIM[look.tool_w])
+    if anim in ("attack", "work"):
+        seq = TOOL_ANIM[look.tool_a if anim == "attack" else look.tool_w]
         return dict(tool=seq["states"][i], by=seq["by"][i], lean=seq["lean"][i], act=anim, step=i)
     if anim == "hurt":
         return dict(by=0, lean=-2, tool="rest2", hurt=True, blink=True)
