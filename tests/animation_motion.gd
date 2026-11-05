@@ -4,6 +4,10 @@ extends SceneTree
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Player := preload("res://scripts/entities/player.gd")
 const Villager := preload("res://scripts/entities/villager.gd")
+const ResourceTree := preload("res://scripts/entities/resource_tree.gd")
+const Rock := preload("res://scripts/entities/rock.gd")
+const IronOre := preload("res://scripts/entities/iron_ore.gd")
+const Wildlife := preload("res://scripts/entities/wildlife_node.gd")
 
 
 func _initialize() -> void:
@@ -97,6 +101,36 @@ func _initialize() -> void:
     assert(builder.blacksmith_behavior_advance_work(1.5),
         "Forging must complete after its third hammer cycle")
     builder.free()
+
+    var gatherer = Villager.new()
+    var worker_fx_count := [0]
+    var worker_fx_callback := func(_kind: String, _at: Vector2, _dir: Vector2, _amount: float) -> void:
+        worker_fx_count[0] += 1
+    Events.fx_burst.connect(worker_fx_callback)
+    var tree_node = ResourceTree.new()
+    var rock_node = Rock.new()
+    var ore_node = IronOre.new()
+    var wildlife_node = Wildlife.new()
+    tree_node.hit(gatherer)
+    assert(gatherer.carry_kind == "wood" and gatherer.carry == 1,
+        "Woodcutter output must still be delivered when worker hit particles are skipped")
+    rock_node.hit(gatherer)
+    assert(gatherer.carry_kind == "stone" and gatherer.carry == 1,
+        "Miner output must still be delivered when worker hit particles are skipped")
+    ore_node.hit(gatherer)
+    assert(gatherer.carry_kind == "iron" and gatherer.carry == 1,
+        "Iron output must still be delivered when worker hit particles are skipped")
+    wildlife_node.hit(gatherer)
+    assert(gatherer.carry_kind == "food" and gatherer.carry == 1,
+        "Hunter output must still be delivered when worker hit particles are skipped")
+    Events.fx_burst.disconnect(worker_fx_callback)
+    assert(worker_fx_count[0] == 0,
+        "Autonomous worker harvesting must not spawn per-hit particle bursts")
+    tree_node.free()
+    rock_node.free()
+    ore_node.free()
+    wildlife_node.free()
+    gatherer.free()
 
     var player = Player.new()
     player.anim.play("work", true)
