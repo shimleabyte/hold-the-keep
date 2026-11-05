@@ -1,6 +1,6 @@
 extends Node2D
-## Mode bangun: pilih dengan 1-4, klik kiri pasang (tahan untuk melukis),
-## klik kanan batal / bongkar (refund 50%), Esc batal.
+## Mode bangun: hotbar / 1-0 memilih, scroll mengganti, klik kiri memasang,
+## klik kanan membatalkan, Shift+klik kanan membongkar, Esc membatalkan.
 
 const BUILD_RANGE := 120.0
 const REFUND_RATE := 0.5
@@ -23,9 +23,25 @@ func _ready() -> void:
 
 
 func _set_active(id: String) -> void:
+    if active == id:
+        return
     active = id
+    _last_painted = Vector2i(-9999, -9999)
     Events.build_selected.emit(active)
     queue_redraw()
+
+
+func _cycle_active_building(direction: int) -> void:
+    var order: Array = Tech.available_buildings()
+    if order.is_empty():
+        _set_active("")
+        return
+    var current_index: int = order.find(active)
+    if current_index < 0:
+        current_index = 0 if direction > 0 else order.size() - 1
+    else:
+        current_index = posmod(current_index + direction, order.size())
+    _set_active(String(order[current_index]))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -45,15 +61,33 @@ func _unhandled_input(event: InputEvent) -> void:
         if selected_slot >= 0:
             var order: Array = Tech.available_buildings()
             if selected_slot < order.size():
-                var id: String = order[selected_slot]
+                var id: String = String(order[selected_slot])
                 _set_active("" if id == active else id)
                 get_viewport().set_input_as_handled()
                 return
-    elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
-        if active != "":
-            _set_active("")
-        else:
-            demolish_at(_mouse_cell())
+    elif event is InputEventMouseButton and event.pressed:
+        var hud = get_tree().get_first_node_in_group("hud")
+        var over_hud: bool = hud != null and hud.blocks_mouse(event.position)
+        if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+            if active == "":
+                return
+            var over_build_slot: bool = hud != null and hud.is_build_slot_at(event.position)
+            if over_hud and not over_build_slot:
+                return
+            _cycle_active_building(-1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1)
+            get_viewport().set_input_as_handled()
+            return
+        if event.button_index == MOUSE_BUTTON_RIGHT:
+            if over_hud:
+                return
+            if active != "" and event.shift_pressed:
+                demolish_at(_mouse_cell())
+            elif active != "":
+                _set_active("")
+            else:
+                demolish_at(_mouse_cell())
+            get_viewport().set_input_as_handled()
+            return
 
 
 func _over_hud() -> bool:

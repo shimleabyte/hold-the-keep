@@ -71,6 +71,7 @@ var _vitals_panel: Panel
 var _stage_panel: Panel
 var _build_left_hint: Label
 var _build_right_hint: Label
+var _build_mode_hint: Label
 var _queue_button: HUD_WIDGETS.HudChip
 var _queue_backdrop: ColorRect
 var _queue_panel: Panel
@@ -460,6 +461,11 @@ func _build_build_bar() -> void:
     _build_left_hint.visible = false
     _build_right_hint = _label(self, "", Vector2(360, 225), Color(1, 1, 1, 0.78))
     _build_right_hint.visible = false
+    _build_mode_hint = _label(self, "", Vector2(0, 0), Color("#f0dfbd"))
+    _build_mode_hint.add_theme_font_size_override("font_size", 7)
+    _build_mode_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _build_mode_hint.size = Vector2(_viewport_size.x - 8.0, 9)
+    _build_mode_hint.visible = false
     _rebuild_build_bar()
 
 func _rebuild_build_bar() -> void:
@@ -688,9 +694,10 @@ func _current_help_rows() -> Array:
         [Settings.binding_label("ability_dash"), "DASH (LEVEL 1)"],
         [Settings.binding_label("ability_cleave"), "TEBAS (LEVEL 2)"],
         [Settings.binding_label("ability_rally"), "SERUAN (LEVEL 3)"],
-        [" ".join(build_keys), "PILIH BANGUNAN"],
-        ["KLIK KIRI", "PASANG BANGUNAN"],
-        ["KLIK KANAN", "BATALKAN / BONGKAR"],
+        ["HOTBAR / SCROLL", "PILIH / GANTI BANGUNAN"],
+        ["KLIK KIRI", "PASANG / TARIK GARIS"],
+        ["KLIK KANAN", "BATALKAN PILIHAN"],
+        ["SHIFT + KANAN", "BONGKAR SAAT MODE BANGUN"],
         [" ".join(job_keys), "PILIH JOB"],
         ["SHIFT + JOB", "KURANGI KUOTA"],
         ["ALT + JOB", "NAIKKAN PRIORITAS"],
@@ -876,6 +883,8 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _build_right_hint.position = Vector2(_viewport_size.x - 132.0, build_y - 14.0)
     _build_right_hint.size = Vector2(127.0, 10)
     _build_right_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    _build_mode_hint.position = Vector2(4, build_y - 14.0)
+    _build_mode_hint.size = Vector2(_viewport_size.x - 8.0, 9)
 
     _combat_bar.position = Vector2((_viewport_size.x - _combat_bar.size.x) * 0.5, build_y - _combat_bar.size.y - 19.0)
     _msg_bubble.position = Vector2(
@@ -1067,7 +1076,21 @@ func _on_resource_changed(_kind: String, _amount: int) -> void:
 
 func _on_build_selected(id: String) -> void:
     _selected = id
+    _build_mode_hint.visible = not id.is_empty() and DataDB.buildings.has(id)
+    if _build_mode_hint.visible:
+        var data: Dictionary = DataDB.buildings[id]
+        var building_name := String(data.get("short", data.get("name", id))).to_upper()
+        _build_mode_hint.text = "BANGUN: %s  ·  SCROLL GANTI  ·  KIRI PASANG  ·  KANAN BATAL  ·  SHIFT+KANAN BONGKAR" % building_name
+    else:
+        _build_mode_hint.text = ""
     _refresh_slots()
+
+
+func is_build_slot_at(pos: Vector2) -> bool:
+    for slot in _slot_nodes:
+        if is_instance_valid(slot) and slot.visible and Rect2(slot.position, slot.size).has_point(pos):
+            return true
+    return false
 
 
 func _on_tech_changed(_id: String) -> void:

@@ -95,6 +95,7 @@ jobs:
           - decision_events
           - release_hardening
           - input_rebinding
+          - building_controls
           - map_stages
           - player_combat
           - resource_save_state
