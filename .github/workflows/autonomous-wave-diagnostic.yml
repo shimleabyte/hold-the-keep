@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/autonomous-wave-diagnostic.yml"
       - "tests/autonomous_wave_diagnostic.gd"
+      - "tests/autonomous_wave_diagnostic.tscn"
       - "scripts/systems/wave_spawner.gd"
       - "scripts/autoload/game_clock.gd"
       - "scripts/entities/enemy.gd"
@@ -65,10 +66,15 @@ jobs:
           mkdir -p build/diagnostics
           timeout --signal=TERM --kill-after=10s 300s \
             godot --headless --fixed-fps 60 --path . \
-            --script res://tests/autonomous_wave_diagnostic.gd \
+            res://tests/autonomous_wave_diagnostic.tscn \
             2>&1 | tee build/diagnostics/autonomous-wave.txt
-          grep -q "^AUTONOMOUS_WAVE_REPORT " build/diagnostics/autonomous-wave.txt
-          grep -q '"result":"passed"' build/diagnostics/autonomous-wave.txt
+          if grep -Eq "^(SCRIPT ERROR:|ERROR:|AUTONOMOUS_WAVE_FAIL:)" build/diagnostics/autonomous-wave.txt; then
+            echo "Diagnostic emitted a runtime or script error." >&2
+            exit 1
+          fi
+          grep -q '^AUTONOMOUS_WAVE_CASE {"profile":"classic"' build/diagnostics/autonomous-wave.txt
+          grep -q '^AUTONOMOUS_WAVE_CASE {"profile":"frontier"' build/diagnostics/autonomous-wave.txt
+          grep -q '^AUTONOMOUS_WAVE_REPORT .*"result":"passed"' build/diagnostics/autonomous-wave.txt
 
       - name: Upload autonomous wave report
         if: always()
