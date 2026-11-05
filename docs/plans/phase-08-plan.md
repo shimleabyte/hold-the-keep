@@ -1,6 +1,6 @@
 # Phase 08 — Visual and Audio Identity
 
-**Status:** Implementation slices 08.2–08.7 are merged. PR #50/#52/#53/#54/#55 delivered biome dressing, faction identity, building identity, combat visual feedback and regional audio; workflows #471/#473/#475/#476/#477 passed 30/30, 72/72, 74/74, 76/76 and 78/78 jobs respectively. Phase 08 remains open for rendered screenshot review and manual audio listening/level-balance QA.
+**Status:** Implementation slices 08.2–08.7 are merged. PR #50/#52/#53/#54/#55 delivered biome dressing, faction identity, building identity, combat visual feedback and regional audio; workflows #471/#473/#475/#476/#477 passed 30/30, 72/72, 74/74, 76/76 and 78/78 jobs respectively. A supplementary Phase 08.3 draw-only resource dressing and two-landmark ambient pass is isolated on `feat/phase-08.3-resource-cluster-dressing`; it is not merged or runtime-validated. Phase 08 remains open for rendered screenshot review and manual audio listening/level-balance QA.
 **Art direction:** [World & Gameplay Design Bible](../WORLD_AND_GAMEPLAY_BIBLE.md) — Grim Medieval Folklore Fantasy, weathered medieval pixel art and restrained folklore motifs.
 **Dependency:** Stable gameplay contracts from Phases 02, 04, 05, 06 and current UI layouts from Phase 10.
 **Engine target:** Godot 4.7 only.
@@ -25,7 +25,7 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 ## 08.3 — Biome props, landmarks and resource silhouettes
 - [x] Scatter deterministic, region-specific fern clusters, reeds, dead pines, standing stones and ash pillars; add one landmark in each core biome. Decorations are non-colliding and excluded from resource occupancy.
 - [x] Add Greenwood pine, Fenlands willow, Ashen deadwood, Highlands stone and Ashen rock resource silhouettes; preserve Classic sprite paths and resource behavior.
-- [ ] Add further resource-cluster dressing and restrained ambient animation while preserving tile readability.
+- [ ] Add further resource-cluster dressing and restrained ambient animation while preserving tile readability. A first draw-only implementation is committed on `feat/phase-08.3-resource-cluster-dressing`: regional tree/rock base detail plus 12 Hz Fenlands reeds and Hearthland shrine animation; pending Godot 4.7 and rendered review.
 
 ## 08.4 — Unit and faction identity
 - [x] Give each faction a distinct three-color visual kit and unique thorn, chevron, reed or ember crest motif; retain the existing faction tint as a secondary recognition cue.
