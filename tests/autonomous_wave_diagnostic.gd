@@ -96,7 +96,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     if main_scene == null:
         _require(false, "%s: could not load main gameplay scene" % profile)
         return {}
-    var main := main_scene.instantiate()
+    var main = main_scene.instantiate()
     root.add_child(main)
     current_scene = main
     await _ticks(12)
@@ -228,11 +228,11 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     return report
 
 
-func _drive_player(player: Node) -> void:
+func _drive_player(player) -> void:
     if not is_instance_valid(player) or int(player.hp) <= 0:
         _release_movement_input()
         return
-    var nearest: Node2D = null
+    var nearest = null
     var nearest_distance := INF
     for enemy in get_nodes_in_group("enemies"):
         if not is_instance_valid(enemy) or enemy.is_queued_for_deletion() or int(enemy.hp) <= 0:
