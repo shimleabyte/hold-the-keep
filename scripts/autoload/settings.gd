@@ -60,6 +60,7 @@ var custom_bindings: Dictionary = {}
 var _last_window_size := Vector2i.ZERO
 
 signal content_viewport_resized(viewport_size: Vector2i)
+signal bindings_changed
 
 
 func _ready() -> void:
@@ -150,6 +151,7 @@ func restore_default_bindings() -> void:
             action, InputSetup.DEFAULT_KEY_BINDINGS.get(action, [])
         )
     save_settings()
+    bindings_changed.emit()
 
 
 func _key_is_used_by_other_action(action: String, code: int) -> bool:
@@ -173,6 +175,7 @@ func set_key_binding(action: String, code: int) -> bool:
     _replace_keyboard_binding(action, code)
     custom_bindings[action] = code
     save_settings()
+    bindings_changed.emit()
     return true
 
 
@@ -188,9 +191,54 @@ func get_key_binding(action: String) -> int:
     return 0
 
 
+func _format_key_label(code: int) -> String:
+    match code:
+        KEY_UP:
+            return "↑"
+        KEY_DOWN:
+            return "↓"
+        KEY_LEFT:
+            return "←"
+        KEY_RIGHT:
+            return "→"
+        KEY_SPACE:
+            return "SPACE"
+        KEY_ESCAPE:
+            return "ESC"
+        KEY_KP_ENTER:
+            return "NUM ENTER"
+        _:
+            return OS.get_keycode_string(code).to_upper()
+
+
 func binding_label(action: String) -> String:
+    if not InputMap.has_action(action):
+        return "—"
+    var labels: PackedStringArray = []
+    for event in InputMap.action_get_events(action):
+        if not event is InputEventKey:
+            continue
+        var code := int(event.physical_keycode)
+        if code == 0:
+            code = int(event.keycode)
+        if code <= 0:
+            continue
+        var label := _format_key_label(code)
+        if not labels.has(label):
+            labels.append(label)
+    return " / ".join(labels) if not labels.is_empty() else "—"
+
+
+func binding_short_label(action: String) -> String:
     var code := get_key_binding(action)
-    return OS.get_keycode_string(code).to_upper() if code > 0 else "—"
+    if code <= 0:
+        return "—"
+    var label := _format_key_label(code)
+    if label == "SPACE":
+        return "SPC"
+    if label == "NUM ENTER":
+        return "NENT"
+    return label
 
 
 func apply() -> void:

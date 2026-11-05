@@ -20,6 +20,12 @@ func _initialize() -> void:
     if not check(InputMap.has_action("game_cancel") and InputMap.has_action("restart_game"),
         "Context-only system actions must also be registered"):
         return
+    if not check(settings.binding_label("move_up").contains("W") and settings.binding_label("move_up").contains("↑"),
+        "The controls UI must show both WASD and arrow-key defaults"):
+        return
+    if not check(settings.binding_label("interact").contains("SPACE") and settings.binding_label("interact").contains("E"),
+        "The controls UI must show both interaction defaults"):
+        return
     var move_has_gamepad := false
     for event in InputMap.action_get_events("move_up"):
         if event is InputEventJoypadButton or event is InputEventJoypadMotion:
@@ -43,6 +49,9 @@ func _initialize() -> void:
         return
     if not check(settings.get_key_binding("move_up") == KEY_Z,
         "InputMap should apply the new key immediately"):
+        return
+    if not check(settings.binding_label("move_up") == "Z",
+        "The visible binding label must refresh to the active custom key"):
         return
     if not check(not settings.set_key_binding("move_down", KEY_Z),
         "A key already used by another bindable action must be rejected"):
@@ -77,6 +86,9 @@ func _initialize() -> void:
     settings.restore_default_bindings()
     if not check(settings.get_key_binding("move_up") == KEY_W,
         "Restore defaults must restore the first movement key"):
+        return
+    if not check(settings.binding_label("move_up").contains("↑"),
+        "Restoring defaults must restore and display secondary movement keys"):
         return
     if not check(settings.get_key_binding("ability_dash") == KEY_Q,
         "Restore defaults must restore ability defaults"):

@@ -216,7 +216,7 @@ func _build_controls_panel() -> void:
             row.add_child(label)
 
             var key_button := Button.new()
-            key_button.custom_minimum_size = Vector2(82, 19)
+            key_button.custom_minimum_size = Vector2(116, 19)
             key_button.text = Settings.binding_label(action)
             key_button.pressed.connect(_begin_rebind.bind(action))
             row.add_child(key_button)

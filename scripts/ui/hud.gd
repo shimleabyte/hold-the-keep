@@ -58,33 +58,8 @@ const GOLD := Color("#ffd23f")
 const SLOT_W := 70
 const SLOT_H := 30
 
-const HELP_ROWS := [
-    ["WASD", "GERAK"],
-    ["TAHAN SHIFT", "LARI"],
-    ["Y", "TEKNOLOGI (RISET)"],
-    ["E / SPASI", "TEBANG, TAMBANG"],
-    ["F / KLIK", "SERANG"],
-    ["Q", "DASH (LEVEL 1)"],
-    ["C", "TEBAS (LEVEL 2)"],
-    ["V", "SERUAN (LEVEL 3)"],
-    ["1-9 / 0", "PILIH BANGUNAN"],
-    ["N / QUEUE", "ANTREAN KONSTRUKSI"],
-    ["KLIK KIRI", "PASANG BANGUNAN"],
-    ["KLIK KANAN", "BATAL / BONGKAR"],
-    ["T M K B J U I X R", "TAMBAH JOB"],
-    ["G", "SERBU / TARIK PRAJURIT"],
-    ["SHIFT + T M K B J U I X R", "KURANGI JOB"],
-    ["ALT + T/M/K/B/J/U/I/R", "NAIKKAN PRIORITAS"],
-    ["ALT + SHIFT + KEY", "TURUNKAN PRIORITAS"],
-    ["KLIK + / -", "UBAH KUOTA JOB"],
-    ["P / ESC", "MENU"],
-    ["F5 / F9", "SIMPAN / MUAT"],
-    ["F3", "TAMPILKAN FPS"],
-    ["TAB", "PETA WILAYAH"],
-    ["O", "OBJEKTIF CONQUEST"],
-    ["E (DI SITUS)", "INTERAKSI OBJEKTIF"],
-    ["JOBS", "PANEL KUOTA"],
-]
+const HELP_PANEL_WIDTH := 400.0
+const HELP_ROW_HEIGHT := 10.0
 
 var _font: Font
 var _viewport_size := Vector2(480, 270)
@@ -150,6 +125,8 @@ var _boss_title: Label
 var _jobs: Dictionary = {}
 var _slots: Dictionary = {}
 var _help: Panel
+var _help_key_labels: Array[Label] = []
+var _help_desc_labels: Array[Label] = []
 var _msg: Label
 var _msg_bubble: Panel
 var _banner: Label
@@ -200,6 +177,8 @@ func _ready() -> void:
     Events.village_changed.connect(_on_village_changed)
     Events.tech_researched.connect(_on_tech_changed)
     Events.stage_changed.connect(_on_stage_changed)
+    if not Settings.bindings_changed.is_connected(_on_bindings_changed):
+        Settings.bindings_changed.connect(_on_bindings_changed)
     var main_node = get_tree().get_first_node_in_group("main")
     if main_node != null:
         var initial_stage: Dictionary = main_node.spawner.stage_info(GameClock.day)
@@ -471,14 +450,14 @@ func _build_build_bar() -> void:
     _queue_button.font = _font
     _queue_button.position = Vector2(4, 211)
     _queue_button.size = Vector2(18, 16)
-    _queue_button.tooltip_text = "Buka antrean konstruksi (B)"
+    _queue_button.tooltip_text = "Buka antrean konstruksi (%s)" % Settings.binding_label("toggle_construction_queue")
     _queue_button.pressed.connect(_toggle_construction_queue)
     _bind_focus_hint(_queue_button)
     add_child(_queue_button)
     _blockers.append(_queue_button)
     _build_left_hint = _label(self, "BANGUNAN 1-8", Vector2(46, 225), Color(1, 1, 1, 0.78))
     _build_left_hint.visible = false
-    _build_right_hint = _label(self, "TAB PETA  ·  H BANTUAN", Vector2(360, 225), Color(1, 1, 1, 0.78))
+    _build_right_hint = _label(self, "", Vector2(360, 225), Color(1, 1, 1, 0.78))
     _build_right_hint.visible = false
     _rebuild_build_bar()
 
@@ -501,19 +480,10 @@ func _rebuild_build_bar() -> void:
         var slot := HUD_WIDGETS.BuildSlot.new()
         slot.id = id
         slot.font = _font
-        slot.key_text = str((i + 1) % 10)
         var data: Dictionary = DataDB.buildings[id]
         slot.title = String(data.get("short", data["name"]))
         slot.icon = ICONS[id]
-        var cost := DataDB.cost_of(id)
-        var cost_parts: Array[String] = []
-        for kind in ["wood", "stone", "iron", "food"]:
-            if cost.has(kind):
-                cost_parts.append("%s %d" % [kind.capitalize(), int(cost[kind])])
-        slot.tooltip_text = "%s  ·  tombol %s\n%s" % [
-            String(data["name"]), slot.key_text,
-            ", ".join(PackedStringArray(cost_parts)) if not cost_parts.is_empty() else "Tanpa biaya resource"
-        ]
+        _update_build_slot_binding(slot, i)
         _bind_focus_hint(slot)
         slot.position = Vector2(x0 + i * (w + 3), _viewport_size.y - SLOT_H - 2)
         slot.size = Vector2(w, SLOT_H)
@@ -695,19 +665,120 @@ func _on_queue_cancel_requested(site) -> void:
     _queue_panel_component.cancel_requested(site)
 
 
+func _current_help_rows() -> Array:
+    var movement_vertical := "%s  %s" % [
+        Settings.binding_label("move_up"), Settings.binding_label("move_down")
+    ]
+    var movement_horizontal := "%s  %s" % [
+        Settings.binding_label("move_left"), Settings.binding_label("move_right")
+    ]
+    var build_keys := PackedStringArray()
+    for slot_index in 10:
+        build_keys.append(Settings.binding_short_label("build_slot_%d" % (slot_index + 1)))
+    var job_keys := PackedStringArray()
+    for job in JOBS:
+        job_keys.append(Settings.binding_short_label("job_" + job))
+    return [
+        [movement_vertical, "GERAK ATAS / BAWAH"],
+        [movement_horizontal, "GERAK KIRI / KANAN"],
+        [Settings.binding_label("interact"), "INTERAKSI / PANEN"],
+        [Settings.binding_label("attack") + " / KLIK KIRI", "SERANG"],
+        [Settings.binding_label("sprint"), "TAHAN UNTUK LARI"],
+        [Settings.binding_label("ability_dash"), "DASH (LEVEL 1)"],
+        [Settings.binding_label("ability_cleave"), "TEBAS (LEVEL 2)"],
+        [Settings.binding_label("ability_rally"), "SERUAN (LEVEL 3)"],
+        [" ".join(build_keys), "PILIH BANGUNAN"],
+        ["KLIK KIRI / KANAN", "PASANG / BATALKAN / BONGKAR"],
+        [" ".join(job_keys), "PILIH JOB"],
+        ["SHIFT + JOB", "KURANGI KUOTA"],
+        ["ALT + JOB", "NAIKKAN PRIORITAS"],
+        ["ALT + SHIFT + JOB", "TURUNKAN PRIORITAS"],
+        ["KLIK − / +", "UBAH KUOTA JOB"],
+        [Settings.binding_label("toggle_technology") + " / " + Settings.binding_label("toggle_construction_queue"), "TEKNOLOGI / ANTREAN"],
+        [Settings.binding_label("toggle_map") + " / " + Settings.binding_label("toggle_objectives"), "PETA / OBJEKTIF"],
+        [Settings.binding_label("command_expedition") + " / " + Settings.binding_label("menu_pause"), "EKSPEDISI / JEDA"],
+        [Settings.binding_label("save_game") + " / " + Settings.binding_label("load_game"), "SIMPAN / MUAT"],
+    ]
+
+
 func _build_help() -> void:
-    var h := HELP_ROWS.size() * 10 + 30
-    _help = _panel(Vector2((_viewport_size.x - 288.0) / 2.0, (_viewport_size.y - h) / 2.0), Vector2(288, h))
+    var rows := _current_help_rows()
+    var h := rows.size() * HELP_ROW_HEIGHT + 30.0
+    _help = _panel(
+        Vector2((_viewport_size.x - HELP_PANEL_WIDTH) * 0.5, (_viewport_size.y - h) * 0.5),
+        Vector2(HELP_PANEL_WIDTH, h)
+    )
     var title := _label(_help, "KONTROL", Vector2(0, 5), GOLD)
-    title.size = Vector2(288, 9)
+    title.size = Vector2(HELP_PANEL_WIDTH, 9)
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    for i in HELP_ROWS.size():
-        _label(_help, HELP_ROWS[i][0], Vector2(14, 18 + i * 10), Color("#ffd9a0"))
-        _label(_help, HELP_ROWS[i][1], Vector2(124, 18 + i * 10))
-    var foot := _label(_help, "H  TUTUP BANTUAN", Vector2(0, h - 12), Color(1, 1, 1, 0.7))
-    foot.size = Vector2(288, 9)
+    for i in rows.size():
+        var key_label := _label(_help, rows[i][0], Vector2(12, 18 + i * HELP_ROW_HEIGHT), Color("#ffd9a0"))
+        key_label.size = Vector2(202, 9)
+        var desc_label := _label(_help, rows[i][1], Vector2(220, 18 + i * HELP_ROW_HEIGHT))
+        desc_label.size = Vector2(168, 9)
+        _help_key_labels.append(key_label)
+        _help_desc_labels.append(desc_label)
+    var foot := _label(_help, "%s  TUTUP BANTUAN" % Settings.binding_label("toggle_help"), Vector2(0, h - 12), Color(1, 1, 1, 0.7))
+    foot.size = Vector2(HELP_PANEL_WIDTH, 9)
     foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     _help.visible = false
+
+
+func _update_build_slot_binding(slot: HUD_WIDGETS.BuildSlot, slot_index: int) -> void:
+    var action := "build_slot_%d" % (slot_index + 1)
+    slot.key_text = Settings.binding_short_label(action)
+    var data: Dictionary = DataDB.buildings[slot.id]
+    var cost := DataDB.cost_of(slot.id)
+    var cost_parts: Array[String] = []
+    for kind in ["wood", "stone", "iron", "food"]:
+        if cost.has(kind):
+            cost_parts.append("%s %d" % [kind.capitalize(), int(cost[kind])])
+    slot.tooltip_text = "%s  ·  tombol %s\n%s" % [
+        String(data["name"]), Settings.binding_label(action),
+        ", ".join(PackedStringArray(cost_parts)) if not cost_parts.is_empty() else "Tanpa biaya resource"
+    ]
+    slot.queue_redraw()
+
+
+func _on_bindings_changed() -> void:
+    for i in _slot_nodes.size():
+        var slot: HUD_WIDGETS.BuildSlot = _slot_nodes[i]
+        _update_build_slot_binding(slot, i)
+    _queue_button.tooltip_text = "Buka antrean konstruksi (%s)" % Settings.binding_label("toggle_construction_queue")
+    _combat_bar.tooltip_text = "%s · Dash    %s · Tebas    %s · Seruan — status dan cooldown" % [
+        Settings.binding_label("ability_dash"),
+        Settings.binding_label("ability_cleave"),
+        Settings.binding_label("ability_rally")
+    ]
+    _build_right_hint.text = "%s PETA  ·  %s BANTUAN" % [
+        Settings.binding_label("toggle_map"), Settings.binding_label("toggle_help")
+    ]
+    for i in JOBS.size():
+        var job_action := "job_" + JOBS[i]
+        var row: HUD_WIDGETS.JobRow = _jobs[JOBS[i]]
+        var descriptions := {
+            "woodcutter": "Penebang — mengumpulkan kayu",
+            "miner": "Penambang — mengambil batu dan bijih",
+            "farmer": "Petani — menghasilkan makanan",
+            "builder": "Pembangun — membangun dan memperbaiki",
+            "hunter": "Pemburu — memasok makanan dari satwa",
+            "scout": "Pengintai — membuka wilayah",
+            "healer": "Penyembuh — memulihkan unit terluka",
+            "blacksmith": "Pandai besi — membuat perlengkapan prajurit",
+            "soldier": "Prajurit — mempertahankan permukiman"
+        }
+        row.tooltip_text = "%s  ·  %s tambah kuota, SHIFT kurangi, ALT ubah prioritas" % [
+            String(descriptions.get(JOBS[i], JOBS[i])),
+            Settings.binding_label(job_action)
+        ]
+    var rows := _current_help_rows()
+    for i in mini(rows.size(), _help_key_labels.size()):
+        _help_key_labels[i].text = rows[i][0]
+        _help_desc_labels[i].text = rows[i][1]
+    if _help.get_child_count() > 0:
+        var footer := _help.get_child(_help.get_child_count() - 1) as Label
+        if footer != null:
+            footer.text = "%s  TUTUP BANTUAN" % Settings.binding_label("toggle_help")
 
 func _build_messages() -> void:
     # Short-lived feedback uses a compact dark bubble instead of floating text
