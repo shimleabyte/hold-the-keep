@@ -48,6 +48,8 @@ const OUTPOST_GUARD_RADIUS := 128.0
 const OUTPOST_GUARD_ARRIVAL_RADIUS := 45.0
 const REACH := 11.0
 const DEFAULT_WORK_RADIUS := 12.0
+const MAX_WORK_PATH_CHECKS := 8
+const TARGET_RETRY_COOLDOWN := 6.0
 const BUILDER_REPAIR_INTERVAL := 1.6
 const BUILDER_REPAIR_AMOUNT := 12
 const HEAL_INTERVAL := 3.2
@@ -97,7 +99,10 @@ var _path := PackedVector2Array()
 var _pi := 0
 var _path_ver := -1
 var _goal_cells: Array[Vector2i] = []
-var _bad: Array = []
+var _blocked_targets: Dictionary = {}
+var _blocked_nav_version := -1
+var work_ai_status := "UNASSIGNED"
+var work_ai_detail := ""
 var _decide_t := 0.0
 var _work_t := 0.0
 var _wander_t := 2.0
@@ -136,6 +141,7 @@ func _ready() -> void:
     add_to_group("villagers")
     Events.tech_researched.connect(_on_tech)
     _decide_t = randf_range(0.0, 1.0)
+    _blocked_nav_version = nav.version if nav != null else -1
 
 
 ## Stat dinamis dari teknologi.
@@ -267,7 +273,9 @@ func set_job(j: String, preferred_workplace = null) -> bool:
         max_hp = _hp_cap_for(job)
     hp = clampi(int(round(float(hp) * max_hp / maxi(1, old_max))), 1, max_hp)
     _work_t = 0.0
-    _bad.clear()
+    _blocked_targets.clear()
+    work_ai_status = "IDLE_READY" if not job.is_empty() else "UNASSIGNED"
+    work_ai_detail = ""
     if state != State.HIDDEN and state != State.FLEEING:
         state = State.IDLE
         _path = PackedVector2Array()
@@ -414,6 +422,7 @@ func _physics_process(delta: float) -> void:
         _rally_damage_mult = 1.0
         _rally_interval_mult = 1.0
     _resolve_pending(delta)
+    _tick_blocked_targets(delta)
 
     if state == State.HIDDEN:
         if not GameClock.is_night:
@@ -900,12 +909,20 @@ func _tick_fight(delta: float) -> void:
 # ---------------------------------------------------------------- jobs
 
 func _find_work() -> void:
+    if nav.version != _blocked_nav_version:
+        _blocked_targets.clear()
+        _blocked_nav_version = nav.version
+    if job.is_empty():
+        _set_work_status("UNASSIGNED", "No occupation is assigned")
+        return
     if carry > 0:
         _go_depot()
         return
     if job == "scout":
+        _set_work_status("SCOUT_SEARCHING", "Evaluating unexplored cells")
         _find_scout_work()
         return
+    _set_work_status("SEARCHING", "Evaluating eligible work targets")
     var cands: Array = []
     match job:
         "woodcutter", "miner":
@@ -915,11 +932,12 @@ func _find_work() -> void:
             # Once a matching worksite exists, its capacity is authoritative.
             # Keep the old connected-depot radius only when no specialty site exists.
             if not has_valid_workplace() and _has_specialized_workplace(job):
+                _set_work_status("WORKPLACE_UNAVAILABLE", "Matching specialist workplaces are full or unreachable")
                 return
             var kind := "wood" if job == "woodcutter" else _mine_kind()
             for n in get_tree().get_nodes_in_group("harvestable"):
                 var in_work_area := _is_in_workplace_radius(n) if has_valid_workplace() else _is_in_gather_radius(n)
-                if n.yield_kind == kind and n.is_available(self) and in_work_area and not _bad.has(n):
+                if n.yield_kind == kind and n.is_available(self) and in_work_area:
                     cands.append(n)
         "hunter":
             if not has_valid_workplace():
@@ -928,11 +946,11 @@ func _find_work() -> void:
                     return
             for wildlife in get_tree().get_nodes_in_group("wildlife"):
                 if wildlife.yield_kind == "food" and wildlife.is_available(self) \
-                        and _is_in_workplace_radius(wildlife) and not _bad.has(wildlife):
+                        and _is_in_workplace_radius(wildlife):
                     cands.append(wildlife)
         "farmer":
             for f in get_tree().get_nodes_in_group("farms"):
-                if f.free_slots("farmer") > 0 and _is_in_work_radius(f) and not _bad.has(f):
+                if f.free_slots("farmer") > 0 and _is_in_work_radius(f):
                     cands.append(f)
         "blacksmith":
             if not has_valid_workplace():
@@ -977,11 +995,11 @@ func _find_work() -> void:
                 return int(a.queue_order) < int(b.queue_order)
             )
             for site in construction_sites:
-                if site.has_method("can_claim") and site.can_claim(self) and not _bad.has(site) \
+                if site.has_method("can_claim") and site.can_claim(self) \
                         and _is_builder_site_in_range(site):
                     cands.append(site)
             for building in get_tree().get_nodes_in_group("buildings"):
-                if building.hp <= 0 or building.hp >= building.max_hp or _bad.has(building):
+                if building.hp <= 0 or building.hp >= building.max_hp:
                     continue
                 if workplace.position.distance_squared_to(building.position) > radius * radius:
                     continue
@@ -1001,13 +1019,43 @@ func _find_work() -> void:
             return int(a.queue_order) < int(b.queue_order)
         return a.position.distance_squared_to(position) < b.position.distance_squared_to(position)
     )
-    for i in mini(8, cands.size()):
-        var n = cands[i]
-        var cells := _cells_of(n)
-        var p: PackedVector2Array = nav.path_adjacent(position, cells)
-        if p.is_empty():
-            _bad.append(n)
+    var reachable_candidates: Array[Dictionary] = []
+    var checked_candidates := 0
+    var blocked_candidates := 0
+    var unreachable_candidates := 0
+    var candidate_index := 0
+    while candidate_index < cands.size() and checked_candidates < MAX_WORK_PATH_CHECKS:
+        var candidate = cands[candidate_index]
+        candidate_index += 1
+        if _is_target_blocked(candidate):
+            blocked_candidates += 1
             continue
+        checked_candidates += 1
+        var candidate_cells := _cells_of(candidate)
+        var candidate_path: PackedVector2Array = nav.path_adjacent(position, candidate_cells)
+        if candidate_path.is_empty():
+            unreachable_candidates += 1
+            _mark_target_blocked(candidate, "NO_PATH")
+            continue
+        reachable_candidates.append({
+            "target": candidate,
+            "cells": candidate_cells,
+            "path": candidate_path
+        })
+
+    # Preserve Builder queue order and Healer urgency. Other jobs compare actual
+    # A* route lengths among a bounded candidate set instead of straight distance.
+    if job not in ["builder", "healer"]:
+        reachable_candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+            var path_a: PackedVector2Array = a["path"]
+            var path_b: PackedVector2Array = b["path"]
+            return path_a.size() < path_b.size()
+        )
+
+    for route in reachable_candidates:
+        var n = route["target"]
+        var cells: Array[Vector2i] = route["cells"]
+        var p: PackedVector2Array = route["path"]
         if job == "builder":
             if n.has_method("is_construction_site") and n.is_construction_site():
                 if not n.claim(self):
@@ -1029,11 +1077,77 @@ func _find_work() -> void:
         target = n
         _goal_cells = cells
         _set_path(p)
-        _bad.clear()
         state = State.TO_WORK
+        _set_work_status("MOVING_TO_WORK", "Following the shortest valid route to an eligible target")
         return
+
     if cands.is_empty():
-        _bad.clear()
+        _set_work_status("NO_AVAILABLE_TARGET", "No eligible target is available inside the assigned work area")
+    elif reachable_candidates.is_empty():
+        if blocked_candidates > 0 and unreachable_candidates == 0:
+            _set_work_status("TARGET_RETRY_COOLDOWN", "Recent path failures are cooling down before another attempt")
+        else:
+            _set_work_status("NO_REACHABLE_TARGET", "Nearby targets exist, but no tested path is reachable")
+    else:
+        _set_work_status("TARGET_RESERVED", "Reachable targets were claimed by another worker")
+
+
+func _set_work_status(status: String, detail: String = "") -> void:
+    work_ai_status = status
+    work_ai_detail = detail
+
+
+func _is_target_blocked(candidate: Variant) -> bool:
+    if candidate == null or not is_instance_valid(candidate):
+        return false
+    return _blocked_targets.has(candidate.get_instance_id())
+
+
+func _mark_target_blocked(candidate: Variant, reason: String) -> void:
+    if candidate == null or not is_instance_valid(candidate):
+        return
+    _blocked_targets[candidate.get_instance_id()] = {
+        "remaining": TARGET_RETRY_COOLDOWN,
+        "reason": reason
+    }
+
+
+func _tick_blocked_targets(delta: float) -> void:
+    if nav == null:
+        return
+    if nav.version != _blocked_nav_version:
+        _blocked_targets.clear()
+        _blocked_nav_version = nav.version
+        return
+    for target_id in _blocked_targets.keys():
+        var record: Dictionary = _blocked_targets[target_id]
+        var remaining := maxf(0.0, float(record.get("remaining", 0.0)) - delta)
+        if remaining <= 0.0 or not is_instance_valid(instance_from_id(int(target_id))):
+            _blocked_targets.erase(target_id)
+        else:
+            record["remaining"] = remaining
+            _blocked_targets[target_id] = record
+
+
+func worker_ai_diagnostics() -> Dictionary:
+    var target_label := ""
+    if target != null and is_instance_valid(target):
+        target_label = String(target.name)
+    var workplace_label := ""
+    if workplace != null and is_instance_valid(workplace):
+        workplace_label = String(workplace.id)
+    return {
+        "job": job,
+        "state": String(State.keys()[state]),
+        "status": work_ai_status,
+        "detail": work_ai_detail,
+        "target": target_label,
+        "workplace": workplace_label,
+        "carry_kind": carry_kind,
+        "carry": carry,
+        "remaining_path_points": maxi(0, _path.size() - _pi),
+        "temporarily_blocked_targets": _blocked_targets.size()
+    }
 
 
 func _find_scout_work() -> void:
@@ -1201,9 +1315,11 @@ func builder_behavior_advance_work(delta: float) -> bool:
     return true
 
 
-func builder_behavior_release() -> void:
+func builder_behavior_release(reason: String = "IDLE") -> void:
     _release()
     state = State.IDLE
+    _decide_t = 0.5
+    _set_work_status(reason, "Builder released the previous task and will re-evaluate work")
 
 
 func _release_heal_target() -> void:
@@ -1308,10 +1424,13 @@ func _go_depot() -> void:
             best_path = path
     if _depot == null:
         state = State.IDLE
+        _decide_t = 4.0
+        _set_work_status("NO_REACHABLE_DEPOT", "Cargo is retained; no connected depot has a valid path or capacity")
         return
     _goal_cells = _depot.cells()
     _set_path(best_path)
     state = State.TO_DEPOT
+    _set_work_status("DELIVERING", "Carrying %d %s to %s" % [carry, carry_kind, String(_depot.id)])
 
 
 func _deposit() -> void:
