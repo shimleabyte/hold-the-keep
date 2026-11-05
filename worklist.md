@@ -1,19 +1,35 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `ef9dd51281551ff98013505614eb99d0f1d61004` (2026-11-05)  
+**Audit baseline:** `main` at `89d8c7bc6da9e41d20d4c48aed1f950e5e9425e8` (2026-11-05)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
 
 This is an execution worklist, not a claim that every item is already implemented. Re-check the live branch/PR state before starting each assignment.
 
-## Live execution status — 2026-11-05 (Actions paused; HUD slice in progress)
+## Live execution status — 2026-11-05 (Actions paused; performance pass in progress)
 
-**Current main:** `ef9dd51281551ff98013505614eb99d0f1d61004` — one documentation-only commit after `a10a039c64fa2d69ef0712bc7ba68d3d8c67b028`; the gameplay source base is unchanged from PR #136's last rebase. It includes the Priority 1 architecture, deterministic Frontier render harness, PR #129's dedicated Builder/Archer/Brute sprite identities, and PR #138's rendered same-seed QA workflow. Save schema remains v17.  
+**Current main:** `89d8c7bc6da9e41d20d4c48aed1f950e5e9425e8`. It includes the Priority 1 architecture, deterministic Frontier render harness, dedicated Builder/Archer/Brute sprite identities, rendered same-seed QA workflow, and the first P0 performance reductions: chunked fog, idle resource processing suppression, row-batched Frontier decoration, incremental building-footprint navigation updates, and selective territory/logistics invalidation. Save schema remains v17.  
 **Current save schema:** v17.  
 **Open pull requests:** #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls. PR #127's text-first HUD implementation is closed as superseded by the icon-first replacement branch. PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.  
-**Active code branch:** `feat/icon-first-night-wave-awareness`, based on the current `main`. It contains the next-phase countdown and active-plus-queued enemy pressure indicator, with focused campaign/responsive assertions. The implementation keeps the HUD icon-first and excludes unrelated night-shelter job badges from old PR #127. No PR or workflow has been created for this branch; Godot validation has not been run.
+**Active code branch:** `perf/priority-performance-pass-mainline`, based on current `main` (11 commits ahead, 0 behind at this snapshot). It consolidates bounded specialist interceptor scans, road-change invalidation filtering, one-pass village assignment counters, bounded wildlife candidate selection with a full-sort reference assertion, and a local Classic/Frontier/Expedition performance probe. No PR or workflow has been created; Godot validation and profiler captures have not been run.
 
+### Performance optimization sequence
+
+| Slice | Implementation | Validation |
+|---|---|---|
+| P0 fog | 16×16 independently invalidated fog draw chunks; row-run drawing compresses hidden tiles | Regression assertions added; Godot run pending |
+| P0 idle resources | Healthy trees, rocks, iron and wildlife disable _process; depleted/restored nodes enable it only while regrowing | Save/regrowth assertions added; Godot run pending |
+| P1 scenery | Frontier decoration draw items batch by world row and z-layer; deterministic landmark selection uses one map scan | Batch coverage assertions added; Godot/render review pending |
+| P1 path invalidation | AStar updates only changed building footprints; roads do not dirty AStar or enemy flow field | Wall/road placement and removal assertions added; Godot run pending |
+| P1 territory/logistics | Ordinary non-claim buildings do not rebuild territory; only Keep/road/bridge/depot changes invalidate logistics | Source integration is on main; regression assertions pending/available in Frontier test |
+| P1 AI | Common defender scans plus Saboteur/Siege Engine intercept scans refresh at 120 ms; current targets are validated each tick | Faction warfare cadence assertions added; Godot run pending |
+| P1 village | One job-count pass per assignment; local counters are updated through quota removal and assignment | Villager economy quota assertions added; Godot run pending |
+| P2 generation | Wildlife selection retains at most 9×target-count candidates in a max-heap before sorting; RNG traversal and greedy spacing retained | Full-sort reference comparison added; Godot run pending |
+
+**Manual performance probe:** run `godot --path . --script res://tools/performance_probe.gd` in a windowed session at a fixed resolution. It records world creation time, navigation/flow/territory/job-assignment/fog scan timings, node/resource/physics counts, and idle versus active-wave frame samples in `user://performance_probe.json`. Run it before and after this branch on the same machine and settings.
+
+**Validation boundary:** no Godot executable is available in the current engineering environment and the repository owner has exhausted GitHub Actions minutes. Source checks are not runtime validation. Do not open a PR or trigger Actions until local Godot 4.7 checks or the Actions budget is available.
 | Workstream | Current disposition |
 |---|---|
 | INT-0 specialist integration | Complete: Hunter, Scout, Healer and Blacksmith integrations are on main. |
