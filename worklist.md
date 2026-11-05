@@ -1,17 +1,18 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `5cc1b391dbb3eaebcd09bb7eda80f5552be48e37` (2026-11-05)  
+**Audit baseline:** `main` at `ef9dd51281551ff98013505614eb99d0f1d61004` (2026-11-05)  
 **Engine target:** Godot 4.7 only  
 **Project:** Native desktop, Godot / GDScript  
 **Purpose:** Assign independent implementation work to Developer A, B, C, etc. without creating avoidable merge conflicts or duplicating work already in progress.
 
 This is an execution worklist, not a claim that every item is already implemented. Re-check the live branch/PR state before starting each assignment.
 
-## Live execution status — 2026-11-05 (post render-workflow integration)
+## Live execution status — 2026-11-05 (Actions paused; HUD slice in progress)
 
-**Current main:** `5cc1b391dbb3eaebcd09bb7eda80f5552be48e37` — includes the Priority 1 architecture, deterministic Frontier render harness, PR #129's dedicated Builder/Archer/Brute sprite identities, and PR #138's rendered same-seed QA workflow. PR #129 passed Godot 4.7 regression (54/54), Campaign Simulation QA and Role Sprite Visual QA on its tested head. PR #138 is workflow-only; its original PR #133 head passed the render job, but the new-base runs failed before runner allocation. Save schema remains v17.  
+**Current main:** `ef9dd51281551ff98013505614eb99d0f1d61004` — one documentation-only commit after `a10a039c64fa2d69ef0712bc7ba68d3d8c67b028`; the gameplay source base is unchanged from PR #136's last rebase. It includes the Priority 1 architecture, deterministic Frontier render harness, PR #129's dedicated Builder/Archer/Brute sprite identities, and PR #138's rendered same-seed QA workflow. Save schema remains v17.  
 **Current save schema:** v17.  
-**Open pull requests:** #127 HUD countdowns (old base; rebase/review required); #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls on current main. PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.
+**Open pull requests:** #135 full-runtime autonomous night-wave diagnostic; #136 Android ARMv7/touch controls. PR #127's text-first HUD implementation is closed as superseded by the icon-first replacement branch. PR #128 is closed as superseded by #136. PR #131 is closed as superseded by #137; PR #133 is closed as superseded by merged PR #138.  
+**Active code branch:** `feat/icon-first-night-wave-awareness`, based on the current `main`. It contains the next-phase countdown and active-plus-queued enemy pressure indicator, with focused campaign/responsive assertions. The implementation keeps the HUD icon-first and excludes unrelated night-shelter job badges from old PR #127. No PR or workflow has been created for this branch; Godot validation has not been run.
 
 | Workstream | Current disposition |
 |---|---|
@@ -45,12 +46,12 @@ This is an execution worklist, not a claim that every item is already implemente
 1. **PR #136 — Android ARMv7:** do not merge until GitHub Actions actually starts jobs. Required: Godot 4.7 import/parse, full regression, Android debug APK export, and APK ABI inspection proving `armeabi-v7a` only. Then install on the 32-bit Android target and test launch, touch, safe-area behavior, pause/resume, overlays and a sustained gameplay session. No APK or device pass is currently claimed.
 2. **PR #135 — full-night diagnostic:** keep isolated until its Godot 4.7 workflow gets a real runner and produces a diagnostic artifact. The deterministic bot is diagnostic coverage, not human balance testing.
 3. **Merged #138 — rendered Frontier QA:** execute the workflow on current main and review its images/log when runner allocation resumes. The original PR #133 implementation passed, but current-main verification has not run.
-4. **PR #127 — HUD countdowns:** rebase and review against current HUD layout before considering integration. Preserve the icon-first/minimal-text HUD contract; verify the new countdown and active+queued indicator do not create overlap or clutter at minimum and common viewport sizes.
+4. **Icon-first HUD countdown branch:** implementation is committed on `feat/icon-first-night-wave-awareness`. The queue includes a pending final boss and dawn cancels any unrevealed boss; the compact clock redraws only when its displayed second or day/night icon state changes. Static source review only; no Godot execution is claimed. When Actions minutes return, run Godot 4.7 import/parse, the campaign balance matrix, responsive-layout assertions and the full regression suite. PR #127 is closed as superseded; keep this replacement isolated until it passes validation.
 5. Run extended human Classic and Frontier playthroughs; record pacing, recovery, difficulty spikes and confusing interactions before tuning values or adding facilities.
 
 ### CI and validation note
 
-The repository owner has confirmed that the GitHub Actions minute budget is exhausted. PR #135, #136 and #138 therefore remain unvalidated where fresh workflow execution is required. Do not trigger, rerun or queue additional Actions workflows until the minute budget resets or is replenished. These checks are deferred, not code-test failures. Existing successful runs on earlier PR heads remain historical evidence only and do not replace validation on current main.
+The repository owner has confirmed that the GitHub Actions minute budget is exhausted. PR #135, #136 and #138 remain unvalidated where fresh workflow execution is required; the isolated HUD countdown branch is also unvalidated because its focused tests have not been run. Do not trigger, rerun or queue additional Actions workflows until the minute budget resets or is replenished. These checks are deferred, not code-test failures. Existing successful runs on earlier PR heads remain historical evidence only and do not replace validation on current main.
 
 ### Validation and release boundaries
 
@@ -59,7 +60,7 @@ The repository owner has confirmed that the GitHub Actions minute budget is exha
 - Remaining acceptance work includes a successful full-wave runtime diagnostic, Android ARMv7 build plus physical-device testing, human playthroughs across Classic/Frontier acts, target-hardware profiling, rendered resolution/fullscreen review and audio listening.
 - Do not claim a feature complete solely because headless tests pass. Record rendered/manual QA separately.
 
-This snapshot records the live repository state after PR #129 and #138 merged and PR #136 was rebased onto the `a10a039` mainline. GitHub Actions validation is deferred until the minute budget is available. Re-check PR heads, workflow runs and `main` before each merge or assignment; repository state can change after this commit.
+This snapshot records `main` at `ef9dd51281551ff98013505614eb99d0f1d61004`, with the icon-first HUD countdown work isolated on `feat/icon-first-night-wave-awareness`. GitHub Actions validation is deferred until the minute budget is available. Re-check PR heads, workflow runs and `main` before each merge or assignment; repository state can change after this commit.
 ---
 
 ## 0. Ground rules and current baseline

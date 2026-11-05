@@ -37,6 +37,25 @@ func verify_night_warning() -> void:
         "The warning must become available again on the next day")
 
 
+func verify_phase_countdown() -> void:
+    game_clock.set_process(false)
+    game_clock.time_of_day = 0.5
+    assert(game_clock.seconds_until_phase_change() == 18,
+        "The countdown must show 18 seconds until night at 0.5 day-cycle progress")
+    game_clock.time_of_day = 0.75
+    assert(game_clock.seconds_until_phase_change() == 27,
+        "The countdown must show 27 seconds until dawn at 0.75 day-cycle progress")
+    game_clock.time_of_day = 0.95
+    assert(game_clock.seconds_until_phase_change() == 117,
+        "The countdown must wrap through dawn to the next night without going negative")
+    game_clock.time_of_day = GameClock.NIGHT_START
+    assert(game_clock.seconds_until_phase_change() == 54,
+        "At night start, the countdown must target dawn rather than report zero")
+    game_clock.time_of_day = GameClock.NIGHT_END
+    assert(game_clock.seconds_until_phase_change() == 126,
+        "At dawn, the countdown must target the next night")
+
+
 func pool_has(pool: Array, enemy_id: String) -> bool:
     for value in pool:
         if String(value.get("id", "")) == enemy_id:
@@ -106,6 +125,8 @@ func run_profile(profile: String, expected: Dictionary) -> void:
     game_clock.day = final_day
     assert(main.spawner._boss_pending and main.spawner._boss_waiting_for_reveal,
         "%s must queue the final boss behind the regular wave on its configured final day" % profile)
+    assert(main.spawner.remaining_wave_spawns() == main.spawner.wave_size(final_day) + 1,
+        "%s hostile pressure must include the queued final boss" % profile)
     assert(main.spawner._boss_t == 0.0,
         "%s boss reveal wait must not be represented by a negative countdown" % profile)
     var staged_state: Dictionary = main.spawner.export_state()
@@ -125,6 +146,8 @@ func run_profile(profile: String, expected: Dictionary) -> void:
     var final_wave_count: int = main.spawner.wave_size(final_day)
     var reveal_remaining := floori(float(final_wave_count) * 0.25)
     main.spawner._to_spawn = reveal_remaining + 1
+    assert(main.spawner.remaining_wave_spawns() == reveal_remaining + 2,
+        "%s queued hostile count must retain the boss while regular units are still spawning" % profile)
     main.spawner._process(0.1)
     assert(main.spawner._boss_waiting_for_reveal and main.spawner._boss_t == 0.0,
         "%s boss warning must not start before at least 75%% of regular enemies are deployed" % profile)
@@ -133,6 +156,11 @@ func run_profile(profile: String, expected: Dictionary) -> void:
     assert(not main.spawner._boss_waiting_for_reveal
         and is_equal_approx(main.spawner._boss_t, 4.0),
         "%s boss must announce itself with a four-second warning after the wave reaches its reveal threshold" % profile)
+    assert(main.spawner.remaining_wave_spawns() == reveal_remaining + 1,
+        "%s boss must remain in the queued hostile count during its reveal warning" % profile)
+    main.spawner.end_wave()
+    assert(main.spawner.remaining_wave_spawns() == 0 and not main.spawner._boss_pending,
+        "%s dawn must clear regular and pending-boss spawns from the completed wave" % profile)
 
     print("PASS: %s schedule, wave and final-boss pacing matrix (final day %d)" % [profile, final_day])
     main.queue_free()
@@ -162,6 +190,7 @@ func _run() -> void:
         }
     })
     verify_night_warning()
+    verify_phase_countdown()
     events.build_feedback.disconnect(_on_build_feedback)
     print("PASS: once-per-night preparation warning and next-day reset")
     quit(0)
