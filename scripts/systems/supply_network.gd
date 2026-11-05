@@ -64,7 +64,9 @@ func _ready() -> void:
 
 
 func _on_building_event(id: String, cell: Vector2i) -> void:
-    _dirty = true
+    # Only roads and depot/root structures change the Keep-rooted logistics graph.
+    if ["keep", "road", "bridge", "granary", "storage", "outpost"].has(id):
+        _dirty = true
     if id == "keep" and _cost_source_cell == Vector2i(-1, -1):
         var keep = _find_keep()
         if keep != null:

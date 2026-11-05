@@ -9,6 +9,7 @@ var astar := AStarGrid2D.new()
 var version := 0
 
 var _dirty := true
+var _dirty_cells: Dictionary = {}
 
 
 func _ready() -> void:
@@ -23,24 +24,50 @@ func _ready() -> void:
     Events.building_destroyed.connect(_on_building_event)
 
 
-func _on_building_event(_id: String, _cell: Vector2i) -> void:
-    _dirty = true
+func _on_building_event(id: String, cell: Vector2i) -> void:
+    if _dirty:
+        return
+    var definition: Dictionary = DataDB.buildings.get(id, {})
+    var footprint: Variant = definition.get("size", [1, 1])
+    var width := 1
+    var height := 1
+    if footprint is Array and footprint.size() >= 2:
+        width = maxi(1, int(footprint[0]))
+        height = maxi(1, int(footprint[1]))
+    for y in height:
+        for x in width:
+            _dirty_cells[cell + Vector2i(x, y)] = true
 
 
 func _physics_process(_delta: float) -> void:
     if _dirty:
         rebuild()
+    elif not _dirty_cells.is_empty():
+        _rebuild_dirty_cells()
+
+
+func _set_cell_solid(cell: Vector2i) -> void:
+    if cell.x < 0 or cell.y < 0 or cell.x >= WorldConfig.map_size or cell.y >= WorldConfig.map_size:
+        return
+    var occupant = world.occupied.get(cell)
+    var is_bridge: bool = occupant != null and is_instance_valid(occupant) and occupant.is_in_group("buildings") and String(occupant.id) == "bridge"
+    var blocks_path: bool = occupant != null and not (is_instance_valid(occupant) and occupant.is_in_group("roads"))
+    astar.set_point_solid(cell, (not world.is_buildable(cell) and not is_bridge) or blocks_path)
 
 
 func rebuild() -> void:
     _dirty = false
+    _dirty_cells.clear()
     for y in WorldConfig.map_size:
         for x in WorldConfig.map_size:
-            var c := Vector2i(x, y)
-            var occupant = world.occupied.get(c)
-            var is_bridge: bool = occupant != null and is_instance_valid(occupant) and occupant.is_in_group("buildings") and String(occupant.id) == "bridge"
-            var blocks_path: bool = occupant != null and not (is_instance_valid(occupant) and occupant.is_in_group("roads"))
-            astar.set_point_solid(c, (not world.is_buildable(c) and not is_bridge) or blocks_path)
+            _set_cell_solid(Vector2i(x, y))
+    version += 1
+
+
+func _rebuild_dirty_cells() -> void:
+    for cell_value in _dirty_cells:
+        _set_cell_solid(cell_value)
+    _dirty_cells.clear()
     version += 1
 
 

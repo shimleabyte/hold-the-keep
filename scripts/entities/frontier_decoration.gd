@@ -4,6 +4,8 @@ extends Node2D
 var prop_kind := "fern_cluster"
 var variant := 0
 var is_landmark := false
+var _batch_entries: Array[Dictionary] = []
+
 
 func setup(kind: String, variation: int, landmark: bool = false) -> void:
     prop_kind = kind
@@ -16,8 +18,35 @@ func setup(kind: String, variation: int, landmark: bool = false) -> void:
     queue_redraw()
 
 
+## Entries share a world row so their draw calls can be submitted by one CanvasItem.
+func setup_batch(entries: Array, landmark: bool) -> void:
+    _batch_entries.clear()
+    for entry in entries:
+        if entry is Dictionary:
+            _batch_entries.append(entry.duplicate(true))
+    is_landmark = landmark
+    z_index = 1 if landmark else 0
+    add_to_group("frontier_decorations")
+    add_to_group("frontier_decoration_batches")
+    if landmark:
+        add_to_group("frontier_landmarks")
+    queue_redraw()
+
+
 func _draw() -> void:
-    match prop_kind:
+    if not _batch_entries.is_empty():
+        for entry in _batch_entries:
+            var offset: Vector2 = entry.get("offset", Vector2.ZERO)
+            draw_set_transform(offset, 0.0, Vector2.ONE)
+            _draw_prop(String(entry.get("kind", "")), int(entry.get("variant", 0)))
+        draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+        return
+    _draw_prop(prop_kind, variant)
+
+
+func _draw_prop(kind: String, variation: int) -> void:
+    variant = posmod(variation, 3)
+    match kind:
         "fern_cluster":
             _draw_fern()
         "fen_reeds":

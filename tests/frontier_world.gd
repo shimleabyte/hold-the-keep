@@ -311,6 +311,15 @@ func _initialize() -> void:
     var landmark_regions := {}
     assert(world.generated_decoration_layout.size() >= 100,
         "Frontier must receive a meaningful amount of non-blocking regional dressing")
+    var decoration_batches := get_tree().get_nodes_in_group("frontier_decoration_batches")
+    assert(decoration_batches.size() < world.generated_decoration_layout.size()
+        and decoration_batches.size() <= world.map_size * 2,
+        "Regional decoration visuals must be batched by world row and z-layer")
+    var batched_decoration_count := 0
+    for decoration_batch in decoration_batches:
+        batched_decoration_count += decoration_batch._batch_entries.size()
+    assert(batched_decoration_count == world.generated_decoration_layout.size(),
+        "Every deterministic decoration record must be represented in the row batches")
     var resource_cells: Dictionary = {}
     for resource_entry in world.generated_resource_layout:
         resource_cells[resource_entry["cell"]] = true
@@ -347,6 +356,28 @@ func _initialize() -> void:
     main.fog.import_state({"cells": [far_index]})
     assert(main.fog.is_revealed_cell(far_cell),
         "Frontier fog data must accept the final valid row-major map index")
+    var expected_fog_chunks := ceili(float(world_config.map_size) / 16.0)
+    expected_fog_chunks *= expected_fog_chunks
+    assert(main.fog._fog_chunks.size() == expected_fog_chunks,
+        "Fog must be split into 16x16 chunks instead of one full-map draw item")
+    var original_fog_state: Dictionary = main.fog.export_state()
+    main.fog.discovered.fill(0)
+    main.fog._dirty_chunk_indices.clear()
+    var local_reveal := Vector2(6 * world_config.tile_size + 8, 6 * world_config.tile_size + 8)
+    assert(main.fog.reveal_position(local_reveal, 1.0),
+        "A newly explored tile must change the fog state")
+    assert(main.fog._dirty_chunk_indices.size() == 1,
+        "Exploring one tile must invalidate only its containing fog chunk")
+    main.fog._flush_dirty_chunks()
+    var boundary_reveal := Vector2(16 * world_config.tile_size + 8, 16 * world_config.tile_size + 8)
+    assert(main.fog.reveal_position(boundary_reveal, 24.0),
+        "Exploring a chunk boundary must reveal new neighboring cells")
+    assert(main.fog._dirty_chunk_indices.size() == 4,
+        "Exploring across a four-chunk corner must invalidate exactly those four chunks")
+    main.fog._flush_dirty_chunks()
+    assert(main.fog._dirty_chunk_indices.is_empty(),
+        "Fog dirty-chunk tracking must clear after invalidation")
+    main.fog.import_state(original_fog_state)
     var frontier_save: Dictionary = save_system.collect(main)
     assert(frontier_save["world"]["profile"] == "frontier"
         and int(frontier_save["world"]["map_size"]) == 128
@@ -445,6 +476,40 @@ func _initialize() -> void:
     for region in region_cells:
         assert(int(reachable_regions.get(region, 0)) > 50,
             "Every Frontier biome must be reachable from the Keep: " + region)
+
+    var navigation_probe_cell := Vector2i(-1, -1)
+    for y in world_config.map_size:
+        if navigation_probe_cell.x >= 0:
+            break
+        for x in world_config.map_size:
+            var candidate_cell := Vector2i(x, y)
+            if reachable.has(candidate_cell) and world.is_buildable(candidate_cell) and not world.occupied.has(candidate_cell):
+                navigation_probe_cell = candidate_cell
+                break
+    assert(navigation_probe_cell.x >= 0,
+        "The incremental navigation test must find an empty walkable cell")
+    main.territory.rebuild()
+    main.supply.rebuild()
+    var navigation_version := main.nav.version
+    var probe_wall = main.build.place_raw("wall", navigation_probe_cell)
+    assert(not main.territory._dirty,
+        "Placing a wall with no claim radius must not trigger a full territory rebuild")
+    assert(not main.supply._dirty,
+        "Placing a wall must not rebuild Keep-rooted road/depot connectivity")
+    assert(main.nav._dirty_cells.size() == 1 and not main.nav._dirty,
+        "Placing a one-cell wall must queue one cell instead of a full-grid rebuild")
+    await ticks(1)
+    assert(main.nav.astar.is_point_solid(navigation_probe_cell)
+        and main.nav.version == navigation_version + 1,
+        "The incremental navigation update must make the placed wall solid")
+    assert(main.build.demolish_at(navigation_probe_cell),
+        "The navigation probe wall must be removable after the first update")
+    await ticks(1)
+    assert(not main.territory._dirty and not main.supply._dirty,
+        "Removing an ordinary wall must not trigger unrelated territory or depot-graph rebuilds")
+    assert(not main.nav.astar.is_point_solid(navigation_probe_cell)
+        and main.nav.version == navigation_version + 2,
+        "Removing the wall must restore walkability with another local update")
 
     assert(main.enemy_keep != null and is_instance_valid(main.enemy_keep),
         "Frontier must place its campaign stronghold")
