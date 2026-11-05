@@ -6,6 +6,16 @@ func ticks(count: int) -> void:
         await physics_frame
 
 
+func wait_for_flow_current(flow: Node, context: String, maximum_ticks := 600) -> void:
+    var waited := 0
+    while not flow.is_current():
+        await physics_frame
+        waited += 1
+        if waited >= maximum_ticks:
+            require(false, "%s: FlowField did not publish a current snapshot in %d ticks" % [context, maximum_ticks])
+            return
+
+
 func clear_claims(territory: Node) -> void:
     territory.claimed_cells.clear()
     territory.enemy_claimed_cells.clear()
@@ -52,6 +62,7 @@ func _initialize() -> void:
     current_scene = main
     await ticks(5)
     game_clock.set_process(false)
+    await wait_for_flow_current(main.flow, "Initial world setup")
 
     var territory = main.territory
     var world = main.world
@@ -131,10 +142,12 @@ func _initialize() -> void:
     require(main.nav.is_walkable(road_a),
         "Villagers must be able to walk across road tiles")
     main.flow.rebuild()
+    await wait_for_flow_current(main.flow, "Road placement")
     require(main.flow.is_reachable(road_a),
         "Enemy flow routing must remain valid across road tiles")
 
     main.flow.rebuild()
+    await wait_for_flow_current(main.flow, "Road route refresh")
     var bridge_cell := Vector2i(-1, -1)
     var claimed_cells: Array = territory.claimed_cells.keys()
     var player_cell: Vector2i = main.nav.cell_of(main.player.global_position)
@@ -168,13 +181,14 @@ func _initialize() -> void:
         "Bridge fixtures must be water cells inside the map bounds")
     main.nav.rebuild()
     main.flow.rebuild()
+    await wait_for_flow_current(main.flow, "Bridge-bank route refresh")
     require(main.build.place("bridge", bridge_cell) == "",
         "A bridge must be constructible over claimed water")
     var bridge_site = world.occupied[bridge_cell]
     require(bridge_site != null and bridge_site.is_in_group("construction_sites"),
         "Bridge placement must create a blueprint before the bridge becomes traversable")
     main.build.complete_site(bridge_site)
-    await ticks(2)
+    await wait_for_flow_current(main.flow, "Bridge completion")
     main.nav.rebuild()
     require(main.nav.is_walkable(bridge_cell),
         "Villagers must be able to traverse a bridge over water")

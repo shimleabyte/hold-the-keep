@@ -10,7 +10,8 @@ func _initialize() -> void:
 
     var build = main.build
     var hud = get_first_node_in_group("hud")
-    var available: Array = Tech.available_buildings()
+    var tech = root.get_node("Tech")
+    var available: Array = tech.available_buildings()
     assert(available.size() >= 2, "The test profile must expose at least two buildings")
     assert(hud != null, "HUD must exist before testing build mode")
 
