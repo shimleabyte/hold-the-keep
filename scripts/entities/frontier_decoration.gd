@@ -4,16 +4,45 @@ extends Node2D
 var prop_kind := "fern_cluster"
 var variant := 0
 var is_landmark := false
+var _ambient_elapsed := 0.0
+var _ambient_time := 0.0
+var _ambient_phase := 0.0
+var _ambient_intensity := 0.5
+var _ambient_enabled := false
+
+const AMBIENT_UPDATE_INTERVAL := 1.0 / 12.0
+
 
 func setup(kind: String, variation: int, landmark: bool = false) -> void:
     prop_kind = kind
     variant = posmod(variation, 3)
     is_landmark = landmark
+    _ambient_phase = float(variation) * 0.83
+    _ambient_enabled = landmark and (kind == "fen_reeds" or kind == "hearth_shrine")
+    set_process(_ambient_enabled)
     z_index = 1 if landmark else 0
     add_to_group("frontier_decorations")
     if landmark:
         add_to_group("frontier_landmarks")
     queue_redraw()
+
+
+## Only the Fenlands reeds and Hearthland shrine animate; the rest stay static.
+## A 12 Hz update cap keeps the effect inexpensive on low-end devices.
+func _process(delta: float) -> void:
+    if not _ambient_enabled:
+        return
+    _ambient_elapsed += delta
+    if _ambient_elapsed < AMBIENT_UPDATE_INTERVAL:
+        return
+    _ambient_time += _ambient_elapsed
+    _ambient_elapsed = 0.0
+    var sway := sin(_ambient_time * 1.7 + _ambient_phase)
+    if prop_kind == "fen_reeds":
+        rotation_degrees = sway * 1.25
+    else:
+        _ambient_intensity = 0.5 + 0.5 * sin(_ambient_time * 2.2 + _ambient_phase)
+        queue_redraw()
 
 
 func _draw() -> void:
@@ -100,6 +129,8 @@ func _draw_hearth_shrine() -> void:
     draw_line(Vector2(0, -13), Vector2(0, -5), Color("#c39b62"), 1.0)
     draw_line(Vector2(-3, -9), Vector2(3, -9), Color("#c39b62"), 1.0)
     draw_circle(Vector2(0, -7), 1.2, Color("#d0a45f"))
+    var ember_alpha := 0.28 + _ambient_intensity * 0.42
+    draw_circle(Vector2(0, -7), 3.0, Color(0.83, 0.48, 0.2, ember_alpha))
 
 
 func _draw_ruin_marker() -> void:
