@@ -30,6 +30,7 @@ const SHIELD_TARGET_RANGE := 96.0
 const SCOUT_FOCUS_RANGE := 220.0
 const BEAST_TARGET_SCAN_LIMIT := 24
 const BEAST_TARGET_ISOLATION_RADIUS := 76.0
+const TARGET_REFRESH_INTERVAL := 0.12
 const WALK_BASE_SPEED := 32.0
 const RUN_BASE_SPEED := 58.0
 
@@ -108,6 +109,14 @@ var _moving := false
 var _step_t := 0.0
 var _hurt_t := 0.0
 var _stagger_t := 0.0
+var _contact_target_scan_t := 0.0
+var _contact_target_cache: Node2D
+var _ranged_target_scan_t := 0.0
+var _ranged_target_cache: Node2D
+var _guard_target_scan_t := 0.0
+var _guard_target_cache: Node2D
+var _shield_target_scan_t := 0.0
+var _shield_target_cache: Node2D
 var _pending = null
 var _pending_t := 0.0
 var _pending_is_projectile := false
@@ -287,6 +296,10 @@ func _physics_process(delta: float) -> void:
         queue_redraw()
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _hurt_t = maxf(0.0, _hurt_t - delta)
+    _contact_target_scan_t = maxf(0.0, _contact_target_scan_t - delta)
+    _ranged_target_scan_t = maxf(0.0, _ranged_target_scan_t - delta)
+    _guard_target_scan_t = maxf(0.0, _guard_target_scan_t - delta)
+    _shield_target_scan_t = maxf(0.0, _shield_target_scan_t - delta)
     support_behavior.advance_timers(delta)
     shield_behavior.advance_timers(delta)
     saboteur_behavior.advance_timers(delta)
@@ -384,18 +397,11 @@ func _physics_process(delta: float) -> void:
         _footsteps(delta)
         return
 
-    if player != null and is_instance_valid(player):
-        if position.distance_to(player.position) < _attack_reach():
-            _begin_attack(player, player.position - position)
-            _update_anim(delta)
-            return
-
-    for defender in get_tree().get_nodes_in_group("defenders"):
-        var target := defender as Node2D
-        if target.visible and position.distance_to(target.position) < _attack_reach():
-            _begin_attack(target, target.position - position)
-            _update_anim(delta)
-            return
+    var contact_target := _nearest_contact_target()
+    if contact_target != null:
+        _begin_attack(contact_target, contact_target.position - position)
+        _update_anim(delta)
+        return
 
     _tick_flow(delta)
     _update_anim(delta)
@@ -516,16 +522,49 @@ func _tick_marked_target(delta: float) -> bool:
     return true
 
 
+func _nearest_contact_target() -> Node2D:
+    var reach := _attack_reach()
+    if is_instance_valid(_contact_target_cache):
+        if _contact_target_cache.visible and position.distance_squared_to(_contact_target_cache.position) < reach * reach:
+            return _contact_target_cache
+    _contact_target_cache = null
+    if _contact_target_scan_t > 0.0:
+        return null
+    _contact_target_scan_t = TARGET_REFRESH_INTERVAL
+
+    # Preserve the existing player-first combat targeting rule.
+    if player != null and is_instance_valid(player) and player.visible:
+        if position.distance_squared_to(player.position) < reach * reach:
+            _contact_target_cache = player
+            return _contact_target_cache
+    for defender in get_tree().get_nodes_in_group("defenders"):
+        if not is_instance_valid(defender) or not (defender is Node2D):
+            continue
+        var target := defender as Node2D
+        if target.visible and position.distance_squared_to(target.position) < reach * reach:
+            _contact_target_cache = target
+            return _contact_target_cache
+    return null
+
+
 func _nearest_shield_target() -> Node2D:
     var marked := _valid_scout_mark(SHIELD_TARGET_RANGE)
     if marked != null:
         return marked
     if is_garrison:
         return _nearest_guard_target()
+    if is_instance_valid(_shield_target_cache):
+        if _shield_target_cache.visible and position.distance_squared_to(_shield_target_cache.position) <= SHIELD_TARGET_RANGE * SHIELD_TARGET_RANGE:
+            return _shield_target_cache
+    _shield_target_cache = null
+    if _shield_target_scan_t > 0.0:
+        return null
+    _shield_target_scan_t = TARGET_REFRESH_INTERVAL
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
         candidates.append(player)
-    return ENEMY_TARGETING.nearest(self, candidates, SHIELD_TARGET_RANGE)
+    _shield_target_cache = ENEMY_TARGETING.nearest(self, candidates, SHIELD_TARGET_RANGE)
+    return _shield_target_cache
 
 
 func _tick_shieldbearer(delta: float) -> void:
@@ -563,16 +602,28 @@ func _tick_ranged(delta: float) -> void:
 
 func _nearest_ranged_target() -> Node2D:
     if is_patrol and patrol_returning:
+        _ranged_target_cache = null
         return null
     var marked := _valid_scout_mark(165.0)
     if marked != null:
+        _ranged_target_cache = marked
         return marked
+    var leash_center := patrol_origin if is_patrol else guard_origin
+    var leash_radius := patrol_radius if is_patrol else (175.0 if is_garrison else 0.0)
+    if is_instance_valid(_ranged_target_cache):
+        var cached_distance := position.distance_squared_to(_ranged_target_cache.position)
+        var cached_in_leash := leash_radius <= 0.0 or _ranged_target_cache.position.distance_to(leash_center) <= leash_radius
+        if _ranged_target_cache.visible and cached_distance <= 165.0 * 165.0 and cached_in_leash:
+            return _ranged_target_cache
+    _ranged_target_cache = null
+    if _ranged_target_scan_t > 0.0:
+        return null
+    _ranged_target_scan_t = TARGET_REFRESH_INTERVAL
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
         candidates.append(player)
-    var leash_center := patrol_origin if is_patrol else guard_origin
-    var leash_radius := patrol_radius if is_patrol else (175.0 if is_garrison else 0.0)
-    return ENEMY_TARGETING.nearest(self, candidates, 165.0, leash_center, leash_radius)
+    _ranged_target_cache = ENEMY_TARGETING.nearest(self, candidates, 165.0, leash_center, leash_radius)
+    return _ranged_target_cache
 
 
 func _tick_garrison(delta: float) -> void:
@@ -592,16 +643,28 @@ func _tick_garrison(delta: float) -> void:
 
 func _nearest_guard_target() -> Node2D:
     if is_patrol and patrol_returning:
+        _guard_target_cache = null
         return null
     var marked := _valid_scout_mark(150.0)
     if marked != null:
+        _guard_target_cache = marked
         return marked
+    var leash_center := patrol_origin if is_patrol else guard_origin
+    var leash_radius := patrol_radius if is_patrol else 175.0
+    if is_instance_valid(_guard_target_cache):
+        var cached_distance := position.distance_squared_to(_guard_target_cache.position)
+        var cached_in_leash := _guard_target_cache.position.distance_to(leash_center) <= leash_radius
+        if _guard_target_cache.visible and cached_distance <= 150.0 * 150.0 and cached_in_leash:
+            return _guard_target_cache
+    _guard_target_cache = null
+    if _guard_target_scan_t > 0.0:
+        return null
+    _guard_target_scan_t = TARGET_REFRESH_INTERVAL
     var candidates := get_tree().get_nodes_in_group("defenders")
     if player != null and is_instance_valid(player):
         candidates.append(player)
-    var leash_center := patrol_origin if is_patrol else guard_origin
-    var leash_radius := patrol_radius if is_patrol else 175.0
-    return ENEMY_TARGETING.nearest(self, candidates, 150.0, leash_center, leash_radius)
+    _guard_target_cache = ENEMY_TARGETING.nearest(self, candidates, 150.0, leash_center, leash_radius)
+    return _guard_target_cache
 
 
 func _begin_attack(target, direction: Vector2) -> void:
