@@ -106,7 +106,7 @@ func _initialize() -> void:
 
     var enlarged := output.duplicate()
     enlarged.resize(CAPTURE_SIZE.x * 3, CAPTURE_SIZE.y * 3, Image.INTERPOLATE_NEAREST)
-    var enlarged_error := enlarged.save_png("%s/role-sprites-gameplay-3x.png" % OUTPUT_DIR)
+    var enlarged_error: Error = enlarged.save_png("%s/role-sprites-gameplay-3x.png" % OUTPUT_DIR)
     if enlarged_error != OK:
         _fail("Could not save enlarged gameplay screenshot")
         return
