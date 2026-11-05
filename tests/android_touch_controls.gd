@@ -5,7 +5,13 @@ const MOBILE_CONTROLS := preload("res://scripts/ui/mobile_controls.gd")
 
 
 class TouchHudHost extends CanvasLayer:
+    var _map_panel: Control
     var _jobs_panel: Control
+    var _outpost_panel: Control
+    var _queue_panel: Control
+    var _help: Control
+    var _over: Control
+    var _event_decision_panel: Control
 
 
 class FakePauseMenu extends Node:
