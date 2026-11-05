@@ -11,6 +11,8 @@ const Wildlife := preload("res://scripts/entities/wildlife_node.gd")
 
 
 func _initialize() -> void:
+    assert(SpriteAnim.FRAMES == 22,
+        "Profession animation must reuse the existing 22-frame sprite sheet")
     var anim = SpriteAnim.new()
     anim.face(Vector2.RIGHT)
     anim.play("idle", true)
@@ -103,6 +105,10 @@ func _initialize() -> void:
         "Builder repair contact must align with the baked hammer impact")
 
     builder._work_t = 0.0
+    var forge_fx_count := [0]
+    var forge_fx_callback := func(_kind: String, _at: Vector2, _dir: Vector2, _amount: float) -> void:
+        forge_fx_count[0] += 1
+    Events.fx_burst.connect(forge_fx_callback)
     assert(not builder.blacksmith_behavior_advance_work(0.75),
         "Forging must be active before its first hammer contact")
     anim.work_style = "blacksmith"
@@ -115,6 +121,9 @@ func _initialize() -> void:
         "Forging must continue through its second hammer cycle")
     assert(builder.blacksmith_behavior_advance_work(1.5),
         "Forging must complete after its third hammer cycle")
+    Events.fx_burst.disconnect(forge_fx_callback)
+    assert(forge_fx_count[0] == 0,
+        "Blacksmith strikes must use baked sprite accents, not runtime particle bursts")
     builder.free()
 
     var gatherer = Villager.new()
