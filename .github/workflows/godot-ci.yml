@@ -32,6 +32,15 @@ jobs:
       - name: Verify role sprite generator reproducibility
         run: python3 tools/check_role_sprite_reproducibility.py
 
+      - name: Upload generated role sprite candidates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-role-sprite-candidates
+          path: build/generated-role-sprites/*.svg
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Install Godot
         uses: chickensoft-games/setup-godot@v2
         with:
