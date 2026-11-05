@@ -124,7 +124,9 @@ func reveal_position(position_world: Vector2, radius: float) -> bool:
             if discovered[index] == 0:
                 discovered[index] = 1
                 changed = true
-                var chunk_index := (y / CHUNK_CELLS) * _chunk_columns + (x / CHUNK_CELLS)
+                var chunk_y := floori(float(y) / float(CHUNK_CELLS))
+                var chunk_x := floori(float(x) / float(CHUNK_CELLS))
+                var chunk_index := chunk_y * _chunk_columns + chunk_x
                 _dirty_chunk_indices[chunk_index] = true
     return changed
 
