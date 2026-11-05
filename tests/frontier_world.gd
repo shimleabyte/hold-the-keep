@@ -311,7 +311,7 @@ func _initialize() -> void:
     var landmark_regions := {}
     assert(world.generated_decoration_layout.size() >= 100,
         "Frontier must receive a meaningful amount of non-blocking regional dressing")
-    var decoration_batches := get_tree().get_nodes_in_group("frontier_decoration_batches")
+    var decoration_batches: Array = get_nodes_in_group("frontier_decoration_batches")
     assert(decoration_batches.size() < world.generated_decoration_layout.size()
         and decoration_batches.size() <= world.map_size * 2,
         "Regional decoration visuals must be batched by world row and z-layer")
@@ -490,7 +490,7 @@ func _initialize() -> void:
         "The incremental navigation test must find an empty walkable cell")
     main.territory.rebuild()
     main.supply.rebuild()
-    var navigation_version := main.nav.version
+    var navigation_version: int = int(main.nav.version)
     var probe_wall = main.build.place_raw("wall", navigation_probe_cell)
     assert(not main.territory._dirty,
         "Placing a wall with no claim radius must not trigger a full territory rebuild")
@@ -498,13 +498,15 @@ func _initialize() -> void:
         "Placing a wall must not rebuild Keep-rooted road/depot connectivity")
     assert(main.nav._dirty_cells.size() == 1 and not main.nav._dirty,
         "Placing a one-cell wall must queue one cell instead of a full-grid rebuild")
-    await ticks(1)
+    # physics_frame is emitted before node _physics_process callbacks; wait
+    # through the update frame so the queued NavGrid work has actually run.
+    await ticks(2)
     assert(main.nav.astar.is_point_solid(navigation_probe_cell)
         and main.nav.version == navigation_version + 1,
         "The incremental navigation update must make the placed wall solid")
     assert(main.build.demolish_at(navigation_probe_cell),
         "The navigation probe wall must be removable after the first update")
-    await ticks(1)
+    await ticks(2)
     assert(not main.territory._dirty and not main.supply._dirty,
         "Removing an ordinary wall must not trigger unrelated territory or depot-graph rebuilds")
     assert(not main.nav.astar.is_point_solid(navigation_probe_cell)
