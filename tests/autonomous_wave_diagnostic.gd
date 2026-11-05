@@ -1,4 +1,4 @@
-extends SceneTree
+extends Node
 ## Runs one complete real-time night wave in Classic and Frontier.
 ## Unlike campaign_combat_simulation.gd, this keeps the game clock, spawner,
 ## navigation, enemy AI, villager lifecycle and player combat loop active.
@@ -23,12 +23,12 @@ var _game_over := false
 var _failures: Array[String] = []
 
 
-func _initialize() -> void:
+func _ready() -> void:
     call_deferred("_run")
 
 
 func _run() -> void:
-    var events = root.get_node("Events")
+    var events = get_tree().root.get_node("Events")
     events.wave_started.connect(_on_wave_started)
     events.build_feedback.connect(_on_build_feedback)
     events.villager_died.connect(_on_villager_died)
@@ -41,6 +41,7 @@ func _run() -> void:
         reports.append(report)
         print("AUTONOMOUS_WAVE_CASE " + JSON.stringify(report))
 
+    _require(reports.size() == CASES.size(), "Diagnostic did not produce one report for every configured profile")
     events.wave_started.disconnect(_on_wave_started)
     events.build_feedback.disconnect(_on_build_feedback)
     events.villager_died.disconnect(_on_villager_died)
@@ -48,7 +49,7 @@ func _run() -> void:
     events.game_over.disconnect(_on_game_over)
     _release_bot_input()
     Engine.time_scale = 1.0
-    paused = false
+    get_tree().paused = false
 
     if not _failures.is_empty():
         for failure in _failures:
@@ -64,23 +65,23 @@ func _run() -> void:
         "result": "passed" if _failures.is_empty() else "failed"
     }
     print("AUTONOMOUS_WAVE_REPORT " + JSON.stringify(report))
-    quit(0 if _failures.is_empty() else 1)
+    get_tree().quit(0 if _failures.is_empty() else 1)
 
 
 func _run_case(case_data: Dictionary) -> Dictionary:
     _release_bot_input()
     Engine.time_scale = 1.0
-    paused = false
+    get_tree().paused = false
     _clear_save_files()
 
     var profile := String(case_data["profile"])
     var day := int(case_data["day"])
     var seed_value := int(case_data["seed"])
-    var world_config = root.get_node("WorldConfig")
-    var clock = root.get_node("GameClock")
-    var inventory = root.get_node("Inventory")
-    var tech = root.get_node("Tech")
-    var save_system = root.get_node("SaveSystem")
+    var world_config = get_tree().root.get_node("WorldConfig")
+    var clock = get_tree().root.get_node("GameClock")
+    var inventory = get_tree().root.get_node("Inventory")
+    var tech = get_tree().root.get_node("Tech")
+    var save_system = get_tree().root.get_node("SaveSystem")
 
     world_config.apply_profile(profile)
     world_config.world_seed = seed_value
@@ -97,8 +98,8 @@ func _run_case(case_data: Dictionary) -> Dictionary:
         _require(false, "%s: could not load main gameplay scene" % profile)
         return {}
     var main = main_scene.instantiate()
-    root.add_child(main)
-    current_scene = main
+    get_tree().root.add_child(main)
+    get_tree().current_scene = main
     await _ticks(12)
     Input.warp_mouse(Vector2(320, 180))
 
@@ -148,7 +149,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     Engine.time_scale = SIMULATION_TIME_SCALE
     clock.set_process(true)
     for tick in MAX_NIGHT_PHYSICS_TICKS:
-        await physics_frame
+        await get_tree().physics_frame
         ticks_run = tick + 1
 
         _record_wave_spawns()
@@ -161,7 +162,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
             minimum_keep_hp = mini(minimum_keep_hp, int(keep.hp))
 
         _drive_player(main.player)
-        if _game_over or paused:
+        if _game_over or get_tree().paused:
             break
         if bool(_active_case.get("wave_started", false)) \
                 and not bool(clock.is_night) and clock.time_of_day >= GameClock.NIGHT_END:
@@ -333,21 +334,21 @@ func _on_game_over(_day: int) -> void:
 
 func _ticks(count: int) -> void:
     for _index in count:
-        await physics_frame
+        await get_tree().physics_frame
 
 
 func _discard_main(main: Node) -> void:
     _release_bot_input()
     Engine.time_scale = 1.0
-    paused = false
+    get_tree().paused = false
     if main != null and is_instance_valid(main):
         main.queue_free()
-    current_scene = null
-    await process_frame
+    get_tree().current_scene = null
+    await get_tree().process_frame
 
 
 func _clear_save_files() -> void:
-    var save_system = root.get_node_or_null("SaveSystem")
+    var save_system = get_tree().root.get_node_or_null("SaveSystem")
     if save_system == null:
         return
     for path in [save_system.PATH, save_system.TMP, save_system.BACKUP]:
