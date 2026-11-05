@@ -126,7 +126,7 @@ func select_target() -> Node2D:
 
 
 func _nearest_interceptor() -> Node2D:
-    var reach := actor._attack_reach() + 4.0
+    var reach: float = float(actor._attack_reach()) + 4.0
     # Player interception remains immediate; only the full defender scan is throttled.
     if actor.player != null and is_instance_valid(actor.player) and actor.player.visible:
         if actor.position.distance_squared_to(actor.player.position) <= reach * reach:
