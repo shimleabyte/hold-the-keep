@@ -11,9 +11,9 @@ const SIDE := 2
 const WORK_FRAME_THRESHOLDS := {
     "default": [0.25, 0.50, 0.75, 1.0],
     "woodcutter": [0.22, 0.49, 0.75, 1.0],
-    "miner": [0.34, 0.52, 0.76, 1.0],
+    "miner": [0.24, 0.44, 0.72, 1.0],
     "builder": [0.28, 0.46, 0.70, 1.0],
-    "blacksmith": [0.42, 0.58, 0.82, 1.0],
+    "blacksmith": [0.28, 0.46, 0.76, 1.0],
     "farmer": [0.18, 0.44, 0.78, 1.0],
 }
 const CLIPS := {
