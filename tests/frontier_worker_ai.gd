@@ -11,9 +11,9 @@ func ticks(count: int) -> void:
         await physics_frame
 
 
-func _find_reachable_cell(main: Node, origin: Vector2, min_radius: float,
-        max_radius: float, reserved: Dictionary) -> Vector2i:
-    var start := main.nav.cell_of(origin)
+func _find_reachable_cell(main: Node, start_position: Vector2, distance_origin: Vector2,
+        min_radius: float, max_radius: float, reserved: Dictionary) -> Vector2i:
+    var start := main.nav.cell_of(start_position)
     var reachable: Dictionary = main.nav.reachable_cells(start)
     var best := Vector2i(-1, -1)
     var best_distance := INF
@@ -25,7 +25,7 @@ func _find_reachable_cell(main: Node, origin: Vector2, min_radius: float,
             float(cell.x * WorldConfig.tile_size) + WorldConfig.tile_size / 2.0,
             float((cell.y + 1) * WorldConfig.tile_size)
         )
-        var distance := origin.distance_to(foot) / float(WorldConfig.tile_size)
+        var distance := distance_origin.distance_to(foot) / float(WorldConfig.tile_size)
         if distance <= min_radius or distance >= max_radius or distance >= best_distance:
             continue
         best = cell
@@ -82,7 +82,7 @@ func _run_profile(profile_id: String) -> void:
     var reserved: Dictionary = {}
 
     var wood_cell := _find_reachable_cell(
-        main, worker_origin, clearing_radius + 0.5, gather_radius - 0.5, reserved
+        main, worker_origin, keep.position, clearing_radius + 0.5, gather_radius - 0.5, reserved
     )
     assert(wood_cell.x >= 0, profile_id + " must have reachable terrain beyond the old Keep gather radius")
     reserved[wood_cell] = true
@@ -95,7 +95,7 @@ func _run_profile(profile_id: String) -> void:
         profile_id + " woodcutter must acquire and path to a resource beyond 14 tiles")
 
     var stone_cell := _find_reachable_cell(
-        main, worker_origin, clearing_radius + 0.5, gather_radius - 0.5, reserved
+        main, worker_origin, keep.position, clearing_radius + 0.5, gather_radius - 0.5, reserved
     )
     assert(stone_cell.x >= 0, profile_id + " must have a second reachable gathering tile")
     reserved[stone_cell] = true
@@ -112,7 +112,7 @@ func _run_profile(profile_id: String) -> void:
     # their ordinary building-repair radius.
     var builder = main.village.spawn_villager(worker_origin + Vector2(-5.0, 0.0))
     assert(builder.set_job("builder"), "Builder must claim a Keep workplace in " + profile_id)
-    var site_cell := _find_reachable_cell(main, builder.position, 14.5, 16.5, reserved)
+    var site_cell := _find_reachable_cell(main, builder.position, keep.position, 14.5, 16.5, reserved)
     assert(site_cell.x >= 0, profile_id + " must expose a reachable initial-claim edge cell")
     var site = main.build.create_construction_site("wall", site_cell, keep.cell)
     main.nav.rebuild()
