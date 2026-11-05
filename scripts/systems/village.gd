@@ -8,6 +8,7 @@ const SPAWN_INTERVAL := 12.0
 const SPAWN_FOOD := 8
 const UPKEEP := 2  # makanan per penduduk per hari
 const MAX_QUOTA := 20
+const ASSIGNMENT_SETTLE_SECONDS := 0.05
 const JOBS := ["woodcutter", "miner", "farmer", "builder", "hunter", "scout", "healer", "blacksmith", "soldier"]
 const JOB_INPUT_ACTIONS := {
     "woodcutter": "job_woodcutter",
@@ -28,6 +29,7 @@ var job_priority: Array[String] = ["woodcutter", "miner", "farmer", "builder", "
 
 var _spawn_t := 0.0
 var _assignment_dirty := true
+var _assignment_wait_seconds := 0.0
 var _assignment_pass_count := 0
 
 
@@ -146,15 +148,22 @@ func _process(delta: float) -> void:
         _spawn_t = 0.0
         try_spawn()
     if _assignment_dirty:
-        assign_jobs()
+        _assignment_wait_seconds = maxf(0.0, _assignment_wait_seconds - delta)
+        if _assignment_wait_seconds <= 0.0:
+            assign_jobs()
 
 
-func _request_job_assignment() -> void:
+func _request_job_assignment(settle_seconds: float = 0.0) -> void:
     _assignment_dirty = true
+    _assignment_wait_seconds = maxf(
+        _assignment_wait_seconds,
+        maxf(0.0, settle_seconds)
+    )
 
 
 func assign_jobs() -> void:
     _assignment_dirty = false
+    _assignment_wait_seconds = 0.0
     _assignment_pass_count += 1
     var vs := villagers()
     var job_counts: Dictionary = {}
@@ -227,11 +236,11 @@ func adjust_job_priority(job_name: String, delta: int) -> void:
 func _on_workplace_changed(_id: String, _cell: Vector2i) -> void:
     # Construction completion emits removal + placement in one call stack.
     # Defer assignment so both notifications collapse into one pass.
-    _request_job_assignment()
+    _request_job_assignment(ASSIGNMENT_SETTLE_SECONDS)
 
 
 func _on_building_destroyed(_id: String, _cell: Vector2i) -> void:
-    _request_job_assignment()
+    _request_job_assignment(ASSIGNMENT_SETTLE_SECONDS)
 
 
 func _on_villager_died() -> void:
