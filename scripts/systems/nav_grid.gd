@@ -110,7 +110,9 @@ func path_adjacent(from_pos: Vector2, cells: Array[Vector2i]) -> PackedVector2Ar
             if is_walkable(n) and not cands.has(n):
                 cands.append(n)
     cands.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return Vector2(a - s).length_squared() < Vector2(b - s).length_squared())
-    for i in mini(3, cands.size()):
+    # A resource occupies one tile and may be approached from any of its four
+    # cardinal sides. Checking only three can reject the sole reachable side.
+    for i in mini(4, cands.size()):
         var p := astar.get_point_path(s, cands[i])
         if not p.is_empty():
             return p
