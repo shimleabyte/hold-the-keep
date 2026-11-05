@@ -160,6 +160,7 @@ func _ready() -> void:
     _build_map()
     _build_outpost_panel()
     _build_construction_queue_panel()
+    _on_bindings_changed()
 
     Events.resource_changed.connect(_on_resource_changed)
     Events.supply_cost_source_changed.connect(_on_supply_state_changed)
@@ -688,7 +689,8 @@ func _current_help_rows() -> Array:
         [Settings.binding_label("ability_cleave"), "TEBAS (LEVEL 2)"],
         [Settings.binding_label("ability_rally"), "SERUAN (LEVEL 3)"],
         [" ".join(build_keys), "PILIH BANGUNAN"],
-        ["KLIK KIRI / KANAN", "PASANG / BATALKAN / BONGKAR"],
+        ["KLIK KIRI", "PASANG BANGUNAN"],
+        ["KLIK KANAN", "BATALKAN / BONGKAR"],
         [" ".join(job_keys), "PILIH JOB"],
         ["SHIFT + JOB", "KURANGI KUOTA"],
         ["ALT + JOB", "NAIKKAN PRIORITAS"],
@@ -767,9 +769,9 @@ func _on_bindings_changed() -> void:
             "blacksmith": "Pandai besi — membuat perlengkapan prajurit",
             "soldier": "Prajurit — mempertahankan permukiman"
         }
-        row.tooltip_text = "%s  ·  %s tambah kuota, SHIFT kurangi, ALT ubah prioritas" % [
-            String(descriptions.get(JOBS[i], JOBS[i])),
-            Settings.binding_label(job_action)
+        var job_key := Settings.binding_label(job_action)
+        row.tooltip_text = "%s  ·  %s tambah kuota; SHIFT+%s kurangi; ALT+%s prioritas. Klik kiri −/+ kuota, klik kanan ubah prioritas" % [
+            String(descriptions.get(JOBS[i], JOBS[i])), job_key, job_key, job_key
         ]
     var rows := _current_help_rows()
     for i in mini(rows.size(), _help_key_labels.size()):
