@@ -2,7 +2,7 @@
 
 **Status (2026-11-03):** Mainline includes Frontier expansion through Phase 08.7, Phase 09.3, Phase 05 construction/queue management (PRs #58/#59), Watchtower vision (#60), Granary food reserve (#61), and the ordered Phase 04 specialist stack: Hunter #64 (`e59864d`), Scout #65 (`ea9a63c`), Healer #67 (`bf44703`) and Blacksmith/Forge #68 (`1b15f37`). The specialist PRs passed 45/45, 46/46, 47/47 and 48/48 Godot 4.7 jobs respectively (#620, #621, #626, #635). Mainline save schema is now v17. Manual rendered gameplay, equipment visibility, treatment/combat readability, full campaign balance, target-hardware profiling, native Windows runtime and clean-machine acceptance remain open.
 **Phase 02 merge commits:** PR #31 (`6dcea7921f8f40eba17a1d2ca466a5f3e5b18fe8`) delivered local depot storage/transfers; PR #32 (`2f94959b497677eae49d4303f72322650fb591c2`) delivered garrisons/inspection; PR #33 (`5d7db56b3a51a25541f541bb46c19b26996d22be`) delivered player-directed physical shipments and save v13. PR #33 validation: [workflow #41323062111](https://github.com/shimleabyte/hold-the-keep/actions/runs/41323062111), 50/50 jobs successful on Godot 4.3/4.7, including 23 regressions per engine, Frontier diagnostic and Windows/Linux export.  
-**Baseline:** Godot 4.7 / GDScript, Classic world 64×64 / 15 days, Frontier world 128×128 / 20 days / 4 acts, optional Frontier Expedition world 192×192 / 20 days / 4 acts with a 128×128 starting heartland, `main` save format v17. Classic v1–v16 and Frontier v7–v16 remain supported through migration.
+**Baseline:** Godot 4.7 / GDScript, Classic world 128×128 / 15 days, Frontier world 192×192 / 20 days / 4 acts, optional Frontier Expedition world 256×256 / 20 days / 4 acts with a 160×160 starting heartland, `main` save format v17. Historical Classic 64×64, Frontier 128×128 and Expedition 192×192 saves remain loadable at their recorded dimensions.
 
 **Active CI policy:** Godot 4.7 only for import/parse, regressions and Frontier diagnostics. Godot 4.3 compatibility checks and Windows/Linux release exports are excluded from development CI; package builds return during release acceptance.
 
@@ -351,3 +351,56 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - Connect 14 event cues for combat anticipation/projectiles/block/stagger/abilities/charges/siege, wave and camp alarm, objective completion, act unlock and victory.
 - `tests/audio_identity.gd` validates loop counts/format/buffers, deterministic synthesis, event-cue availability, Master bus routing and context selection. It passed in both Godot versions.
 - Manual audio listening, level-balance and loop-transition QA remain mandatory; CI cannot confirm perceived loudness, speaker translation or subjective mix quality.
+
+
+## Phase 11 — Rival civilizations and military command
+
+**Status (2026-11-06):** Initial implementation is isolated on `feat/army-command-rival-civilization`. It is not merged. The branch preserves the player avatar, camera, direct combat and autonomous civilian jobs. Following human playtest feedback that the original maps were too small to support an enjoyable strategy loop, new campaigns now use Classic 128×128, Frontier 192×192 and Expedition 256×256 (160×160 starting heartland). Historical map dimensions remain available to saves through the profile-aware loader; save schema remains v17.
+
+### Product contract
+
+- Civilian workers remain autonomous. Existing gathering, construction, delivery, specialist and workplace state machines are not exposed to direct army selection.
+- Military units only (`job == "soldier"`, including Archer specialization) may be selected and ordered.
+- The player remains directly controllable. Mouse selection clicks must not accidentally trigger player melee; clicking a hostile target remains a valid player attack.
+- The first army command slice is deliberately small: single select, drag selection, Shift add/remove, move and attack.
+- Rival strongholds own an independent finite resource ledger, construction plan, visible faction structures, paid garrison recruitment and technology tiers.
+- Rival buildings use a separate entity type; they must not register as player workplaces, depots, supply sources or player-buildable structures.
+- The first rival economy uses abstracted workforce production. Visible enemy workers, multi-settlement logistics, territorial expansion and offensive strategic plans remain later work.
+- Larger maps are part of this phase: Classic 128×128, Frontier 192×192 and Expedition 256×256. Keep historical save dimensions loadable and profile-specific; do not migrate old coordinates onto a newly generated map.
+
+### Map expansion from direct playtest feedback
+
+- [x] Increase new Classic campaigns from 64×64 to 128×128 (4× tile area).
+- [x] Increase new Frontier campaigns from 128×128 to 192×192.
+- [x] Increase new Frontier Expedition campaigns from 192×192 to 256×256 and heartland from 128×128 to 160×160.
+- [x] Preserve old 64×64 / 128×128 / 192×192 campaign dimensions when continuing existing saves.
+- [ ] Validate old-save loading, all new world generators, stronghold placement, strategic-map/fog behavior and target desktop performance on the expanded profiles.
+
+### Initial implementation on the feature branch
+
+- [x] Add a separate army command controller; select only visible living soldiers.
+- [x] Add right-click movement and direct attack orders while retaining the soldier combat state machine.
+- [x] Keep player camera, direct movement and player avatar active.
+- [x] Add faction-owned settlement structure entities using existing low-cost building art.
+- [x] Add bounded rival economy ticks, resource stockpiles, construction costs, visible buildings and production income.
+- [x] Add a barracks-dependent garrison capacity, resource-paid periodic recruitment and military technology tiers.
+- [x] Add additive stronghold serialization for rival structures, resource balances, research and construction state; preserve schema v17.
+- [x] Add a focused regression test and include it in the Godot 4.7 runner/matrix.
+- [x] Replace the old “no remote military control” design restriction with autonomous civilians plus commandable armies.
+- [ ] Verify Godot 4.7 import and GDScript parse on the complete branch.
+- [ ] Pass the focused army/civilization regression and full mainline regression matrix.
+- [ ] Verify Classic new-game and existing v17 save/reload, plus Frontier and Expedition multi-stronghold reload.
+- [ ] Render and play a Classic rival-settlement session; inspect building overlap, pathing, recruitment pacing and combat challenge.
+- [ ] Measure frame-time p50/p95/p99 and worst frame during rival construction, garrison recruitment and active waves on a target desktop.
+
+### Follow-on sequence
+
+1. **11.1 — Acceptance and persistence:** validate the initial branch; harden corrupted/blocked structure restore, rebuild behavior and save migration fixtures without a schema bump where possible.
+2. **11.2 — Rival strategy:** add faction-specific priorities and responses, use existing faction doctrine and archetype rosters, and make each faction's attack/defense strategy distinct.
+3. **11.3 — Rival military production:** convert barracks/archery facilities into explicit training queues and deploy new unit types only when paid costs and population/upkeep rules allow.
+4. **11.4 — Expansion and supply:** add secondary settlements, faction-owned territory, roads and local depots through explicit ownership contracts. Reuse the existing logistics architecture rather than mirroring it.
+5. **11.5 — Map and campaign review:** only after multiple settlements work, decide whether any profile needs more tiles. Run human campaign balance reviews and performance diagnostics before changing Classic or Frontier dimensions.
+
+**Known overlap:** PR #169 (`feat/rts-command-foundation`) is a separate open proposal that retires the hero camera and exposes all villagers to direct selection/orders. That implementation conflicts with this phase's product contract. Do not merge it as-is; reconcile or close it before integrating any overlapping files. PRs #166/#167 and the open player-animation work must be rechecked for current branch compatibility before merging.
+
+**Validation boundary:** No engine runtime is available in the implementation environment. CI and rendered/manual acceptance must be reported from actual workflow and playtest results; source inspection alone is not a passing test.
