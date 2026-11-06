@@ -140,7 +140,7 @@ func _flush_dirty_chunks() -> void:
 
 
 func _scan_sources() -> void:
-    if player != null and is_instance_valid(player):
+    if player != null and is_instance_valid(player) and player.visible:
         var player_reveal_radius := 144.0 if Tech.has_flag("frontier_surveying") else 112.0
         reveal_position(player.global_position, player_reveal_radius)
     for building in get_tree().get_nodes_in_group("buildings"):
