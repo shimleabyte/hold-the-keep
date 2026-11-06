@@ -102,6 +102,7 @@ jobs:
           - army_command_and_rival_civilization
           - legacy_world_dimensions
           - player_combat
+          - android_touch_controls
           - resource_save_state
           - responsive_layout
           - territory_claims
@@ -241,3 +242,41 @@ jobs:
           path: build/diagnostics/frontier-perf.txt
           if-no-files-found: error
 
+  android-armv7-export:
+    name: Android ARMv7 debug APK · Godot 4.7
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools platforms;android-35 build-tools;35.0.0"
+
+      - name: Install Godot 4.7
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Export ARMv7-only APK and verify native ABI
+        env:
+          GODOT: godot
+        run: bash tools/export_android_armv7.sh
+
+      - name: Upload Android ARMv7 debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: hold-the-keep-android-armv7-debug
+          path: build/android/HoldTheKeep-armv7-debug.apk
+          if-no-files-found: error
+          retention-days: 14

@@ -59,6 +59,7 @@ tests=(
     input_rebinding
     map_stages
     player_combat
+    android_touch_controls
     resource_save_state
     responsive_layout
     territory_claims

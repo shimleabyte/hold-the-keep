@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const HUD_WIDGETS := preload("res://scripts/ui/hud_widgets.gd")
+const MOBILE_CONTROLS_SCRIPT := preload("res://scripts/ui/mobile_controls.gd")
 const CONSTRUCTION_QUEUE_PANEL_SCRIPT := preload("res://scripts/ui/construction_queue_panel.gd")
 const OUTPOST_PANEL_SCRIPT := preload("res://scripts/ui/outpost_panel.gd")
 ## HUD: panel atas (sumber daya, jam, musuh, penduduk), vitals, kuota job (bisa diklik),
@@ -138,6 +139,7 @@ var _over_label: Label
 var _selected := ""
 var _msg_tween: Tween
 var _banner_tween: Tween
+var _mobile_controls: Control
 var _scan_t := 0.0
 
 
@@ -195,6 +197,9 @@ func _ready() -> void:
     if not Settings.content_viewport_resized.is_connected(_on_content_viewport_resized):
         Settings.content_viewport_resized.connect(_on_content_viewport_resized)
     _layout_viewport()
+    _mobile_controls = MOBILE_CONTROLS_SCRIPT.new()
+    add_child(_mobile_controls)
+    _mobile_controls.configure_viewport(_viewport_size)
 
 
 # ---------------------------------------------------------------- pembangun UI
@@ -897,6 +902,8 @@ func _layout_viewport(target_size: Vector2 = Vector2.ZERO) -> void:
     _over.size = _viewport_size
     _over_label.position = Vector2(0, (_viewport_size.y - _over_label.size.y) * 0.5)
     _over_label.size.x = _viewport_size.x
+    if _mobile_controls != null:
+        _mobile_controls.configure_viewport(_viewport_size)
 
     for slot_index in _slot_nodes.size():
         var slot: HUD_WIDGETS.BuildSlot = _slot_nodes[slot_index]

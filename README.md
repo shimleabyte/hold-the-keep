@@ -77,6 +77,10 @@ Artefak hasil build berada di `build/windows/HoldTheKeep.exe` dan `build/linux/H
 - Mode windowed/fullscreen, keyboard/mouse, gamepad, save/load, dan sesi gameplay berkelanjutan.
 - Ukur frame time ketika bangunan ditempatkan, selesai dibangun, dihancurkan, dan ketika gelombang malam aktif. Hasil headless CI bukan pengganti pengukuran pada PC desktop target.
 
+## Android ARMv7 (debug build)
+
+Preset **Android ARMv7 Debug** menghasilkan APK 32-bit `armeabi-v7a` untuk pengujian perangkat, bukan release store. Gunakan Godot 4.7, JDK 17, dan Android SDK; jalankan `bash tools/export_android_armv7.sh` dari root repo. APK hasil ekspor berada di `build/android/HoldTheKeep-armv7-debug.apk`. Kontrol landscape menyediakan joystick kiri, Attack/Interact/Dash/Cleave/Rally di kanan, serta tombol jeda. Export CI memverifikasi ABI; instalasi, safe area, lifecycle, dan sesi bermain tetap perlu diuji pada perangkat fisik.
+
 ## Teknologi
 
 - Godot 4.7
