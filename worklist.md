@@ -26,7 +26,7 @@ Required acceptance: focused `army_command_and_rival_civilization` test, complet
 
 ## Live execution status — 2026-11-05 (P0–P2 desktop pass)
 
-**Current main:** `de37f433a2f996eb9d5caacabfb1dcb3a5a60b36`. The software-side P0–P2 implementation is merged. Current-main changes include time-sliced enemy FlowField rebuilds, complete-snapshot publication, coalesced worker reassignment, worker animation redraw fixes, low-cost baked profession feedback, Builder reachability recovery, multi-cell navigation fallback, desktop resolution coverage, Godot 4.7 export guards, save-file recovery regression coverage, worker lifecycle regression coverage, and partial-quota HUD guards. Save schema remains v17.
+**Current main at feature audit:** `a76077eb13de8489d706eca7e98c6063fad56aa6`. The software-side P0–P2 implementation is merged. Current-main changes include time-sliced enemy FlowField rebuilds, complete-snapshot publication, coalesced worker reassignment, worker animation redraw fixes, low-cost baked profession feedback, Builder reachability recovery, multi-cell navigation fallback, desktop resolution coverage, Godot 4.7 export guards, save-file recovery regression coverage, worker lifecycle regression coverage, and partial-quota HUD guards. Save schema remains v17.
 
 ### P0 — gameplay blockers
 
