@@ -99,6 +99,7 @@ jobs:
           - map_stages
           - player_combat_flow
           - player_combat_motion
+          - army_command_and_rival_civilization
           - player_combat
           - resource_save_state
           - responsive_layout
