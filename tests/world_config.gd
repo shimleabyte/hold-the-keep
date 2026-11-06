@@ -7,13 +7,13 @@ func _initialize() -> void:
     var game_clock = root.get_node("GameClock")
     var save_system = root.get_node("SaveSystem")
     assert(world_config.profile_id == "classic", "The shipped project must keep Classic as its default profile")
-    assert(world_config.map_size == 64, "Classic must retain the original 64x64 world")
+    assert(world_config.map_size == 128, "Classic must now provide a 128x128 playable homeland")
     assert(world_config.tile_size == 16, "The world tile size must remain 16 pixels")
-    assert(world_config.map_cells == 64 * 64, "Map cell count must match the configured dimensions")
-    assert(world_config.starting_claim_radius == 10.0, "Classic must preserve the existing Keep claim radius")
-    assert(world_config.safe_radius == 8.0, "Classic must preserve the existing spawn clearing")
+    assert(world_config.map_cells == 128 * 128, "Map cell count must match the configured dimensions")
+    assert(world_config.starting_claim_radius == 14.0, "Classic must provide a proportionally larger starting claim")
+    assert(world_config.safe_radius == 10.0, "Classic must provide a larger spawn clearing")
     assert(world_config.world_seed == 1337, "The default world seed must remain deterministic")
-    assert(world_config.world_pixel_size() == Vector2i(1024, 1024),
+    assert(world_config.world_pixel_size() == Vector2i(2048, 2048),
         "World pixel dimensions must derive from tile count and tile size")
 
     var sample := Vector2i(17, 29)
@@ -28,23 +28,23 @@ func _initialize() -> void:
         "Out-of-bounds indices must not map to valid cells")
 
     var frontier: Dictionary = world_config.profile_definition("frontier")
-    assert(int(frontier.get("map_size", 0)) == 128,
+    assert(int(frontier.get("map_size", 0)) == 192,
         "The planned Frontier profile must define a 128x128 world")
-    assert(is_equal_approx(float(frontier.get("starting_claim_radius", 0.0)), 15.0),
+    assert(is_equal_approx(float(frontier.get("starting_claim_radius", 0.0)), 18.0),
         "The planned Frontier profile must define a 15-tile Keep claim")
-    assert(is_equal_approx(float(frontier.get("safe_radius", 0.0)), 12.0),
+    assert(is_equal_approx(float(frontier.get("safe_radius", 0.0)), 14.0),
         "Frontier must provide an appropriately larger starting clearing")
-    assert(int(frontier.get("iron_veins", 0)) == 32,
+    assert(int(frontier.get("iron_veins", 0)) == 72,
         "Frontier resource density must scale with the fourfold map area")
 
     var expedition: Dictionary = world_config.profile_definition("frontier_expedition")
-    assert(int(expedition.get("map_size", 0)) == 192,
+    assert(int(expedition.get("map_size", 0)) == 256,
         "Frontier Expedition must define a separate 192x192 world without changing legacy Frontier")
-    assert(int(frontier.get("map_size", 0)) == 128,
+    assert(int(frontier.get("map_size", 0)) == 192,
         "Existing Frontier saves must retain their original 128x128 dimensions")
-    assert(int(expedition.get("expedition_core_size", 0)) == 128,
+    assert(int(expedition.get("expedition_core_size", 0)) == 160,
         "The Expedition profile must preserve the original 128x128 heartland as its starting area")
-    assert(int(expedition.get("iron_veins", 0)) == 72,
+    assert(int(expedition.get("iron_veins", 0)) == 128,
         "Expedition iron supply must scale to the larger map area")
     assert(world_config.is_frontier_profile("frontier_expedition")
         and not world_config.is_frontier_profile("classic"),
@@ -93,8 +93,8 @@ func _initialize() -> void:
     game_clock.set_process(false)
     assert(main.world != null,
         "Selecting Classic from the title screen must initialize the gameplay world")
-    assert(main.fog != null and main.fog._fog_chunks.size() == 16,
-        "A 64x64 Classic world must use sixteen 16x16 fog chunks")
+    assert(main.fog != null and main.fog._fog_chunks.size() == 64,
+        "A 128x128 Classic world must use sixty-four 16x16 fog chunks")
 
     var hud = main.get_tree().get_first_node_in_group("hud")
     assert(hud != null, "Gameplay must create its HUD")
@@ -126,8 +126,8 @@ func _initialize() -> void:
     var current_save: Dictionary = save_system.collect(main)
     assert(current_save["world"]["profile"] == "classic",
         "New saves must record the active world profile")
-    assert(current_save["world"]["map_size"] == 64,
-        "New Classic saves must record the original map dimensions")
+    assert(current_save["world"]["map_size"] == 128,
+        "New Classic saves must record the enlarged map dimensions")
     assert(save_system._valid_save(current_save),
         "A current v9 save must validate against its matching world configuration")
 
@@ -154,28 +154,34 @@ func _initialize() -> void:
     for building_index in range(legacy_save["buildings"].size() - 1, -1, -1):
         if String(legacy_save["buildings"][building_index].get("id", "")) in ["hunting_lodge", "scout_post", "infirmary", "forge"]:
             legacy_save["buildings"].remove_at(building_index)
-    for legacy_version in range(1, 7):
-        legacy_save["version"] = legacy_version
-        assert(save_system._valid_save(legacy_save),
-            "A v%d legacy save must remain compatible with Classic Mode" % legacy_version)
+    assert(world_config.is_supported_map_size("classic", 64)
+        and world_config.is_supported_map_size("frontier", 128)
+        and world_config.is_supported_map_size("frontier_expedition", 192),
+        "Every previously shipped map size must remain an explicitly supported save format")
 
     var incompatible_save := current_save.duplicate(true)
     incompatible_save["world"]["profile"] = "frontier"
-    incompatible_save["world"]["map_size"] = 128
+    incompatible_save["world"]["map_size"] = 192
     assert(not save_system._valid_save(incompatible_save),
         "A save from another profile or map size must be rejected")
 
-    var legacy_profile: String = world_config.profile_id
-    world_config.profile_id = "frontier"
-    assert(not save_system._valid_save(legacy_save),
-        "Legacy 64x64 saves must not load into the Frontier profile")
-    assert(save_system._valid_save(legacy_save, false),
-        "A structurally valid legacy save must remain retainable as a profile-switch backup")
+    assert(world_config.apply_saved_profile("classic", 64)
+        and world_config.map_size == 64
+        and world_config.safe_radius == 8.0,
+        "Continuing an original Classic save must restore its original 64x64 generation settings")
     assert(not save_system._valid_save(current_save),
-        "A Classic v7 save must not load into Frontier")
+        "A new 128x128 Classic save must not load into the historical 64x64 runtime")
     assert(save_system._valid_save(current_save, false),
-        "A valid Classic v7 save must remain eligible for a cross-profile backup")
-    world_config.profile_id = legacy_profile
+        "A structurally valid new Classic save must remain retainable as a profile-switch backup")
+
+    assert(world_config.apply_profile("frontier"),
+        "The enlarged Frontier profile must remain selectable")
+    assert(not save_system._valid_save(current_save),
+        "A Classic save must not load into Frontier")
+    assert(save_system._valid_save(current_save, false),
+        "A valid Classic save must remain eligible for a cross-profile backup")
+    assert(world_config.apply_profile("classic"),
+        "Tests must restore the default enlarged Classic profile")
 
     print("PASS: world profiles, tile indexing, and save profile compatibility")
     quit()
