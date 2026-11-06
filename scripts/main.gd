@@ -21,6 +21,7 @@ const FRONTIER_CAMPAIGN_SCRIPT := preload("res://scripts/systems/frontier_campai
 const SAVE_MIGRATION_SCRIPT := preload("res://scripts/persistence/save_migration_pipeline.gd")
 const FRONTIER_OBJECTIVE_PANEL_SCRIPT := preload("res://scripts/ui/frontier_objective_panel.gd")
 const TITLE_SCREEN_SCRIPT := preload("res://scripts/ui/title_screen.gd")
+const RTS_COMMAND_SCRIPT := preload("res://scripts/systems/rts_command.gd")
 
 const NIGHT_TINT := Color(0.45, 0.5, 0.75)
 const DIRS4: Array[Vector2i] = [
@@ -171,6 +172,14 @@ func _initialize_game() -> void:
     var objective_panel = FRONTIER_OBJECTIVE_PANEL_SCRIPT.new()
     objective_panel.campaign = frontier_campaign
     add_child(objective_panel)
+
+    var rts_command = RTS_COMMAND_SCRIPT.new()
+    rts_command.world = world
+    rts_command.nav = nav
+    rts_command.player = player
+    rts_command.build_system = build
+    rts_command.name = "RTSCommand"
+    add_child(rts_command)
 
 func _on_campaign_won(_day: int) -> void:
     campaign_conquered = true
