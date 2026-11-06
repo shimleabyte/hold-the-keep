@@ -133,8 +133,11 @@ func _process(delta: float) -> void:
     var garrison_cap := civilization.garrison_capacity() if civilization != null else 4
     if _local_garrison().size() >= garrison_cap:
         return
-    if civilization == null or civilization.try_recruit():
+    if civilization == null:
         _spawn_guard()
+        return
+    if civilization.can_recruit() and _spawn_guard():
+        civilization.pay_recruitment()
 
 
 func _spawn_guard() -> bool:
