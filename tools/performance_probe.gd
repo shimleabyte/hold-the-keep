@@ -11,12 +11,14 @@ const WARMUP_FRAMES := 30
 const IDLE_SAMPLE_FRAMES := 120
 const WAVE_SAMPLE_FRAMES := 180
 const SYSTEM_REPEATS := 3
+const FLOW_REBUILD_TIMEOUT_FRAMES := 600
 # Keep this value aligned with GameClock.NIGHT_START. Avoid a static autoload
 # reference here: --script runs this SceneTree script outside the normal main
 # scene parse context, where static autoload symbol resolution can fail.
 const NIGHT_START := 0.6
 
 var _cases: Array[Dictionary] = []
+var _diagnostic_failures: Array[String] = []
 var _world_config
 
 
@@ -51,15 +53,45 @@ func _run() -> void:
         for _frame in WARMUP_FRAMES:
             await process_frame
         await _wait_for_flow_snapshot(main.flow)
+        if not main.flow.is_current():
+            main.queue_free()
+            await process_frame
+            break
+
+        # Keep the benchmark's occupancy snapshot stable. Rival strongholds run
+        # their own economic build loop in gameplay and can otherwise invalidate
+        # the FlowField while this isolated rebuild benchmark is being measured.
+        _freeze_rival_buildout()
+
+        var flow_rebuild_timing: Dictionary = await _measure_flow_rebuild(main.flow)
+        if bool(flow_rebuild_timing.get("timed_out", false)):
+            _cases.append({
+                "profile": profile_id,
+                "map_size": config.map_size,
+                "flow_field_rebuild": flow_rebuild_timing
+            })
+            main.queue_free()
+            await process_frame
+            break
 
         var system_timings := {
             "navigation_rebuild": _measure_system(main.nav, "rebuild"),
-            "flow_field_rebuild": await _measure_flow_rebuild(main.flow),
+            "flow_field_rebuild": flow_rebuild_timing,
             "territory_rebuild": _measure_system(main.territory, "rebuild"),
             "village_job_assignment": _measure_system(main.village, "assign_jobs"),
             "fog_source_scan": _measure_system(main.fog, "_scan_sources")
         }
         var building_completion_timing: Dictionary = await _measure_building_completion(main)
+        if bool(building_completion_timing.get("timed_out", false)):
+            _cases.append({
+                "profile": profile_id,
+                "map_size": config.map_size,
+                "system_timings_ms": system_timings,
+                "building_completion_transition": building_completion_timing
+            })
+            main.queue_free()
+            await process_frame
+            break
 
         var idle_samples := await _capture_frames(IDLE_SAMPLE_FRAMES)
         clock.day = 6
@@ -94,6 +126,8 @@ func _run() -> void:
         "idle_sample_frames": IDLE_SAMPLE_FRAMES,
         "active_wave_sample_frames": WAVE_SAMPLE_FRAMES,
         "system_timing_repeats": SYSTEM_REPEATS,
+        "result": "failed" if not _diagnostic_failures.is_empty() else "passed",
+        "failures": _diagnostic_failures,
         "cases": _cases
     }
     var output := JSON.stringify(report, "\\t")
@@ -104,7 +138,15 @@ func _run() -> void:
         file.store_string(output)
         file.close()
     print(output)
-    quit(0)
+    quit(1 if not _diagnostic_failures.is_empty() else 0)
+
+
+func _freeze_rival_buildout() -> void:
+    for stronghold in get_nodes_in_group("enemy_strongholds"):
+        if not is_instance_valid(stronghold):
+            continue
+        stronghold.set_process(false)
+        stronghold.set_physics_process(false)
 
 
 func _measure_system(target: Object, method_name: String) -> Dictionary:
@@ -125,14 +167,15 @@ func _measure_system(target: Object, method_name: String) -> Dictionary:
 
 
 
-func _wait_for_flow_snapshot(flow_field: Node, maximum_frames := 600) -> int:
+func _wait_for_flow_snapshot(flow_field: Node, maximum_frames: int = FLOW_REBUILD_TIMEOUT_FRAMES) -> int:
     var waited := 0
-    while not flow_field.is_current():
+    while not flow_field.is_current() and waited < maximum_frames:
         await process_frame
         waited += 1
-        if waited >= maximum_frames:
-            push_error("Performance probe: FlowField did not publish a current snapshot")
-            return waited
+    if not flow_field.is_current():
+        var message := "Initial FlowField snapshot timed out after %d frames" % waited
+        _diagnostic_failures.append(message)
+        push_error("Performance probe: " + message)
     return waited
 
 
@@ -149,6 +192,7 @@ func _measure_flow_rebuild(flow_field: Node) -> Dictionary:
         schedule_call_ms.append(float(Time.get_ticks_usec() - started) / 1000.0)
         var waited_frames := 0
         var peak_frame_ms := 0.0
+        var timed_out := false
 
         while not flow_field.is_current() or int(flow_field.version) <= previous_version:
             var frame_started := Time.get_ticks_usec()
@@ -156,13 +200,29 @@ func _measure_flow_rebuild(flow_field: Node) -> Dictionary:
             var frame_ms := float(Time.get_ticks_usec() - frame_started) / 1000.0
             peak_frame_ms = maxf(peak_frame_ms, frame_ms)
             waited_frames += 1
-            if waited_frames >= 600:
-                push_error("Performance probe: FlowField rebuild timed out")
+            if waited_frames >= FLOW_REBUILD_TIMEOUT_FRAMES:
+                timed_out = true
+                var message := "%s FlowField rebuild repeat %d timed out after %d frames" % [
+                    String(_world_config.profile_id), _repeat + 1, waited_frames
+                ]
+                _diagnostic_failures.append(message)
+                push_error("Performance probe: " + message)
                 break
 
         completion_ms.append(float(Time.get_ticks_usec() - started) / 1000.0)
         completion_frames.append(waited_frames)
         worst_frame_ms.append(peak_frame_ms)
+        if timed_out:
+            return {
+                "schedule_call_ms_avg": _average(schedule_call_ms),
+                "schedule_call_ms_max": _max_float(schedule_call_ms),
+                "completion_ms_avg": _average(completion_ms),
+                "completion_ms_max": _max_float(completion_ms),
+                "completion_frames_avg": _average_int(completion_frames),
+                "completion_frames_max": _max_int(completion_frames),
+                "peak_frame_wall_ms_max": _max_float(worst_frame_ms),
+                "timed_out": true
+            }
 
     return {
         "schedule_call_ms_avg": _average(schedule_call_ms),
@@ -171,7 +231,8 @@ func _measure_flow_rebuild(flow_field: Node) -> Dictionary:
         "completion_ms_max": _max_float(completion_ms),
         "completion_frames_avg": _average_int(completion_frames),
         "completion_frames_max": _max_int(completion_frames),
-        "peak_frame_wall_ms_max": _max_float(worst_frame_ms)
+        "peak_frame_wall_ms_max": _max_float(worst_frame_ms),
+        "timed_out": false
     }
 
 
@@ -189,6 +250,8 @@ func _measure_building_completion(main: Node) -> Dictionary:
         return {"error": "No free construction probe cell"}
     var site = main.build.create_construction_site("wall", probe_cell, keep.cell)
     await _wait_for_flow_snapshot(main.flow)
+    if not main.flow.is_current():
+        return {"timed_out": true, "error": "Initial FlowField snapshot did not settle"}
     var previous_version: int = int(main.flow.version)
     var started := Time.get_ticks_usec()
     site._finish()
@@ -203,15 +266,20 @@ func _measure_building_completion(main: Node) -> Dictionary:
         var frame_ms := float(Time.get_ticks_usec() - frame_started) / 1000.0
         peak_frame_ms = maxf(peak_frame_ms, frame_ms)
         settle_frames += 1
-        if settle_frames >= 600:
-            push_error("Performance probe: building-completion FlowField did not settle")
+        if settle_frames >= FLOW_REBUILD_TIMEOUT_FRAMES:
+            var message := "%s building-completion FlowField did not settle after %d frames" % [
+                String(_world_config.profile_id), settle_frames
+            ]
+            _diagnostic_failures.append(message)
+            push_error("Performance probe: " + message)
             break
 
     return {
         "synchronous_transition_call_ms": completion_call_ms,
         "flow_settle_ms": float(Time.get_ticks_usec() - settle_started) / 1000.0,
         "flow_settle_frames": settle_frames,
-        "flow_peak_frame_wall_ms": peak_frame_ms
+        "flow_peak_frame_wall_ms": peak_frame_ms,
+        "timed_out": not main.flow.is_current() or int(main.flow.version) <= previous_version
     }
 
 
