@@ -302,11 +302,11 @@ func _run() -> void:
     world_config.apply_profile("frontier")
     # Canonical migration is data-only. Reuse the already-running scene context
     # and convert a validated Classic snapshot into a structurally valid
-    # Frontier snapshot instead of generating another 128x128 world here.
-    main.world.map_size = 128
+    # Frontier snapshot instead of generating another 192x192 world here.
+    main.world.map_size = 192
     var frontier_snapshot: Dictionary = migration_baseline.duplicate(true)
     frontier_snapshot["world"]["profile"] = "frontier"
-    frontier_snapshot["world"]["map_size"] = 128
+    frontier_snapshot["world"]["map_size"] = 192
     frontier_snapshot["world"]["tile_size"] = 16
     frontier_snapshot["world"]["seed"] = world_config.world_seed
     var frontier_campaign_state: Dictionary = frontier_snapshot["campaign"].duplicate(true)
