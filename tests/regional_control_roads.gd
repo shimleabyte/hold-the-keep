@@ -196,6 +196,8 @@ func _initialize() -> void:
     require(main.nav.is_walkable(bridge_cell),
         "Villagers must be able to traverse a bridge over water")
     main.flow.rebuild()
+    require(await require_flow_current(main.flow),
+        "The flow field must finish rebuilding after bridge completion")
     require(main.flow.is_reachable(bridge_cell),
         "Enemy route fields must cross a built bridge")
     var storage = main.build.place_raw("storage", road_c + Vector2i(-1, 0))
