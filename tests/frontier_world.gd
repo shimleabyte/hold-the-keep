@@ -86,7 +86,7 @@ func reference_wildlife_signature(world: Node) -> Array[String]:
             return int(a["order"]) < int(b["order"])
         return a_score < b_score
     )
-    var target_count := mini(112, maxi(12, roundi(float(world.map_size * world.map_size) / 340.0)))
+    var target_count := mini(240, maxi(12, roundi(float(world.map_size * world.map_size) / 340.0)))
     var blocked_nearby: Dictionary = {}
     var signature: Array[String] = []
     var placed := 0
@@ -323,7 +323,7 @@ func _initialize() -> void:
     assert(world.map_size == 192 and world.tile_size == 16,
         "Main world must use the Frontier dimensions and existing tile size")
     assert(world.pixel_size == Vector2i(2048, 2048),
-        "Frontier camera/world bounds must cover 2048x2048 pixels")
+        "Frontier camera/world bounds must cover 3072x3072 pixels")
     var terrain_source := world._layer.tile_set.get_source(0) as TileSetAtlasSource
     assert(terrain_source != null
         and terrain_source.texture.resource_path.ends_with("tiles_frontier.svg")
