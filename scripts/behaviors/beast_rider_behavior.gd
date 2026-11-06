@@ -81,14 +81,19 @@ func advance_timers(delta: float) -> void:
     approach_repath_timer = maxf(0.0, approach_repath_timer - delta)
 
 
-func target_is_valid(candidate: Node2D) -> bool:
-    if candidate == null or not is_instance_valid(candidate) or not candidate.visible:
+func target_is_valid(candidate: Variant) -> bool:
+    # Freed Object references must enter as Variant; a Node2D parameter rejects
+    # them before is_instance_valid() can guard the reference.
+    if candidate == null or not is_instance_valid(candidate) or not (candidate is Node2D):
         return false
-    if candidate != actor.player and not candidate.is_in_group("defenders"):
+    var target_node := candidate as Node2D
+    if not target_node.visible:
         return false
-    if int(candidate.get("hp")) <= 0:
+    if target_node != actor.player and not target_node.is_in_group("defenders"):
         return false
-    if actor.is_garrison and candidate.global_position.distance_to(actor.guard_origin) > 175.0:
+    if int(target_node.get("hp")) <= 0:
+        return false
+    if actor.is_garrison and target_node.global_position.distance_to(actor.guard_origin) > 175.0:
         return false
     return true
 
