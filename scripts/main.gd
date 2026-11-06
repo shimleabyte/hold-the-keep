@@ -20,6 +20,7 @@ const MENU_SCRIPT := preload("res://scripts/ui/pause_menu.gd")
 const FRONTIER_CAMPAIGN_SCRIPT := preload("res://scripts/systems/frontier_campaign.gd")
 const SAVE_MIGRATION_SCRIPT := preload("res://scripts/persistence/save_migration_pipeline.gd")
 const FRONTIER_OBJECTIVE_PANEL_SCRIPT := preload("res://scripts/ui/frontier_objective_panel.gd")
+const ARMY_COMMAND_SCRIPT := preload("res://scripts/systems/army_command.gd")
 const TITLE_SCREEN_SCRIPT := preload("res://scripts/ui/title_screen.gd")
 
 const NIGHT_TINT := Color(0.45, 0.5, 0.75)
@@ -42,6 +43,7 @@ var supply
 var village
 var events
 var frontier_campaign
+var army_command
 var _save_restore_plan: Dictionary = {}
 
 var _tint: CanvasModulate
@@ -164,6 +166,13 @@ func _initialize_game() -> void:
     world.add_child(fog)
     if not save.is_empty():
         fog.import_state(save.get("fog", {}))
+
+    army_command = ARMY_COMMAND_SCRIPT.new()
+    army_command.name = "ArmyCommand"
+    army_command.world = world
+    army_command.nav = nav
+    army_command.build_system = build
+    world.add_child(army_command)
 
     frontier_campaign = FRONTIER_CAMPAIGN_SCRIPT.new()
     add_child(frontier_campaign)
