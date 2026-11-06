@@ -37,6 +37,14 @@ func require(condition: bool, message: String) -> void:
     assert(condition, message)
 
 
+func require_flow_current(flow: Node, maximum_frames := 120) -> bool:
+    var waited := 0
+    while not flow.is_current() and waited < maximum_frames:
+        await physics_frame
+        waited += 1
+    return flow.is_current()
+
+
 func _initialize() -> void:
     var inventory = root.get_node("Inventory")
     var game_clock = root.get_node("GameClock")
@@ -132,13 +140,18 @@ func _initialize() -> void:
     require(main.nav.is_walkable(road_a),
         "Villagers must be able to walk across road tiles")
     main.flow.rebuild()
+    require(await require_flow_current(main.flow),
+        "The flow field must finish its expanded-map rebuild")
     require(main.flow.is_reachable(road_a),
         "Enemy flow routing must remain valid across road tiles")
 
     main.flow.rebuild()
+    require(await require_flow_current(main.flow),
+        "The flow field must be current before bridge-bank selection")
     var bridge_cell := Vector2i(-1, -1)
     var claimed_cells: Array = territory.claimed_cells.keys()
     var player_cell: Vector2i = main.nav.cell_of(main.player.global_position)
+    var reachable_from_keep := reachable_cells(main.nav, player_cell)
     claimed_cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
         var distance_a: float = Vector2(a - player_cell).length_squared()
         var distance_b: float = Vector2(b - player_cell).length_squared()
@@ -147,16 +160,19 @@ func _initialize() -> void:
     for candidate in claimed_cells:
         if not world.is_buildable(candidate) or world.occupied.has(candidate):
             continue
-        var touches_reachable_bank := false
+        var reachable_bank := Vector2i(-1, -1)
         for direction in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
             var neighbor: Vector2i = candidate + direction
-            if world.is_buildable(neighbor) and main.flow.is_reachable(neighbor):
-                touches_reachable_bank = true
+            if world.is_buildable(neighbor) and reachable_from_keep.has(neighbor) and main.flow.is_reachable(neighbor):
+                reachable_bank = neighbor
                 break
-        if not touches_reachable_bank:
+        if reachable_bank.x < 0:
             continue
         var original_tile: int = int(world.tile_type_at(candidate))
         world._layer.set_cell(candidate, 0, Vector2i(2, 0))
+        # The enlarged Keep claim extends beyond the normal build radius. Move the
+        # player to the reachable bank, then test the real bridge placement rules.
+        main.player.global_position = main.nav.center_of(reachable_bank)
         if main.build.check("bridge", candidate) == "":
             bridge_cell = candidate
             break
