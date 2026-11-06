@@ -18,8 +18,9 @@
 - Rival structures use a separate entity type and do not join player workplace, depot or supply groups.
 - Recruitment consumes stored resources and only spends them after a guard can actually spawn.
 - The first rival economy uses abstracted workforce income. Visible enemy civilians, faction-specific strategic priorities, secondary settlements, enemy roads/supply and offensive plans are still pending.
+- World profile sizes are expanded for new games: 128×128 / 192×192 / 256×256; historical profile sizes remain supported by the save loader.
 - Save schema remains v17. Existing stronghold records without a civilization snapshot initialize the default rival economy.
-- The 64×64 / 128×128 / 192×192 world profiles are unchanged. Do not increase dimensions until multi-settlement layout and target-desktop performance justify it.
+- New campaigns now use 128×128 Classic, 192×192 Frontier and 256×256 Expedition. Existing 64×64 / 128×128 / 192×192 saves must load in their original dimensions.
 - PR #169 is an overlapping proposal that retires player control and selects civilians. Do not merge it as-is; resolve its product-contract conflict before integrating any code.
 
 Required acceptance: focused `army_command_and_rival_civilization` test, complete Godot 4.7 suite, Classic/Frontier/Expedition save reload, rendered Classic settlement review and desktop p50/p95/p99 profiling.
