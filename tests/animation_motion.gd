@@ -36,12 +36,12 @@ func _initialize() -> void:
     anim.face(Vector2.RIGHT)
     anim.play("attack", true)
     anim.update(0.15)
-    assert(anim.motion_offset().x > 0.0, "Attack must lunge toward the facing direction")
+    assert(anim.motion_offset() == Vector2.ZERO, "Attack must keep the sprite pivot planted; sword and upper-body frames carry the motion")
 
     anim.face(Vector2.LEFT)
     anim.play("attack", true)
     anim.update(0.15)
-    assert(anim.motion_offset().x < 0.0, "Mirrored attack must lunge left, not right")
+    assert(anim.motion_offset() == Vector2.ZERO, "Mirrored attack must also keep the sprite pivot planted")
 
     anim.play("work", true)
     anim.work_style = "builder"
