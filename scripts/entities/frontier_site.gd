@@ -83,7 +83,7 @@ func interact() -> void:
                     Events.build_feedback.emit("Jalur ke Keep belum dapat dilalui")
                     return
                 add_to_group("defenders")
-                Events.build_feedback.emit("Kawal " + String(definition["name"]) + " menuju Keep. Jangan tinggalkan terlalu jauh.")
+                Events.build_feedback.emit("Konvoi bergerak menuju Keep. Kirim pasukan untuk melindunginya dari serangan.")
             else:
                 Events.build_feedback.emit("Tetap dekat. Karavan bergerak saat kamu mengawalnya.")
         "defend":
@@ -111,20 +111,9 @@ func _process(delta: float) -> void:
 
 
 func _tick_escort(delta: float) -> void:
-    # Keep the escort moving only while at least one visible friendly unit is nearby.
-    # This replaces the retired hero-leash with a commander-managed escort presence.
-    var escort_present := false
-    if player != null and is_instance_valid(player) and player.visible:
-        escort_present = player.global_position.distance_to(global_position) <= 136.0
-    if not escort_present:
-        for villager in get_tree().get_nodes_in_group("villagers"):
-            if not is_instance_valid(villager) or not villager.visible:
-                continue
-            if villager.global_position.distance_to(global_position) <= 136.0:
-                escort_present = true
-                break
-    if not escort_present:
-        return
+    # The convoy follows its route independently of the retired hero.
+    # Its health and hostile pressure create the escort challenge; the commander
+    # protects it by issuing orders to nearby friendly units.
     if _path.is_empty():
         _build_escort_path()
     if _path.is_empty():
