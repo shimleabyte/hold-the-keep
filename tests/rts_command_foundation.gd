@@ -6,7 +6,7 @@ var failed := false
 
 func _initialize() -> void:
     await process_frame
-    var main_scene := load("res://scenes/main.tscn").instantiate()
+    var main_scene: Variant = load("res://scenes/main.tscn").instantiate()
     root.add_child(main_scene)
     await process_frame
     await process_frame
@@ -43,13 +43,13 @@ func _initialize() -> void:
             break
     _check(goal_cell.x >= 0, "Test fixture should find a reachable movement destination")
     if goal_cell.x >= 0:
-        var goal := main_scene.nav.center_of(goal_cell)
-        var issued := commander.issue_move_order(goal)
+        var goal: Vector2 = main_scene.nav.center_of(goal_cell)
+        var issued: int = commander.issue_move_order(goal)
         _check(issued == 1, "Selected villager should accept a reachable move order")
         var state_constants: Dictionary = unit.get_script().get_script_constant_map().get("State", {})
         _check(int(unit.state) == int(state_constants.get("MANUAL_MOVE", -1)),
             "A move order should enter the explicit manual movement state")
-        var origin := unit.global_position
+        var origin: Vector2 = unit.global_position
         await create_timer(0.35).timeout
         _check(unit.global_position.distance_to(origin) > 0.1,
             "Villager should move after receiving a move order")
