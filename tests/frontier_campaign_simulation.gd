@@ -101,6 +101,10 @@ func _simulate_profile(profile_id: String) -> Dictionary:
     if profile_id == "frontier":
         camp_report = await _activate_frontier_camp(main, profile_id)
 
+    # The expanded Frontier map requires more bounded FlowField slices than Classic.
+    # Do not fast-forward the night wave while its first complete path snapshot is pending.
+    var flow_ready_wait_frames: int = await _wait_for_flow_current(main, profile_id)
+
     # Cross dusk through the production clock, spawn a real wave, and let enemy AI move.
     _clock.day = WAVE_DAY
     _clock.time_of_day = 0.59
@@ -201,6 +205,7 @@ func _simulate_profile(profile_id: String) -> Dictionary:
         "food_after_upkeep": saved_food,
         "keep_hp_after_repair": saved_keep_hp,
         "wave_budget": expected_wave,
+        "flow_ready_wait_frames": flow_ready_wait_frames,
         "wave_enemies_spawned": wave_spawned,
         "sample_enemy_moved_pixels": snappedf(movement_pixels, 0.1),
         "restored_enemy_count": _count_enemies(),
@@ -313,6 +318,16 @@ func _clear_save_files() -> void:
 func _ticks(count: int) -> void:
     for _index in range(count):
         await physics_frame
+
+
+func _wait_for_flow_current(main: Node, profile_id: String, maximum_frames: int = 1800) -> int:
+    var waited := 0
+    while not main.flow.is_current() and waited < maximum_frames:
+        await physics_frame
+        waited += 1
+    _require(profile_id, main.flow.is_current(),
+        "FlowField must publish a complete reachable snapshot within %d frames (waited %d)" % [maximum_frames, waited])
+    return waited
 
 
 func _require(profile_id: String, condition: bool, message: String) -> void:
