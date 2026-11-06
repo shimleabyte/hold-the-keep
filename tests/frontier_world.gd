@@ -151,16 +151,16 @@ func _initialize() -> void:
     assert(world_config.apply_profile("frontier"),
         "Frontier must be selectable before creating a new world")
     assert(world_config.profile_id == "frontier"
-        and world_config.map_size == 128
-        and world_config.map_cells == 128 * 128,
-        "Frontier profile must apply all 128x128 dimensions")
-    assert(world_config.starting_claim_radius == 15.0
-        and world_config.safe_radius == 12.0,
+        and world_config.map_size == 192
+        and world_config.map_cells == 192 * 192,
+        "Frontier profile must apply all 192x192 dimensions")
+    assert(world_config.starting_claim_radius == 18.0
+        and world_config.safe_radius == 14.0,
         "Frontier must apply the expanded starting footprint and clearing")
 
-    var region_layout := FRONTIER_REGION_GENERATOR.generate(128, world_config.world_seed)
-    var repeated_region_layout := FRONTIER_REGION_GENERATOR.generate(128, world_config.world_seed)
-    assert(region_layout.size() == 128 * 128,
+    var region_layout := FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed)
+    var repeated_region_layout := FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed)
+    assert(region_layout.size() == 192 * 192,
         "The Frontier region stage must return one label per map cell")
     assert(region_layout == repeated_region_layout,
         "The same Frontier profile size and seed must produce identical region labels")
@@ -172,22 +172,22 @@ func _initialize() -> void:
     for region_id in region_counts.size():
         assert(region_counts[region_id] >= 700,
             "Every generated Frontier region must retain meaningful territory")
-    var expedition_region_layout := FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed)
-    assert(expedition_region_layout.size() == 192 * 192
-        and expedition_region_layout == FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed),
-        "The same deterministic region stage must support the 192x192 Expedition profile")
+    var expedition_region_layout := FRONTIER_REGION_GENERATOR.generate(256, world_config.world_seed)
+    assert(expedition_region_layout.size() == 256 * 256
+        and expedition_region_layout == FRONTIER_REGION_GENERATOR.generate(256, world_config.world_seed),
+        "The same deterministic region stage must support the 256x256 Expedition profile")
 
     var terrain_rng := RandomNumberGenerator.new()
     terrain_rng.seed = world_config.world_seed + 1001
     var terrain_layout := FRONTIER_TERRAIN_GENERATOR.generate(
-        128, world_config.world_seed, world_config.safe_radius, region_layout, terrain_rng
+        192, world_config.world_seed, world_config.safe_radius, region_layout, terrain_rng
     )
     var repeated_terrain_rng := RandomNumberGenerator.new()
     repeated_terrain_rng.seed = world_config.world_seed + 1001
     var repeated_terrain_layout := FRONTIER_TERRAIN_GENERATOR.generate(
-        128, world_config.world_seed, world_config.safe_radius, region_layout, repeated_terrain_rng
+        192, world_config.world_seed, world_config.safe_radius, region_layout, repeated_terrain_rng
     )
-    assert(terrain_layout.size() == 128 * 128
+    assert(terrain_layout.size() == 192 * 192
         and terrain_layout == repeated_terrain_layout,
         "The Frontier terrain stage must produce deterministic row-major tile layouts")
     for tile_id in terrain_layout:
@@ -198,29 +198,29 @@ func _initialize() -> void:
     var expedition_terrain_rng := RandomNumberGenerator.new()
     expedition_terrain_rng.seed = world_config.world_seed + 1001
     var expedition_terrain_layout := FRONTIER_TERRAIN_GENERATOR.generate(
-        192, world_config.world_seed, world_config.safe_radius, expedition_region_layout, expedition_terrain_rng
+        256, world_config.world_seed, world_config.safe_radius, expedition_region_layout, expedition_terrain_rng
     )
-    assert(expedition_terrain_layout.size() == 192 * 192,
-        "The Frontier terrain stage must support the 192x192 Expedition profile")
+    assert(expedition_terrain_layout.size() == 256 * 256,
+        "The Frontier terrain stage must support the 256x256 Expedition profile")
     assert(FRONTIER_TERRAIN_GENERATOR.generate(0, world_config.world_seed, world_config.safe_radius, PackedByteArray(), RandomNumberGenerator.new()).is_empty(),
         "Invalid terrain-stage dimensions must return an empty layout")
 
     var resource_rng := RandomNumberGenerator.new()
     resource_rng.seed = world_config.world_seed + 1001
     var resource_terrain := FRONTIER_TERRAIN_GENERATOR.generate(
-        128, world_config.world_seed, world_config.safe_radius, region_layout, resource_rng
+        192, world_config.world_seed, world_config.safe_radius, region_layout, resource_rng
     )
     var frontier_resource_layout := FRONTIER_RESOURCE_GENERATOR.generate(
-        128, world_config.world_seed, world_config.safe_radius,
+        192, world_config.world_seed, world_config.safe_radius,
         region_layout, resource_terrain, resource_rng
     )
     var repeated_resource_rng := RandomNumberGenerator.new()
     repeated_resource_rng.seed = world_config.world_seed + 1001
     var repeated_resource_terrain := FRONTIER_TERRAIN_GENERATOR.generate(
-        128, world_config.world_seed, world_config.safe_radius, region_layout, repeated_resource_rng
+        192, world_config.world_seed, world_config.safe_radius, region_layout, repeated_resource_rng
     )
     var repeated_resource_layout := FRONTIER_RESOURCE_GENERATOR.generate(
-        128, world_config.world_seed, world_config.safe_radius,
+        192, world_config.world_seed, world_config.safe_radius,
         region_layout, repeated_resource_terrain, repeated_resource_rng
     )
     assert(frontier_resource_layout.size() >= 200
@@ -233,9 +233,9 @@ func _initialize() -> void:
 
     var generated_kind_counts := {"wood": 0, "stone": 0}
     var generated_resource_cells: Dictionary = {}
-    var resource_center := Vector2(128, 128) * 0.5
+    var resource_center := Vector2(192, 192) * 0.5
     var resource_clearing_radius := maxf(
-        world_config.safe_radius + 7.0, 128.0 * 0.15
+        world_config.safe_radius + 7.0, 192.0 * 0.15
     )
     for placement in frontier_resource_layout:
         var cell: Vector2i = placement["cell"]
@@ -245,7 +245,7 @@ func _initialize() -> void:
         assert(not generated_resource_cells.has(cell),
             "A resource stage must not place two harvestables on the same cell")
         generated_resource_cells[cell] = true
-        assert(int(resource_terrain[cell.y * 128 + cell.x]) != 2,
+        assert(int(resource_terrain[cell.y * 192 + cell.x]) != 2,
             "Resources must be placed only on dry Frontier terrain")
         assert(Vector2(cell).distance_to(resource_center) >= resource_clearing_radius,
             "Resources must remain outside the protected starting clearing")
@@ -259,7 +259,7 @@ func _initialize() -> void:
     ).is_empty(),
         "Invalid resource-stage dimensions must return an empty layout")
     assert(FRONTIER_RESOURCE_GENERATOR.generate(
-        128, world_config.world_seed, world_config.safe_radius,
+        192, world_config.world_seed, world_config.safe_radius,
         region_layout, PackedByteArray(), RandomNumberGenerator.new()
     ).is_empty(),
         "Mismatched resource-stage terrain buffers must return an empty layout")
@@ -273,7 +273,7 @@ func _initialize() -> void:
     var world = main.world
     assert(world._frontier_regions == region_layout,
         "WorldMap must consume the isolated region generator without changing its output")
-    assert(world._layer.get_used_cells().size() == 128 * 128,
+    assert(world._layer.get_used_cells().size() == 192 * 192,
         "Frontier terrain stage must assign every logical map cell")
     for y in world_config.map_size:
         for x in world_config.map_size:
@@ -319,8 +319,8 @@ func _initialize() -> void:
     assert(frontier_map.position.x >= 0.0 and frontier_map.position.y >= 0.0
         and frontier_map.position.x + frontier_map.size.x <= 480.1
         and frontier_map.position.y + frontier_map.size.y <= 270.1,
-        "The 128x128 strategic map must fit a compact viewport")
-    assert(world.map_size == 128 and world.tile_size == 16,
+        "The 192x192 strategic map must fit a compact viewport")
+    assert(world.map_size == 192 and world.tile_size == 16,
         "Main world must use the Frontier dimensions and existing tile size")
     assert(world.pixel_size == Vector2i(2048, 2048),
         "Frontier camera/world bounds must cover 2048x2048 pixels")
@@ -440,13 +440,13 @@ func _initialize() -> void:
     main.fog.import_state(original_fog_state)
     var frontier_save: Dictionary = save_system.collect(main)
     assert(frontier_save["world"]["profile"] == "frontier"
-        and int(frontier_save["world"]["map_size"]) == 128
+        and int(frontier_save["world"]["map_size"]) == 192
         and save_system._valid_save(frontier_save),
-        "A 128x128 Frontier save must retain valid world and fog metadata")
+        "A 192x192 Frontier save must retain valid world and fog metadata")
     var invalid_frontier_save := frontier_save.duplicate(true)
     invalid_frontier_save["fog"]["cells"].append(world_config.map_cells)
     assert(not save_system._valid_save(invalid_frontier_save),
-        "Frontier save validation must reject fog indices outside the 128x128 map")
+        "Frontier save validation must reject fog indices outside the 192x192 map")
 
     var clearing_center := Vector2(world_config.map_size, world_config.map_size) * 0.5
     var clearing_radius := maxf(world_config.safe_radius + 7.0, float(world_config.map_size) * 0.15)
