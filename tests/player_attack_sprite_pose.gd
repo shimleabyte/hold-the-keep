@@ -38,13 +38,13 @@ func _initialize() -> void:
         var left_boot := Vector2i(6, 11)
         var right_boot := Vector2i(12 if view == 2 else 13, 17 if view == 2 else 18)
         for x in range(left_boot.x, left_boot.y):
-            var windup := image.get_pixel(WINDUP_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + 26)
-            var impact := image.get_pixel(IMPACT_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + 26)
+            var windup := image.get_pixel(WINDUP_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + 27)
+            var impact := image.get_pixel(IMPACT_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + 27)
             if windup != impact:
                 planted_feet_unchanged = false
         for x in range(right_boot.x, right_boot.y):
-            var windup := image.get_pixel(WINDUP_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + 26)
-            var impact := image.get_pixel(IMPACT_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + 26)
+            var windup := image.get_pixel(WINDUP_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + 27)
+            var impact := image.get_pixel(IMPACT_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + 27)
             if windup != impact:
                 planted_feet_unchanged = false
 
