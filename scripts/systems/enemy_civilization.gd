@@ -52,8 +52,21 @@ func setup(keep_ref, saved: Dictionary = {}) -> void:
             )
 
     var saved_construction: Variant = saved.get("construction", {})
-    if saved_construction is Dictionary:
-        construction = saved_construction.duplicate(true)
+    if saved_construction is Dictionary and not saved_construction.is_empty():
+        var saved_id := String(saved_construction.get("id", ""))
+        var saved_plan := _build_plan_for(saved_id)
+        var saved_cell := Vector2i(
+            int(saved_construction.get("cx", -1)),
+            int(saved_construction.get("cy", -1))
+        )
+        var saved_remaining := float(saved_construction.get("remaining", 0.0))
+        if not saved_plan.is_empty() and WorldConfig.is_valid_cell(saved_cell) and is_finite(saved_remaining):
+            construction = {
+                "id": saved_id,
+                "cx": saved_cell.x,
+                "cy": saved_cell.y,
+                "remaining": clampf(saved_remaining, 0.0, float(saved_plan.get("work", 1.0)))
+            }
     active = bool(saved.get("active", true))
 
 
@@ -166,6 +179,13 @@ func _advance_research(delta: float) -> void:
             Events.build_feedback.emit("%s has advanced to Military Tier III" % _faction_label())
 
 
+func _build_plan_for(id: String) -> Dictionary:
+    for plan in BUILD_PLAN:
+        if String(plan.get("id", "")) == id:
+            return plan
+    return {}
+
+
 func _has_structure(id: String) -> bool:
     for structure in structures:
         if is_instance_valid(structure) and String(structure.structure_id) == id:
@@ -206,7 +226,7 @@ func _placement_valid(id: String, anchor: Vector2i, footprint: Vector2i = Vector
     var actual_size := footprint
     if actual_size == Vector2i.ZERO:
         actual_size = STRUCTURE_SCRIPT.FOOTPRINTS.get(id, Vector2i.ONE)
-    if not WorldConfig.is_valid_cell(anchor):
+    if not STRUCTURE_SCRIPT.FOOTPRINTS.has(id) or not WorldConfig.is_valid_cell(anchor):
         return false
     for y in actual_size.y:
         for x in actual_size.x:
