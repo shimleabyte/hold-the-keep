@@ -138,6 +138,19 @@ func _run() -> void:
     assert(act_two_snapshot["version"] == 17
         and act_two_snapshot["frontier_campaign"]["profile"] == "frontier",
         "The snapshot must use the current Frontier campaign schema")
+    var saved_escort_record: Dictionary = {}
+    for objective_record in act_two_snapshot["frontier_campaign"]["objectives"]:
+        if String(objective_record.get("id", "")) == "highland_survivors":
+            saved_escort_record = objective_record
+            break
+    assert(not saved_escort_record.is_empty(),
+        "An active escort must be present in the RTS campaign snapshot")
+    var saved_escort_position := Vector2(
+        float(saved_escort_record.get("x", 0.0)),
+        float(saved_escort_record.get("y", 0.0))
+    )
+    assert(saved_escort_position.distance_to(expected_escort_position) < 0.1,
+        "Escort coordinates must be serialized exactly at the save boundary")
     assert(save_system.request_load(),
         "The Act II Frontier checkpoint must be accepted for reload")
     await ticks(12)
@@ -158,8 +171,8 @@ func _run() -> void:
         "An active rescue site must be recreated after reload")
     assert(restored_escort.site_state == "escorting" and restored_escort._path.size() > 1,
         "An in-progress rescue must retain an active, rebuilt route")
-    assert(restored_escort.position.distance_to(expected_escort_position) < 0.1,
-        "Escort position must be preserved")
+    assert(restored_escort.position.distance_to(expected_escort_position) < 32.0,
+        "The autonomous convoy must resume near its saved position and continue along its route")
     var restored_iron = main.campaign.current_target_node()
     assert(restored_iron != null and restored_iron.stronghold_id == "iron_legion"
         and restored_iron.hp == expected_iron_hp,
