@@ -20,6 +20,8 @@ const STARTING_RESOURCES: Dictionary = {"wood": 100.0, "stone": 42.0, "food": 65
 var owner_keep: Node2D
 var resources: Dictionary = {}
 var structures: Array[EnemySettlementStructure] = []
+## Saved structures that could not be placed because the reconstructed map is occupied.
+var pending_structures: Array[Dictionary] = []
 var technology_tier: int = 0
 var research_progress: float = 0.0
 var build_order_index: int = 0
@@ -39,19 +41,11 @@ func setup(keep_ref: Node2D, saved: Dictionary = {}) -> void:
     for kind: String in ["wood", "stone", "food", "iron"]:
         resources[kind] = clampf(float(saved_resources.get(kind, resources[kind])), 0.0, MAX_RESOURCE)
 
-    var saved_structure_values: Array = saved.get("structures", [])
-    var saved_structures: Array[Dictionary] = []
-    for structure_index: int in range(saved_structure_values.size()):
-        if not (saved_structure_values[structure_index] is Dictionary):
-            continue
-        var structure_record: Dictionary = saved_structure_values[structure_index]
-        saved_structures.append(structure_record)
-    for record: Dictionary in saved_structures:
-        _spawn_structure(
-            String(record.get("id", "")),
-            Vector2i(int(record.get("cx", -1)), int(record.get("cy", -1))),
-            int(record.get("hp", -1))
-        )
+    pending_structures.clear()
+    var saved_structure_values: Variant = saved.get("structures", [])
+    _restore_saved_structure_records(saved_structure_values)
+    var saved_pending_values: Variant = saved.get("pending_structures", [])
+    _restore_saved_structure_records(saved_pending_values)
 
     var saved_construction: Dictionary = saved.get("construction", {})
     if not saved_construction.is_empty():
@@ -80,6 +74,7 @@ func advance(delta: float) -> void:
     while _tick_accumulator >= 1.0 and ticks < 5:
         _tick_accumulator -= 1.0
         ticks += 1
+        _restore_pending_structures()
         _produce_resources()
         _advance_construction(1.0)
         _advance_research(1.0)
@@ -192,6 +187,51 @@ func _has_structure(id: String) -> bool:
     for structure: EnemySettlementStructure in structures:
         if is_instance_valid(structure) and String(structure.structure_id) == id:
             return true
+    for record: Dictionary in pending_structures:
+        if String(record.get("id", "")) == id:
+            return true
+    return false
+
+
+func _restore_saved_structure_records(values: Variant) -> void:
+    if not (values is Array):
+        return
+    for value: Variant in values:
+        if not (value is Dictionary):
+            continue
+        var record: Dictionary = value
+        if not _try_restore_saved_structure(record):
+            pending_structures.append({
+                "id": String(record.get("id", "")),
+                "cx": int(record.get("cx", -1)),
+                "cy": int(record.get("cy", -1)),
+                "hp": int(record.get("hp", -1))
+            })
+
+
+func _restore_pending_structures() -> void:
+    if pending_structures.is_empty():
+        return
+    var still_pending: Array[Dictionary] = []
+    for record: Dictionary in pending_structures:
+        if not _try_restore_saved_structure(record):
+            still_pending.append(record)
+    pending_structures = still_pending
+
+
+func _try_restore_saved_structure(record: Dictionary) -> bool:
+    var id: String = String(record.get("id", ""))
+    if not STRUCTURE_SCRIPT.FOOTPRINTS.has(id):
+        return false
+    var saved_cell := Vector2i(int(record.get("cx", -1)), int(record.get("cy", -1)))
+    var saved_hp := int(record.get("hp", -1))
+    if _spawn_structure(id, saved_cell, saved_hp):
+        return true
+    # A player building, resource node, or another restored entity may now occupy
+    # the old footprint. Preserve the structure by relocating it within its owner region.
+    var replacement_cell := _find_build_site(id)
+    if replacement_cell.x >= 0 and _spawn_structure(id, replacement_cell, saved_hp):
+        return true
     return false
 
 
@@ -296,6 +336,7 @@ func _recruitment_cost() -> Dictionary:
 func on_keep_destroyed() -> void:
     active = false
     construction.clear()
+    pending_structures.clear()
     for structure: EnemySettlementStructure in structures:
         if is_instance_valid(structure):
             structure.on_keep_destroyed()
@@ -315,6 +356,7 @@ func export_state() -> Dictionary:
     return {
         "resources": resources.duplicate(true),
         "structures": structure_records,
+        "pending_structures": pending_structures.duplicate(true),
         "technology_tier": technology_tier,
         "research_progress": research_progress,
         "build_order_index": build_order_index,
