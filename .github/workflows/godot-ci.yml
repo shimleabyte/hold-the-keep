@@ -63,6 +63,7 @@ jobs:
       max-parallel: 6
       matrix:
         test:
+          - player_attack_sprite_pose
           - animation_motion
           - campaign_assault
           - campaign_multi_stronghold
@@ -98,7 +99,6 @@ jobs:
           - building_controls
           - map_stages
           - player_combat_flow
-          - player_attack_sprite_pose
           - player_combat
           - resource_save_state
           - responsive_layout
