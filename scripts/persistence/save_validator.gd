@@ -649,6 +649,143 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
                 return false
     return true
 
+func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vector2i) -> bool:
+    for key in ["resources", "structures", "technology_tier", "research_progress", "build_order_index", "construction", "tick_accumulator", "active"]:
+        if not data.has(key):
+            return false
+    if not (data["resources"] is Dictionary) or not (data["structures"] is Array):
+        return false
+    if not (data["construction"] is Dictionary) or not (data["active"] is bool):
+        return false
+
+    var resources: Dictionary = data["resources"]
+    for kind: String in ["wood", "stone", "food", "iron"]:
+        if not resources.has(kind):
+            return false
+        if typeof(resources[kind]) not in [TYPE_INT, TYPE_FLOAT]:
+            return false
+        var amount: float = float(resources[kind])
+        if not is_finite(amount) or amount < 0.0 or amount > 999.0:
+            return false
+
+    if typeof(data["technology_tier"]) != TYPE_INT:
+        return false
+    var technology_tier: int = int(data["technology_tier"])
+    if technology_tier < 0 or technology_tier > 2:
+        return false
+    if typeof(data["research_progress"]) not in [TYPE_INT, TYPE_FLOAT]:
+        return false
+    var research_progress: float = float(data["research_progress"])
+    if not is_finite(research_progress) or research_progress < 0.0 or research_progress > 180.0:
+        return false
+    if typeof(data["build_order_index"]) != TYPE_INT:
+        return false
+    var build_order_index: int = int(data["build_order_index"])
+    if build_order_index < 0 or build_order_index > 7:
+        return false
+    if typeof(data["tick_accumulator"]) not in [TYPE_INT, TYPE_FLOAT]:
+        return false
+    var tick_accumulator: float = float(data["tick_accumulator"])
+    if not is_finite(tick_accumulator) or tick_accumulator < 0.0 or tick_accumulator >= 1.0:
+        return false
+
+    var footprints: Dictionary = {
+        "lumber_camp": Vector2i(2, 2),
+        "farm": Vector2i(2, 2),
+        "quarry": Vector2i(2, 2),
+        "barracks": Vector2i(2, 2),
+        "tower": Vector2i(1, 1),
+        "forge": Vector2i(2, 2),
+        "storage": Vector2i(2, 2)
+    }
+    var hit_points: Dictionary = {
+        "lumber_camp": 180,
+        "farm": 140,
+        "quarry": 200,
+        "barracks": 260,
+        "tower": 320,
+        "forge": 240,
+        "storage": 190
+    }
+    var occupied_cells: Dictionary = {}
+    for keep_y: int in 3:
+        for keep_x: int in 3:
+            occupied_cells[keep_cell + Vector2i(keep_x, keep_y)] = true
+
+    var raw_structures: Array = data["structures"]
+    if raw_structures.size() > footprints.size():
+        return false
+    var seen_structures: Dictionary = {}
+    for structure_index: int in range(raw_structures.size()):
+        if not (raw_structures[structure_index] is Dictionary):
+            return false
+        var structure: Dictionary = raw_structures[structure_index]
+        for key in ["id", "cx", "cy", "hp"]:
+            if not structure.has(key):
+                return false
+        var structure_id: String = String(structure["id"])
+        if not footprints.has(structure_id) or seen_structures.has(structure_id):
+            return false
+        if typeof(structure["cx"]) != TYPE_INT or typeof(structure["cy"]) != TYPE_INT or typeof(structure["hp"]) != TYPE_INT:
+            return false
+        var anchor: Vector2i = Vector2i(int(structure["cx"]), int(structure["cy"]))
+        var footprint: Vector2i = footprints[structure_id]
+        var hp: int = int(structure["hp"])
+        if anchor.x < 0 or anchor.y < 0 or anchor.x + footprint.x > map_size or anchor.y + footprint.y > map_size:
+            return false
+        if hp < 1 or hp > int(hit_points[structure_id]):
+            return false
+        seen_structures[structure_id] = true
+        for y: int in footprint.y:
+            for x: int in footprint.x:
+                var cell: Vector2i = anchor + Vector2i(x, y)
+                if occupied_cells.has(cell):
+                    return false
+                occupied_cells[cell] = true
+
+    var construction: Dictionary = data["construction"]
+    if not construction.is_empty():
+        for key in ["id", "cx", "cy", "remaining"]:
+            if not construction.has(key):
+                return false
+        var construction_id: String = String(construction["id"])
+        if not footprints.has(construction_id) or seen_structures.has(construction_id):
+            return false
+        if typeof(construction["cx"]) != TYPE_INT or typeof(construction["cy"]) != TYPE_INT:
+            return false
+        if typeof(construction["remaining"]) not in [TYPE_INT, TYPE_FLOAT]:
+            return false
+        var construction_anchor: Vector2i = Vector2i(int(construction["cx"]), int(construction["cy"]))
+        var construction_footprint: Vector2i = footprints[construction_id]
+        var remaining: float = float(construction["remaining"])
+        var required_work: float = 16.0
+        match construction_id:
+            "farm", "storage":
+                required_work = 18.0
+            "quarry":
+                required_work = 20.0
+            "barracks":
+                required_work = 25.0
+            "tower":
+                required_work = 18.0
+            "forge":
+                required_work = 28.0
+            _:
+                required_work = 16.0
+        if not is_finite(remaining) or remaining < 0.0 or remaining > required_work:
+            return false
+        if construction_anchor.x < 0 or construction_anchor.y < 0 or construction_anchor.x + construction_footprint.x > map_size or construction_anchor.y + construction_footprint.y > map_size:
+            return false
+        for y: int in construction_footprint.y:
+            for x: int in construction_footprint.x:
+                var cell: Vector2i = construction_anchor + Vector2i(x, y)
+                if occupied_cells.has(cell):
+                    return false
+                occupied_cells[cell] = true
+
+    return true
+
+
 
 func _valid_campaign_state(value: Variant, expected_profile: String, map_size: int) -> bool:
     if not (value is Dictionary) or String(value.get("profile", "")) != expected_profile:
@@ -692,6 +829,12 @@ func _valid_campaign_state(value: Variant, expected_profile: String, map_size: i
             return false
         if not (objective["reward"] is Dictionary):
             return false
+        if objective.has("civilization"):
+            if not (objective["civilization"] is Dictionary):
+                return false
+            var civilization_data: Dictionary = objective["civilization"]
+            if not _valid_rival_civilization(civilization_data, map_size, Vector2i(cx, cy)):
+                return false
         records[stronghold_id] = true
 
     var seen: Dictionary = {}

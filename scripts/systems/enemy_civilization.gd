@@ -35,26 +35,19 @@ func setup(keep_ref: Node2D, saved: Dictionary = {}) -> void:
     research_progress = clampf(float(saved.get("research_progress", 0.0)), 0.0, 180.0)
     build_order_index = clampi(int(saved.get("build_order_index", 0)), 0, BUILD_PLAN.size())
     _tick_accumulator = clampf(float(saved.get("tick_accumulator", 0.0)), 0.0, 0.99)
-    if saved.get("resources", {}) is Dictionary:
-        var saved_resources: Dictionary = saved.get("resources", {})
-        for kind: String in ["wood", "stone", "food", "iron"]:
-            resources[kind] = clampf(float(saved_resources.get(kind, resources[kind])), 0.0, MAX_RESOURCE)
+    var saved_resources: Dictionary = saved.get("resources", {})
+    for kind: String in ["wood", "stone", "food", "iron"]:
+        resources[kind] = clampf(float(saved_resources.get(kind, resources[kind])), 0.0, MAX_RESOURCE)
 
-    var saved_structures_value: Variant = saved.get("structures", [])
-    if saved_structures_value is Array:
-        for record_value: Variant in saved_structures_value:
-            if not record_value is Dictionary:
-                continue
-            var record: Dictionary = record_value
-            _spawn_structure(
-                String(record.get("id", "")),
-                Vector2i(int(record.get("cx", -1)), int(record.get("cy", -1))),
-                int(record.get("hp", -1))
-            )
+    var saved_structures: Array[Dictionary] = saved.get("structures", [])
+    for record: Dictionary in saved_structures:
+        _spawn_structure(
+            String(record.get("id", "")),
+            Vector2i(int(record.get("cx", -1)), int(record.get("cy", -1))),
+            int(record.get("hp", -1))
+        )
 
-    var saved_construction: Dictionary = {}
-    if saved.get("construction", {}) is Dictionary:
-        saved_construction = saved.get("construction", {})
+    var saved_construction: Dictionary = saved.get("construction", {})
     if not saved_construction.is_empty():
         var saved_id: String = String(saved_construction.get("id", ""))
         var saved_plan: Dictionary = _build_plan_for(saved_id)

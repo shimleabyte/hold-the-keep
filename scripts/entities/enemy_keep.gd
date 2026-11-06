@@ -85,7 +85,7 @@ func import_state(data: Dictionary) -> void:
     _reinforce_timer = clampf(float(data.get("reinforce_timer", REINFORCE_INTERVAL)), 0.0, REINFORCE_INTERVAL)
     _spawn_index = posmod(int(data.get("spawn_index", 0)), GUARD_DIRECTIONS.size() * GUARD_RINGS.size())
     var saved_civilization: Dictionary = data.get("civilization", {})
-    _saved_civilization_state = saved_civilization.duplicate(true) if saved_civilization is Dictionary else {}
+    _saved_civilization_state = saved_civilization.duplicate(true)
 
 
 func spawn_initial_garrison() -> void:
