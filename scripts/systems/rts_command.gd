@@ -105,11 +105,29 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
         if _build_mode_active() or _ui_blocks_mouse(event.position):
             return
         if not selected_units.is_empty():
-            var ordered := issue_move_order(get_global_mouse_position())
+            var destination := get_global_mouse_position()
+            var ordered := 0
+            var site := _nearest_frontier_site(destination)
+            if site != null and not String(site.objective_type) in ["clear_camp", "clear_ruins"]:
+                var lead: Node2D = selected_units[0]
+                if lead.has_method("issue_interaction_order") and lead.issue_interaction_order(site):
+                    ordered = 1
+                    for index in range(1, selected_units.size()):
+                        var offset := Vector2(float(index % 3) * FORMATION_SPACING, float(index / 3) * FORMATION_SPACING)
+                        if selected_units[index].has_method("issue_move_order"):
+                            selected_units[index].issue_move_order(destination + offset)
+            else:
+                var attack_target := _nearest_attack_target(destination)
+                if attack_target != null:
+                    for unit in selected_units:
+                        if unit.has_method("issue_attack_order") and unit.issue_attack_order(attack_target):
+                            ordered += 1
+                if ordered == 0:
+                    ordered = issue_move_order(destination)
             if ordered > 0:
-                _command_marker = get_global_mouse_position()
+                _command_marker = destination
                 _command_marker_time = 0.85
-                Events.build_feedback.emit("Perintah gerak: %d unit" % ordered)
+                Events.build_feedback.emit("Perintah dikirim: %d unit" % ordered)
         # Consume the right click even with no selection. It must not fall
         # through to the legacy right-click demolition behavior.
         get_viewport().set_input_as_handled()
@@ -178,6 +196,42 @@ func _finish_selection(additive: bool) -> void:
             clear_selection()
         return
     select_unit(clicked, additive)
+
+
+func _nearest_frontier_site(world_position: Vector2) -> Node2D:
+    var best: Node2D = null
+    var best_distance := 30.0
+    for value in get_tree().get_nodes_in_group("frontier_sites"):
+        if not is_instance_valid(value) or not value.visible or not (value is Node2D):
+            continue
+        var site := value as Node2D
+        var distance := site.global_position.distance_to(world_position)
+        if distance < best_distance:
+            best_distance = distance
+            best = site
+    return best
+
+
+func _nearest_attack_target(world_position: Vector2) -> Node2D:
+    var best: Node2D = null
+    var best_distance := 34.0
+    var candidates: Array = []
+    for group_name in ["enemies", "campaign_targets", "enemy_strongholds"]:
+        for value in get_tree().get_nodes_in_group(group_name):
+            if not candidates.has(value):
+                candidates.append(value)
+    for value in candidates:
+        if not is_instance_valid(value) or not value.visible or not (value is Node2D):
+            continue
+        var target := value as Node2D
+        var hp_value: Variant = target.get("hp")
+        if hp_value is int and int(hp_value) <= 0:
+            continue
+        var distance := target.global_position.distance_to(world_position)
+        if distance < best_distance:
+            best_distance = distance
+            best = target
+    return best
 
 
 func _nearest_selectable(world_position: Vector2) -> Node2D:
