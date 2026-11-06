@@ -1,39 +1,40 @@
+class_name EnemyKeep
 extends Node2D
 ## Enemy stronghold and its persistent defensive garrison.
 
-const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
-const SPRITE := preload("res://assets/sprites/enemy_keep.svg")
-const CIVILIZATION_SCRIPT := preload("res://scripts/systems/enemy_civilization.gd")
-const SIZE := Vector2i(3, 3)
-const MAX_HP := 900
-const CLAIM_RADIUS := 9.0
-const REINFORCE_INTERVAL := 105.0
+const ENEMY_SCRIPT: Script = preload("res://scripts/entities/enemy.gd")
+const SPRITE: Texture2D = preload("res://assets/sprites/enemy_keep.svg")
+const CIVILIZATION_SCRIPT: Script = preload("res://scripts/systems/enemy_civilization.gd")
+const SIZE: Vector2i = Vector2i(3, 3)
+const MAX_HP: int = 900
+const CLAIM_RADIUS: float = 9.0
+const REINFORCE_INTERVAL: float = 105.0
 const GUARD_DIRECTIONS: Array[Vector2i] = [
     Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1),
     Vector2i(-1, -1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(1, 1),
     Vector2i(-2, 0), Vector2i(2, 0), Vector2i(0, -2), Vector2i(0, 2)
 ]
-const GUARD_RINGS := [3, 4, 5]
+const GUARD_RINGS: Array[int] = [3, 4, 5]
 
-var world
-var flow
-var player
-var cell := Vector2i.ZERO
-var size := SIZE
-var hp := MAX_HP
-var max_hp := MAX_HP
-var claim_radius := CLAIM_RADIUS
-var stronghold_id := "classic_enemy_keep"
-var region_id := "HEARTHLAND"
-var faction_id := "classic_raiders"
-var _reinforce_timer := REINFORCE_INTERVAL
-var _spawn_index := 0
-var _initial_garrison_pending := false
-var civilization
+var world: WorldMap
+var flow: FlowField
+var player: Player
+var cell: Vector2i = Vector2i.ZERO
+var size: Vector2i = SIZE
+var hp: int = MAX_HP
+var max_hp: int = MAX_HP
+var claim_radius: float = CLAIM_RADIUS
+var stronghold_id: String = "classic_enemy_keep"
+var region_id: String = "HEARTHLAND"
+var faction_id: String = "classic_raiders"
+var _reinforce_timer: float = REINFORCE_INTERVAL
+var _spawn_index: int = 0
+var _initial_garrison_pending: bool = false
+var civilization: EnemyCivilization
 var _saved_civilization_state: Dictionary = {}
 
 
-func setup(world_ref, flow_ref, player_ref, anchor: Vector2i, saved_hp := MAX_HP, identity: Dictionary = {}) -> void:
+func setup(world_ref: WorldMap, flow_ref: FlowField, player_ref: Player, anchor: Vector2i, saved_hp: int = MAX_HP, identity: Dictionary = {}) -> void:
     world = world_ref
     flow = flow_ref
     player = player_ref
@@ -83,14 +84,14 @@ func import_state(data: Dictionary) -> void:
     faction_id = String(data.get("faction", faction_id))
     _reinforce_timer = clampf(float(data.get("reinforce_timer", REINFORCE_INTERVAL)), 0.0, REINFORCE_INTERVAL)
     _spawn_index = posmod(int(data.get("spawn_index", 0)), GUARD_DIRECTIONS.size() * GUARD_RINGS.size())
-    var saved_civilization: Variant = data.get("civilization", {})
+    var saved_civilization: Dictionary = data.get("civilization", {})
     _saved_civilization_state = saved_civilization.duplicate(true) if saved_civilization is Dictionary else {}
 
 
 func spawn_initial_garrison() -> void:
     if flow != null and flow.has_method("is_current") and not flow.is_current():
         _initial_garrison_pending = true
-        var callback := Callable(self, "_on_flow_field_rebuilt")
+        var callback: Callable = Callable(self, "_on_flow_field_rebuilt")
         if not flow.rebuilt.is_connected(callback):
             flow.rebuilt.connect(callback)
         return
@@ -101,7 +102,7 @@ func _on_flow_field_rebuilt(_version: int) -> void:
     if not _initial_garrison_pending:
         return
     _initial_garrison_pending = false
-    var callback := Callable(self, "_on_flow_field_rebuilt")
+    var callback: Callable = Callable(self, "_on_flow_field_rebuilt")
     if flow != null and is_instance_valid(flow) and flow.rebuilt.is_connected(callback):
         flow.rebuilt.disconnect(callback)
     if hp > 0 and is_inside_tree():
@@ -109,14 +110,15 @@ func _on_flow_field_rebuilt(_version: int) -> void:
 
 
 func _spawn_initial_garrison_now() -> void:
-    for i in 3:
+    for i: int in 3:
         _spawn_guard()
 
 
-func _local_garrison() -> Array:
-    var guards: Array = []
-    for guard in get_tree().get_nodes_in_group("enemy_garrison"):
-        if is_instance_valid(guard) and guard.guard_origin.distance_squared_to(position) < 1.0:
+func _local_garrison() -> Array[Enemy]:
+    var guards: Array[Enemy] = []
+    for guard_node: Node in get_tree().get_nodes_in_group("enemy_garrison"):
+        var guard: Enemy = guard_node as Enemy
+        if guard != null and is_instance_valid(guard) and guard.guard_origin.distance_squared_to(position) < 1.0:
             guards.append(guard)
     return guards
 
@@ -141,30 +143,30 @@ func _process(delta: float) -> void:
 
 
 func _spawn_guard() -> bool:
-    var directions := GUARD_DIRECTIONS.size()
-    var attempts := directions * GUARD_RINGS.size()
-    var fortress_center := position + Vector2(0, -size.y * WorldConfig.tile_size / 2.0)
-    for i in attempts:
-        var slot := (_spawn_index + i) % attempts
-        var ring_index := floori(float(slot) / directions)
+    var directions: int = GUARD_DIRECTIONS.size()
+    var attempts: int = directions * GUARD_RINGS.size()
+    var fortress_center: Vector2 = position + Vector2(0, -size.y * WorldConfig.tile_size / 2.0)
+    for i: int in attempts:
+        var slot: int = (_spawn_index + i) % attempts
+        var ring_index: int = floori(float(slot) / float(directions))
         var direction: Vector2 = Vector2(GUARD_DIRECTIONS[slot % directions])
-        var spawn_position := fortress_center + direction * float(GUARD_RINGS[ring_index] * WorldConfig.tile_size)
-        var spawn_cell := Vector2i((spawn_position / WorldConfig.tile_size).floor())
+        var spawn_position: Vector2 = fortress_center + direction * float(GUARD_RINGS[ring_index] * WorldConfig.tile_size)
+        var spawn_cell: Vector2i = Vector2i((spawn_position / WorldConfig.tile_size).floor())
         if not world.is_buildable(spawn_cell) or world.occupied.has(spawn_cell):
             continue
         if not flow.is_reachable(spawn_cell):
             continue
-        var too_close := false
-        for existing_guard in _local_garrison():
+        var too_close: bool = false
+        for existing_guard: Enemy in _local_garrison():
             if existing_guard.position.distance_to(spawn_position) < WorldConfig.tile_size * 1.5:
                 too_close = true
                 break
         if too_close:
             continue
         _spawn_index = (slot + 1) % attempts
-        var guard = ENEMY_SCRIPT.new()
-        var roster := FactionRegistry.roster_for(faction_id)
-        var guard_id := FactionRegistry.garrison_enemy(faction_id)
+        var guard: Enemy = ENEMY_SCRIPT.new() as Enemy
+        var roster: Array[String] = FactionRegistry.roster_for(faction_id)
+        var guard_id: String = FactionRegistry.garrison_enemy(faction_id)
         if not roster.is_empty() and not _local_garrison().is_empty():
             guard_id = roster[posmod(_spawn_index, roster.size())]
         guard.setup_guard(DataDB.enemies[guard_id], world, flow, player, position, faction_id)
@@ -177,7 +179,7 @@ func _spawn_guard() -> bool:
 func take_damage(amount: int) -> void:
     if hp <= 0:
         return
-    var campaign = get_tree().get_first_node_in_group("campaign")
+    var campaign: Campaign = get_tree().get_first_node_in_group("campaign") as Campaign
     if campaign != null and not campaign.is_current_objective(stronghold_id):
         Events.build_feedback.emit("Kalahkan sasaran kampanye sebelumnya terlebih dahulu")
         return
@@ -188,10 +190,10 @@ func take_damage(amount: int) -> void:
     if hp > 0:
         return
 
-    for occupied_cell in cells():
+    for occupied_cell: Vector2i in cells():
         if world.occupied.get(occupied_cell) == self:
             world.occupied.erase(occupied_cell)
-    for guard in _local_garrison():
+    for guard: Enemy in _local_garrison():
         guard.retreat()
     if civilization != null:
         civilization.on_keep_destroyed()
@@ -205,8 +207,8 @@ func take_damage(amount: int) -> void:
 
 func _draw() -> void:
     draw_texture(SPRITE, Vector2(-SPRITE.get_width() / 2.0, -SPRITE.get_height()))
-    var width := 46.0
-    var y := -float(SPRITE.get_height()) - 6.0
+    var width: float = 46.0
+    var y: float = -float(SPRITE.get_height()) - 6.0
     draw_rect(Rect2(-width / 2.0, y, width, 4), Color(0.04, 0.03, 0.03, 0.9))
     draw_rect(Rect2(-width / 2.0, y, width * float(hp) / max_hp, 4), Color("#a63d36"))
     draw_rect(Rect2(-width / 2.0, y, width, 4), Color("#e3ba84"), false, 1.0)
