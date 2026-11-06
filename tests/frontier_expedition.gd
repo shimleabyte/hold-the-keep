@@ -242,9 +242,9 @@ func _initialize() -> void:
     assert(not main.fog.is_revealed_cell(unexplored),
         "Exploring one outer march must not reveal the entire 256x256 map")
 
-    var far_index: int = world_config.cell_index(Vector2i(191, 191))
+    var far_index: int = world_config.cell_index(Vector2i(255, 255))
     assert(far_index == 256 * 256 - 1
-        and world_config.cell_from_index(far_index) == Vector2i(191, 191),
+        and world_config.cell_from_index(far_index) == Vector2i(255, 255),
         "The largest Expedition row-major index must round-trip")
     var expedition_save: Dictionary = save_system.collect(main)
     assert(String(expedition_save["frontier_campaign"]["profile"]) == "frontier_expedition",
