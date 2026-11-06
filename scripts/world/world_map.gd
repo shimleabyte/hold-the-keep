@@ -429,7 +429,11 @@ func _spawn_frontier_iron() -> void:
             rng.randi_range(4, map_size - 5)
         )
         var iron_keepout_radius := safe_radius + 8.0
-        if (WorldConfig.profile_id == "frontier" and map_size == 192)             or (WorldConfig.profile_id == "frontier_expedition" and map_size == 256):
+        var is_new_large_frontier := (
+            (WorldConfig.profile_id == "frontier" and map_size == 192)
+            or (WorldConfig.profile_id == "frontier_expedition" and map_size == 256)
+        )
+        if is_new_large_frontier:
             iron_keepout_radius = maxf(iron_keepout_radius, float(map_size) * 0.15 + 2.0)
         if Vector2(cell).distance_to(center) < iron_keepout_radius:
             continue
