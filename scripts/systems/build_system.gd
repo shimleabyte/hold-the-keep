@@ -145,7 +145,8 @@ func check(id: String, c: Vector2i) -> String:
             return "Pos Terdepan harus terhubung ke wilayah sendiri"
         return "Di luar wilayah. Bangun Pos Terdepan di perbatasan"
     var rect := Rect2(Vector2(c) * WorldConfig.tile_size, Vector2(size) * WorldConfig.tile_size)
-    if player != null:
+    var rts_commander := get_tree().get_first_node_in_group("rts_commander")
+    if player != null and rts_commander == null:
         if rect.grow(6).has_point(player.global_position + Vector2(0, -4)):
             return "Ada pemain di situ"
         if player.global_position.distance_to(rect.get_center()) > BUILD_RANGE:
