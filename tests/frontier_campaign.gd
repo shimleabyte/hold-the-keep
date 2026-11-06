@@ -51,14 +51,15 @@ func _run() -> void:
     assert(main.spawner.stage_info(20)["to_day"] == 20, "Act IV must include day 20")
     assert(main.spawner.wave_size(1) == 8, "Frontier should use its own opening wave size")
 
-    var reachable: Dictionary = main.nav.reachable_cells(main.nav.cell_of(main.player.global_position))
+    var explorer: Node2D = main.village.villagers()[0]
+    var reachable: Dictionary = main.nav.reachable_cells(main.nav.cell_of(explorer.global_position))
     var greenwood_cell := Vector2i(-1, -1)
     for cell in reachable:
         if String(main.world.region_id(cell)) == "GREENWOOD":
             greenwood_cell = cell
             break
     assert(greenwood_cell.x >= 0, "Greenwood must be reachable from the starting region")
-    main.player.position = main.nav.center_of(greenwood_cell)
+    explorer.position = main.nav.center_of(greenwood_cell)
     main.frontier_campaign._scan_discovery()
     assert(bool(main.frontier_campaign.objectives["discover_greenwood"]["completed"]),
         "Entering Greenwood must complete its discovery objective")
@@ -148,14 +149,15 @@ func _run() -> void:
         if highland_cell.x >= 0:
             break
     assert(highland_cell.x >= 0, "Highlands must exist in the Frontier world")
-    main.player.position = main.nav.center_of(highland_cell)
+    explorer.position = main.nav.center_of(highland_cell)
     main.frontier_campaign._scan_discovery()
     assert(bool(main.frontier_campaign.objectives["discover_highlands"]["completed"]),
         "Highlands discovery must reward entry after Act II unlock")
     for objective_id in ["highland_survivors", "highland_caravan"]:
         var escort = main.frontier_campaign.sites[objective_id]
-        main.player.position = escort.global_position
-        escort.interact()
+        explorer.position = escort.global_position
+        assert(explorer.issue_interaction_order(escort),
+            "The selected explorer must activate the objective through the RTS interaction command")
         assert(escort.site_state == "escorting" and escort._path.size() > 1,
             "Rescue/escort must start a valid route back to the Keep")
         if objective_id == "highland_survivors":
@@ -176,7 +178,6 @@ func _run() -> void:
         for step in escort._path.size() + 2:
             if not is_instance_valid(escort) or escort.site_state != "escorting":
                 break
-            main.player.position = escort.position
             escort._tick_escort(1.0)
         assert(bool(main.frontier_campaign.objectives[objective_id]["completed"]),
             "Escorted survivor/caravan must complete at the Keep")
@@ -194,14 +195,15 @@ func _run() -> void:
         if fenland_cell.x >= 0:
             break
     assert(fenland_cell.x >= 0, "Fenlands must exist in the Frontier world")
-    main.player.position = main.nav.center_of(fenland_cell)
+    explorer.position = main.nav.center_of(fenland_cell)
     main.frontier_campaign._scan_discovery()
     assert(bool(main.frontier_campaign.objectives["discover_fenlands"]["completed"]),
         "Fenlands discovery must complete during Act III")
     main.frontier_campaign.sites["fenland_ruins"].take_damage(9999)
     var beacon = main.frontier_campaign.sites["fenland_watch"]
-    main.player.position = beacon.global_position
-    beacon.interact()
+    explorer.position = beacon.global_position
+    assert(explorer.issue_interaction_order(beacon),
+        "The selected explorer must activate the signal objective through RTS interaction")
     beacon._on_phase_changed(true)
     beacon._on_phase_changed(false)
     assert(bool(main.frontier_campaign.objectives["fenland_watch"]["completed"]),
@@ -220,18 +222,18 @@ func _run() -> void:
         if ashen_cell.x >= 0:
             break
     assert(ashen_cell.x >= 0, "Ashen March must exist in the Frontier world")
-    main.player.position = main.nav.center_of(ashen_cell)
+    explorer.position = main.nav.center_of(ashen_cell)
     main.frontier_campaign._scan_discovery()
     assert(bool(main.frontier_campaign.objectives["discover_ashen_march"]["completed"]),
         "Ashen March discovery must complete during Act IV")
     var refugees = main.frontier_campaign.sites["ashen_refugees"]
-    main.player.position = refugees.global_position
-    refugees.interact()
+    explorer.position = refugees.global_position
+    assert(explorer.issue_interaction_order(refugees),
+        "The selected explorer must activate the refugee objective through RTS interaction")
     assert(refugees.site_state == "escorting", "Refugees must start an escort")
     for step in refugees._path.size() + 2:
         if not is_instance_valid(refugees) or refugees.site_state != "escorting":
             break
-        main.player.position = refugees.position
         refugees._tick_escort(1.0)
     assert(bool(main.frontier_campaign.objectives["ashen_refugees"]["completed"]),
         "Refugees must reach the Keep")
