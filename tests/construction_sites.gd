@@ -156,6 +156,12 @@ func _initialize() -> void:
         "A site must become a real building after an arrived Builder completes its work")
     assert(not completed.is_in_group("construction_sites") and builder.target == null,
         "Completion must remove blueprint state and release its Builder")
+    var completion_flow_wait := 0
+    while main.flow._dirty or main.flow._build_active:
+        await ticks(1)
+        completion_flow_wait += 1
+        assert(completion_flow_wait < 600,
+            "Construction completion must eventually publish its refreshed enemy flow field")
     assert(not main.flow._dirty and not main.flow._build_active,
         "Construction completion must settle its refreshed enemy flow field without a blocking rebuild")
     builder.set_physics_process(false)
