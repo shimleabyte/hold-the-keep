@@ -10,8 +10,8 @@ func _initialize() -> void:
     assert(world_config.map_size == 128, "Classic must now provide a 128x128 playable homeland")
     assert(world_config.tile_size == 16, "The world tile size must remain 16 pixels")
     assert(world_config.map_cells == 128 * 128, "Map cell count must match the configured dimensions")
-    assert(world_config.starting_claim_radius == 14.0, "Classic must provide a proportionally larger starting claim")
-    assert(world_config.safe_radius == 10.0, "Classic must provide a larger spawn clearing")
+    assert(world_config.starting_claim_radius == 20.0, "Classic must provide a proportionally larger starting claim")
+    assert(world_config.safe_radius == 16.0, "Classic must provide a larger spawn clearing")
     assert(world_config.world_seed == 1337, "The default world seed must remain deterministic")
     assert(world_config.world_pixel_size() == Vector2i(2048, 2048),
         "World pixel dimensions must derive from tile count and tile size")
@@ -30,9 +30,9 @@ func _initialize() -> void:
     var frontier: Dictionary = world_config.profile_definition("frontier")
     assert(int(frontier.get("map_size", 0)) == 192,
         "The Frontier profile must define a 192x192 world")
-    assert(is_equal_approx(float(frontier.get("starting_claim_radius", 0.0)), 18.0),
+    assert(is_equal_approx(float(frontier.get("starting_claim_radius", 0.0)), 22.5),
         "The larger Frontier must use an 18-tile Keep claim")
-    assert(is_equal_approx(float(frontier.get("safe_radius", 0.0)), 14.0),
+    assert(is_equal_approx(float(frontier.get("safe_radius", 0.0)), 18.0),
         "Frontier must provide an appropriately larger starting clearing")
     assert(int(frontier.get("iron_veins", 0)) == 72,
         "Frontier iron supply must scale with its expanded map area")
@@ -44,6 +44,9 @@ func _initialize() -> void:
         "The current Frontier profile must remain 192x192")
     assert(int(expedition.get("expedition_core_size", 0)) == 160,
         "The Expedition profile must provide a larger 160x160 starting heartland")
+    assert(is_equal_approx(float(expedition.get("starting_claim_radius", 0.0)), 20.0)
+        and is_equal_approx(float(expedition.get("safe_radius", 0.0)), 16.0),
+        "Expedition claims and clearings must scale with its larger heartland")
     assert(int(expedition.get("iron_veins", 0)) == 128,
         "Expedition iron supply must scale to the largest map area")
     assert(world_config.is_frontier_profile("frontier_expedition")
