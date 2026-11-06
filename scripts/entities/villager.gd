@@ -133,6 +133,7 @@ var _scout_revealed_at_target := false
 var _manual_goal_cell := Vector2i(-1, -1)
 var _manual_interact_target: Node2D
 var _manual_attack_target: Node2D
+var _manual_gather := false
 var weapon_equipped := false
 var armor_equipped := false
 var _smith_recipe := ""
@@ -623,6 +624,9 @@ func _tick_working(delta: float) -> void:
         state = State.IDLE
         _decide_t = 0.15
         return
+    if _manual_gather:
+        _tick_manual_gather(delta)
+        return
     if _resource_work_behavior.tick(delta):
         return
     if job == "blacksmith":
@@ -658,6 +662,77 @@ func _tick_working(delta: float) -> void:
     if _work_t >= _hit_interval():
         _work_t = 0.0
         _hit_done = false
+
+func _tick_manual_gather(delta: float) -> void:
+    if target == null or not is_instance_valid(target):
+        _release()
+        state = State.IDLE
+        _decide_t = 0.15
+        return
+    if not target.is_available(self):
+        if carry > 0:
+            _go_depot()
+        else:
+            _release()
+            state = State.IDLE
+            _decide_t = 0.15
+        return
+
+    anim.face(target.position - position)
+    _work_t += delta
+    if not _hit_done and _work_t >= _hit_interval() * 0.5:
+        _hit_done = true
+        target.hit(self)
+        if carry >= _carry_cap() or not target.is_available(self):
+            _hit_done = false
+            _work_t = 0.0
+            if carry > 0:
+                _go_depot()
+            else:
+                _release()
+                state = State.IDLE
+                _decide_t = 0.15
+            return
+    if _work_t >= _hit_interval():
+        _work_t = 0.0
+        _hit_done = false
+
+
+## Direct RTS resource order. It temporarily overrides autonomous target selection.
+func issue_gather_order(resource: Node2D) -> bool:
+    if resource == null or not is_instance_valid(resource) or not resource.is_in_group("harvestable"):
+        return false
+    if not resource.visible or not resource.has_method("is_available") or not resource.is_available(self):
+        return false
+    if not visible or state in [State.HIDDEN, State.FLEEING] or job == "soldier" or _expeditioning or nav == null:
+        return false
+
+    var cells: Array[Vector2i] = _cells_of(resource)
+    var path: PackedVector2Array = nav.path_adjacent(position, cells)
+    if path.is_empty():
+        return false
+
+    if is_outpost_guard():
+        release_outpost_guard()
+    _release()
+    _foe = null
+    _pending_foe = null
+    _pending_t = 0.0
+    _manual_interact_target = null
+    _manual_attack_target = null
+    if not _claim(resource):
+        return false
+
+    target = resource
+    _manual_gather = true
+    _goal_cells = cells
+    _set_path(path)
+    state = State.TO_WORK
+    _decide_t = 0.0
+    _set_work_status("MANUAL_GATHER", "Following a commander-issued resource order")
+    queue_redraw()
+    return true
+
 
 func is_unavailable_for_blacksmithing() -> bool:
     return state in [State.HIDDEN, State.FLEEING, State.FIGHT]
@@ -1356,6 +1431,7 @@ func _claim(n) -> bool:
 
 
 func _release() -> void:
+    _manual_gather = false
     if job == "healer":
         _release_heal_target()
     elif job == "blacksmith":
