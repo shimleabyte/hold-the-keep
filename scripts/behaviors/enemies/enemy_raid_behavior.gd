@@ -67,7 +67,7 @@ func tick_faction_raid(delta: float):
         return
 
     var reach := maxf(enemy._attack_reach(), 28.0)
-    if enemy.player != null and is_instance_valid(enemy.player) and enemy.position.distance_to(enemy.player.position) <= reach:
+    if enemy.player != null and is_instance_valid(enemy.player) and enemy.player.visible and enemy.position.distance_to(enemy.player.position) <= reach:
         if enemy.role == "ranged":
             enemy._begin_ranged_attack(enemy.player)
         else:
@@ -120,7 +120,7 @@ func tick_supply_raid(delta: float):
         return
 
     var reach := maxf(enemy._attack_reach(), 28.0)
-    if enemy.player != null and is_instance_valid(enemy.player) and enemy.position.distance_to(enemy.player.position) <= reach:
+    if enemy.player != null and is_instance_valid(enemy.player) and enemy.player.visible and enemy.position.distance_to(enemy.player.position) <= reach:
         enemy._begin_attack(enemy.player, enemy.player.position - enemy.position)
         return
     for defender in enemy.get_tree().get_nodes_in_group("defenders"):
