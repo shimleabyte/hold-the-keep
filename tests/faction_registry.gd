@@ -42,7 +42,7 @@ func _run() -> void:
     while not main.flow.is_current():
         await ticks(1)
         flow_wait_frames += 1
-        assert(flow_wait_frames < 1800,
+        assert(flow_wait_frames < 600,
             "Initial enemy flow field must publish before faction garrison assertions")
 
     var expected_regions := ["GREENWOOD", "HIGHLANDS", "FENLANDS", "ASHEN_MARCH"]

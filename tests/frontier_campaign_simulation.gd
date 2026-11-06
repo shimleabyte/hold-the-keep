@@ -320,7 +320,7 @@ func _ticks(count: int) -> void:
         await physics_frame
 
 
-func _wait_for_flow_current(main: Node, profile_id: String, maximum_frames: int = 1800) -> int:
+func _wait_for_flow_current(main: Node, profile_id: String, maximum_frames: int = 600) -> int:
     var waited := 0
     while not main.flow.is_current() and waited < maximum_frames:
         await physics_frame
