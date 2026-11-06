@@ -108,6 +108,7 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
             var destination := get_global_mouse_position()
             var ordered := 0
             var site := _nearest_frontier_site(destination)
+            var resource := _nearest_harvestable(destination)
             if site != null and not String(site.objective_type) in ["clear_camp", "clear_ruins"]:
                 var lead: Node2D = selected_units[0]
                 if lead.has_method("issue_interaction_order") and lead.issue_interaction_order(site):
@@ -116,6 +117,8 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
                         var offset := Vector2(float(index % 3) * FORMATION_SPACING, float(index / 3) * FORMATION_SPACING)
                         if selected_units[index].has_method("issue_move_order"):
                             selected_units[index].issue_move_order(destination + offset)
+            elif resource != null:
+                ordered = _issue_gather_orders(resource)
             else:
                 var attack_target := _nearest_attack_target(destination)
                 if attack_target != null:
@@ -196,6 +199,56 @@ func _finish_selection(additive: bool) -> void:
             clear_selection()
         return
     select_unit(clicked, additive)
+
+
+func _nearest_harvestable(world_position: Vector2) -> Node2D:
+    var best: Node2D = null
+    var best_distance := 28.0
+    for value in get_tree().get_nodes_in_group("harvestable"):
+        if not is_instance_valid(value) or not value.visible or not (value is Node2D):
+            continue
+        if not value.has_method("is_available"):
+            continue
+        var node := value as Node2D
+        var distance := node.global_position.distance_to(world_position)
+        if distance < best_distance:
+            best_distance = distance
+            best = node
+    return best
+
+
+func _issue_gather_orders(primary: Node2D) -> int:
+    if primary == null or not is_instance_valid(primary):
+        return 0
+    var kind := String(primary.get("yield_kind"))
+    if kind.is_empty():
+        return 0
+
+    var candidates: Array[Node2D] = []
+    for value in get_tree().get_nodes_in_group("harvestable"):
+        if not is_instance_valid(value) or not value.visible or not (value is Node2D):
+            continue
+        var node := value as Node2D
+        if String(node.get("yield_kind")) != kind:
+            continue
+        if node.global_position.distance_to(primary.global_position) > 112.0:
+            continue
+        candidates.append(node)
+    candidates.sort_custom(func(a: Node2D, b: Node2D) -> bool:
+        return a.global_position.distance_squared_to(primary.global_position) < b.global_position.distance_squared_to(primary.global_position)
+    )
+
+    var issued := 0
+    for unit in selected_units:
+        if not is_instance_valid(unit) or not unit.has_method("issue_gather_order"):
+            continue
+        for candidate in candidates:
+            if not candidate.has_method("is_available") or not candidate.is_available(unit):
+                continue
+            if unit.issue_gather_order(candidate):
+                issued += 1
+                break
+    return issued
 
 
 func _nearest_frontier_site(world_position: Vector2) -> Node2D:
