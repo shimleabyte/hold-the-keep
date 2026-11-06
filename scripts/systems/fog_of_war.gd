@@ -1,3 +1,4 @@
+class_name FogOfWar
 extends Node2D
 ## Permanent exploration fog rendered as independently invalidated chunks.
 

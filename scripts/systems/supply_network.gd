@@ -1,3 +1,4 @@
+class_name SupplyNetwork
 extends Node
 ## Road-connected logistics. Automatic transfers remain bounded; player orders
 ## reserve cargo immediately and move it with visible, recoverable couriers.
