@@ -62,7 +62,7 @@ func _initialize() -> void:
         "Generated map must contain wood, stone, iron and wildlife food resources")
 
     nodes["wood"].import_state({"hp": 0, "regrow": 17.5})
-    nodes["stone"].import_state({"hp": 2, "regrow": 0.0})
+    nodes["stone"].import_state({"hp": 0, "regrow": 0.0})
     nodes["iron"].import_state({"hp": 0, "regrow": 54.0})
     nodes["food"].import_state({"hp": 0, "regrow": 63.0})
     assert(nodes["wood"].is_processing() and not nodes["stone"].is_processing()
