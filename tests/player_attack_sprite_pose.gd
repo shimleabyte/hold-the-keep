@@ -27,7 +27,7 @@ func _initialize() -> void:
                     break
             if upper_body_changed:
                 break
-        for y in range(24, FRAME_HEIGHT):
+        for y in range(26, 27):
             for x in range(FRAME_WIDTH):
                 var windup := image.get_pixel(WINDUP_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + y)
                 var impact := image.get_pixel(IMPACT_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + y)
