@@ -329,7 +329,7 @@ func _initialize() -> void:
         and terrain_source.texture.resource_path.ends_with("tiles_frontier.svg")
         and terrain_source.texture.get_size() == Vector2(112, 16),
         "Frontier must use the dedicated seven-cell weathered biome atlas")
-    assert(world.starting_keep_cell() == Vector2i(63, 61),
+    assert(world.starting_keep_cell() == Vector2i(95, 93),
         "Keep placement must remain centered relative to the expanded map")
 
     var region_cells := {
