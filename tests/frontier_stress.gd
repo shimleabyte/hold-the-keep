@@ -116,13 +116,17 @@ func _run() -> void:
     }
     main.village.assign_jobs()
 
-    # Trigger a real ranged attack so the projectile node and physics path are exercised.
+    # Trigger a real ranged attack against a visible RTS defender. The retired hero
+    # remains hidden and must not be treated as a valid target for stress coverage.
     assert(data_db.enemies.has("archer"), "The ranged archer definition must exist")
+    var defenders: Array = get_nodes_in_group("defenders")
+    assert(not defenders.is_empty(), "RTS stress workload must include visible military defenders")
+    var ranged_target: Node2D = defenders[0]
     var archer = load("res://scripts/entities/enemy.gd").new()
     archer.setup(data_db.enemies["archer"], main.world, main.flow, main.player, "iron_legion")
-    archer.position = main.player.position + Vector2(128.0, 0.0)
+    archer.position = ranged_target.position + Vector2(128.0, 0.0)
     main.world.entities.add_child(archer)
-    archer._begin_ranged_attack(main.player)
+    archer._begin_ranged_attack(ranged_target)
     await ticks(14)
 
     var projectiles := get_nodes_in_group("enemy_projectiles")
@@ -131,10 +135,11 @@ func _run() -> void:
 
     var fx = _find_fx_layer(main)
     assert(fx != null, "The shared FX layer must be present")
+    var keep_position: Vector2 = main.world.keep_center_position()
     for i in range(70):
-        events.fx_burst.emit("impact", main.player.position, Vector2.RIGHT, 2.0)
+        events.fx_burst.emit("impact", keep_position, Vector2.RIGHT, 2.0)
     for i in range(10):
-        events.fx_burst.emit("debris", main.player.position, Vector2.LEFT, 1.0)
+        events.fx_burst.emit("debris", keep_position, Vector2.LEFT, 1.0)
     assert(fx.count() == MAX_PARTICLES,
         "The shared particle store must clamp to its configured 500-particle ceiling")
 
