@@ -64,8 +64,8 @@ func _initialize() -> void:
     ]
     for color in palette_colors:
         var found := false
-        for y in range(FRAME_HEIGHT):
-            for x in range(FRAME_WIDTH):
+        for y in range(image.get_height()):
+            for x in range(image.get_width()):
                 if image.get_pixel(x, y).is_equal_approx(color):
                     found = true
                     break
