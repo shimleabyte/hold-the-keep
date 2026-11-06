@@ -89,7 +89,7 @@ func _initialize() -> void:
     while not main.flow.is_current():
         await ticks(1)
         initial_flow_wait += 1
-        assert(initial_flow_wait < 180,
+        assert(initial_flow_wait < 600,
             "Initial enemy flow field must publish before construction profiling")
     assert_multi_cell_approach_fallback(main)
     main.village.set_process(false)
@@ -123,16 +123,17 @@ func _initialize() -> void:
 
     # FlowField publishes only complete snapshots and spreads Dijkstra work over frames.
     var flow_version_before: int = main.flow.version
-    main.flow.rebuild_pops_per_frame = 1
+    main.flow.rebuild_pops_per_frame = main.flow.DEFAULT_REBUILD_POPS_PER_FRAME
+    main.flow.rebuild_budget_usec = 1
     await ticks(2)
     assert(main.flow._build_active and main.flow.version == flow_version_before,
-        "A construction event must not synchronously replace the published flow field")
-    main.flow.rebuild_pops_per_frame = main.flow.DEFAULT_REBUILD_POPS_PER_FRAME
+        "A tiny elapsed-time budget must keep the previous complete field published across frames")
+    main.flow.rebuild_budget_usec = main.flow.DEFAULT_REBUILD_BUDGET_USEC
     var flow_wait_frames := 0
     while main.flow._dirty or main.flow._build_active:
         await ticks(1)
         flow_wait_frames += 1
-        assert(flow_wait_frames < 100,
+        assert(flow_wait_frames < 600,
             "A bounded flow-field rebuild must eventually publish its completed snapshot")
     assert(main.flow.version == flow_version_before + 1,
         "One blueprint placement must publish exactly one refreshed flow field")
@@ -155,6 +156,12 @@ func _initialize() -> void:
         "A site must become a real building after an arrived Builder completes its work")
     assert(not completed.is_in_group("construction_sites") and builder.target == null,
         "Completion must remove blueprint state and release its Builder")
+    var completion_flow_wait := 0
+    while main.flow._dirty or main.flow._build_active:
+        await ticks(1)
+        completion_flow_wait += 1
+        assert(completion_flow_wait < 600,
+            "Construction completion must eventually publish its refreshed enemy flow field")
     assert(not main.flow._dirty and not main.flow._build_active,
         "Construction completion must settle its refreshed enemy flow field without a blocking rebuild")
     builder.set_physics_process(false)

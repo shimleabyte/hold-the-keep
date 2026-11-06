@@ -8,6 +8,18 @@ func ticks(count: int) -> void:
         await physics_frame
 
 
+func reference_land_counts(world: Node) -> Dictionary:
+    var counts: Dictionary = {}
+    for y in world.map_size:
+        for x in world.map_size:
+            var cell := Vector2i(x, y)
+            if not world.is_buildable(cell):
+                continue
+            var region := String(world.region_id(cell))
+            counts[region] = int(counts.get(region, 0)) + 1
+    return counts
+
+
 func _initialize() -> void:
     await process_frame
     var world_config = root.get_node("WorldConfig")
@@ -71,6 +83,8 @@ func _initialize() -> void:
         "A 256x256 Expedition must use 256 independently invalidated 16x16 fog chunks")
     assert(main.world._expedition_gate_cells.size() == 4,
         "The expanded map must create one crossing for each outer march")
+    assert(main.world.region_land_counts == reference_land_counts(main.world),
+        "Expedition regional land counts must exclude initially sealed crossings and walls")
 
     var expedition_eligible_cells: PackedByteArray = main.world.generated_decoration_eligibility
     var expected_expedition_decorations := FRONTIER_DECORATION_GENERATOR.generate(
@@ -215,6 +229,8 @@ func _initialize() -> void:
             "Entering the surveyed approach region must complete discovery: " + region)
         assert(main.world.is_expedition_gate_open(region),
             "Matching discovery must persistently open its sector: " + region)
+        assert(main.world.region_land_counts == reference_land_counts(main.world),
+            "Opening a survey gate must add exactly its restored land cell to regional counts")
         assert(main.world.tile_type_at(gate_cell) != 2
             and main.world.is_buildable(gate_cell)
             and main.nav.is_walkable(gate_cell),
@@ -226,11 +242,15 @@ func _initialize() -> void:
 
     # Rebuild the gate state from completed discovery objectives, as happens after loading a save.
     main.world.apply_expedition_sector_unlocks({})
+    assert(main.world.region_land_counts == reference_land_counts(main.world),
+        "Closing crossings during restoration must remove their land from regional counts")
     main.nav.rebuild()
     main.frontier_campaign._sync_expedition_gates()
     for region in locked_regions:
         assert(main.world.is_expedition_gate_open(region),
             "Completed exploration objectives must restore open crossings: " + region)
+    assert(main.world.region_land_counts == reference_land_counts(main.world),
+        "Restored crossings must be represented exactly once in regional land counts")
 
     var greenwood_gate: Vector2i = main.world._expedition_gate_cells["GREENWOOD"]
     var beyond_gate := greenwood_gate + Vector2i(0, -1)

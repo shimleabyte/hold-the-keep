@@ -275,11 +275,17 @@ func _initialize() -> void:
         "WorldMap must consume the isolated region generator without changing its output")
     assert(world._layer.get_used_cells().size() == 192 * 192,
         "Frontier terrain stage must assign every logical map cell")
+    var expected_land_counts: Dictionary = {}
     for y in world_config.map_size:
         for x in world_config.map_size:
             var terrain_cell := Vector2i(x, y)
+            if world.is_buildable(terrain_cell):
+                var region_name := String(world.region_id(terrain_cell))
+                expected_land_counts[region_name] = int(expected_land_counts.get(region_name, 0)) + 1
             assert(world.tile_type_at(terrain_cell) == int(terrain_layout[y * world_config.map_size + x]),
                 "WorldMap must consume the isolated Frontier terrain layout at %s" % terrain_cell)
+    assert(world.region_land_counts == expected_land_counts,
+        "Frontier regional land counts must match generated buildable terrain")
     var integrated_wood_stone_layout: Array[Dictionary] = []
     for entry in world.generated_resource_layout:
         var kind := String(entry["kind"])
@@ -579,7 +585,7 @@ func _initialize() -> void:
     while not main.flow.is_current():
         await ticks(1)
         flow_snapshot_wait += 1
-        assert(flow_snapshot_wait < 180,
+        assert(flow_snapshot_wait < 600,
             "The asynchronous FlowField must publish before road invalidation is measured")
     var road_nav_version: int = int(main.nav.version)
     var road = main.build.place_raw("road", navigation_probe_cell)

@@ -11,6 +11,30 @@ func clear_claims(territory: Node) -> void:
     territory.enemy_claimed_cells.clear()
 
 
+func reference_region_ownership(territory: Node, world: Node, region_id: String) -> Dictionary:
+    var counts := {
+        "land_cells": 0,
+        "player_cells": 0,
+        "enemy_cells": 0,
+        "contested_cells": 0
+    }
+    for y in world.map_size:
+        for x in world.map_size:
+            var cell := Vector2i(x, y)
+            if not world.is_buildable(cell) or String(world.region_id(cell)) != region_id:
+                continue
+            counts["land_cells"] = int(counts["land_cells"]) + 1
+            var player_owns: bool = territory.claimed_cells.has(cell)
+            var enemy_owns: bool = territory.enemy_claimed_cells.has(cell)
+            if player_owns:
+                counts["player_cells"] = int(counts["player_cells"]) + 1
+            if enemy_owns:
+                counts["enemy_cells"] = int(counts["enemy_cells"]) + 1
+            if player_owns and enemy_owns:
+                counts["contested_cells"] = int(counts["contested_cells"]) + 1
+    return counts
+
+
 func reachable_cells(nav: Node, start: Vector2i) -> Dictionary:
     var visited: Dictionary = {}
     if not nav.is_walkable(start):
@@ -37,7 +61,7 @@ func require(condition: bool, message: String) -> void:
     assert(condition, message)
 
 
-func require_flow_current(flow: Node, maximum_frames: int = 120) -> bool:
+func require_flow_current(flow: Node, maximum_frames: int = 600) -> bool:
     var waited: int = 0
     while not flow.is_current() and waited < maximum_frames:
         await physics_frame
@@ -71,6 +95,9 @@ func _initialize() -> void:
         "Regional ownership must report land area, ownership coverage and control")
     require(String(hearthland["control"]) == "player",
         "The Keep should establish control of the compact Classic Hearthland")
+    var expected_hearthland: Dictionary = reference_region_ownership(territory, world, "HEARTHLAND")
+    require(int(hearthland["land_cells"]) == int(expected_hearthland["land_cells"]),
+        "Cached Hearthland land count must match an independent full-map count")
 
     var greenwood_cells: Array[Vector2i] = []
     for y in world_config_size():
@@ -93,8 +120,13 @@ func _initialize() -> void:
         territory.claimed_cells[greenwood_cells[i]] = true
         territory.enemy_claimed_cells[greenwood_cells[i]] = true
     territory._rebuild_region_states()
-    require(String(territory.get_region_state("GREENWOOD")["control"]) == "contested",
+    var contested_state: Dictionary = territory.get_region_state("GREENWOOD")
+    require(String(contested_state["control"]) == "contested",
         "Overlapping hostile and player claims must mark a region contested")
+    var expected_contested: Dictionary = reference_region_ownership(territory, world, "GREENWOOD")
+    for count_key in ["land_cells", "player_cells", "enemy_cells", "contested_cells"]:
+        require(int(contested_state[count_key]) == int(expected_contested[count_key]),
+            "Cached regional %s must preserve player/enemy overlap accounting" % count_key)
 
     clear_claims(territory)
     var ownership_count := ceili(float(greenwood_cells.size()) * 0.36)
