@@ -193,11 +193,27 @@ func face(dir: Vector2) -> bool:
     return changed
 
 
-func draw(ci: CanvasItem, tex: Texture2D, fw: int, fh: int) -> void:
+func draw(
+    ci: CanvasItem,
+    tex: Texture2D,
+    fw: int,
+    fh: int,
+    extra_offset: Vector2 = Vector2.ZERO,
+    extra_rotation: float = 0.0,
+    extra_scale: Vector2 = Vector2.ONE
+) -> void:
     var flipped := flip and view == SIDE
-    # Translation is kept separate from mirroring so recoil/lunge always follows facing.
-    ci.draw_set_transform(motion_offset(), 0.0, Vector2(-1, 1) if flipped else Vector2.ONE)
-    ci.draw_texture_rect_region(tex, Rect2(-fw / 2.0, -fh, fw, fh), Rect2(frame_index() * fw, view * fh, fw, fh))
+    var facing_scale := Vector2(-1.0, 1.0) if flipped else Vector2.ONE
+    var final_scale := Vector2(
+        facing_scale.x * extra_scale.x,
+        facing_scale.y * extra_scale.y
+    )
+    ci.draw_set_transform(motion_offset() + extra_offset, extra_rotation, final_scale)
+    ci.draw_texture_rect_region(
+        tex,
+        Rect2(-fw / 2.0, -fh, fw, fh),
+        Rect2(frame_index() * fw, view * fh, fw, fh)
+    )
     ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
