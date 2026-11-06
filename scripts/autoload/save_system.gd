@@ -10,6 +10,8 @@ const SAVE_FILE_STORE_SCRIPT := preload("res://scripts/persistence/save_file_sto
 const SAVE_MIGRATION_SCRIPT := preload("res://scripts/persistence/save_migration_pipeline.gd")
 
 var pending: Dictionary = {}
+var pending_world_profile := ""
+var pending_world_map_size := 0
 var _validator = SAVE_VALIDATOR_SCRIPT.new()
 var _file_store = SAVE_FILE_STORE_SCRIPT.new()
 
@@ -252,6 +254,8 @@ func request_load() -> bool:
         return false
 
     Settings.set_world_profile(selected_profile)
+    pending_world_profile = selected_profile
+    pending_world_map_size = WorldConfig.map_size
     var source_version := int(parsed.get("version", 0))
     if source_version < VERSION:
         var main := _main()
@@ -273,4 +277,6 @@ func request_load() -> bool:
 func take_pending() -> Dictionary:
     var data := pending
     pending = {}
+    pending_world_profile = ""
+    pending_world_map_size = 0
     return data
