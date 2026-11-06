@@ -431,6 +431,7 @@ func _use_dash() -> bool:
     _harvest_anim_active = false
     facing = _dash_dir
     anim.face(_dash_dir)
+    anim.play("run", true, 18.0)
     _swing = 0.0
     Events.fx_burst.emit("dash", global_position + Vector2(0, -2), -_dash_dir, 1.5)
     queue_redraw()
@@ -534,6 +535,7 @@ func _use_rally() -> bool:
         return false
     _rally_cd = RALLY_COOLDOWN
     _rally_t = 8.0
+    anim.play("idle", true)
     combat_motion.play("rally", Vector2.UP, 0.62)
     combat_feedback.register_ability("rally", Vector2.ZERO, 0.35)
     Audio.play("rally", 1.0, -5.0)
