@@ -352,23 +352,20 @@ func _build_top_bar() -> void:
 
 func _build_vitals() -> void:
     _vitals_panel = _panel(Vector2(4, 22), Vector2(122, 20))
-    _vitals_panel.tooltip_text = "Kesehatan pemain dan ketahanan benteng"
+    _vitals_panel.tooltip_text = "Ketahanan Keep"
     var p := _vitals_panel
-    _icon(p, "heart", Vector2(3, 2))
     _hp_bar = HUD_WIDGETS.StatBar.new()
-    _hp_bar.position = Vector2(17, 3)
-    _hp_bar.size = Vector2(98, 5)
-    _hp_bar.fill = Color("#d63a3a")
+    _hp_bar.visible = false
     p.add_child(_hp_bar)
-    _hp_text = _label(p, "100", Vector2(66, 1))
+    _hp_text = _label(p, "", Vector2.ZERO)
     _hp_text.visible = false
-    _icon(p, "keep", Vector2(3, 10))
+    _icon(p, "keep", Vector2(3, 4))
     _keep_bar = HUD_WIDGETS.StatBar.new()
-    _keep_bar.position = Vector2(17, 11)
-    _keep_bar.size = Vector2(98, 5)
+    _keep_bar.position = Vector2(17, 7)
+    _keep_bar.size = Vector2(98, 6)
     _keep_bar.fill = GOLD
     p.add_child(_keep_bar)
-    _keep_text = _label(p, "-", Vector2(66, 9))
+    _keep_text = _label(p, "-", Vector2(66, 4))
     _keep_text.visible = false
 
 func _build_stage_bar() -> void:
@@ -392,9 +389,9 @@ func _build_combat_bar() -> void:
     _combat_bar.size = Vector2(158, 18)
     _combat_bar.ability_icons = [ICONS["compass"], ICONS["sword"], ICONS["people"]]
     _combat_bar.tooltip_text = "Q · Dash    C · Tebas    V · Seruan — ikon menunjukkan status dan cooldown"
-    _combat_bar.mouse_filter = Control.MOUSE_FILTER_STOP
+    _combat_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _combat_bar.visible = false
     add_child(_combat_bar)
-    _blockers.append(_combat_bar)
 
 func _build_jobs() -> void:
     _jobs_panel = _panel(Vector2(400, 22), Vector2(76, 132))
@@ -683,14 +680,14 @@ func _current_help_rows() -> Array:
     for job in JOBS:
         job_keys.append(Settings.binding_short_label("job_" + job))
     return [
-        [movement_vertical, "GERAK ATAS / BAWAH"],
-        [movement_horizontal, "GERAK KIRI / KANAN"],
-        [Settings.binding_label("interact"), "INTERAKSI / PANEN"],
-        [Settings.binding_label("attack") + " / KLIK KIRI", "SERANG"],
-        [Settings.binding_label("sprint"), "TAHAN UNTUK LARI"],
-        [Settings.binding_label("ability_dash"), "DASH (LEVEL 1)"],
-        [Settings.binding_label("ability_cleave"), "TEBAS (LEVEL 2)"],
-        [Settings.binding_label("ability_rally"), "SERUAN (LEVEL 3)"],
+        [movement_vertical, "GESER KAMERA ATAS / BAWAH"],
+        [movement_horizontal, "GESER KAMERA KIRI / KANAN"],
+        ["KLIK KIRI", "PILIH UNIT"],
+        ["DRAG KLIK KIRI", "PILIH BANYAK UNIT"],
+        ["SHIFT + KLIK KIRI", "TAMBAH / LEPAS SELEKSI"],
+        ["KLIK KANAN", "PERINTAH PINDAH UNIT"],
+        ["TENGAH + DRAG", "GESER KAMERA"],
+        ["RODA MOUSE", "ZOOM KAMERA"],
         ["HOTBAR / SCROLL", "PILIH / GANTI BANGUNAN"],
         ["KLIK KIRI", "PASANG / TARIK GARIS"],
         ["KLIK KANAN", "BATAL / TANPA MODE: BONGKAR"],
@@ -702,7 +699,7 @@ func _current_help_rows() -> Array:
         ["KLIK − / +", "UBAH KUOTA JOB"],
         [Settings.binding_label("toggle_technology") + " / " + Settings.binding_label("toggle_construction_queue"), "TEKNOLOGI / ANTREAN"],
         [Settings.binding_label("toggle_map") + " / " + Settings.binding_label("toggle_objectives"), "PETA / OBJEKTIF"],
-        [Settings.binding_label("command_expedition") + " / " + Settings.binding_label("menu_pause"), "EKSPEDISI / JEDA"],
+        [Settings.binding_label("menu_pause"), "JEDA"],
         [Settings.binding_label("save_game") + " / " + Settings.binding_label("load_game"), "SIMPAN / MUAT"],
     ]
 
