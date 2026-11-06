@@ -29,23 +29,23 @@ func _initialize() -> void:
 
     var frontier: Dictionary = world_config.profile_definition("frontier")
     assert(int(frontier.get("map_size", 0)) == 192,
-        "The planned Frontier profile must define a 128x128 world")
+        "The Frontier profile must define a 192x192 world")
     assert(is_equal_approx(float(frontier.get("starting_claim_radius", 0.0)), 18.0),
-        "The planned Frontier profile must define a 15-tile Keep claim")
+        "The larger Frontier must use an 18-tile Keep claim")
     assert(is_equal_approx(float(frontier.get("safe_radius", 0.0)), 14.0),
         "Frontier must provide an appropriately larger starting clearing")
     assert(int(frontier.get("iron_veins", 0)) == 72,
-        "Frontier resource density must scale with the fourfold map area")
+        "Frontier iron supply must scale with its expanded map area")
 
     var expedition: Dictionary = world_config.profile_definition("frontier_expedition")
     assert(int(expedition.get("map_size", 0)) == 256,
-        "Frontier Expedition must define a separate 192x192 world without changing legacy Frontier")
+        "Frontier Expedition must define a 256x256 world")
     assert(int(frontier.get("map_size", 0)) == 192,
-        "Existing Frontier saves must retain their original 128x128 dimensions")
+        "The current Frontier profile must remain 192x192")
     assert(int(expedition.get("expedition_core_size", 0)) == 160,
-        "The Expedition profile must preserve the original 128x128 heartland as its starting area")
+        "The Expedition profile must provide a larger 160x160 starting heartland")
     assert(int(expedition.get("iron_veins", 0)) == 128,
-        "Expedition iron supply must scale to the larger map area")
+        "Expedition iron supply must scale to the largest map area")
     assert(world_config.is_frontier_profile("frontier_expedition")
         and not world_config.is_frontier_profile("classic"),
         "Both Frontier profiles must use shared campaign systems without changing Classic")
@@ -80,7 +80,7 @@ func _initialize() -> void:
     assert(expedition_button is Button
         and expedition_button.text == "FRONTIER: EXPEDITION"
         and String(expedition_button.get_meta("campaign_profile_id", "")) == "frontier_expedition",
-        "The Frontier: Expedition button must select the 192x192 Expedition profile")
+        "The Frontier: Expedition button must select the 256x256 Expedition profile")
     var campaign_scroll_rect: Rect2 = title_scroll.get_global_rect()
     assert(campaign_scroll_rect.encloses(expedition_button.get_global_rect()),
         "Frontier: Expedition must be visible without scrolling on the default title viewport")
@@ -129,7 +129,7 @@ func _initialize() -> void:
     assert(current_save["world"]["map_size"] == 128,
         "New Classic saves must record the enlarged map dimensions")
     assert(save_system._valid_save(current_save),
-        "A current v9 save must validate against its matching world configuration")
+        "A current save must validate against its matching enlarged world configuration")
 
     var legacy_save := current_save.duplicate(true)
     legacy_save.erase("world")
