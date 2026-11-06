@@ -374,7 +374,7 @@ func _run() -> void:
         "The stress population must retain all newly spawned villagers alongside the initial population")
 
     var snapshot: Dictionary = save_system.collect(main)
-    require(snapshot["world"]["profile"] == "frontier" and snapshot["world"]["map_size"] == 128,
+    require(snapshot["world"]["profile"] == "frontier" and snapshot["world"]["map_size"] == 192,
         "Stress snapshot must retain the Frontier world identity")
     require(snapshot["frontier_campaign"]["camps"]["records"].size() == 4,
         "Stress snapshot must persist all four faction camp records")
