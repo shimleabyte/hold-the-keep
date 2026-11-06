@@ -41,7 +41,7 @@ The player is not an all-knowing ruler issuing frictionless commands. Informatio
 
 ### What the game is not
 
-- Not a full RTS with remote control over every unit.
+- Not a full RTS that requires direct micromanagement of every civilian. Civilian work remains autonomous; military units may receive direct selection, movement and attack orders.
 - Not a pure colony simulator where the player only watches autonomous agents.
 - Not a conventional high-fantasy monster-clearing game.
 - Not a horror game built around jump scares.
