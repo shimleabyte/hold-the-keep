@@ -36,16 +36,16 @@ Nighttime raids may remain as one pressure source, but they are not the strategi
 - Single and drag selection of visible villagers.
 - Shift-add/remove selection.
 - Right-click move orders with simple group spacing.
+- Right-click harvestable nodes to distribute selected non-soldier villagers across nearby unclaimed nodes of the same resource type; units deliver cargo before returning to their previous AI.
 - Right-click visible enemies, faction camps, campaign targets and strongholds to issue a soldier attack order.
 - Right-click a rescue/escort/defend site to send a selected unit to activate it; escort convoys follow their route autonomously and remain vulnerable to enemy attacks.
 - Existing worker AI resumes when a move order completes.
 - Legacy player camera/control is disabled, but the node remains for save/reference compatibility.
 - Build placement no longer depends on a single hero's proximity; territory and resources remain enforced.
 
-### RTS-1 — Contextual orders
-- Contextual gathering/building/repair orders for compatible worker roles.
+### RTS-1 — Tactical command depth
+- Contextual building placement and repair assignment.
 - Attack-move, stop, hold position, patrol and garrison orders.
-- Stop, hold position, patrol and garrison orders.
 - Command queue and cancellation.
 
 ### RTS-2 — Production and military command
@@ -65,4 +65,4 @@ Nighttime raids may remain as one pressure source, but they are not the strategi
 
 ## Current limitation
 
-RTS-0 is only the first command layer. Selection currently covers villagers. Direct move, soldier attack, and basic Frontier site interaction orders exist. There is not yet contextual resource gathering, building/repair orders, attack-move, formations, unit production, rival AI economies, or an RTS campaign balance pass.
+RTS-0 is only the first command layer. Selection currently covers villagers. Direct move, contextual resource gathering, soldier attack, and basic Frontier site interaction orders exist. There is not yet contextual building/repair orders, attack-move, formations, unit production, rival AI economies, or an RTS campaign balance pass.
