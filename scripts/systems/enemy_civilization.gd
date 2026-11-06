@@ -103,7 +103,7 @@ func _try_start_construction() -> void:
         if _has_structure(String(plan["id"])):
             build_order_index += 1
             continue
-        var anchor := _find_build_site(String(plan["id"]))
+        var anchor: Vector2i = _find_build_site(String(plan["id"]))
         if anchor.x < 0:
             return
         var cost: Dictionary = plan["cost"]
