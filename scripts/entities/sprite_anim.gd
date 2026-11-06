@@ -139,16 +139,6 @@ func motion_offset() -> Vector2:
             return Vector2(0, -roundf(run_lift * 2.0))
         "work":
             return _work_motion_offset(progress, forward)
-        "attack":
-            # Tarik badan sebentar, dorong saat ayunan, lalu kembali ke stance.
-            var push := 0.0
-            if progress < 0.24:
-                push = -smoothstep(0.0, 0.24, progress)
-            elif progress < 0.68:
-                push = lerpf(-1.0, 1.5, smoothstep(0.24, 0.68, progress))
-            else:
-                push = lerpf(1.5, 0.0, smoothstep(0.68, 1.0, progress))
-            return forward * roundf(push)
         "hurt":
             # Recoil tajam pada awal hit lalu pulih sepanjang klip.
             var recoil := 1.0 - smoothstep(0.0, 0.8, progress)
@@ -193,22 +183,9 @@ func face(dir: Vector2) -> bool:
     return changed
 
 
-func draw(
-    ci: CanvasItem,
-    tex: Texture2D,
-    fw: int,
-    fh: int,
-    extra_offset: Vector2 = Vector2.ZERO,
-    extra_rotation: float = 0.0,
-    extra_scale: Vector2 = Vector2.ONE
-) -> void:
-    var flipped := flip and view == SIDE
-    var facing_scale := Vector2(-1.0, 1.0) if flipped else Vector2.ONE
-    var final_scale := Vector2(
-        facing_scale.x * extra_scale.x,
-        facing_scale.y * extra_scale.y
-    )
-    ci.draw_set_transform(motion_offset() + extra_offset, extra_rotation, final_scale)
+func draw(ci: CanvasItem, tex: Texture2D, fw: int, fh: int) -> void:
+    var facing_scale := Vector2(-1.0, 1.0) if flip and view == SIDE else Vector2.ONE
+    ci.draw_set_transform(motion_offset(), 0.0, facing_scale)
     ci.draw_texture_rect_region(
         tex,
         Rect2(-fw / 2.0, -fh, fw, fh),

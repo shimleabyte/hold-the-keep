@@ -62,7 +62,7 @@ func _initialize() -> void:
         "Generated map must contain wood, stone, iron and wildlife food resources")
 
     nodes["wood"].import_state({"hp": 0, "regrow": 17.5})
-    nodes["stone"].import_state({"hp": 2, "regrow": 0.0})
+    nodes["stone"].import_state({"hp": 0, "regrow": 0.0})
     nodes["iron"].import_state({"hp": 0, "regrow": 54.0})
     nodes["food"].import_state({"hp": 0, "regrow": 63.0})
     assert(nodes["wood"].is_processing() and not nodes["stone"].is_processing()
@@ -97,7 +97,11 @@ func _initialize() -> void:
     await ticks(1)
     assert(main.nav.is_walkable(cells["wood"]),
         "Player cleanup must also release the stump tile in worker navigation")
-    assert(save_system.save_current(true), "Initial resource save must persist a cleared stump")
+    # Seed the backup with the exact mixed resource state asserted after recovery.
+    nodes["stone"].import_state({"hp": 2, "regrow": 0.0})
+    nodes["iron"].import_state({"hp": 0, "regrow": 54.0})
+    nodes["food"].import_state({"hp": 0, "regrow": 63.0})
+    assert(save_system.save_current(true), "Initial resource save must persist the cleared stump and mixed resource states")
 
     # Write another valid save so the first save becomes the rollback copy.
     nodes["wood"].import_state({"hp": 2, "regrow": 0.0})

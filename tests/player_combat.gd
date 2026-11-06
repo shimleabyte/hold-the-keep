@@ -127,11 +127,18 @@ func _initialize() -> void:
         "Rally must improve soldier damage and attack cadence")
 
     player._cleave_cd = 0.0
+    var resolve_before_grant := float(player.combat_status()["resolve"])
     player.combat_flow.add_resolve(60.0)
+    var resolve_after_grant := minf(
+        resolve_before_grant + 60.0,
+        float(player.combat_status()["resolve_max"])
+    )
     assert(player.activate_ability("cleave"), "Cleave must be available for Resolve spending")
     assert(player._cleave_empowered, "60 Resolve must convert Cleave into its empowered variant")
-    assert(is_equal_approx(float(player.combat_status()["resolve"]), 0.0),
-        "Empowered Cleave must consume exactly 60 Resolve")
+    assert(is_equal_approx(
+        float(player.combat_status()["resolve"]),
+        resolve_after_grant - 60.0
+    ), "Empowered Cleave must consume exactly 60 Resolve without discarding Resolve already earned")
     await ticks(20)
 
     var wolf = enemy_script.new()
