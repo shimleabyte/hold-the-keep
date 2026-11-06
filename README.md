@@ -6,9 +6,9 @@ Bangun desa, kelola penduduk dan sumber daya pada siang hari. Persiapkan pertaha
 
 ## Mode permainan
 
-- **Classic** — Peta 64×64 dengan kampanye bertahan selama 15 hari.
-- **Frontier** — Peta 128×128, lima biome, empat stronghold, dan kampanye Conquest 20 hari.
-- **Frontier Expedition** — Peta 192×192. Mulai dari heartland, lalu buka empat wilayah luar melalui eksplorasi.
+- **Classic** — Peta 128×128 untuk membangun permukiman, memperluas wilayah dan menghadapi peradaban rival selama 15 hari.
+- **Frontier** — Peta 192×192, lima biome, empat stronghold, dan kampanye Conquest 20 hari.
+- **Frontier Expedition** — Peta 256×256 dengan heartland 160×160. Mulai dari pusat, lalu buka empat wilayah luar melalui eksplorasi.
 
 ## Fitur utama
 
@@ -34,6 +34,10 @@ Bangun desa, kelola penduduk dan sumber daya pada siang hari. Persiapkan pertaha
 | Bergerak | WASD / tombol panah / left stick |
 | Berinteraksi dan mengumpulkan resource | E / Spasi |
 | Menyerang | F / klik kiri |
+| Pilih prajurit | Klik kiri pada prajurit sendiri |
+| Pilih beberapa prajurit | Drag klik kiri; Shift untuk tambah/lepas |
+| Perintah gerak pasukan | Klik kanan tanah setelah memilih prajurit |
+| Perintah serang pasukan | Klik kanan musuh / stronghold setelah memilih prajurit |
 | Berlari | Shift / bumper kiri |
 | Dash | Q |
 | Cleave | C |
