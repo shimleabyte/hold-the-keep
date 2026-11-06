@@ -188,6 +188,7 @@ func _initialize() -> void:
         and not map_panel._position_is_known(Vector2(unexplored) * 16.0),
         "The expanded outer world must remain hidden until the player explores it")
 
+    var explorer: Node2D = main.village.villagers()[0]
     var discoveries := {
         "GREENWOOD": "discover_greenwood",
         "HIGHLANDS": "discover_highlands",
@@ -207,7 +208,7 @@ func _initialize() -> void:
             "The inside approach must carry the matching discovery region: " + region)
         assert(main.nav.is_walkable(approach_cell) and core_reachable.has(approach_cell),
             "The survey approach must be connected to the starting Keep, not just locally walkable: " + region)
-        main.player.global_position = main.nav.center_of(approach_cell)
+        explorer.global_position = main.nav.center_of(approach_cell)
         main.frontier_campaign._scan_discovery()
         assert(bool(main.frontier_campaign.objectives[objective_id]["completed"]),
             "Entering the surveyed approach region must complete discovery: " + region)
@@ -235,7 +236,7 @@ func _initialize() -> void:
     assert(main.nav.is_walkable(beyond_gate),
         "The outer side of an unlocked survey gate must be reachable")
     var explored_position: Vector2 = main.nav.center_of(beyond_gate)
-    main.player.global_position = explored_position
+    explorer.global_position = explored_position
     main.fog._scan_sources()
     assert(main.fog.is_revealed_cell(beyond_gate),
         "Player exploration beyond an opened gate must reveal the outer march")
