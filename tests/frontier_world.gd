@@ -322,7 +322,7 @@ func _initialize() -> void:
         "The 192x192 strategic map must fit a compact viewport")
     assert(world.map_size == 192 and world.tile_size == 16,
         "Main world must use the Frontier dimensions and existing tile size")
-    assert(world.pixel_size == Vector2i(2048, 2048),
+    assert(world.pixel_size == Vector2i(3072, 3072),
         "Frontier camera/world bounds must cover 3072x3072 pixels")
     var terrain_source := world._layer.tile_set.get_source(0) as TileSetAtlasSource
     assert(terrain_source != null
