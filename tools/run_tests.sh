@@ -24,6 +24,7 @@ fi
 # simulations are kept in tools/run_diagnostics.sh for deliberate manual runs.
 tests=(
     animation_motion
+    rts_command_foundation
     campaign_assault
     campaign_multi_stronghold
     workplace_assignments
