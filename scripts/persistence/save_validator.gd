@@ -343,8 +343,12 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
     for saved_resource in resources:
         if saved_resource is Dictionary and saved_resource.has("cx") and saved_resource.has("cy"):
             var resource_state: Variant = saved_resource.get("state", {})
-            if resource_state is Dictionary and bool(resource_state.get("cleared", false)):
-                continue
+            if resource_state is Dictionary:
+                var cleared_marker: Variant = resource_state.get("cleared", false)
+                if typeof(cleared_marker) != TYPE_BOOL:
+                    return false
+                if cleared_marker:
+                    continue
             occupied_cells[Vector2i(int(saved_resource["cx"]), int(saved_resource["cy"]))] = true
     var site_cells: Dictionary = {}
     var queue_orders: Dictionary = {}
