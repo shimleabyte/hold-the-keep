@@ -7,11 +7,9 @@ const MIN_VIEWPORT_SIZE := Vector2i(480, 270)
 const VIEWPORT_PIXEL_SCALE := 2
 const BINDABLE_GROUPS := [
     {
-        "title": "MOVEMENT & COMBAT",
+        "title": "CAMERA",
         "actions": [
-            "move_up", "move_down", "move_left", "move_right",
-            "interact", "attack", "sprint",
-            "ability_dash", "ability_cleave", "ability_rally"
+            "move_up", "move_down", "move_left", "move_right"
         ]
     },
     {
