@@ -109,9 +109,10 @@ func _initialize() -> void:
 
     # Road tiles are ordinary claimed construction, but do not block pathfinding.
     inventory.items = {"wood": 1000, "stone": 500, "food": 500, "iron": 0}
-    var road_a := Vector2i(32, 32)
-    var road_b := Vector2i(32, 33)
-    var road_c := Vector2i(31, 33)
+    var keep_cell: Vector2i = world.starting_keep_cell()
+    var road_a := keep_cell + Vector2i(3, 3)
+    var road_b := road_a + Vector2i(0, 1)
+    var road_c := road_a + Vector2i(-1, 1)
     require(main.build.check("road", road_a) == "",
         "A road should be buildable inside the Keep claim and player range")
     require(main.build.place("road", road_a) == "", "First road placement must succeed")
