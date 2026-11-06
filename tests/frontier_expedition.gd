@@ -54,6 +54,8 @@ func _initialize() -> void:
         "Expedition world bounds must scale from 256 tiles at 16px")
     assert(world_config.starting_keep_cell() == Vector2i(127, 125),
         "Keep placement must remain centered in the expanded world")
+    assert(world_config.starting_claim_radius == 20.0 and world_config.safe_radius == 16.0,
+        "Expedition must scale its starting claim and clearing with the 160x160 heartland")
     assert(world_config.profile_definition("frontier").get("map_size", 0) == 192,
         "The original Frontier save profile must remain 128x128")
 
