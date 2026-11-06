@@ -5,6 +5,7 @@ extends CharacterBody2D
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const CombatVisualFeedback := preload("res://scripts/entities/combat_visual_feedback.gd")
+const PlayerCombatFlow := preload("res://scripts/entities/player_combat_flow.gd")
 const SPRITE := preload("res://assets/sprites/player.svg")
 const FW := 20
 const FH := 20
@@ -46,6 +47,7 @@ var hp := MAX_HP
 var spawn_pos := Vector2.ZERO
 var anim := SpriteAnim.new()
 var combat_feedback = CombatVisualFeedback.new()
+var combat_flow = PlayerCombatFlow.new()
 
 var _cooldown := 0.0
 var _atk_cd := 0.0
@@ -57,6 +59,7 @@ var _build_mode := false
 var _running := false
 var _hurt_t := 0.0
 var _pending_attack := -1.0
+var _attack_profile: Dictionary = {}
 var _pending_harvest = null
 var _harvest_t := 0.0
 var _harvest_anim_active := false
@@ -68,10 +71,14 @@ var level := 1
 var experience := 0
 var _dash_t := 0.0
 var _dash_cd := 0.0
+var _dash_elapsed := 0.0
+var _perfect_dodge_registered := false
+var _dash_can_perfect_dodge := false
 var _dash_dir := Vector2.DOWN
 var _cleave_pending := -1.0
 var _cleave_t := 0.0
 var _cleave_cd := 0.0
+var _cleave_empowered := false
 var _rally_cd := 0.0
 var _rally_t := 0.0
 
@@ -132,6 +139,7 @@ func set_camera_limits(rect: Rect2i) -> void:
 func _physics_process(delta: float) -> void:
     if combat_feedback.advance(delta):
         queue_redraw()
+    combat_flow.advance(delta)
     _cooldown = maxf(0.0, _cooldown - delta)
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _dash_cd = maxf(0.0, _dash_cd - delta)
@@ -147,10 +155,13 @@ func _physics_process(delta: float) -> void:
         queue_redraw()
     if _cleave_t > 0.0:
         _cleave_t = maxf(0.0, _cleave_t - delta)
+        if _cleave_t <= 0.0:
+            _cleave_empowered = false
         queue_redraw()
 
     var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
     if _dash_t > 0.0:
+        _dash_elapsed += delta
         var dash_step := minf(delta, _dash_t)
         _dash_t = maxf(0.0, _dash_t - delta)
         velocity = _dash_dir * DASH_SPEED * (dash_step / maxf(delta, 0.001))
@@ -276,55 +287,109 @@ func _attack() -> void:
     if foe != null:
         facing = (foe.global_position - global_position).normalized()
         anim.face(foe.global_position - global_position)
+
     _attack_direction = facing.normalized() if facing.length_squared() > 0.0001 else Vector2.DOWN
-    anim.play("attack", true)
-    _pending_attack = HIT_DELAY
-    combat_feedback.begin_windup(_attack_direction, HIT_DELAY, false)
-    _swing = SWING_TIME
+    _attack_profile = combat_flow.begin_attack()
+    var hit_delay := float(_attack_profile.get("hit_delay", HIT_DELAY))
+    var swing_time := float(_attack_profile.get("swing_time", SWING_TIME))
+    var animation_fps := float(_attack_profile.get("animation_fps", 14.0))
+
+    anim.play("attack", true, animation_fps)
+    _pending_attack = hit_delay
+    combat_feedback.begin_windup(_attack_direction, hit_delay, false)
+    _swing = swing_time
     Events.player_attacked.emit()
+    Events.fx_burst.emit("blade_trail", global_position + Vector2(0, -7), _attack_direction, 1.0)
     queue_redraw()
 
 
 ## A normal swing only connects inside the captured 120-degree forward-facing sector.
-func _is_inside_attack_arc(origin: Vector2, target_position: Vector2, attack_direction: Vector2) -> bool:
+func _is_inside_attack_arc(
+    origin: Vector2,
+    target_position: Vector2,
+    attack_direction: Vector2,
+    max_range: float = ATTACK_RANGE,
+    min_dot: float = ATTACK_ARC_MIN_DOT
+) -> bool:
     var offset := target_position - origin
     var distance_squared := offset.length_squared()
-    if distance_squared > ATTACK_RANGE * ATTACK_RANGE:
+    if distance_squared > max_range * max_range:
         return false
     if distance_squared <= 0.0001:
         return true
     var direction := attack_direction.normalized()
     if direction.length_squared() <= 0.0001:
         return false
-    return offset.normalized().dot(direction) >= ATTACK_ARC_MIN_DOT
+    return offset.normalized().dot(direction) >= min_dot
 
 
 ## Resolve damage on the impact frame; enemies and objectives share the same attack sector.
 func _apply_attack() -> void:
     combat_feedback.end_windup()
     var origin := global_position + Vector2(0, -6)
-    for e in get_tree().get_nodes_in_group("enemies"):
-        var n := e as Node2D
-        if not _is_inside_attack_arc(origin, n.global_position + Vector2(0, -4), _attack_direction):
+    var damage_scale := float(_attack_profile.get("damage_scale", 1.0))
+    var reach := float(_attack_profile.get("reach", ATTACK_RANGE))
+    var arc_min_dot := float(_attack_profile.get("arc_min_dot", ATTACK_ARC_MIN_DOT))
+    var stagger := float(_attack_profile.get("stagger", 0.0))
+    var resolve_per_hit := float(_attack_profile.get("resolve_on_hit", 0.0))
+    var visual_kind := String(_attack_profile.get("visual", "quick"))
+    var hit_count := 0
+
+    for enemy in get_tree().get_nodes_in_group("enemies"):
+        var foe := enemy as Node2D
+        if not is_instance_valid(foe):
             continue
-        var hit_damage := _player_damage(ATTACK_DAMAGE)
-        if n.has_method("take_damage_from"):
-            n.take_damage_from(hit_damage, global_position)
-        else:
-            n.take_damage(hit_damage)
+        if not _is_inside_attack_arc(
+            origin,
+            foe.global_position + Vector2(0, -4),
+            _attack_direction,
+            reach,
+            arc_min_dot
+        ):
+            continue
+
+        var hit_damage := maxi(1, roundi(float(_player_damage(ATTACK_DAMAGE)) * damage_scale))
+        if foe.has_method("take_damage_from"):
+            foe.take_damage_from(hit_damage, global_position)
+        elif foe.has_method("take_damage"):
+            foe.take_damage(hit_damage)
+
+        if stagger > 0.0 and is_instance_valid(foe) and foe.has_method("apply_stagger"):
+            foe.apply_stagger(stagger)
+        Events.fx_burst.emit(
+            "heavy_impact" if visual_kind == "finisher" or visual_kind == "riposte" else "impact",
+            foe.global_position + Vector2(0, -6),
+            _attack_direction,
+            1.35 if visual_kind == "finisher" or visual_kind == "riposte" else 1.0
+        )
+        hit_count += 1
+
+    var site_scale := damage_scale * Tech.stat("campaign.site_damage", 1.0)
     for target in get_tree().get_nodes_in_group("campaign_targets"):
-        if not is_instance_valid(target) or not _is_inside_attack_arc(origin, target.global_position, _attack_direction):
+        if not is_instance_valid(target):
             continue
-        var site_damage := roundi(float(_player_damage(ATTACK_DAMAGE)) * Tech.stat("campaign.site_damage", 1.0))
+        if not _is_inside_attack_arc(origin, target.global_position, _attack_direction, reach, arc_min_dot):
+            continue
+        var site_damage := roundi(float(_player_damage(ATTACK_DAMAGE)) * site_scale)
         target.take_damage(maxi(1, site_damage))
+
     var campaign = get_tree().get_first_node_in_group("campaign")
     for stronghold in get_tree().get_nodes_in_group("enemy_strongholds"):
-        if not is_instance_valid(stronghold) or not _is_inside_attack_arc(origin, stronghold.global_position, _attack_direction):
+        if not is_instance_valid(stronghold):
+            continue
+        if not _is_inside_attack_arc(origin, stronghold.global_position, _attack_direction, reach, arc_min_dot):
             continue
         if campaign != null and not campaign.is_current_objective(stronghold.stronghold_id):
             continue
-        var stronghold_damage := roundi(float(_player_damage(ATTACK_DAMAGE)) * Tech.stat("campaign.site_damage", 1.0))
+        var stronghold_damage := roundi(float(_player_damage(ATTACK_DAMAGE)) * site_scale)
         stronghold.take_damage(maxi(1, stronghold_damage))
+
+    if hit_count > 0:
+        combat_flow.add_resolve(minf(resolve_per_hit * float(mini(hit_count, 3)), 28.0))
+        if visual_kind == "finisher" or visual_kind == "riposte":
+            Events.screen_shake.emit(0.42, 0.08)
+            Audio.play("impact_hit", 1.1, -4.0)
+
     queue_redraw()
 
 
@@ -348,6 +413,9 @@ func _use_dash() -> bool:
         _dash_dir = Vector2.DOWN
     _dash_cd = DASH_COOLDOWN
     _dash_t = DASH_DURATION
+    _dash_elapsed = 0.0
+    _perfect_dodge_registered = false
+    _dash_can_perfect_dodge = _invuln <= 0.0
     combat_feedback.register_ability("dash", _dash_dir, DASH_DURATION + 0.08)
     Audio.play("dash", 1.0, -5.0)
     _invuln = maxf(_invuln, DASH_DURATION + 0.12)
@@ -357,7 +425,8 @@ func _use_dash() -> bool:
     _harvest_anim_active = false
     facing = _dash_dir
     anim.face(_dash_dir)
-    Events.fx_burst.emit("dust", global_position + Vector2(0, -2), -_dash_dir, 2.0)
+    _swing = 0.0
+    Events.fx_burst.emit("dash", global_position + Vector2(0, -2), -_dash_dir, 1.5)
     queue_redraw()
     return true
 
@@ -374,7 +443,8 @@ func _finish_dash() -> void:
                 foe.take_damage(hit_damage)
             if foe.has_method("apply_stagger"):
                 foe.apply_stagger(0.38)
-    Events.fx_burst.emit("dust", global_position + Vector2(0, -2), _dash_dir, 2.0)
+    _dash_can_perfect_dodge = false
+    Events.fx_burst.emit("dash_impact", global_position + Vector2(0, -2), _dash_dir, 1.0)
     queue_redraw()
 
 
@@ -387,35 +457,64 @@ func _use_cleave() -> bool:
         anim.face(facing)
     _cleave_direction = facing.normalized() if facing.length_squared() > 0.0001 else Vector2.DOWN
     _cleave_cd = CLEAVE_COOLDOWN
+    _cleave_empowered = combat_flow.try_spend_resolve(60.0)
     _cleave_pending = 0.22
-    _cleave_t = 0.42
-    combat_feedback.register_ability("cleave", _cleave_direction, _cleave_t)
-    Audio.play("cleave", 1.0, -5.0)
+    _cleave_t = 0.46
+    combat_feedback.register_ability(
+        "cleave_empowered" if _cleave_empowered else "cleave",
+        _cleave_direction,
+        _cleave_t
+    )
+    Audio.play("cleave", 1.0 if not _cleave_empowered else 0.88, -5.0)
     _pending_attack = -1.0
-    anim.play("attack", true)
+    _swing = 0.0
+    combat_feedback.end_windup()
+    anim.play("attack", true, 12.0 if _cleave_empowered else 14.0)
     Events.player_attacked.emit()
-    Events.fx_burst.emit("spark", global_position + Vector2(0, -7), _cleave_direction, 1.5)
+    Events.fx_burst.emit(
+        "cleave_charge",
+        global_position + Vector2(0, -7),
+        _cleave_direction,
+        1.0 if not _cleave_empowered else 1.8
+    )
     queue_redraw()
     return true
 
 
 func _apply_cleave() -> void:
     var origin := global_position + Vector2(0, -6)
-    for e in get_tree().get_nodes_in_group("enemies"):
-        var foe := e as Node2D
+    var radius := CLEAVE_RANGE + (14.0 if _cleave_empowered else 0.0)
+    var damage_scale := 1.0 if not _cleave_empowered else 1.55
+    var stagger_duration := 0.55 if not _cleave_empowered else 0.88
+
+    for enemy in get_tree().get_nodes_in_group("enemies"):
+        var foe := enemy as Node2D
+        if not is_instance_valid(foe):
+            continue
         var to_foe := foe.global_position + Vector2(0, -4) - origin
-        if to_foe.length() > CLEAVE_RANGE:
+        if to_foe.length() > radius:
             continue
         if to_foe.length_squared() > 0.01 and to_foe.normalized().dot(_cleave_direction) < cos(CLEAVE_HALF_ANGLE):
             continue
-        var hit_damage := _player_damage(20 + level * 3)
+
+        var hit_damage := maxi(1, roundi(float(_player_damage(20 + level * 3)) * damage_scale))
         if foe.has_method("take_damage_from"):
             foe.take_damage_from(hit_damage, global_position)
-        else:
+        elif foe.has_method("take_damage"):
             foe.take_damage(hit_damage)
-        if foe.has_method("apply_stagger"):
-            foe.apply_stagger(0.55)
-    Events.screen_shake.emit(0.8, 0.1)
+        if is_instance_valid(foe) and foe.has_method("apply_stagger"):
+            foe.apply_stagger(stagger_duration)
+
+        Events.fx_burst.emit(
+            "heavy_impact" if _cleave_empowered else "impact",
+            foe.global_position + Vector2(0, -6),
+            _cleave_direction,
+            1.6 if _cleave_empowered else 1.1
+        )
+
+    if _cleave_empowered:
+        Events.fx_burst.emit("heavy_impact", global_position + Vector2(0, -7), _cleave_direction, 2.0)
+    Events.screen_shake.emit(1.0 if _cleave_empowered else 0.8, 0.13 if _cleave_empowered else 0.1)
     queue_redraw()
 
 
@@ -432,10 +531,30 @@ func _use_rally() -> bool:
             continue
         if global_position.distance_to(defender.global_position) <= RALLY_RADIUS:
             defender.apply_rally(8.0, 1.5, 0.78)
+            Events.fx_burst.emit("rally", defender.global_position + Vector2(0, -7), Vector2.ZERO, 0.35)
             affected += 1
-    Events.fx_burst.emit("rally", global_position + Vector2(0, -8), Vector2.ZERO, 2.0)
+    Events.fx_burst.emit("rally", global_position + Vector2(0, -8), Vector2.ZERO, 2.8)
     Events.build_feedback.emit("SERUAN PERANG: %d prajurit diperkuat" % affected)
     return true
+
+
+func _register_perfect_dodge(source_position: Vector2) -> void:
+    if _perfect_dodge_registered or not _dash_can_perfect_dodge:
+        return
+    if _dash_elapsed > 0.16 or source_position == Vector2.ZERO:
+        return
+
+    _perfect_dodge_registered = true
+    combat_flow.register_perfect_dodge()
+    combat_feedback.register_ability("riposte", (global_position - source_position).normalized(), 0.58)
+    Events.fx_burst.emit(
+        "perfect_dodge",
+        global_position + Vector2(0, -7),
+        (global_position - source_position).normalized(),
+        1.7
+    )
+    Audio.play("block", 1.15, -4.0)
+    queue_redraw()
 
 
 func _player_damage(base_damage: int) -> int:
@@ -469,6 +588,7 @@ func gain_experience(amount: int) -> void:
 
 
 func combat_status() -> Dictionary:
+    var flow_status: Dictionary = combat_flow.status()
     return {
         "level": level,
         "xp": experience,
@@ -477,7 +597,13 @@ func combat_status() -> Dictionary:
         "cleave_cd": _cleave_cd,
         "rally_cd": _rally_cd,
         "cleave_unlocked": level >= 2,
-        "rally_unlocked": level >= 3
+        "rally_unlocked": level >= 3,
+        "resolve": float(flow_status.get("resolve", 0.0)),
+        "resolve_max": float(flow_status.get("resolve_max", 100.0)),
+        "combo_step": int(flow_status.get("combo_step", 0)),
+        "riposte_ready": bool(flow_status.get("riposte_ready", false)),
+        "riposte_remaining": float(flow_status.get("riposte_remaining", 0.0)),
+        "cleave_empowered_ready": bool(flow_status.get("cleave_empowered_ready", false))
     }
 
 
@@ -500,6 +626,8 @@ func take_damage(amount: int) -> void:
 
 func take_damage_from(amount: int, source_position: Vector2) -> void:
     if _invuln > 0.0 or hp <= 0:
+        if hp > 0 and _dash_t > 0.0 and _dash_can_perfect_dodge and _invuln > 0.0:
+            _register_perfect_dodge(source_position)
         return
     hp -= amount
     _since_hit = 0.0
@@ -527,6 +655,9 @@ func _die() -> void:
     _cleave_pending = -1.0
     _dash_t = 0.0
     _rally_t = 0.0
+    _dash_can_perfect_dodge = false
+    _cleave_empowered = false
+    combat_flow.reset()
     anim.play("idle", true)
     Events.build_feedback.emit("Kamu tumbang! Kembali ke keep")
     Events.player_hp_changed.emit(hp, MAX_HP)
@@ -588,6 +719,7 @@ func _try_interact() -> void:
                 break
 
 func _draw() -> void:
+    _draw_dash_afterimages()
     anim.draw(self, SPRITE, FW, FH)
     combat_feedback.draw(self, FH, Color("#c8caa0"))
     if _swing > 0.0:
@@ -596,26 +728,87 @@ func _draw() -> void:
         _draw_cleave()
 
 
+func _draw_dash_afterimages() -> void:
+    if _dash_t <= 0.0:
+        return
+    var progress := clampf(1.0 - _dash_t / DASH_DURATION, 0.0, 1.0)
+    var frame_rect := Rect2(anim.frame_index() * FW, anim.view * FH, FW, FH)
+    var mirror := Vector2(-1.0, 1.0) if anim.flip and anim.view == SpriteAnim.SIDE else Vector2.ONE
+    for echo in range(3, 0, -1):
+        var fade := (1.0 - float(echo) / 4.0) * (1.0 - progress * 0.35)
+        var offset := anim.motion_offset() - _dash_dir * float(echo * 5)
+        draw_set_transform(offset, 0.0, mirror)
+        draw_texture_rect_region(
+            SPRITE,
+            Rect2(-FW / 2.0, -FH, FW, FH),
+            frame_rect,
+            Color(0.62, 0.79, 0.76, fade * 0.72)
+        )
+        draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
 func _draw_cleave() -> void:
-    var progress := 1.0 - _cleave_t / 0.42
-    var radius := CLEAVE_RANGE * (0.72 + progress * 0.28)
+    var progress := 1.0 - _cleave_t / 0.46
+    var radius := (CLEAVE_RANGE + (14.0 if _cleave_empowered else 0.0)) * (0.68 + progress * 0.32)
     var base := _cleave_direction.angle()
     var fade := 1.0 - maxf(0.0, progress - 0.72) / 0.28
-    for i in 9:
-        var angle := lerpf(-CLEAVE_HALF_ANGLE, CLEAVE_HALF_ANGLE, progress) - i * 0.18
-        var alpha := (1.0 - i / 9.0) * fade
-        draw_arc(Vector2(0, -6), radius, base + angle - 0.16, base + angle,
-            6, Color(1.0, 0.78, 0.32, alpha), 2.0 if i < 3 else 1.0)
+    var tint := Color("#ffe8a0") if _cleave_empowered else Color("#eab65c")
+    for trail in range(10):
+        var angle := lerpf(-CLEAVE_HALF_ANGLE, CLEAVE_HALF_ANGLE, progress) - float(trail) * 0.17
+        var alpha := (1.0 - float(trail) / 10.0) * fade
+        draw_arc(
+            Vector2(0, -6),
+            radius - float(trail) * (1.0 if _cleave_empowered else 0.6),
+            base + angle - 0.18,
+            base + angle,
+            7,
+            Color(tint.r, tint.g, tint.b, alpha),
+            2.0 if trail < 3 else 1.0
+        )
+    if _cleave_empowered:
+        draw_arc(Vector2(0, -6), radius * 0.72, base - 0.9, base + 0.9,
+            12, Color(1.0, 0.92, 0.66, fade * 0.8), 1.0)
 
 
-## Busur tebasan: menyapu dari belakang ke depan lalu ke sisi lain, dengan ekor memudar.
+## Weapon-specific trails use the same low-cost draw primitives and existing sprite.
 func _draw_slash() -> void:
-    var t := 1.0 - _swing / SWING_TIME
+    var swing_time := maxf(0.001, float(_attack_profile.get("swing_time", SWING_TIME)))
+    var t := clampf(1.0 - _swing / swing_time, 0.0, 1.0)
+    var visual := String(_attack_profile.get("visual", "quick"))
+    var half_angle := float(_attack_profile.get("draw_half_angle", ATTACK_ARC_HALF_ANGLE))
+    var reach := float(_attack_profile.get("reach", ATTACK_RANGE))
     var base := _attack_direction.angle()
-    var head := lerpf(-ATTACK_ARC_HALF_ANGLE, ATTACK_ARC_HALF_ANGLE, t)
+    var head := lerpf(-half_angle, half_angle, t)
     var center := Vector2(0, -6)
-    var fade := 1.0 - maxf(0.0, t - 0.7) / 0.3
-    for i in 7:
-        var a1 := head - i * 0.26
-        var alpha := (1.0 - i / 7.0) * fade
-        draw_arc(center, ATTACK_RANGE, base + a1 - 0.26, base + a1, 5, Color(1, 1, 1, alpha * 0.9), 2.0 if i < 3 else 1.0)
+    var fade := 1.0 - maxf(0.0, t - 0.68) / 0.32
+    var trail_count := 5 if visual == "quick" else 7
+    var trail_gap := 0.19 if visual == "quick" else 0.23
+    var tint := Color("#fff2d5")
+    if visual == "finisher":
+        tint = Color("#ffd078")
+    elif visual == "riposte":
+        tint = Color("#e8f3d2")
+
+    for trail in trail_count:
+        var angle := head - float(trail) * trail_gap
+        var alpha := (1.0 - float(trail) / float(trail_count)) * fade
+        draw_arc(
+            center,
+            reach - float(trail) * (0.55 if visual == "quick" else 0.85),
+            base + angle - 0.22,
+            base + angle,
+            7,
+            Color(tint.r, tint.g, tint.b, alpha * 0.94),
+            2.0 if trail < 2 else 1.0
+        )
+
+    if visual == "cross":
+        var cross_angle := base - 0.42 + t * 0.84
+        draw_arc(center, reach * 0.78, cross_angle - 0.42, cross_angle + 0.14,
+            8, Color(1.0, 0.78, 0.43, fade * 0.72), 1.0)
+    elif visual == "finisher" or visual == "riposte":
+        draw_arc(center, reach * 0.72, base - half_angle * 0.8, base + half_angle * 0.8,
+            10, Color(1.0, 0.88, 0.62, fade * 0.8), 1.5)
+        var tip := center + Vector2.RIGHT.rotated(base) * reach
+        var side := Vector2.RIGHT.rotated(base + PI * 0.5) * 5.0
+        draw_line(tip - side, tip + side, Color(1.0, 0.91, 0.72, fade), 1.5)
