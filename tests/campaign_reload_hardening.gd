@@ -31,10 +31,16 @@ func first_walkable_cell_in_region(main: Node, region_id: String) -> Vector2i:
     return Vector2i(-1, -1)
 
 
+func commander_unit(main: Node) -> Node2D:
+    var units: Array = main.village.villagers()
+    assert(not units.is_empty(), "RTS campaign tests require a friendly commandable unit")
+    return units[0]
+
+
 func discover_region(main: Node, region_id: String, objective_id: String) -> void:
     var cell := first_walkable_cell_in_region(main, region_id)
     assert(cell.x >= 0, region_id + " must contain a walkable discovery cell")
-    main.player.position = main.nav.center_of(cell)
+    commander_unit(main).position = main.nav.center_of(cell)
     main.frontier_campaign._scan_discovery()
     assert(bool(main.frontier_campaign.objectives[objective_id]["completed"]),
         objective_id + " must complete when the player enters its region")
@@ -45,13 +51,15 @@ func complete_escort(main: Node, objective_id: String) -> void:
     assert(site != null and is_instance_valid(site),
         objective_id + " must have a live escort site")
     if site.site_state != "escorting":
-        main.player.position = site.position
-        site.interact()
+        var escort_unit := commander_unit(main)
+        escort_unit.position = site.position
+        assert(escort_unit.issue_interaction_order(site),
+            objective_id + " must activate through a unit interaction order")
     assert(site.site_state == "escorting" and site._path.size() > 1,
         objective_id + " must enter a path-backed escort state")
     # Route construction and restore are the subject of this test; the separate
     # frontier_campaign regression covers full path traversal and arrival behavior.
-    main.player.position = site.global_position
+    commander_unit(main).position = site.global_position
     site._finish_escort()
     assert(bool(main.frontier_campaign.objectives[objective_id]["completed"]),
         objective_id + " must complete through the escort completion handler")
@@ -97,7 +105,7 @@ func _run() -> void:
     # Act I: finish discovery and the camp, then conquer Greenwood.
     var greenwood := first_reachable_cell_in_region(main, "GREENWOOD")
     assert(greenwood.x >= 0, "Greenwood must be reachable for the campaign discovery")
-    main.player.position = main.nav.center_of(greenwood)
+    commander_unit(main).position = main.nav.center_of(greenwood)
     main.frontier_campaign._scan_discovery()
     assert(bool(main.frontier_campaign.objectives["discover_greenwood"]["completed"]),
         "Greenwood discovery must complete before the save")
@@ -112,18 +120,18 @@ func _run() -> void:
 
     # Save an in-progress Act II escort and a damaged Iron Legion stronghold.
     var escort = main.frontier_campaign.sites["highland_survivors"]
-    escort.interact()
+    var escort_unit := commander_unit(main)
+    escort_unit.position = escort.position
+    assert(escort_unit.issue_interaction_order(escort),
+        "The Highlands rescue must activate through an RTS unit interaction order")
     assert(escort.site_state == "escorting" and escort._path.size() > 1,
         "The Highlands rescue must enter an active, path-backed escort state")
-    main.player.position = escort.position
     var next_stronghold = main.campaign.current_target_node()
     assert(next_stronghold != null and next_stronghold.stronghold_id == "iron_legion",
         "Act II must expose the Iron Legion stronghold")
     next_stronghold.take_damage(211)
     var expected_iron_hp: int = int(next_stronghold.hp)
     var expected_escort_position: Vector2 = escort.position
-    main.player.position += Vector2(500.0, 500.0)
-
     assert(save_system.save_current(true),
         "Frontier save must succeed with a partially damaged stronghold and active escort")
     var act_two_snapshot: Dictionary = save_system.collect(main)
@@ -171,8 +179,10 @@ func _run() -> void:
     assert(bool(main.frontier_campaign.objectives["fenland_ruins"]["completed"]),
         "Fenlands ruins must be cleared")
     var beacon = main.frontier_campaign.sites["fenland_watch"]
-    main.player.position = beacon.global_position
-    beacon.interact()
+    var beacon_unit := commander_unit(main)
+    beacon_unit.position = beacon.global_position
+    assert(beacon_unit.issue_interaction_order(beacon),
+        "The signal site must activate through an RTS unit interaction order")
     beacon._on_phase_changed(true)
     beacon._on_phase_changed(false)
     assert(bool(main.frontier_campaign.objectives["fenland_watch"]["completed"]),
@@ -252,7 +262,7 @@ func _run() -> void:
         "The actual Frontier final wave must schedule the King on day 20")
     var king = load("res://scripts/entities/enemy.gd").new()
     king.setup(root.get_node("DataDB").enemies["king"], main.world, main.flow, main.player, "ashen_host")
-    king.position = main.player.position + Vector2(20, 0)
+    king.position = main.world.keep_center_position() + Vector2(20, 0)
     main.world.entities.add_child(king)
     await ticks(1)
     king.take_damage(999999)
