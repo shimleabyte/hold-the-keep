@@ -5,7 +5,7 @@
 **Release target:** Desktop-first — Windows x86_64 and Linux x86_64. Android remains deferred.  
 **Current save schema:** v17.
 
-**Product direction update (2026-11-06):** The accepted product identity is now a traditional top-down RTS inspired by Age of Empires' economy, expansion, technology, military command and conquest loop. `docs/RTS_PIVOT.md` records the migration contract. RTS-0 implementation is in progress on `feat/rts-command-foundation`: detached strategy camera, villager selection, group move orders and hero-independent building placement. This is a foundation slice, not a claim that unit production, combat orders, rival economies or campaign balance are complete.
+**Product direction update (2026-11-06):** The accepted product identity is now a traditional top-down RTS inspired by Age of Empires' economy, expansion, technology, military command and conquest loop. `docs/RTS_PIVOT.md` records the migration contract. RTS-0 implementation is in progress on `feat/rts-command-foundation`: detached strategy camera, villager selection, group move orders, contextual resource gathering, soldier attack orders, Frontier objective interaction and hero-independent building placement. This is a foundation slice, not a claim that unit production, combat orders, rival economies or campaign balance are complete.
 
 ## Live execution status — 2026-11-05 (P0–P2 desktop pass)
 
