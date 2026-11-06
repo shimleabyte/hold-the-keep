@@ -253,6 +253,9 @@ func _tick_pending(delta: float) -> void:
 func _click_on_hud() -> bool:
     if Input.is_physical_key_pressed(KEY_F) or Input.is_joy_button_pressed(0, JOY_BUTTON_X):
         return false
+    var commander := get_tree().get_first_node_in_group("army_command_manager")
+    if commander != null and commander.has_method("blocks_player_attack") and commander.blocks_player_attack():
+        return true
     var hud := get_tree().get_first_node_in_group("hud")
     return hud != null and hud.blocks_mouse(get_viewport().get_mouse_position())
 
