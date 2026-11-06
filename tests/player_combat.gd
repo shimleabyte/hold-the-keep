@@ -25,6 +25,25 @@ func _initialize() -> void:
         "Dash must translate the player, not only play an animation")
     assert(player.combat_status()["dash_cd"] > 0.0, "Dash must enter cooldown")
 
+    # An incoming hit avoided during the opening dash window must grant one Riposte.
+    player._dash_cd = 0.0
+    var hp_before_perfect_dodge: int = player.hp
+    assert(player.activate_ability("dash"), "Dash should be available for the perfect-dodge check")
+    player.take_damage_from(5, player.global_position + Vector2(-12, 0))
+    assert(player.hp == hp_before_perfect_dodge,
+        "A perfect dodge must negate the incoming hit")
+    var dodge_status: Dictionary = player.combat_status()
+    assert(dodge_status["riposte_ready"] and dodge_status["resolve"] >= 24.0,
+        "A successful dash evasion must grant Resolve and a Riposte window")
+    var riposte_profile: Dictionary = player.combat_flow.begin_attack()
+    assert(riposte_profile["visual"] == "riposte"
+        and float(riposte_profile["damage_scale"]) > 1.0,
+        "The next basic strike must consume Riposte and receive its damage modifier")
+    player.combat_flow.reset()
+    player._dash_t = 0.0
+    player._invuln = 0.0
+    player._dash_can_perfect_dodge = false
+
     var initial_status: Dictionary = player.combat_status()
     player.gain_experience(initial_status["next_xp"])
     assert(player.level == 2, "XP threshold must advance the player to level 2")
@@ -93,6 +112,8 @@ func _initialize() -> void:
         "A normal melee swing must not damage an enemy directly behind the player")
     assert(normal_flank.hp == normal_flank_hp,
         "A normal melee swing must not damage an enemy outside its visible forward sector")
+    assert(player.combat_status()["resolve"] > 0.0,
+        "Confirmed basic-attack hits must generate Resolve")
 
     player.gain_experience(player.combat_status()["next_xp"])
     assert(player.level == 3 and player.combat_status()["rally_unlocked"],
@@ -103,6 +124,14 @@ func _initialize() -> void:
     assert(soldier._rally_t > 0.0, "Rally must reach nearby friendly soldiers")
     assert(soldier._rally_damage_mult > 1.0 and soldier._rally_interval_mult < 1.0,
         "Rally must improve soldier damage and attack cadence")
+
+    player._cleave_cd = 0.0
+    player.combat_flow.add_resolve(60.0)
+    assert(player.activate_ability("cleave"), "Cleave must be available for Resolve spending")
+    assert(player._cleave_empowered, "60 Resolve must convert Cleave into its empowered variant")
+    assert(is_equal_approx(float(player.combat_status()["resolve"]), 0.0),
+        "Empowered Cleave must consume exactly 60 Resolve")
+    await ticks(20)
 
     var wolf = enemy_script.new()
     wolf.setup(data_db.enemies["wolf"], main.world, main.flow, player)
