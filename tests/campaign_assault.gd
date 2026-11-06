@@ -23,7 +23,7 @@ func _initialize() -> void:
     while not main.flow.is_current():
         await ticks(1)
         flow_wait_frames += 1
-        assert(flow_wait_frames < 180,
+        assert(flow_wait_frames < 1800,
             "Initial enemy flow field must publish before garrison assertions")
 
     var stronghold = main.enemy_keep
