@@ -115,7 +115,7 @@ class JobRow extends Control:
 
 
 
-## Level, XP, and active-skill cooldowns.
+## Level, XP, Resolve and active-skill cooldowns.
 class CombatBar extends Control:
     var font: Font
     var ability_icons: Array = []
@@ -135,11 +135,13 @@ class CombatBar extends Control:
         draw_rect(Rect2(3, 3, 35, 5), Color("#29231d"))
         draw_rect(Rect2(4, 4, 33.0 * clampf(ratio, 0.0, 1.0), 3), Color("#d39b42"))
         draw_string(font, Vector2(3, 15), str(level), HORIZONTAL_ALIGNMENT_LEFT, 10, 6, Color("#ffd23f"))
+
         var abilities := [
             ["Q", true, float(state.get("dash_cd", 0.0))],
             ["C", bool(state.get("cleave_unlocked", false)), float(state.get("cleave_cd", 0.0))],
             ["V", bool(state.get("rally_unlocked", false)), float(state.get("rally_cd", 0.0))]
         ]
+        var empowered_ready := bool(state.get("cleave_empowered_ready", false))
         for i in abilities.size():
             var item: Array = abilities[i]
             var x := 43.0 + i * 37.0
@@ -147,6 +149,8 @@ class CombatBar extends Control:
             var cooldown := float(item[2])
             var ready := unlocked and cooldown <= 0.05
             var tint := Color("#ffd23f") if ready else (Color("#a99a83") if unlocked else Color("#665d52"))
+            if i == 1 and ready and empowered_ready:
+                tint = Color("#fff0b0")
             draw_rect(Rect2(x, 1, 34, 16), Color("#211b19"))
             draw_rect(Rect2(x, 1, 34, 16), Color("#6b5a40"), false, 1.0)
             if i < ability_icons.size() and ability_icons[i] is Texture2D:
@@ -156,6 +160,25 @@ class CombatBar extends Control:
                     HORIZONTAL_ALIGNMENT_LEFT, 15, 6, Color("#f0d8ad"))
             draw_string(font, Vector2(x + 23, 15), String(item[0]),
                 HORIZONTAL_ALIGNMENT_LEFT, 9, 6, Color("#d7ba7a"))
+            if i == 1 and ready and empowered_ready:
+                draw_rect(Rect2(x + 29, 2, 3, 3), Color("#ffe6a0"))
+
+        var resolve_max := maxf(1.0, float(state.get("resolve_max", 100.0)))
+        var resolve := clampf(float(state.get("resolve", 0.0)), 0.0, resolve_max)
+        var resolve_ratio := resolve / resolve_max
+        var resolve_color := Color("#d39b42")
+        if bool(state.get("riposte_ready", false)):
+            resolve_color = Color("#e6e3ad")
+        elif empowered_ready:
+            resolve_color = Color("#f0b85e")
+        draw_string(font, Vector2(4, 24), "R", HORIZONTAL_ALIGNMENT_LEFT, 8, 6, Color("#d7ba7a"))
+        draw_rect(Rect2(13, 20, size.x - 18, 4), Color("#29231d"))
+        draw_rect(Rect2(14, 21, (size.x - 20) * resolve_ratio, 2), resolve_color)
+        var combo_step := int(state.get("combo_step", 0))
+        var tag := "RIPOSTE" if bool(state.get("riposte_ready", false)) else ("COMBO %d" % combo_step if combo_step > 0 else "")
+        if not tag.is_empty():
+            var tag_color := Color("#f4e7ae") if bool(state.get("riposte_ready", false)) else Color("#c8b18a")
+            draw_string(font, Vector2(155, 12), tag, HORIZONTAL_ALIGNMENT_LEFT, 40, 6, tag_color)
 
 
 ## Slot bar bangunan: ikon, nomor + nama, biaya. Bisa diklik.
