@@ -785,7 +785,7 @@ func _tick_outpost_guard(delta: float) -> void:
 func issue_army_move_order(destination: Vector2) -> bool:
     if job != "soldier" or state in [State.HIDDEN, State.FLEEING] or _expeditioning or nav == null:
         return false
-    var goal_cell := nav.cell_of(destination)
+    var goal_cell: Vector2i = nav.cell_of(destination)
     if not WorldConfig.is_valid_cell(goal_cell):
         return false
     var path: PackedVector2Array = nav.path_to(position, goal_cell)
