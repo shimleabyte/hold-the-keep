@@ -141,6 +141,25 @@ func draw(canvas: CanvasItem, frame_height: int, faction_tint: Color = Color.WHI
                 var angle := ability_direction.angle()
                 canvas.draw_arc(center, 13.0 + progress * 9.0, angle - CLEAVE_HALF_ANGLE, angle + CLEAVE_HALF_ANGLE,
                     12, Color(1.0, 0.82, 0.42, alpha), 1.5)
+            "cleave_empowered":
+                var angle := ability_direction.angle()
+                var radius := 16.0 + progress * 18.0
+                canvas.draw_arc(center, radius, angle - CLEAVE_HALF_ANGLE, angle + CLEAVE_HALF_ANGLE,
+                    16, Color(1.0, 0.88, 0.56, alpha), 2.0)
+                canvas.draw_arc(center, radius * 0.72, angle - 0.86, angle + 0.86,
+                    12, Color(1.0, 0.62, 0.27, alpha * 0.82), 1.0)
+                for marker in 5:
+                    var spoke := angle + lerpf(-CLEAVE_HALF_ANGLE, CLEAVE_HALF_ANGLE, float(marker) / 4.0)
+                    var direction := Vector2.RIGHT.rotated(spoke)
+                    canvas.draw_line(center + direction * (radius - 2.0),
+                        center + direction * (radius + 3.0), Color(1.0, 0.93, 0.69, alpha), 1.0)
+            "riposte":
+                var radius := 8.0 + progress * 15.0
+                canvas.draw_arc(center, radius, 0.0, TAU, 16, Color("#f4e7ae", alpha), 1.5)
+                for marker in 6:
+                    var direction := Vector2.RIGHT.rotated(float(marker) * TAU / 6.0)
+                    canvas.draw_line(center + direction * (radius + 1.0),
+                        center + direction * (radius + 4.0), Color("#fff5ca", alpha), 1.25)
             "rally":
                 canvas.draw_arc(center, 9.0 + progress * 10.0, 0.0, TAU, 16,
                     Color(0.79, 0.84, 0.58, alpha), 1.0)

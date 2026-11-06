@@ -389,9 +389,9 @@ func _build_combat_bar() -> void:
     _combat_bar = HUD_WIDGETS.CombatBar.new()
     _combat_bar.font = _font
     _combat_bar.position = Vector2(151, 219)
-    _combat_bar.size = Vector2(158, 18)
+    _combat_bar.size = Vector2(196, 25)
     _combat_bar.ability_icons = [ICONS["compass"], ICONS["sword"], ICONS["people"]]
-    _combat_bar.tooltip_text = "Q · Dash    C · Tebas    V · Seruan — ikon menunjukkan status dan cooldown"
+    _combat_bar.tooltip_text = "Q Dash · C Cleave · V Rally. Basic attack chains three strikes. 60 Resolve empowers Cleave; a perfect dodge grants Riposte."
     _combat_bar.mouse_filter = Control.MOUSE_FILTER_STOP
     add_child(_combat_bar)
     _blockers.append(_combat_bar)

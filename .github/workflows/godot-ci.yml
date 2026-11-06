@@ -97,6 +97,7 @@ jobs:
           - input_rebinding
           - building_controls
           - map_stages
+          - player_combat_flow
           - player_combat
           - resource_save_state
           - responsive_layout

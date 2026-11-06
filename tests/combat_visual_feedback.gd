@@ -54,6 +54,12 @@ func _initialize() -> void:
         "Cleave must retain its locked direction in the ability cue")
     assert(is_equal_approx(CombatVisualFeedback.CLEAVE_HALF_ANGLE, 1.2),
         "Cleave anticipation must use the same half-angle as the damaging player arc")
+    feedback.register_ability("cleave_empowered", Vector2.RIGHT, 0.46)
+    assert(feedback.ability_kind == "cleave_empowered",
+        "Resolve-powered Cleave must resolve to its heavier layered cue")
+    feedback.register_ability("riposte", Vector2.LEFT, 0.58)
+    assert(feedback.ability_kind == "riposte",
+        "Perfect Dodge must resolve to its distinct Riposte cue")
     feedback.register_ability("rally", Vector2.ZERO, 0.35)
     assert(feedback.ability_kind == "rally",
         "Rally must resolve to its distinct radial cue")
