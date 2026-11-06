@@ -7,10 +7,14 @@ func ticks(count: int) -> void:
 
 
 func _initialize() -> void:
+    call_deferred("_run")
+
+
+func _run() -> void:
     var game_clock = root.get_node("GameClock")
     var save_system = root.get_node("SaveSystem")
-    var world_config = root.get_node("WorldConfig")
-    assert(world_config.apply_saved_profile("classic", 64),
+    var world_config: Node = root.get_node("WorldConfig")
+    assert(bool(world_config.call("apply_saved_profile", "classic", 64)),
         "The version-2 synthetic fixture must be checked against its original 64x64 Classic runtime")
     DirAccess.remove_absolute("user://save.json")
     DirAccess.remove_absolute("user://save.tmp")
