@@ -46,6 +46,9 @@ func _input(event: InputEvent) -> void:
 
     if mouse_event.button_index == MOUSE_BUTTON_LEFT:
         if mouse_event.pressed:
+            # Clicking a hostile entity remains the player's direct melee attack.
+            if _nearest_attack_target(get_global_mouse_position()) != null:
+                return
             _selection_started = true
             _selection_start_screen = mouse_event.position
             _selection_start_world = get_global_mouse_position()
@@ -70,6 +73,10 @@ func _input(event: InputEvent) -> void:
             _command_marker_time = COMMAND_MARKER_SECONDS
             Events.build_feedback.emit("Army order issued to %d unit(s)" % issued)
         get_viewport().set_input_as_handled()
+
+
+func blocks_player_attack() -> bool:
+    return _selection_started
 
 
 func _mouse_blocked(screen_position: Vector2) -> bool:
