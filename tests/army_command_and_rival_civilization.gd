@@ -1,19 +1,19 @@
 extends SceneTree
 ## Verifies soldiers-only mouse orders and the first persistent rival civilization.
 
-var failed := false
+var failed: bool = false
 
 
 func _initialize() -> void:
     OS.set_environment("HTK_AUTO_START_GAME", "1")
     OS.set_environment("HTK_AUTO_RESOLVE_EVENTS", "1")
     await process_frame
-    var main_scene: Variant = load("res://scenes/main.tscn").instantiate()
+    var main_scene: HoldTheKeepMain = load("res://scenes/main.tscn").instantiate() as HoldTheKeepMain
     root.add_child(main_scene)
     await process_frame
     await process_frame
 
-    var commander = main_scene.army_command
+    var commander: ArmyCommand = main_scene.army_command
     _check(commander != null, "Main scene must install the army command manager")
     if commander == null:
         quit(1)
@@ -24,13 +24,13 @@ func _initialize() -> void:
     _check(main_scene.player.camera != null and main_scene.player.camera.is_current(),
         "The direct-control player's camera must remain current")
 
-    var units := get_nodes_in_group("villagers")
+    var units: Array[Node] = get_nodes_in_group("villagers")
     _check(units.size() >= 2, "Classic campaign should create starting villagers")
     if units.size() < 2:
         quit(1)
         return
 
-    var worker = units[0]
+    var worker: Villager = units[0] as Villager
     _check(String(worker.job) != "soldier", "Starting civilian should remain an autonomous worker")
     commander.select_unit(worker)
     _check(commander.selected_units.is_empty(), "Civilian workers must not be selectable by the army command manager")
@@ -43,8 +43,8 @@ func _initialize() -> void:
 
     var start_cell: Vector2i = main_scene.nav.cell_of(worker.global_position)
     var reachable: Dictionary = main_scene.nav.reachable_cells(start_cell)
-    var destination_cell := Vector2i(-1, -1)
-    for cell_value in reachable:
+    var destination_cell: Vector2i = Vector2i(-1, -1)
+    for cell_value: Vector2i in reachable.keys():
         var cell: Vector2i = cell_value
         if Vector2(cell - start_cell).length() >= 5.0 and main_scene.nav.is_walkable(cell):
             destination_cell = cell
@@ -56,7 +56,7 @@ func _initialize() -> void:
         _check(int(worker.state) == int(state_constants.get("MANUAL_MOVE", -1)),
             "A move order should enter the explicit manual-move state")
 
-    var stronghold = main_scene.campaign.current_target_node()
+    var stronghold: EnemyKeep = main_scene.campaign.current_target_node() as EnemyKeep
     _check(stronghold != null, "Classic campaign should expose its rival stronghold")
     if stronghold != null:
         commander.select_unit(worker)
@@ -67,12 +67,12 @@ func _initialize() -> void:
         _check(worker._manual_attack_target == stronghold,
             "A soldier must retain the commander-selected target rather than reacquiring a random enemy")
 
-        var civilization = stronghold.civilization
+        var civilization: EnemyCivilization = stronghold.civilization
         _check(civilization != null, "Every enemy stronghold should own an autonomous civilization")
         if civilization != null:
-            var starting_wood := float(civilization.resources.get("wood", 0.0))
+            var starting_wood: float = float(civilization.resources.get("wood", 0.0))
             _check(starting_wood > 0.0, "Rival civilization should start with a finite resource ledger")
-            for tick in range(270):
+            for tick: int in range(270):
                 civilization.advance(1.0)
             _check(civilization._has_structure("lumber_camp"),
                 "Rival civilization should construct a visible lumber camp")
@@ -87,23 +87,24 @@ func _initialize() -> void:
             _check(not civilization.structures.is_empty(),
                 "Completed rival structures should exist as world entities")
             var snapshot: Dictionary = stronghold.export_state()
-            var saved_civ: Variant = snapshot.get("civilization", null)
+            var saved_civ: Dictionary = snapshot.get("civilization", {})
             _check(saved_civ is Dictionary and saved_civ.get("structures", []) is Array,
                 "Stronghold state must persist the rival economy and completed structures")
             _check(float(civilization.resources.get("wood", 0.0)) <= 999.0,
                 "Rival resource stock must remain bounded")
 
             if not civilization.structures.is_empty():
-                var structure = civilization.structures[0]
+                var structure: EnemySettlementStructure = civilization.structures[0]
                 var occupied_cell: Vector2i = structure.cell
                 structure.take_damage(9999)
                 _check(not main_scene.world.occupied.has(occupied_cell),
                     "Destroying a rival structure must release its world footprint")
 
     # The command layer must not have reassigned the other civilian worker.
-    var remaining_workers := get_nodes_in_group("villagers")
-    var civilian_count := 0
-    for unit in remaining_workers:
+    var remaining_workers: Array[Node] = get_nodes_in_group("villagers")
+    var civilian_count: int = 0
+    for unit_node: Node in remaining_workers:
+        var unit: Villager = unit_node as Villager
         if unit != worker and String(unit.job) != "soldier":
             civilian_count += 1
     _check(civilian_count >= 1, "Non-selected civilian workers must retain their normal jobs")
