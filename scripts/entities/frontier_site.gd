@@ -111,7 +111,19 @@ func _process(delta: float) -> void:
 
 
 func _tick_escort(delta: float) -> void:
-    if player == null or not is_instance_valid(player) or player.global_position.distance_to(global_position) > 136.0:
+    # Keep the escort moving only while at least one visible friendly unit is nearby.
+    # This replaces the retired hero-leash with a commander-managed escort presence.
+    var escort_present := false
+    if player != null and is_instance_valid(player) and player.visible:
+        escort_present = player.global_position.distance_to(global_position) <= 136.0
+    if not escort_present:
+        for villager in get_tree().get_nodes_in_group("villagers"):
+            if not is_instance_valid(villager) or not villager.visible:
+                continue
+            if villager.global_position.distance_to(global_position) <= 136.0:
+                escort_present = true
+                break
+    if not escort_present:
         return
     if _path.is_empty():
         _build_escort_path()
