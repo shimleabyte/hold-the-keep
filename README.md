@@ -35,13 +35,16 @@ Game sedang bertransisi ke model RTS top-down: kamera strategi, seleksi unit, pe
 
 | Aksi | Kontrol |
 |---|---|
-| Bergerak | WASD / tombol panah / left stick |
-| Berinteraksi dan mengumpulkan resource | E / Spasi |
-| Menyerang | F / klik kiri |
-| Berlari | Shift / bumper kiri |
-| Dash | Q |
-| Cleave | C |
-| Rally | V |
+| Geser kamera | WASD / tombol panah |
+| Geser kamera di tepi layar | Arahkan kursor ke tepi |
+| Geser kamera manual | Klik tengah + drag |
+| Zoom | Roda mouse |
+| Pilih unit | Klik kiri |
+| Pilih banyak unit | Drag klik kiri |
+| Tambah/lepaskan dari seleksi | Shift + klik kiri |
+| Perintah gerak unit | Klik kanan tanah |
+| Perintah serang prajurit | Klik kanan musuh / target kampanye |
+| Interaksi objektif Frontier | Klik kanan titik objektif dengan unit terpilih |
 | Peta strategis | TAB |
 | Objektif | O |
 | Teknologi | Y |
