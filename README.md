@@ -34,6 +34,10 @@ Bangun desa, kelola penduduk dan sumber daya pada siang hari. Persiapkan pertaha
 | Bergerak | WASD / tombol panah / left stick |
 | Berinteraksi dan mengumpulkan resource | E / Spasi |
 | Menyerang | F / klik kiri |
+| Pilih prajurit | Klik kiri pada prajurit sendiri |
+| Pilih beberapa prajurit | Drag klik kiri; Shift untuk tambah/lepas |
+| Perintah gerak pasukan | Klik kanan tanah setelah memilih prajurit |
+| Perintah serang pasukan | Klik kanan musuh / stronghold setelah memilih prajurit |
 | Berlari | Shift / bumper kiri |
 | Dash | Q |
 | Cleave | C |
