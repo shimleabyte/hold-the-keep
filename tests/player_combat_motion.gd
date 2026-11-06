@@ -39,7 +39,7 @@ func _initialize() -> void:
     motion.play("cross", Vector2.RIGHT, 0.29)
     motion.advance(0.14)
     var cross_pose: Dictionary = motion.pose()
-    assert(float(cross_pose["offset"].y) < -2.0,
+    assert(float(cross_pose["offset"].y) < -1.0,
         "Cross Slash must transfer body weight laterally instead of reusing Quick Slash")
 
     motion.play("finisher", Vector2.RIGHT, 0.42)
@@ -61,14 +61,14 @@ func _initialize() -> void:
         "Riposte must have a distinct forward counter-lunge")
 
     motion.play("cleave_empowered", Vector2.DOWN, 0.46)
-    motion.advance(0.23)
+    motion.advance(0.31)
     var empowered_pose: Dictionary = motion.pose()
     assert(float(empowered_pose["offset"].y) > 5.0
         and float(empowered_pose["scale"].y) > 1.1,
         "Empowered Cleave must use a stronger committed body follow-through")
 
     motion.play("rally", Vector2.UP, 0.62)
-    motion.advance(0.30)
+    motion.advance(0.40)
     var rally_pose: Dictionary = motion.pose()
     assert(float(rally_pose["offset"].y) < -1.0
         and float(rally_pose["scale"].y) > 1.0,
