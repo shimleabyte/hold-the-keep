@@ -22,12 +22,13 @@ func _initialize() -> void:
     save_system.set("pending_world_map_size", 64)
     OS.set_environment("HTK_AUTO_START_GAME", "1")
 
-    var first_main: HoldTheKeepMain = load("res://scenes/main.tscn").instantiate() as HoldTheKeepMain
+    var first_main: Node2D = load("res://scenes/main.tscn").instantiate() as Node2D
     root.add_child(first_main)
     current_scene = first_main
     await ticks(8)
     game_clock.set_process(false)
-    assert(first_main.world != null and first_main.world.map_size == 64,
+    var first_world: Node = first_main.get("world") as Node
+    assert(first_world != null and int(first_world.get("map_size")) == 64,
         "The fixture must start on the historical 64x64 world")
     assert(bool(save_system.call("save_current", true)),
         "The historical world fixture must produce a valid current-schema save")
@@ -40,14 +41,16 @@ func _initialize() -> void:
 
     await ticks(8)
     game_clock.set_process(false)
-    var restored_main: HoldTheKeepMain = get_first_node_in_group("main") as HoldTheKeepMain
-    assert(restored_main != null and restored_main.world != null,
+    var restored_main: Node2D = get_first_node_in_group("main") as Node2D
+    var restored_world: Node = restored_main.get("world") as Node
+    assert(restored_main != null and restored_world != null,
         "Continue must rebuild the main scene")
     assert(String(world_config.get("profile_id")) == "classic" and int(world_config.get("map_size")) == 64,
         "The saved campaign dimensions must override the new-game default during Continue")
-    assert(restored_main.world.map_size == 64,
+    assert(int(restored_world.get("map_size")) == 64,
         "The restored terrain must retain its original 64x64 footprint")
-    assert(restored_main.world.starting_keep_cell() == Vector2i(31, 29),
+    var restored_keep_cell: Vector2i = restored_world.call("starting_keep_cell")
+    assert(restored_keep_cell == Vector2i(31, 29),
         "The saved Classic Keep must remain at its original cell coordinates")
     var restored_snapshot: Dictionary = save_system.call("collect", restored_main)
     assert(bool(save_system.call("_valid_save", restored_snapshot)),
