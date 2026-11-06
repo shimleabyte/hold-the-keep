@@ -1,6 +1,6 @@
 extends Node
 ## Single source of truth for world dimensions and profile-level generation settings.
-## Classic and the original Frontier profile remain compatible; Frontier Expedition adds a larger exploration-first map.
+## All campaign profiles are scaled for territory and settlement growth. Historical dimensions remain supported for existing saves.
 
 const TILE_SIZE := 16
 const DEFAULT_SEED := 1337
@@ -72,7 +72,7 @@ func _ready() -> void:
         push_error("WorldConfig: unknown world profile '%s'; falling back to Classic" % requested_profile)
         requested_profile = "classic"
 
-    _apply_profile_values(requested_profile)
+    _apply_profile_values(requested_profile, int(PROFILES[requested_profile]["map_size"]))
     world_seed = int(ProjectSettings.get_setting("world/seed", DEFAULT_SEED))
 
 
