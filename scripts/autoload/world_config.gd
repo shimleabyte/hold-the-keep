@@ -1,10 +1,34 @@
 extends Node
 ## Single source of truth for world dimensions and profile-level generation settings.
-## Classic and the original Frontier profile remain compatible; Frontier Expedition adds a larger exploration-first map.
+## All campaign profiles are scaled for territory and settlement growth. Historical dimensions remain supported for existing saves.
 
 const TILE_SIZE := 16
 const DEFAULT_SEED := 1337
 const PROFILES: Dictionary = {
+    "classic": {
+        "map_size": 128,
+        "starting_claim_radius": 14.0,
+        "safe_radius": 10.0,
+        "iron_veins": 32
+    },
+    "frontier": {
+        "map_size": 192,
+        "starting_claim_radius": 18.0,
+        "safe_radius": 14.0,
+        "iron_veins": 72
+    },
+    "frontier_expedition": {
+        "map_size": 256,
+        "starting_claim_radius": 18.0,
+        "safe_radius": 14.0,
+        "iron_veins": 128,
+        "expedition_core_size": 160
+    }
+}
+
+## Previously shipped dimensions. They remain loadable so existing campaigns keep
+## their original generated terrain, coordinates, fog and resource placements.
+const LEGACY_PROFILES: Dictionary = {
     "classic": {
         "map_size": 64,
         "starting_claim_radius": 10.0,
@@ -34,6 +58,7 @@ var starting_claim_radius := 10.0
 var safe_radius := 8.0
 var iron_veins := 8
 var world_seed := DEFAULT_SEED
+var _active_profile_definition: Dictionary = {}
 
 
 func _ready() -> void:
@@ -47,7 +72,7 @@ func _ready() -> void:
         push_error("WorldConfig: unknown world profile '%s'; falling back to Classic" % requested_profile)
         requested_profile = "classic"
 
-    _apply_profile_values(requested_profile)
+    _apply_profile_values(requested_profile, int(PROFILES[requested_profile]["map_size"]))
     world_seed = int(ProjectSettings.get_setting("world/seed", DEFAULT_SEED))
 
 
@@ -56,14 +81,35 @@ func apply_profile(id: String) -> bool:
     if not PROFILES.has(id):
         push_error("WorldConfig: cannot apply unknown profile '%s'" % id)
         return false
-    _apply_profile_values(id)
+    _apply_profile_values(id, int(PROFILES[id]["map_size"]))
     ProjectSettings.set_setting("world/profile", id)
     return true
 
 
-func _apply_profile_values(id: String) -> void:
+## Applies the exact dimensions stored in a save. Old profiles use their historical
+## map sizes instead of being silently regenerated on the newer, larger layouts.
+func apply_saved_profile(id: String, saved_map_size: int) -> bool:
+    if not is_supported_map_size(id, saved_map_size):
+        push_error("WorldConfig: unsupported saved map %s/%d" % [id, saved_map_size])
+        return false
+    _apply_profile_values(id, saved_map_size)
+    return true
+
+
+func is_supported_map_size(id: String, candidate_size: int) -> bool:
+    if not PROFILES.has(id):
+        return false
+    if int(PROFILES[id]["map_size"]) == candidate_size:
+        return true
+    return LEGACY_PROFILES.has(id) and int(LEGACY_PROFILES[id]["map_size"]) == candidate_size
+
+
+func _apply_profile_values(id: String, requested_size: int) -> void:
     profile_id = id
-    var profile: Dictionary = PROFILES[profile_id]
+    var profile: Dictionary = PROFILES[id]
+    if int(profile["map_size"]) != requested_size and LEGACY_PROFILES.has(id):
+        profile = LEGACY_PROFILES[id]
+    _active_profile_definition = profile.duplicate(true)
     map_size = int(profile["map_size"])
     tile_size = TILE_SIZE
     map_cells = map_size * map_size
@@ -82,6 +128,8 @@ func is_frontier_expedition() -> bool:
 
 
 func profile_definition(id: String) -> Dictionary:
+    if id == profile_id and not _active_profile_definition.is_empty():
+        return _active_profile_definition.duplicate(true)
     if not PROFILES.has(id):
         return {}
     return PROFILES[id].duplicate(true)
