@@ -20,6 +20,7 @@ const MENU_SCRIPT := preload("res://scripts/ui/pause_menu.gd")
 const FRONTIER_CAMPAIGN_SCRIPT := preload("res://scripts/systems/frontier_campaign.gd")
 const SAVE_MIGRATION_SCRIPT := preload("res://scripts/persistence/save_migration_pipeline.gd")
 const FRONTIER_OBJECTIVE_PANEL_SCRIPT := preload("res://scripts/ui/frontier_objective_panel.gd")
+const ARMY_COMMAND_SCRIPT := preload("res://scripts/systems/army_command.gd")
 const TITLE_SCREEN_SCRIPT := preload("res://scripts/ui/title_screen.gd")
 
 const NIGHT_TINT := Color(0.45, 0.5, 0.75)
@@ -42,6 +43,7 @@ var supply
 var village
 var events
 var frontier_campaign
+var army_command
 var _save_restore_plan: Dictionary = {}
 
 var _tint: CanvasModulate
@@ -55,18 +57,27 @@ func _ready() -> void:
         return
     if not SaveSystem.pending.is_empty():
         var saved_world: Variant = SaveSystem.pending.get("world", {})
-        var saved_profile := String(saved_world.get("profile", WorldConfig.profile_id)) if saved_world is Dictionary else WorldConfig.profile_id
-        if WorldConfig.apply_profile(saved_profile):
-            _start_campaign(saved_profile, true)
+        var saved_profile := SaveSystem.pending_world_profile
+        if saved_profile.is_empty():
+            saved_profile = String(saved_world.get("profile", WorldConfig.profile_id)) if saved_world is Dictionary else "classic"
+        if _start_campaign(saved_profile, true):
             return
     var title_screen = TITLE_SCREEN_SCRIPT.new()
     title_screen.mode_selected.connect(_start_campaign)
     add_child(title_screen)
 
 
-func _start_campaign(profile_id: String, preserve_runtime_state := false) -> void:
-    if not WorldConfig.apply_profile(profile_id):
-        return
+func _start_campaign(profile_id: String, preserve_runtime_state := false) -> bool:
+    var profile_applied := false
+    if preserve_runtime_state:
+        var saved_size := SaveSystem.pending_world_map_size
+        if saved_size <= 0:
+            saved_size = WorldConfig.map_size
+        profile_applied = WorldConfig.apply_saved_profile(profile_id, saved_size)
+    else:
+        profile_applied = WorldConfig.apply_profile(profile_id)
+    if not profile_applied:
+        return false
     Settings.set_world_profile(profile_id)
     if not preserve_runtime_state:
         Inventory.reset()
@@ -80,6 +91,7 @@ func _start_campaign(profile_id: String, preserve_runtime_state := false) -> voi
         title_screen.queue_free()
 
     _initialize_game()
+    return true
 
 
 func _initialize_game() -> void:
@@ -164,6 +176,13 @@ func _initialize_game() -> void:
     world.add_child(fog)
     if not save.is_empty():
         fog.import_state(save.get("fog", {}))
+
+    army_command = ARMY_COMMAND_SCRIPT.new()
+    army_command.name = "ArmyCommand"
+    army_command.world = world
+    army_command.nav = nav
+    army_command.build_system = build
+    world.add_child(army_command)
 
     frontier_campaign = FRONTIER_CAMPAIGN_SCRIPT.new()
     add_child(frontier_campaign)
