@@ -130,7 +130,7 @@ func _process(delta: float) -> void:
     if _reinforce_timer > 0.0:
         return
     _reinforce_timer = REINFORCE_INTERVAL
-    var garrison_cap := civilization.garrison_capacity() if civilization != null else 4
+    var garrison_cap: int = civilization.garrison_capacity() if civilization != null else 4
     if _local_garrison().size() >= garrison_cap:
         return
     if civilization == null:
