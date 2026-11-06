@@ -1,8 +1,8 @@
 # Hold the Keep
 
-Game strategi pertahanan desa 2D top-down bertema medieval, dibuat dengan **Godot 4.7**.
+Game strategi RTS 2D top-down bertema medieval, dibuat dengan **Godot 4.7**. Proyek ini sedang memindahkan fondasi village-defense menjadi permainan komando kerajaan: kelola ekonomi, bangun pemukiman, jelajahi wilayah, kendalikan pasukan, dan taklukkan rival.
 
-Bangun desa, kelola penduduk dan sumber daya pada siang hari. Persiapkan pertahanan, lalu hadapi serangan musuh saat malam. Di mode Frontier, jelajahi wilayah yang lebih luas dan taklukkan benteng lawan.
+Model RTS masih dalam tahap migrasi. Fondasi kamera strategi, seleksi unit, perintah gerak, serang, dan interaksi objektif sudah tersedia di branch pengembangan; produksi militer dan AI ekonomi lawan belum selesai.
 
 ## Mode permainan
 
@@ -16,13 +16,12 @@ Game sedang bertransisi ke model RTS top-down: kamera strategi, seleksi unit, pe
 
 ## Fitur utama
 
-- Siklus siang dan malam dengan gelombang serangan musuh.
-- Bangun dan tingkatkan desa, pertahanan, serta fasilitas produksi.
-- Atur pekerjaan penduduk: penebang, penambang, petani, Builder, Hunter, Scout, Healer, Blacksmith, dan prajurit.
-- Kumpulkan kayu, batu, makanan, dan besi.
-- Lawan musuh secara langsung dan buka kemampuan pemain.
-- Jelajahi peta dengan fog of war, klaim wilayah, dan hadapi stronghold lawan.
-- Riset teknologi, simpan progres, dan lanjutkan kampanye.
+- Kamera strategi terpisah dari unit, dengan pan, edge-scroll, drag, dan zoom.
+- Seleksi villager dengan klik tunggal atau drag-box, lalu berikan perintah gerak langsung.
+- Prajurit dapat menerima perintah serang terhadap musuh, kamp, objective dan stronghold.
+- Interaksi objective Frontier menggunakan unit terpilih; konvoi bergerak di rute dan dapat diserang.
+- Ekonomi berbasis kayu, batu, makanan, besi, pekerjaan penduduk, konstruksi, dan supply network.
+- Bangunan, teknologi, fog of war, klaim wilayah, faksi, dan kampanye multi-stronghold tetap tersedia sebagai fondasi ekspansi.
 
 ## Menjalankan game
 
