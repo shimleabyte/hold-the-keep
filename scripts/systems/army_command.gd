@@ -114,7 +114,7 @@ func _finish_selection(additive: bool) -> void:
 
 
 func _nearest_selectable(world_position: Vector2) -> Villager:
-    var best: Node2D = null
+    var best: Villager = null
     var best_distance: float = CLICK_SELECT_RADIUS
     for value: Node in get_tree().get_nodes_in_group("villagers"):
         var unit: Villager = value as Villager
@@ -131,9 +131,9 @@ func select_units_in_rect(rect: Rect2, additive: bool = false) -> void:
     if not additive:
         selected_units.clear()
     for value: Node in get_tree().get_nodes_in_group("villagers"):
-        if not is_selectable(value):
-            continue
         var unit: Villager = value as Villager
+        if not is_selectable(unit):
+            continue
         if rect.has_point(unit.global_position) and not selected_units.has(unit):
             selected_units.append(unit)
     queue_redraw()
@@ -194,15 +194,15 @@ func _nearest_attack_target(world_position: Vector2) -> Node2D:
     var best_distance: float = 34.0
     var candidates: Array[Node2D] = []
     for group_name: String in ["enemies", "enemy_strongholds", "enemy_buildings", "faction_camp_targets", "campaign_targets"]:
-        for value in get_tree().get_nodes_in_group(group_name):
-            if not candidates.has(value):
-                candidates.append(value)
-    for value in candidates:
-        if value == null or not is_instance_valid(value) or not (value is Node2D) or not value.visible:
+        for candidate: Node in get_tree().get_nodes_in_group(group_name):
+            var candidate_2d: Node2D = candidate as Node2D
+            if candidate_2d != null and not candidates.has(candidate_2d):
+                candidates.append(candidate_2d)
+    for target: Node2D in candidates:
+        if not is_instance_valid(target) or not target.visible:
             continue
-        var target: Node2D = value as Node2D
         var target_hp: int = int(target.get("hp"))
-        if target_hp != null and int(target_hp) <= 0:
+        if target_hp <= 0:
             continue
         var distance: float = target.global_position.distance_to(world_position)
         if distance < best_distance:

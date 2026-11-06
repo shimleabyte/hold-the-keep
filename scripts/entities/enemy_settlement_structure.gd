@@ -101,9 +101,9 @@ func _die() -> void:
     remove_from_group("campaign_targets")
     remove_from_group("enemy_buildings")
     if owner_keep != null and is_instance_valid(owner_keep):
-        var owner_civilization: EnemyCivilization = owner_keep.get("civilization") as EnemyCivilization
+        var owner_civilization: RefCounted = owner_keep.get("civilization") as RefCounted
         if owner_civilization != null:
-            owner_civilization.on_structure_destroyed(self)
+            owner_civilization.call("on_structure_destroyed", self)
     Events.fx_burst.emit("debris", global_position + Vector2(0, -12), Vector2.ZERO, 1.4)
     queue_free()
 

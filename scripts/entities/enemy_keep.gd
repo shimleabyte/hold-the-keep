@@ -57,8 +57,8 @@ func _ready() -> void:
 
 func cells() -> Array[Vector2i]:
     var out: Array[Vector2i] = []
-    for y in size.y:
-        for x in size.x:
+    for y: int in size.y:
+        for x: int in size.x:
             out.append(cell + Vector2i(x, y))
     return out
 
@@ -121,6 +121,10 @@ func _local_garrison() -> Array[Enemy]:
         if guard != null and is_instance_valid(guard) and guard.guard_origin.distance_squared_to(position) < 1.0:
             guards.append(guard)
     return guards
+
+
+func local_garrison_count() -> int:
+    return _local_garrison().size()
 
 
 func _process(delta: float) -> void:

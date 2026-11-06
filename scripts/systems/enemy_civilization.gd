@@ -40,9 +40,12 @@ func setup(keep_ref: Node2D, saved: Dictionary = {}) -> void:
         for kind: String in ["wood", "stone", "food", "iron"]:
             resources[kind] = clampf(float(saved_resources.get(kind, resources[kind])), 0.0, MAX_RESOURCE)
 
-    var saved_structures: Array[Dictionary] = []
-    if saved.get("structures", []) is Array:
-        for record: Dictionary in saved.get("structures", []):
+    var saved_structures_value: Variant = saved.get("structures", [])
+    if saved_structures_value is Array:
+        for record_value: Variant in saved_structures_value:
+            if not record_value is Dictionary:
+                continue
+            var record: Dictionary = record_value
             _spawn_structure(
                 String(record.get("id", "")),
                 Vector2i(int(record.get("cx", -1)), int(record.get("cy", -1))),
@@ -71,7 +74,7 @@ func setup(keep_ref: Node2D, saved: Dictionary = {}) -> void:
 
 
 func advance(delta: float) -> void:
-    if not active or owner_keep == null or not is_instance_valid(owner_keep) or int(owner_keep.hp) <= 0:
+    if not active or owner_keep == null or not is_instance_valid(owner_keep) or int(owner_keep.get("hp")) <= 0:
         return
     _tick_accumulator += clampf(delta, 0.0, 5.0)
     var ticks: int = 0
@@ -104,8 +107,7 @@ func _produce_resources() -> void:
 
     var garrison_count: int = 0
     if owner_keep != null and is_instance_valid(owner_keep):
-        var local_garrison: Array[Enemy] = owner_keep.call("_local_garrison")
-        garrison_count = local_garrison.size()
+        garrison_count = int(owner_keep.call("local_garrison_count"))
     resources["food"] = maxf(0.0, float(resources["food"]) - 0.025 * float(garrison_count))
 
 
@@ -250,10 +252,12 @@ func _spawn_structure(id: String, anchor: Vector2i, saved_hp: int = -1) -> bool:
         return false
     var structure: EnemySettlementStructure = STRUCTURE_SCRIPT.new() as EnemySettlementStructure
     var owner_world: WorldMap = owner_keep.get("world") as WorldMap
+    if owner_world == null or not is_instance_valid(owner_world):
+        return false
     structure.setup(owner_world, owner_keep, id, anchor, saved_hp)
-    owner_keep.world.entities.add_child(structure)
+    owner_world.entities.add_child(structure)
     for occupied_cell: Vector2i in structure.cells():
-        owner_keep.world.occupied[occupied_cell] = structure
+        owner_world.occupied[occupied_cell] = structure
         Events.resource_occupancy_changed.emit(occupied_cell)
     structures.append(structure)
     return true
