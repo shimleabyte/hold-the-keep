@@ -27,19 +27,22 @@ func _initialize() -> void:
                     break
             if upper_body_changed:
                 break
+        var foot_differences: Array[String] = []
         for y in range(26, 27):
             for x in range(FRAME_WIDTH):
                 var windup := image.get_pixel(WINDUP_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + y)
                 var impact := image.get_pixel(IMPACT_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + y)
                 if windup != impact:
                     planted_feet_unchanged = false
-                    break
-            if not planted_feet_unchanged:
-                break
-        assert(upper_body_changed,
-            "Attack wind-up and impact must change upper-body pixels for view %d" % view)
-        assert(planted_feet_unchanged,
-            "Attack wind-up and impact must preserve the boot baseline for view %d" % view)
+                    foot_differences.append("x=%d windup=%s impact=%s" % [x, windup, impact])
+        if not upper_body_changed:
+            push_error("Attack upper-body pixels did not change for view %d" % view)
+            quit(1)
+            return
+        if not planted_feet_unchanged:
+            push_error("Bottom-row pixel differences for view %d: %s" % [view, ", ".join(foot_differences)])
+            quit(1)
+            return
 
     var palette_colors := [
         Color("#1c365a"),
