@@ -39,7 +39,13 @@ func setup(keep_ref: Node2D, saved: Dictionary = {}) -> void:
     for kind: String in ["wood", "stone", "food", "iron"]:
         resources[kind] = clampf(float(saved_resources.get(kind, resources[kind])), 0.0, MAX_RESOURCE)
 
-    var saved_structures: Array[Dictionary] = saved.get("structures", [])
+    var saved_structure_values: Array = saved.get("structures", [])
+    var saved_structures: Array[Dictionary] = []
+    for structure_index: int in range(saved_structure_values.size()):
+        if not (saved_structure_values[structure_index] is Dictionary):
+            continue
+        var structure_record: Dictionary = saved_structure_values[structure_index]
+        saved_structures.append(structure_record)
     for record: Dictionary in saved_structures:
         _spawn_structure(
             String(record.get("id", "")),

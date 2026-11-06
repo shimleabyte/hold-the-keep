@@ -158,8 +158,8 @@ func _initialize() -> void:
         and world_config.safe_radius == 18.0,
         "Frontier must apply the expanded starting footprint and clearing")
 
-    var region_layout: Dictionary = FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed)
-    var repeated_region_layout: Dictionary = FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed)
+    var region_layout: PackedByteArray = FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed)
+    var repeated_region_layout: PackedByteArray = FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed)
     assert(region_layout.size() == 192 * 192,
         "The Frontier region stage must return one label per map cell")
     assert(region_layout == repeated_region_layout,
@@ -172,7 +172,7 @@ func _initialize() -> void:
     for region_id in region_counts.size():
         assert(region_counts[region_id] >= 700,
             "Every generated Frontier region must retain meaningful territory")
-    var expedition_region_layout: Dictionary = FRONTIER_REGION_GENERATOR.generate(256, world_config.world_seed)
+    var expedition_region_layout: PackedByteArray = FRONTIER_REGION_GENERATOR.generate(256, world_config.world_seed)
     assert(expedition_region_layout.size() == 256 * 256
         and expedition_region_layout == FRONTIER_REGION_GENERATOR.generate(256, world_config.world_seed),
         "The same deterministic region stage must support the 256x256 Expedition profile")
