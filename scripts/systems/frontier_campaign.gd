@@ -1,3 +1,4 @@
+class_name FrontierCampaign
 extends Node
 
 const SITE_SCRIPT := preload("res://scripts/entities/frontier_site.gd")

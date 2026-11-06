@@ -14,7 +14,8 @@ func _run() -> void:
     var world_config = root.get_node("WorldConfig")
     var game_clock = root.get_node("GameClock")
     var save_system = root.get_node("SaveSystem")
-    world_config.apply_profile("classic")
+    _require(world_config.apply_saved_profile("classic", 64),
+        "Historical Classic migration fixtures must be generated on the original 64x64 world")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
 
@@ -302,11 +303,11 @@ func _run() -> void:
     world_config.apply_profile("frontier")
     # Canonical migration is data-only. Reuse the already-running scene context
     # and convert a validated Classic snapshot into a structurally valid
-    # Frontier snapshot instead of generating another 128x128 world here.
-    main.world.map_size = 128
+    # Frontier snapshot instead of generating another 192x192 world here.
+    main.world.map_size = 192
     var frontier_snapshot: Dictionary = migration_baseline.duplicate(true)
     frontier_snapshot["world"]["profile"] = "frontier"
-    frontier_snapshot["world"]["map_size"] = 128
+    frontier_snapshot["world"]["map_size"] = 192
     frontier_snapshot["world"]["tile_size"] = 16
     frontier_snapshot["world"]["seed"] = world_config.world_seed
     var frontier_campaign_state: Dictionary = frontier_snapshot["campaign"].duplicate(true)

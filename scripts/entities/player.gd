@@ -1,3 +1,4 @@
+class_name Player
 extends CharacterBody2D
 ## Pemain top-down. Origin node = kaki (untuk Y-sort).
 ## Animasi: idle, jalan, lari (tahan Shift), serang, panen, kena pukul. Damage serangan dan panen
@@ -7,8 +8,8 @@ const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const CombatVisualFeedback := preload("res://scripts/entities/combat_visual_feedback.gd")
 const PlayerCombatFlow := preload("res://scripts/entities/player_combat_flow.gd")
 const SPRITE := preload("res://assets/sprites/player.svg")
-const FW := 24
-const FH := 28
+const FW: int = 24
+const FH: int = 28
 
 const SPEED := 70.0
 const RUN_SPEED := 108.0
@@ -253,6 +254,9 @@ func _tick_pending(delta: float) -> void:
 func _click_on_hud() -> bool:
     if Input.is_physical_key_pressed(KEY_F) or Input.is_joy_button_pressed(0, JOY_BUTTON_X):
         return false
+    var commander: ArmyCommand = get_tree().get_first_node_in_group("army_command_manager") as ArmyCommand
+    if commander != null and commander.has_method("blocks_player_attack") and commander.blocks_player_attack():
+        return true
     var hud := get_tree().get_first_node_in_group("hud")
     return hud != null and hud.blocks_mouse(get_viewport().get_mouse_position())
 

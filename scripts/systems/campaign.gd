@@ -1,3 +1,4 @@
+class_name Campaign
 extends Node
 ## Ordered regional conquest objectives. Classic keeps its single-stronghold rules.
 
@@ -125,11 +126,11 @@ func current_target_id() -> String:
     return ""
 
 
-func current_target_node():
+func current_target_node() -> Node:
     var stronghold_id := current_target_id()
     if stronghold_id.is_empty():
         return null
-    var node = _nodes.get(stronghold_id)
+    var node: Node = _nodes.get(stronghold_id)
     return node if node != null and is_instance_valid(node) else null
 
 

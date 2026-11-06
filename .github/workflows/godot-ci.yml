@@ -99,6 +99,8 @@ jobs:
           - building_controls
           - map_stages
           - player_combat_flow
+          - army_command_and_rival_civilization
+          - legacy_world_dimensions
           - player_combat
           - resource_save_state
           - responsive_layout

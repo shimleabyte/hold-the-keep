@@ -46,7 +46,7 @@ func configure(world_ref, fog_ref, territory_ref, font_ref: Font = null) -> void
 func configure_layout(viewport_size: Vector2) -> void:
     var available_width := maxf(192.0, viewport_size.x - 150.0)
     var available_height := maxf(192.0, viewport_size.y - 70.0)
-    var minimum_tile_scale := 1.0 if WorldConfig.is_frontier_profile() else 3.0
+    var minimum_tile_scale: float = 0.5
     _map_scale = clampf(minf(available_width, available_height) / float(WorldConfig.map_size), minimum_tile_scale, 4.5)
     _map_pixels = WorldConfig.map_size * _map_scale
     size = Vector2(_map_pixels + 128.0, _map_pixels + 50.0)
@@ -185,11 +185,12 @@ func _draw_region_labels() -> void:
             [Vector2i(center, center), "HEARTHLAND"]
         ]
     else:
+        var scale: float = float(WorldConfig.map_size) / 64.0
         regions = [
-            [Vector2i(32, 8), "GREENWOOD"],
-            [Vector2i(53, 32), "HIGHLANDS"],
-            [Vector2i(20, 49), "FENLANDS"],
-            [Vector2i(32, 32), "HEARTHLAND"]
+            [Vector2i(roundi(32.0 * scale), roundi(8.0 * scale)), "GREENWOOD"],
+            [Vector2i(roundi(53.0 * scale), roundi(32.0 * scale)), "HIGHLANDS"],
+            [Vector2i(roundi(20.0 * scale), roundi(49.0 * scale)), "FENLANDS"],
+            [Vector2i(center, center), "HEARTHLAND"]
         ]
     for item in regions:
         var cell: Vector2i = item[0]

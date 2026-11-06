@@ -47,14 +47,16 @@ func _initialize() -> void:
         "Frontier Expedition selection must persist through settings")
 
     assert(world_config.profile_id == "frontier_expedition"
-        and world_config.map_size == 192
-        and world_config.map_cells == 192 * 192,
-        "Expedition must create a 192x192 map")
-    assert(world_config.world_pixel_size() == Vector2i(3072, 3072),
-        "Expedition world bounds must scale from 192 tiles at 16px")
-    assert(world_config.starting_keep_cell() == Vector2i(95, 93),
+        and world_config.map_size == 256
+        and world_config.map_cells == 256 * 256,
+        "Expedition must create a 256x256 map")
+    assert(world_config.world_pixel_size() == Vector2i(4096, 4096),
+        "Expedition world bounds must scale from 256 tiles at 16px")
+    assert(world_config.starting_keep_cell() == Vector2i(127, 125),
         "Keep placement must remain centered in the expanded world")
-    assert(world_config.profile_definition("frontier").get("map_size", 0) == 128,
+    assert(world_config.starting_claim_radius == 20.0 and world_config.safe_radius == 16.0,
+        "Expedition must scale its starting claim and clearing with the 160x160 heartland")
+    assert(world_config.profile_definition("frontier").get("map_size", 0) == 192,
         "The original Frontier save profile must remain 128x128")
 
     var main = load("res://scenes/main.tscn").instantiate()
@@ -63,10 +65,10 @@ func _initialize() -> void:
     await ticks(6)
     game_clock.set_process(false)
 
-    assert(main.world.map_size == 192 and main.world.pixel_size == Vector2i(3072, 3072),
+    assert(main.world.map_size == 256 and main.world.pixel_size == Vector2i(4096, 4096),
         "Main scene must use the Expedition world dimensions")
-    assert(main.fog._fog_chunks.size() == 144,
-        "A 192x192 Expedition must use 144 independently invalidated 16x16 fog chunks")
+    assert(main.fog._fog_chunks.size() == 256,
+        "A 256x256 Expedition must use 256 independently invalidated 16x16 fog chunks")
     assert(main.world._expedition_gate_cells.size() == 4,
         "The expanded map must create one crossing for each outer march")
 
@@ -91,7 +93,7 @@ func _initialize() -> void:
         if bool(entry["landmark"]):
             expedition_landmark_regions[main.world.region_id(decoration_cell)] = true
     assert(expedition_landmark_regions.size() == 5,
-        "The 192x192 Expedition must retain one landmark in each generated region")
+        "The 256x256 Expedition must retain one landmark in each generated region")
     assert(main.frontier_campaign.objectives.size() == 11,
         "The larger map must retain the existing four-act regional campaign")
     var core_reachable: Dictionary = main.nav.reachable_cells(main.nav.cell_of(main.world.spawn_point()))
@@ -158,7 +160,7 @@ func _initialize() -> void:
         assert(not main.world.is_expedition_gate_open(region),
             "Outer sector must start locked until its matching discovery: " + region)
         var gate_cell: Vector2i = main.world._expedition_gate_cells[region]
-        assert(gate_cell.x >= 32 and gate_cell.x < 160 and gate_cell.x != 95,
+        assert(gate_cell.x >= 48 and gate_cell.x < 208 and gate_cell.x != 127,
             "Survey gates must replace cells on a real heartland perimeter, not a side wall: " + region)
         assert(main.world.tile_type_at(gate_cell) == 2,
             "An undiscovered sector crossing must be physically sealed by water: " + region)
@@ -182,7 +184,7 @@ func _initialize() -> void:
     assert(map_panel.position.x >= 0.0 and map_panel.position.y >= 0.0
         and map_panel.position.x + map_panel.size.x <= 480.1
         and map_panel.position.y + map_panel.size.y <= 270.1,
-        "The 192x192 strategic map must remain usable at the minimum logical viewport")
+        "The 256x256 strategic map must remain usable at the minimum logical viewport")
     var unexplored := Vector2i(8, 8)
     assert(not main.fog.is_revealed_cell(unexplored)
         and not map_panel._position_is_known(Vector2(unexplored) * 16.0),
@@ -240,23 +242,23 @@ func _initialize() -> void:
     assert(main.fog.is_revealed_cell(beyond_gate),
         "Player exploration beyond an opened gate must reveal the outer march")
     assert(not main.fog.is_revealed_cell(unexplored),
-        "Exploring one outer march must not reveal the entire 192x192 map")
+        "Exploring one outer march must not reveal the entire 256x256 map")
 
-    var far_index: int = world_config.cell_index(Vector2i(191, 191))
-    assert(far_index == 192 * 192 - 1
-        and world_config.cell_from_index(far_index) == Vector2i(191, 191),
+    var far_index: int = world_config.cell_index(Vector2i(255, 255))
+    assert(far_index == 256 * 256 - 1
+        and world_config.cell_from_index(far_index) == Vector2i(255, 255),
         "The largest Expedition row-major index must round-trip")
     var expedition_save: Dictionary = save_system.collect(main)
     assert(String(expedition_save["frontier_campaign"]["profile"]) == "frontier_expedition",
         "The Frontier campaign save must retain the active Expedition profile identifier")
     assert(String(expedition_save["world"]["profile"]) == "frontier_expedition"
-        and int(expedition_save["world"]["map_size"]) == 192
+        and int(expedition_save["world"]["map_size"]) == 256
         and save_system._valid_save(expedition_save),
-        "192x192 Expedition worlds, fog and completed discovery state must validate in v15")
+        "256x256 Expedition worlds, fog and completed discovery state must validate in v15")
     var invalid_save := expedition_save.duplicate(true)
     invalid_save["fog"]["cells"].append(world_config.map_cells)
     assert(not save_system._valid_save(invalid_save),
-        "Expedition save validation must reject fog indices outside 192x192 bounds")
+        "Expedition save validation must reject fog indices outside 256x256 bounds")
     var saved_discoveries: Dictionary = {}
     for record in expedition_save["frontier_campaign"]["objectives"]:
         if String(record.get("id", "")).begins_with("discover_"):
@@ -271,9 +273,9 @@ func _initialize() -> void:
     var pause = get_first_node_in_group("pause_menu")
     assert(pause != null and pause._campaign_profile.get_item_count() == 3
         and pause._campaign_profile.selected == 2,
-        "The new-campaign menu must select the active 192x192 Expedition profile")
+        "The new-campaign menu must select the active 256x256 Expedition profile")
 
     assert(settings.set_world_profile(previous_profile),
         "The test must restore the previous profile preference")
-    print("PASS: 192x192 Expedition, four discovery-gated marches, permanent exploration fog and v15 save validation")
+    print("PASS: 256x256 Expedition, four discovery-gated marches, permanent exploration fog and v15 save validation")
     quit(0)

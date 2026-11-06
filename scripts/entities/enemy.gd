@@ -1,3 +1,4 @@
+class_name Enemy
 extends Node2D
 ## Enemy roles: melee raider, pouncing wolf, ranged archer, armored siege brute.
 ## Normal raiders follow the flow field; garrison units defend their stronghold radius.

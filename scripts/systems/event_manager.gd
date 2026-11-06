@@ -1,3 +1,4 @@
+class_name EventManager
 extends Node
 ## Weighted, data-driven events with player decisions and backward-compatible triggers.
 

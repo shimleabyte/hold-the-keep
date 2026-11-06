@@ -1,3 +1,4 @@
+class_name Territory
 extends Node2D
 ## Territory claims projected from the Keep and Outposts onto the world grid.
 

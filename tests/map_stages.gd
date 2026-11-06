@@ -15,6 +15,7 @@ func enemy_entry(pool: Array, enemy_id: String) -> Dictionary:
 
 func _initialize() -> void:
     var game_clock = root.get_node("GameClock")
+    var world_config: Node = root.get_node("WorldConfig")
     DirAccess.remove_absolute("user://save.json")
     DirAccess.remove_absolute("user://save.tmp")
     DirAccess.remove_absolute("user://save.bak")
@@ -25,16 +26,21 @@ func _initialize() -> void:
     await ticks(4)
     game_clock.set_process(false)
 
-    assert(main.world.region_id(Vector2i(32, 32)) == "HEARTHLAND",
+    var map_center: int = int(world_config.map_size / 2)
+    var hearthland_cell: Vector2i = Vector2i(map_center, map_center)
+    var greenwood_cell: Vector2i = Vector2i(map_center, roundi(float(world_config.get("map_size")) * 0.125))
+    var highlands_cell: Vector2i = Vector2i(roundi(float(world_config.get("map_size")) * 0.83), map_center)
+    var fenlands_cell: Vector2i = Vector2i(roundi(float(world_config.get("map_size")) * 0.31), roundi(float(world_config.get("map_size")) * 0.77))
+    assert(main.world.region_id(hearthland_cell) == "HEARTHLAND",
         "The central region must be identified as Hearthland")
-    assert(main.world.region_id(Vector2i(32, 8)) == "GREENWOOD",
+    assert(main.world.region_id(greenwood_cell) == "GREENWOOD",
         "The north region must be Greenwood")
-    assert(main.world.region_id(Vector2i(53, 32)) == "HIGHLANDS",
+    assert(main.world.region_id(highlands_cell) == "HIGHLANDS",
         "The east region must be Highlands")
-    assert(main.world.region_id(Vector2i(20, 49)) == "FENLANDS",
+    assert(main.world.region_id(fenlands_cell) == "FENLANDS",
         "The southern region must be Fenlands")
 
-    for cell in [Vector2i(32, 32), Vector2i(32, 8), Vector2i(53, 32), Vector2i(20, 49)]:
+    for cell: Vector2i in [hearthland_cell, greenwood_cell, highlands_cell, fenlands_cell]:
         var terrain_type: int = int(main.world.tile_type_at(cell))
         assert(terrain_type >= 0 and terrain_type <= 5,
             "Every generated map cell must use a registered terrain tile")
@@ -65,7 +71,7 @@ func _initialize() -> void:
     assert(not map_panel.visible, "The strategic map must stay closed during normal play")
     assert(map_panel._position_is_known(main.world.spawn_point()),
         "The strategic map must know the player spawn area")
-    assert(not map_panel._position_is_known(Vector2(32, 32)),
+    assert(not map_panel._position_is_known(Vector2(highlands_cell) * 16.0),
         "The strategic map must not reveal distant unexplored ground")
 
     hud._toggle_map()

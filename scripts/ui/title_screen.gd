@@ -1,3 +1,4 @@
+class_name TitleScreen
 extends CanvasLayer
 
 signal mode_selected(profile_id: String)
@@ -134,7 +135,7 @@ func _build_screen() -> void:
     modes.add_child(_mode_card(
         "01  /  CLASSIC",
         "THE LAST HOLD",
-        "A compact 64 × 64 frontier. Build your keep, develop your village and survive a focused campaign.",
+        "A 128 × 128 homeland. Establish a settlement, secure the surrounding wilds and hold against a rival civilization.",
         "ENTER CLASSIC",
         "classic",
         mode_card_width
@@ -142,7 +143,7 @@ func _build_screen() -> void:
     modes.add_child(_mode_card(
         "02  /  FRONTIER",
         "A WIDER WAR",
-        "A 128 × 128 world of five regions. Expand outward, secure supply lines and conquer rival strongholds.",
+        "A 192 × 192 world of five regions. Expand across distant biomes, secure supply lines and fight rival kingdoms.",
         "ENTER FRONTIER",
         "frontier",
         mode_card_width
@@ -150,7 +151,7 @@ func _build_screen() -> void:
     modes.add_child(_mode_card(
         "03  /  FRONTIER: EXPEDITION",
         "BEYOND THE FRONTIER",
-        "A vast 192 × 192 world. Survey sealed crossings, uncover four outer marches and establish routes to rival strongholds.",
+        "A vast 256 × 256 world with a 160 × 160 heartland. Survey sealed crossings, open four outer marches and establish routes to rival strongholds.",
         "FRONTIER: EXPEDITION",
         "frontier_expedition",
         mode_card_width
@@ -282,10 +283,7 @@ func _close_settings() -> void:
 
 
 func _continue_campaign() -> void:
-    var profile_id := SaveSystem.saved_profile_id()
-    if not WorldConfig.apply_profile(profile_id):
-        return
-    Settings.set_world_profile(profile_id)
+    # SaveSystem restores the exact historical profile dimensions before reloading.
     SaveSystem.request_load()
 
 

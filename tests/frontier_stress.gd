@@ -69,8 +69,8 @@ func _run() -> void:
     game_clock.set_process(false)
     main.nav.rebuild()
 
-    assert(world_config.profile_id == "frontier" and main.world.map_size == 128,
-        "Stress workload must execute on the 128x128 Frontier profile")
+    assert(world_config.profile_id == "frontier" and main.world.map_size == 192,
+        "Stress workload must execute on the 192x192 Frontier profile")
     assert(faction_registry.factions.size() == 4,
         "All four regional factions must be loaded")
 
@@ -146,15 +146,15 @@ func _run() -> void:
         "The stress population must remain registered")
 
     var snapshot: Dictionary = save_system.collect(main)
-    assert(snapshot["world"]["map_size"] == 128
+    assert(snapshot["world"]["map_size"] == 192
         and snapshot["world"]["profile"] == "frontier",
-        "Stress snapshot must retain Frontier world identity")
+        "Stress snapshot must retain the enlarged Frontier world identity")
     assert(snapshot["enemies"].size() >= ENEMIES_PER_FACTION * FACTION_IDS.size(),
         "Stress snapshot must retain the loaded faction population")
     assert(save_system._valid_save(snapshot),
         "The high-population Frontier snapshot must pass current save validation")
 
-    print("PASS: Frontier stress: 128x128, four factions, %d enemies, %d villagers, %d projectiles, %d particles" % [
+    print("PASS: Frontier stress: 192x192, four factions, %d enemies, %d villagers, %d projectiles, %d particles" % [
         enemies.size(), villagers.size(), projectiles.size(), fx.count()
     ])
     quit(0)

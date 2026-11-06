@@ -1,3 +1,4 @@
+class_name NavGrid
 extends Node
 ## A* grid untuk villager. Pohon, batu, air, dan semua bangunan = solid.
 ## Dibangun ulang saat bangunan berubah; `version` naik tiap rebuild.

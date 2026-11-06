@@ -132,7 +132,7 @@ func _write_text(path: String, value: String) -> bool:
 
 
 func _run() -> void:
-    world_config.apply_profile("classic")
+    assert(world_config.apply_saved_profile("classic", 64), "Historical migration fixtures must use the original Classic map")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
 
@@ -192,8 +192,8 @@ func _run() -> void:
     game_clock.set_process(false)
 
     var frontier_snapshot: Dictionary = save_system.collect(frontier_main)
-    assert(frontier_snapshot["world"]["map_size"] == 128,
-        "Frontier fixtures must use the 128x128 world")
+    assert(frontier_snapshot["world"]["map_size"] == 192,
+        "Frontier fixtures must use the enlarged 192x192 world")
     for version in range(7, 18):
         var fixture := _fixture_for_version(frontier_snapshot, version)
         assert(save_system._valid_save(fixture),

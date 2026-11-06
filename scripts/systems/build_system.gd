@@ -1,3 +1,4 @@
+class_name BuildSystem
 extends Node2D
 ## Mode bangun: hotbar / 1-0 memilih, scroll mengganti, klik kiri memasang,
 ## klik kanan membatalkan, Shift+klik kanan membongkar, Esc membatalkan.
