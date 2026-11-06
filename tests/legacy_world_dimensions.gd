@@ -40,7 +40,7 @@ func _initialize() -> void:
 
     await ticks(8)
     game_clock.set_process(false)
-    var restored_main := root.get_first_node_in_group("main")
+    var restored_main: Node = root.get_first_node_in_group("main")
     assert(restored_main != null and restored_main.world != null,
         "Continue must rebuild the main scene")
     assert(world_config.profile_id == "classic" and world_config.map_size == 64,
