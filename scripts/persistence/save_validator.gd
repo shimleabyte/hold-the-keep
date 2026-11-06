@@ -16,6 +16,13 @@ func _is_positive_integral(value: Variant) -> bool:
     return is_finite(numeric_value) and numeric_value >= 1.0 and numeric_value == floor(numeric_value)
 
 
+func _is_integral_number(value: Variant) -> bool:
+    if not (value is int or value is float):
+        return false
+    var numeric_value: float = float(value)
+    return is_finite(numeric_value) and is_equal_approx(numeric_value, floorf(numeric_value))
+
+
 func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
     if not (data is Dictionary):
         return false
@@ -668,7 +675,7 @@ func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vecto
         if not is_finite(amount) or amount < 0.0 or amount > 999.0:
             return false
 
-    if typeof(data["technology_tier"]) != TYPE_INT:
+    if not _is_integral_number(data["technology_tier"]):
         return false
     var technology_tier: int = int(data["technology_tier"])
     if technology_tier < 0 or technology_tier > 2:
@@ -678,7 +685,7 @@ func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vecto
     var research_progress: float = float(data["research_progress"])
     if not is_finite(research_progress) or research_progress < 0.0 or research_progress > 180.0:
         return false
-    if typeof(data["build_order_index"]) != TYPE_INT:
+    if not _is_integral_number(data["build_order_index"]):
         return false
     var build_order_index: int = int(data["build_order_index"])
     if build_order_index < 0 or build_order_index > 7:
@@ -726,7 +733,7 @@ func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vecto
         var structure_id: String = String(structure["id"])
         if not footprints.has(structure_id) or seen_structures.has(structure_id):
             return false
-        if typeof(structure["cx"]) != TYPE_INT or typeof(structure["cy"]) != TYPE_INT or typeof(structure["hp"]) != TYPE_INT:
+        if not _is_integral_number(structure["cx"]) or not _is_integral_number(structure["cy"]) or not _is_integral_number(structure["hp"]):
             return false
         var anchor: Vector2i = Vector2i(int(structure["cx"]), int(structure["cy"]))
         var footprint: Vector2i = footprints[structure_id]
@@ -751,7 +758,7 @@ func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vecto
         var construction_id: String = String(construction["id"])
         if not footprints.has(construction_id) or seen_structures.has(construction_id):
             return false
-        if typeof(construction["cx"]) != TYPE_INT or typeof(construction["cy"]) != TYPE_INT:
+        if not _is_integral_number(construction["cx"]) or not _is_integral_number(construction["cy"]):
             return false
         if typeof(construction["remaining"]) not in [TYPE_INT, TYPE_FLOAT]:
             return false
