@@ -10,6 +10,10 @@ Bangun desa, kelola penduduk dan sumber daya pada siang hari. Persiapkan pertaha
 - **Frontier** — Peta 128×128, lima biome, empat stronghold, dan kampanye Conquest 20 hari.
 - **Frontier Expedition** — Peta 192×192. Mulai dari heartland, lalu buka empat wilayah luar melalui eksplorasi.
 
+## Arah pengembangan
+
+Game sedang bertransisi ke model RTS top-down: kamera strategi, seleksi unit, perintah gerak langsung, ekonomi, ekspansi, riset, dan penaklukan. Status migrasi dan tahapan desain dicatat di [docs/RTS_PIVOT.md](docs/RTS_PIVOT.md). Fondasi seleksi/perintah pertama belum berarti seluruh sistem RTS sudah selesai.
+
 ## Fitur utama
 
 - Siklus siang dan malam dengan gelombang serangan musuh.
