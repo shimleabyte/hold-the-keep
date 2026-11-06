@@ -74,6 +74,7 @@ func _run() -> void:
             "map_cells": config.map_cells,
             "world_creation_ms": generation_ms,
             "system_timings_ms": system_timings,
+            "flow_field_rebuild_budget_usec": main.flow.rebuild_budget_usec,
             "building_completion_transition": building_completion_timing,
             "scene_counts": _scene_counts(main),
             "idle_frame_samples": _summarize_frames(idle_samples),
