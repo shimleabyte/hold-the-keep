@@ -1431,6 +1431,8 @@ func _claim(n) -> bool:
 
 
 func _release() -> void:
+    if _manual_gather and target != null and is_instance_valid(target) and target.get("worker") == self:
+        target.worker = null
     _manual_gather = false
     if job == "healer":
         _release_heal_target()
