@@ -63,6 +63,7 @@ tests=(
     responsive_layout
     territory_claims
     world_config
+    legacy_world_dimensions
     frontier_world
     frontier_expedition
     regional_control_roads
