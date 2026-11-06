@@ -26,7 +26,7 @@ func _initialize() -> void:
     await ticks(4)
     game_clock.set_process(false)
 
-    var map_center := world_config.map_size / 2
+    var map_center: int = int(world_config.map_size / 2)
     var hearthland_cell := Vector2i(map_center, map_center)
     var greenwood_cell := Vector2i(map_center, roundi(float(world_config.map_size) * 0.125))
     var highlands_cell := Vector2i(roundi(float(world_config.map_size) * 0.83), map_center)
