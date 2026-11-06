@@ -37,7 +37,7 @@ Nighttime raids may remain as one pressure source, but they are not the strategi
 - Shift-add/remove selection.
 - Right-click move orders with simple group spacing.
 - Right-click visible enemies, faction camps, campaign targets and strongholds to issue a soldier attack order.
-- Right-click a rescue/escort/defend site to send a selected unit to activate it; nearby friendly units keep the escort moving.
+- Right-click a rescue/escort/defend site to send a selected unit to activate it; escort convoys follow their route autonomously and remain vulnerable to enemy attacks.
 - Existing worker AI resumes when a move order completes.
 - Legacy player camera/control is disabled, but the node remains for save/reference compatibility.
 - Build placement no longer depends on a single hero's proximity; territory and resources remain enforced.
