@@ -64,6 +64,7 @@ jobs:
       matrix:
         test:
           - animation_motion
+          - rts_command_foundation
           - campaign_assault
           - campaign_multi_stronghold
           - workplace_assignments
