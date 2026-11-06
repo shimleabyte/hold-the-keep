@@ -238,6 +238,8 @@ func set_job(j: String, preferred_workplace = null) -> bool:
     _release_workplace()
     _expeditioning = false
     _expedition_target = null
+    _manual_goal_cell = Vector2i(-1, -1)
+    _manual_attack_target = null
     _scout_target_cell = Vector2i(-1, -1)
     _scout_survey_t = 0.0
     _scout_revealed_at_target = false
@@ -786,6 +788,9 @@ func issue_army_move_order(destination: Vector2) -> bool:
     var goal_cell := nav.cell_of(destination)
     if not WorldConfig.is_valid_cell(goal_cell):
         return false
+    var path: PackedVector2Array = nav.path_to(position, goal_cell)
+    if path.is_empty():
+        return false
     if is_outpost_guard():
         release_outpost_guard()
     _release()
@@ -793,9 +798,6 @@ func issue_army_move_order(destination: Vector2) -> bool:
     _manual_attack_target = null
     _pending_foe = null
     _pending_t = 0.0
-    var path: PackedVector2Array = nav.path_to(position, goal_cell)
-    if path.is_empty():
-        return false
     _manual_goal_cell = nav.cell_of(path[path.size() - 1])
     _goal_cells = [_manual_goal_cell]
     _set_path(path)
