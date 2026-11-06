@@ -1,8 +1,8 @@
 extends SceneTree
-## Attack pose regression: the upper body must visibly counter-rotate while the feet remain on the same sprite baseline.
+## Player identity and combat pose regression for the 24x28 top-down atlas.
 
-const FRAME_WIDTH := 20
-const FRAME_HEIGHT := 20
+const FRAME_WIDTH := 24
+const FRAME_HEIGHT := 28
 const WINDUP_FRAME := 10
 const IMPACT_FRAME := 12
 
@@ -12,23 +12,52 @@ func _initialize() -> void:
     assert(texture != null, "Player sprite sheet must load as a Texture2D")
     var image := texture.get_image()
     assert(image != null, "Player sprite sheet must expose image data")
-    assert(image.get_width() == 440 and image.get_height() == 60,
-        "Player sprite sheet dimensions must remain 22 frames by 3 directions")
+    assert(image.get_width() == 528 and image.get_height() == 84,
+        "Player sprite sheet must remain 22 frames by 3 directions at 24x28")
 
     for view in range(3):
-        var body_changed := false
-        var min_x := 2 if view == 2 else 5
-        var max_x := 11 if view == 2 else 14
-        for y in range(5, 17):
-            for x in range(min_x, max_x):
+        var upper_body_changed := false
+        var planted_feet_unchanged := true
+        for y in range(3, 21):
+            for x in range(FRAME_WIDTH):
                 var windup := image.get_pixel(WINDUP_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + y)
                 var impact := image.get_pixel(IMPACT_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + y)
                 if windup != impact:
-                    body_changed = true
+                    upper_body_changed = true
                     break
-            if body_changed:
+            if upper_body_changed:
                 break
-        assert(body_changed, "Attack wind-up and impact must change the actual body pixels for view %d" % view)
+        for y in range(24, FRAME_HEIGHT):
+            for x in range(FRAME_WIDTH):
+                var windup := image.get_pixel(WINDUP_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + y)
+                var impact := image.get_pixel(IMPACT_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + y)
+                if windup != impact:
+                    planted_feet_unchanged = false
+                    break
+            if not planted_feet_unchanged:
+                break
+        assert(upper_body_changed,
+            "Attack wind-up and impact must change upper-body pixels for view %d" % view)
+        assert(planted_feet_unchanged,
+            "Attack wind-up and impact must preserve the boot baseline for view %d" % view)
 
-    print("PASS: attack wind-up/impact alter real upper-body pixels in front, back and side views")
+    var palette_colors := [
+        Color("#1c365a"),
+        Color("#285080"),
+        Color("#929eaf"),
+        Color("#c28b32"),
+        Color("#252631"),
+    ]
+    for color in palette_colors:
+        var found := false
+        for y in range(FRAME_HEIGHT):
+            for x in range(FRAME_WIDTH):
+                if image.get_pixel(x, y).is_equal_approx(color):
+                    found = true
+                    break
+            if found:
+                break
+        assert(found, "Player identity palette color is missing: %s" % color)
+
+    print("PASS: 24x28 player atlas has the new cloak/steel/gold palette, distinct attack poses and planted feet")
     quit(0)
