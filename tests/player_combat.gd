@@ -27,6 +27,7 @@ func _initialize() -> void:
 
     # An incoming hit avoided during the opening dash window must grant one Riposte.
     player._dash_cd = 0.0
+    player._invuln = 0.0
     var hp_before_perfect_dodge: int = player.hp
     assert(player.activate_ability("dash"), "Dash should be available for the perfect-dodge check")
     player.take_damage_from(5, player.global_position + Vector2(-12, 0))
