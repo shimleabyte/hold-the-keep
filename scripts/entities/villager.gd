@@ -828,12 +828,17 @@ func issue_interaction_order(target_node: Node2D) -> bool:
         return false
     if not visible or state == State.HIDDEN or state == State.FLEEING or _expeditioning or nav == null:
         return false
+    if is_outpost_guard():
+        release_outpost_guard()
     if position.distance_to(target_node.global_position) <= 36.0:
+        _release()
+        _foe = null
+        _manual_attack_target = null
+        _manual_interact_target = null
+        state = State.IDLE
         target_node.interact()
         return true
 
-    if is_outpost_guard():
-        release_outpost_guard()
     _release()
     _foe = null
     _pending_foe = null
@@ -860,8 +865,10 @@ func issue_interaction_order(target_node: Node2D) -> bool:
 func issue_attack_order(target_node: Node2D) -> bool:
     if target_node == null or not is_instance_valid(target_node) or job != "soldier":
         return false
-    if not target_node.visible or _expeditioning or is_outpost_guard():
+    if not target_node.visible or _expeditioning:
         return false
+    if is_outpost_guard():
+        release_outpost_guard()
     var valid_target := target_node.is_in_group("enemies") or target_node.is_in_group("campaign_targets") or target_node.is_in_group("enemy_strongholds")
     if not valid_target:
         return false
