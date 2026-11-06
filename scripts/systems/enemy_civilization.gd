@@ -18,7 +18,7 @@ const STARTING_RESOURCES := {"wood": 100.0, "stone": 42.0, "food": 65.0, "iron":
 
 var owner_keep
 var resources: Dictionary = {}
-var structures: Array[Node2D] = []
+var structures: Array = []
 var technology_tier := 0
 var research_progress := 0.0
 var build_order_index := 0
@@ -83,6 +83,7 @@ func _produce_resources() -> void:
                 income["food"] = float(income["food"]) + 1.25
             "quarry":
                 income["stone"] = float(income["stone"]) + 0.62
+                income["iron"] = float(income["iron"]) + 0.08
             "forge":
                 income["iron"] = float(income["iron"]) + 0.22
     for kind in income:
