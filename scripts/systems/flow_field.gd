@@ -1,3 +1,4 @@
+class_name FlowField
 extends Node
 ## Satu flow field untuk semua musuh: Dijkstra dari tile keep ke seluruh peta.
 

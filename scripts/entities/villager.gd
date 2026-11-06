@@ -1,3 +1,4 @@
+class_name Villager
 extends Node2D
 ## Villager dengan job. Mesin state sederhana:
 ## IDLE -> TO_WORK -> WORKING -> TO_DEPOT -> (kembali TO_WORK)
@@ -13,7 +14,7 @@ const BlacksmithBehavior := preload("res://scripts/entities/villager_blacksmith_
 const BuilderBehavior := preload("res://scripts/entities/villager_builder_behavior.gd")
 const ResourceWorkBehavior := preload("res://scripts/entities/villager_resource_behavior.gd")
 
-enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING, SCOUTING, SCOUT_RETURNING }
+enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING, SCOUTING, SCOUT_RETURNING, MANUAL_MOVE }
 
 const TEXTURES := {
     "": preload("res://assets/sprites/villager_idle.svg"),
@@ -130,6 +131,8 @@ var _scout_target_cell := Vector2i(-1, -1)
 var _scout_cursor := 0
 var _scout_survey_t := 0.0
 var _scout_revealed_at_target := false
+var _manual_goal_cell: Vector2i = Vector2i(-1, -1)
+var _manual_attack_target: Node2D
 var weapon_equipped := false
 var armor_equipped := false
 var _smith_recipe := ""
@@ -236,6 +239,8 @@ func set_job(j: String, preferred_workplace = null) -> bool:
     _release_workplace()
     _expeditioning = false
     _expedition_target = null
+    _manual_goal_cell = Vector2i(-1, -1)
+    _manual_attack_target = null
     _scout_target_cell = Vector2i(-1, -1)
     _scout_survey_t = 0.0
     _scout_revealed_at_target = false
@@ -428,7 +433,7 @@ func _physics_process(delta: float) -> void:
     if GameClock.is_night and job != "soldier" and state != State.FLEEING:
         _begin_flee()
 
-    if nav.version != _path_ver and (state == State.TO_WORK or state == State.TO_DEPOT or state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or state == State.SCOUTING or state == State.SCOUT_RETURNING or (state == State.IDLE and is_outpost_guard())):
+    if nav.version != _path_ver and (state == State.TO_WORK or state == State.TO_DEPOT or state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or state == State.SCOUTING or state == State.SCOUT_RETURNING or state == State.MANUAL_MOVE or (state == State.IDLE and is_outpost_guard())):
         _repath()
 
     match state:
@@ -489,6 +494,12 @@ func _physics_process(delta: float) -> void:
                 _scout_target_cell = Vector2i(-1, -1)
                 state = State.IDLE
                 _decide_t = SCOUT_RECHECK_SECONDS
+        State.MANUAL_MOVE:
+            if _move_along(delta):
+                _manual_goal_cell = Vector2i(-1, -1)
+                state = State.IDLE
+                _scan_t = 0.0
+                _wander_t = 2.0
     _update_anim(delta)
 
 
@@ -502,9 +513,9 @@ func _update_anim(delta: float) -> void:
         State.EXPEDITION:
             moving = _pi < _path.size()
             _running = _expedition_target != null and is_instance_valid(_expedition_target) and position.distance_to(_expedition_target.position) > RUN_DISTANCE
-        State.RECALLING, State.SCOUTING, State.SCOUT_RETURNING:
+        State.RECALLING, State.SCOUTING, State.SCOUT_RETURNING, State.MANUAL_MOVE:
             moving = _pi < _path.size()
-            _running = state == State.RECALLING or state == State.SCOUT_RETURNING
+            _running = state == State.RECALLING or state == State.SCOUT_RETURNING or state == State.MANUAL_MOVE
         State.FLEEING:
             moving = true
             _running = true
@@ -771,6 +782,76 @@ func _tick_outpost_guard(delta: float) -> void:
             _pi = 0
 
 
+## Military-only move order. Civilian work and the player avatar are untouched.
+func issue_army_move_order(destination: Vector2) -> bool:
+    if job != "soldier" or state in [State.HIDDEN, State.FLEEING] or _expeditioning or nav == null:
+        return false
+    var goal_cell: Vector2i = nav.cell_of(destination)
+    if not WorldConfig.is_valid_cell(goal_cell):
+        return false
+    var path: PackedVector2Array = nav.path_to(position, goal_cell)
+    if path.is_empty():
+        return false
+    if is_outpost_guard():
+        release_outpost_guard()
+    _release()
+    _foe = null
+    _manual_attack_target = null
+    _pending_foe = null
+    _pending_t = 0.0
+    _manual_goal_cell = nav.cell_of(path[path.size() - 1])
+    _goal_cells = [_manual_goal_cell]
+    _set_path(path)
+    state = State.MANUAL_MOVE
+    _scan_t = 0.0
+    queue_redraw()
+    return true
+
+
+## Military-only attack order. The existing combat loop still resolves the attacks.
+func issue_army_attack_order(target_node: Node2D) -> bool:
+    if job != "soldier" or target_node == null or not is_instance_valid(target_node):
+        return false
+    if not target_node.visible or _expeditioning or state in [State.HIDDEN, State.FLEEING]:
+        return false
+    var valid_target: bool = (
+        target_node.is_in_group("enemies")
+        or target_node.is_in_group("enemy_strongholds")
+        or target_node.is_in_group("enemy_buildings")
+        or target_node.is_in_group("faction_camp_targets")
+        or target_node.is_in_group("campaign_targets")
+    )
+    if not valid_target:
+        return false
+    var target_hp: Variant = target_node.get("hp")
+    if target_hp != null and int(target_hp) <= 0:
+        return false
+
+    var path: PackedVector2Array
+    if target_node.has_method("cells"):
+        var target_cells: Array[Vector2i] = target_node.cells()
+        path = nav.path_adjacent(position, target_cells)
+    else:
+        path = nav.path_to(position, nav.cell_of(target_node.global_position))
+    if path.is_empty():
+        return false
+
+    if is_outpost_guard():
+        release_outpost_guard()
+    _release()
+    _manual_goal_cell = Vector2i(-1, -1)
+    _manual_attack_target = target_node
+    _foe = target_node
+    _pending_foe = null
+    _pending_t = 0.0
+    _repath_t = 0.0
+    _set_path(path)
+    state = State.FIGHT
+    _scan_t = 0.0
+    queue_redraw()
+    return true
+
+
 func start_expedition(stronghold) -> bool:
     if job != "soldier" or is_outpost_guard() or not is_instance_valid(stronghold):
         return false
@@ -855,10 +936,26 @@ func _tick_expedition(delta: float) -> void:
 
 
 func _tick_fight(delta: float) -> void:
-    _scan_t -= delta
-    if _scan_t <= 0.0:
-        _scan_t = 0.3
-        _foe = _nearest_enemy()
+    if _manual_attack_target != null:
+        if not is_instance_valid(_manual_attack_target) or not _manual_attack_target.visible:
+            _manual_attack_target = null
+            _foe = null
+            state = State.IDLE
+            _scan_t = 0.0
+            return
+        var manual_hp: Variant = _manual_attack_target.get("hp")
+        if manual_hp != null and int(manual_hp) <= 0:
+            _manual_attack_target = null
+            _foe = null
+            state = State.IDLE
+            _scan_t = 0.0
+            return
+        _foe = _manual_attack_target
+    else:
+        _scan_t -= delta
+        if _scan_t <= 0.0:
+            _scan_t = 0.3
+            _foe = _nearest_enemy()
     if _foe == null or not is_instance_valid(_foe):
         _foe = null
         if is_outpost_guard():
@@ -870,9 +967,12 @@ func _tick_fight(delta: float) -> void:
             state = State.EXPEDITION if _expeditioning and is_instance_valid(_expedition_target) else State.IDLE
         return
     var dist := position.distance_to(_foe.position)
+    var attack_reach: float = REACH
+    if _manual_attack_target != null and (_foe.has_method("cells") or _foe.is_in_group("enemy_buildings") or _foe.is_in_group("enemy_strongholds")):
+        attack_reach = 34.0
     if _archer_combat.tick(self, _foe, delta):
         return
-    if not is_archer() and dist < REACH:
+    if not is_archer() and dist < attack_reach:
         if anim.face(_foe.position - position):
             queue_redraw()
         if _atk_cd <= 0.0:
@@ -884,7 +984,12 @@ func _tick_fight(delta: float) -> void:
     _repath_t -= delta
     if _repath_t <= 0.0:
         _repath_t = 0.5
-        var p: PackedVector2Array = nav.path_to(position, nav.cell_of(_foe.position))
+        var p: PackedVector2Array
+        if _manual_attack_target != null and _foe.has_method("cells"):
+            var target_cells: Array[Vector2i] = _foe.cells()
+            p = nav.path_adjacent(position, target_cells)
+        else:
+            p = nav.path_to(position, nav.cell_of(_foe.position))
         if not p.is_empty():
             _set_path(p)
     if _pi < _path.size():
@@ -1517,7 +1622,9 @@ func _set_path(p: PackedVector2Array) -> void:
 
 func _repath() -> void:
     var p: PackedVector2Array
-    if state == State.SCOUTING:
+    if state == State.MANUAL_MOVE:
+        p = nav.path_to(position, _manual_goal_cell)
+    elif state == State.SCOUTING:
         p = nav.path_to(position, _scout_target_cell)
     elif state == State.SCOUT_RETURNING and has_valid_workplace():
         p = nav.path_adjacent(position, workplace.cells())
@@ -1557,7 +1664,7 @@ func _move_along(delta: float) -> bool:
     var tgt := _path[_pi]
     var to := tgt - position
     var d := to.length()
-    var fast := state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or state == State.SCOUT_RETURNING or (state == State.FIGHT and _foe != null and is_instance_valid(_foe) and position.distance_to(_foe.position) > RUN_DISTANCE)
+    var fast: bool = state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or state == State.SCOUT_RETURNING or state == State.MANUAL_MOVE or (state == State.FIGHT and _foe != null and is_instance_valid(_foe) and position.distance_to(_foe.position) > RUN_DISTANCE)
     var step := (RUN_SPEED if fast else SPEED) * delta
     if not anim.is_busy() and anim.face(to):
         queue_redraw()

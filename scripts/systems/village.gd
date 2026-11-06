@@ -1,3 +1,4 @@
+class_name Village
 extends Node
 ## Population, labor occupations, military specializations and workplace assignment.
 ## Named InputMap job actions change quotas; Alt raises priority and Alt + Shift lowers it.

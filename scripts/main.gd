@@ -1,3 +1,4 @@
+class_name HoldTheKeepMain
 extends Node2D
 
 const WORLD_SCRIPT := preload("res://scripts/world/world_map.gd")
@@ -20,6 +21,7 @@ const MENU_SCRIPT := preload("res://scripts/ui/pause_menu.gd")
 const FRONTIER_CAMPAIGN_SCRIPT := preload("res://scripts/systems/frontier_campaign.gd")
 const SAVE_MIGRATION_SCRIPT := preload("res://scripts/persistence/save_migration_pipeline.gd")
 const FRONTIER_OBJECTIVE_PANEL_SCRIPT := preload("res://scripts/ui/frontier_objective_panel.gd")
+const ARMY_COMMAND_SCRIPT := preload("res://scripts/systems/army_command.gd")
 const TITLE_SCREEN_SCRIPT := preload("res://scripts/ui/title_screen.gd")
 
 const NIGHT_TINT := Color(0.45, 0.5, 0.75)
@@ -27,21 +29,22 @@ const DIRS4: Array[Vector2i] = [
     Vector2i(1, 0), Vector2i(-1, 0),
     Vector2i(0, 1), Vector2i(0, -1)
 ]
-var world
-var territory
-var campaign
-var enemy_keep
-var fog
-var campaign_conquered := false
-var player
-var build
-var flow
-var spawner
-var nav
-var supply
-var village
-var events
-var frontier_campaign
+var world: WorldMap
+var territory: Territory
+var campaign: Campaign
+var enemy_keep: EnemyKeep
+var fog: FogOfWar
+var campaign_conquered: bool = false
+var player: Player
+var build: BuildSystem
+var flow: FlowField
+var spawner: WaveSpawner
+var nav: NavGrid
+var supply: SupplyNetwork
+var village: Village
+var events: EventManager
+var frontier_campaign: FrontierCampaign
+var army_command: ArmyCommand
 var _save_restore_plan: Dictionary = {}
 
 var _tint: CanvasModulate
@@ -54,19 +57,28 @@ func _ready() -> void:
         _start_campaign(WorldConfig.profile_id, true)
         return
     if not SaveSystem.pending.is_empty():
-        var saved_world: Variant = SaveSystem.pending.get("world", {})
-        var saved_profile := String(saved_world.get("profile", WorldConfig.profile_id)) if saved_world is Dictionary else WorldConfig.profile_id
-        if WorldConfig.apply_profile(saved_profile):
-            _start_campaign(saved_profile, true)
+        var saved_world: Dictionary = SaveSystem.pending.get("world", {})
+        var saved_profile: String = SaveSystem.pending_world_profile
+        if saved_profile.is_empty():
+            saved_profile = String(saved_world.get("profile", WorldConfig.profile_id)) if saved_world is Dictionary else "classic"
+        if _start_campaign(saved_profile, true):
             return
-    var title_screen = TITLE_SCREEN_SCRIPT.new()
+    var title_screen: TitleScreen = TITLE_SCREEN_SCRIPT.new()
     title_screen.mode_selected.connect(_start_campaign)
     add_child(title_screen)
 
 
-func _start_campaign(profile_id: String, preserve_runtime_state := false) -> void:
-    if not WorldConfig.apply_profile(profile_id):
-        return
+func _start_campaign(profile_id: String, preserve_runtime_state: bool = false) -> bool:
+    var profile_applied: bool = false
+    if preserve_runtime_state:
+        var saved_size: int = SaveSystem.pending_world_map_size
+        if saved_size <= 0:
+            saved_size = WorldConfig.map_size
+        profile_applied = WorldConfig.apply_saved_profile(profile_id, saved_size)
+    else:
+        profile_applied = WorldConfig.apply_profile(profile_id)
+    if not profile_applied:
+        return false
     Settings.set_world_profile(profile_id)
     if not preserve_runtime_state:
         Inventory.reset()
@@ -75,11 +87,12 @@ func _start_campaign(profile_id: String, preserve_runtime_state := false) -> voi
         SaveSystem.pending.clear()
     get_tree().paused = false
 
-    var title_screen := get_node_or_null("TitleScreen")
+    var title_screen: Node = get_node_or_null("TitleScreen")
     if title_screen != null:
         title_screen.queue_free()
 
     _initialize_game()
+    return true
 
 
 func _initialize_game() -> void:
@@ -147,7 +160,7 @@ func _initialize_game() -> void:
     Events.campaign_won.connect(_on_campaign_won)
 
     # Keep paling akhir, supaya HUD sudah mendengarkan event HP-nya.
-    var save := SaveSystem.take_pending()
+    var save: Dictionary = SaveSystem.take_pending()
     if save.is_empty():
         build.place_raw("keep", world.starting_keep_cell())
         campaign.configure_new(WorldConfig.profile_id)
@@ -165,6 +178,13 @@ func _initialize_game() -> void:
     if not save.is_empty():
         fog.import_state(save.get("fog", {}))
 
+    army_command = ARMY_COMMAND_SCRIPT.new()
+    army_command.name = "ArmyCommand"
+    army_command.world = world
+    army_command.nav = nav
+    army_command.build_system = build
+    world.add_child(army_command)
+
     frontier_campaign = FRONTIER_CAMPAIGN_SCRIPT.new()
     add_child(frontier_campaign)
     frontier_campaign.setup(self, _save_restore_plan.get("frontier_campaign_state", {}) if not save.is_empty() else {})
@@ -176,15 +196,15 @@ func _on_campaign_won(_day: int) -> void:
     campaign_conquered = true
 
 
-func set_primary_stronghold(stronghold) -> void:
+func set_primary_stronghold(stronghold: EnemyKeep) -> void:
     enemy_keep = stronghold
 
 
 func _spawn_campaign_strongholds() -> void:
-    for objective in campaign.objectives_in_order():
+    for objective: Dictionary in campaign.objectives_in_order():
         var stronghold_id := String(objective["id"])
-        var target_region := String(objective.get("region", ""))
-        var anchor := _find_enemy_keep_cell(target_region)
+        var target_region: String = String(objective.get("region", ""))
+        var anchor: Vector2i = _find_enemy_keep_cell(target_region)
         if anchor.x < 0 or anchor.y < 0:
             push_error("Campaign: no reachable stronghold site for %s in %s" % [stronghold_id, target_region])
             continue
@@ -208,14 +228,14 @@ func _enemy_keep_cells(anchor: Vector2i) -> Array[Vector2i]:
     return cells
 
 
-func _find_enemy_keep_cell(target_region := "") -> Vector2i:
+func _find_enemy_keep_cell(target_region: String = "") -> Vector2i:
     nav.rebuild()
     if WorldConfig.is_frontier_profile():
         return _find_frontier_enemy_keep_cell(target_region)
     var candidates: Array[Dictionary] = []
     var keep_cell: Vector2i = world.starting_keep_cell()
     var keep_center := Vector2(keep_cell) + Vector2(1.5, 1.5)
-    var map_size := WorldConfig.map_size
+    var map_size: int = WorldConfig.map_size
     var min_stronghold_distance := float(map_size) * 0.34375
     for y in range(5, map_size - 5):
         for x in range(5, map_size - 5):
@@ -241,7 +261,7 @@ func _find_enemy_keep_cell(target_region := "") -> Vector2i:
     return Vector2i(-1, -1)
 
 
-func _find_frontier_enemy_keep_cell(target_region := "") -> Vector2i:
+func _find_frontier_enemy_keep_cell(target_region: String = "") -> Vector2i:
     if WorldConfig.is_frontier_expedition():
         return _find_expedition_enemy_keep_cell(target_region)
 
@@ -254,7 +274,7 @@ func _find_frontier_enemy_keep_cell(target_region := "") -> Vector2i:
     var keep_center := Vector2(keep_cell) + Vector2(1.5, 1.5)
     var best_cell := Vector2i(-1, -1)
     var best_distance := -1.0
-    var map_size := WorldConfig.map_size
+    var map_size: int = WorldConfig.map_size
 
     for y in range(5, map_size - 5):
         for x in range(5, map_size - 5):
@@ -319,7 +339,7 @@ func _find_expedition_enemy_keep_cell(target_region: String) -> Vector2i:
     return best_cell
 
 
-func _spawn_enemy_keep(saved: Dictionary = {}, create_garrison := true) -> void:
+func _spawn_enemy_keep(saved: Dictionary = {}, create_garrison: bool = true) -> void:
     if bool(saved.get("destroyed", false)):
         return
     var anchor := Vector2i(int(saved.get("cx", -1)), int(saved.get("cy", -1)))
@@ -334,7 +354,7 @@ func _spawn_enemy_keep(saved: Dictionary = {}, create_garrison := true) -> void:
     var region := String(saved.get("region", world.region_id(anchor)))
     var faction := String(saved.get("faction", "classic_raiders"))
     var identity := {"id":stronghold_id,"region":region,"faction":faction}
-    var stronghold = ENEMY_KEEP_SCRIPT.new()
+    var stronghold: EnemyKeep = ENEMY_KEEP_SCRIPT.new() as EnemyKeep
     stronghold.setup(world, flow, player, anchor, int(saved.get("hp", 900)), identity)
     stronghold.import_state(saved)
     world.entities.add_child(stronghold)
@@ -399,7 +419,7 @@ func _apply_save(d: Dictionary) -> void:
     if String(_save_restore_plan["campaign_mode"]) == "campaign":
         campaign.import_state(_save_restore_plan["campaign_state"])
         campaign.restore_conquered_regions()
-        for objective in campaign.objectives_in_order():
+        for objective: Dictionary in campaign.objectives_in_order():
             if not bool(objective.get("destroyed", false)):
                 _spawn_enemy_keep(objective, false)
         campaign.sync_completion()

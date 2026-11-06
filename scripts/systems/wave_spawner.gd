@@ -1,3 +1,4 @@
+class_name WaveSpawner
 extends Node
 ## Gelombang musuh tiap malam. Jumlah dan komposisi dari data/waves.json.
 
