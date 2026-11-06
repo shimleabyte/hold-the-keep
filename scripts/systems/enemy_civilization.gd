@@ -245,14 +245,23 @@ func garrison_capacity() -> int:
     return clampi(capacity, 4, 8)
 
 
-func try_recruit() -> bool:
-    var cost := {"food": 10.0, "wood": 4.0}
-    if technology_tier >= 1:
-        cost["iron"] = 1.0
+func can_recruit() -> bool:
+    return _can_pay(_recruitment_cost())
+
+
+func pay_recruitment() -> bool:
+    var cost := _recruitment_cost()
     if not _can_pay(cost):
         return false
     _pay(cost)
     return true
+
+
+func _recruitment_cost() -> Dictionary:
+    var cost := {"food": 10.0, "wood": 4.0}
+    if technology_tier >= 1:
+        cost["iron"] = 1.0
+    return cost
 
 
 func on_keep_destroyed() -> void:
