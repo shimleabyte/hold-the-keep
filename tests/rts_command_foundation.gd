@@ -30,6 +30,7 @@ func _initialize() -> void:
         return
 
     var unit = units[0]
+    var state_constants: Dictionary = unit.get_script().get_script_constant_map().get("State", {})
     commander.select_unit(unit)
     _check(commander.selected_units.size() == 1 and commander.selected_units[0] == unit,
         "Single-unit selection should update the current selection")
@@ -46,7 +47,6 @@ func _initialize() -> void:
         var goal: Vector2 = main_scene.nav.center_of(goal_cell)
         var issued: int = commander.issue_move_order(goal)
         _check(issued == 1, "Selected villager should accept a reachable move order")
-        var state_constants: Dictionary = unit.get_script().get_script_constant_map().get("State", {})
         _check(int(unit.state) == int(state_constants.get("MANUAL_MOVE", -1)),
             "A move order should enter the explicit manual movement state")
         var origin: Vector2 = unit.global_position
