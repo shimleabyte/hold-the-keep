@@ -154,8 +154,8 @@ func _initialize() -> void:
         and world_config.map_size == 192
         and world_config.map_cells == 192 * 192,
         "Frontier profile must apply all 192x192 dimensions")
-    assert(world_config.starting_claim_radius == 18.0
-        and world_config.safe_radius == 14.0,
+    assert(is_equal_approx(world_config.starting_claim_radius, 22.5)
+        and world_config.safe_radius == 18.0,
         "Frontier must apply the expanded starting footprint and clearing")
 
     var region_layout := FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed)
