@@ -22,7 +22,12 @@ func _initialize() -> void:
     save_system.set("pending_world_map_size", 64)
     OS.set_environment("HTK_AUTO_START_GAME", "1")
 
-    var first_main: Node2D = load("res://scenes/main.tscn").instantiate() as Node2D
+    var scene_resource: PackedScene = load("res://scenes/main.tscn") as PackedScene
+    var first_main: Node2D = scene_resource.instantiate() as Node2D
+    if first_main == null:
+        push_error("FAIL: Main scene could not be instantiated for the legacy save fixture")
+        quit(1)
+        return
     root.add_child(first_main)
     current_scene = first_main
     await ticks(8)
@@ -42,9 +47,15 @@ func _initialize() -> void:
     await ticks(8)
     game_clock.set_process(false)
     var restored_main: Node2D = get_first_node_in_group("main") as Node2D
+    assert(restored_main != null, "Continue must rebuild the main scene")
+    if restored_main == null:
+        quit(1)
+        return
     var restored_world: Node = restored_main.get("world") as Node
-    assert(restored_main != null and restored_world != null,
-        "Continue must rebuild the main scene")
+    assert(restored_world != null, "Continue must restore its world node")
+    if restored_world == null:
+        quit(1)
+        return
     assert(String(world_config.get("profile_id")) == "classic" and int(world_config.get("map_size")) == 64,
         "The saved campaign dimensions must override the new-game default during Continue")
     assert(int(restored_world.get("map_size")) == 64,
