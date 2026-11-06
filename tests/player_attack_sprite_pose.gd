@@ -66,7 +66,8 @@ func _initialize() -> void:
         var found := false
         for y in range(image.get_height()):
             for x in range(image.get_width()):
-                if image.get_pixel(x, y).is_equal_approx(color):
+                var observed := image.get_pixel(x, y)
+                if observed.is_equal_approx(color) or observed.is_equal_approx(color.srgb_to_linear()):
                     found = true
                     break
             if found:
