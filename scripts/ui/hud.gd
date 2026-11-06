@@ -690,7 +690,7 @@ func _current_help_rows() -> Array:
         ["RODA MOUSE", "ZOOM KAMERA"],
         ["HOTBAR / SCROLL", "PILIH / GANTI BANGUNAN"],
         ["KLIK KIRI", "PASANG / TARIK GARIS"],
-        ["KLIK KANAN", "BATAL / TANPA MODE: BONGKAR"],
+        ["KLIK KANAN", "MODE BANGUN: BATAL"],
         ["SHIFT + KANAN", "BONGKAR SAAT MODE BANGUN"],
         [" ".join(job_keys), "PILIH JOB"],
         ["SHIFT + JOB", "KURANGI KUOTA"],
