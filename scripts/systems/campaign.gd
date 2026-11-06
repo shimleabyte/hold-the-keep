@@ -1,3 +1,4 @@
+class_name Campaign
 extends Node
 ## Ordered regional conquest objectives. Classic keeps its single-stronghold rules.
 
