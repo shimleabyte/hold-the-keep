@@ -6,7 +6,6 @@ extends CharacterBody2D
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const CombatVisualFeedback := preload("res://scripts/entities/combat_visual_feedback.gd")
 const PlayerCombatFlow := preload("res://scripts/entities/player_combat_flow.gd")
-const PlayerCombatMotion := preload("res://scripts/entities/player_combat_motion.gd")
 const SPRITE := preload("res://assets/sprites/player.svg")
 const FW := 20
 const FH := 20
@@ -49,7 +48,6 @@ var spawn_pos := Vector2.ZERO
 var anim := SpriteAnim.new()
 var combat_feedback = CombatVisualFeedback.new()
 var combat_flow = PlayerCombatFlow.new()
-var combat_motion = PlayerCombatMotion.new()
 
 var _cooldown := 0.0
 var _atk_cd := 0.0
@@ -142,8 +140,6 @@ func _physics_process(delta: float) -> void:
     if combat_feedback.advance(delta):
         queue_redraw()
     combat_flow.advance(delta)
-    if combat_motion.advance(delta):
-        queue_redraw()
     _cooldown = maxf(0.0, _cooldown - delta)
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _dash_cd = maxf(0.0, _dash_cd - delta)
@@ -299,7 +295,6 @@ func _attack() -> void:
     var animation_fps := float(_attack_profile.get("animation_fps", 14.0))
 
     anim.play("attack", true, animation_fps)
-    combat_motion.play(String(_attack_profile.get("visual", "quick")), _attack_direction, swing_time)
     _pending_attack = hit_delay
     combat_feedback.begin_windup(_attack_direction, hit_delay, false)
     _swing = swing_time
@@ -424,7 +419,6 @@ func _use_dash() -> bool:
     combat_feedback.register_ability("dash", _dash_dir, DASH_DURATION + 0.08)
     Audio.play("dash", 1.0, -5.0)
     _invuln = maxf(_invuln, DASH_DURATION + 0.12)
-    combat_motion.play("dash", _dash_dir, DASH_DURATION)
     _pending_attack = -1.0
     combat_feedback.end_windup()
     _pending_harvest = null
@@ -477,11 +471,6 @@ func _use_cleave() -> bool:
     _swing = 0.0
     combat_feedback.end_windup()
     anim.play("attack", true, 12.0 if _cleave_empowered else 14.0)
-    combat_motion.play(
-        "cleave_empowered" if _cleave_empowered else "cleave",
-        _cleave_direction,
-        _cleave_t
-    )
     Events.player_attacked.emit()
     Events.fx_burst.emit(
         "cleave_charge",
@@ -536,7 +525,6 @@ func _use_rally() -> bool:
     _rally_cd = RALLY_COOLDOWN
     _rally_t = 8.0
     anim.play("idle", true)
-    combat_motion.play("rally", Vector2.UP, 0.62)
     combat_feedback.register_ability("rally", Vector2.ZERO, 0.35)
     Audio.play("rally", 1.0, -5.0)
     var affected := 0
@@ -671,7 +659,6 @@ func _die() -> void:
     _rally_t = 0.0
     _dash_can_perfect_dodge = false
     _cleave_empowered = false
-    combat_motion.clear()
     combat_flow.reset()
     anim.play("idle", true)
     Events.build_feedback.emit("Kamu tumbang! Kembali ke keep")
@@ -735,16 +722,7 @@ func _try_interact() -> void:
 
 func _draw() -> void:
     _draw_dash_afterimages()
-    var body_pose: Dictionary = combat_motion.pose()
-    anim.draw(
-        self,
-        SPRITE,
-        FW,
-        FH,
-        body_pose["offset"],
-        float(body_pose["rotation"]),
-        body_pose["scale"]
-    )
+    anim.draw(self, SPRITE, FW, FH)
     combat_feedback.draw(self, FH, Color("#c8caa0"))
     if _swing > 0.0:
         _draw_slash()
