@@ -1,3 +1,4 @@
+class_name EnemySettlementStructure
 extends Node2D
 ## Destructible faction-owned settlement building. It is separate from player
 ## buildings so civilian workplace and supply systems never claim it.
@@ -30,21 +31,21 @@ const HIT_POINTS: Dictionary = {
     "storage": 190
 }
 
-var world
-var owner_keep
-var structure_id := ""
-var faction_id := ""
-var cell := Vector2i.ZERO
-var size := Vector2i.ONE
-var hp := 100
-var max_hp := 100
+var world: WorldMap
+var owner_keep: Node2D
+var structure_id: String = ""
+var faction_id: String = ""
+var cell: Vector2i = Vector2i.ZERO
+var size: Vector2i = Vector2i.ONE
+var hp: int = 100
+var max_hp: int = 100
 
 
-func setup(world_ref, keep_ref, id: String, anchor: Vector2i, saved_hp := -1) -> void:
+func setup(world_ref: WorldMap, keep_ref: Node2D, id: String, anchor: Vector2i, saved_hp: int = -1) -> void:
     world = world_ref
     owner_keep = keep_ref
     structure_id = id
-    faction_id = String(keep_ref.faction_id) if keep_ref != null else ""
+    faction_id = String(keep_ref.get("faction_id")) if keep_ref != null else ""
     cell = anchor
     size = FOOTPRINTS.get(id, Vector2i.ONE)
     max_hp = int(HIT_POINTS.get(id, 120))
@@ -64,8 +65,8 @@ func _ready() -> void:
 
 func cells() -> Array[Vector2i]:
     var out: Array[Vector2i] = []
-    for y in size.y:
-        for x in size.x:
+    for y: int in size.y:
+        for x: int in size.x:
             out.append(cell + Vector2i(x, y))
     return out
 
@@ -83,7 +84,7 @@ func take_damage(amount: int) -> void:
 func on_keep_destroyed() -> void:
     # The prototype does not capture rival infrastructure yet. Release its footprint
     # and remove it cleanly when the owning stronghold is conquered.
-    for occupied_cell in cells():
+    for occupied_cell: Vector2i in cells():
         if world != null and is_instance_valid(world) and world.occupied.get(occupied_cell) == self:
             world.occupied.erase(occupied_cell)
             Events.resource_occupancy_changed.emit(occupied_cell)
@@ -93,29 +94,31 @@ func on_keep_destroyed() -> void:
 
 
 func _die() -> void:
-    for occupied_cell in cells():
+    for occupied_cell: Vector2i in cells():
         if world != null and is_instance_valid(world) and world.occupied.get(occupied_cell) == self:
             world.occupied.erase(occupied_cell)
             Events.resource_occupancy_changed.emit(occupied_cell)
     remove_from_group("campaign_targets")
     remove_from_group("enemy_buildings")
-    if owner_keep != null and is_instance_valid(owner_keep) and owner_keep.civilization != null:
-        owner_keep.civilization.on_structure_destroyed(self)
+    if owner_keep != null and is_instance_valid(owner_keep):
+        var owner_civilization: EnemyCivilization = owner_keep.get("civilization") as EnemyCivilization
+        if owner_civilization != null:
+            owner_civilization.on_structure_destroyed(self)
     Events.fx_burst.emit("debris", global_position + Vector2(0, -12), Vector2.ZERO, 1.4)
     queue_free()
 
 
 func _draw() -> void:
-    var texture := TEXTURES.get(structure_id) as Texture2D
-    var footprint_pixels := Vector2(size) * float(WorldConfig.tile_size)
+    var texture: Texture2D = TEXTURES.get(structure_id) as Texture2D
+    var footprint_pixels: Vector2 = Vector2(size) * float(WorldConfig.tile_size)
     if texture != null:
         draw_texture(texture, Vector2(-texture.get_width() / 2.0, -texture.get_height()))
     else:
         draw_rect(Rect2(-footprint_pixels.x / 2.0, -footprint_pixels.y, footprint_pixels.x, footprint_pixels.y), Color("#78664c"))
 
     if hp < max_hp:
-        var bar_width := minf(footprint_pixels.x, 42.0)
-        var bar_y := -float(texture.get_height()) - 5.0 if texture != null else -footprint_pixels.y - 5.0
+        var bar_width: float = minf(footprint_pixels.x, 42.0)
+        var bar_y: float = -float(texture.get_height()) - 5.0 if texture != null else -footprint_pixels.y - 5.0
         draw_rect(Rect2(-bar_width / 2.0, bar_y, bar_width, 4.0), Color(0.02, 0.02, 0.02, 0.85))
         draw_rect(Rect2(-bar_width / 2.0, bar_y, bar_width * float(hp) / float(max_hp), 3.0), Color("#b94f43"))
         draw_rect(Rect2(-bar_width / 2.0, bar_y, bar_width, 4.0), Color("#d0b68b"), false, 0.8)
