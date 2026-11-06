@@ -650,7 +650,7 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
     return true
 
 func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vector2i) -> bool:
-    for key in ["resources", "structures", "technology_tier", "research_progress", "build_order_index", "construction", "tick_accumulator", "active"]:
+    for key: String in ["resources", "structures", "technology_tier", "research_progress", "build_order_index", "construction", "tick_accumulator", "active"]:
         if not data.has(key):
             return false
     if not (data["resources"] is Dictionary) or not (data["structures"] is Array):
@@ -720,7 +720,7 @@ func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vecto
         if not (raw_structures[structure_index] is Dictionary):
             return false
         var structure: Dictionary = raw_structures[structure_index]
-        for key in ["id", "cx", "cy", "hp"]:
+        for key: String in ["id", "cx", "cy", "hp"]:
             if not structure.has(key):
                 return false
         var structure_id: String = String(structure["id"])
@@ -745,7 +745,7 @@ func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vecto
 
     var construction: Dictionary = data["construction"]
     if not construction.is_empty():
-        for key in ["id", "cx", "cy", "remaining"]:
+        for key: String in ["id", "cx", "cy", "remaining"]:
             if not construction.has(key):
                 return false
         var construction_id: String = String(construction["id"])

@@ -15,7 +15,7 @@ func enemy_entry(pool: Array, enemy_id: String) -> Dictionary:
 
 func _initialize() -> void:
     var game_clock = root.get_node("GameClock")
-    var world_config = root.get_node("WorldConfig")
+    var world_config: Node = root.get_node("WorldConfig")
     DirAccess.remove_absolute("user://save.json")
     DirAccess.remove_absolute("user://save.tmp")
     DirAccess.remove_absolute("user://save.bak")
@@ -27,10 +27,10 @@ func _initialize() -> void:
     game_clock.set_process(false)
 
     var map_center: int = int(world_config.map_size / 2)
-    var hearthland_cell := Vector2i(map_center, map_center)
-    var greenwood_cell := Vector2i(map_center, roundi(float(world_config.map_size) * 0.125))
-    var highlands_cell := Vector2i(roundi(float(world_config.map_size) * 0.83), map_center)
-    var fenlands_cell := Vector2i(roundi(float(world_config.map_size) * 0.31), roundi(float(world_config.map_size) * 0.77))
+    var hearthland_cell: Vector2i = Vector2i(map_center, map_center)
+    var greenwood_cell: Vector2i = Vector2i(map_center, roundi(float(world_config.get("map_size")) * 0.125))
+    var highlands_cell: Vector2i = Vector2i(roundi(float(world_config.get("map_size")) * 0.83), map_center)
+    var fenlands_cell: Vector2i = Vector2i(roundi(float(world_config.get("map_size")) * 0.31), roundi(float(world_config.get("map_size")) * 0.77))
     assert(main.world.region_id(hearthland_cell) == "HEARTHLAND",
         "The central region must be identified as Hearthland")
     assert(main.world.region_id(greenwood_cell) == "GREENWOOD",
@@ -40,7 +40,7 @@ func _initialize() -> void:
     assert(main.world.region_id(fenlands_cell) == "FENLANDS",
         "The southern region must be Fenlands")
 
-    for cell in [hearthland_cell, greenwood_cell, highlands_cell, fenlands_cell]:
+    for cell: Vector2i in [hearthland_cell, greenwood_cell, highlands_cell, fenlands_cell]:
         var terrain_type: int = int(main.world.tile_type_at(cell))
         assert(terrain_type >= 0 and terrain_type <= 5,
             "Every generated map cell must use a registered terrain tile")

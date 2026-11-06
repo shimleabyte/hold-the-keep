@@ -86,7 +86,7 @@ func reference_wildlife_signature(world: Node) -> Array[String]:
             return int(a["order"]) < int(b["order"])
         return a_score < b_score
     )
-    var target_count := mini(240, maxi(12, roundi(float(world.map_size * world.map_size) / 340.0)))
+    var target_count: int = mini(240, maxi(12, roundi(float(world.map_size * world.map_size) / 340.0)))
     var blocked_nearby: Dictionary = {}
     var signature: Array[String] = []
     var placed := 0
@@ -158,8 +158,8 @@ func _initialize() -> void:
         and world_config.safe_radius == 18.0,
         "Frontier must apply the expanded starting footprint and clearing")
 
-    var region_layout := FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed)
-    var repeated_region_layout := FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed)
+    var region_layout: Dictionary = FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed)
+    var repeated_region_layout: Dictionary = FRONTIER_REGION_GENERATOR.generate(192, world_config.world_seed)
     assert(region_layout.size() == 192 * 192,
         "The Frontier region stage must return one label per map cell")
     assert(region_layout == repeated_region_layout,
@@ -172,7 +172,7 @@ func _initialize() -> void:
     for region_id in region_counts.size():
         assert(region_counts[region_id] >= 700,
             "Every generated Frontier region must retain meaningful territory")
-    var expedition_region_layout := FRONTIER_REGION_GENERATOR.generate(256, world_config.world_seed)
+    var expedition_region_layout: Dictionary = FRONTIER_REGION_GENERATOR.generate(256, world_config.world_seed)
     assert(expedition_region_layout.size() == 256 * 256
         and expedition_region_layout == FRONTIER_REGION_GENERATOR.generate(256, world_config.world_seed),
         "The same deterministic region stage must support the 256x256 Expedition profile")
@@ -233,7 +233,7 @@ func _initialize() -> void:
 
     var generated_kind_counts := {"wood": 0, "stone": 0}
     var generated_resource_cells: Dictionary = {}
-    var resource_center := Vector2(192, 192) * 0.5
+    var resource_center: Vector2 = Vector2(192, 192) * 0.5
     var resource_clearing_radius := maxf(
         world_config.safe_radius + 7.0, 192.0 * 0.15
     )
@@ -411,7 +411,7 @@ func _initialize() -> void:
     assert(main.territory.claimed_cells.size() >= 650,
         "The Frontier Keep must claim the larger 15-tile starting territory")
 
-    var far_cell := Vector2i(world_config.map_size - 1, world_config.map_size - 1)
+    var far_cell: Vector2i = Vector2i(world_config.map_size - 1, world_config.map_size - 1)
     var far_index: int = world_config.cell_index(far_cell)
     main.fog.import_state({"cells": [far_index]})
     assert(main.fog.is_revealed_cell(far_cell),

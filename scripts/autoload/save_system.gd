@@ -10,8 +10,8 @@ const SAVE_FILE_STORE_SCRIPT := preload("res://scripts/persistence/save_file_sto
 const SAVE_MIGRATION_SCRIPT := preload("res://scripts/persistence/save_migration_pipeline.gd")
 
 var pending: Dictionary = {}
-var pending_world_profile := ""
-var pending_world_map_size := 0
+var pending_world_profile: String = ""
+var pending_world_map_size: int = 0
 var _validator = SAVE_VALIDATOR_SCRIPT.new()
 var _file_store = SAVE_FILE_STORE_SCRIPT.new()
 
@@ -49,7 +49,7 @@ func _main() -> Node:
 
 
 ## Write a complete temporary file before moving the current save to its rollback copy.
-func save_current(silent := false) -> bool:
+func save_current(silent: bool = false) -> bool:
     var main := _main()
     if main == null or not _has_keep():
         if not silent:
@@ -173,11 +173,11 @@ func collect(main: Node) -> Dictionary:
     }
 
 
-func _valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
+func _valid_save(data: Variant, enforce_world_compatibility: bool = true) -> bool:
     return _validator.is_valid_save(data, enforce_world_compatibility)
 
 
-func _read_saved_data(path: String, enforce_world_compatibility := true) -> Variant:
+func _read_saved_data(path: String, enforce_world_compatibility: bool = true) -> Variant:
     return _file_store.read_snapshot(path, enforce_world_compatibility)
 
 func _read_valid_save(path: String) -> Variant:
@@ -186,7 +186,7 @@ func _read_valid_save(path: String) -> Variant:
 
 ## Return the profile and exact historical/current dimensions from the newest valid save.
 func saved_profile_id() -> String:
-    for candidate in [PATH, BACKUP]:
+    for candidate: String in [PATH, BACKUP]:
         var data: Variant = _read_saved_data(candidate, false)
         if not (data is Dictionary):
             continue
@@ -194,15 +194,15 @@ func saved_profile_id() -> String:
             return "classic"
         var world_data: Variant = data.get("world", {})
         if world_data is Dictionary:
-            var profile_id := String(world_data.get("profile", ""))
-            var map_size := int(world_data.get("map_size", 0))
+            var profile_id: String = String(world_data.get("profile", ""))
+            var map_size: int = int(world_data.get("map_size", 0))
             if WorldConfig.is_supported_map_size(profile_id, map_size):
                 return profile_id
     return WorldConfig.profile_id
 
 
 func saved_map_size() -> int:
-    for candidate in [PATH, BACKUP]:
+    for candidate: String in [PATH, BACKUP]:
         var data: Variant = _read_saved_data(candidate, false)
         if not (data is Dictionary):
             continue
@@ -210,8 +210,8 @@ func saved_map_size() -> int:
             return int(WorldConfig.LEGACY_PROFILES["classic"]["map_size"])
         var world_data: Variant = data.get("world", {})
         if world_data is Dictionary:
-            var profile_id := String(world_data.get("profile", ""))
-            var map_size := int(world_data.get("map_size", 0))
+            var profile_id: String = String(world_data.get("profile", ""))
+            var map_size: int = int(world_data.get("map_size", 0))
             if WorldConfig.is_supported_map_size(profile_id, map_size):
                 return map_size
     return WorldConfig.map_size
@@ -222,17 +222,17 @@ func saved_map_size() -> int:
 ## terrain coordinates, fog indices and resource placement from historical campaigns.
 func request_load() -> bool:
     var parsed: Variant = null
-    var selected_profile := ""
-    var previous_profile := WorldConfig.profile_id
-    var previous_size := WorldConfig.map_size
+    var selected_profile: String = ""
+    var previous_profile: String = WorldConfig.profile_id
+    var previous_size: int = WorldConfig.map_size
 
-    for candidate in [PATH, BACKUP]:
+    for candidate: String in [PATH, BACKUP]:
         var candidate_data: Variant = _read_saved_data(candidate, false)
         if not (candidate_data is Dictionary):
             continue
-        var source_version := int(candidate_data.get("version", 0))
-        var target_profile := "classic"
-        var target_size := int(WorldConfig.LEGACY_PROFILES["classic"]["map_size"])
+        var source_version: int = int(candidate_data.get("version", 0))
+        var target_profile: String = "classic"
+        var target_size: int = int(WorldConfig.LEGACY_PROFILES["classic"]["map_size"])
         if source_version >= 7:
             var world_data: Variant = candidate_data.get("world", {})
             if not (world_data is Dictionary):
@@ -256,7 +256,7 @@ func request_load() -> bool:
     Settings.set_world_profile(selected_profile)
     pending_world_profile = selected_profile
     pending_world_map_size = WorldConfig.map_size
-    var source_version := int(parsed.get("version", 0))
+    var source_version: int = int(parsed.get("version", 0))
     if source_version < VERSION:
         var main := _main()
         var migration = SAVE_MIGRATION_SCRIPT.new()

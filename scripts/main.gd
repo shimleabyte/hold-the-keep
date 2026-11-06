@@ -21,7 +21,7 @@ const MENU_SCRIPT := preload("res://scripts/ui/pause_menu.gd")
 const FRONTIER_CAMPAIGN_SCRIPT := preload("res://scripts/systems/frontier_campaign.gd")
 const SAVE_MIGRATION_SCRIPT := preload("res://scripts/persistence/save_migration_pipeline.gd")
 const FRONTIER_OBJECTIVE_PANEL_SCRIPT := preload("res://scripts/ui/frontier_objective_panel.gd")
-const ARMY_COMMAND_SCRIPT := preload("res://scripts/systems/army_command.gd")
+const ARMY_COMMAND_SCRIPT: Script = preload("res://scripts/systems/army_command.gd")
 const TITLE_SCREEN_SCRIPT := preload("res://scripts/ui/title_screen.gd")
 
 const NIGHT_TINT := Color(0.45, 0.5, 0.75)

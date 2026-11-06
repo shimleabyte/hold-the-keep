@@ -8,8 +8,8 @@ const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const CombatVisualFeedback := preload("res://scripts/entities/combat_visual_feedback.gd")
 const PlayerCombatFlow := preload("res://scripts/entities/player_combat_flow.gd")
 const SPRITE := preload("res://assets/sprites/player.svg")
-const FW := 24
-const FH := 28
+const FW: int = 24
+const FH: int = 28
 
 const SPEED := 70.0
 const RUN_SPEED := 108.0
