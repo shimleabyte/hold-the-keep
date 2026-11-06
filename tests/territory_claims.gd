@@ -18,6 +18,7 @@ func footprint_clear(main, anchor: Vector2i, size: Vector2i) -> bool:
 func _initialize() -> void:
     var game_clock = root.get_node("GameClock")
     var inventory = root.get_node("Inventory")
+    var world_config = root.get_node("WorldConfig")
     var main = load("res://scenes/main.tscn").instantiate()
     root.add_child(main)
     current_scene = main
@@ -36,8 +37,8 @@ func _initialize() -> void:
         "Outposts must not be placed wholly inside already-owned territory")
 
     var outside := Vector2i(-1, -1)
-    for y in range(4, WorldConfig.map_size - 4):
-        for x in range(4, WorldConfig.map_size - 4):
+    for y in range(4, world_config.map_size - 4):
+        for x in range(4, world_config.map_size - 4):
             var c := Vector2i(x, y)
             if not main.territory.is_claimed(c) and footprint_clear(main, c, Vector2i(2, 2)):
                 outside = c
@@ -51,11 +52,11 @@ func _initialize() -> void:
     var outpost_cell := Vector2i(-1, -1)
     var expansion_target := Vector2i(-1, -1)
     var keep_center := Vector2(keep_cell) + Vector2(1.5, 1.5)
-    var frontier_radius := float(WorldConfig.starting_claim_radius)
+    var frontier_radius := float(world_config.starting_claim_radius)
     var search_min := maxi(2, floori(frontier_radius - 3.0))
     var search_max := ceili(frontier_radius + 6.0)
-    for y in range(maxi(2, keep_cell.y - search_max), mini(WorldConfig.map_size - 2, keep_cell.y + search_max)):
-        for x in range(maxi(2, keep_cell.x - search_max), mini(WorldConfig.map_size - 2, keep_cell.x + search_max)):
+    for y in range(maxi(2, keep_cell.y - search_max), mini(world_config.map_size - 2, keep_cell.y + search_max)):
+        for x in range(maxi(2, keep_cell.x - search_max), mini(world_config.map_size - 2, keep_cell.x + search_max)):
             var c := Vector2i(x, y)
             var target := c + Vector2i(8, 0)
             var center := Vector2(c) + Vector2.ONE
