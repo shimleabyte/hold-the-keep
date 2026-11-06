@@ -169,6 +169,16 @@ func _initialize() -> void:
         and world_config.map_size == 64
         and world_config.safe_radius == 8.0,
         "Continuing an original Classic save must restore its original 64x64 generation settings")
+    assert(world_config.apply_saved_profile("frontier", 128)
+        and world_config.map_size == 128
+        and world_config.starting_claim_radius == 15.0,
+        "Continuing an original Frontier save must restore its original 128x128 generation settings")
+    assert(world_config.apply_saved_profile("frontier_expedition", 192)
+        and world_config.map_size == 192
+        and int(world_config.profile_definition("frontier_expedition")["expedition_core_size"]) == 128,
+        "Continuing an original Expedition save must restore its 192x192 map and 128x128 heartland")
+    assert(world_config.apply_saved_profile("classic", 64),
+        "The legacy Classic profile must remain restorable after the other historical profiles are checked")
     assert(not save_system._valid_save(current_save),
         "A new 128x128 Classic save must not load into the historical 64x64 runtime")
     assert(save_system._valid_save(current_save, false),
