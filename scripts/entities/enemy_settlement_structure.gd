@@ -81,8 +81,15 @@ func take_damage(amount: int) -> void:
 
 
 func on_keep_destroyed() -> void:
-    # Conquered structures remain in the world, but are no longer hostile targets.
+    # The prototype does not capture rival infrastructure yet. Release its footprint
+    # and remove it cleanly when the owning stronghold is conquered.
+    for occupied_cell in cells():
+        if world != null and is_instance_valid(world) and world.occupied.get(occupied_cell) == self:
+            world.occupied.erase(occupied_cell)
+            Events.resource_occupancy_changed.emit(occupied_cell)
     remove_from_group("campaign_targets")
+    remove_from_group("enemy_buildings")
+    queue_free()
 
 
 func _die() -> void:
