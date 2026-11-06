@@ -7,20 +7,20 @@ const DEFAULT_SEED := 1337
 const PROFILES: Dictionary = {
     "classic": {
         "map_size": 128,
-        "starting_claim_radius": 14.0,
-        "safe_radius": 10.0,
+        "starting_claim_radius": 20.0,
+        "safe_radius": 16.0,
         "iron_veins": 32
     },
     "frontier": {
         "map_size": 192,
-        "starting_claim_radius": 18.0,
-        "safe_radius": 14.0,
+        "starting_claim_radius": 22.5,
+        "safe_radius": 18.0,
         "iron_veins": 72
     },
     "frontier_expedition": {
         "map_size": 256,
-        "starting_claim_radius": 18.0,
-        "safe_radius": 14.0,
+        "starting_claim_radius": 20.0,
+        "safe_radius": 16.0,
         "iron_veins": 128,
         "expedition_core_size": 160
     }
