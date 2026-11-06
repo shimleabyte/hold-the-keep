@@ -351,3 +351,48 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - Connect 14 event cues for combat anticipation/projectiles/block/stagger/abilities/charges/siege, wave and camp alarm, objective completion, act unlock and victory.
 - `tests/audio_identity.gd` validates loop counts/format/buffers, deterministic synthesis, event-cue availability, Master bus routing and context selection. It passed in both Godot versions.
 - Manual audio listening, level-balance and loop-transition QA remain mandatory; CI cannot confirm perceived loudness, speaker translation or subjective mix quality.
+
+
+## Phase 11 — Rival civilizations and military command
+
+**Status (2026-11-06):** Initial implementation is isolated on `feat/army-command-rival-civilization`. It is not merged and has not yet passed Godot 4.7 CI. The branch deliberately preserves the current player avatar, camera, direct combat and autonomous civilian jobs. Classic remains 64×64; Frontier remains 128×128; Expedition remains 192×192. No map-size or save-schema bump is included.
+
+### Product contract
+
+- Civilian workers remain autonomous. Existing gathering, construction, delivery, specialist and workplace state machines are not exposed to direct army selection.
+- Military units only (`job == "soldier"`, including Archer specialization) may be selected and ordered.
+- The player remains directly controllable. Mouse selection clicks must not accidentally trigger player melee; clicking a hostile target remains a valid player attack.
+- The first army command slice is deliberately small: single select, drag selection, Shift add/remove, move and attack.
+- Rival strongholds own an independent finite resource ledger, construction plan, visible faction structures, paid garrison recruitment and technology tiers.
+- Rival buildings use a separate entity type; they must not register as player workplaces, depots, supply sources or player-buildable structures.
+- The first rival economy uses abstracted workforce production. Visible enemy workers, multi-settlement logistics, territorial expansion and offensive strategic plans remain later work.
+- Larger maps are not approved by this phase. Revisit dimensions only after real multi-settlement layout, navigation cost and desktop performance demonstrate the current profiles are insufficient.
+
+### Initial implementation on the feature branch
+
+- [x] Add a separate army command controller; select only visible living soldiers.
+- [x] Add right-click movement and direct attack orders while retaining the soldier combat state machine.
+- [x] Keep player camera, direct movement and player avatar active.
+- [x] Add faction-owned settlement structure entities using existing low-cost building art.
+- [x] Add bounded rival economy ticks, resource stockpiles, construction costs, visible buildings and production income.
+- [x] Add a barracks-dependent garrison capacity, resource-paid periodic recruitment and military technology tiers.
+- [x] Add additive stronghold serialization for rival structures, resource balances, research and construction state; preserve schema v17.
+- [x] Add a focused regression test and include it in the Godot 4.7 runner/matrix.
+- [x] Replace the old “no remote military control” design restriction with autonomous civilians plus commandable armies.
+- [ ] Verify Godot 4.7 import and GDScript parse on the complete branch.
+- [ ] Pass the focused army/civilization regression and full mainline regression matrix.
+- [ ] Verify Classic new-game and existing v17 save/reload, plus Frontier and Expedition multi-stronghold reload.
+- [ ] Render and play a Classic rival-settlement session; inspect building overlap, pathing, recruitment pacing and combat challenge.
+- [ ] Measure frame-time p50/p95/p99 and worst frame during rival construction, garrison recruitment and active waves on a target desktop.
+
+### Follow-on sequence
+
+1. **11.1 — Acceptance and persistence:** validate the initial branch; harden corrupted/blocked structure restore, rebuild behavior and save migration fixtures without a schema bump where possible.
+2. **11.2 — Rival strategy:** add faction-specific priorities and responses, use existing faction doctrine and archetype rosters, and make each faction's attack/defense strategy distinct.
+3. **11.3 — Rival military production:** convert barracks/archery facilities into explicit training queues and deploy new unit types only when paid costs and population/upkeep rules allow.
+4. **11.4 — Expansion and supply:** add secondary settlements, faction-owned territory, roads and local depots through explicit ownership contracts. Reuse the existing logistics architecture rather than mirroring it.
+5. **11.5 — Map and campaign review:** only after multiple settlements work, decide whether any profile needs more tiles. Run human campaign balance reviews and performance diagnostics before changing Classic or Frontier dimensions.
+
+**Known overlap:** PR #169 (`feat/rts-command-foundation`) is a separate open proposal that retires the hero camera and exposes all villagers to direct selection/orders. That implementation conflicts with this phase's product contract. Do not merge it as-is; reconcile or close it before integrating any overlapping files. PRs #166/#167 and the open player-animation work must be rechecked for current branch compatibility before merging.
+
+**Validation boundary:** No engine runtime is available in the implementation environment. CI and rendered/manual acceptance must be reported from actual workflow and playtest results; source inspection alone is not a passing test.
