@@ -182,7 +182,7 @@ func _initialize() -> void:
     main.flow.rebuild()
     require(main.flow.is_reachable(bridge_cell),
         "Enemy route fields must cross a built bridge")
-    var storage = main.build.place_raw("storage", Vector2i(29, 34))
+    var storage = main.build.place_raw("storage", road_c + Vector2i(-1, 0))
     await ticks(2)
     main.supply.rebuild()
     require(main.supply.connected_road_count() == 3,
