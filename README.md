@@ -42,6 +42,7 @@ Game sedang bertransisi ke model RTS top-down: kamera strategi, seleksi unit, pe
 | Pilih banyak unit | Drag klik kiri |
 | Tambah/lepaskan dari seleksi | Shift + klik kiri |
 | Perintah gerak unit | Klik kanan tanah |
+| Perintah kumpulkan resource | Klik kanan resource dengan villager terpilih |
 | Perintah serang prajurit | Klik kanan musuh / target kampanye |
 | Interaksi objektif Frontier | Klik kanan titik objektif dengan unit terpilih |
 | Peta strategis | TAB |
