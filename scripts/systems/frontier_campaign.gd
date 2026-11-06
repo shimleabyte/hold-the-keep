@@ -132,7 +132,7 @@ func _scan_discovery() -> void:
             continue
         var target_region := String(definition["region"])
         for observer_position in observers:
-            var observer_cell := main.nav.cell_of(observer_position)
+            var observer_cell: Vector2i = main.nav.cell_of(observer_position)
             if String(main.world.region_id(observer_cell)) != target_region:
                 continue
             if WorldConfig.is_frontier_expedition() and not main.world.is_expedition_survey_site_reached(target_region, observer_position):
