@@ -214,7 +214,7 @@ func _find_build_site(id: String) -> Vector2i:
             for x in range(-radius, radius + 1):
                 if maxi(absi(x), absi(y)) != radius:
                     continue
-                var anchor := owner_keep.cell + Vector2i(x, y)
+                var anchor: Vector2i = owner_keep.cell + Vector2i(x, y)
                 if _placement_valid(id, anchor, footprint):
                     return anchor
     return Vector2i(-1, -1)
