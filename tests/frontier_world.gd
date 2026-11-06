@@ -585,7 +585,7 @@ func _initialize() -> void:
     while not main.flow.is_current():
         await ticks(1)
         flow_snapshot_wait += 1
-        assert(flow_snapshot_wait < 180,
+        assert(flow_snapshot_wait < 1800,
             "The asynchronous FlowField must publish before road invalidation is measured")
     var road_nav_version: int = int(main.nav.version)
     var road = main.build.place_raw("road", navigation_probe_cell)

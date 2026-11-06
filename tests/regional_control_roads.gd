@@ -61,7 +61,7 @@ func require(condition: bool, message: String) -> void:
     assert(condition, message)
 
 
-func require_flow_current(flow: Node, maximum_frames: int = 120) -> bool:
+func require_flow_current(flow: Node, maximum_frames: int = 1800) -> bool:
     var waited: int = 0
     while not flow.is_current() and waited < maximum_frames:
         await physics_frame

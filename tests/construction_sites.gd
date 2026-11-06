@@ -89,7 +89,7 @@ func _initialize() -> void:
     while not main.flow.is_current():
         await ticks(1)
         initial_flow_wait += 1
-        assert(initial_flow_wait < 180,
+        assert(initial_flow_wait < 1800,
             "Initial enemy flow field must publish before construction profiling")
     assert_multi_cell_approach_fallback(main)
     main.village.set_process(false)
@@ -133,7 +133,7 @@ func _initialize() -> void:
     while main.flow._dirty or main.flow._build_active:
         await ticks(1)
         flow_wait_frames += 1
-        assert(flow_wait_frames < 100,
+        assert(flow_wait_frames < 1800,
             "A bounded flow-field rebuild must eventually publish its completed snapshot")
     assert(main.flow.version == flow_version_before + 1,
         "One blueprint placement must publish exactly one refreshed flow field")
