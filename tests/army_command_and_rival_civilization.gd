@@ -104,7 +104,9 @@ func _initialize() -> void:
                 "Rival civilization should construct a stone and iron source")
             _check(bool(civilization.call("_has_structure", "barracks")),
                 "Rival civilization should eventually invest in military production")
-            _check(int(civilization.get("technology_tier")) >= 1,
+            var technology_tier: int = int(civilization.get("technology_tier"))
+            var technology_advanced: bool = technology_tier >= 1
+            _check(technology_advanced,
                 "Rival civilization should advance technology after meeting prerequisites")
 
             var structures: Array = civilization.get("structures")
@@ -112,7 +114,9 @@ func _initialize() -> void:
                 "Completed rival structures should exist as world entities")
             var snapshot: Dictionary = stronghold.call("export_state")
             var saved_civilization: Dictionary = snapshot.get("civilization", {})
-            _check(saved_civilization.has("structures") and saved_civilization["structures"] is Array,
+            var saved_structure_values: Variant = saved_civilization.get("structures", null)
+            var saved_structures_valid: bool = saved_structure_values is Array
+            _check(saved_civilization.has("structures") and saved_structures_valid,
                 "Stronghold state must persist the rival economy and completed structures")
             _check(float(resources.get("wood", 0.0)) <= 999.0,
                 "Rival resource stock must remain bounded")
