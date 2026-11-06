@@ -37,8 +37,8 @@ func require(condition: bool, message: String) -> void:
     assert(condition, message)
 
 
-func require_flow_current(flow: Node, maximum_frames := 120) -> bool:
-    var waited := 0
+func require_flow_current(flow: Node, maximum_frames: int = 120) -> bool:
+    var waited: int = 0
     while not flow.is_current() and waited < maximum_frames:
         await physics_frame
         waited += 1
@@ -118,9 +118,9 @@ func _initialize() -> void:
     # Road tiles are ordinary claimed construction, but do not block pathfinding.
     inventory.items = {"wood": 1000, "stone": 500, "food": 500, "iron": 0}
     var keep_cell: Vector2i = world.starting_keep_cell()
-    var road_a := keep_cell + Vector2i(3, 3)
-    var road_b := road_a + Vector2i(0, 1)
-    var road_c := road_a + Vector2i(-1, 1)
+    var road_a: Vector2i = keep_cell + Vector2i(2, 3)
+    var road_b: Vector2i = road_a + Vector2i(0, 1)
+    var road_c: Vector2i = road_a + Vector2i(-1, 1)
     require(main.build.check("road", road_a) == "",
         "A road should be buildable inside the Keep claim and player range")
     require(main.build.place("road", road_a) == "", "First road placement must succeed")
@@ -151,7 +151,7 @@ func _initialize() -> void:
     var bridge_cell := Vector2i(-1, -1)
     var claimed_cells: Array = territory.claimed_cells.keys()
     var player_cell: Vector2i = main.nav.cell_of(main.player.global_position)
-    var reachable_from_keep := reachable_cells(main.nav, player_cell)
+    var reachable_from_keep: Dictionary = reachable_cells(main.nav, player_cell)
     claimed_cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
         var distance_a: float = Vector2(a - player_cell).length_squared()
         var distance_b: float = Vector2(b - player_cell).length_squared()
@@ -160,7 +160,7 @@ func _initialize() -> void:
     for candidate in claimed_cells:
         if not world.is_buildable(candidate) or world.occupied.has(candidate):
             continue
-        var reachable_bank := Vector2i(-1, -1)
+        var reachable_bank: Vector2i = Vector2i(-1, -1)
         for direction in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
             var neighbor: Vector2i = candidate + direction
             if world.is_buildable(neighbor) and reachable_from_keep.has(neighbor) and main.flow.is_reachable(neighbor):
@@ -200,7 +200,7 @@ func _initialize() -> void:
         "The flow field must finish rebuilding after bridge completion")
     require(main.flow.is_reachable(bridge_cell),
         "Enemy route fields must cross a built bridge")
-    var storage = main.build.place_raw("storage", road_c + Vector2i(-1, 0))
+    var storage: Node = main.build.place_raw("storage", road_c + Vector2i(-1, 0))
     await ticks(2)
     main.supply.rebuild()
     require(main.supply.connected_road_count() == 3,
