@@ -1,3 +1,4 @@
+class_name Player
 extends CharacterBody2D
 ## Pemain top-down. Origin node = kaki (untuk Y-sort).
 ## Animasi: idle, jalan, lari (tahan Shift), serang, panen, kena pukul. Damage serangan dan panen
@@ -253,7 +254,7 @@ func _tick_pending(delta: float) -> void:
 func _click_on_hud() -> bool:
     if Input.is_physical_key_pressed(KEY_F) or Input.is_joy_button_pressed(0, JOY_BUTTON_X):
         return false
-    var commander := get_tree().get_first_node_in_group("army_command_manager")
+    var commander: ArmyCommand = get_tree().get_first_node_in_group("army_command_manager") as ArmyCommand
     if commander != null and commander.has_method("blocks_player_attack") and commander.blocks_player_attack():
         return true
     var hud := get_tree().get_first_node_in_group("hud")

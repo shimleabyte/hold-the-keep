@@ -1,3 +1,4 @@
+class_name WorldMap
 extends Node2D
 ## Profile-scaled world terrain, collision water and harvestable resource nodes.
 ## Classic keeps its original atlas; Frontier uses a dedicated weathered regional palette.
@@ -398,7 +399,7 @@ func _spawn_classic_iron() -> void:
     while veins < WorldConfig.iron_veins and tries < 300:
         tries += 1
         var c := Vector2i(rng.randi_range(4, map_size - 5), rng.randi_range(4, map_size - 5))
-        var homeland_radius := maxf(16.0, 13.0 * float(map_size) / 64.0)
+        var homeland_radius: float = maxf(16.0, 13.0 * float(map_size) / 64.0)
         if Vector2(c).distance_to(center) < homeland_radius:
             continue
         var want := rng.randi_range(3, 5)
@@ -428,8 +429,8 @@ func _spawn_frontier_iron() -> void:
             rng.randi_range(4, map_size - 5),
             rng.randi_range(4, map_size - 5)
         )
-        var iron_keepout_radius := safe_radius + 8.0
-        var is_new_large_frontier := (
+        var iron_keepout_radius: float = safe_radius + 8.0
+        var is_new_large_frontier: bool = (
             (WorldConfig.profile_id == "frontier" and map_size == 192)
             or (WorldConfig.profile_id == "frontier_expedition" and map_size == 256)
         )
@@ -474,7 +475,7 @@ func _spawn_wildlife() -> void:
         safe_radius + (7.0 if frontier else 4.0),
         float(map_size) * (0.15 if frontier else 0.10)
     )
-    var target_count := mini(240, maxi(12, roundi(float(map_size * map_size) / 340.0)))
+    var target_count: int = mini(240, maxi(12, roundi(float(map_size * map_size) / 340.0)))
     # A selected wildlife node blocks at most eight other candidate cells (its 3x3
     # neighborhood). Therefore the first 9 * target_count candidates in score order
     # are sufficient to reproduce the greedy spacing pass; later candidates cannot

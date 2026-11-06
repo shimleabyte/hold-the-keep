@@ -1,3 +1,4 @@
+class_name Villager
 extends Node2D
 ## Villager dengan job. Mesin state sederhana:
 ## IDLE -> TO_WORK -> WORKING -> TO_DEPOT -> (kembali TO_WORK)
@@ -130,7 +131,7 @@ var _scout_target_cell := Vector2i(-1, -1)
 var _scout_cursor := 0
 var _scout_survey_t := 0.0
 var _scout_revealed_at_target := false
-var _manual_goal_cell := Vector2i(-1, -1)
+var _manual_goal_cell: Vector2i = Vector2i(-1, -1)
 var _manual_attack_target: Node2D
 var weapon_equipped := false
 var armor_equipped := false
@@ -813,7 +814,7 @@ func issue_army_attack_order(target_node: Node2D) -> bool:
         return false
     if not target_node.visible or _expeditioning or state in [State.HIDDEN, State.FLEEING]:
         return false
-    var valid_target := (
+    var valid_target: bool = (
         target_node.is_in_group("enemies")
         or target_node.is_in_group("enemy_strongholds")
         or target_node.is_in_group("enemy_buildings")
@@ -966,7 +967,7 @@ func _tick_fight(delta: float) -> void:
             state = State.EXPEDITION if _expeditioning and is_instance_valid(_expedition_target) else State.IDLE
         return
     var dist := position.distance_to(_foe.position)
-    var attack_reach := REACH
+    var attack_reach: float = REACH
     if _manual_attack_target != null and (_foe.has_method("cells") or _foe.is_in_group("enemy_buildings") or _foe.is_in_group("enemy_strongholds")):
         attack_reach = 34.0
     if _archer_combat.tick(self, _foe, delta):
@@ -1663,7 +1664,7 @@ func _move_along(delta: float) -> bool:
     var tgt := _path[_pi]
     var to := tgt - position
     var d := to.length()
-    var fast := state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or state == State.SCOUT_RETURNING or state == State.MANUAL_MOVE or (state == State.FIGHT and _foe != null and is_instance_valid(_foe) and position.distance_to(_foe.position) > RUN_DISTANCE)
+    var fast: bool = state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or state == State.SCOUT_RETURNING or state == State.MANUAL_MOVE or (state == State.FIGHT and _foe != null and is_instance_valid(_foe) and position.distance_to(_foe.position) > RUN_DISTANCE)
     var step := (RUN_SPEED if fast else SPEED) * delta
     if not anim.is_busy() and anim.face(to):
         queue_redraw()
