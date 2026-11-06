@@ -116,10 +116,7 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
         var saved_profile := String(world_data["profile"])
         var saved_map_size := int(world_data["map_size"])
         var saved_tile_size := int(world_data["tile_size"])
-        if not WorldConfig.PROFILES.has(saved_profile) or saved_map_size <= 0 or saved_tile_size <= 0:
-            return false
-        var saved_profile_data: Dictionary = WorldConfig.profile_definition(saved_profile)
-        if saved_map_size != int(saved_profile_data.get("map_size", 0)) or saved_tile_size != WorldConfig.TILE_SIZE:
+        if not WorldConfig.is_supported_map_size(saved_profile, saved_map_size) or saved_tile_size != WorldConfig.TILE_SIZE:
             return false
         if enforce_world_compatibility:
             if saved_profile != WorldConfig.profile_id:
