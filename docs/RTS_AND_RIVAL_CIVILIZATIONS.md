@@ -10,7 +10,8 @@
 - Basic commands are select, box-select, move and attack. Advanced formation controls, control groups, attack-move and command queues are separate later work.
 - Rival economy and construction are distinct from player buildings. Rival structures must not be assigned to player workers, depots or supply routes.
 - Rival resource production is bounded and paid for. Recruitment, construction and research spend stored resources.
-- World dimensions remain unchanged until multi-settlement gameplay and performance measurements justify a new profile.
+- New campaign dimensions are Classic 128×128, Frontier 192×192 and Frontier Expedition 256×256. The larger footprint is a gameplay requirement for rival settlement growth and territorial expansion, not a cosmetic option.
+- Historical save dimensions remain supported: Classic 64×64, Frontier 128×128 and Expedition 192×192. Continue loads the exact dimensions stored by the campaign so old terrain, coordinates, fog and resource placement stay valid.
 - New save state is additive. Existing v17 saves without civilization data must load with a valid initial rival economy.
 
 ## Current implementation slice
@@ -33,6 +34,10 @@
 - Rival structures and economy state are persisted as additive stronghold state.
 
 **Important limitation:** the first slice uses an abstracted workforce for the rival economy. It establishes resource production, construction, recruitment and research without yet simulating visible enemy laborers, multiple outposts, road logistics, territorial expansion or coordinated offensive campaigns.
+
+## Map-scale decision
+
+The previous defer-expansion decision is superseded by real player playtesting: the old world sizes do not leave enough strategic distance or space for a competing civilization to develop. New campaigns therefore use the enlarged profile ladder. Resource density is retained as the map grows, and the Expedition heartland grows to 160×160 while its four outer marches remain discovery-gated.
 
 ## Delivery sequence
 
