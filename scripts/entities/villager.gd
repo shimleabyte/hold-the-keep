@@ -131,6 +131,8 @@ var _scout_cursor := 0
 var _scout_survey_t := 0.0
 var _scout_revealed_at_target := false
 var _manual_goal_cell := Vector2i(-1, -1)
+var _manual_interact_target: Node2D
+var _manual_attack_target: Node2D
 var weapon_equipped := false
 var armor_equipped := false
 var _smith_recipe := ""
@@ -237,6 +239,9 @@ func set_job(j: String, preferred_workplace = null) -> bool:
     _release_workplace()
     _expeditioning = false
     _expedition_target = null
+    _manual_interact_target = null
+    _manual_attack_target = null
+    _manual_goal_cell = Vector2i(-1, -1)
     _scout_target_cell = Vector2i(-1, -1)
     _scout_survey_t = 0.0
     _scout_revealed_at_target = false
@@ -492,9 +497,14 @@ func _physics_process(delta: float) -> void:
                 _decide_t = SCOUT_RECHECK_SECONDS
         State.MANUAL_MOVE:
             if _move_along(delta):
+                var interaction_target := _manual_interact_target
+                _manual_interact_target = null
                 _manual_goal_cell = Vector2i(-1, -1)
                 state = State.IDLE
                 _decide_t = 0.05
+                if is_instance_valid(interaction_target) and interaction_target.is_in_group("frontier_sites"):
+                    if position.distance_to(interaction_target.global_position) <= 36.0:
+                        interaction_target.interact()
     _update_anim(delta)
 
 
@@ -794,6 +804,8 @@ func issue_move_order(destination: Vector2) -> bool:
     _scout_target_cell = Vector2i(-1, -1)
     _scout_survey_t = 0.0
     _scout_revealed_at_target = false
+    _manual_interact_target = null
+    _manual_attack_target = null
     _manual_goal_cell = nav.cell_of(destination)
     var path: PackedVector2Array = nav.path_to(position, _manual_goal_cell)
     if path.is_empty():
@@ -805,6 +817,68 @@ func issue_move_order(destination: Vector2) -> bool:
     _decide_t = 0.0
     work_ai_status = "MANUAL_MOVE"
     work_ai_detail = "Moving to a commander-issued destination"
+    queue_redraw()
+    return true
+
+
+
+## Right-clicking a Frontier interaction point sends one selected unit to activate it.
+func issue_interaction_order(target_node: Node2D) -> bool:
+    if target_node == null or not is_instance_valid(target_node) or not target_node.is_in_group("frontier_sites"):
+        return false
+    if not visible or state == State.HIDDEN or state == State.FLEEING or _expeditioning or nav == null:
+        return false
+    if position.distance_to(target_node.global_position) <= 36.0:
+        target_node.interact()
+        return true
+
+    if is_outpost_guard():
+        release_outpost_guard()
+    _release()
+    _foe = null
+    _pending_foe = null
+    _pending_t = 0.0
+    _manual_attack_target = null
+    _manual_interact_target = target_node
+    var target_cells: Array[Vector2i] = [nav.cell_of(target_node.global_position)]
+    var path: PackedVector2Array = nav.path_adjacent(position, target_cells)
+    if path.is_empty():
+        _manual_interact_target = null
+        return false
+    _manual_goal_cell = nav.cell_of(path[path.size() - 1])
+    _goal_cells = [_manual_goal_cell]
+    _set_path(path)
+    state = State.MANUAL_MOVE
+    _decide_t = 0.0
+    work_ai_status = "MANUAL_INTERACT"
+    work_ai_detail = "Moving to a commander-selected Frontier objective"
+    queue_redraw()
+    return true
+
+
+## Soldier right-click combat order for visible enemy units, camps and campaign targets.
+func issue_attack_order(target_node: Node2D) -> bool:
+    if target_node == null or not is_instance_valid(target_node) or job != "soldier":
+        return false
+    if not target_node.visible or _expeditioning or is_outpost_guard():
+        return false
+    var valid_target := target_node.is_in_group("enemies") or target_node.is_in_group("campaign_targets") or target_node.is_in_group("enemy_strongholds")
+    if not valid_target:
+        return false
+    var target_hp: Variant = target_node.get("hp")
+    if target_hp is int and int(target_hp) <= 0:
+        return false
+
+    _release()
+    _foe = target_node
+    _manual_attack_target = target_node
+    _manual_interact_target = null
+    _pending_foe = null
+    _pending_t = 0.0
+    _path = PackedVector2Array()
+    _pi = 0
+    _scan_t = 0.0
+    state = State.FIGHT
     queue_redraw()
     return true
 
@@ -893,10 +967,22 @@ func _tick_expedition(delta: float) -> void:
 
 
 func _tick_fight(delta: float) -> void:
-    _scan_t -= delta
-    if _scan_t <= 0.0:
-        _scan_t = 0.3
-        _foe = _nearest_enemy()
+    if _manual_attack_target != null:
+        if not is_instance_valid(_manual_attack_target) or not _manual_attack_target.visible:
+            _manual_attack_target = null
+            _foe = null
+        else:
+            var target_hp: Variant = _manual_attack_target.get("hp")
+            if target_hp is int and int(target_hp) <= 0:
+                _manual_attack_target = null
+                _foe = null
+            else:
+                _foe = _manual_attack_target
+    if _manual_attack_target == null:
+        _scan_t -= delta
+        if _scan_t <= 0.0:
+            _scan_t = 0.3
+            _foe = _nearest_enemy()
     if _foe == null or not is_instance_valid(_foe):
         _foe = null
         if is_outpost_guard():
