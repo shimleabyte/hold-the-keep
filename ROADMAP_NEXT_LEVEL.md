@@ -355,7 +355,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 
 ## Phase 11 — Rival civilizations and military command
 
-**Status (2026-11-06):** Initial implementation is isolated on `feat/army-command-rival-civilization`. It is not merged. The branch preserves the player avatar, camera, direct combat and autonomous civilian jobs. Following human playtest feedback that the original maps were too small to support an enjoyable strategy loop, new campaigns now use Classic 128×128, Frontier 192×192 and Expedition 256×256 (160×160 starting heartland). Historical map dimensions remain available to saves through the profile-aware loader; save schema remains v17.
+**Status (2026-11-06):** Initial implementation is isolated on `feat/rival-civilization-expanded-worlds`. It is not merged. The branch preserves the player avatar, camera, direct combat and autonomous civilian jobs. Following human playtest feedback that the original maps were too small to support an enjoyable strategy loop, new campaigns now use Classic 128×128, Frontier 192×192 and Expedition 256×256 (160×160 starting heartland). Historical map dimensions remain available to saves through the profile-aware loader; save schema remains v17.
 
 ### Product contract
 
