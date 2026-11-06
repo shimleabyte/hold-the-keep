@@ -1,3 +1,4 @@
+class_name TitleScreen
 extends CanvasLayer
 
 signal mode_selected(profile_id: String)
