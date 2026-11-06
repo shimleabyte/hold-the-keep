@@ -3,6 +3,7 @@ extends SceneTree
 
 
 func _initialize() -> void:
+    await process_frame
     var world_config = root.get_node("WorldConfig")
     var game_clock = root.get_node("GameClock")
     var save_system = root.get_node("SaveSystem")
