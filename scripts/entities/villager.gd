@@ -13,7 +13,7 @@ const BlacksmithBehavior := preload("res://scripts/entities/villager_blacksmith_
 const BuilderBehavior := preload("res://scripts/entities/villager_builder_behavior.gd")
 const ResourceWorkBehavior := preload("res://scripts/entities/villager_resource_behavior.gd")
 
-enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING, SCOUTING, SCOUT_RETURNING }
+enum State { IDLE, TO_WORK, WORKING, TO_DEPOT, FLEEING, HIDDEN, FIGHT, EXPEDITION, RECALLING, SCOUTING, SCOUT_RETURNING, MANUAL_MOVE }
 
 const TEXTURES := {
     "": preload("res://assets/sprites/villager_idle.svg"),
@@ -130,6 +130,7 @@ var _scout_target_cell := Vector2i(-1, -1)
 var _scout_cursor := 0
 var _scout_survey_t := 0.0
 var _scout_revealed_at_target := false
+var _manual_goal_cell := Vector2i(-1, -1)
 var weapon_equipped := false
 var armor_equipped := false
 var _smith_recipe := ""
@@ -428,7 +429,7 @@ func _physics_process(delta: float) -> void:
     if GameClock.is_night and job != "soldier" and state != State.FLEEING:
         _begin_flee()
 
-    if nav.version != _path_ver and (state == State.TO_WORK or state == State.TO_DEPOT or state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or state == State.SCOUTING or state == State.SCOUT_RETURNING or (state == State.IDLE and is_outpost_guard())):
+    if nav.version != _path_ver and (state == State.TO_WORK or state == State.TO_DEPOT or state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or state == State.SCOUTING or state == State.SCOUT_RETURNING or state == State.MANUAL_MOVE or (state == State.IDLE and is_outpost_guard())):
         _repath()
 
     match state:
@@ -489,6 +490,11 @@ func _physics_process(delta: float) -> void:
                 _scout_target_cell = Vector2i(-1, -1)
                 state = State.IDLE
                 _decide_t = SCOUT_RECHECK_SECONDS
+        State.MANUAL_MOVE:
+            if _move_along(delta):
+                _manual_goal_cell = Vector2i(-1, -1)
+                state = State.IDLE
+                _decide_t = 0.05
     _update_anim(delta)
 
 
@@ -502,9 +508,9 @@ func _update_anim(delta: float) -> void:
         State.EXPEDITION:
             moving = _pi < _path.size()
             _running = _expedition_target != null and is_instance_valid(_expedition_target) and position.distance_to(_expedition_target.position) > RUN_DISTANCE
-        State.RECALLING, State.SCOUTING, State.SCOUT_RETURNING:
+        State.RECALLING, State.SCOUTING, State.SCOUT_RETURNING, State.MANUAL_MOVE:
             moving = _pi < _path.size()
-            _running = state == State.RECALLING or state == State.SCOUT_RETURNING
+            _running = state == State.RECALLING or state == State.SCOUT_RETURNING or state == State.MANUAL_MOVE
         State.FLEEING:
             moving = true
             _running = true
@@ -769,6 +775,38 @@ func _tick_outpost_guard(delta: float) -> void:
             state = State.FIGHT
             _path = PackedVector2Array()
             _pi = 0
+
+
+
+## RTS command entry point. Releases the current task claim, routes to a walkable tile,
+## then returns the unit to its normal job/defense AI on arrival.
+func issue_move_order(destination: Vector2) -> bool:
+    if not visible or state == State.HIDDEN or state == State.FLEEING or _expeditioning:
+        return false
+    if nav == null:
+        return false
+    if is_outpost_guard():
+        release_outpost_guard()
+    _release()
+    _foe = null
+    _pending_foe = null
+    _pending_t = 0.0
+    _scout_target_cell = Vector2i(-1, -1)
+    _scout_survey_t = 0.0
+    _scout_revealed_at_target = false
+    _manual_goal_cell = nav.cell_of(destination)
+    var path: PackedVector2Array = nav.path_to(position, _manual_goal_cell)
+    if path.is_empty():
+        _manual_goal_cell = Vector2i(-1, -1)
+        return false
+    _goal_cells = [_manual_goal_cell]
+    _set_path(path)
+    state = State.MANUAL_MOVE
+    _decide_t = 0.0
+    work_ai_status = "MANUAL_MOVE"
+    work_ai_detail = "Moving to a commander-issued destination"
+    queue_redraw()
+    return true
 
 
 func start_expedition(stronghold) -> bool:
@@ -1517,7 +1555,9 @@ func _set_path(p: PackedVector2Array) -> void:
 
 func _repath() -> void:
     var p: PackedVector2Array
-    if state == State.SCOUTING:
+    if state == State.MANUAL_MOVE:
+        p = nav.path_to(position, _manual_goal_cell)
+    elif state == State.SCOUTING:
         p = nav.path_to(position, _scout_target_cell)
     elif state == State.SCOUT_RETURNING and has_valid_workplace():
         p = nav.path_adjacent(position, workplace.cells())
@@ -1557,7 +1597,7 @@ func _move_along(delta: float) -> bool:
     var tgt := _path[_pi]
     var to := tgt - position
     var d := to.length()
-    var fast := state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or state == State.SCOUT_RETURNING or (state == State.FIGHT and _foe != null and is_instance_valid(_foe) and position.distance_to(_foe.position) > RUN_DISTANCE)
+    var fast := state == State.FLEEING or state == State.EXPEDITION or state == State.RECALLING or state == State.SCOUT_RETURNING or state == State.MANUAL_MOVE or (state == State.FIGHT and _foe != null and is_instance_valid(_foe) and position.distance_to(_foe.position) > RUN_DISTANCE)
     var step := (RUN_SPEED if fast else SPEED) * delta
     if not anim.is_busy() and anim.face(to):
         queue_redraw()
