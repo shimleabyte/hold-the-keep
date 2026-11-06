@@ -54,7 +54,7 @@ func import_state(data: Dictionary) -> void:
     if _cleared:
         _hp = 0
     _regrow_in = maxf(0.0, float(data.get("regrow", 0.0))) if _hp <= 0 and not _cleared else 0.0
-    set_process(_hp <= 0 and not _cleared)
+    set_process(_hp <= 0 and not _cleared and _regrow_in > 0.0)
     worker = null
     _apply_cleared_state()
     _update_resource_groups()
