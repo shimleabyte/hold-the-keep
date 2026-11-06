@@ -3,6 +3,7 @@ extends Node2D
 
 const ENEMY_SCRIPT := preload("res://scripts/entities/enemy.gd")
 const SPRITE := preload("res://assets/sprites/enemy_keep.svg")
+const CIVILIZATION_SCRIPT := preload("res://scripts/systems/enemy_civilization.gd")
 const SIZE := Vector2i(3, 3)
 const MAX_HP := 900
 const CLAIM_RADIUS := 9.0
@@ -28,6 +29,8 @@ var faction_id := "classic_raiders"
 var _reinforce_timer := REINFORCE_INTERVAL
 var _spawn_index := 0
 var _initial_garrison_pending := false
+var civilization
+var _saved_civilization_state: Dictionary = {}
 
 
 func setup(world_ref, flow_ref, player_ref, anchor: Vector2i, saved_hp := MAX_HP, identity: Dictionary = {}) -> void:
@@ -47,6 +50,8 @@ func setup(world_ref, flow_ref, player_ref, anchor: Vector2i, saved_hp := MAX_HP
 func _ready() -> void:
     add_to_group("enemy_strongholds")
     z_index = 2
+    civilization = CIVILIZATION_SCRIPT.new()
+    civilization.setup(self, _saved_civilization_state)
 
 
 func cells() -> Array[Vector2i]:
@@ -67,7 +72,8 @@ func export_state() -> Dictionary:
         "hp": hp,
         "destroyed": false,
         "reinforce_timer": _reinforce_timer,
-        "spawn_index": _spawn_index
+        "spawn_index": _spawn_index,
+        "civilization": civilization.export_state() if civilization != null else _saved_civilization_state.duplicate(true)
     }
 
 
@@ -77,6 +83,8 @@ func import_state(data: Dictionary) -> void:
     faction_id = String(data.get("faction", faction_id))
     _reinforce_timer = clampf(float(data.get("reinforce_timer", REINFORCE_INTERVAL)), 0.0, REINFORCE_INTERVAL)
     _spawn_index = posmod(int(data.get("spawn_index", 0)), GUARD_DIRECTIONS.size() * GUARD_RINGS.size())
+    var saved_civilization: Variant = data.get("civilization", {})
+    _saved_civilization_state = saved_civilization.duplicate(true) if saved_civilization is Dictionary else {}
 
 
 func spawn_initial_garrison() -> void:
@@ -116,11 +124,15 @@ func _local_garrison() -> Array:
 func _process(delta: float) -> void:
     if hp <= 0:
         return
+    if civilization != null:
+        civilization.advance(delta)
     _reinforce_timer -= delta
     if _reinforce_timer > 0.0:
         return
     _reinforce_timer = REINFORCE_INTERVAL
-    if _local_garrison().size() < 4:
+    var garrison_cap := civilization.garrison_capacity() if civilization != null else 4
+    var can_recruit := civilization == null or civilization.try_recruit()
+    if _local_garrison().size() < garrison_cap and can_recruit:
         _spawn_guard()
 
 
@@ -177,6 +189,8 @@ func take_damage(amount: int) -> void:
             world.occupied.erase(occupied_cell)
     for guard in _local_garrison():
         guard.retreat()
+    if civilization != null:
+        civilization.on_keep_destroyed()
     remove_from_group("enemy_strongholds")
     Events.enemy_stronghold_destroyed.emit(cell)
     Events.stronghold_conquered.emit(stronghold_id, region_id, cell)
