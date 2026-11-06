@@ -113,21 +113,32 @@ func _process(delta: float) -> void:
 
 
 func _scan_discovery() -> void:
-    var player_position: Vector2 = main.player.global_position
-    var region := String(main.world.region_id(main.nav.cell_of(player_position)))
-    if region.is_empty():
+    # RTS mode has no active hero. Exploration is credited to visible friendly units.
+    var observers: Array[Vector2] = []
+    if main.player != null and is_instance_valid(main.player) and main.player.visible:
+        observers.append(main.player.global_position)
+    for villager in get_tree().get_nodes_in_group("villagers"):
+        if is_instance_valid(villager) and villager.visible:
+            observers.append(villager.global_position)
+    if observers.is_empty():
         return
+
     for objective_id in objectives:
         var record: Dictionary = objectives[objective_id]
         var definition: Dictionary = record["definition"]
         if String(definition["type"]) != "discovery" or int(definition.get("act", 1)) > unlocked_act:
             continue
+        if bool(record["completed"]):
+            continue
         var target_region := String(definition["region"])
-        if target_region != region or bool(record["completed"]):
-            continue
-        if WorldConfig.is_frontier_expedition() and not main.world.is_expedition_survey_site_reached(target_region, player_position):
-            continue
-        complete_objective(String(objective_id))
+        for observer_position in observers:
+            var observer_cell := main.nav.cell_of(observer_position)
+            if String(main.world.region_id(observer_cell)) != target_region:
+                continue
+            if WorldConfig.is_frontier_expedition() and not main.world.is_expedition_survey_site_reached(target_region, observer_position):
+                continue
+            complete_objective(String(objective_id))
+            break
 
 
 func _sync_expedition_gates() -> void:
