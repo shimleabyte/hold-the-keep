@@ -1,6 +1,6 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `a76077eb13de8489d706eca7e98c6063fad56aa6` (2026-11-06)  
+**Audit baseline:** `main` at `44deb325fd8681a4181bbd073829a9965e98c112` (2026-11-06)  
 **Engine target:** Godot 4.7 only  
 **Release target:** Desktop-first — Windows x86_64 and Linux x86_64. Android remains deferred.  
 **Current save schema:** v17.
@@ -8,8 +8,8 @@
 
 ## New feature work — rival civilization and army command (2026-11-06)
 
-**Branch:** `feat/army-command-rival-civilization`  
-**State:** Initial implementation; Godot 4.7 validation and rendered gameplay acceptance pending.
+**Branch:** `feat/rival-civilization-expanded-worlds`  
+**State:** Integrated on current mainline base; enlarged map and legacy-save regressions added. Godot 4.7 validation and rendered gameplay acceptance pending.
 
 - Army selection is restricted to living soldier/archer units. Civilians retain the existing autonomous job loop.
 - Mouse controls: click/drag/Shift-select; right-click ground to move; right-click visible hostile targets to attack.
