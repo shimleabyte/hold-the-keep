@@ -57,6 +57,23 @@ func _initialize() -> void:
     _check(commander.issue_move_order(Vector2(-1000.0, -1000.0)) == 0 and commander.selected_units.size() == 1,
         "An order outside the map should not crash or clear selection")
 
+    var resource_target: Node2D = null
+    for value in get_nodes_in_group("harvestable"):
+        if not is_instance_valid(value) or not value.visible or not value.is_available(unit):
+            continue
+        var resource_cells: Array[Vector2i] = [main_scene.nav.cell_of(value.global_position)]
+        if main_scene.nav.path_adjacent(unit.global_position, resource_cells).is_empty():
+            continue
+        resource_target = value as Node2D
+        break
+    _check(resource_target != null, "New campaign should expose a reachable harvestable resource")
+    if resource_target != null:
+        _check(unit.issue_gather_order(resource_target),
+            "A villager should accept a direct resource-gathering order")
+        var to_work_state: int = int(state_constants.get("TO_WORK", -1))
+        _check(unit.target == resource_target and int(unit.state) == to_work_state,
+            "A direct gathering order should claim the resource and enter its work route")
+
     var soldier = units[0]
     _check(soldier.set_job("soldier"), "A villager should be convertible to a soldier")
     var stronghold = main_scene.campaign.current_target_node()
@@ -73,7 +90,7 @@ func _initialize() -> void:
     if failed:
         quit(1)
         return
-    print("PASS: detached RTS camera, selection and direct villager movement order")
+    print("PASS: RTS camera, villager selection, movement, gathering and soldier attack orders")
     quit()
 
 
