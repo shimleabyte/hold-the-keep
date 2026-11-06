@@ -411,7 +411,7 @@ func _initialize() -> void:
     assert(main.territory.claimed_cells.size() >= 650,
         "The Frontier Keep must claim the larger 15-tile starting territory")
 
-    var far_cell := Vector2i(127, 127)
+    var far_cell := Vector2i(world_config.map_size - 1, world_config.map_size - 1)
     var far_index: int = world_config.cell_index(far_cell)
     main.fog.import_state({"cells": [far_index]})
     assert(main.fog.is_revealed_cell(far_cell),
