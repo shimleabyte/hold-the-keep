@@ -29,6 +29,7 @@ var _command_marker_time := 0.0
 
 func _ready() -> void:
     add_to_group("rts_commander")
+    z_index = 90
     camera = Camera2D.new()
     camera.position_smoothing_enabled = true
     camera.position_smoothing_speed = 9.0
@@ -53,6 +54,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
     if camera == null or get_tree().paused:
         return
+    if _selection_started:
+        _selection_end_world = get_global_mouse_position()
     _move_camera(delta)
     _prune_selection()
     _command_marker_time = maxf(0.0, _command_marker_time - delta)
