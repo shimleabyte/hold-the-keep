@@ -132,7 +132,7 @@ func _write_text(path: String, value: String) -> bool:
 
 
 func _run() -> void:
-    world_config.apply_profile("classic")
+    assert(world_config.apply_saved_profile("classic", 64), "Historical migration fixtures must use the original Classic map")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
 
