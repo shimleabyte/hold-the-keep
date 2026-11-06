@@ -14,7 +14,8 @@ func _run() -> void:
     var world_config = root.get_node("WorldConfig")
     var game_clock = root.get_node("GameClock")
     var save_system = root.get_node("SaveSystem")
-    world_config.apply_profile("classic")
+    _require(world_config.apply_saved_profile("classic", 64),
+        "Historical Classic migration fixtures must be generated on the original 64x64 world")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
 
