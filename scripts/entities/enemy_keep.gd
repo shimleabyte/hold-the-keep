@@ -131,8 +131,9 @@ func _process(delta: float) -> void:
         return
     _reinforce_timer = REINFORCE_INTERVAL
     var garrison_cap := civilization.garrison_capacity() if civilization != null else 4
-    var can_recruit := civilization == null or civilization.try_recruit()
-    if _local_garrison().size() < garrison_cap and can_recruit:
+    if _local_garrison().size() >= garrison_cap:
+        return
+    if civilization == null or civilization.try_recruit():
         _spawn_guard()
 
 
