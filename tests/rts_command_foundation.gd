@@ -57,6 +57,17 @@ func _initialize() -> void:
     _check(commander.issue_move_order(Vector2(-1000.0, -1000.0)) == 0 and commander.selected_units.size() == 1,
         "An order outside the map should not crash or clear selection")
 
+    var soldier = units[0]
+    _check(soldier.set_job("soldier"), "A villager should be convertible to a soldier")
+    var stronghold = main_scene.campaign.current_target_node()
+    _check(stronghold != null, "The campaign should expose a current enemy stronghold")
+    if stronghold != null:
+        _check(soldier.issue_attack_order(stronghold),
+            "A selected soldier should accept a direct stronghold attack order")
+        var fight_state: int = int(state_constants.get("FIGHT", -1))
+        _check(int(soldier.state) == fight_state,
+            "A direct attack order should enter the combat state")
+
     main_scene.queue_free()
     await process_frame
     if failed:
