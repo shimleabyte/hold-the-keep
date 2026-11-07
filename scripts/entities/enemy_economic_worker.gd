@@ -131,11 +131,14 @@ func tick(delta: float) -> void:
 
 
 func _tick_idle() -> void:
-    if carry > 0:
+    if carry >= CARRY_CAPACITY:
         _begin_return_to_keep()
         return
     if retiring:
-        shutdown()
+        if carry > 0:
+            _begin_return_to_keep()
+        else:
+            shutdown()
         return
     if _retry_timer > 0.0:
         return
@@ -145,8 +148,11 @@ func _tick_idle() -> void:
         _play_clip("work")
         return
     if not _find_resource_target():
-        _retry_timer = TARGET_RETRY_SECONDS
-        _play_clip("idle")
+        if carry > 0:
+            _begin_return_to_keep()
+        else:
+            _retry_timer = TARGET_RETRY_SECONDS
+            _play_clip("idle")
 
 
 func _tick_resource_work(delta: float) -> void:
@@ -170,8 +176,15 @@ func _tick_resource_work(delta: float) -> void:
             _begin_return_to_keep()
             return
         _target.call("hit", self)
-        if carry >= CARRY_CAPACITY or int(_target.get("_hp")) <= 0:
+        if carry >= CARRY_CAPACITY:
             _begin_return_to_keep()
+            return
+        if int(_target.get("_hp")) <= 0:
+            # Carry capacity represents a full delivery load, not a one-node cap.
+            # Chain nearby resource nodes before paying the travel cost to return.
+            _release_target()
+            _state = State.IDLE
+            _retry_timer = 0.1
             return
 
 
