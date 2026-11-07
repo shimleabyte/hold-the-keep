@@ -103,7 +103,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     await _ticks(12)
     Input.warp_mouse(Vector2(320, 180))
 
-    if main.player == null or main.spawner == null or main.world == null:
+    if main.player == null or main.spawner == null or main.world == null or main.flow == null:
         _require(false, "%s: HTK_AUTO_START_GAME=1 must initialize the gameplay scene" % profile)
         await _discard_main(main)
         return {}
@@ -111,6 +111,20 @@ func _run_case(case_data: Dictionary) -> Dictionary:
     var keep = _find_keep()
     if keep == null:
         _require(false, "%s: the campaign must start with a live Keep" % profile)
+        await _discard_main(main)
+        return {}
+
+    # Frontier's 192x192 enemy FlowField is intentionally rebuilt over multiple
+    # frames. Do not compress its startup work into the night-wave time scale:
+    # normal gameplay has daytime before the first night begins.
+    var flow_wait_frames := 0
+    while not main.flow.is_current() and flow_wait_frames < 600:
+        await get_tree().process_frame
+        flow_wait_frames += 1
+    if not main.flow.is_current():
+        _require(false, "%s: FlowField did not publish before the night wave (%d frames)" % [
+            profile, flow_wait_frames
+        ])
         await _discard_main(main)
         return {}
 
@@ -133,6 +147,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
         "profile": profile,
         "day": day,
         "wave_budget": int(main.spawner.wave_size(day)),
+        "flow_ready_wait_frames": flow_wait_frames,
         "wave_started": false
     }
 
@@ -184,6 +199,7 @@ func _run_case(case_data: Dictionary) -> Dictionary:
         "seed": seed_value,
         "day": day,
         "wave_budget": wave_budget,
+        "flow_ready_wait_frames": flow_wait_frames,
         "wave_started": bool(_active_case.get("wave_started", false)),
         "wave_enemies_observed": spawned,
         "wave_spawn_complete": spawned >= wave_budget,
