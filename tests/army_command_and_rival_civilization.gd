@@ -125,6 +125,63 @@ func _initialize() -> void:
                 var diagnostic_ids: Array[String] = []
                 for structure_node: Node in civilization.get("structures"):
                     diagnostic_ids.append(String(structure_node.get("structure_id")))
+                var target_scan: Dictionary = {
+                    "region": stronghold.get("region_id"),
+                    "owner_cell": stronghold.get("cell"),
+                    "worker_cell": main_scene.get("nav").call("cell_of", woodcutter.position),
+                    "resource_count": 0,
+                    "same_region": 0,
+                    "within_claim": 0,
+                    "not_player_owned": 0,
+                    "reachable": 0,
+                    "safe_path": 0,
+                    "samples": []
+                }
+                var resource_world: Node = main_scene.get("world")
+                var resource_nav: Node = main_scene.get("nav")
+                var resource_territory: Node = main_scene.get("territory")
+                var debug_candidates: Array[Dictionary] = []
+                for resource_cell_value in resource_world.get("resource_nodes_by_cell").keys():
+                    var resource_cell: Vector2i = Vector2i(resource_cell_value)
+                    var resource_node: Node2D = resource_world.call("resource_node_at", resource_cell)
+                    if resource_node == null or String(resource_node.get("yield_kind")) != "wood" or int(resource_node.get("_hp")) <= 0:
+                        continue
+                    target_scan["resource_count"] = int(target_scan["resource_count"]) + 1
+                    if String(resource_world.call("region_id", resource_cell)) != String(stronghold.get("region_id")):
+                        continue
+                    target_scan["same_region"] = int(target_scan["same_region"]) + 1
+                    var max_distance := (float(stronghold.get("claim_radius")) + 6.0) * float(WorldConfig.tile_size)
+                    var distance := stronghold.position.distance_to(resource_node.position)
+                    if distance > max_distance:
+                        continue
+                    target_scan["within_claim"] = int(target_scan["within_claim"]) + 1
+                    if String(resource_territory.call("owner_at", resource_cell)) in ["player", "contested"]:
+                        continue
+                    target_scan["not_player_owned"] = int(target_scan["not_player_owned"]) + 1
+                    debug_candidates.append({"cell": resource_cell, "node": resource_node, "distance": distance})
+                debug_candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["distance"]) < float(b["distance"]))
+                for index in mini(24, debug_candidates.size()):
+                    var candidate: Dictionary = debug_candidates[index]
+                    var candidate_node: Node2D = candidate["node"]
+                    var candidate_path: PackedVector2Array = resource_nav.call("path_adjacent", woodcutter.position, [candidate["cell"]])
+                    if not candidate_path.is_empty():
+                        target_scan["reachable"] = int(target_scan["reachable"]) + 1
+                    var safe_path := true
+                    for path_position in candidate_path:
+                        var path_cell: Vector2i = resource_nav.call("cell_of", path_position)
+                        if String(resource_territory.call("owner_at", path_cell)) in ["player", "contested"]:
+                            safe_path = false
+                            break
+                    if not candidate_path.is_empty() and safe_path:
+                        target_scan["safe_path"] = int(target_scan["safe_path"]) + 1
+                    target_scan["samples"].append({
+                        "cell": candidate["cell"],
+                        "distance": candidate["distance"],
+                        "path": candidate_path.size(),
+                        "safe": safe_path,
+                        "owner": resource_territory.call("owner_at", candidate["cell"])
+                    })
+                print("RIVAL_TARGET_SCAN ", target_scan)
                 print("RIVAL_BUILD_DIAGNOSTIC ", {
                     "resources": resources.duplicate(true),
                     "structures": diagnostic_ids,
