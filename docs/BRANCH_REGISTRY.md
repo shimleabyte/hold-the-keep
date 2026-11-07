@@ -3,7 +3,7 @@
 **Audit date:** 2026-11-07 (Asia/Jakarta)  
 **Repository:** [shimleabyte/hold-the-keep](https://github.com/shimleabyte/hold-the-keep)  
 **Canonical branch:** `main`  
-**`main` HEAD after recovery:** [`198c31f5f0c7241158e8e56024e1bc69aacf8b17`](https://github.com/shimleabyte/hold-the-keep/commit/198c31f5f0c7241158e8e56024e1bc69aacf8b17)  
+**Production code integration:** [`198c31f5f0c7241158e8e56024e1bc69aacf8b17`](https://github.com/shimleabyte/hold-the-keep/commit/198c31f5f0c7241158e8e56024e1bc69aacf8b17); later docs-only reconciliation reached `6fbc63454ae288a5537ea206c575cf6ad2bcc8f9`.  
 **Engine / scope:** Godot 4.7; desktop-first (Windows x86_64 / Linux x86_64); Android deferred  
 **Save schema:** v17
 
@@ -16,8 +16,8 @@
 | Branches explicitly deleted during recovery | 0 |
 | Pull requests inventoried | 186 |
 | Merged PRs | 133 |
-| Closed, unmerged PRs | 50 |
-| Open PRs | 3 |
+| Closed, unmerged PRs | 51 |
+| Open PRs | 2 |
 | MERGED branches (including main) | 88 |
 | DUPLICATE / SUPERSEDED branches | 24 |
 | ACTIVE branches | 13 |
@@ -25,7 +25,7 @@
 | BLOCKED / DEFERRED branches | 7 |
 | Completed but unmerged | 0 proven by this audit |
 
-**Registry update (2026-11-07 recovery):** live enumeration after PR #186 shows 157 remote branches and 186 pull requests (133 merged, 50 closed unmerged, 3 open). This includes merged PRs #182, #184, #185 and #186. The temporary recovery branch is no longer listed after its merge; no separate branch-delete action was issued. The branch-level historical classification table below is a retained snapshot, not a full reclassification of all current refs. See [docs/SESSION_RECOVERY.md](docs/SESSION_RECOVERY.md) for the verified focused branch dispositions.
+**Registry update (2026-11-07 recovery):** live enumeration after PR #181 closed shows 157 remote branches and 186 pull requests (133 merged, 51 closed unmerged, 2 open). The remaining open PRs are Android-only #150/#152 and are deferred. Merged PRs #182, #184, #185 and #186 are included. The temporary recovery branch is no longer listed after its merge; no explicit branch-delete action was issued. The branch-level historical inventory remains a retained snapshot, not a full source audit of every historical ref. See [docs/SESSION_RECOVERY.md](docs/SESSION_RECOVERY.md) for focused dispositions.
 
 **Deletion limitation:** this audit's connected GitHub actions expose branch enumeration, comparisons, file writes and ref updates, but no remote branch-delete operation. No branch was force-pushed, moved or deleted as a workaround. Every branch that is demonstrably merged or superseded is marked for retirement, but actual deletion remains blocked by tool capability rather than uncertain authorization.
 
@@ -44,28 +44,27 @@
 
 | PR | Topic | State | Audit disposition |
 |---|---|---|---|
-| [#166](https://github.com/shimleabyte/hold-the-keep/pull/166) | FlowField elapsed-time rebuild budget | Closed, not merged | Superseded by #177. Main now contains the 2,048-pop ceiling plus elapsed-time budget; validated by #177. |
-| [#167](https://github.com/shimleabyte/hold-the-keep/pull/167) | Territory region-count cache | Closed, not merged | Superseded by #177. Main now uses `world.region_land_counts`; validated by #177. |
-| [#169](https://github.com/shimleabyte/hold-the-keep/pull/169) | RTS command foundation proposal | Closed, not merged | Do not merge as proposed. It removes direct player control and changes civilian selection/commanding, conflicting with the approved hybrid action/management contract. Keep the established player control and autonomous civilian behavior. |
-| [#175](https://github.com/shimleabyte/hold-the-keep/pull/175) | Expanded worlds, rival civilizations and soldier-only army command | Merged | Authoritative initial Phase 11 implementation. |
-| [#177](https://github.com/shimleabyte/hold-the-keep/pull/177) | Integrate bounded FlowField and territory rebuilds | Merged | Authoritative performance reconciliation. Godot CI, Campaign Simulation QA and Rendered World QA passed on the PR head. |
-| [#178](https://github.com/shimleabyte/hold-the-keep/pull/178) | Rival structure restore persistence | Merged | Authoritative Phase 11.1 persistence hardening. Exact-head Godot CI passed 63/63 and Campaign Simulation QA passed. |
 | [#150](https://github.com/shimleabyte/hold-the-keep/pull/150) | Android ARMv7 physical-device QA checklist | Open, draft | Deferred. Keep separate; do not merge into the desktop workstream. |
 | [#152](https://github.com/shimleabyte/hold-the-keep/pull/152) | Android ARMv7 touchscreen controls | Open | Deferred. Keep separate; physical-device acceptance is not part of current desktop scope. |
 | [#153](https://github.com/shimleabyte/hold-the-keep/pull/153) | Low-cost profession animation/contact feedback iteration | Closed, not merged | Do not classify as safely disposable solely from PR state; related art/animation branches remain retained until their residual changes are compared with #158. |
 | [#158](https://github.com/shimleabyte/hold-the-keep/pull/158) | Low-cost profession contact feedback | Merged | Integrated implementation for the merged portion; does not by itself prove every older profession-sprite branch is fully represented. |
-| [#179](https://github.com/shimleabyte/hold-the-keep/pull/179) | Phase 08.8 art direction and player-atlas generator safety | Merged | Art bible/reference board and 24×28 authored-player ownership guard merged at `27740a72e187`; exact-head Godot 4.7 and Rendered World QA passed. |
+| [#166](https://github.com/shimleabyte/hold-the-keep/pull/166) | FlowField elapsed-time rebuild budget | Closed, not merged | Superseded by #177. Main contains the 2,048-pop ceiling plus elapsed-time budget; validated by #177. |
+| [#167](https://github.com/shimleabyte/hold-the-keep/pull/167) | Territory region-count cache | Closed, not merged | Superseded by #177. Main uses `world.region_land_counts`; validated by #177. |
+| [#169](https://github.com/shimleabyte/hold-the-keep/pull/169) | RTS command foundation proposal | Closed, not merged | Do not merge as proposed. It removes direct player control and changes civilian selection/commanding, conflicting with the approved hybrid action/management contract. |
+| [#175](https://github.com/shimleabyte/hold-the-keep/pull/175) | Expanded worlds, rival civilizations and soldier-only army command | Merged | Authoritative initial Phase 11 implementation. |
+| [#177](https://github.com/shimleabyte/hold-the-keep/pull/177) | Integrate bounded FlowField and territory rebuilds | Merged | Authoritative performance reconciliation. Godot CI, Campaign Simulation QA and Rendered World QA passed on the PR head. |
+| [#178](https://github.com/shimleabyte/hold-the-keep/pull/178) | Rival structure restore persistence | Merged | Authoritative Phase 11.1 persistence hardening. Exact-head Godot CI passed 63/63 and Campaign Simulation QA passed. |
+| [#179](https://github.com/shimleabyte/hold-the-keep/pull/179) | Phase 08.8 art direction and player-atlas generator safety | Merged | Art bible/reference board and authored-player ownership guard merged at `27740a72e187`; exact-head Godot 4.7 and Rendered World QA passed. |
+| [#181](https://github.com/shimleabyte/hold-the-keep/pull/181) | Player atlas and combat pose timing proposal | Closed, not merged | Superseded by #184. Player SVG, Player integration, animation docs, CI workflow and major pose tests match main; the residual Hurt test expected stale frame-20/busy behavior. Closed after source-level reconciliation; branch retained. |
 | [#182](https://github.com/shimleabyte/hold-the-keep/pull/182) | Phase 08.9 ten-role civilian sprite overhaul | Merged | Ten authored civilian role atlases integrated at `7dea98194e308ebb380115c873d395e64fffada0`. |
-
-All 186 PR records (open and closed) were enumerated in the latest count refresh. The table above records explicit decisions for the known risk/priority PRs; the branch inventory below links each branch to its matching PR where one exists. This is a metadata-wide audit, not a claim that every historical PR diff and discussion thread received a full source review.
-
-| [#184](https://github.com/shimleabyte/hold-the-keep/pull/184) | Player 46-frame animation integration | Merged | Current player atlas/clip system is integrated; sprite-only playblast succeeds, live gameplay motion review remains open. |
+| [#184](https://github.com/shimleabyte/hold-the-keep/pull/184) | Player 46-frame animation integration | Merged | Current player atlas/clip system integrated; sprite-only playblast succeeds, live gameplay motion review remains open. |
 | [#185](https://github.com/shimleabyte/hold-the-keep/pull/185) | Frontier ground dressing and landmark motion | Merged | Integrated visual dressing; ambient processing regression later fixed by #186. |
 | [#186](https://github.com/shimleabyte/hold-the-keep/pull/186) | Frontier inactive decoration processing regression | Merged | Reapplies the configured processing flag after scene-tree entry; exact-head Godot 4.7 CI passed 65/65, Campaign Simulation QA and Rendered World QA passed. |
 
+All 186 PR records (open and closed) were enumerated. This table contains the explicit decisions for the known risk/priority PRs; see the branch inventory below for each enumerated branch. The inventory metadata is not a substitute for full source review of every historical branch.
+
 ## Open PRs
 
-- [#181 — feat(animation): split player atlas and synchronize combat poses](https://github.com/shimleabyte/hold-the-keep/pull/181) — head `animation/player-motion-timing` (`e63c1ecf5b70ad3b9ca37054a8b7c5bdd7c3f022`), base `main`, open and not mergeable. The later 46-frame player implementation was merged by #184. Reconcile unique tests/docs/workflow changes, preserve anything useful, then close as superseded if no residual requirement remains.
 - [#152 — feat(android): add ARMv7 touchscreen controls on current main](https://github.com/shimleabyte/hold-the-keep/pull/152) — deferred Android work; keep separate from desktop-first scope.
 - [#150 — docs(android): add ARMv7 physical-device acceptance checklist](https://github.com/shimleabyte/hold-the-keep/pull/150) — draft; deferred Android work; keep separate from desktop-first scope.
 
