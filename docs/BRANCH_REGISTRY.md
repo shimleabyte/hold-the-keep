@@ -3,7 +3,7 @@
 **Audit date:** 2026-11-07 (Asia/Jakarta)  
 **Repository:** [shimleabyte/hold-the-keep](https://github.com/shimleabyte/hold-the-keep)  
 **Canonical branch:** `main`  
-**Current `main` HEAD:** [`f9a6a443db0f2bb8593f77a8ac93f1d3b834f95d`](https://github.com/shimleabyte/hold-the-keep/commit/f9a6a443db0f2bb8593f77a8ac93f1d3b834f95d)  
+**`main` HEAD at audit start:** [`f9a6a443db0f2bb8593f77a8ac93f1d3b834f95d`](https://github.com/shimleabyte/hold-the-keep/commit/f9a6a443db0f2bb8593f77a8ac93f1d3b834f95d)  
 **Engine / scope:** Godot 4.7; desktop-first (Windows x86_64 / Linux x86_64); Android deferred  
 **Save schema:** v17
 
