@@ -639,6 +639,31 @@ func _initialize() -> void:
     assert(decoration_signature(mirror) == decoration_signature(world),
         "Biome decoration and landmark placement must be deterministic for a matching seed/profile")
 
+    # Only Fenlands reeds and the Hearthland shrine should animate. Decoration
+    # batches retain one CanvasItem per world row; updates are capped at 12 Hz.
+    var animated_landmark_batches: Array[Node] = []
+    for batch in get_nodes_in_group("frontier_decoration_batches"):
+        var should_animate := false
+        if bool(batch.is_landmark):
+            for entry in batch._batch_entries:
+                var kind := String(entry.get("kind", ""))
+                if kind == "fen_reeds" or kind == "hearth_shrine":
+                    should_animate = true
+                    break
+        assert(batch.is_processing() == should_animate,
+            "Only landmark batches containing reeds or the hearth shrine should process")
+        if should_animate:
+            animated_landmark_batches.append(batch)
+    assert(animated_landmark_batches.size() == 2,
+        "The Fenlands reeds and Hearthland shrine must be the two animated landmarks")
+    var ambient_times_before: Array[float] = []
+    for batch in animated_landmark_batches:
+        ambient_times_before.append(float(batch._ambient_time))
+    await ticks(12)
+    for index in animated_landmark_batches.size():
+        assert(float(animated_landmark_batches[index]._ambient_time) > ambient_times_before[index],
+            "Animated landmark batches must advance their low-frequency ambient timeline")
+
     print("PASS: Frontier dimensions, five regions, biome dressing, five landmarks, resources, iron veins, Keep claim, reachability and deterministic generation")
     mirror.queue_free()
     main.queue_free()
