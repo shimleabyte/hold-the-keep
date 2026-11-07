@@ -209,3 +209,58 @@ New tests: `tests/rival_physical_workforce.gd`; expanded `tests/army_command_and
 - Save schema remains v17. No change to the validator contract or save version.
 - CI is not green yet. Do not merge PR #187 until the exact current head passes the integrated rival campaign, focused workforce, persistence and full Godot 4.7 matrix. Rendered/desktop playtesting has not been performed in this execution environment.
 - **Next action:** inspect the exact-head result of `army_command_and_rival_civilization`; use its `RIVAL_TARGET_SCAN` output to fix the first rejected stage, rerun focused tests, then the full matrix.
+
+
+
+## Final integration checkpoint — rival physical workforce — 2026-11-08
+
+**Integrated main HEAD:** `dc060785b54b220a1b63d3149daa24fb59751b96`  
+**Source PR:** [#187 — feat: rival physical workforce and resource hauling](https://github.com/shimleabyte/hold-the-keep/pull/187)  
+**PR head before squash:** `c01119081ca816c8ed6ef28a889bfd6182f20271`  
+**Merge commit:** `dc060785b54b220a1b63d3149daa24fb59751b96`  
+**Save schema:** v17, unchanged
+
+### What was recovered and integrated
+
+The Phase 11.3.1 follow-up is integrated. Completed Lumber Camp, Farm, Quarry and Forge workplaces staff runtime-only rival workers using the existing finite eight-citizen workforce and two-worker-per-workplace cap. Woodcutters, farmers and miners perform their work, reserve real resource nodes where applicable, move using the existing NavGrid, carry resources and deliver to their owning stronghold.
+
+Workers are constrained to their stronghold's region and a bounded local work radius. They cannot harvest player-owned or contested territory. They are not player villagers or military garrison units and are not exposed to player selection/army command. When workplaces or keeps are destroyed, their workers release reservations and retire. The civilization owns worker ticking; workers do not run a second independent simulation loop. Temporary civilization instances used by doctrine tests cannot spawn actors for the live keep.
+
+The first integrated campaign test exposed that the initial claim-radius-only resource search could find no valid node on the tested map seed: 290 wood nodes existed in the home region, but none were inside the old 15-tile bound. The final implementation uses a bounded local work radius of four times the stronghold claim radius (or claim radius + six tiles, whichever is larger), still restricted to the home region and still excluding player/contested territory. The path candidate budget is bounded at 24.
+
+Carried cargo is folded into the existing rival resource ledger during save export and cleared from live actors so extracted cargo is not duplicated or lost. The validator contract and save version remain v17. No per-worker positions or new save fields were introduced.
+
+### Implementation files
+
+- `scripts/entities/enemy_economic_worker.gd` — autonomous rival work, node reservation, resource harvesting, hauling, retirement and cargo reconciliation.
+- `scripts/systems/enemy_civilization.gd` — physical worker staffing/ticking and save-time cargo reconciliation.
+- `tests/rival_physical_workforce.gd` — visible worker spawning, reservation, harvesting, cargo and v17 export.
+- `tests/army_command_and_rival_civilization.gd` — integrated 500-second rival economy, doctrine, construction, research, recruitment and command regression; yields physics frames so NavGrid consumes occupancy changes.
+- `tests/archery_range.gd` — temporary save-validator diagnostic added during investigation; the test passed in the final full matrix. Review whether the conditional diagnostic block should be removed in a later test-cleanup pass.
+- `.github/workflows/godot-ci.yml` and `tools/run_tests.sh` — focused workforce regression included in the blocking suite.
+- Related Phase 11.3, context, roadmap and rival-civilization documentation updated.
+
+### Verification and integration status
+
+| Verification layer | Exact result |
+|---|---|
+| GDScript import/parse | PASS on PR head |
+| Focused physical workforce | PASS on PR head |
+| Integrated army/rival campaign | PASS on PR head |
+| Rival civilization persistence | PASS on PR head |
+| Archery Range regression | PASS on PR head |
+| Full Godot 4.7 matrix on PR head | **66/66 PASS**, run [#42424983740](https://github.com/shimleabyte/hold-the-keep/actions/runs/42424983740) |
+| Campaign Simulation QA on PR head | PASS, run [#42424983752](https://github.com/shimleabyte/hold-the-keep/actions/runs/42424983752) |
+| PR integration | PR #187 squash-merged to `main` |
+| Full Godot 4.7 matrix on merge commit | **66/66 PASS**, run [#42425286936](https://github.com/shimleabyte/hold-the-keep/actions/runs/42425286936) |
+| Campaign Simulation QA on merge commit | PASS, run [#42425286903](https://github.com/shimleabyte/hold-the-keep/actions/runs/42425286903) |
+
+The three critical rival tests were also rerun on the merge commit itself and passed: `army_command_and_rival_civilization`, `rival_civilization_persistence` and `rival_physical_workforce`.
+
+### Acceptance boundary and remaining work
+
+Automated and integrated simulation acceptance is complete for this slice. The CI player-animation playblast and performance diagnostics passed as part of the full matrix, but they are not a dedicated rendered acceptance capture of rival woodcutters/miners/farmers travelling and working. No interactive desktop playtest was performed in this execution environment. Do not label this feature as human-playtested or visually accepted.
+
+The physical workforce's central destination is still its owning stronghold. Local depots, road-connected shipment routes, inter-settlement transfers, outposts, secondary settlements and coordinated rival logistics/raids remain separate unfinished systems. The next acceptance task is a dedicated in-game rendered capture/playtest of workers travelling, harvesting, hauling, handling blocked routes and returning after workplace destruction. After that, implement local storage and road-connected shipments as a separate tested logistics vertical slice.
+
+**Current resume point:** `main` at `dc060785b54b220a1b63d3149daa24fb59751b96`. PR #187 is merged and the feature branch is retained as history. Do not reimplement Phase 11.3.1. Start with rendered rival-worker acceptance, then proceed to local depot/road logistics.
