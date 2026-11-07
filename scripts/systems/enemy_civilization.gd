@@ -1,10 +1,11 @@
 class_name EnemyCivilization
 extends RefCounted
-## Bounded autonomous economy and development plan for one rival stronghold.
-## It uses an abstract workforce for now; visible buildings, resources, recruitment
-## and research are persisted. It never creates free units outside recruitment costs.
+## Bounded rival economy with visible resource workers and physical hauling.
+## Construction/research/recruitment remain stronghold-owned and persisted.
 
 const STRUCTURE_SCRIPT: Script = preload("res://scripts/entities/enemy_settlement_structure.gd")
+const WORKER_SCRIPT: Script = preload("res://scripts/entities/enemy_economic_worker.gd")
+const WORKPLACE_IDS: Array[String] = ["lumber_camp", "farm", "quarry", "forge"]
 const BUILD_PLAN: Array[Dictionary] = [
     {"id": "lumber_camp", "cost": {"wood": 50, "stone": 10}, "work": 16.0},
     {"id": "farm", "cost": {"wood": 45, "stone": 10}, "work": 18.0},
@@ -99,10 +100,15 @@ var build_order_index: int = 0
 var construction: Dictionary = {}
 var _tick_accumulator: float = 0.0
 var active: bool = true
+var _main_scene: Node
+## Runtime-only workers keyed by their completed workplace instance ID.
+var _workers_by_structure: Dictionary = {}
 
 
 func setup(keep_ref: Node2D, saved: Dictionary = {}) -> void:
     owner_keep = keep_ref
+    _main_scene = owner_keep.get_tree().get_first_node_in_group("main") if owner_keep != null and owner_keep.is_inside_tree() else null
+    _workers_by_structure.clear()
     resources = STARTING_RESOURCES.duplicate(true)
     technology_tier = clampi(int(saved.get("technology_tier", 0)), 0, 2)
     research_progress = clampf(float(saved.get("research_progress", 0.0)), 0.0, 180.0)
@@ -147,7 +153,9 @@ func advance(delta: float) -> void:
         _tick_accumulator -= 1.0
         ticks += 1
         _restore_pending_structures()
-        _produce_resources()
+        var labor: Dictionary = labor_allocation()
+        _produce_resources(labor)
+        _sync_physical_workers(labor)
         _advance_construction(1.0)
         _advance_research(1.0)
         _try_start_construction()
@@ -208,10 +216,7 @@ func _workplace_has_storage_room(workplace_id: String) -> bool:
         "farm":
             return float(resources.get("food", 0.0)) < resource_capacity("food")
         "quarry":
-            return (
-                float(resources.get("stone", 0.0)) < resource_capacity("stone")
-                or float(resources.get("iron", 0.0)) < resource_capacity("iron")
-            )
+            return float(resources.get("stone", 0.0)) < resource_capacity("stone")
         "forge":
             return float(resources.get("iron", 0.0)) < resource_capacity("iron")
     return false
@@ -264,22 +269,95 @@ func labor_allocation() -> Dictionary:
     return allocation
 
 
-func _produce_resources() -> void:
-    var labor: Dictionary = labor_allocation()
-    var income: Dictionary = {
-        "wood": 0.08 + 0.525 * float(labor["lumber_camp"]),
-        "stone": 0.025 + 0.31 * float(labor["quarry"]),
-        "food": 0.42 + 0.625 * float(labor["farm"]),
-        "iron": 0.04 * float(labor["quarry"]) + 0.11 * float(labor["forge"])
-    }
-    for kind: String in income:
-        _credit_income(kind, float(income[kind]))
-
-    # A fixed population pool makes recruitment an economic trade-off:
-    # each living garrison soldier removes one available worker and costs more food.
-    var worker_upkeep: float = WORKER_FOOD_UPKEEP * float(labor["available"])
-    var soldier_upkeep: float = SOLDIER_FOOD_UPKEEP * float(labor["garrison"])
+func _produce_resources(labor: Dictionary = {}) -> void:
+    var assigned: Dictionary = labor if not labor.is_empty() else labor_allocation()
+    # Wood, stone and iron now enter the ledger only when physical workers
+    # harvest a world node and haul the cargo home. Farms produce food in-world.
+    var worker_upkeep: float = WORKER_FOOD_UPKEEP * float(assigned["available"])
+    var soldier_upkeep: float = SOLDIER_FOOD_UPKEEP * float(assigned["garrison"])
     resources["food"] = maxf(0.0, float(resources["food"]) - worker_upkeep - soldier_upkeep)
+
+
+func worker_resource_kinds(workplace_id: String) -> Array[String]:
+    match workplace_id:
+        "lumber_camp":
+            return ["wood"]
+        "quarry":
+            return ["stone"]
+        "forge":
+            return ["iron"] if technology_tier >= 1 else []
+    return []
+
+
+func can_receive(kind: String, amount: int = 1) -> bool:
+    if not ["wood", "stone", "food", "iron"].has(kind) or amount <= 0:
+        return false
+    var current := float(resources.get(kind, 0.0))
+    return current + float(amount) <= minf(resource_capacity(kind), MAX_RESOURCE)
+
+
+func deliver_resource(kind: String, amount: int) -> int:
+    if amount <= 0 or not ["wood", "stone", "food", "iron"].has(kind):
+        return 0
+    return clampi(floori(_credit_income(kind, float(amount))), 0, amount)
+
+
+func _sync_physical_workers(labor: Dictionary) -> void:
+    if owner_keep == null or not is_instance_valid(owner_keep) or not active:
+        return
+    if _main_scene == null or not is_instance_valid(_main_scene):
+        _main_scene = owner_keep.get_tree().get_first_node_in_group("main")
+    var owner_world: Node = owner_keep.get("world") as Node
+    var entities: Node = owner_world.get("entities") as Node if owner_world != null else null
+    if entities == null or _main_scene == null:
+        return
+
+    var next_assignments: Dictionary = {}
+    for structure: EnemySettlementStructure in structures:
+        if not is_instance_valid(structure) or structure.hp <= 0:
+            continue
+        var workplace_id: String = String(structure.structure_id)
+        if not WORKPLACE_IDS.has(workplace_id):
+            continue
+        var structure_key: int = structure.get_instance_id()
+        var assigned_workers: Array = _workers_by_structure.get(structure_key, [])
+        var valid_workers: Array = []
+        for worker_value: Variant in assigned_workers:
+            if is_instance_valid(worker_value) and not worker_value.is_queued_for_deletion():
+                valid_workers.append(worker_value)
+        var desired_count: int = clampi(int(labor.get(workplace_id, 0)), 0, WORKERS_PER_WORKPLACE)
+
+        while valid_workers.size() > desired_count:
+            var excess: Node = valid_workers.pop_back() as Node
+            excess.call("recall_to_keep")
+
+        while valid_workers.size() < desired_count:
+            var worker: Node2D = WORKER_SCRIPT.new() as Node2D
+            if not bool(worker.call("setup", self, structure, workplace_id, valid_workers.size(), _main_scene)):
+                worker.free()
+                break
+            entities.add_child(worker)
+            valid_workers.append(worker)
+        next_assignments[structure_key] = valid_workers
+    _workers_by_structure = next_assignments
+
+
+func _collect_physical_worker_cargo_for_save() -> void:
+    if owner_keep == null or not is_instance_valid(owner_keep) or not owner_keep.is_inside_tree():
+        return
+    for worker: Node in owner_keep.get_tree().get_nodes_in_group("enemy_economic_workers"):
+        if not is_instance_valid(worker) or worker.get("civilization") != self:
+            continue
+        var cargo: Dictionary = worker.call("clear_cargo_for_save")
+        var kind: String = String(cargo.get("kind", ""))
+        var amount: int = maxi(0, int(cargo.get("amount", 0)))
+        if amount <= 0 or not ["wood", "stone", "food", "iron"].has(kind):
+            continue
+        # Cargo is already extracted from the world. Persist it even when a
+        # stockpile is full; it becomes over-cap stored stock and halts further
+        # production until the faction spends it, matching v17 overflow handling.
+        resources[kind] = minf(MAX_RESOURCE, float(resources.get(kind, 0.0)) + float(amount))
+
 
 
 func _try_start_construction() -> void:
@@ -612,12 +690,18 @@ func on_keep_destroyed() -> void:
     active = false
     construction.clear()
     pending_structures.clear()
+    if owner_keep != null and is_instance_valid(owner_keep) and owner_keep.is_inside_tree():
+        for worker: Node in owner_keep.get_tree().get_nodes_in_group("enemy_economic_workers"):
+            if is_instance_valid(worker) and worker.get("civilization") == self:
+                worker.call("shutdown")
+    _workers_by_structure.clear()
     for structure: EnemySettlementStructure in structures:
         if is_instance_valid(structure):
             structure.on_keep_destroyed()
 
 
 func export_state() -> Dictionary:
+    _collect_physical_worker_cargo_for_save()
     var structure_records: Array[Dictionary] = []
     for structure: EnemySettlementStructure in structures:
         if not is_instance_valid(structure):
