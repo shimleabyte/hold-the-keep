@@ -110,8 +110,11 @@ func _initialize() -> void:
                 "Rival civilization should construct a physical quarry for stone")
             if not bool(civilization.call("_has_structure", "barracks")):
                 var diagnostic_workers: Array[Dictionary] = []
+                var rival_woodcutter: Node2D
                 for rival_worker: Node in get_nodes_in_group("enemy_economic_workers"):
                     if is_instance_valid(rival_worker) and rival_worker.get("civilization") == civilization:
+                        if String(rival_worker.get("role")) == "lumber_camp" and rival_woodcutter == null:
+                            rival_woodcutter = rival_worker as Node2D
                         var target_node: Variant = rival_worker.get("_target")
                         var worker_path: PackedVector2Array = rival_worker.get("_path")
                         diagnostic_workers.append({
@@ -128,7 +131,7 @@ func _initialize() -> void:
                 var target_scan: Dictionary = {
                     "region": stronghold.get("region_id"),
                     "owner_cell": stronghold.get("cell"),
-                    "worker_cell": main_scene.get("nav").call("cell_of", woodcutter.position),
+                    "worker_cell": main_scene.get("nav").call("cell_of", rival_woodcutter.position),
                     "resource_count": 0,
                     "same_region": 0,
                     "within_claim": 0,
@@ -163,7 +166,7 @@ func _initialize() -> void:
                 for index in mini(24, debug_candidates.size()):
                     var candidate: Dictionary = debug_candidates[index]
                     var candidate_node: Node2D = candidate["node"]
-                    var candidate_path: PackedVector2Array = resource_nav.call("path_adjacent", woodcutter.position, [candidate["cell"]])
+                    var candidate_path: PackedVector2Array = resource_nav.call("path_adjacent", rival_woodcutter.position, [candidate["cell"]])
                     if not candidate_path.is_empty():
                         target_scan["reachable"] = int(target_scan["reachable"]) + 1
                     var safe_path := true
