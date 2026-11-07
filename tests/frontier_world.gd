@@ -644,9 +644,9 @@ func _initialize() -> void:
     var animated_landmark_batches: Array[Node] = []
     for batch in get_nodes_in_group("frontier_decoration_batches"):
         var should_animate := false
+        var batch_entries: Array = batch.get("_batch_entries")
         if bool(batch.get("is_landmark")):
-            var batch_entries: Array = batch.get("_batch_entries")
-        for entry in batch_entries:
+            for entry in batch_entries:
                 var kind := String(entry.get("kind", ""))
                 if kind == "fen_reeds" or kind == "hearth_shrine":
                     should_animate = true
