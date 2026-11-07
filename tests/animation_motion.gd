@@ -110,8 +110,8 @@ func _initialize() -> void:
         "Rally must complete its six-pose call without changing the gameplay buff duration")
 
     anim.play_player_clip("hurt", true)
-    assert(anim.frame_index() == 42 and anim.is_busy(),
-        "Hurt must begin from its first authored recoil pose")
+    assert(anim.frame_index() == 42 and not anim.is_busy(),
+        "Hurt must begin from its first authored recoil pose without locking the action state")
     anim.update(0.051)
     assert(anim.frame_index() == 43, "Hurt must progress to its raised guard pose")
     anim.update(0.05)
