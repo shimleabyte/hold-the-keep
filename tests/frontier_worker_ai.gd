@@ -155,9 +155,9 @@ func _run_profile(profile_id: String) -> void:
     # the existence of any ore node anywhere on the map.
     var saved_tech_flags: Dictionary = tech._flags.duplicate(true)
     var saved_inventory: Dictionary = inventory.items.duplicate(true)
-    Tech._flags["iron_mining"] = true
-    Inventory.items["iron"] = 0
-    Inventory.items["stone"] = 10
+    tech._flags["iron_mining"] = true
+    inventory.items["iron"] = 0
+    inventory.items["stone"] = 10
 
     var remote_iron = IRON_ORE_SCRIPT.new()
     remote_iron.position = miner.position + Vector2(10000.0, 0.0)
@@ -198,8 +198,8 @@ func _run_profile(profile_id: String) -> void:
     assert(miner._resource_work_behavior._mine_kind() == "iron",
         profile_id + " sabotaged depot stock must not suppress local iron production")
 
-    Tech._flags = saved_tech_flags
-    Inventory.items = saved_inventory
+    tech._flags = saved_tech_flags
+    inventory.items = saved_inventory
 
     # Builders must be dispatched by actual path reachability, not a circular
     # workplace radius. Keep's Frontier claim edge is 15 tiles (+2 tolerance),
