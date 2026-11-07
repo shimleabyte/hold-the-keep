@@ -8,7 +8,7 @@ var main_player: Player
 
 func ticks(count: int) -> void:
     for _index in count:
-        await physics_frame
+        await process_frame
 
 
 func capture(label: String, center: Vector2, width := 144, height := 96) -> void:
