@@ -74,7 +74,7 @@ func _initialize() -> void:
     assert(anim.frame_index() == 0,
         "Switching out of a timed player attack must clear its frame timeline")
 
-    var player_work := PlayerScript.new()
+    var player_work: Player = PlayerScript.new() as Player
     player_work.anim.play_player_clip("work", true, 14.0)
     assert(player_work.anim.frame_index() == 16, "Player harvest must begin from its own neutral tool pose")
     var harvest_elapsed := 0.0
