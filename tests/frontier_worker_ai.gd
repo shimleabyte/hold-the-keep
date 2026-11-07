@@ -8,6 +8,8 @@ const IRON_ORE_SCRIPT := preload("res://scripts/entities/iron_ore.gd")
 
 var world_config
 var game_clock
+var tech
+var inventory
 
 
 func ticks(count: int) -> void:
@@ -151,8 +153,8 @@ func _run_profile(profile_id: String) -> void:
 
     # Iron selection must use actual worker access and live connected stock, not
     # the existence of any ore node anywhere on the map.
-    var saved_tech_flags: Dictionary = Tech._flags.duplicate(true)
-    var saved_inventory: Dictionary = Inventory.items.duplicate(true)
+    var saved_tech_flags: Dictionary = tech._flags.duplicate(true)
+    var saved_inventory: Dictionary = inventory.items.duplicate(true)
     Tech._flags["iron_mining"] = true
     Inventory.items["iron"] = 0
     Inventory.items["stone"] = 10
@@ -287,6 +289,8 @@ func _run_profile(profile_id: String) -> void:
 func _initialize() -> void:
     world_config = root.get_node("WorldConfig")
     game_clock = root.get_node("GameClock")
+    tech = root.get_node("Tech")
+    inventory = root.get_node("Inventory")
     await process_frame
     await _run_profile("frontier")
     await _run_profile("frontier_expedition")
