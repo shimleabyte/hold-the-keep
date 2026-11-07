@@ -157,3 +157,9 @@ The rival stronghold no longer cycles mechanically through its faction roster wh
 Each supported faction unit has an explicit recruitment cost. Basic roles have modest food/wood costs; disruption, cavalry, shield, shaman and siege roles consume additional resources. The stronghold does not spawn a periodic reinforcement when no candidate can be paid. Costs are debited only after a valid spawn succeeds. The three opening garrison units are preserved unchanged as initial campaign setup.
 
 No unit-composition state is stored; it is derived from living garrison entities. Save schema v17 remains unchanged. The army/rival regression now verifies the expected first recruit for all four doctrines, composition deficit correction, unit-specific resource debits and no recruitment when all candidates are unaffordable.
+
+## 5f. Phase 11.6 — Military technology recruitment gates
+
+Rival military research now changes which units a faction can actually recruit. Saboteurs and War Shamans require Military Tier II; Beast Riders and Siege Engines require Military Tier III. Basic infantry, scouts, wolves, archers and shield infantry remain available without advanced research. Composition planning filters locked units, and direct payment also checks the technology gate so callers cannot bypass it.
+
+This makes a rival's research investment unlock battlefield options rather than merely incrementing a tier label. It does not grant units for free; advanced units still require their full unit-specific costs. Tests verify the Siege faction's early shield infantry, Tier II support/disruption unlocks, and Tier III access to its signature Siege Engine. Save schema v17 remains unchanged.

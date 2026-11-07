@@ -286,7 +286,7 @@ func _initialize() -> void:
                 "greenwood_raiders": "bandit",
                 "iron_legion": "enemy_shieldbearer",
                 "fen_cult": "wolf",
-                "ashen_host": "enemy_siege_engine"
+                "ashen_host": "enemy_shieldbearer"
             }
             var faction_registry: Node = root.get_node_or_null("FactionRegistry")
             _check(faction_registry != null, "Faction registry autoload must be initialized before recruitment strategy tests")
@@ -343,6 +343,41 @@ func _initialize() -> void:
             _check(unaffordable_choice.is_empty(),
                 "%s faction must not recruit when no roster unit can be paid" % faction_id)
             recruitment_balance_after.merge(saved_recruitment_balance, true)
+
+
+            if faction_id == "ashen_host":
+                _check(
+                    not bool(strategy_civilization.call("can_recruit", "enemy_siege_engine")),
+                    "Siege Engine recruitment must remain locked before Military Tier III"
+                )
+                _check(
+                    bool(strategy_civilization.call("can_recruit", "enemy_shieldbearer")),
+                    "Basic shield infantry must remain available before advanced military research"
+                )
+                strategy_civilization.set("technology_tier", 1)
+                _check(
+                    bool(strategy_civilization.call("can_recruit", "enemy_war_shaman")),
+                    "Military Tier II must unlock War Shamans"
+                )
+                _check(
+                    bool(strategy_civilization.call("can_recruit", "enemy_saboteur")),
+                    "Military Tier II must unlock Saboteurs"
+                )
+                _check(
+                    not bool(strategy_civilization.call("can_recruit", "enemy_siege_engine")),
+                    "Siege Engines must not bypass the top military research tier"
+                )
+                strategy_civilization.set("technology_tier", 2)
+                _check(
+                    bool(strategy_civilization.call("can_recruit", "enemy_siege_engine")),
+                    "Military Tier III must unlock paid Siege Engine recruitment"
+                )
+                var tier_three_choice: String = strategy_civilization.call(
+                    "choose_recruitment_unit", empty_garrison
+                )
+                _check(tier_three_choice == "enemy_siege_engine",
+                    "A fully researched Siege faction must prioritize its siege engine")
+                strategy_civilization.set("technology_tier", 0)
 
             var first_plan: Dictionary = strategy_civilization.call("_build_plan_for", actual_order[0])
             var first_cost: Dictionary = first_plan.get("cost", {})

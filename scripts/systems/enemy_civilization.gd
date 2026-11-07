@@ -77,6 +77,12 @@ const RECRUITMENT_COSTS: Dictionary = {
     "wolf": {"food": 8.0},
     "enemy_war_shaman": {"food": 16.0, "wood": 6.0, "iron": 1.0}
 }
+const RECRUITMENT_MIN_TECH_TIER: Dictionary = {
+    "enemy_saboteur": 1,
+    "enemy_war_shaman": 1,
+    "enemy_beast_rider": 2,
+    "enemy_siege_engine": 2
+}
 const BASE_STORAGE_CAPACITY: float = 240.0
 const STORAGE_BUILDING_BONUS: float = 360.0
 const MAX_RESOURCE: float = 999.0
@@ -536,14 +542,17 @@ func garrison_capacity() -> int:
 
 
 func can_recruit(unit_id: String = "") -> bool:
+    if not unit_id.is_empty():
+        var required_tier: int = int(RECRUITMENT_MIN_TECH_TIER.get(unit_id, 0))
+        if technology_tier < required_tier:
+            return false
     return _can_pay(_recruitment_cost(unit_id))
 
 
 func pay_recruitment(unit_id: String = "") -> bool:
-    var cost: Dictionary = _recruitment_cost(unit_id)
-    if not _can_pay(cost):
+    if not can_recruit(unit_id):
         return false
-    _pay(cost)
+    _pay(_recruitment_cost(unit_id))
     return true
 
 
