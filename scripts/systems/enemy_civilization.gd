@@ -33,6 +33,18 @@ const DOCTRINE_BUILD_ORDERS: Dictionary = {
         "quarry", "lumber_camp", "farm", "barracks", "forge", "tower", "storage"
     ]
 }
+const WORKFORCE_CAPACITY: int = 8
+const MIN_WORKFORCE: int = 2
+const WORKERS_PER_WORKPLACE: int = 2
+const WORKER_FOOD_UPKEEP: float = 0.04
+const SOLDIER_FOOD_UPKEEP: float = 0.06
+const DEFAULT_LABOR_ORDER: Array[String] = ["lumber_camp", "quarry", "farm", "forge"]
+const DOCTRINE_LABOR_ORDERS: Dictionary = {
+    "ambush": ["lumber_camp", "quarry", "farm", "forge"],
+    "fortress": ["quarry", "lumber_camp", "farm", "forge"],
+    "attrition": ["farm", "lumber_camp", "quarry", "forge"],
+    "siege": ["quarry", "forge", "lumber_camp", "farm"]
+}
 const MAX_RESOURCE: float = 999.0
 const STARTING_RESOURCES: Dictionary = {"wood": 100.0, "stone": 42.0, "food": 65.0, "iron": 4.0}
 
@@ -101,28 +113,96 @@ func advance(delta: float) -> void:
         _try_start_construction()
 
 
-func _produce_resources() -> void:
-    var income: Dictionary = {"wood": 0.08, "stone": 0.025, "food": 0.42, "iron": 0.0}
-    for structure: EnemySettlementStructure in structures:
-        if not is_instance_valid(structure):
-            continue
-        match String(structure.structure_id):
-            "lumber_camp":
-                income["wood"] = float(income["wood"]) + 1.05
-            "farm":
-                income["food"] = float(income["food"]) + 1.25
-            "quarry":
-                income["stone"] = float(income["stone"]) + 0.62
-                income["iron"] = float(income["iron"]) + 0.08
-            "forge":
-                income["iron"] = float(income["iron"]) + 0.22
-    for kind: String in income:
-        resources[kind] = clampf(float(resources.get(kind, 0.0)) + float(income[kind]), 0.0, MAX_RESOURCE)
+static func workforce_for_garrison(garrison_count: int) -> int:
+    return clampi(WORKFORCE_CAPACITY - maxi(0, garrison_count), MIN_WORKFORCE, WORKFORCE_CAPACITY)
 
+
+func workforce_size() -> int:
     var garrison_count: int = 0
     if owner_keep != null and is_instance_valid(owner_keep):
         garrison_count = int(owner_keep.call("local_garrison_count"))
-    resources["food"] = maxf(0.0, float(resources["food"]) - 0.025 * float(garrison_count))
+    return workforce_for_garrison(garrison_count)
+
+
+func labor_order() -> Array[String]:
+    var faction_id: String = String(owner_keep.get("faction_id")) if owner_keep != null else ""
+    var faction: Dictionary = FactionRegistry.factions.get(faction_id, {})
+    var doctrine: String = String(faction.get("doctrine", ""))
+    var selected_order: Variant = DOCTRINE_LABOR_ORDERS.get(doctrine, DEFAULT_LABOR_ORDER)
+    var candidates: Array = DEFAULT_LABOR_ORDER
+    if selected_order is Array:
+        candidates = selected_order
+
+    var order: Array[String] = []
+    for raw_id: Variant in candidates:
+        var id: String = String(raw_id)
+        if ["lumber_camp", "farm", "quarry", "forge"].has(id) and not order.has(id):
+            order.append(id)
+    for fallback_id: String in DEFAULT_LABOR_ORDER:
+        if not order.has(fallback_id):
+            order.append(fallback_id)
+    return order
+
+
+func _has_active_structure(id: String) -> bool:
+    for structure: EnemySettlementStructure in structures:
+        if is_instance_valid(structure) and String(structure.structure_id) == id:
+            return true
+    return false
+
+
+func labor_allocation() -> Dictionary:
+    var garrison_count: int = 0
+    if owner_keep != null and is_instance_valid(owner_keep):
+        garrison_count = int(owner_keep.call("local_garrison_count"))
+    var remaining: int = workforce_for_garrison(garrison_count)
+    var allocation: Dictionary = {
+        "available": remaining,
+        "garrison": garrison_count,
+        "builders": 0,
+        "lumber_camp": 0,
+        "farm": 0,
+        "quarry": 0,
+        "forge": 0,
+        "idle": 0
+    }
+
+    # Construction takes precedence. The same citizens cannot gather and build
+    # during the same simulation tick.
+    if not construction.is_empty():
+        var builders: int = mini(WORKERS_PER_WORKPLACE, remaining)
+        allocation["builders"] = builders
+        remaining -= builders
+
+    for workplace_id: String in labor_order():
+        if remaining <= 0:
+            break
+        if not _has_active_structure(workplace_id):
+            continue
+        var assigned: int = mini(WORKERS_PER_WORKPLACE, remaining)
+        allocation[workplace_id] = assigned
+        remaining -= assigned
+
+    allocation["idle"] = remaining
+    return allocation
+
+
+func _produce_resources() -> void:
+    var labor: Dictionary = labor_allocation()
+    var income: Dictionary = {
+        "wood": 0.08 + 0.525 * float(labor["lumber_camp"]),
+        "stone": 0.025 + 0.31 * float(labor["quarry"]),
+        "food": 0.42 + 0.625 * float(labor["farm"]),
+        "iron": 0.04 * float(labor["quarry"]) + 0.11 * float(labor["forge"])
+    }
+    for kind: String in income:
+        resources[kind] = clampf(float(resources.get(kind, 0.0)) + float(income[kind]), 0.0, MAX_RESOURCE)
+
+    # A fixed population pool makes recruitment an economic trade-off:
+    # each living garrison soldier removes one available worker and costs more food.
+    var worker_upkeep: float = WORKER_FOOD_UPKEEP * float(labor["available"])
+    var soldier_upkeep: float = SOLDIER_FOOD_UPKEEP * float(labor["garrison"])
+    resources["food"] = maxf(0.0, float(resources["food"]) - worker_upkeep - soldier_upkeep)
 
 
 func _try_start_construction() -> void:
@@ -155,6 +235,10 @@ func _try_start_construction() -> void:
 func _advance_construction(delta: float) -> void:
     if construction.is_empty():
         return
+    var labor: Dictionary = labor_allocation()
+    var builder_count: int = int(labor.get("builders", 0))
+    if builder_count <= 0:
+        return
     var id: String = String(construction.get("id", ""))
     var anchor: Vector2i = Vector2i(int(construction.get("cx", -1)), int(construction.get("cy", -1)))
     if not _placement_valid(id, anchor):
@@ -164,7 +248,10 @@ func _advance_construction(delta: float) -> void:
             return
         construction["cx"] = anchor.x
         construction["cy"] = anchor.y
-    construction["remaining"] = maxf(0.0, float(construction.get("remaining", 0.0)) - delta)
+    var construction_rate: float = 0.5 * float(builder_count)
+    construction["remaining"] = maxf(
+        0.0, float(construction.get("remaining", 0.0)) - delta * construction_rate
+    )
     if float(construction["remaining"]) > 0.0:
         return
     if _spawn_structure(id, anchor, -1):

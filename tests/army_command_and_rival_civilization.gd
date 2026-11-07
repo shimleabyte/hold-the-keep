@@ -113,6 +113,64 @@ func _initialize() -> void:
             var structures: Array = civilization.get("structures")
             _check(not structures.is_empty(),
                 "Completed rival structures should exist as world entities")
+            var labor: Dictionary = civilization.call("labor_allocation")
+            var expected_workforce: int = civilization.call(
+                "workforce_for_garrison", int(labor.get("garrison", 0))
+            )
+            _check(int(labor.get("available", -1)) == expected_workforce,
+                "Rival workforce must shrink as soldiers are recruited")
+            var allocated_workers: int = (
+                int(labor.get("builders", 0))
+                + int(labor.get("lumber_camp", 0))
+                + int(labor.get("farm", 0))
+                + int(labor.get("quarry", 0))
+                + int(labor.get("forge", 0))
+                + int(labor.get("idle", 0))
+            )
+            _check(allocated_workers == expected_workforce,
+                "Rival labor allocation must never assign a citizen to two jobs")
+            for workplace_id: String in ["lumber_camp", "farm", "quarry", "forge", "builders"]:
+                _check(int(labor.get(workplace_id, 0)) <= 2,
+                    "%s must respect its two-worker labor cap" % workplace_id)
+            _check(int(civilization.call("workforce_for_garrison", 3)) == 5,
+                "Three starting soldiers must leave five citizens available for the economy")
+            _check(int(civilization.call("workforce_for_garrison", 8)) == 2,
+                "A full garrison must leave only the protected two-worker minimum")
+
+            var stocks_before_production: Dictionary = resources.duplicate(true)
+            civilization.call("_produce_resources")
+            var expected_wood: float = clampf(
+                float(stocks_before_production.get("wood", 0.0))
+                + 0.08 + 0.525 * float(labor.get("lumber_camp", 0)),
+                0.0, 999.0
+            )
+            var expected_stone: float = clampf(
+                float(stocks_before_production.get("stone", 0.0))
+                + 0.025 + 0.31 * float(labor.get("quarry", 0)),
+                0.0, 999.0
+            )
+            var expected_iron: float = clampf(
+                float(stocks_before_production.get("iron", 0.0))
+                + 0.04 * float(labor.get("quarry", 0))
+                + 0.11 * float(labor.get("forge", 0)),
+                0.0, 999.0
+            )
+            var expected_food: float = maxf(
+                0.0,
+                float(stocks_before_production.get("food", 0.0))
+                + 0.42 + 0.625 * float(labor.get("farm", 0))
+                - 0.04 * float(labor.get("available", 0))
+                - 0.06 * float(labor.get("garrison", 0))
+            )
+            _check(is_equal_approx(float(resources.get("wood", 0.0)), expected_wood),
+                "Rival wood production must scale with assigned lumber workers")
+            _check(is_equal_approx(float(resources.get("stone", 0.0)), expected_stone),
+                "Rival stone production must scale with assigned quarry workers")
+            _check(is_equal_approx(float(resources.get("iron", 0.0)), expected_iron),
+                "Rival iron production must be staffed by quarry/forge workers")
+            _check(is_equal_approx(float(resources.get("food", 0.0)), expected_food),
+                "Rival food balance must include farm labor and population upkeep")
+
             var snapshot: Dictionary = stronghold.call("export_state")
             var saved_civilization: Dictionary = snapshot.get("civilization", {})
             var saved_structure_values: Variant = saved_civilization.get("structures", null)
@@ -124,12 +182,17 @@ func _initialize() -> void:
 
             if not structures.is_empty():
                 var structure: Node2D = structures[0] as Node2D
+                var destroyed_structure_id: String = String(structure.get("structure_id"))
                 var occupied_cell: Vector2i = structure.get("cell")
                 structure.call("take_damage", 9999)
                 var world: Node = main_scene.get("world") as Node
                 var occupied: Dictionary = world.get("occupied")
                 _check(not occupied.has(occupied_cell),
                     "Destroying a rival structure must release its world footprint")
+                if destroyed_structure_id in ["lumber_camp", "farm", "quarry", "forge"]:
+                    var labor_after_destruction: Dictionary = civilization.call("labor_allocation")
+                    _check(int(labor_after_destruction.get(destroyed_structure_id, -1)) == 0,
+                        "Destroyed production buildings must release their assigned workers")
 
 
     if stronghold != null:
@@ -138,6 +201,12 @@ func _initialize() -> void:
         _check(base_civilization != null, "A live rival civilization instance must exist before testing doctrine strategy")
         var civilization_script: Script = base_civilization.get_script() as Script if base_civilization != null else null
         _check(civilization_script != null, "The live rival civilization must expose its compiled script")
+        var expected_labor_orders: Dictionary = {
+            "greenwood_raiders": ["lumber_camp", "quarry", "farm", "forge"],
+            "iron_legion": ["quarry", "lumber_camp", "farm", "forge"],
+            "fen_cult": ["farm", "lumber_camp", "quarry", "forge"],
+            "ashen_host": ["quarry", "forge", "lumber_camp", "farm"]
+        }
         var expected_orders: Dictionary = {
             "greenwood_raiders": [
                 "lumber_camp", "quarry", "barracks", "farm", "tower", "forge", "storage"
@@ -160,6 +229,19 @@ func _initialize() -> void:
             if strategy_civilization == null:
                 continue
             strategy_civilization.call("setup", stronghold, {})
+            var expected_labor_order: Array = expected_labor_orders[faction_id]
+            var actual_labor_order: Array[String] = strategy_civilization.call("labor_order")
+            _check(actual_labor_order.size() == expected_labor_order.size(),
+                "%s doctrine must retain every production job" % faction_id)
+            var labor_order_matches: bool = actual_labor_order.size() == expected_labor_order.size()
+            if labor_order_matches:
+                for labor_index: int in range(expected_labor_order.size()):
+                    if actual_labor_order[labor_index] != String(expected_labor_order[labor_index]):
+                        labor_order_matches = false
+                        break
+            _check(labor_order_matches,
+                "%s doctrine must prioritize a distinct production workforce" % faction_id)
+
             var expected_order: Array = expected_orders[faction_id]
             var actual_order: Array[String] = strategy_civilization.call("development_order")
             _check(actual_order.size() == expected_order.size(),
@@ -204,7 +286,7 @@ func _initialize() -> void:
     if failed:
         quit(1)
         return
-    print("PASS: army-only commands, paid rival economies, doctrine-specific investment, construction, technology and persistence")
+    print("PASS: army-only commands, staffed rival production, doctrine-specific labor/investment, paid construction, technology and persistence")
     quit()
 
 

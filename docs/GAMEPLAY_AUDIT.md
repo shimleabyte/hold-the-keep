@@ -116,3 +116,20 @@ At the audited baseline `931cca8e`, GitHub Actions reported:
 This workspace has no local repository checkout and no Godot 4.7 executable. A local Git clone also failed because the runtime could not resolve `github.com`. Therefore no local Godot execution, rendered playthrough or human ten-minute playtest is claimed. Post-change CI results must be checked on the new commit before treating this slice as integrated and verified.
 
 Remote main and open PRs were inspected. The four open PRs at audit time were #182 (civilian role art), #181 (player atlas/animation), #152 (Android touch controls) and #150 (Android device checklist). The gameplay changes in this slice touch separate economy/test/documentation files; no unrelated PR is merged or overwritten.
+
+## 5b. Phase 11.3 — Bounded rival workforce and production
+
+Rival production now uses an explicit derived workforce instead of granting each completed production building full output regardless of labor availability.
+
+- Each stronghold has an eight-citizen labor pool. Each living garrison soldier occupies one position; a minimum of two civilian workers is protected.
+- Production buildings employ at most two workers each.
+- Per-worker yields: Lumber Camp 0.525 wood/second; Farm 0.625 food/second; Quarry 0.31 stone plus 0.04 iron/second; Forge 0.11 iron/second.
+- Doctrine changes labor priority as well as construction priority: Ambush favors wood, Fortress favors stone, Attrition favors food, Siege favors stone/iron.
+- Active construction reserves up to two builders. Each builder contributes 0.5 work/second, so construction labor cannot simultaneously produce resources.
+- Worker upkeep is 0.04 food/second and soldier upkeep 0.06 food/second, in addition to existing background subsistence income.
+- Assignments are derived from the live garrison and completed structures every bounded economy tick. They are not serialized; save schema v17 remains unchanged.
+
+The rival workforce is still abstract. Visible laborers, resource-node depletion, travel, roads, storage capacity and physical deliveries are not part of this slice.
+
+The existing army/rival regression now checks workforce conservation, workplace caps, recruitment-to-labor conversion, staffed output formulas, doctrine labor priority and worker release when a production structure is destroyed.
+
