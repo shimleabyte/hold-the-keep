@@ -183,17 +183,18 @@ func _initialize() -> void:
             _check(is_equal_approx(expanded_storage_capacity, 600.0),
                 "Completing Storage must expand the rival stockpile capacity")
             var original_wood_balance: float = float(resources.get("wood", 0.0))
-            resources["wood"] = base_storage_capacity - 0.25
+            var active_wood_capacity: float = civilization.call("resource_capacity", "wood")
+            resources["wood"] = active_wood_capacity - 0.25
             civilization.call("_credit_income", "wood", 5.0)
-            _check(is_equal_approx(float(resources.get("wood", 0.0)), base_storage_capacity),
-                "Rival production must stop exactly at the stockpile capacity")
-            resources["wood"] = base_storage_capacity
+            _check(is_equal_approx(float(resources.get("wood", 0.0)), active_wood_capacity),
+                "Rival production must stop exactly at the active stockpile capacity")
+            resources["wood"] = active_wood_capacity
             var full_storage_labor: Dictionary = civilization.call("labor_allocation")
             _check(int(full_storage_labor.get("lumber_camp", 0)) == 0,
                 "A full wood stockpile must release Lumber Camp labor to another task")
-            resources["wood"] = base_storage_capacity + 25.0
+            resources["wood"] = active_wood_capacity + 25.0
             civilization.call("_credit_income", "wood", 5.0)
-            _check(is_equal_approx(float(resources.get("wood", 0.0)), base_storage_capacity + 25.0),
+            _check(is_equal_approx(float(resources.get("wood", 0.0)), active_wood_capacity + 25.0),
                 "Loading an over-cap v17 stockpile must not silently delete saved resources")
             resources["wood"] = original_wood_balance
 
