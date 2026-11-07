@@ -15,10 +15,10 @@
 | Remote branches after this audit | 157 |
 | Branches deleted | 0 |
 | Branches retained | 157 |
-| Pull requests inventoried | 178 |
+| Pull requests inventoried | 179 |
 | Merged PRs | 126 |
 | Closed, unmerged PRs | 50 |
-| Open PRs | 2 |
+| Open PRs | 3 |
 | MERGED branches (including main) | 88 |
 | DUPLICATE / SUPERSEDED branches | 24 |
 | ACTIVE branches | 12 |
@@ -56,7 +56,7 @@
 | [#153](https://github.com/shimleabyte/hold-the-keep/pull/153) | Low-cost profession animation/contact feedback iteration | Closed, not merged | Do not classify as safely disposable solely from PR state; related art/animation branches remain retained until their residual changes are compared with #158. |
 | [#158](https://github.com/shimleabyte/hold-the-keep/pull/158) | Low-cost profession contact feedback | Merged | Integrated implementation for the merged portion; does not by itself prove every older profession-sprite branch is fully represented. |
 
-All 178 PR records (open and closed) were enumerated. The table above records explicit decisions for the known risk/priority PRs; the branch inventory below links each branch to its matching PR where one exists. This is a metadata-wide audit, not a claim that every historical PR diff and discussion thread received a full source review.
+All 179 PR records (open and closed) were enumerated. The table above records explicit decisions for the known risk/priority PRs; the branch inventory below links each branch to its matching PR where one exists. This is a metadata-wide audit, not a claim that every historical PR diff and discussion thread received a full source review.
 
 ## Open PRs
 
@@ -65,11 +65,11 @@ All 178 PR records (open and closed) were enumerated. The table above records ex
 
 ## Retained branch inventory
 
-All remote branches are listed. `HEAD` links to the exact enumerated tip commit. The CI column distinguishes the current-main result from historical tip status; it does not infer old CI success from branch age or PR title.
+All remote branches are listed. `HEAD` links to the enumerated tip or live branch ref. The CI column distinguishes exact-head validation from historical status; it does not infer old CI success from branch age or PR title.
 
 | Branch | Workstream | Status | Main integration | PR | CI | Next action | HEAD |
-| [`art/phase-08.8-art-direction-lock`](https://github.com/shimleabyte/hold-the-keep/tree/art/phase-08.8-art-direction-lock) | visual: Phase 08.8 full art direction and asset overhaul | ACTIVE | Not merged; isolated from main | Not created yet | Pending exact-head Godot 4.7 validation | Complete asset inventory and deliver reviewed character/building/biome art packages | [`current branch tip`](https://github.com/shimleabyte/hold-the-keep/tree/art/phase-08.8-art-direction-lock) |
 |---|---|---|---|---|---|---|---|
+| [`art/phase-08.8-art-direction-lock`](https://github.com/shimleabyte/hold-the-keep/tree/art/phase-08.8-art-direction-lock) | visual: Phase 08.8 full art direction and asset overhaul | ACTIVE | Not merged; PR #179 open | [#179](https://github.com/shimleabyte/hold-the-keep/pull/179) open | Godot 4.7 64/64 passed; Rendered World QA passed | Complete asset inventory and deliver reviewed character/building/biome art packages | [`current branch tip`](https://github.com/shimleabyte/hold-the-keep/tree/art/phase-08.8-art-direction-lock) |
 | [`combat/player-skills-enemy-ai`](https://github.com/shimleabyte/hold-the-keep/tree/combat/player-skills-enemy-ai) | combat: player-skills-enemy-ai | MERGED | Integrated via PR #1 | [#1](https://github.com/shimleabyte/hold-the-keep/pull/1) merged | Historical head not re-run in this audit | Retire branch when deletion access is available | [`ec2a41bd45`](https://github.com/shimleabyte/hold-the-keep/commit/ec2a41bd450c58cec2d75b7e3c00f7f02e6717e0) |
 | [`docs/android-armv7-device-qa`](https://github.com/shimleabyte/hold-the-keep/tree/docs/android-armv7-device-qa) | docs: android-armv7-device-qa | BLOCKED / DEFERRED | Not in desktop mainline; outside current desktop-first scope | [#150](https://github.com/shimleabyte/hold-the-keep/pull/150) open | Historical head not re-run in this audit | Retain separately; do not merge until Android/RTS scope is explicitly reopened | [`1d2e290638`](https://github.com/shimleabyte/hold-the-keep/commit/1d2e29063881f6060f08e3ca3e98202196e55531) |
 | [`docs/phase-06-mainline-acceptance`](https://github.com/shimleabyte/hold-the-keep/tree/docs/phase-06-mainline-acceptance) | docs: phase-06-mainline-acceptance | INCOMPLETE | PR #49 closed unmerged; main integration not proven | [#49](https://github.com/shimleabyte/hold-the-keep/pull/49) closed unmerged | Historical head not re-run in this audit | Preserve; inspect unique commits and tests before any deletion | [`728cc0a249`](https://github.com/shimleabyte/hold-the-keep/commit/728cc0a24952ffb3c2c54a32e0f3721fd048f4a0) |
@@ -275,6 +275,7 @@ The following are not safe deletion candidates based solely on Git metadata:
 - Branches preserved: 156.
 - Current main Godot CI: [passed, run #42316888270](https://github.com/shimleabyte/hold-the-keep/actions/runs/42316888270).
 - PR #178 exact-head Godot CI: [63/63 passed, run #42316264733](https://github.com/shimleabyte/hold-the-keep/actions/runs/42316264733).
+- PR #179 exact-head Godot CI: [64/64 checks passed, run #42320928929](https://github.com/shimleabyte/hold-the-keep/actions/runs/42320928929). Rendered World QA: [passed, run #42320928830](https://github.com/shimleabyte/hold-the-keep/actions/runs/42320928830).
 - PR #178 Campaign Simulation QA: [passed, run #42316264766](https://github.com/shimleabyte/hold-the-keep/actions/runs/42316264766).
 - PR #177 integration: Godot CI, Campaign Simulation QA and Rendered World QA passed on its exact head.
 
