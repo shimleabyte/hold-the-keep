@@ -18,13 +18,13 @@ func _initialize() -> void:
     await process_frame
     await process_frame
 
-    var world: WorldMap = main_scene.get("world") as WorldMap
+    var world: Node2D = main_scene.get("world") as Node2D
     var campaign: Node = main_scene.get("campaign") as Node
     var save_system: Node = root.get_node("SaveSystem")
     var player: Node2D = main_scene.get("player") as Node2D
-    var keep: EnemyKeep = campaign.call("current_target_node") as EnemyKeep
+    var keep: Node2D = campaign.call("current_target_node") as Node2D
     _check(world != null and keep != null and player != null,
-        "Classic persistence fixture must expose its WorldMap, player and active rival keep")
+        "Classic persistence fixture must expose the world, player and active rival keep")
     if world == null or keep == null or player == null:
         main_scene.queue_free()
         await process_frame
@@ -164,7 +164,7 @@ func _initialize() -> void:
     quit()
 
 
-func _find_candidate_sites(world: WorldMap, keep: EnemyKeep, footprint: Vector2i, desired_count: int) -> Array[Vector2i]:
+func _find_candidate_sites(world: Node2D, keep: Node2D, footprint: Vector2i, desired_count: int) -> Array[Vector2i]:
     var candidates: Array[Vector2i] = []
     for radius: int in range(4, 15):
         for y: int in range(-radius, radius + 1):
