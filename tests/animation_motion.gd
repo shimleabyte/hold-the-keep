@@ -143,9 +143,9 @@ func _initialize() -> void:
     assert(harvest_elapsed >= 0.14 and anim.frame_index() == 18,
         "Player harvest's tool-contact pose must coincide with its existing 0.14s gameplay event")
     anim.play_player_clip("hurt", true)
-    assert(anim.frame_index() == 20, "Player hurt must use its remapped 24-frame atlas cell")
+    assert(anim.frame_index() == 42, "Player hurt must begin at its first frame in the 46-frame atlas")
     anim.play_player_clip("death", true)
-    assert(anim.frame_index() == 21, "Player death must use its remapped three-frame fall sequence")
+    assert(anim.frame_index() == 20, "Player death preview must begin at its first collapse frame")
 
     anim.play("work", true)
     anim.work_style = "builder"
