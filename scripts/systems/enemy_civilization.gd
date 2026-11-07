@@ -147,7 +147,20 @@ func setup(keep_ref: Node2D, saved: Dictionary = {}) -> void:
 func advance(delta: float) -> void:
     if not active or owner_keep == null or not is_instance_valid(owner_keep) or int(owner_keep.get("hp")) <= 0:
         return
+    _tick_physical_workers(delta)
     _tick_accumulator += clampf(delta, 0.0, 5.0)
+
+
+func _tick_physical_workers(delta: float) -> void:
+    if owner_keep == null or not is_instance_valid(owner_keep) or not owner_keep.is_inside_tree():
+        return
+    var frame_delta := clampf(delta, 0.0, 5.0)
+    for worker: Node in owner_keep.get_tree().get_nodes_in_group("enemy_economic_workers"):
+        if not is_instance_valid(worker) or worker.is_queued_for_deletion():
+            continue
+        if worker.get("civilization") != self:
+            continue
+        worker.call("tick", frame_delta)
     var ticks: int = 0
     while _tick_accumulator >= 1.0 and ticks < 5:
         _tick_accumulator -= 1.0
