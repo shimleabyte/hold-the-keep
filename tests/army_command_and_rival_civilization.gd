@@ -94,15 +94,18 @@ func _initialize() -> void:
             var resources: Dictionary = civilization.get("resources")
             var starting_wood: float = float(resources.get("wood", 0.0))
             _check(starting_wood > 0.0, "Rival civilization should start with a finite resource ledger")
-            for tick: int in range(270):
+            for tick: int in range(500):
                 civilization.call("advance", 1.0)
+                for rival_worker: Node in get_nodes_in_group("enemy_economic_workers"):
+                    if is_instance_valid(rival_worker) and rival_worker.get("civilization") == civilization:
+                        rival_worker.call("tick", 1.0)
 
             _check(bool(civilization.call("_has_structure", "lumber_camp")),
                 "Rival civilization should construct a visible lumber camp")
             _check(bool(civilization.call("_has_structure", "farm")),
                 "Rival civilization should construct food infrastructure")
             _check(bool(civilization.call("_has_structure", "quarry")),
-                "Rival civilization should construct a stone and iron source")
+                Rival civilization should construct a physical quarry for stone)
             _check(bool(civilization.call("_has_structure", "barracks")),
                 "Rival civilization should eventually invest in military production")
             var technology_tier: int = int(civilization.get("technology_tier"))
@@ -138,43 +141,27 @@ func _initialize() -> void:
                 "A full garrison must leave only the protected two-worker minimum")
 
             var stocks_before_production: Dictionary = resources.duplicate(true)
-            var active_capacity: float = civilization.call("resource_capacity", "wood")
-            var expected_wood: float = float(stocks_before_production.get("wood", 0.0)) + minf(
-                0.08 + 0.525 * float(labor.get("lumber_camp", 0)),
-                maxf(0.0, active_capacity - float(stocks_before_production.get("wood", 0.0)))
-            )
-            var stone_capacity: float = civilization.call("resource_capacity", "stone")
-            var expected_stone: float = float(stocks_before_production.get("stone", 0.0)) + minf(
-                0.025 + 0.31 * float(labor.get("quarry", 0)),
-                maxf(0.0, stone_capacity - float(stocks_before_production.get("stone", 0.0)))
-            )
-            var iron_capacity: float = civilization.call("resource_capacity", "iron")
-            var expected_iron: float = float(stocks_before_production.get("iron", 0.0)) + minf(
-                0.04 * float(labor.get("quarry", 0))
-                    + 0.11 * float(labor.get("forge", 0)),
-                maxf(0.0, iron_capacity - float(stocks_before_production.get("iron", 0.0)))
-            )
-            var food_capacity: float = civilization.call("resource_capacity", "food")
-            var expected_food_income: float = 0.42 + 0.625 * float(labor.get("farm", 0))
             var expected_food: float = maxf(
                 0.0,
                 float(stocks_before_production.get("food", 0.0))
-                    + minf(
-                        expected_food_income,
-                        maxf(0.0, food_capacity - float(stocks_before_production.get("food", 0.0)))
-                    )
                     - 0.04 * float(labor.get("available", 0))
                     - 0.06 * float(labor.get("garrison", 0))
             )
-            civilization.call("_produce_resources")
-            _check(is_equal_approx(float(resources.get("wood", 0.0)), expected_wood),
-                "Rival wood production must scale with assigned lumber workers")
-            _check(is_equal_approx(float(resources.get("stone", 0.0)), expected_stone),
-                "Rival stone production must scale with assigned quarry workers")
-            _check(is_equal_approx(float(resources.get("iron", 0.0)), expected_iron),
-                "Rival iron production must be staffed by quarry/forge workers")
+            civilization.call("_produce_resources", labor)
+            _check(is_equal_approx(
+                float(resources.get("wood", 0.0)),
+                float(stocks_before_production.get("wood", 0.0))
+            ), "Rival wood must enter the ledger only through harvested and delivered cargo")
+            _check(is_equal_approx(
+                float(resources.get("stone", 0.0)),
+                float(stocks_before_production.get("stone", 0.0))
+            ), "Rival stone must enter the ledger only through harvested and delivered cargo")
+            _check(is_equal_approx(
+                float(resources.get("iron", 0.0)),
+                float(stocks_before_production.get("iron", 0.0))
+            ), "Rival iron must enter the ledger only through harvested and delivered cargo")
             _check(is_equal_approx(float(resources.get("food", 0.0)), expected_food),
-                "Rival food balance must include farm labor and population upkeep")
+                "Rival population upkeep must debit food without granting passive food income")
 
             var base_storage_capacity: float = civilization.call("storage_capacity", false)
             var expanded_storage_capacity: float = civilization.call("storage_capacity", true)
@@ -389,8 +376,8 @@ func _initialize() -> void:
             _check(String(active_construction.get("id", "")) == actual_order[0],
                 "%s doctrine must start its preferred affordable building" % faction_id)
             var ledger_after: Dictionary = strategy_civilization.get("resources")
-            var expected_wood: float = wood_before + 0.08 - float(first_cost.get("wood", 0.0))
-            var expected_stone: float = stone_before + 0.025 - float(first_cost.get("stone", 0.0))
+            var expected_wood: float = wood_before - float(first_cost.get("wood", 0.0))
+            var expected_stone: float = stone_before - float(first_cost.get("stone", 0.0))
             _check(is_equal_approx(float(ledger_after.get("wood", 0.0)), expected_wood),
                 "%s construction must debit its own wood ledger" % faction_id)
             _check(is_equal_approx(float(ledger_after.get("stone", 0.0)), expected_stone),
@@ -410,7 +397,7 @@ func _initialize() -> void:
     if failed:
         quit(1)
         return
-    print("PASS: army-only commands, staffed rival production, doctrine-specific labor/investment, paid construction, technology and persistence")
+    print("PASS: army-only commands, physical rival gathering/hauling, doctrine strategy, paid construction, technology and persistence")
     quit()
 
 
