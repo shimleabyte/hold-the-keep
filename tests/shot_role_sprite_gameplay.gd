@@ -32,6 +32,17 @@ func _initialize() -> void:
         _fail("Gameplay did not finish initializing; ensure HTK_AUTO_START_GAME=1")
         return
 
+    # Remove transient stage/tutorial announcements from the review capture only.
+    # The running game HUD is not modified.
+    for child in main.get_children():
+        if child is CanvasLayer:
+            var banner = child.get("_banner")
+            if banner is CanvasItem:
+                banner.hide()
+            var message_bubble = child.get("_msg_bubble")
+            if message_bubble is CanvasItem:
+                message_bubble.hide()
+
     var clock = root.get_node_or_null("GameClock")
     if clock != null:
         clock.set_process(false)
@@ -105,15 +116,28 @@ func _initialize() -> void:
         _fail("Could not save gameplay screenshot")
         return
 
+    var two_x := output.duplicate()
+    two_x.resize(CAPTURE_SIZE.x * 2, CAPTURE_SIZE.y * 2, Image.INTERPOLATE_NEAREST)
+    if two_x.save_png("%s/all-civilian-roles-gameplay-1280x720.png" % OUTPUT_DIR) != OK:
+        _fail("Could not save the 1280x720 gameplay screenshot")
+        return
+
+    var two_half_x := output.duplicate()
+    two_half_x.resize(roundi(CAPTURE_SIZE.x * 2.5), roundi(CAPTURE_SIZE.y * 2.5), Image.INTERPOLATE_NEAREST)
+    if two_half_x.save_png("%s/all-civilian-roles-gameplay-1600x900.png" % OUTPUT_DIR) != OK:
+        _fail("Could not save the 1600x900 gameplay screenshot")
+        return
+
     var enlarged := output.duplicate()
     enlarged.resize(CAPTURE_SIZE.x * 3, CAPTURE_SIZE.y * 3, Image.INTERPOLATE_NEAREST)
-    var enlarged_error: Error = enlarged.save_png("%s/all-civilian-roles-gameplay-3x.png" % OUTPUT_DIR)
-    if enlarged_error != OK:
-        _fail("Could not save enlarged gameplay screenshot")
+    if enlarged.save_png("%s/all-civilian-roles-gameplay-1920x1080.png" % OUTPUT_DIR) != OK:
+        _fail("Could not save the 1920x1080 gameplay screenshot")
         return
 
     print("ROLE_VISUAL_QA_CAPTURE ", base_path)
-    print("ROLE_VISUAL_QA_CAPTURE_3X ", "%s/all-civilian-roles-gameplay-3x.png" % OUTPUT_DIR)
+    print("ROLE_VISUAL_QA_CAPTURE_1280x720 ", "%s/all-civilian-roles-gameplay-1280x720.png" % OUTPUT_DIR)
+    print("ROLE_VISUAL_QA_CAPTURE_1600x900 ", "%s/all-civilian-roles-gameplay-1600x900.png" % OUTPUT_DIR)
+    print("ROLE_VISUAL_QA_CAPTURE_1920x1080 ", "%s/all-civilian-roles-gameplay-1920x1080.png" % OUTPUT_DIR)
     print("ROLE_VISUAL_QA_ROLES civilian_professions=10")
     print("PASS: all ten civilian professions rendered in the real gameplay viewport")
     quit(0)
