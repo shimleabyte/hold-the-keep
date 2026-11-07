@@ -28,14 +28,19 @@ func _initialize() -> void:
     clock.set_physics_process(false)
 
     var main_scene := load("res://scenes/main.tscn") as PackedScene
-    assert(main_scene != null, "Main gameplay scene must load")
+    if main_scene == null:
+        push_error("Main gameplay scene must load")
+        quit(1)
+        return
     var main = main_scene.instantiate()
     root.add_child(main)
     current_scene = main
     await _ticks(12)
 
-    assert(main.world != null and main.flow != null and main.spawner != null,
-        "Frontier gameplay must initialize WorldMap, FlowField and WaveSpawner")
+    if main.world == null or main.flow == null or main.spawner == null:
+        push_error("HTK_AUTO_START_GAME=1 must initialize WorldMap, FlowField and WaveSpawner")
+        quit(1)
+        return
 
     var wait_frames := 0
     while not main.flow.is_current() and wait_frames < FLOW_WAIT_LIMIT:

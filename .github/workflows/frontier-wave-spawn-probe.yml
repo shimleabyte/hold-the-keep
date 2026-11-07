@@ -38,4 +38,7 @@ jobs:
         run: godot --headless --path . --import
 
       - name: Probe Frontier edge reachability and runtime spawning
+        env:
+          HTK_AUTO_START_GAME: "1"
+          HTK_AUTO_RESOLVE_EVENTS: "1"
         run: timeout --signal=TERM --kill-after=10s 240s godot --headless --fixed-fps 60 --path . --script res://tests/frontier_wave_spawn_reachability.gd
