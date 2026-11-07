@@ -355,7 +355,7 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 
 ## Phase 11 — Rival civilizations and military command
 
-**Current status (2026-11-07):** Phase 11's initial implementation, performance integration and Phase 11.1 persistence hardening are merged into `main`. Current main is `10747392ecdaebc6b7490b43fb82cf2cfa389468`. Save schema remains v17.
+**Current status (2026-11-07):** Phase 11's initial implementation, performance integration and Phase 11.1 persistence hardening are merged into `main`. The Phase 11.1 code integration commit is `10747392ecdaebc6b7490b43fb82cf2cfa389468`; documentation was synchronized in docs-only commit `173ce5e`. Save schema remains v17.
 
 - **PR #175** merged the expanded maps, soldier-only army command and additive rival civilization economy at `fb3b167`.
 - **PR #177** merged time-bounded FlowField rebuild scheduling and regional land-count caching at `d5c2fe3`.

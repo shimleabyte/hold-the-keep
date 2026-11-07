@@ -1,6 +1,6 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Current audit baseline:** `main` at `10747392ecdaebc6b7490b43fb82cf2cfa389468` (2026-11-07)  
+**Current implementation baseline:** Phase 11.1 merged as `10747392ecdaebc6b7490b43fb82cf2cfa389468` (2026-11-07); the status documents were synchronized in docs-only commit `173ce5e`.  
 **Engine target:** Godot 4.7 only  
 **Release target:** Desktop-first — Windows x86_64 and Linux x86_64. Android remains deferred.  
 **Current save schema:** v17.
