@@ -134,7 +134,8 @@ func _initialize() -> void:
                     "worker_cell": main_scene.get("nav").call("cell_of", rival_woodcutter.position),
                     "resource_count": 0,
                     "same_region": 0,
-                    "within_claim": 0,
+                    "within_work_radius": 0,
+                    "nearest_same_region": [],
                     "not_player_owned": 0,
                     "reachable": 0,
                     "safe_path": 0,
@@ -144,6 +145,7 @@ func _initialize() -> void:
                 var resource_nav: Node = main_scene.get("nav")
                 var resource_territory: Node = main_scene.get("territory")
                 var debug_candidates: Array[Dictionary] = []
+                var same_region_candidates: Array[Dictionary] = []
                 for resource_cell_value in resource_world.get("resource_nodes_by_cell").keys():
                     var resource_cell: Vector2i = Vector2i(resource_cell_value)
                     var resource_node: Node2D = resource_world.call("resource_node_at", resource_cell)
@@ -153,15 +155,26 @@ func _initialize() -> void:
                     if String(resource_world.call("region_id", resource_cell)) != String(stronghold.get("region_id")):
                         continue
                     target_scan["same_region"] = int(target_scan["same_region"]) + 1
-                    var max_distance := (float(stronghold.get("claim_radius")) + 6.0) * float(resource_world.get("tile_size"))
                     var distance := stronghold.position.distance_to(resource_node.position)
-                    if distance > max_distance:
+                    same_region_candidates.append({"cell": resource_cell, "distance": distance})
+                    var local_work_radius := maxf(
+                        float(stronghold.get("claim_radius")) + 6.0,
+                        float(stronghold.get("claim_radius")) * 4.0
+                    ) * float(resource_world.get("tile_size"))
+                    if distance > local_work_radius:
                         continue
-                    target_scan["within_claim"] = int(target_scan["within_claim"]) + 1
+                    target_scan["within_work_radius"] = int(target_scan["within_work_radius"]) + 1
                     if String(resource_territory.call("owner_at", resource_cell)) in ["player", "contested"]:
                         continue
                     target_scan["not_player_owned"] = int(target_scan["not_player_owned"]) + 1
                     debug_candidates.append({"cell": resource_cell, "node": resource_node, "distance": distance})
+                same_region_candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["distance"]) < float(b["distance"]))
+                for index in mini(12, same_region_candidates.size()):
+                    var nearest: Dictionary = same_region_candidates[index]
+                    target_scan["nearest_same_region"].append({
+                        "cell": nearest["cell"],
+                        "distance": nearest["distance"]
+                    })
                 debug_candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["distance"]) < float(b["distance"]))
                 for index in mini(24, debug_candidates.size()):
                     var candidate: Dictionary = debug_candidates[index]
