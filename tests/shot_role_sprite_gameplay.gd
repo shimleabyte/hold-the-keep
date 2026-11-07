@@ -109,7 +109,7 @@ func _initialize() -> void:
         return
 
     print("ROLE_VISUAL_QA_CAPTURE ", base_path)
-    print("ROLE_VISUAL_QA_CAPTURE_3X ", "%s/role-sprites-gameplay-3x.png" % OUTPUT_DIR)
+    print("ROLE_VISUAL_QA_CAPTURE_3X ", "%s/all-civilian-roles-gameplay-3x.png" % OUTPUT_DIR)
     print("ROLE_VISUAL_QA_ROLES civilian_professions=10")
     print("PASS: all ten civilian professions rendered in the real gameplay viewport")
     quit(0)
