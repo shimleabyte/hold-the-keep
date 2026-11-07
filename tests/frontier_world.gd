@@ -651,8 +651,13 @@ func _initialize() -> void:
                 if kind == "fen_reeds" or kind == "hearth_shrine":
                     should_animate = true
                     break
-        assert(batch.is_processing() == should_animate,
-            "Only landmark batches containing reeds or the hearth shrine should process")
+        var actual_processing: bool = batch.is_processing()
+        var actual_ambient: bool = bool(batch.get("_ambient_enabled"))
+        assert(actual_processing == should_animate,
+            "Decoration batch %s: landmark=%s expected_process=%s actual_process=%s ambient=%s entries=%s" % [
+                String(batch.get_path()), str(bool(batch.get("is_landmark"))),
+                str(should_animate), str(actual_processing), str(actual_ambient), str(batch_entries)
+            ])
         if should_animate:
             animated_landmark_batches.append(batch)
     assert(animated_landmark_batches.size() == 2,
