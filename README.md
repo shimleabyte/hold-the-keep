@@ -84,6 +84,10 @@ Artefak hasil build berada di `build/windows/HoldTheKeep.exe` dan `build/linux/H
 - Renderer GL Compatibility
 - Pixel-art assets berbasis SVG
 
+## Status pengembangan
+
+Untuk status implementasi, keputusan arsitektur, roadmap dan inventaris branch/PR, lihat [CONTEXT.md](CONTEXT.md), [worklist.md](worklist.md), [ROADMAP_NEXT_LEVEL.md](ROADMAP_NEXT_LEVEL.md), dan [docs/BRANCH_REGISTRY.md](docs/BRANCH_REGISTRY.md).
+
 ## Kredit
 
 Font HUD menggunakan **Silkscreen**. Lisensinya tersedia di `assets/fonts/OFL-Silkscreen.txt`.
