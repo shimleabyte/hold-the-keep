@@ -644,8 +644,9 @@ func _initialize() -> void:
     var animated_landmark_batches: Array[Node] = []
     for batch in get_nodes_in_group("frontier_decoration_batches"):
         var should_animate := false
-        if bool(batch.is_landmark):
-            for entry in batch._batch_entries:
+        if bool(batch.get("is_landmark")):
+            var batch_entries: Array = batch.get("_batch_entries")
+        for entry in batch_entries:
                 var kind := String(entry.get("kind", ""))
                 if kind == "fen_reeds" or kind == "hearth_shrine":
                     should_animate = true
@@ -658,10 +659,10 @@ func _initialize() -> void:
         "The Fenlands reeds and Hearthland shrine must be the two animated landmarks")
     var ambient_times_before: Array[float] = []
     for batch in animated_landmark_batches:
-        ambient_times_before.append(float(batch._ambient_time))
+        ambient_times_before.append(float(batch.get("_ambient_time")))
     await ticks(12)
     for index in animated_landmark_batches.size():
-        assert(float(animated_landmark_batches[index]._ambient_time) > ambient_times_before[index],
+        assert(float(animated_landmark_batches[index].get("_ambient_time")) > ambient_times_before[index],
             "Animated landmark batches must advance their low-frequency ambient timeline")
 
     print("PASS: Frontier dimensions, five regions, biome dressing, five landmarks, resources, iron veins, Keep claim, reachability and deterministic generation")
