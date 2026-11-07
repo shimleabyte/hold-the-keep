@@ -463,3 +463,12 @@ Periodic rival reinforcement is no longer round-robin. Each doctrine has target 
 Each recruit has a distinct paid resource profile. Advanced roles cost additional food, wood, stone and/or iron. If no roster unit can be afforded, the stronghold waits rather than spawning free troops. Initial opening garrisons remain unchanged. The planner derives composition from live guard IDs and introduces no save-schema changes; v17 remains current.
 
 Next dependencies remain physical rival resource logistics and territorial expansion, plus human rendered opening/middle-game acceptance. Do not substitute a larger roster for observed strategic behavior.
+
+
+## Phase 11.6 — Research-gated rival military unlocks (2026-11-07)
+
+Rival technology now changes available army composition. Saboteurs and War Shamans require Military Tier II; Beast Riders and Siege Engines require Military Tier III. Basic infantry, scouts, wolves, archers and shield infantry remain Tier I options. Both the composition planner and payment API enforce the minimum tier, preventing direct-call bypass. Advanced units retain their resource costs and are not spawned for free. The three-unit opening garrison remains unchanged.
+
+Exact-head Godot 4.7 CI passed 64/64 and Campaign Simulation QA passed 1/1 on `dd5b7f41`. Save schema v17 remains unchanged; unlocks are derived from the existing technology tier and recruitment uses living guard composition.
+
+The next high-value gaps are physical rival resource extraction/delivery and rival expansion/supply, after human rendered opening/middle-game acceptance. The current rival labor pool is abstract and does not yet model resource-node depletion, worker travel, or shipments. Do not add secondary settlements before those logistics contracts are specified.

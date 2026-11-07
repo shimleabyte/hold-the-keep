@@ -100,3 +100,10 @@ Existing v17 balances above the new capacity remain intact and production is sus
 Periodic rival reinforcement now uses a target composition rather than incrementing through the roster. The faction doctrine specifies unit shares; the stronghold counts its living garrison and chooses the affordable roster type with the largest deficit against those shares. Ambush favors bandits/scouts/disruption/riders; Fortress favors shieldbearers and archers; Attrition favors wolves, shamans and scouts; Siege prioritizes siege engines with shield/shaman/saboteur support.
 
 Recruitment costs are unit-specific and paid from the rival's own ledger. Higher-impact specialist and siege roles consume additional resources. If no roster type is affordable, no reinforcement spawns. The three-unit opening garrison is preserved as campaign setup; every subsequent periodic reinforcement must be paid. The live garrison is the source of composition truth, so no save fields or schema migration are needed.
+
+
+## Phase 11.6 — Military research unlocks (2026-11-07)
+
+Rival military research now gates advanced recruitment options. Basic infantry, scouts, wolves, archers and shield infantry are available at Tier I. Saboteurs and War Shamans require Tier II; Beast Riders and Siege Engines require Tier III. The recruitment composition planner excludes locked units, and the payment function independently checks the minimum tier. The same unit-specific costs still apply after unlock; research does not provide free troops. Initial three-unit garrisons are unchanged.
+
+The unlock rules read the existing `technology_tier`, and army composition is still derived from living garrison entities. No save fields or schema bump are required.

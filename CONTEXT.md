@@ -669,3 +669,10 @@ Historical v17 balances above the new limit are preserved; no save field is migr
 Periodic rival reinforcements now use faction-specific target compositions and unit-specific recruitment costs. The planner counts the current stronghold garrison, scores available roster units by their composition deficit, and selects the most underrepresented role that the faction can afford. When no unit can be paid, recruitment is skipped. New unit costs range from basic food/wood costs to higher food/wood/stone/iron costs for specialists and siege units.
 
 The three-unit opening garrison remains unchanged. Only periodic paid reinforcements use the doctrine planner. Spawning uses the same validated stronghold perimeter placement and costs are debited only after a unit spawns successfully. Army composition is derived from the living garrison, not serialized; save schema v17 remains unchanged. The existing army/rival regression covers all four faction preferences, deficit filling, unit cost debits and refusing recruitment when the ledger cannot afford any roster unit.
+
+
+### Phase 11.6 — Rival military research unlocks (2026-11-07)
+
+Rival military technology now unlocks actual recruitment options. Basic infantry, scouts, wolves, archers and shield infantry remain available at Tier I. Saboteurs and War Shamans require technology tier 1; Beast Riders and Siege Engines require tier 2. Both composition selection and direct payment enforce the gate, so locked units cannot be selected or purchased early. Advanced units retain their unit-specific costs.
+
+The three-unit opening garrison remains unchanged. Research unlocks options but never grants a free unit. No unlock/composition state is serialized; current technology tier and living garrison are already part of the v17 rival state. Phase 11.6 passed exact-head Godot 4.7 CI 64/64 and Campaign Simulation QA 1/1 on `dd5b7f41`. Human rendered playtesting remains outstanding.
