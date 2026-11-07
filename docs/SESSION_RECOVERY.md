@@ -5,7 +5,7 @@
 **Engine target:** Godot 4.7 only  
 **Recovery PR:** [#186](https://github.com/shimleabyte/hold-the-keep/pull/186), merged 2026-11-07  
 **Baseline branch / SHA:** `main` / `92f169606b5f73555df8052e2c7701f6f68492ec`  
-**Current main after recovery:** `198c31f5f0c7241158e8e56024e1bc69aacf8b17`  
+**Latest verified production-code integration:** `198c31f5f0c7241158e8e56024e1bc69aacf8b17` (PR #186). Documentation-only commits were subsequently added to `main`; the latest pre-checkpoint docs tip was `6fbc63454ae288a5537ea206c575cf6ad2bcc8f9`.  
 **Save schema:** v17  
 **Renderer:** GL Compatibility
 
@@ -35,16 +35,16 @@ The latest session directives used were the gameplay overhaul directive (`Pasted
 ### Remote Git state
 
 - `main` HEAD before recovery: `92f169606b5f73555df8052e2c7701f6f68492ec`.
-- Current `main` after recovery: `198c31f5f0c7241158e8e56024e1bc69aacf8b17` (squash merge PR #186, `fix: disable inactive frontier decoration processing`).
+- Production code integration on `main`: `198c31f5f0c7241158e8e56024e1bc69aacf8b17` (squash merge PR #186, `fix: disable inactive frontier decoration processing`). The docs-only status reconciliation reached `6fbc63454ae288a5537ea206c575cf6ad2bcc8f9` before this follow-up update.
 - Latest main commit: merge PR #185, `feat(art): add restrained Frontier ground dressing and landmark motion`.
 - Immediately preceding integration: PR #184, `feat(animation): integrate the 46-frame player animation system`, merge `e7a53d7279d5eeba5e3704ece7f2b7ea087ffead`.
 - PR #182, the authored civilian role atlas package, is merged at `7dea98194e308ebb380115c873d395e64fffada0`.
 - Branch inventory: **157** remote branches (100 on page 1, 57 on page 2). The temporary recovery head branch is no longer listed after PR merge; no explicit branch-delete action was issued.
-- PR inventory after PR #186: **186** total; **133 merged**, **50 closed unmerged**, **3 open**.
+- PR inventory after PR #181 was closed as superseded: **186** total; **133 merged**, **51 closed unmerged**, **2 open**.
 - Open PRs:
-  - #181 `animation/player-motion-timing` — open, not mergeable; old player-animation proposal. The later 46-frame system is already integrated by #184. Keep under supersession audit; do not merge as-is.
   - #152 `feat/android-armv7-touch-controls-current-main` — Android touch controls; explicitly deferred.
   - #150 `docs/android-armv7-device-qa` — physical Android QA checklist; explicitly deferred.
+- PR #181 was closed unmerged as superseded after source-level reconciliation; see the branch disposition below.
 - No branch was reset, force-pushed or deleted during recovery.
 - The remote GitHub API is the only repository workspace available in this session. No local checkout or local working tree is mounted, so uncommitted local modifications cannot be inspected and the local working tree cannot be certified clean.
 
@@ -121,17 +121,17 @@ Comparisons were performed against baseline `92f1696`. The branch heads below ar
 | Candidate | Remote head | Ahead / behind main | Classification | Recovery decision |
 |---|---|---:|---|---|
 | `fix/p0-gameplay-fairness-current-main` | `4e2ecc4` | 6 / 233 | SUPERSEDED | Directional attack lock/arc and dusk warning are already implemented in current main; current `player_combat` verifies lock direction after turning. Do not merge old player/clock implementation. |
-| `perf/priority-performance-pass` | `a8cb132` | 14 / 139 | IN PROGRESS | Changes span `enemy.gd`, specialist behaviors, FlowField/NavGrid, Village and WorldMap. Review per subsystem against current main; no wholesale cherry-pick. |
-| `perf/p1-skip-road-pathfield-rebuilds` | `4b346f4` | 3 / 144 | IN PROGRESS | Reconcile its FlowField/NavGrid delta and test against the current road/supply invalidation rules. |
-| `perf/p1-specialist-interceptor-scans` | `874d080` | 8 / 156 | IN PROGRESS | Review specialist scan changes against present siege/saboteur behaviors and faction warfare stress; retain only measured improvements. |
-| `perf/p1-village-job-assignment-counters` | `976bcc3` | 3 / 143 | IN PROGRESS | Compare counters against current bounded village scheduling and use performance evidence before adoption. |
-| `perf/p2-bounded-wildlife-selection` | `6ddeacd` | 3 / 144 | SUPERSEDED PENDING DIFF AUDIT | Current Frontier tests already verify deterministic bounded wildlife placement; check for unique performance improvement before closing out. |
+| `perf/priority-performance-pass` | `a8cb132` | 14 / 145 | SUPERSEDED | Its component changes are now represented by later mainline implementations: time-sliced FlowField, road-only supply invalidation, coalesced Village scheduling, bounded wildlife selection and 120 ms specialist scans. `Enemy` target-cache validation also has stricter player/defender identity checks in main. No wholesale cherry-pick. |
+| `perf/p1-skip-road-pathfield-rebuilds` | `4b346f4` | 3 / 150 | SUPERSEDED | Current main has time-sliced FlowField work and regression assertions that road placement/removal invalidates logistics but not navigation/FlowField. The old branch adds no missing required behavior. |
+| `perf/p1-specialist-interceptor-scans` | `874d080` | 8 / 162 | SUPERSEDED | Current Saboteur/Siege controllers already throttle defender/interceptor scans to 120 ms and cache the nearest candidate; `faction_warfare_stress` verifies the throttle. The branch is an older equivalent. |
+| `perf/p1-village-job-assignment-counters` | `976bcc3` | 3 / 149 | SUPERSEDED | Current `Village` coalesces dirty assignment requests, waits for the settle window, counts occupations in one population pass and updates local counters during assignment. The old branch predates this implementation. |
+| `perf/p2-bounded-wildlife-selection` | `6ddeacd` | 3 / 150 | SUPERSEDED | Current `WorldMap` already uses a bounded top-K heap selector and registers accepted wildlife into occupancy; `frontier_world` compares its output with a full-sort reference and verifies deterministic seeds. The old branch lacks later occupancy integration. |
 | `work/worker-resource-awareness` | `c19b20f` | 5 / 138 | SUPERSEDED | Current `scripts/entities/villager_resource_behavior.gd` implements connected-depot stock counting and local, unclaimed iron selection; `tests/frontier_worker_ai.gd` verifies remote ore, local ore, reserved ore, connected storage and sabotage. Do not re-port duplicate behavior. |
 | `work/dev-f-villager-role-architecture` | `bd7d519` | 1 / 263 | IN PROGRESS | The branch extracts nine role components but removes 466 lines from the old Villager host. It is too stale and invasive for a direct merge. Compare current role-owned behavior and extract only still-monolithic roles in small tested slices. |
 | `feat/low-cost-profession-sprite-art` family | `72661f2`, `6323215`, `7faa718` | 20–29 ahead / 137–205 behind | SUPERSEDED | PR #182 now supplies ten individually authored role atlases and protects generator ownership. Do not restore these older sprite-sheet variants; inspect any non-art script delta separately only if a defect is identified. |
 | `feat/phase-08.3-resource-cluster-dressing` | `9a897a1` | 8 / 220 | IN PROGRESS | Overlaps later #185 decoration/tree/rock work. Compare its unique artwork against current integrated assets; no wholesale merge. |
 | `work/dev-e-save-validator-extraction` | `ecb06b3` | 6 / 308 | SUPERSEDED | Main already contains a later 975-line SaveValidator and a 283-line SaveSystem integration with dedicated CI tests; older 747-line branch validator is not a safe replacement. |
-| `animation/player-motion-timing` / PR #181 | `e63c1ec` | 28 / 16 | SUPERSEDED PENDING UNIQUE-DIFF AUDIT | Current main has the later 46-frame atlas and expanded clips through #184. PR #181 is stale and unmergeable; inspect unique test/workflow/docs changes, then close only when no useful delta remains. |
+| `animation/player-motion-timing` / PR #181 | `e63c1ec` | 28 / 16 | SUPERSEDED / CLOSED UNMERGED | Source-level comparison found the player SVG, Player integration, animation direction doc, CI workflow and major pose tests byte-identical to main. The remaining Hurt test expected frame 20 and busy-state locking; main intentionally tests Hurt from frame 42 without locking the action state. PR #181 was closed 2026-11-07; historical branch retained. |
 | Android PR #150 / #152 | Existing open heads | N/A | BLOCKED / DEFERRED | Do not mix Android controls or physical-device QA into the desktop-first recovery. |
 
 No ref deletion, force update or branch reset is authorized by this recovery. The branch list is a retention inventory, not a request to delete historical sources.
@@ -140,7 +140,7 @@ No ref deletion, force update or branch reset is authorized by this recovery. Th
 
 1. Perform an interactive desktop opening/middle-game playtest; this remains the highest-priority acceptance gap and cannot be replaced by automated simulation.
 2. Build the rival visible-workforce/logistics vertical slice with resource reservation, pathing, local storage and save semantics before secondary settlement expansion.
-3. Reconcile PR #181's residual diff with the later #184 atlas and close it only after proving it has no unique required work.
+3. PR #181 residual-diff reconciliation is complete; it was closed unmerged as superseded. Retain the historical branch for reference.
 4. Inspect civilian profession work loops and enemy/faction animation families in actual gameplay; extend animation architecture without moving combat/work timing out of gameplay systems.
 5. Produce faction silhouettes, buildings/construction/damage states, biome resources/wildlife/props, combat effects and HUD/map icons in the existing Grim Medieval Folklore Fantasy direction.
 6. Profile old performance branches against current diagnostic baselines; cherry-pick only changes with a demonstrated improvement.
@@ -166,9 +166,9 @@ No ref deletion, force update or branch reset is authorized by this recovery. Th
 - Changed file: `scripts/entities/frontier_decoration.gd`; `_ready()` reapplies `set_process(_ambient_enabled)` after scene entry. The assertion in `tests/frontier_world.gd` was not weakened or changed.
 - Exact PR-head Godot 4.7 CI: [run #42387251192](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387251192), **65/65 jobs passed**, including `Godot 4.7 · frontier_world`.
 - Exact PR-head Campaign Simulation QA: [run #42387251211](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387251211), success. Rendered World QA: [run #42387251238](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387251238), success.
-- Main push after merge: Godot CI [run #42387559533](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387559533) was queued at the last observation; Campaign Simulation QA [run #42387559467](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387559467) and Rendered World QA [run #42387559524](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387559524) passed. Recheck main push CI before closing this checkpoint.
+- Main push after merge: Godot CI [run #42387559533](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387559533) passed; Campaign Simulation QA [run #42387559467](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387559467) and Rendered World QA [run #42387559524](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387559524) passed. Later main docs-tip Godot CI [run #42388208398](https://github.com/shimleabyte/hold-the-keep/actions/runs/42388208398) also passed **65/65**.
 - Inspected the 37-frame player sprite playblast and 1024×1024 Frontier seed-1337 first/repeat captures. The two map screenshots were pixel-identical. Player clips render, but the sprite-only preview shows modest silhouette changes and does not establish live gameplay acceptance. Landmark animation still needs a live scene preview.
 - Miner resource-awareness branch `c19b20f` is superseded by `scripts/entities/villager_resource_behavior.gd`; current `tests/frontier_worker_ai.gd` covers inaccessible ore, local ore, reserved ore, connected stockpiles and sabotage.
-- PR #181 remains open and unmergeable pending residual-diff reconciliation. Android PRs #150/#152 remain deferred. The temporary recovery head is no longer listed after merge; no explicit branch-delete command was issued.
+- PR #181 was closed unmerged as superseded after its residual source diff was reconciled against #184; the historical branch remains. Android PRs #150/#152 remain the only open PRs and are deferred. The temporary recovery head is no longer listed after merge; no explicit branch-delete command was issued.
 - No local checkout, local working tree, interactive desktop session or target hardware was available. Do not claim human gameplay or target-PC performance acceptance.
-- **Next action:** recheck main push CI #42387559533, then audit PR #181 against #184 and close it only after its remaining changes are confirmed superseded or separately preserved.
+- Focused source audit of the old P1/P2 performance branches found their behavior already superseded in current main (details in the branch matrix above). The next feature dependency remains rival visible workforce/logistics; first define resource reservations, pathing, local storage, node depletion and save semantics as one testable vertical slice. Human desktop gameplay acceptance remains blocked by the missing interactive desktop runtime.
