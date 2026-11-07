@@ -21,7 +21,11 @@ on:
       - main
     paths:
       - ".github/workflows/role-sprite-visual-qa.yml"
-      - "assets/sprites/villager_builder.svg"
+      - "assets/sprites/villager_*.svg"
+      - "tools/gen_assets.py"
+      - "tools/check_role_sprite_reproducibility.py"
+      - "tests/role_sprite_identity.gd"
+      - "tests/shot_villager_sprite_atlas.gd"
       - "assets/sprites/enemy_archer.svg"
       - "assets/sprites/enemy_brute.svg"
       - "scripts/entities/villager.gd"
@@ -71,7 +75,7 @@ jobs:
           mkdir -p /tmp/hold-the-keep-villager-visual-qa
           godot --headless --path . --script res://tests/shot_villager_sprite_atlas.gd
 
-      - name: Render the three role sprites in gameplay
+      - name: Render all civilian professions in gameplay
         env:
           HTK_AUTO_START_GAME: "1"
           LIBGL_ALWAYS_SOFTWARE: "1"
