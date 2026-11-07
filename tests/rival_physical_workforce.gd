@@ -146,7 +146,8 @@ func _initialize() -> void:
     var snapshot: Dictionary = save_system.call("collect", main_scene)
     _check(bool(save_system.call("_valid_save", snapshot)),
         "Physical worker cargo must remain compatible with additive v17 rival civilization saves")
-    _check(int(save_system.get("VERSION")) == 17,
+    var save_version: int = int(save_system.get_script().get_script_constant_map().get("VERSION", 0))
+    _check(save_version == 17,
         "Rival physical worker state must not require a save schema bump")
 
     main_scene.queue_free()
