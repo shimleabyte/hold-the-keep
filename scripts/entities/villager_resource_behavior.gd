@@ -53,12 +53,49 @@ func tick(delta: float) -> bool:
     return false
 
 
+## Count the central inventory and usable connected Frontier depot stock.
+## Disconnected or sabotaged depots must not suppress local iron production.
+func _resource_stock_amount(kind: String) -> int:
+    var total := int(Inventory.get_amount(kind))
+    if not WorldConfig.is_frontier_profile():
+        return total
+    var supply = _villager.get_tree().get_first_node_in_group("supply_network")
+    if supply == null:
+        return total
+    for depot in _villager.get_tree().get_nodes_in_group("depots"):
+        if not is_instance_valid(depot) or String(depot.id) == "keep":
+            continue
+        if not supply.is_depot_connected(depot) or _villager._facility_sabotaged(depot):
+            continue
+        if depot.has_method("stockpile_amount"):
+            total += int(depot.stockpile_amount(kind))
+    return total
+
+
+## Prefer iron only when a live, unclaimed ore node is inside this miner's
+## actual work area. A remote or reserved vein must not strand the miner.
 func _mine_kind() -> String:
-    if Tech.has_flag("iron_mining") and Inventory.get_amount("iron") <= Inventory.get_amount("stone") * 0.5:
-        for resource in _villager.get_tree().get_nodes_in_group("harvestable"):
-            if resource.yield_kind == "iron":
-                return "iron"
-    return "stone"
+    if not Tech.has_flag("iron_mining"):
+        return "stone"
+    var has_local_iron := false
+    for resource in _villager.get_tree().get_nodes_in_group("harvestable"):
+        if not is_instance_valid(resource) or String(resource.yield_kind) != "iron":
+            continue
+        if not resource.is_available(_villager):
+            continue
+        var in_work_area: bool = (
+            _villager._is_in_workplace_radius(resource)
+            if _villager.has_valid_workplace()
+            else _villager._is_in_gather_radius(resource)
+        )
+        if in_work_area:
+            has_local_iron = true
+            break
+    if not has_local_iron:
+        return "stone"
+    var iron_stock := _resource_stock_amount("iron")
+    var stone_stock := _resource_stock_amount("stone")
+    return "iron" if iron_stock <= stone_stock * 0.5 else "stone"
 
 
 func _tick_farmer(delta: float) -> void:
