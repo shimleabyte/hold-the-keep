@@ -192,7 +192,6 @@ func is_busy() -> bool:
         or clip == "work"
         or clip == "dash"
         or clip == "rally"
-        or clip == "hurt"
         or clip == "death"
     ) and not finished
 
