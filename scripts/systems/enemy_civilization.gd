@@ -149,6 +149,17 @@ func advance(delta: float) -> void:
         return
     _tick_physical_workers(delta)
     _tick_accumulator += clampf(delta, 0.0, 5.0)
+    var ticks: int = 0
+    while _tick_accumulator >= 1.0 and ticks < 5:
+        _tick_accumulator -= 1.0
+        ticks += 1
+        _restore_pending_structures()
+        var labor: Dictionary = labor_allocation()
+        _produce_resources(labor)
+        _sync_physical_workers(labor)
+        _advance_construction(1.0)
+        _advance_research(1.0)
+        _try_start_construction()
 
 
 func _tick_physical_workers(delta: float) -> void:
@@ -161,17 +172,6 @@ func _tick_physical_workers(delta: float) -> void:
         if worker.get("civilization") != self:
             continue
         worker.call("tick", frame_delta)
-    var ticks: int = 0
-    while _tick_accumulator >= 1.0 and ticks < 5:
-        _tick_accumulator -= 1.0
-        ticks += 1
-        _restore_pending_structures()
-        var labor: Dictionary = labor_allocation()
-        _produce_resources(labor)
-        _sync_physical_workers(labor)
-        _advance_construction(1.0)
-        _advance_research(1.0)
-        _try_start_construction()
 
 
 static func workforce_for_garrison(garrison_count: int) -> int:
@@ -317,6 +317,11 @@ func deliver_resource(kind: String, amount: int) -> int:
 
 func _sync_physical_workers(labor: Dictionary) -> void:
     if owner_keep == null or not is_instance_valid(owner_keep) or not active:
+        return
+    # Test/restore simulations may instantiate temporary civilization models for
+    # doctrine calculations. Only the civilization actually attached to this
+    # stronghold is allowed to create visible workers.
+    if owner_keep.get("civilization") != self:
         return
     if _main_scene == null or not is_instance_valid(_main_scene):
         _main_scene = owner_keep.get_tree().get_first_node_in_group("main")
@@ -619,6 +624,11 @@ func _spawn_structure(id: String, anchor: Vector2i, saved_hp: int = -1) -> bool:
 
 func on_structure_destroyed(structure: EnemySettlementStructure) -> void:
     structures.erase(structure)
+    for worker: Node in owner_keep.get_tree().get_nodes_in_group("enemy_economic_workers"):
+        if not is_instance_valid(worker) or worker.get("civilization") != self:
+            continue
+        if worker.get("workplace") == structure:
+            worker.call("recall_to_keep")
     # A destroyed priority building becomes eligible for reconstruction. If another
     # project is already active, its completion will reconcile the missing structure.
     _reconcile_build_order_index()
