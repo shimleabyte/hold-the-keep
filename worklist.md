@@ -50,6 +50,24 @@ Implemented in PR #182:
 
 Execution order: enemy/faction identity → architecture → terrain/biomes/resources/props → combat/UI art → full rendered review. Keep workstreams isolated and merge only after exact-head Godot 4.7 validation.
 
+### Player animation and protagonist motion — PR #181 (active)
+
+**Branch:** `animation/player-motion-timing`  
+**PR:** [#181](https://github.com/shimleabyte/hold-the-keep/pull/181)  
+**Specification:** `docs/ANIMATION_DIRECTION.md`
+
+- [x] Separate the player's 46-frame atlas from shared 22-frame civilian/enemy sheets.
+- [x] Add dedicated pick/axe harvest and heavy Cleave pose ranges.
+- [x] Add six-pose Dash/Rally and four-pose Hurt/Death-preview sequences.
+- [x] Synchronize light/heavy impact frames to existing gameplay event markers.
+- [x] Preserve harvest yield/timing, damage, range, cooldowns, buffs and immediate respawn rules.
+- [x] Add action timeline, frame identity, foot-contact and attack-to-hurt interruption regressions.
+- [x] Produce sprite-only Godot playblast captures with exact light/heavy impact samples.
+- [ ] Pass exact-head 46-frame Godot 4.7 tests and inspect the new Dash/Rally/Hurt/Death contact sheet.
+- [ ] Refine locomotion/cape/weapon overlap and inspect all three facing rows before broad enemy/faction animation production.
+
+This is a presentation package. Do not alter economy, enemy AI, save schema, harvest yields, combat balance, civilian autonomy or the civilian art contract. Three facing rows are not eight-direction animation.
+
 ### Phase 11 acceptance still open
 
 - Human rendered/playable review of a Classic rival settlement and expanded Frontier/Expedition campaigns.
