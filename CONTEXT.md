@@ -694,3 +694,10 @@ The three-unit opening garrison remains unchanged. Only periodic paid reinforcem
 Rival military technology now unlocks actual recruitment options. Basic infantry, scouts, wolves, archers and shield infantry remain available at Tier I. Saboteurs and War Shamans require technology tier 1; Beast Riders and Siege Engines require tier 2. Both composition selection and direct payment enforce the gate, so locked units cannot be selected or purchased early. Advanced units retain their unit-specific costs.
 
 The three-unit opening garrison remains unchanged. Research unlocks options but never grants a free unit. No unlock/composition state is serialized; current technology tier and living garrison are already part of the v17 rival state. Phase 11.6 passed exact-head Godot 4.7 CI 64/64 and Campaign Simulation QA 1/1 on `dd5b7f41`. Human rendered playtesting remains outstanding.
+
+
+### Phase 11.3.1 — Visible rival workforce (integrated 2026-11-08)
+
+Completed Lumber Camps, Farms, Quarries and Forges now staff runtime-only rival workers from the existing bounded civilization workforce. Workers reserve and harvest actual world resource nodes where applicable, perform farm work cycles, move with NavGrid and haul cargo to their owning stronghold. Their work radius is bounded to their own region; player-owned and contested territory is excluded. Worker lifecycle is owned by EnemyCivilization, and cargo is reconciled during export without a save migration. Save schema v17 remains unchanged.
+
+PR #187 is merged to `main` at `dc060785b54b220a1b63d3149daa24fb59751b96`. The post-merge Godot 4.7 matrix passed 66/66 and Campaign Simulation QA passed. The integrated army/rival, rival physical workforce, and rival persistence tests all passed on the merge commit. Dedicated rendered/desktop acceptance of the rival worker visual loop remains outstanding. Next dependencies are local depots and road-connected shipments; outposts and secondary settlements remain deferred.
