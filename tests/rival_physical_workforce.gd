@@ -89,7 +89,7 @@ func _initialize() -> void:
     for step in range(1200):
         if not is_instance_valid(woodcutter):
             break
-        woodcutter.call("tick", 0.1)
+        civilization.call("advance", 0.1)
 
         var target: Variant = woodcutter.get("_target")
         if target != null and is_instance_valid(target):
