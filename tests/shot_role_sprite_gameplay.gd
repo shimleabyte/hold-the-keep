@@ -1,5 +1,5 @@
 extends SceneTree
-## Captures Builder, Archer and Brute together in the real game viewport.
+## Captures the ten civilian professions together in the real game viewport.
 ## Run with HTK_AUTO_START_GAME=1 under desktop GL or Xvfb + Mesa.
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
@@ -32,6 +32,17 @@ func _initialize() -> void:
         _fail("Gameplay did not finish initializing; ensure HTK_AUTO_START_GAME=1")
         return
 
+    # Remove transient stage/tutorial announcements from the review capture only.
+    # The running game HUD is not modified.
+    for child in main.get_children():
+        if child is CanvasLayer:
+            var banner = child.get("_banner")
+            if banner is CanvasItem:
+                banner.hide()
+            var message_bubble = child.get("_msg_bubble")
+            if message_bubble is CanvasItem:
+                message_bubble.hide()
+
     var clock = root.get_node_or_null("GameClock")
     if clock != null:
         clock.set_process(false)
@@ -42,44 +53,45 @@ func _initialize() -> void:
     main.player.camera.position_smoothing_enabled = false
     main.player.camera.zoom = Vector2.ONE
 
-    var builder = main.village.spawn_villager(main.player.global_position + Vector2(-32, 0))
-    builder.job = "builder"
-    builder.set_process(false)
-    builder.set_physics_process(false)
-    builder.anim.view = SpriteAnim.SIDE
-    builder.anim.flip = false
-    builder.anim.play("work", true)
-    builder.anim.manual_progress = 0.5
-    builder.queue_redraw()
+    var roles: Array[String] = [
+        "woodcutter", "miner", "farmer", "builder", "blacksmith",
+        "hunter", "scout", "healer", "soldier", ""
+    ]
+    var work_roles := ["woodcutter", "miner", "farmer", "builder", "blacksmith"]
+    var spawned := 0
+    for index in roles.size():
+        var column := index % 5
+        var row := int(index / 5)
+        var offset := Vector2((column - 2) * 58.0, -76.0 + row * 42.0)
+        var villager = main.village.spawn_villager(main.player.global_position + offset)
+        if villager == null:
+            _fail("Could not spawn civilian role: " + roles[index])
+            return
+        villager.job = roles[index]
+        villager.set_process(false)
+        villager.set_physics_process(false)
+        villager.anim.view = index % 3
+        villager.anim.flip = (index % 2) == 1
+        villager.anim.work_style = roles[index]
+        if work_roles.has(roles[index]):
+            villager.anim.play("work", true)
+            villager.anim.manual_progress = 0.5
+        elif roles[index] == "soldier":
+            villager.anim.play("attack", true)
+            villager.anim.manual_progress = 0.5
+        else:
+            villager.anim.play("idle", true)
+            villager.anim.manual_progress = 0.5
+        villager.queue_redraw()
+        spawned += 1
 
-    main.spawner.restore_enemy({
-        "id": "archer",
-        "x": main.player.global_position.x + 16,
-        "y": main.player.global_position.y - 4,
-        "hp": 28
-    })
-    main.spawner.restore_enemy({
-        "id": "brute",
-        "x": main.player.global_position.x + 54,
-        "y": main.player.global_position.y + 2,
-        "hp": 110
-    })
-
-    var found := {"archer": false, "brute": false}
-    for enemy in get_nodes_in_group("enemies"):
-        if enemy.id != "archer" and enemy.id != "brute":
-            continue
-        enemy.set_process(false)
-        enemy.set_physics_process(false)
-        enemy.anim.play("attack", true)
-        enemy.anim.manual_progress = 0.55
-        enemy.anim.face(Vector2.LEFT)
-        enemy.queue_redraw()
-        found[String(enemy.id)] = true
-
-    if not bool(found["archer"]) or not bool(found["brute"]):
-        _fail("Could not spawn both dedicated enemy roles in the gameplay scene")
+    if spawned != roles.size():
+        _fail("Not all ten civilian professions were spawned")
         return
+
+    # spawn_villager() schedules a quota-based auto-assignment pass. Freeze that
+    # scheduler for this visual-only fixture so it cannot overwrite the ten roles.
+    main.village.set_process(false)
 
     for _frame in 4:
         await process_frame
@@ -98,21 +110,34 @@ func _initialize() -> void:
         CAPTURE_SIZE.x,
         CAPTURE_SIZE.y
     ))
-    var base_path := "%s/role-sprites-gameplay.png" % OUTPUT_DIR
+    var base_path := "%s/all-civilian-roles-gameplay.png" % OUTPUT_DIR
     var save_error := output.save_png(base_path)
     if save_error != OK:
         _fail("Could not save gameplay screenshot")
         return
 
+    var two_x := output.duplicate()
+    two_x.resize(CAPTURE_SIZE.x * 2, CAPTURE_SIZE.y * 2, Image.INTERPOLATE_NEAREST)
+    if two_x.save_png("%s/all-civilian-roles-gameplay-1280x720.png" % OUTPUT_DIR) != OK:
+        _fail("Could not save the 1280x720 gameplay screenshot")
+        return
+
+    var two_half_x := output.duplicate()
+    two_half_x.resize(roundi(CAPTURE_SIZE.x * 2.5), roundi(CAPTURE_SIZE.y * 2.5), Image.INTERPOLATE_NEAREST)
+    if two_half_x.save_png("%s/all-civilian-roles-gameplay-1600x900.png" % OUTPUT_DIR) != OK:
+        _fail("Could not save the 1600x900 gameplay screenshot")
+        return
+
     var enlarged := output.duplicate()
     enlarged.resize(CAPTURE_SIZE.x * 3, CAPTURE_SIZE.y * 3, Image.INTERPOLATE_NEAREST)
-    var enlarged_error: Error = enlarged.save_png("%s/role-sprites-gameplay-3x.png" % OUTPUT_DIR)
-    if enlarged_error != OK:
-        _fail("Could not save enlarged gameplay screenshot")
+    if enlarged.save_png("%s/all-civilian-roles-gameplay-1920x1080.png" % OUTPUT_DIR) != OK:
+        _fail("Could not save the 1920x1080 gameplay screenshot")
         return
 
     print("ROLE_VISUAL_QA_CAPTURE ", base_path)
-    print("ROLE_VISUAL_QA_CAPTURE_3X ", "%s/role-sprites-gameplay-3x.png" % OUTPUT_DIR)
-    print("ROLE_VISUAL_QA_ROLES builder=1 archer=1 brute=1")
-    print("PASS: role-specific sprites rendered in the real gameplay viewport")
+    print("ROLE_VISUAL_QA_CAPTURE_1280x720 ", "%s/all-civilian-roles-gameplay-1280x720.png" % OUTPUT_DIR)
+    print("ROLE_VISUAL_QA_CAPTURE_1600x900 ", "%s/all-civilian-roles-gameplay-1600x900.png" % OUTPUT_DIR)
+    print("ROLE_VISUAL_QA_CAPTURE_1920x1080 ", "%s/all-civilian-roles-gameplay-1920x1080.png" % OUTPUT_DIR)
+    print("ROLE_VISUAL_QA_ROLES civilian_professions=10")
+    print("PASS: all ten civilian professions rendered in the real gameplay viewport")
     quit(0)

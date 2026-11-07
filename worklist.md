@@ -1,5 +1,6 @@
 # Hold the Keep — Parallel Developer Worklist
 
+**Current implementation baseline:** Phase 11.1 production code is integrated at `10747392ecdaebc6b7490b43fb82cf2cfa389468` (2026-11-07); current main's pre-audit tip was docs-only `f9a6a443db0f2bb8593f77a8ac93f1d3b834f95d`. See [docs/BRANCH_REGISTRY.md](docs/BRANCH_REGISTRY.md) for the current 158-branch / 182-PR inventory, deferred work and retained candidates.  
 ## Gameplay-overhaul status — 2026-11-07
 
 The audit baseline was remote `main` SHA `931cca8e065976da89a33d40ef42c5f70bd6b308`. Read [docs/GAMEPLAY_AUDIT.md](docs/GAMEPLAY_AUDIT.md) before assigning new gameplay work. The first implementation slice (Phase 11.2) makes the `ambush`, `fortress`, `attrition` and `siege` doctrines choose different rival building priorities, while retaining identical costs, finite ledgers and save v17. Regression coverage is in `army_command_and_rival_civilization`.
@@ -25,19 +26,29 @@ Phase 11's initial rival-civilization and army-command implementation is integra
 - **PR #166/#167** are closed as superseded by #177. **PR #169** is closed without merge because it conflicts with the player-control/civilian-autonomy contract.
 - PR #178's exact-head validation passed **63/63 Godot 4.7 CI jobs** (run #42316264733) and Campaign Simulation QA (run #42316264766). Post-merge Campaign Simulation QA passed on production code HEAD (run #42316677164). The next mainline Godot run on docs-only HEAD `f9a6a443` passed (run #42316888270); later registry/status documentation commits must be checked against their own push run.
 
-## Active visual overhaul — Phase 08.8
+## Active visual overhaul — Phase 08.9
 
-**Branch:** `art/phase-08.8-art-direction-lock` (based on current `main`). This is a separate visual workstream; no gameplay systems, save schema, AI, economy or campaign behavior are intentionally changed.
+**Foundation:** PR #179 merged to `main` at `27740a72`.  
+**Active package:** PR #182 — [`art/phase-08.9-villager-character-family`](https://github.com/shimleabyte/hold-the-keep/tree/art/phase-08.9-villager-character-family).  
+**Validated code head:** `8dc9b8e2a25f`.
 
-Committed on this branch:
-- `docs/ART_DIRECTION.md` — authoritative material, palette, silhouette, animation, architecture, biome, effects, icon and acceptance specification.
-- `docs/ART_REFERENCE_BOARD.md` — historical medieval construction/clothing and relevant game-art production references.
-- `tools/gen_assets.py` — the legacy generic 20×20 renderer no longer emits the player and refuses to overwrite the hand-authored 24×28 player atlas.
-- `tests/role_sprite_identity.gd` — checks the player atlas dimensions, distinct pixel data and generator ownership.
+Completed in PR #179:
+- `docs/ART_DIRECTION.md` — authoritative visual bible covering material palettes, silhouettes, animation, architecture, biomes, effects, icons, lighting and acceptance gates.
+- `docs/ART_REFERENCE_BOARD.md` — historical construction/clothing/armor and pixel-art references.
+- Legacy generator protection for the hand-authored 24×28 blue-mantled player atlas.
 
-**Not yet completed:** complete asset inventory; authored character/faction sheets; building and biome rework; VFX and icon redesign; Godot-rendered preview sheets; multi-resolution screenshots; full Godot 4.7 CI passed 64/64 on PR #179 (run #42320928929), deterministic Frontier Rendered World QA passed (run #42320928830); human desktop review. Existing production artwork remains untouched outside the player-generator safety change. Do not describe this overhaul as complete until its visual acceptance evidence exists.
+Implemented in PR #182:
+- Replaced the ten civilian role atlases with authored 440×60 SVG sheets (20×20 frames, 22 frames × 3 directional rows).
+- Profession-specific silhouettes, clothing mass, headwear, belts/gear, work tools and seven animation states.
+- Removed the civilian atlases from the generic humanoid generator and registered all ten as protected hand-authored sources.
+- SVG/XML/grid validation, generator-ownership checks, animation-frame identity regression and byte-reproducibility checks for the remaining generator-owned Archer/Brute sheets.
+- Godot-native 10-role sprite contact sheet and gameplay review captures at 1280×720, 1600×900 and 1920×1080.
 
-Execution order is art inventory/ownership, character family and animation, faction combinations, architecture, biomes/resources/props, combat/UI art, then in-game render QA. Keep each package isolated and merge only after the exact head's blocking checks pass.
+**Exact-head validation:** Godot 4.7 CI passed 63/63 jobs (run #42323335962); Role Sprite Visual QA passed (run #42323335969); deterministic Frontier Rendered World QA passed (run #42323335991). The gameplay capture was visually inspected after correcting the test fixture's auto-job-assignment interference.
+
+**Still open:** faction-specific enemy/military art, buildings and construction/damage states, biome terrain/resource/wildlife/props, VFX, HUD/map icons, whole-world multi-resolution screenshots and target-desktop performance review. Existing gameplay/AI/economy/collision/save behavior remains unchanged. Do not mark the full visual overhaul complete until those packages and the final human review exist.
+
+Execution order: enemy/faction identity → architecture → terrain/biomes/resources/props → combat/UI art → full rendered review. Keep workstreams isolated and merge only after exact-head Godot 4.7 validation.
 
 ### Phase 11 acceptance still open
 
