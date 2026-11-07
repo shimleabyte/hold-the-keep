@@ -1,6 +1,6 @@
 # Phase 08 — Visual and Audio Identity
 
-**Status:** Phase 08.2–08.7 production slices remain integrated. The original biome, faction, building, combat-feedback and audio work is not being discarded. Phase 08 remains open for rendered screenshot review and manual audio listening/level-balance QA. A new additive overhaul is in progress on `art/phase-08.8-art-direction-lock`; it has established the authoritative art bible/reference board and added a regression guard for the hand-authored player atlas. No complete character/building/biome replacement is claimed yet.
+**Status:** Phase 08.2–08.7 production slices remain integrated. Stage A art-direction foundation merged through PR #179 at `27740a72`. Stage B civilian character atlases are implemented on `art/phase-08.9-villager-character-family` and under review in PR #182. The remaining enemy/faction, building, environment, VFX and icon packages are still open. Preserve the existing biome/faction/building gameplay integration rather than discarding it.
 **Art direction:** [ART_DIRECTION.md](../ART_DIRECTION.md) is the authoritative production specification. [World & Gameplay Design Bible](../WORLD_AND_GAMEPLAY_BIBLE.md) remains the world/lore source of truth; [ART_REFERENCE_BOARD.md](../ART_REFERENCE_BOARD.md) records historical and game-art references.
 **Dependency:** Stable gameplay contracts from Phases 02, 04, 05, 06 and current UI layouts from Phase 10.
 **Engine target:** Godot 4.7 only.
@@ -17,26 +17,34 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 - Keep generated/procedural SVG assets reproducible; hand-authored replacements must preserve import paths or update references atomically.
 - Establish preview sheets and in-engine screenshot baselines so visual changes are reviewed rather than inferred from source files.
 
-## 08.8 — Complete visual asset overhaul (active)
+## 08.8 — Art-direction foundation (merged)
 
-Branch: `art/phase-08.8-art-direction-lock`
+**Merged:** PR #179 at [`27740a72e187`](https://github.com/shimleabyte/hold-the-keep/commit/27740a72e187487ea8fc58a1a08680836cc8e22e).
 
-The overhaul is additive to the shipped Phase 08 work. It replaces generic construction at its source while preserving resource IDs, gameplay behavior, collision footprints, animation IDs, Y-sort origins and save data.
+- [x] Establish `docs/ART_DIRECTION.md` as the authoritative grim medieval folklore art bible, including material palettes, biome/faction language, silhouettes, animation, architecture, lighting, pixel grid and visual gates.
+- [x] Establish `docs/ART_REFERENCE_BOARD.md` with historical medieval construction, clothing/armor, tools and relevant pixel-art production references.
+- [x] Protect the hand-authored 24×28 blue-mantled player atlas from the legacy 20×20 humanoid generator.
+- [x] Add a player frame-size and generator-ownership regression.
+- [x] Exact PR #179 head passed Godot 4.7 64/64 checks and deterministic Frontier Rendered World QA.
 
-- [x] Establish `docs/ART_DIRECTION.md` with material palettes, biome/faction grammar, role silhouettes, architecture, lighting, pixel-grid rules, rendering dimensions and visual acceptance gates.
-- [x] Establish `docs/ART_REFERENCE_BOARD.md` with historical construction, clothing/armor, pixel-art production and top-down atmosphere references.
-- [x] Identify the legacy generator's unsafe player overwrite: it previously emitted a 20×20 generic player sheet despite the integrated protagonist using 24×28 frames.
-- [x] Exclude the hand-authored player from the legacy renderer and add an explicit generator write guard.
-- [x] Extend `role_sprite_identity` to check player frame size, distinction from the generic soldier sheet and generator ownership. Exact-head Godot 4.7 CI passed 64/64 checks on PR #179 (run #42320928929); the deterministic Frontier Rendered World QA also passed (run #42320928830).
-- [ ] Inventory every current SVG, generator owner, resource reference, atlas size, collision/footprint dependency and actual screen usage.
-- [ ] Redesign the complete player/villager/enemy family with separate authored silhouettes and full directional animation. Do not treat color, hat or held tool overlays as complete role identity.
-- [ ] Redesign faction/archetype combinations, all shipped building silhouettes and construction/damage states.
-- [ ] Redesign biome terrain, vegetation, resources, wildlife, props, combat effects and HUD/map icon families.
-- [ ] Add reproducible source/generator ownership for new assets without allowing a legacy bulk generator to overwrite hand-authored work.
-- [ ] Produce Godot 4.7 rendered sheets and in-game captures at 1280×720, 1600×900 and 1920×1080. Review native logical scale and 2× output.
-- [ ] Run the complete blocking regression matrix and record target-desktop performance separately from CI. Human desktop visual acceptance remains a separate gate.
+## 08.9 — Civilian character family (PR #182 active)
 
-**Current limitation:** only the art bible, reference board, generator safety guard and test assertions are committed on this branch. Existing shipped art remains in use until replacement packages are implemented and validated.
+**Branch:** `art/phase-08.9-villager-character-family`  
+**PR:** [#182](https://github.com/shimleabyte/hold-the-keep/pull/182)  
+**Current validated code head:** `8dc9b8e2a25f`
+
+- [x] Replace all ten civilian atlases: labourer, woodcutter, miner, farmer, builder, hunter, scout, healer, blacksmith and soldier.
+- [x] Preserve 440×60 atlas dimensions, 20×20 frames, 22 animation frames, three directional rows and existing texture paths/foot pivots.
+- [x] Give each profession distinct body silhouette, clothing mass, headwear, equipment placement and signature tool/gear; include idle, walk, run, attack, work, hurt and death frames.
+- [x] Remove civilian atlas output from the legacy generic humanoid renderer and protect all ten hand-authored SVG sources.
+- [x] Add XML/integer-grid/SVG ownership validation and byte-reproducibility checks for the remaining generator-owned enemy Archer/Brute sheets.
+- [x] Add a Godot-native 10-role atlas contact sheet and real gameplay capture at 1280×720, 1600×900 and 1920×1080.
+- [x] Exact-head Godot 4.7 CI passed 63/63 jobs (run #42323335962); Role Sprite Visual QA passed (run #42323335969); deterministic Frontier Rendered World QA passed (run #42323335991).
+- [ ] Merge PR #182 after final exact-head checks remain green.
+- [ ] Manually review all civilian animation clips at native desktop scale and confirm profession recognition during actual work/combat.
+- [ ] Continue with faction-specific military units and enemy archetypes; then buildings/construction/damage, biomes/resources/wildlife/props, combat effects, HUD/map icons and final visual-performance review.
+
+**Remaining Phase 08 scope:** enemy/faction identity, all building silhouettes and states, terrain/biome assets, resource nodes and wildlife, environmental props, VFX, UI icon families, whole-world rendered review and target-desktop performance. The overhaul is not complete while those groups remain generic or unreviewed.
 
 ## 08.2 — Terrain and regional identity
 - [x] Give Frontier biomes distinct ground textures in a dedicated seven-cell atlas (five land biomes, alternate Hearthland ground and water), preserving tile IDs, 16px tile size and water collision.
