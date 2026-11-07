@@ -78,6 +78,10 @@ func _initialize() -> void:
         _fail("Not all ten civilian professions were spawned")
         return
 
+    # spawn_villager() schedules a quota-based auto-assignment pass. Freeze that
+    # scheduler for this visual-only fixture so it cannot overwrite the ten roles.
+    main.village.set_process(false)
+
     for _frame in 4:
         await process_frame
     await RenderingServer.frame_post_draw
