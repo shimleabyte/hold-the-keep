@@ -20,7 +20,7 @@ const CARRY_CAPACITY := 12
 const FARM_CYCLE_SECONDS := 4.8
 const FARM_CYCLE_YIELD := 3
 const TARGET_RETRY_SECONDS := 2.5
-const MAX_PATH_CHECKS := 12
+const MAX_PATH_CHECKS := 24
 const RESOURCE_WORK_SECONDS := {
     "wood": 3.0,
     "stone": 4.8,
@@ -375,8 +375,17 @@ func _find_resource_target() -> bool:
 
 
 func _resource_cell_is_available(cell: Vector2i, node: Node2D) -> bool:
-    var max_distance := float(owner_keep.get("claim_radius")) + 6.0
-    if owner_keep.position.distance_to(node.position) > max_distance * float(WorldConfig.tile_size):
+    # Workers operate inside their stronghold's region, not only inside the
+    # small construction/defence claim radius. Some map seeds place the keep
+    # on a resource-poor edge of its region, so allow a bounded regional haul.
+    var owner_region := String(owner_keep.get("region_id"))
+    if String(world.region_id(cell)) != owner_region:
+        return false
+    var local_work_radius := maxf(
+        float(owner_keep.get("claim_radius")) + 6.0,
+        float(owner_keep.get("claim_radius")) * 4.0
+    )
+    if owner_keep.position.distance_to(node.position) > local_work_radius * float(WorldConfig.tile_size):
         return false
     if territory != null and is_instance_valid(territory):
         var ownership := String(territory.call("owner_at", cell))
