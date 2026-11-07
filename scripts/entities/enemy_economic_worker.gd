@@ -120,7 +120,9 @@ func tick(delta: float) -> void:
         State.TO_KEEP:
             _tick_travel(delta, State.WAITING_STORAGE)
         State.WAITING_STORAGE:
-            _deposit_at_keep()
+            if _retry_timer <= 0.0:
+                _deposit_at_keep()
+                _retry_timer = 1.0
         State.TO_WORKPLACE:
             _tick_travel(delta, State.FARMING)
 
@@ -135,12 +137,12 @@ func _tick_idle() -> void:
     if retiring:
         shutdown()
         return
+    if _retry_timer > 0.0:
+        return
     if role == "farm":
         _state = State.FARMING
         _work_timer = 0.0
         _play_clip("work")
-        return
-    if _retry_timer > 0.0:
         return
     if not _find_resource_target():
         _retry_timer = TARGET_RETRY_SECONDS
@@ -433,6 +435,7 @@ func _deposit_at_keep() -> void:
         _finish_delivery()
     else:
         _state = State.WAITING_STORAGE
+        _retry_timer = 1.0
         _play_clip("idle")
 
 
