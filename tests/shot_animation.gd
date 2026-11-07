@@ -3,7 +3,7 @@ var crops: Array = []
 func ticks(n: int) -> void:
     for i in n:
         await physics_frame
-func crop(label: String, center: Vector2, w := 112, h := 72) -> void:
+func crop(label: String, center: Vector2, w := 144, h := 72) -> void:
     await process_frame
     await RenderingServer.frame_post_draw
     var img := root.get_texture().get_image()
