@@ -210,6 +210,15 @@ func _initialize() -> void:
     gatherer.free()
 
     var player = PlayerScript.new()
+    player.anim.play_player_attack(0.11, 0.24)
+    assert(player.anim.is_busy(), "Player attack must enter its busy animation state")
+    player._hurt_t = 0.1
+    player._update_anim(0.0)
+    assert(player.anim.clip == "hurt" and player.anim.frame_index() == 20,
+        "A damage reaction must interrupt an active player attack into the dedicated hurt pose")
+    assert(not player.anim.is_busy(), "Hurt presentation must take priority over attack busy state")
+    player._hurt_t = 0.0
+
     player.anim.play_player_clip("work", true)
     player._harvest_anim_active = true
     player._pending_harvest = RefCounted.new()

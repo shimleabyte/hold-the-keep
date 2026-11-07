@@ -208,10 +208,11 @@ func _footsteps(delta: float) -> void:
 
 
 func _update_anim(delta: float) -> void:
-    if anim.is_busy():
+    if _hurt_t > 0.0:
+        if anim.clip != "hurt":
+            anim.play_player_clip("hurt", true)
+    elif anim.is_busy():
         pass  # biarkan ayunan/panen selesai
-    elif _hurt_t > 0.0:
-        anim.play_player_clip("hurt")
     elif velocity.length() > 5.0:
         anim.play_player_clip("run" if _running else "walk")
     else:
@@ -640,6 +641,7 @@ func take_damage_from(amount: int, source_position: Vector2) -> void:
     Events.fx_burst.emit("hurt", global_position + Vector2(0, -8), Vector2.ZERO, 1.0)
     Events.screen_shake.emit(1.0, 0.1)
     _hurt_t = HURT_TIME
+    anim.play_player_clip("hurt", true)
     modulate = Color(1.6, 0.6, 0.6)
     create_tween().tween_property(self, "modulate", Color.WHITE, 0.2)
     if hp <= 0:
