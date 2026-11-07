@@ -18,7 +18,7 @@ const CIVILIAN_SPRITES: Array[String] = [
     "villager_soldier",
 ]
 const CLIP_STARTS: Array[int] = [0, 2, 6, 10, 14, 18, 19]
-const CLIP_COUNTS: Array[int] = [2, 4, 4, 4, 1, 3]
+const CLIP_COUNTS: Array[int] = [2, 4, 4, 4, 4, 1, 3]
 
 
 func _load_sprite(name: String) -> Image:
