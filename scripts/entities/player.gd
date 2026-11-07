@@ -211,11 +211,11 @@ func _update_anim(delta: float) -> void:
     if anim.is_busy():
         pass  # biarkan ayunan/panen selesai
     elif _hurt_t > 0.0:
-        anim.play("hurt")
+        anim.play_player_clip("hurt")
     elif velocity.length() > 5.0:
-        anim.play("run" if _running else "walk")
+        anim.play_player_clip("run" if _running else "walk")
     else:
-        anim.play("idle")
+        anim.play_player_clip("idle")
     if anim.update(delta):
         queue_redraw()
 
@@ -225,7 +225,7 @@ func _cancel_harvest_animation() -> void:
     _pending_harvest = null
     _harvest_t = 0.0
     if anim.clip == "work":
-        anim.play("idle", true)
+        anim.play_player_clip("idle", true)
         queue_redraw()
 
 
@@ -296,9 +296,7 @@ func _attack() -> void:
     _attack_profile = combat_flow.begin_attack()
     var hit_delay := float(_attack_profile.get("hit_delay", HIT_DELAY))
     var swing_time := float(_attack_profile.get("swing_time", SWING_TIME))
-    var animation_fps := float(_attack_profile.get("animation_fps", 14.0))
-
-    anim.play("attack", true, animation_fps)
+    anim.play_player_attack(hit_delay, swing_time)
     _pending_attack = hit_delay
     combat_feedback.begin_windup(_attack_direction, hit_delay, false)
     _swing = swing_time
@@ -429,7 +427,7 @@ func _use_dash() -> bool:
     _harvest_anim_active = false
     facing = _dash_dir
     anim.face(_dash_dir)
-    anim.play("run", true, 18.0)
+    anim.play_player_clip("run", true, 18.0)
     _swing = 0.0
     Events.fx_burst.emit("dash", global_position + Vector2(0, -2), -_dash_dir, 1.5)
     queue_redraw()
@@ -474,7 +472,7 @@ func _use_cleave() -> bool:
     _pending_attack = -1.0
     _swing = 0.0
     combat_feedback.end_windup()
-    anim.play("attack", true, 12.0 if _cleave_empowered else 14.0)
+    anim.play_player_attack(0.22, _cleave_t)
     Events.player_attacked.emit()
     Events.fx_burst.emit(
         "cleave_charge",
@@ -528,7 +526,7 @@ func _use_rally() -> bool:
         return false
     _rally_cd = RALLY_COOLDOWN
     _rally_t = 8.0
-    anim.play("idle", true)
+    anim.play_player_clip("idle", true)
     combat_feedback.register_ability("rally", Vector2.ZERO, 0.35)
     Audio.play("rally", 1.0, -5.0)
     var affected := 0
@@ -664,7 +662,7 @@ func _die() -> void:
     _dash_can_perfect_dodge = false
     _cleave_empowered = false
     combat_flow.reset()
-    anim.play("idle", true)
+    anim.play_player_clip("idle", true)
     Events.build_feedback.emit("Kamu tumbang! Kembali ke keep")
     Events.player_hp_changed.emit(hp, MAX_HP)
 
@@ -710,7 +708,7 @@ func _try_interact() -> void:
         _cooldown = HIT_COOLDOWN
         facing = (best.global_position - global_position).normalized()
         anim.face(best.global_position - global_position)
-        anim.play("work", true, HARVEST_ANIM_FPS)
+        anim.play_player_clip("work", true, HARVEST_ANIM_FPS)
         _harvest_anim_active = true
         _pending_harvest = best
         _harvest_t = HIT_DELAY

@@ -16,8 +16,8 @@ func _initialize() -> void:
     if image == null:
         _fail("Player sprite sheet must expose image data")
         return
-    if image.get_width() != 528 or image.get_height() != 84:
-        _fail("Player sprite sheet must remain 22 frames by 3 directions at 24x28")
+    if image.get_width() != 576 or image.get_height() != 84:
+        _fail("Player sprite sheet must remain 24 frames by 3 directions at 24x28")
         return
 
     for view in range(3):
@@ -54,6 +54,37 @@ func _initialize() -> void:
         if not planted_feet_unchanged:
             _fail("Attack wind-up and impact moved the boot contact pixels for view %d" % view)
             return
+
+        var previous_attack_frame := WINDUP_FRAME
+        for frame in range(WINDUP_FRAME + 1, 16):
+            var pose_changed := false
+            for y in range(FRAME_HEIGHT - 1):
+                for x in range(FRAME_WIDTH):
+                    var previous := image.get_pixel(previous_attack_frame * FRAME_WIDTH + x, view * FRAME_HEIGHT + y)
+                    var current := image.get_pixel(frame * FRAME_WIDTH + x, view * FRAME_HEIGHT + y)
+                    if previous != current:
+                        pose_changed = true
+                        break
+                if pose_changed:
+                    break
+            if not pose_changed:
+                _fail("Adjacent player attack poses %d and %d are identical for view %d" % [previous_attack_frame, frame, view])
+                return
+            previous_attack_frame = frame
+
+        for frame in range(WINDUP_FRAME, 16):
+            for x in range(left_boot.x, left_boot.y):
+                var reference_boot := image.get_pixel(WINDUP_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + 27)
+                var observed_boot := image.get_pixel(frame * FRAME_WIDTH + x, view * FRAME_HEIGHT + 27)
+                if reference_boot != observed_boot:
+                    _fail("Player attack moved planted left-boot contact in frame %d for view %d" % [frame, view])
+                    return
+            for x in range(right_boot.x, right_boot.y):
+                var reference_boot := image.get_pixel(WINDUP_FRAME * FRAME_WIDTH + x, view * FRAME_HEIGHT + 27)
+                var observed_boot := image.get_pixel(frame * FRAME_WIDTH + x, view * FRAME_HEIGHT + 27)
+                if reference_boot != observed_boot:
+                    _fail("Player attack moved planted right-boot contact in frame %d for view %d" % [frame, view])
+                    return
 
     var palette_colors := [
         Color("#1c365a"),
