@@ -57,7 +57,8 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 - [x] Preserve civilian atlases from PR #182; their 440×60 / 20×20 / 22×3 contract remains unchanged.
 - [ ] Pass exact-head Godot 4.7 tests with both protagonist and civilian visual regressions.
 - [ ] Capture and inspect the player animation contact sheet/GIF at native gameplay zoom.
-- [ ] Author distinct Dash/Rally, extend hurt/death, and refine locomotion/cape/weapon overlap.
+- [x] Add dedicated six-pose Dash/Rally clips and four-pose Hurt/Death-preview ranges while preserving existing gameplay timers and immediate-respawn behavior.
+- [ ] Inspect the new action poses in the exact-head contact sheet and refine locomotion/cape/weapon overlap.
 
 **Boundary:** three player facing rows remain three facings. This is not an eight-direction or complete character animation pass.
 

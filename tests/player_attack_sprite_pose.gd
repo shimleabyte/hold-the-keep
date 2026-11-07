@@ -16,8 +16,8 @@ func _initialize() -> void:
     if image == null:
         _fail("Player sprite sheet must expose image data")
         return
-    if image.get_width() != 720 or image.get_height() != 84:
-        _fail("Player sprite sheet must remain 30 frames by 3 directions at 24x28")
+    if image.get_width() != 1104 or image.get_height() != 84:
+        _fail("Player sprite sheet must remain 46 frames by 3 directions at 24x28")
         return
 
     for view in range(3):
@@ -116,6 +116,26 @@ func _initialize() -> void:
                 if reference_boot != observed_boot:
                     _fail("Heavy Cleave moved planted right-boot contact in frame %d for view %d" % [frame, view])
                     return
+
+        for frame_range in [
+            Vector2i(20, 24), Vector2i(30, 36), Vector2i(36, 42), Vector2i(42, 46)
+        ]:
+            var previous_frame: int = frame_range.x
+            for frame in range(frame_range.x + 1, frame_range.y):
+                var changed := false
+                for y in range(FRAME_HEIGHT):
+                    for x in range(FRAME_WIDTH):
+                        var previous := image.get_pixel(previous_frame * FRAME_WIDTH + x, view * FRAME_HEIGHT + y)
+                        var current := image.get_pixel(frame * FRAME_WIDTH + x, view * FRAME_HEIGHT + y)
+                        if previous != current:
+                            changed = true
+                            break
+                    if changed:
+                        break
+                if not changed:
+                    _fail("Adjacent player action poses %d and %d are identical for view %d" % [previous_frame, frame, view])
+                    return
+                previous_frame = frame
 
     var palette_colors := [
         Color("#1c365a"),

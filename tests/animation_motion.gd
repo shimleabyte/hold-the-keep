@@ -43,7 +43,7 @@ func _initialize() -> void:
     anim.update(0.15)
     assert(anim.motion_offset() == Vector2.ZERO, "Mirrored attack must also keep the sprite pivot planted")
 
-    assert(SpriteAnim.PLAYER_FRAMES == 30,
+    assert(SpriteAnim.PLAYER_FRAMES == 46,
         "The protagonist's authored atlas must remain independent from shared 22-frame role sheets")
 
     var player_attack_timings: Array[Vector2] = [
@@ -90,6 +90,49 @@ func _initialize() -> void:
             cleave_impact_seen = true
     assert(cleave_impact_seen and anim.finished and anim.frame_index() == 29,
         "Cleave must complete its dedicated follow-through and recovery sequence")
+
+    anim.play_player_clip("dash", true)
+    assert(anim.frame_index() == 30 and anim.is_busy(),
+        "Dash must start on its dedicated forward-lean pose")
+    anim.update(0.038)
+    assert(anim.frame_index() == 31, "Dash must advance through its authored acceleration pose")
+    anim.update(0.183)
+    assert(anim.finished and anim.frame_index() == 35,
+        "Dash must complete its six-pose cycle within the existing 0.22-second window")
+
+    anim.play_player_clip("rally", true)
+    assert(anim.frame_index() == 36 and anim.is_busy(),
+        "Rally must start on its dedicated raised-arm call pose")
+    anim.update(0.084)
+    assert(anim.frame_index() == 37, "Rally must advance through its arm-raise sequence")
+    anim.update(0.416)
+    assert(anim.finished and anim.frame_index() == 41,
+        "Rally must complete its six-pose call without changing the gameplay buff duration")
+
+    anim.play_player_clip("hurt", true)
+    assert(anim.frame_index() == 42 and anim.is_busy(),
+        "Hurt must begin from its first authored recoil pose")
+    anim.update(0.051)
+    assert(anim.frame_index() == 43, "Hurt must progress to its raised guard pose")
+    anim.update(0.05)
+    assert(anim.frame_index() == 44, "Hurt must progress through its stagger pose")
+    anim.update(0.05)
+    assert(anim.frame_index() == 45, "Hurt must enter its recovery pose")
+    anim.update(0.049)
+    assert(anim.finished and anim.frame_index() == 45,
+        "Hurt must complete within the existing 0.20-second reaction window")
+
+    anim.play_player_clip("death", true)
+    assert(anim.frame_index() == 20, "Death preview must begin at the collapse pose")
+    anim.update(0.126)
+    assert(anim.frame_index() == 21, "Death preview must continue through the fall")
+    anim.update(0.125)
+    assert(anim.frame_index() == 22, "Death preview must continue through the lower fall")
+    anim.update(0.125)
+    assert(anim.frame_index() == 23, "Death preview must reach the prone settled pose")
+    anim.update(0.124)
+    assert(anim.finished and anim.frame_index() == 23,
+        "Death preview must complete its authored fall sequence")
 
     anim.play_player_clip("work", true, 14.0)
     assert(anim.frame_index() == 16, "Player harvest must begin from its own neutral tool pose")

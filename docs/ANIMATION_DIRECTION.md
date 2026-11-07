@@ -13,8 +13,8 @@ Keep the existing crisp pixel-art rendering discipline. Every pose remains align
 | Property | Contract |
 |---|---|
 | Player frame size | 24×28 logical pixels |
-| Player atlas | 30 frames × 3 facing rows |
-| Source SVG size | 720×84 |
+| Player atlas | 46 frames × 3 facing rows |
+| Source SVG size | 1104×84 |
 | Facing rows | Front/down, back/up, side/right; side is mirrored for left |
 | Ground pivot | Bottom-center of the 24×28 cell |
 | Shared role sheets | Preserve their independent 22-frame contract |
@@ -31,9 +31,11 @@ Three rows do not mean eight-direction animation. Diagonal input currently selec
 | 6–9 | Run | Existing two-pose alternation repeated; not yet a complete stride cycle |
 | 10–15 | Light sword attack | Six-pose timed sequence; impact frame 12 follows live gameplay hit delay |
 | 16–19 | Work/harvest | Four-pose hand-authored pick/axe tool cycle; contact frame 18 follows the existing 0.14s event |
-| 20 | Hurt | One frame only; insufficient for a complete recoil/recovery animation |
-| 21–23 | Death | Three frames exist, but gameplay immediately respawns and does not play this sequence to completion |
+| 20–23 | Death | Four-pose collapse, drop, fall and settled-prone preview; gameplay still respawns immediately |
 | 24–29 | Heavy Cleave | Dedicated six-pose brace, wind-up, downswing, impact, follow-through and recovery; impact frame 26 follows the existing 0.22s hit event |
+| 30–35 | Dash | Dedicated six-pose acceleration, drive, extension, braking and recovery cycle within the existing 0.22s dash window |
+| 36–41 | Rally | Dedicated six-pose raised-arm command sequence; 0.50s visual cycle, separate from the 8s gameplay buff |
+| 42–45 | Hurt | Four-pose recoil, guard, stagger and recovery within the existing 0.20s hurt window |
 
 ## Gameplay event ownership
 
@@ -42,8 +44,8 @@ Gameplay remains authoritative for damage, hit sectors, cooldowns, combo state, 
 - Light attack frame 12 is timed from the existing combo hit delay: 0.11s / 0.13s / 0.19s.
 - Cleave resolves at its existing 0.22s event within its 0.46s ability window. It uses frames 24–29, with heavy impact frame 26; damage, range, stagger and cooldown remain gameplay-owned.
 - Player harvest retains its existing 0.14s contact event. Its artwork must become a distinct tool-contact cycle; do not alter yield or resource timing to fit art.
-- Hurt must pre-empt attack/work presentation. It must not cancel or duplicate pending gameplay events unless the gameplay contract explicitly calls for cancellation.
-- Dash currently reuses Run. Rally currently reuses Idle. These are known presentation gaps, not accepted final states.
+- Hurt must pre-empt attack/work presentation. Its four-frame reaction is presentation-only and must not cancel or duplicate pending gameplay events.
+- Dash and Rally now use dedicated authored player clip ranges; their movement/invulnerability and buff mechanics remain unchanged.
 
 ## Animation production rules
 
@@ -69,10 +71,9 @@ Gameplay remains authoritative for damage, hit sectors, cooldowns, combo state, 
 
 ## Current known blockers
 
-- The player playblast previously failed because the harness eagerly preloaded `player.gd` before the `Events` autoload was available. The branch now loads the GDScript after the first process frame; exact-head rendered validation remains pending.
-- The tool silhouette is now separate from the sword, but the four harvest poses still need native-scale visual acceptance and better arm/torso follow-through.
-- Cleave now has a dedicated heavy sequence. Dash still reuses Run and Rally still reuses Idle.
-- Hurt/death are under-animated and death is not currently played through the gameplay respawn path.
+- The player playblast previously failed because the harness eagerly preloaded `player.gd` before the `Events` autoload was available. The harness now loads Player after autoload initialization and captures exact action-time markers.
+- The tool, heavy Cleave, Dash, Rally, Hurt and Death now have separate art/clip ranges. Exact-head visual acceptance of the expanded action set remains pending.
+- Death remains preview-only because gameplay immediately respawns; do not change that gameplay rule as part of this presentation task.
 - Player locomotion still needs more complete leg cycles and torso/cape overlap.
 - Villager, enemy, faction-specific and specialist animation production remains open.
 

@@ -147,12 +147,45 @@ func _initialize() -> void:
     await advance_animation(0.058)
     main_player.set_physics_process(true)
 
-    # Dash currently reuses the run clip.
+    # Dedicated six-pose dash. Hide the trail so the authored body silhouette is reviewable.
     main_player._dash_cd = 0.0
     main_player._use_dash()
-    await ticks(4)
-    await capture("Player · dash (run clip)", center)
-    await ticks(14)
+    main_player.set_physics_process(false)
+    main_player._dash_t = 0.0
+    main_player.combat_feedback.ability_remaining = 0.0
+    await capture("Player · dash anticipation (frame 30)", center)
+    await advance_animation(0.038)
+    await capture("Player · dash acceleration (frame 31)", center)
+    await advance_animation(0.037)
+    await capture("Player · dash drive (frame 32)", center)
+    await advance_animation(0.037)
+    await capture("Player · dash extension (frame 33)", center)
+    await advance_animation(0.037)
+    await capture("Player · dash braking (frame 34)", center)
+    await advance_animation(0.037)
+    await capture("Player · dash recovery (frame 35)", center)
+    await advance_animation(0.035)
+    main_player.set_physics_process(true)
+
+    # Rally has its own raised-arm command cycle.
+    main_player.level = 3
+    main_player._rally_cd = 0.0
+    main_player._use_rally()
+    main_player.set_physics_process(false)
+    main_player.combat_feedback.ability_remaining = 0.0
+    await capture("Player · Rally call start (frame 36)", center)
+    await advance_animation(0.085)
+    await capture("Player · Rally arm lift (frame 37)", center)
+    await advance_animation(0.085)
+    await capture("Player · Rally command (frame 38)", center)
+    await advance_animation(0.085)
+    await capture("Player · Rally hold (frame 39)", center)
+    await advance_animation(0.085)
+    await capture("Player · Rally emphasis (frame 40)", center)
+    await advance_animation(0.085)
+    await capture("Player · Rally recovery (frame 41)", center)
+    await advance_animation(0.075)
+    main_player.set_physics_process(true)
 
     main_player.anim.play_player_clip("work", true, 14.0)
     await ticks(3)
@@ -165,20 +198,29 @@ func _initialize() -> void:
     main_player.anim.play_player_clip("idle", true)
     main_player._invuln = 0.0
     main_player.take_damage(1)
-    await ticks(1)
-    await capture("Player · hurt recoil", center)
-
-    # Gameplay _die() respawns immediately. Preview the authored death clip
-    # independently so the three currently authored frames can be inspected.
     main_player.set_physics_process(false)
+    main_player.modulate = Color.WHITE
+    main_player.combat_feedback.impact_remaining = 0.0
+    await capture("Player · hurt initial recoil (frame 42)", center)
+    await advance_animation(0.052)
+    await capture("Player · hurt guard (frame 43)", center)
+    await advance_animation(0.052)
+    await capture("Player · hurt stagger (frame 44)", center)
+    await advance_animation(0.052)
+    await capture("Player · hurt recovery (frame 45)", center)
+    await advance_animation(0.049)
+
+    # Gameplay _die() still respawns immediately. Preview the four authored
+    # death beats independently; this must not change the gameplay respawn path.
     main_player.anim.play_player_clip("death", true)
-    await capture("Player · death fall 1", center)
-    main_player.anim.update(1.0 / 6.0)
-    main_player.queue_redraw()
-    await capture("Player · death fall 2", center)
-    main_player.anim.update(1.0 / 6.0)
-    main_player.queue_redraw()
-    await capture("Player · death settled", center)
+    await capture("Player · death collapse (frame 20)", center)
+    await advance_animation(0.126)
+    await capture("Player · death drop (frame 21)", center)
+    await advance_animation(0.125)
+    await capture("Player · death fall (frame 22)", center)
+    await advance_animation(0.125)
+    await capture("Player · death settled (frame 23)", center)
+    await advance_animation(0.124)
 
     if crops.is_empty():
         push_error("Player animation playblast produced no frames")

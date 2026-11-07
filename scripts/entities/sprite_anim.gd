@@ -6,7 +6,7 @@ extends RefCounted
 
 const FRAMES := 22
 ## The protagonist has a separately authored 24-frame atlas; shared role sheets remain 22.
-const PLAYER_FRAMES := 30
+const PLAYER_FRAMES := 46
 const FRONT := 0
 const BACK := 1
 const SIDE := 2
@@ -23,9 +23,11 @@ const PLAYER_CLIPS := {
     "walk": {"start": 2, "count": 4, "fps": 8.0, "loop": true},
     "run": {"start": 6, "count": 4, "fps": 12.0, "loop": true},
     "work": {"start": 16, "count": 4, "fps": 14.0, "loop": true},
+    "death": {"start": 20, "count": 4, "fps": 8.0, "loop": false},
     "cleave": {"start": 24, "count": 6, "fps": 1.0, "loop": false},
-    "hurt": {"start": 20, "count": 1, "fps": 6.0, "loop": false},
-    "death": {"start": 21, "count": 3, "fps": 6.0, "loop": false},
+    "dash": {"start": 30, "count": 6, "fps": 27.2727, "loop": false},
+    "rally": {"start": 36, "count": 6, "fps": 12.0, "loop": false},
+    "hurt": {"start": 42, "count": 4, "fps": 20.0, "loop": false},
 }
 const PLAYER_ATTACK_FRAMES := [10, 11, 12, 13, 14, 15]
 const PLAYER_CLEAVE_FRAMES := [24, 25, 26, 27, 28, 29]
@@ -184,7 +186,15 @@ func play_player_cleave(hit_delay: float, duration: float) -> void:
 
 
 func is_busy() -> bool:
-    return (clip == "attack" or clip == "cleave" or clip == "work") and not finished
+    return (
+        clip == "attack"
+        or clip == "cleave"
+        or clip == "work"
+        or clip == "dash"
+        or clip == "rally"
+        or clip == "hurt"
+        or clip == "death"
+    ) and not finished
 
 
 ## Maju delta detik. Kembali true jika frame atau offset piksel yang terlihat berubah.

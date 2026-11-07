@@ -61,9 +61,10 @@ Execution order: enemy/faction identity → architecture → terrain/biomes/reso
 - [x] Synchronize light/heavy impact frames to existing gameplay event markers.
 - [x] Preserve harvest timing/yield, combat damage/range/cooldowns and player-control behavior.
 - [x] Add animation timing, frame identity, foot-contact and attack-to-hurt interruption regressions.
-- [x] Produce a Godot-rendered playblast artifact; first contact sheet visually inspected.
-- [ ] Finish exact-frame capture review and use sprite-only samples without masking VFX.
-- [ ] Give Dash and Rally unique pose sequences; extend hurt/death and refine locomotion/cape/weapon overlap.
+- [x] Add dedicated six-pose Dash/Rally and four-pose Hurt/Death-preview ranges without changing ability timers or respawn gameplay.
+- [x] Produce a Godot-rendered playblast artifact with exact light/heavy impact samples.
+- [ ] Pass exact-head 46-frame CI and inspect the sprite-only Dash/Rally/Hurt/Death contact sheet.
+- [ ] Refine locomotion/cape/weapon overlap and review all three facing rows before broad enemy/faction animation production.
 
 This is a presentation package. Do not alter economy, enemy AI, save schema, harvest yields, combat balance, civilian autonomy or the civilian art contract. Three facing rows are not eight-direction animation.
 
