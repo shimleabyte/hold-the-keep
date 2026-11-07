@@ -1,6 +1,9 @@
 extends SceneTree
 
+const PLAYER_SCRIPT: Script = preload("res://scripts/entities/player.gd")
+
 var crops: Array = []
+var main_player: Player
 
 
 func ticks(count: int) -> void:
@@ -15,6 +18,7 @@ func capture(label: String, center: Vector2, width := 144, height := 96) -> void
     if image == null:
         push_error("Player animation playblast could not read the rendered viewport")
         return
+
     var viewport_size := root.get_visible_rect().size
     var x := clampi(int(center.x - width / 2.0), 0, maxi(0, int(viewport_size.x) - width))
     var y := clampi(int(center.y - height / 2.0), 0, maxi(0, int(viewport_size.y) - height))
@@ -24,27 +28,53 @@ func capture(label: String, center: Vector2, width := 144, height := 96) -> void
     print("PLAYER_PLAYBLAST_FRAME ", label, " atlas=", main_player.anim.frame_index())
 
 
-var main_player: Player
-
-
 func _initialize() -> void:
-    var main: HoldTheKeepMain = (load("res://scenes/main.tscn") as PackedScene).instantiate() as HoldTheKeepMain
-    root.add_child(main)
-    current_scene = main
-    await ticks(5)
+    print("PLAYER_PLAYBLAST_BEGIN")
+    var clock := root.get_node_or_null("GameClock")
+    if clock != null:
+        clock.set_process(false)
 
-    var clock := root.get_node("GameClock")
-    clock.set_process(false)
-    main.build.player = null
-    main_player = main.player as Player
-    main_player.camera.position_smoothing_enabled = false
-    main_player.global_position = Vector2(520, 580)
+    # Lightweight neutral stage: the real Player entity, real sprite atlas,
+    # camera and animation code, without booting campaign/world generation.
+    var stage := Node2D.new()
+    stage.name = "PlayerAnimationPlayblastStage"
+    root.add_child(stage)
+    current_scene = stage
+
+    var backdrop_layer := CanvasLayer.new()
+    backdrop_layer.layer = -1
+    root.add_child(backdrop_layer)
+
+    var backdrop := ColorRect.new()
+    backdrop.color = Color("#151917")
+    backdrop.position = Vector2.ZERO
+    backdrop.size = root.get_visible_rect().size
+    backdrop_layer.add_child(backdrop)
+
+    var floor := ColorRect.new()
+    floor.color = Color("#242825")
+    floor.position = Vector2(0, root.get_visible_rect().size.y * 0.68)
+    floor.size = Vector2(root.get_visible_rect().size.x, root.get_visible_rect().size.y * 0.32)
+    backdrop_layer.add_child(floor)
+
+    var ground_line := ColorRect.new()
+    ground_line.color = Color("#555044")
+    ground_line.position = Vector2(0, floor.position.y)
+    ground_line.size = Vector2(root.get_visible_rect().size.x, 2)
+    backdrop_layer.add_child(ground_line)
+
+    main_player = PLAYER_SCRIPT.new() as Player
+    stage.add_child(main_player)
+    main_player.global_position = Vector2.ZERO
     main_player.velocity = Vector2.ZERO
     main_player.facing = Vector2.DOWN
     main_player.anim.face(Vector2.DOWN)
+    main_player.camera.position_smoothing_enabled = false
+    main_player.camera.make_current()
     await ticks(5)
 
     var center := root.get_visible_rect().size * 0.5
+    print("PLAYER_PLAYBLAST_STAGE_READY size=", root.get_visible_rect().size)
 
     main_player.anim.play_player_clip("idle", true)
     await ticks(12)
@@ -75,16 +105,15 @@ func _initialize() -> void:
     await ticks(5)
     await capture("Player · attack recovery", center)
 
-    # Cleave currently shares the six-frame attack vocabulary. The label makes
-    # that limitation visible instead of presenting it as a unique heavy swing.
+    # Cleave currently shares the six-frame attack vocabulary. Do not disguise it.
     main_player.level = 2
     main_player._cleave_cd = 0.0
     main_player._use_cleave()
     await ticks(5)
     await capture("Player · Cleave (shared attack poses)", center)
-    await ticks(10)
+    await ticks(15)
 
-    # Dash currently reuses the run clip; keep the preview explicit about it.
+    # Dash currently reuses the run clip.
     main_player._dash_cd = 0.0
     main_player._use_dash()
     await ticks(4)
@@ -94,19 +123,19 @@ func _initialize() -> void:
     main_player.anim.play_player_clip("work", true, 14.0)
     await ticks(3)
     await capture("Player · harvest preparation", center)
-    await ticks(5)
+    await ticks(6)
     await capture("Player · harvest contact", center)
     await ticks(5)
     await capture("Player · harvest recovery", center)
 
+    main_player.anim.play_player_clip("idle", true)
     main_player._invuln = 0.0
     main_player.take_damage(1)
     await ticks(1)
     await capture("Player · hurt recoil", center)
 
-    # The actual _die() gameplay path immediately respawns at spawn_pos. To
-    # inspect the currently authored death clip without altering gameplay,
-    # pause only this preview actor and advance the presentation timeline.
+    # Gameplay _die() respawns immediately. Preview the authored death clip
+    # independently so the three currently authored frames can be inspected.
     main_player.set_physics_process(false)
     main_player.anim.play_player_clip("death", true)
     await capture("Player · death fall 1", center)
@@ -127,22 +156,23 @@ func _initialize() -> void:
     DirAccess.make_dir_recursive_absolute(output_root)
     DirAccess.make_dir_recursive_absolute(frames_dir)
 
-    var cols := 3
+    var columns := 3
     var frame_width: int = crops[0][1].get_width()
     var frame_height: int = crops[0][1].get_height()
-    var rows := int(ceil(crops.size() / float(cols)))
-    var contact := Image.create(cols * (frame_width + 8), rows * (frame_height + 8), false, Image.FORMAT_RGBA8)
+    var rows := int(ceil(crops.size() / float(columns)))
+    var contact := Image.create(columns * (frame_width + 8), rows * (frame_height + 8), false, Image.FORMAT_RGBA8)
     contact.fill(Color("#222222"))
 
     var legend := FileAccess.open(output_root.path_join("frames.txt"), FileAccess.WRITE)
     for index in crops.size():
         var frame: Image = crops[index][1]
-        var x := (index % cols) * (frame_width + 8) + 4
-        var y := int(index / cols) * (frame_height + 8) + 4
+        var x := (index % columns) * (frame_width + 8) + 4
+        var y := int(index / columns) * (frame_height + 8) + 4
         contact.blit_rect(frame, Rect2i(0, 0, frame_width, frame_height), Vector2i(x, y))
         frame.save_png(frames_dir.path_join("%02d.png" % index))
         legend.store_line("%02d  %s" % [index, crops[index][0]])
     legend.close()
+
     contact.save_png(output_root.path_join("player-animation-contact.png"))
     print("PLAYER_ANIMATION_PLAYBLAST_COMPLETE frames=", crops.size(), " output=", output_root)
     quit(0)
