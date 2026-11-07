@@ -3,8 +3,9 @@
 **Recovery date:** 2026-11-07  
 **Repository:** `shimleabyte/hold-the-keep`  
 **Engine target:** Godot 4.7 only  
-**Recovery branch:** `recovery/session-resumption-2026-11-07`  
+**Recovery PR:** [#186](https://github.com/shimleabyte/hold-the-keep/pull/186), merged 2026-11-07  
 **Baseline branch / SHA:** `main` / `92f169606b5f73555df8052e2c7701f6f68492ec`  
+**Current main after recovery:** `198c31f5f0c7241158e8e56024e1bc69aacf8b17`  
 **Save schema:** v17  
 **Renderer:** GL Compatibility
 
@@ -34,11 +35,12 @@ The latest session directives used were the gameplay overhaul directive (`Pasted
 ### Remote Git state
 
 - `main` HEAD before recovery: `92f169606b5f73555df8052e2c7701f6f68492ec`.
+- Current `main` after recovery: `198c31f5f0c7241158e8e56024e1bc69aacf8b17` (squash merge PR #186, `fix: disable inactive frontier decoration processing`).
 - Latest main commit: merge PR #185, `feat(art): add restrained Frontier ground dressing and landmark motion`.
 - Immediately preceding integration: PR #184, `feat(animation): integrate the 46-frame player animation system`, merge `e7a53d7279d5eeba5e3704ece7f2b7ea087ffead`.
 - PR #182, the authored civilian role atlas package, is merged at `7dea98194e308ebb380115c873d395e64fffada0`.
-- Branch inventory: **157** remote branches (100 on page 1, 57 on page 2).
-- PR inventory: **185** total; **132 merged**, **50 closed unmerged**, **3 open**.
+- Branch inventory: **157** remote branches (100 on page 1, 57 on page 2). The temporary recovery head branch is no longer listed after PR merge; no explicit branch-delete action was issued.
+- PR inventory after PR #186: **186** total; **133 merged**, **50 closed unmerged**, **3 open**.
 - Open PRs:
   - #181 `animation/player-motion-timing` — open, not mergeable; old player-animation proposal. The later 46-frame system is already integrated by #184. Keep under supersession audit; do not merge as-is.
   - #152 `feat/android-armv7-touch-controls-current-main` — Android touch controls; explicitly deferred.
@@ -64,7 +66,7 @@ The failed Godot job is `Godot 4.7 · frontier_world` (job `128429327158`). Its 
 - The test process then timed out at 180 seconds because the assertion stopped the asynchronous test path before normal teardown.
 - All other 64 jobs passed, including `animation_motion`, `player_combat`, `resource_save_state`, `save_validator`, `save_file_store_recovery`, `frontier_expedition`, `campaign_combat_simulation`, `faction_raids` and `faction_warfare_stress`.
 
-The runtime code in `scripts/entities/frontier_decoration.gd` calls `set_process(_ambient_enabled)` from `setup_batch()`; `scripts/world/world_map.gd` calls `setup_batch()` before adding the node to the scene tree. The next change must make the processing state deterministic after scene-tree entry. Do not weaken the assertion or enable ambient animation on ordinary decoration.
+The runtime code in `scripts/entities/frontier_decoration.gd` calls `set_process(_ambient_enabled)` from `setup_batch()`; `scripts/world/world_map.gd` calls `setup_batch()` before adding the node to the scene tree. PR #186 fixes the scene-entry state in `_ready()` by reapplying the stored ambient flag after tree entry. The original assertion remains unchanged; ordinary decoration is still expected to stay idle.
 
 ## 3. Recovery matrix
 
@@ -93,7 +95,7 @@ Status values use the requested classifications: **COMPLETE AND VERIFIED**, **IM
 
 | Workstream | Task | Checkpoint status | Actual status | Last known commit | Remaining work | Dependencies | Verification | Next action |
 |---|---|---|---|---|---|---|---|---|
-| Animation | Player 46-frame atlas, three facing rows and dedicated action clips | PR #181 was reported active | IMPLEMENTED BUT UNVERIFIED | PR #184 merge `e7a53d7` | Human review of the captured contact sheet and looping preview at native gameplay zoom; locomotion still reuses a limited number of poses | Player SVG, SpriteAnim clip map, combat/ability event ownership | Godot 4.7 import, `animation_motion`, `player_attack_sprite_pose` and player playblast job passed on `92f1696` | Inspect the actual player playblast artifact; fix silhouette/foot/cape issues without changing damage timing |
+| Animation | Player 46-frame atlas, three facing rows and dedicated action clips | PR #181 was reported active | IMPLEMENTED BUT UNVERIFIED | PR #184 merge `e7a53d7` | Sprite-only preview was inspected; action poses move modestly and walk/run reuse few poses. No live gameplay zoom/interaction review yet. | Player SVG, SpriteAnim clip map, combat/ability event ownership | Godot 4.7 import, `animation_motion`, `player_attack_sprite_pose` and 37-frame playblast passed on `92f1696` | Improve authored foot, cape and weapon follow-through; capture an in-game scene rather than another sprite-only sheet |
 | Animation | Attack, Cleave, harvest, Dash, Rally and hurt timing | Partly open in PR #181 | COMPLETE AND VERIFIED (automated) | PR #184 merge `e7a53d7` | Human readability review remains | Existing gameplay event timers and player clip state | `animation_motion`, `player_combat`, `combat_visual_feedback` passed | Preserve gameplay-owned damage and cooldowns |
 | Animation | Full player idle/walk/run cycles and layered cape/weapon motion | Known outstanding item | IN PROGRESS | `e7a53d7` | Walk/run reuse limited poses; cape/weapon overlap and foot contact need authored refinement | Player atlas and SpriteAnim | Automated pose/playblast capture exists; rendered acceptance has not been signed off | Improve actual silhouette/contact poses, then inspect the new playblast |
 | Animation | Ten civilian role atlases and profession identities | PR #182 open in older registry | COMPLETE AND VERIFIED (asset contract and automated capture) | PR #182 merge `7dea981` | Verify each work cycle is meaningfully distinct in actual gameplay; role atlas coverage alone is not proof of profession animation acceptance | Villager role mapping, SpriteAnim and job state | Role Sprite Visual QA, role identity and animation motion jobs passed before #185; current Godot matrix passed all related tests | Inspect all job loops in game; align pick/axe/hammer/heal/survey frames to actual work states |
@@ -106,7 +108,7 @@ Status values use the requested classifications: **COMPLETE AND VERIFIED**, **IM
 | Art | Grim Medieval Folklore Fantasy art direction and reference board | Phase 08.8 locked | COMPLETE AND VERIFIED (documentation) | PR #179 merge `27740a7` | Enforce the existing direction; do not restart or substitute generic fantasy art | Art direction and reference board | Documents present on main | Use the current art bible as production contract |
 | Art | Player visual identity | Player redesign reported integrated | IMPLEMENTED BUT UNVERIFIED | `e7a53d7` | Human native-zoom inspection of player atlas/playblast remains | Player atlas and animation pipeline | 46-frame atlas imports; player playblast succeeded | Review playblast and adjust only actual visual defects |
 | Art | Ten authored civilian profession identities | Phase 08.9 reported in progress | COMPLETE AND VERIFIED (asset contract and automated visual capture) | PR #182 merge `7dea981` | Human review of visual hierarchy at game zoom and role-readability in crowded settlements | Role mapping and art bible | Reproducibility check, role identity test and in-game visual QA succeeded on PR head | Keep the authored atlases; do not restore generic generated sprites |
-| Art | Frontier environmental decoration, tree-root and rock dressing, landmark motion | Recent PR #185 | IMPLEMENTED BUT UNVERIFIED | PR #185 merge `92f1696` | Mainline Frontier test currently fails on processing-state assertion; inspect final rendered outputs after the regression is fixed | Frontier decoration batching and WorldMap draw ordering | Rendered World QA passed; Godot `frontier_world` failed | Fix processing state, rerun exact-head CI and inspect rendered capture |
+| Art | Frontier environmental decoration, tree-root and rock dressing, landmark motion | Recent PR #185 | IMPLEMENTED BUT UNVERIFIED | PR #185 `92f1696`; fix #186 `198c31f` | Rendered captures were inspected and are deterministic, but the screenshots do not prove landmark motion during play; inspect ambient motion in a live Frontier scene | Frontier decoration batching and WorldMap draw ordering | Godot CI 65/65, Campaign Simulation QA and Rendered World QA passed on #186 head; seed-1337 first/repeat screenshots were visually identical | Capture a live landmark animation preview and approve biome dressing at gameplay zoom |
 | Art | Enemy/faction-specific silhouettes and visual identity | Remains open in art direction | NOT STARTED | `92f1696` | Replace generic faction presentation with distinct grounded material, armor, weapons and iconography | Faction roster/design contracts | Asset identity test plus in-world captures | Define faction-specific visual sheets before implementation |
 | Art | Buildings, construction stages, damage states and biome-specific structure variants | Remains open | NOT STARTED | `92f1696` | Production buildings need readable silhouettes and live construction/damage states | Building gameplay function and tile footprint contract | Building visual identity tests and rendered world capture | Produce one building family at a time, preserving footprint/collision |
 | Art | Resource nodes, wildlife, regional props and combat effects | Partial older assets and frontier dressing exist | IN PROGRESS | `92f1696` | Audit quality/coverage at native zoom; complete missing region-specific resource/wildlife and combat feedback | Harvesting lifecycle, collision/occupancy, faction/biome identity | Rendered world QA and role/combat tests | Audit actual asset inventory; avoid replacing working resource lifecycle |
@@ -124,7 +126,7 @@ Comparisons were performed against baseline `92f1696`. The branch heads below ar
 | `perf/p1-specialist-interceptor-scans` | `874d080` | 8 / 156 | IN PROGRESS | Review specialist scan changes against present siege/saboteur behaviors and faction warfare stress; retain only measured improvements. |
 | `perf/p1-village-job-assignment-counters` | `976bcc3` | 3 / 143 | IN PROGRESS | Compare counters against current bounded village scheduling and use performance evidence before adoption. |
 | `perf/p2-bounded-wildlife-selection` | `6ddeacd` | 3 / 144 | SUPERSEDED PENDING DIFF AUDIT | Current Frontier tests already verify deterministic bounded wildlife placement; check for unique performance improvement before closing out. |
-| `work/worker-resource-awareness` | `c19b20f` | 5 / 138 | IN PROGRESS | Contains connected-depot stock accounting, local reachable iron selection and diagnostics. Main already has connected-depot delivery and reachable work areas, but equivalent miner demand selection has not yet been confirmed. Inspect current `_find_work`/resource policy before selectively reconstructing. |
+| `work/worker-resource-awareness` | `c19b20f` | 5 / 138 | SUPERSEDED | Current `scripts/entities/villager_resource_behavior.gd` implements connected-depot stock counting and local, unclaimed iron selection; `tests/frontier_worker_ai.gd` verifies remote ore, local ore, reserved ore, connected storage and sabotage. Do not re-port duplicate behavior. |
 | `work/dev-f-villager-role-architecture` | `bd7d519` | 1 / 263 | IN PROGRESS | The branch extracts nine role components but removes 466 lines from the old Villager host. It is too stale and invasive for a direct merge. Compare current role-owned behavior and extract only still-monolithic roles in small tested slices. |
 | `feat/low-cost-profession-sprite-art` family | `72661f2`, `6323215`, `7faa718` | 20–29 ahead / 137–205 behind | SUPERSEDED | PR #182 now supplies ten individually authored role atlases and protects generator ownership. Do not restore these older sprite-sheet variants; inspect any non-art script delta separately only if a defect is identified. |
 | `feat/phase-08.3-resource-cluster-dressing` | `9a897a1` | 8 / 220 | IN PROGRESS | Overlaps later #185 decoration/tree/rock work. Compare its unique artwork against current integrated assets; no wholesale merge. |
@@ -136,13 +138,13 @@ No ref deletion, force update or branch reset is authorized by this recovery. Th
 
 ## 5. Immediate execution sequence
 
-1. Fix the Frontier decoration processing-state defect without changing which assets animate.
-2. Run the focused `frontier_world` test on Godot 4.7, then the complete Godot CI matrix and campaign/rendered workflows on the exact proposed head.
-3. Inspect the uploaded player-animation playblast and current rendered Frontier/role QA outputs; record human visual status separately from automation.
-4. Audit the current miner resource-selection path against `work/worker-resource-awareness`; selectively port only missing behavior and tests if current main lacks the equivalent.
-5. Continue the rival visible workforce/logistics vertical slice, then territory/outposts and coordinated offensive planning.
-6. Audit residual animation/art tasks and branch patches without merging stale branch snapshots.
-7. Update `CONTEXT.md`, `worklist.md`, `ROADMAP_NEXT_LEVEL.md` and `docs/BRANCH_REGISTRY.md` after the verified implementation stages.
+1. Perform an interactive desktop opening/middle-game playtest; this remains the highest-priority acceptance gap and cannot be replaced by automated simulation.
+2. Build the rival visible-workforce/logistics vertical slice with resource reservation, pathing, local storage and save semantics before secondary settlement expansion.
+3. Reconcile PR #181's residual diff with the later #184 atlas and close it only after proving it has no unique required work.
+4. Inspect civilian profession work loops and enemy/faction animation families in actual gameplay; extend animation architecture without moving combat/work timing out of gameplay systems.
+5. Produce faction silhouettes, buildings/construction/damage states, biome resources/wildlife/props, combat effects and HUD/map icons in the existing Grim Medieval Folklore Fantasy direction.
+6. Profile old performance branches against current diagnostic baselines; cherry-pick only changes with a demonstrated improvement.
+7. Keep v17 save compatibility and legacy world dimensions; use Godot 4.7 exact-head tests before each integration.
 
 ## 6. Execution log
 
@@ -155,3 +157,18 @@ No ref deletion, force update or branch reset is authorized by this recovery. Th
 - Rendered QA artifacts and player animation playblast still require visual inspection.
 - Current local working tree: unavailable in this environment; no cleanliness claim.
 - **Next action:** apply the minimal scene-tree processing-state fix in `scripts/entities/frontier_decoration.gd`, then execute focused and full Godot 4.7 validation.
+
+
+### Recovery execution — 2026-11-07
+
+- Recovery matrix was created before implementation; it was merged with PR #186.
+- Recovery PR #186 code commit: `40bc8a29e86c3cd10e2adc6c4b8fd721794b71e9`; squash merge to `main`: `198c31f5f0c7241158e8e56024e1bc69aacf8b17`.
+- Changed file: `scripts/entities/frontier_decoration.gd`; `_ready()` reapplies `set_process(_ambient_enabled)` after scene entry. The assertion in `tests/frontier_world.gd` was not weakened or changed.
+- Exact PR-head Godot 4.7 CI: [run #42387251192](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387251192), **65/65 jobs passed**, including `Godot 4.7 · frontier_world`.
+- Exact PR-head Campaign Simulation QA: [run #42387251211](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387251211), success. Rendered World QA: [run #42387251238](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387251238), success.
+- Main push after merge: Godot CI [run #42387559533](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387559533) was queued at the last observation; Campaign Simulation QA [run #42387559467](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387559467) and Rendered World QA [run #42387559524](https://github.com/shimleabyte/hold-the-keep/actions/runs/42387559524) passed. Recheck main push CI before closing this checkpoint.
+- Inspected the 37-frame player sprite playblast and 1024×1024 Frontier seed-1337 first/repeat captures. The two map screenshots were pixel-identical. Player clips render, but the sprite-only preview shows modest silhouette changes and does not establish live gameplay acceptance. Landmark animation still needs a live scene preview.
+- Miner resource-awareness branch `c19b20f` is superseded by `scripts/entities/villager_resource_behavior.gd`; current `tests/frontier_worker_ai.gd` covers inaccessible ore, local ore, reserved ore, connected stockpiles and sabotage.
+- PR #181 remains open and unmergeable pending residual-diff reconciliation. Android PRs #150/#152 remain deferred. The temporary recovery head is no longer listed after merge; no explicit branch-delete command was issued.
+- No local checkout, local working tree, interactive desktop session or target hardware was available. Do not claim human gameplay or target-PC performance acceptance.
+- **Next action:** recheck main push CI #42387559533, then audit PR #181 against #184 and close it only after its remaining changes are confirmed superseded or separately preserved.
