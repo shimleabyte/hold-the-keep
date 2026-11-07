@@ -14,6 +14,11 @@ var _ambient_enabled := false
 const AMBIENT_UPDATE_INTERVAL := 1.0 / 12.0
 
 
+func _ready() -> void:
+    # setup() may run before add_child(); synchronize the process flag after tree entry.
+    set_process(_ambient_enabled)
+
+
 func setup(kind: String, variation: int, landmark: bool = false) -> void:
     prop_kind = kind
     variant = posmod(variation, 3)
