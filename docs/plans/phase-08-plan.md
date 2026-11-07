@@ -1,7 +1,7 @@
 # Phase 08 — Visual and Audio Identity
 
-**Status:** Implementation slices 08.2–08.7 are merged. PR #50/#52/#53/#54/#55 delivered biome dressing, faction identity, building identity, combat visual feedback and regional audio; workflows #471/#473/#475/#476/#477 passed 30/30, 72/72, 74/74, 76/76 and 78/78 jobs respectively. Phase 08 remains open for rendered screenshot review and manual audio listening/level-balance QA.
-**Art direction:** [World & Gameplay Design Bible](../WORLD_AND_GAMEPLAY_BIBLE.md) — Grim Medieval Folklore Fantasy, weathered medieval pixel art and restrained folklore motifs.
+**Status:** Phase 08.2–08.7 production slices remain integrated. The original biome, faction, building, combat-feedback and audio work is not being discarded. Phase 08 remains open for rendered screenshot review and manual audio listening/level-balance QA. A new additive overhaul is in progress on `art/phase-08.8-art-direction-lock`; it has established the authoritative art bible/reference board and added a regression guard for the hand-authored player atlas. No complete character/building/biome replacement is claimed yet.
+**Art direction:** [ART_DIRECTION.md](../ART_DIRECTION.md) is the authoritative production specification. [World & Gameplay Design Bible](../WORLD_AND_GAMEPLAY_BIBLE.md) remains the world/lore source of truth; [ART_REFERENCE_BOARD.md](../ART_REFERENCE_BOARD.md) records historical and game-art references.
 **Dependency:** Stable gameplay contracts from Phases 02, 04, 05, 06 and current UI layouts from Phase 10.
 **Engine target:** Godot 4.7 only.
 
@@ -16,6 +16,27 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 - Define sprite scale, pivot, outline, contrast and animation-frame conventions before producing bulk assets.
 - Keep generated/procedural SVG assets reproducible; hand-authored replacements must preserve import paths or update references atomically.
 - Establish preview sheets and in-engine screenshot baselines so visual changes are reviewed rather than inferred from source files.
+
+## 08.8 — Complete visual asset overhaul (active)
+
+Branch: `art/phase-08.8-art-direction-lock`
+
+The overhaul is additive to the shipped Phase 08 work. It replaces generic construction at its source while preserving resource IDs, gameplay behavior, collision footprints, animation IDs, Y-sort origins and save data.
+
+- [x] Establish `docs/ART_DIRECTION.md` with material palettes, biome/faction grammar, role silhouettes, architecture, lighting, pixel-grid rules, rendering dimensions and visual acceptance gates.
+- [x] Establish `docs/ART_REFERENCE_BOARD.md` with historical construction, clothing/armor, pixel-art production and top-down atmosphere references.
+- [x] Identify the legacy generator's unsafe player overwrite: it previously emitted a 20×20 generic player sheet despite the integrated protagonist using 24×28 frames.
+- [x] Exclude the hand-authored player from the legacy renderer and add an explicit generator write guard.
+- [x] Extend `role_sprite_identity` to check player frame size, distinction from the generic soldier sheet and generator ownership. Exact-head Godot validation is pending.
+- [ ] Inventory every current SVG, generator owner, resource reference, atlas size, collision/footprint dependency and actual screen usage.
+- [ ] Redesign the complete player/villager/enemy family with separate authored silhouettes and full directional animation. Do not treat color, hat or held tool overlays as complete role identity.
+- [ ] Redesign faction/archetype combinations, all shipped building silhouettes and construction/damage states.
+- [ ] Redesign biome terrain, vegetation, resources, wildlife, props, combat effects and HUD/map icon families.
+- [ ] Add reproducible source/generator ownership for new assets without allowing a legacy bulk generator to overwrite hand-authored work.
+- [ ] Produce Godot 4.7 rendered sheets and in-game captures at 1280×720, 1600×900 and 1920×1080. Review native logical scale and 2× output.
+- [ ] Run the complete blocking regression matrix and record target-desktop performance separately from CI. Human desktop visual acceptance remains a separate gate.
+
+**Current limitation:** only the art bible, reference board, generator safety guard and test assertions are committed on this branch. Existing shipped art remains in use until replacement packages are implemented and validated.
 
 ## 08.2 — Terrain and regional identity
 - [x] Give Frontier biomes distinct ground textures in a dedicated seven-cell atlas (five land biomes, alternate Hearthland ground and water), preserving tile IDs, 16px tile size and water collision.
