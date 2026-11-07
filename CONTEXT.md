@@ -2,13 +2,15 @@
 
 ## Session recovery status — 2026-11-07
 
-Current remote `main`: `198c31f5f0c7241158e8e56024e1bc69aacf8b17`. PR #186 fixed the inactive Frontier decoration processing-state regression and was squash-merged. Exact PR-head Godot 4.7 CI passed 65/65; Campaign Simulation QA and Rendered World QA passed. The recovery matrix is maintained in [docs/SESSION_RECOVERY.md](docs/SESSION_RECOVERY.md).
+Current production-code integration on remote `main`: `198c31f5f0c7241158e8e56024e1bc69aacf8b17`; subsequent docs-only updates reached `6fbc63454ae288a5537ea206c575cf6ad2bcc8f9` before this checkpoint. PR #186 fixed the inactive Frontier decoration processing-state regression and was squash-merged. Mainline CI on the docs tip passed 65/65 (run #42388208398). Exact PR-head Godot 4.7 CI passed 65/65; Campaign Simulation QA and Rendered World QA passed. The recovery matrix is maintained in [docs/SESSION_RECOVERY.md](docs/SESSION_RECOVERY.md).
 
 The earlier `work/worker-resource-awareness` branch is superseded: `scripts/entities/villager_resource_behavior.gd` already counts usable connected depots and chooses only reachable, unclaimed local iron; `tests/frontier_worker_ai.gd` covers remote ore, local ore, reserved ore, connected storage and sabotage. Do not reimplement it.
 
 PR #182 authored civilian atlases, PR #184 player 46-frame animation and PR #185 Frontier environmental dressing are integrated. The 37-frame player sprite playblast and Frontier seed-1337 render captures were inspected. Sprite clips render, but locomotion/action motion still needs stronger visual separation and review in live gameplay. Rendered screenshots verify map output/determinism only; they do not verify ambient animation playback.
 
 Remaining gameplay gaps: interactive opening/middle-game acceptance; rival visible workers and physical resource logistics; rival outposts/territory; a coordinated offensive planner. Remaining visual gaps: enemy/faction identities and motion; buildings/construction/damage states; biome assets and props; combat VFX; HUD/map iconography. Save schema remains v17, Godot 4.7 is the only active engine target, desktop is first, and Android remains deferred.
+
+PR #181 has since been closed unmerged as superseded by #184; #150 and #152 are now the only open PRs and remain Android-deferred. Performance branches for village assignment, FlowField/road invalidation, specialist scans and bounded wildlife were source-audited and found superseded by newer mainline implementations.
 
 No local checkout, local working tree, interactive desktop session or target hardware was available during this recovery. Do not treat Actions success as human playtest or target-PC performance acceptance.
 
