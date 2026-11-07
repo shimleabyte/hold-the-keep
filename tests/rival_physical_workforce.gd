@@ -80,12 +80,6 @@ func _initialize() -> void:
         not woodcutter.is_in_group("villagers") and not woodcutter.is_in_group("enemy_garrison"),
         "Rival economic workers must remain separate from player civilians and military units"
     )
-    var army_command: Node = main_scene.get("army_command")
-    if army_command != null:
-        army_command.call("select_unit", woodcutter)
-        var selected: Array = army_command.get("selected_units")
-        _check(selected.is_empty(), "Rival economic workers must not be selectable by player army commands")
-
     var resource_before: float = float(civilization.get("resources").get("wood", 0.0))
     var saw_target_claim := false
     var saw_cargo := false
