@@ -11,20 +11,22 @@
 
 | Metric | Result |
 |---|---:|
-| Remote branches before cleanup | 156 |
-| Remote branches after this audit | 156 |
+| Remote branches before cleanup | 157 |
+| Remote branches after this audit | 157 |
 | Branches deleted | 0 |
-| Branches retained | 156 |
+| Branches retained | 157 |
 | Pull requests inventoried | 178 |
 | Merged PRs | 126 |
 | Closed, unmerged PRs | 50 |
 | Open PRs | 2 |
 | MERGED branches (including main) | 88 |
 | DUPLICATE / SUPERSEDED branches | 24 |
-| ACTIVE branches | 11 |
+| ACTIVE branches | 12 |
 | INCOMPLETE branches | 26 |
 | BLOCKED / DEFERRED branches | 7 |
 | Completed but unmerged | 0 proven by this audit |
+
+**Registry update:** one new active visual-overhaul branch, `art/phase-08.8-art-direction-lock`, was created after the initial 156-branch inventory. This brings the retained remote branch count to 157; the new branch is recorded below with its current head and pending CI state.
 
 **Deletion limitation:** this audit's connected GitHub actions expose branch enumeration, comparisons, file writes and ref updates, but no remote branch-delete operation. No branch was force-pushed, moved or deleted as a workaround. Every branch that is demonstrably merged or superseded is marked for retirement, but actual deletion remains blocked by tool capability rather than uncertain authorization.
 
@@ -66,6 +68,7 @@ All 178 PR records (open and closed) were enumerated. The table above records ex
 All remote branches are listed. `HEAD` links to the exact enumerated tip commit. The CI column distinguishes the current-main result from historical tip status; it does not infer old CI success from branch age or PR title.
 
 | Branch | Workstream | Status | Main integration | PR | CI | Next action | HEAD |
+| [`art/phase-08.8-art-direction-lock`](https://github.com/shimleabyte/hold-the-keep/tree/art/phase-08.8-art-direction-lock) | visual: Phase 08.8 full art direction and asset overhaul | ACTIVE | Not merged; isolated from main | Not created yet | Pending exact-head Godot 4.7 validation | Complete asset inventory and deliver reviewed character/building/biome art packages | [`85ce80723c`](https://github.com/shimleabyte/hold-the-keep/commit/85ce80723cd40461892b6b95951e70719ad47f79) |
 |---|---|---|---|---|---|---|---|
 | [`combat/player-skills-enemy-ai`](https://github.com/shimleabyte/hold-the-keep/tree/combat/player-skills-enemy-ai) | combat: player-skills-enemy-ai | MERGED | Integrated via PR #1 | [#1](https://github.com/shimleabyte/hold-the-keep/pull/1) merged | Historical head not re-run in this audit | Retire branch when deletion access is available | [`ec2a41bd45`](https://github.com/shimleabyte/hold-the-keep/commit/ec2a41bd450c58cec2d75b7e3c00f7f02e6717e0) |
 | [`docs/android-armv7-device-qa`](https://github.com/shimleabyte/hold-the-keep/tree/docs/android-armv7-device-qa) | docs: android-armv7-device-qa | BLOCKED / DEFERRED | Not in desktop mainline; outside current desktop-first scope | [#150](https://github.com/shimleabyte/hold-the-keep/pull/150) open | Historical head not re-run in this audit | Retain separately; do not merge until Android/RTS scope is explicitly reopened | [`1d2e290638`](https://github.com/shimleabyte/hold-the-keep/commit/1d2e29063881f6060f08e3ca3e98202196e55531) |
