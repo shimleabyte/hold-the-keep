@@ -13,8 +13,8 @@ Keep the existing crisp pixel-art rendering discipline. Every pose remains align
 | Property | Contract |
 |---|---|
 | Player frame size | 24×28 logical pixels |
-| Player atlas | 24 frames × 3 facing rows |
-| Source SVG size | 576×84 |
+| Player atlas | 30 frames × 3 facing rows |
+| Source SVG size | 720×84 |
 | Facing rows | Front/down, back/up, side/right; side is mirrored for left |
 | Ground pivot | Bottom-center of the 24×28 cell |
 | Shared role sheets | Preserve their independent 22-frame contract |
@@ -30,16 +30,17 @@ Three rows do not mean eight-direction animation. Diagonal input currently selec
 | 2–5 | Walk | Existing two-step-pose alternation repeated; upper body/cape mostly static |
 | 6–9 | Run | Existing two-pose alternation repeated; not yet a complete stride cycle |
 | 10–15 | Light sword attack | Six-pose timed sequence; impact frame 12 follows live gameplay hit delay |
-| 16–19 | Work/harvest | Separate clip range, but currently uses sword-layer poses; dedicated tool silhouette is not yet authored |
+| 16–19 | Work/harvest | Four-pose hand-authored pick/axe tool cycle; contact frame 18 follows the existing 0.14s event |
 | 20 | Hurt | One frame only; insufficient for a complete recoil/recovery animation |
 | 21–23 | Death | Three frames exist, but gameplay immediately respawns and does not play this sequence to completion |
+| 24–29 | Heavy Cleave | Dedicated six-pose brace, wind-up, downswing, impact, follow-through and recovery; impact frame 26 follows the existing 0.22s hit event |
 
 ## Gameplay event ownership
 
 Gameplay remains authoritative for damage, hit sectors, cooldowns, combo state, harvest yield and ability resolution. Animation is presentation-only.
 
 - Light attack frame 12 is timed from the existing combo hit delay: 0.11s / 0.13s / 0.19s.
-- Cleave resolves at its existing 0.22s event within its 0.46s ability window. It currently shares the light-attack pose sequence; a separate heavy action is required.
+- Cleave resolves at its existing 0.22s event within its 0.46s ability window. It uses frames 24–29, with heavy impact frame 26; damage, range, stagger and cooldown remain gameplay-owned.
 - Player harvest retains its existing 0.14s contact event. Its artwork must become a distinct tool-contact cycle; do not alter yield or resource timing to fit art.
 - Hurt must pre-empt attack/work presentation. It must not cancel or duplicate pending gameplay events unless the gameplay contract explicitly calls for cancellation.
 - Dash currently reuses Run. Rally currently reuses Idle. These are known presentation gaps, not accepted final states.
@@ -69,8 +70,8 @@ Gameplay remains authoritative for damage, hit sectors, cooldowns, combo state, 
 ## Current known blockers
 
 - The player playblast previously failed because the harness eagerly preloaded `player.gd` before the `Events` autoload was available. The branch now loads the GDScript after the first process frame; exact-head rendered validation remains pending.
-- Harvest artwork is not yet a genuine tool animation.
-- Cleave/Dash/Rally do not yet have unique pose sequences.
+- The tool silhouette is now separate from the sword, but the four harvest poses still need native-scale visual acceptance and better arm/torso follow-through.
+- Cleave now has a dedicated heavy sequence. Dash still reuses Run and Rally still reuses Idle.
 - Hurt/death are under-animated and death is not currently played through the gameplay respawn path.
 - Player locomotion still needs more complete leg cycles and torso/cape overlap.
 - Villager, enemy, faction-specific and specialist animation production remains open.

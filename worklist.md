@@ -47,11 +47,11 @@ Execution order is art inventory/ownership, character family and animation, fact
 
 - [x] Separate the protagonist's 24-frame atlas/clip map from the shared 22-frame villager/enemy sheets.
 - [x] Key the light-attack impact pose to existing combo timings (0.11s / 0.13s / 0.19s) and Cleave's current 0.22s hit event without changing damage/cooldowns.
-- [x] Give work, hurt and death their own atlas ranges; the work artwork still needs a dedicated tool layer.
+- [x] Give work/harvest a dedicated four-pose pick/axe layer, and reserve six additional frames for the heavy Cleave sequence.
 - [x] Add timing, pose-distinction, atlas-bounds, foot-contact and attack-to-hurt interruption regressions.
 - [x] Remove the eager Player preload from the playblast harness; load the Player script after autoload initialization.
 - [ ] Re-run exact-head Godot 4.7 matrix and complete the rendered Player contact sheet/GIF.
-- [ ] Replace placeholder harvest artwork with a distinct harvesting tool cycle; author unique Cleave, Dash and Rally poses; extend hurt/death animation.
+- [ ] Validate the new pick/axe cycle and heavy Cleave at native gameplay zoom; author unique Dash and Rally poses; extend hurt/death animation.
 - [ ] Inspect native-scale player motion and all facing rows before beginning broad villager/enemy animation production.
 
 Preserve gameplay hit delays, damage, cooldowns, hit sectors, harvest timing and yields. This package remains presentation-only; no AI, economy, save-schema or campaign changes belong here.

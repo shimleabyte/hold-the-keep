@@ -43,12 +43,13 @@ The overhaul is additive to the shipped Phase 08 work. It replaces generic const
 Branch: `animation/player-motion-timing` — [PR #181](https://github.com/shimleabyte/hold-the-keep/pull/181)
 
 - [x] Split the protagonist's 24×28 atlas/clip contract from shared role sheets.
-- [x] Synchronize the light-attack impact frame to existing combo hit delays and the Cleave hit event.
+- [x] Synchronize the light-attack impact frame to existing combo hit delays and author a separate six-pose heavy Cleave sequence keyed to the existing 0.22s event.
+- [x] Replace the work clip's sword-layer placeholders with a dedicated four-pose pick/axe silhouette keyed to the existing 0.14s harvest contact.
 - [x] Add player animation interruption priority and timing/pose/foot-contact regression coverage.
 - [x] Keep gameplay damage, hit sectors, cooldowns and harvest yield unchanged.
 - [ ] Complete the Godot-rendered Player playblast and inspect attack/locomotion at native gameplay zoom.
-- [ ] Replace placeholder harvest poses with dedicated tool artwork.
-- [ ] Author genuinely distinct Cleave, Dash and Rally sequences plus multi-frame hurt/death.
+- [ ] Inspect the new harvest tool and heavy Cleave poses at native gameplay zoom.
+- [ ] Author genuinely distinct Dash and Rally sequences plus multi-frame hurt/death.
 - [ ] Complete player locomotion and secondary cloth/weapon overlap before extending the character production method to villagers and enemies.
 
 **Boundary:** three authored facing rows remain three facings, not eight-direction art. This foundation is not a complete Player animation set and does not complete Phase 08.8.

@@ -114,13 +114,23 @@ func _initialize() -> void:
     await ticks(5)
     await capture("Player · attack recovery", center)
 
-    # Cleave currently shares the six-frame attack vocabulary. Do not disguise it.
+    # Dedicated heavy Cleave sequence: capture the six authored poses at their timeline markers.
     main_player.level = 2
     main_player._cleave_cd = 0.0
     main_player._use_cleave()
+    await ticks(2)
+    await capture("Player · Cleave brace", center)
+    await ticks(6)
+    await capture("Player · Cleave wind-up", center)
+    await ticks(6)
+    await capture("Player · Cleave impact", center)
+    await ticks(2)
+    await capture("Player · Cleave follow-through", center)
     await ticks(5)
-    await capture("Player · Cleave (shared attack poses)", center)
-    await ticks(15)
+    await capture("Player · Cleave recovery", center)
+    await ticks(5)
+    await capture("Player · Cleave settle", center)
+    await ticks(2)
 
     # Dash currently reuses the run clip.
     main_player._dash_cd = 0.0
