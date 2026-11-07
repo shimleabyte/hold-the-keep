@@ -3,7 +3,7 @@
 **Audit date:** 2026-11-07 (Asia/Jakarta)  
 **Repository:** [shimleabyte/hold-the-keep](https://github.com/shimleabyte/hold-the-keep)  
 **Canonical branch:** `main`  
-**`main` HEAD at audit start:** [`f9a6a443db0f2bb8593f77a8ac93f1d3b834f95d`](https://github.com/shimleabyte/hold-the-keep/commit/f9a6a443db0f2bb8593f77a8ac93f1d3b834f95d)  
+**`main` HEAD after recovery:** [`198c31f5f0c7241158e8e56024e1bc69aacf8b17`](https://github.com/shimleabyte/hold-the-keep/commit/198c31f5f0c7241158e8e56024e1bc69aacf8b17)  
 **Engine / scope:** Godot 4.7; desktop-first (Windows x86_64 / Linux x86_64); Android deferred  
 **Save schema:** v17
 
@@ -11,14 +11,13 @@
 
 | Metric | Result |
 |---|---:|
-| Remote branches before cleanup | 157 |
-| Remote branches after this audit | 158 |
-| Branches deleted | 0 |
-| Branches retained | 158 |
-| Pull requests inventoried | 182 |
-| Merged PRs | 128 |
+| Remote branches before recovery | 157 |
+| Remote branches after recovery merge | 157 |
+| Branches explicitly deleted during recovery | 0 |
+| Pull requests inventoried | 186 |
+| Merged PRs | 133 |
 | Closed, unmerged PRs | 50 |
-| Open PRs | 4 |
+| Open PRs | 3 |
 | MERGED branches (including main) | 88 |
 | DUPLICATE / SUPERSEDED branches | 24 |
 | ACTIVE branches | 13 |
@@ -26,7 +25,7 @@
 | BLOCKED / DEFERRED branches | 7 |
 | Completed but unmerged | 0 proven by this audit |
 
-**Registry update:** the counts above were refreshed on 2026-11-07 after PR #179 merged and the Phase 08.9 civilian-art branch and PR #182 were created. Current GitHub enumeration: 158 remote branches and 182 pull requests (128 merged, 50 closed unmerged, 4 open). Classification totals below retain the prior branch-by-branch audit categories; a full reclassification of every historical branch was not part of this focused art update.
+**Registry update (2026-11-07 recovery):** live enumeration after PR #186 shows 157 remote branches and 186 pull requests (133 merged, 50 closed unmerged, 3 open). This includes merged PRs #182, #184, #185 and #186. The temporary recovery branch is no longer listed after its merge; no separate branch-delete action was issued. The branch-level historical classification table below is a retained snapshot, not a full reclassification of all current refs. See [docs/SESSION_RECOVERY.md](docs/SESSION_RECOVERY.md) for the verified focused branch dispositions.
 
 **Deletion limitation:** this audit's connected GitHub actions expose branch enumeration, comparisons, file writes and ref updates, but no remote branch-delete operation. No branch was force-pushed, moved or deleted as a workaround. Every branch that is demonstrably merged or superseded is marked for retirement, but actual deletion remains blocked by tool capability rather than uncertain authorization.
 
@@ -56,16 +55,19 @@
 | [#153](https://github.com/shimleabyte/hold-the-keep/pull/153) | Low-cost profession animation/contact feedback iteration | Closed, not merged | Do not classify as safely disposable solely from PR state; related art/animation branches remain retained until their residual changes are compared with #158. |
 | [#158](https://github.com/shimleabyte/hold-the-keep/pull/158) | Low-cost profession contact feedback | Merged | Integrated implementation for the merged portion; does not by itself prove every older profession-sprite branch is fully represented. |
 | [#179](https://github.com/shimleabyte/hold-the-keep/pull/179) | Phase 08.8 art direction and player-atlas generator safety | Merged | Art bible/reference board and 24×28 authored-player ownership guard merged at `27740a72e187`; exact-head Godot 4.7 and Rendered World QA passed. |
-| [#182](https://github.com/shimleabyte/hold-the-keep/pull/182) | Phase 08.9 ten-role civilian sprite overhaul | Open | Exact-head Godot CI, Role Sprite Visual QA and Rendered World QA passed; merge only after all required statuses remain green. |
+| [#182](https://github.com/shimleabyte/hold-the-keep/pull/182) | Phase 08.9 ten-role civilian sprite overhaul | Merged | Ten authored civilian role atlases integrated at `7dea98194e308ebb380115c873d395e64fffada0`. |
 
-All 182 PR records (open and closed) were enumerated in the latest count refresh. The table above records explicit decisions for the known risk/priority PRs; the branch inventory below links each branch to its matching PR where one exists. This is a metadata-wide audit, not a claim that every historical PR diff and discussion thread received a full source review.
+All 186 PR records (open and closed) were enumerated in the latest count refresh. The table above records explicit decisions for the known risk/priority PRs; the branch inventory below links each branch to its matching PR where one exists. This is a metadata-wide audit, not a claim that every historical PR diff and discussion thread received a full source review.
+
+| [#184](https://github.com/shimleabyte/hold-the-keep/pull/184) | Player 46-frame animation integration | Merged | Current player atlas/clip system is integrated; sprite-only playblast succeeds, live gameplay motion review remains open. |
+| [#185](https://github.com/shimleabyte/hold-the-keep/pull/185) | Frontier ground dressing and landmark motion | Merged | Integrated visual dressing; ambient processing regression later fixed by #186. |
+| [#186](https://github.com/shimleabyte/hold-the-keep/pull/186) | Frontier inactive decoration processing regression | Merged | Reapplies the configured processing flag after scene-tree entry; exact-head Godot 4.7 CI passed 65/65, Campaign Simulation QA and Rendered World QA passed. |
 
 ## Open PRs
 
-- [#152 — feat(android): add ARMv7 touchscreen controls on current main](https://github.com/shimleabyte/hold-the-keep/pull/152) — head `feat/android-armv7-touch-controls-current-main` (`a405e8f92f1d9df5ebbea0b18a582ab4a073be15`), base `main`, ready for review. Deferred Android work; preserve, do not merge into desktop scope.
-- [#150 — docs(android): add ARMv7 physical-device acceptance checklist](https://github.com/shimleabyte/hold-the-keep/pull/150) — head `docs/android-armv7-device-qa` (`1d2e29063881f6060f08e3ca3e98202196e55531`), base `main`, draft. Deferred Android work; preserve, do not merge into desktop scope.
-- [#181 — feat(animation): separate player atlas and sync attack poses to hit events](https://github.com/shimleabyte/hold-the-keep/pull/181) — head `animation/player-motion-timing`, base `main`. Separate player-animation package; keep distinct from the civilian sprite work and reconcile shared regression tests before merging.
-- [#182 — feat(art): replace generic civilian sprites with authored role atlases](https://github.com/shimleabyte/hold-the-keep/pull/182) — head `art/phase-08.9-villager-character-family` (`8dc9b8e2a25f`), base `main`. Godot 4.7 63/63, Role Sprite Visual QA and Rendered World QA passed; merge after the required checks remain green.
+- [#181 — feat(animation): split player atlas and synchronize combat poses](https://github.com/shimleabyte/hold-the-keep/pull/181) — head `animation/player-motion-timing` (`e63c1ecf5b70ad3b9ca37054a8b7c5bdd7c3f022`), base `main`, open and not mergeable. The later 46-frame player implementation was merged by #184. Reconcile unique tests/docs/workflow changes, preserve anything useful, then close as superseded if no residual requirement remains.
+- [#152 — feat(android): add ARMv7 touchscreen controls on current main](https://github.com/shimleabyte/hold-the-keep/pull/152) — deferred Android work; keep separate from desktop-first scope.
+- [#150 — docs(android): add ARMv7 physical-device acceptance checklist](https://github.com/shimleabyte/hold-the-keep/pull/150) — draft; deferred Android work; keep separate from desktop-first scope.
 
 ## Retained branch inventory
 
@@ -74,7 +76,7 @@ All remote branches are listed. `HEAD` links to the enumerated tip or live branc
 | Branch | Workstream | Status | Main integration | PR | CI | Next action | HEAD |
 |---|---|---|---|---|---|---|---|
 | `art/phase-08.8-art-direction-lock` (merged branch; auto-deleted) | visual: Phase 08.8 art-direction foundation | MERGED | Integrated via PR #179 at `27740a72e187` | [#179](https://github.com/shimleabyte/hold-the-keep/pull/179) merged | Godot 4.7 64/64; Rendered World QA passed | No action; successor art production tracked by Phase 08.9 | [merge commit](https://github.com/shimleabyte/hold-the-keep/commit/27740a72e187487ea8fc58a1a08680836cc8e22e) |
-| [`art/phase-08.9-villager-character-family`](https://github.com/shimleabyte/hold-the-keep/tree/art/phase-08.9-villager-character-family) | visual: ten authored civilian role atlases and Godot preview QA | ACTIVE | PR #182 open; isolated from main | [#182](https://github.com/shimleabyte/hold-the-keep/pull/182) open | Godot 4.7 63/63; Role Sprite Visual QA and Rendered World QA passed | Merge after exact-head checks remain green; then start enemy/faction package | [`8dc9b8e2a25f`](https://github.com/shimleabyte/hold-the-keep/commit/8dc9b8e2a25fcef13b327f901fcfc9d0a4eb426e) |
+| [`art/phase-08.9-villager-character-family`](https://github.com/shimleabyte/hold-the-keep/tree/art/phase-08.9-villager-character-family) | visual: ten authored civilian role atlases and Godot preview QA | MERGED | Integrated via PR #182 at `7dea98194e308ebb380115c873d395e64fffada0` | [#182](https://github.com/shimleabyte/hold-the-keep/pull/182) merged | Godot 4.7 63/63; Role Sprite Visual QA and Rendered World QA passed | Continue into enemy/faction visual package after animation acceptance | [`8dc9b8e2a25f`](https://github.com/shimleabyte/hold-the-keep/commit/8dc9b8e2a25fcef13b327f901fcfc9d0a4eb426e) |
 | [`combat/player-skills-enemy-ai`](https://github.com/shimleabyte/hold-the-keep/tree/combat/player-skills-enemy-ai) | combat: player-skills-enemy-ai | MERGED | Integrated via PR #1 | [#1](https://github.com/shimleabyte/hold-the-keep/pull/1) merged | Historical head not re-run in this audit | Retire branch when deletion access is available | [`ec2a41bd45`](https://github.com/shimleabyte/hold-the-keep/commit/ec2a41bd450c58cec2d75b7e3c00f7f02e6717e0) |
 | [`docs/android-armv7-device-qa`](https://github.com/shimleabyte/hold-the-keep/tree/docs/android-armv7-device-qa) | docs: android-armv7-device-qa | BLOCKED / DEFERRED | Not in desktop mainline; outside current desktop-first scope | [#150](https://github.com/shimleabyte/hold-the-keep/pull/150) open | Historical head not re-run in this audit | Retain separately; do not merge until Android/RTS scope is explicitly reopened | [`1d2e290638`](https://github.com/shimleabyte/hold-the-keep/commit/1d2e29063881f6060f08e3ca3e98202196e55531) |
 | [`docs/phase-06-mainline-acceptance`](https://github.com/shimleabyte/hold-the-keep/tree/docs/phase-06-mainline-acceptance) | docs: phase-06-mainline-acceptance | INCOMPLETE | PR #49 closed unmerged; main integration not proven | [#49](https://github.com/shimleabyte/hold-the-keep/pull/49) closed unmerged | Historical head not re-run in this audit | Preserve; inspect unique commits and tests before any deletion | [`728cc0a249`](https://github.com/shimleabyte/hold-the-keep/commit/728cc0a24952ffb3c2c54a32e0f3721fd048f4a0) |
