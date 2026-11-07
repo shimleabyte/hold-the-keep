@@ -5,12 +5,25 @@ var prop_kind := "fern_cluster"
 var variant := 0
 var is_landmark := false
 var _batch_entries: Array[Dictionary] = []
+var _ambient_elapsed := 0.0
+var _ambient_time := 0.0
+var _ambient_phase := 0.0
+var _ambient_intensity := 0.5
+var _ambient_enabled := false
+
+const AMBIENT_UPDATE_INTERVAL := 1.0 / 12.0
 
 
 func setup(kind: String, variation: int, landmark: bool = false) -> void:
     prop_kind = kind
     variant = posmod(variation, 3)
     is_landmark = landmark
+    _ambient_phase = float(variation) * 0.83
+    _ambient_enabled = landmark and (kind == "fen_reeds" or kind == "hearth_shrine")
+    _ambient_elapsed = 0.0
+    _ambient_time = 0.0
+    _ambient_intensity = 0.5
+    set_process(_ambient_enabled)
     z_index = 1 if landmark else 0
     add_to_group("frontier_decorations")
     if landmark:
@@ -25,6 +38,17 @@ func setup_batch(entries: Array, landmark: bool) -> void:
         if entry is Dictionary:
             _batch_entries.append(entry.duplicate(true))
     is_landmark = landmark
+    _ambient_enabled = false
+    _ambient_elapsed = 0.0
+    _ambient_time = 0.0
+    _ambient_intensity = 0.5
+    for entry in _batch_entries:
+        var kind := String(entry.get("kind", ""))
+        if landmark and (kind == "fen_reeds" or kind == "hearth_shrine"):
+            _ambient_enabled = true
+            _ambient_phase = float(entry.get("variant", 0)) * 0.83
+            break
+    set_process(_ambient_enabled)
     z_index = 1 if landmark else 0
     add_to_group("frontier_decorations")
     add_to_group("frontier_decoration_batches")
@@ -33,12 +57,34 @@ func setup_batch(entries: Array, landmark: bool) -> void:
     queue_redraw()
 
 
+## Ambient motion is limited to the two regional landmarks that benefit from it.
+## Batch drawing keeps one CanvasItem per row while animating only the reeds/ember.
+func _process(delta: float) -> void:
+    if not _ambient_enabled:
+        return
+    _ambient_elapsed += delta
+    if _ambient_elapsed < AMBIENT_UPDATE_INTERVAL:
+        return
+    _ambient_time += _ambient_elapsed
+    _ambient_elapsed = 0.0
+    _ambient_intensity = 0.5 + 0.5 * sin(_ambient_time * 2.2 + _ambient_phase)
+    if _batch_entries.is_empty() and prop_kind == "fen_reeds":
+        rotation_degrees = sin(_ambient_time * 1.7 + _ambient_phase) * 1.25
+    else:
+        queue_redraw()
+
+
 func _draw() -> void:
     if not _batch_entries.is_empty():
         for entry in _batch_entries:
             var offset: Vector2 = entry.get("offset", Vector2.ZERO)
-            draw_set_transform(offset, 0.0, Vector2.ONE)
-            _draw_prop(String(entry.get("kind", "")), int(entry.get("variant", 0)))
+            var kind := String(entry.get("kind", ""))
+            var variation := int(entry.get("variant", 0))
+            var sway := 0.0
+            if _ambient_enabled and kind == "fen_reeds":
+                sway = deg_to_rad(sin(_ambient_time * 1.7 + float(variation) * 0.83) * 1.25)
+            draw_set_transform(offset, sway, Vector2.ONE)
+            _draw_prop(kind, variation)
         draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
         return
     _draw_prop(prop_kind, variant)
@@ -126,6 +172,8 @@ func _draw_hearth_shrine() -> void:
         Vector2(-6, -3), Vector2(-5, -11), Vector2(0, -15),
         Vector2(5, -11), Vector2(6, -3)
     ]), Color("#75664c"))
+    var ember_alpha := 0.10 + _ambient_intensity * 0.24
+    draw_circle(Vector2(0, -7), 3.0, Color(0.83, 0.48, 0.2, ember_alpha))
     draw_line(Vector2(0, -13), Vector2(0, -5), Color("#c39b62"), 1.0)
     draw_line(Vector2(-3, -9), Vector2(3, -9), Color("#c39b62"), 1.0)
     draw_circle(Vector2(0, -7), 1.2, Color("#d0a45f"))

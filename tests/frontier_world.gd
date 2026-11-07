@@ -639,6 +639,37 @@ func _initialize() -> void:
     assert(decoration_signature(mirror) == decoration_signature(world),
         "Biome decoration and landmark placement must be deterministic for a matching seed/profile")
 
+    # Only Fenlands reeds and the Hearthland shrine should animate. Decoration
+    # batches retain one CanvasItem per world row; updates are capped at 12 Hz.
+    var animated_landmark_batches: Array[Node] = []
+    for batch in get_nodes_in_group("frontier_decoration_batches"):
+        var should_animate := false
+        var batch_entries: Array = batch.get("_batch_entries")
+        if bool(batch.get("is_landmark")):
+            for entry in batch_entries:
+                var kind := String(entry.get("kind", ""))
+                if kind == "fen_reeds" or kind == "hearth_shrine":
+                    should_animate = true
+                    break
+        var actual_processing: bool = batch.is_processing()
+        var actual_ambient: bool = bool(batch.get("_ambient_enabled"))
+        assert(actual_processing == should_animate,
+            "Decoration batch %s: landmark=%s expected_process=%s actual_process=%s ambient=%s entries=%s" % [
+                String(batch.get_path()), str(bool(batch.get("is_landmark"))),
+                str(should_animate), str(actual_processing), str(actual_ambient), str(batch_entries)
+            ])
+        if should_animate:
+            animated_landmark_batches.append(batch)
+    assert(animated_landmark_batches.size() == 2,
+        "The Fenlands reeds and Hearthland shrine must be the two animated landmarks")
+    var ambient_times_before: Array[float] = []
+    for batch in animated_landmark_batches:
+        ambient_times_before.append(float(batch.get("_ambient_time")))
+    await ticks(12)
+    for index in animated_landmark_batches.size():
+        assert(float(animated_landmark_batches[index].get("_ambient_time")) > ambient_times_before[index],
+            "Animated landmark batches must advance their low-frequency ambient timeline")
+
     print("PASS: Frontier dimensions, five regions, biome dressing, five landmarks, resources, iron veins, Keep claim, reachability and deterministic generation")
     mirror.queue_free()
     main.queue_free()
