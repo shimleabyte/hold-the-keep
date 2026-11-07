@@ -74,20 +74,18 @@ func _initialize() -> void:
     assert(anim.frame_index() == 0,
         "Switching out of a timed player attack must clear its frame timeline")
 
-    var player_work: Player = PlayerScript.new() as Player
-    player_work.anim.play_player_clip("work", true, 14.0)
-    assert(player_work.anim.frame_index() == 16, "Player harvest must begin from its own neutral tool pose")
+    anim.play_player_clip("work", true, 14.0)
+    assert(anim.frame_index() == 16, "Player harvest must begin from its own neutral tool pose")
     var harvest_elapsed := 0.0
     for tick in 9:
         harvest_elapsed += 1.0 / 60.0
-        player_work.anim.update(1.0 / 60.0)
-    assert(harvest_elapsed >= 0.14 and player_work.anim.frame_index() == 18,
+        anim.update(1.0 / 60.0)
+    assert(harvest_elapsed >= 0.14 and anim.frame_index() == 18,
         "Player harvest's tool-contact pose must coincide with its existing 0.14s gameplay event")
-    player_work.anim.play_player_clip("hurt", true)
-    assert(player_work.anim.frame_index() == 20, "Player hurt must use its remapped 24-frame atlas cell")
-    player_work.anim.play_player_clip("death", true)
-    assert(player_work.anim.frame_index() == 21, "Player death must use its remapped three-frame fall sequence")
-    player_work.free()
+    anim.play_player_clip("hurt", true)
+    assert(anim.frame_index() == 20, "Player hurt must use its remapped 24-frame atlas cell")
+    anim.play_player_clip("death", true)
+    assert(anim.frame_index() == 21, "Player death must use its remapped three-frame fall sequence")
 
     anim.play("work", true)
     anim.work_style = "builder"
