@@ -50,7 +50,7 @@ func _initialize() -> void:
     var spawned := 0
     for index in roles.size():
         var column := index % 5
-        var row := index / 5
+        var row := int(index / 5)
         var offset := Vector2((column - 2) * 58.0, -76.0 + row * 42.0)
         var villager = main.village.spawn_villager(main.player.global_position + offset)
         if villager == null:
