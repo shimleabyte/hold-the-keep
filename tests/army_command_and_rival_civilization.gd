@@ -96,9 +96,6 @@ func _initialize() -> void:
             _check(starting_wood > 0.0, "Rival civilization should start with a finite resource ledger")
             for tick: int in range(500):
                 civilization.call("advance", 1.0)
-                for rival_worker: Node in get_nodes_in_group("enemy_economic_workers"):
-                    if is_instance_valid(rival_worker) and rival_worker.get("civilization") == civilization:
-                        rival_worker.call("tick", 1.0)
 
             _check(bool(civilization.call("_has_structure", "lumber_camp")),
                 "Rival civilization should construct a visible lumber camp")
