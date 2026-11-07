@@ -148,3 +148,12 @@ Periodic rival reinforcements now use the existing faction roster and doctrine c
 Each recruit has an explicit resource cost. Scouts and basic infantry remain cheaper; saboteurs, beast riders, shield specialists, shamans and siege engines consume additional food, wood, stone and/or iron. Initial opening garrisons remain unchanged; only periodic paid reinforcement uses the planner. Costs are debited only after a valid spawn cell is found and the unit is created. Save schema v17 is unchanged because composition is derived from the live garrison.
 
 The existing army/rival regression now checks doctrine favorites, filling missing composition roles, per-unit costs and ledger debits, and refusal to recruit when no roster unit is affordable.
+
+
+## 5e. Phase 11.5 — Composition-aware paid recruitment (implementation)
+
+The rival stronghold no longer cycles mechanically through its faction roster when recruiting periodic reinforcements. Every doctrine has target unit shares. On each reinforcement opportunity the planner counts living garrison IDs, computes each candidate's composition deficit against the prospective army size, filters out unavailable/unaffordable roster entries, and selects the candidate with the largest remaining deficit. Roster order provides deterministic tie-breaking.
+
+Each supported faction unit has an explicit recruitment cost. Basic roles have modest food/wood costs; disruption, cavalry, shield, shaman and siege roles consume additional resources. The stronghold does not spawn a periodic reinforcement when no candidate can be paid. Costs are debited only after a valid spawn succeeds. The three opening garrison units are preserved unchanged as initial campaign setup.
+
+No unit-composition state is stored; it is derived from living garrison entities. Save schema v17 remains unchanged. The army/rival regression now verifies the expected first recruit for all four doctrines, composition deficit correction, unit-specific resource debits and no recruitment when all candidates are unaffordable.

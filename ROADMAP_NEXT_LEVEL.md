@@ -454,3 +454,12 @@ Rival resource ledgers now have an effective 240-unit capacity per resource. A c
 Legacy v17 balances above the new cap are not deleted or clamped down. They are preserved and receive no additional production until spending brings the balance below the cap. Save schema stays v17.
 
 Next: rendered pacing review, then physical resource extraction/delivery and rival territory/supply. Visible rival workers and multi-settlement logistics remain separate work, not implied by this local capacity model.
+
+
+## Phase 11.5 — Doctrine-driven rival recruitment (2026-11-07)
+
+Periodic rival reinforcement is no longer round-robin. Each doctrine has target unit shares; the stronghold counts its current living garrison and chooses the affordable roster unit that most reduces its composition deficit. Ambush favors light infantry/scouting and disruption, Fortress favors shield infantry and archers with siege support, Attrition favors wolves/shamans and scouting, and Siege prioritizes siege engines supported by shield infantry and shamans.
+
+Each recruit has a distinct paid resource profile. Advanced roles cost additional food, wood, stone and/or iron. If no roster unit can be afforded, the stronghold waits rather than spawning free troops. Initial opening garrisons remain unchanged. The planner derives composition from live guard IDs and introduces no save-schema changes; v17 remains current.
+
+Next dependencies remain physical rival resource logistics and territorial expansion, plus human rendered opening/middle-game acceptance. Do not substitute a larger roster for observed strategic behavior.

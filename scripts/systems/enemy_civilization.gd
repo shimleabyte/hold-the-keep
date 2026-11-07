@@ -553,7 +553,8 @@ func recruitment_cost_for(unit_id: String) -> Dictionary:
 
 func _recruitment_cost(unit_id: String = "") -> Dictionary:
     if not unit_id.is_empty() and RECRUITMENT_COSTS.has(unit_id):
-        return (RECRUITMENT_COSTS[unit_id] as Dictionary).duplicate(true)
+        var configured_cost: Dictionary = RECRUITMENT_COSTS[unit_id]
+        return configured_cost.duplicate(true)
     var cost: Dictionary = {"food": 10.0, "wood": 4.0}
     if technology_tier >= 1:
         cost["iron"] = 1.0

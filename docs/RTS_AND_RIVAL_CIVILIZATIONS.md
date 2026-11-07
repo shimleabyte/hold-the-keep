@@ -93,3 +93,10 @@ Labor assignments are rebuilt from the live garrison and completed structures ea
 Each rival stronghold now has 240 units of capacity per resource by default. Completing its Storage building raises each resource capacity to 600. Production cannot exceed the active stockpile limit. A full Lumber Camp, Farm or Forge stockpile makes that workplace temporarily ineligible for labor. A Quarry remains eligible while either stone or iron has room; overflow for the already-full resource is discarded. Labor priority then moves workers to the next eligible workplace under the faction doctrine.
 
 Existing v17 balances above the new capacity remain intact and production is suspended for that resource until spending lowers it. No save-schema migration is introduced. Regression checks cover storage capacity, saturation, labor reassignment and legacy over-cap balances.
+
+
+## Phase 11.5 — Doctrine-driven recruitment and army composition (2026-11-07)
+
+Periodic rival reinforcement now uses a target composition rather than incrementing through the roster. The faction doctrine specifies unit shares; the stronghold counts its living garrison and chooses the affordable roster type with the largest deficit against those shares. Ambush favors bandits/scouts/disruption/riders; Fortress favors shieldbearers and archers; Attrition favors wolves, shamans and scouts; Siege prioritizes siege engines with shield/shaman/saboteur support.
+
+Recruitment costs are unit-specific and paid from the rival's own ledger. Higher-impact specialist and siege roles consume additional resources. If no roster type is affordable, no reinforcement spawns. The three-unit opening garrison is preserved as campaign setup; every subsequent periodic reinforcement must be paid. The live garrison is the source of composition truth, so no save fields or schema migration are needed.

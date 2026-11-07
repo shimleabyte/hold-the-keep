@@ -315,8 +315,9 @@ func _initialize() -> void:
             _check(not unit_cost.is_empty(),
                 "%s recruit must have an explicit economic cost" % faction_id)
             var recruitment_balance_before: Dictionary = (
-                strategy_civilization.get("resources") as Dictionary
-            ).duplicate(true)
+                strategy_civilization.get("resources")
+            )
+            recruitment_balance_before = recruitment_balance_before.duplicate(true)
             _check(bool(strategy_civilization.call("can_recruit", composition_recruit)),
                 "%s signature recruit must be affordable from its own ledger" % faction_id)
             _check(bool(strategy_civilization.call("pay_recruitment", composition_recruit)),

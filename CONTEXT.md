@@ -662,3 +662,10 @@ Assignments are derived from current stronghold garrison and completed structure
 Rival resource storage is now finite. The stronghold begins with 240 units of capacity per resource; completing its Storage building increases that ceiling to 600. Production is credited only into available capacity. When a stockpile is full, its workplace is skipped by labor allocation, allowing those workers to staff another productive site. Quarry staffing remains useful while either stone or iron still has room.
 
 Historical v17 balances above the new limit are preserved; no save field is migrated or deleted. Production simply pauses for an over-cap resource until spending brings it under the current capacity. Save schema remains v17. The army/rival regression covers base/expanded capacity, saturation, worker reassignment and v17 over-cap preservation.
+
+
+### Phase 11.5 — Doctrine-driven paid army composition (2026-11-07)
+
+Periodic rival reinforcements now use faction-specific target compositions and unit-specific recruitment costs. The planner counts the current stronghold garrison, scores available roster units by their composition deficit, and selects the most underrepresented role that the faction can afford. When no unit can be paid, recruitment is skipped. New unit costs range from basic food/wood costs to higher food/wood/stone/iron costs for specialists and siege units.
+
+The three-unit opening garrison remains unchanged. Only periodic paid reinforcements use the doctrine planner. Spawning uses the same validated stronghold perimeter placement and costs are debited only after a unit spawns successfully. Army composition is derived from the living garrison, not serialized; save schema v17 remains unchanged. The existing army/rival regression covers all four faction preferences, deficit filling, unit cost debits and refusing recruitment when the ledger cannot afford any roster unit.
