@@ -106,7 +106,8 @@ func tick(delta: float) -> void:
     if workplace == null or not is_instance_valid(workplace) or int(workplace.get("hp")) <= 0:
         retiring = true
         if carry > 0:
-            _begin_return_to_keep()
+            if not [State.TO_KEEP, State.WAITING_STORAGE].has(_state):
+                _begin_return_to_keep()
         else:
             shutdown()
             return
