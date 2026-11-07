@@ -655,3 +655,10 @@ Rival strongholds now use a derived eight-citizen labor pool. Each living garris
 Staffed production rates are: Lumber Camp 0.525 wood/worker/second, Farm 0.625 food/worker/second, Quarry 0.31 stone + 0.04 iron/worker/second, and Forge 0.11 iron/worker/second. Recruitment now reduces productive labor capacity and increases food upkeep, creating a direct economy-versus-garrison decision.
 
 Assignments are derived from current stronghold garrison and completed structures each economy tick. They are not serialized, so save schema v17 remains unchanged. This is still an abstract workforce: visible rival workers, extractable resource nodes, travel, local storage, roads and shipments remain unimplemented. The exact-head Godot CI run is the acceptance gate; rendered Frontier pacing still requires human review.
+
+
+### Phase 11.4 — Rival stockpile capacity (2026-11-07)
+
+Rival resource storage is now finite. The stronghold begins with 240 units of capacity per resource; completing its Storage building increases that ceiling to 600. Production is credited only into available capacity. When a stockpile is full, its workplace is skipped by labor allocation, allowing those workers to staff another productive site. Quarry staffing remains useful while either stone or iron still has room.
+
+Historical v17 balances above the new limit are preserved; no save field is migrated or deleted. Production simply pauses for an over-cap resource until spending brings it under the current capacity. Save schema remains v17. The army/rival regression covers base/expanded capacity, saturation, worker reassignment and v17 over-cap preservation.

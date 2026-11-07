@@ -445,3 +445,12 @@ Rival production and construction now share a finite workforce. Each stronghold 
 The labor snapshot is derived from current structures and garrison each simulation tick rather than saved. The save schema remains v17. See [docs/plans/phase-11.3-rival-workforce.md](docs/plans/phase-11.3-rival-workforce.md).
 
 Next dependencies: rendered opening/middle-game acceptance; then visible rival labor and physical resource extraction/delivery; then rival storage, roads, outposts and secondary settlements; then coordinated offensive military planning. Do not build a second settlement until resource ownership, supply, storage, siege recovery and save/load are specified and tested.
+
+
+## Phase 11.4 — Rival storage and production overflow (2026-11-07)
+
+Rival resource ledgers now have an effective 240-unit capacity per resource. A completed Storage building expands the cap to 600. Production is credited only up to capacity; when a resource is full, its production workplace is omitted from the next derived labor assignment. A Quarry remains staffed while either its stone or iron output can still be stored. This makes Storage a functional economic investment and avoids assigning scarce workers to output that cannot be retained.
+
+Legacy v17 balances above the new cap are not deleted or clamped down. They are preserved and receive no additional production until spending brings the balance below the cap. Save schema stays v17.
+
+Next: rendered pacing review, then physical resource extraction/delivery and rival territory/supply. Visible rival workers and multi-settlement logistics remain separate work, not implied by this local capacity model.

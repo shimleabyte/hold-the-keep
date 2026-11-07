@@ -86,3 +86,10 @@ Rival production no longer grants the full building yield independently of labor
 Per-worker production is 0.525 wood/second (Lumber Camp), 0.625 food/second (Farm), 0.31 stone plus 0.04 iron/second (Quarry), and 0.11 iron/second (Forge). Active construction reserves up to two builders at 0.5 work/second each. Worker food upkeep is 0.04/second and soldier upkeep 0.06/second alongside existing background subsistence income. Recruitment therefore consumes resources, removes productive capacity and increases food demand.
 
 Labor assignments are rebuilt from the live garrison and completed structures each bounded economy tick. They are transient and not serialized, so save schema v17 is unchanged. This remains an abstract workforce; it does not yet simulate visible rival laborers, resource exhaustion, travel, local depots, roads or shipments.
+
+
+## Phase 11.4 — Rival stockpile capacity (2026-11-07)
+
+Each rival stronghold now has 240 units of capacity per resource by default. Completing its Storage building raises each resource capacity to 600. Production cannot exceed the active stockpile limit. A full Lumber Camp, Farm or Forge stockpile makes that workplace temporarily ineligible for labor. A Quarry remains eligible while either stone or iron has room; overflow for the already-full resource is discarded. Labor priority then moves workers to the next eligible workplace under the faction doctrine.
+
+Existing v17 balances above the new capacity remain intact and production is suspended for that resource until spending lowers it. No save-schema migration is introduced. Regression checks cover storage capacity, saturation, labor reassignment and legacy over-cap balances.
