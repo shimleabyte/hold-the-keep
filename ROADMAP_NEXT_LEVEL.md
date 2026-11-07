@@ -4,7 +4,7 @@
 
 The target remains a kingdom strategy game with a directly controlled knight, autonomous civilians, independently commanded military units and rival civilizations competing through economy, territory and warfare. Classic survival waves remain the entry loop; Frontier is the broader conquest/campaign foundation.
 
-**Current main:** `198c31f5f0c7241158e8e56024e1bc69aacf8b17`. PR #186 fixes the Frontier decoration process-state regression. Its exact head passed Godot 4.7 CI **65/65**, Campaign Simulation QA and Rendered World QA. Save schema remains v17; Godot 4.7 is the only active engine gate; desktop remains the priority and Android is deferred.
+**Current production-code integration:** `198c31f5f0c7241158e8e56024e1bc69aacf8b17`; documentation-only reconciliation continued through `6fbc63454ae288a5537ea206c575cf6ad2bcc8f9`. PR #186 fixes the Frontier decoration process-state regression. Latest docs-tip Godot CI run #42388208398 passed 65/65. Its exact head passed Godot 4.7 CI **65/65**, Campaign Simulation QA and Rendered World QA. Save schema remains v17; Godot 4.7 is the only active engine gate; desktop remains the priority and Android is deferred.
 
 **Verified implementations:** player aim-lock and directional attack sectors; nine-second dusk warning; 46-frame player animation integration; ten authored civilian role atlases; Frontier terrain dressing and bounded ambient landmark motion; rival doctrine investment, workforce caps, staffed production, finite stockpiles, paid doctrine-aware recruitment and research gates; resource-aware miners using reachable local iron and connected non-sabotaged depot stock.
 
