@@ -1,14 +1,18 @@
 # Konteks proyek: Hold the Keep
 
-## Gameplay overhaul progress — 2026-11-07
+## Session recovery status — 2026-11-07
 
-The live remote `main` baseline inspected for the gameplay overhaul was `931cca8e065976da89a33d40ef42c5f70bd6b308` (commit #180: miner resource selection now respects reachability and connected depots). Phase 11.2 adds doctrine-driven rival settlement investment priorities. See [docs/GAMEPLAY_AUDIT.md](docs/GAMEPLAY_AUDIT.md) and [docs/plans/phase-11.2-faction-strategy.md](docs/plans/phase-11.2-faction-strategy.md).
+Current remote `main`: `198c31f5f0c7241158e8e56024e1bc69aacf8b17`. PR #186 fixed the inactive Frontier decoration processing-state regression and was squash-merged. Exact PR-head Godot 4.7 CI passed 65/65; Campaign Simulation QA and Rendered World QA passed. The recovery matrix is maintained in [docs/SESSION_RECOVERY.md](docs/SESSION_RECOVERY.md).
 
-The four existing faction doctrines now select distinct orders over the same seven rival buildings. Resource costs, income rates, paid recruitment, construction time and save schema v17 are unchanged. The rival build cursor is derived from persisted structure/construction state, so old v17 civilization snapshots do not require a migration. This is a first strategy slice, not completion of the kingdom-strategy overhaul.
+The earlier `work/worker-resource-awareness` branch is superseded: `scripts/entities/villager_resource_behavior.gd` already counts usable connected depots and chooses only reachable, unclaimed local iron; `tests/frontier_worker_ai.gd` covers remote ore, local ore, reserved ore, connected storage and sabotage. Do not reimplement it.
 
-Still open: visible rival workforce/logistics, rival outposts and secondary settlements, two-sided territory/supply, coordinated offensive military planning, player-selectable strategic objectives, and human rendered playtesting. Exact-baseline CI success is not human gameplay acceptance. This runtime had no local checkout or Godot executable, so no interactive playthrough is claimed.
+PR #182 authored civilian atlases, PR #184 player 46-frame animation and PR #185 Frontier environmental dressing are integrated. The 37-frame player sprite playblast and Frontier seed-1337 render captures were inspected. Sprite clips render, but locomotion/action motion still needs stronger visual separation and review in live gameplay. Rendered screenshots verify map output/determinism only; they do not verify ambient animation playback.
 
-**Supersession note:** older SHA references and phase summaries lower in this document are historical integration checkpoints. Use the current remote `main` commit and the audit above for current status.
+Remaining gameplay gaps: interactive opening/middle-game acceptance; rival visible workers and physical resource logistics; rival outposts/territory; a coordinated offensive planner. Remaining visual gaps: enemy/faction identities and motion; buildings/construction/damage states; biome assets and props; combat VFX; HUD/map iconography. Save schema remains v17, Godot 4.7 is the only active engine target, desktop is first, and Android remains deferred.
+
+No local checkout, local working tree, interactive desktop session or target hardware was available during this recovery. Do not treat Actions success as human playtest or target-PC performance acceptance.
+
+**Supersession note:** older SHA references and phase summaries lower in this document are historical integration checkpoints. Use the current remote `main` and [docs/SESSION_RECOVERY.md](docs/SESSION_RECOVERY.md) for current status.
 
 Dokumen ini ringkasan keadaan proyek supaya sesi kerja berikutnya (manusia atau AI) bisa langsung
 melanjutkan tanpa membaca ulang seluruh riwayat. **Perbarui bagian "Status" dan "Riwayat" setiap
@@ -20,9 +24,9 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 Stage A art direction merged through PR #179 at `27740a72e187487ea8fc58a1a08680836cc8e22e`. It added `docs/ART_DIRECTION.md` and `docs/ART_REFERENCE_BOARD.md`, and protected the 24×28 blue-mantled player atlas from the legacy 20×20 humanoid generator.
 
-Stage B is in PR #182 on `art/phase-08.9-villager-character-family`, validated code head `8dc9b8e2a25f`. Ten civilian role atlases have been replaced with individually differentiated SVG pixel art while retaining the 440×60 / 20×20 / 22×3 animation contract and existing paths. The legacy generator no longer emits those atlases; all ten are in the protected hand-authored registry. The new regression verifies pairwise atlas identity, per-direction motion-frame changes, dimensions, job-to-texture mappings and generator ownership.
+Stage B merged in PR #182 at `7dea98194e308ebb380115c873d395e64fffada0`. Ten civilian role atlases are integrated as individually differentiated SVG pixel art while retaining the 440×60 / 20×20 / 22×3 animation contract and existing paths. The legacy generator no longer emits those atlases; all ten are in the protected hand-authored registry. The new regression verifies pairwise atlas identity, per-direction motion-frame changes, dimensions, job-to-texture mappings and generator ownership.
 
-Exact-head evidence for PR #182: Godot 4.7 CI **63/63 passed** (run #42323335962); Role Sprite Visual QA passed with Godot-rendered atlas and real-gameplay captures (run #42323335969); deterministic Frontier Rendered World QA passed (run #42323335991). The gameplay screenshot fixture freezes the village quota-assignment scheduler only during capture so it can display all ten requested roles; production job assignment is untouched.
+Exact-head evidence for PR #182: Godot 4.7 CI **63/63 passed** (run #42323335962); Role Sprite Visual QA passed with Godot-rendered atlas and real-gameplay captures (run #42323335969); deterministic Frontier Rendered World QA passed (run #42323335991). PR #184 later integrated the player 46-frame atlas; PR #185 integrated Frontier ground dressing/landmark motion; PR #186 fixed the inactive-batch processing regression and passed 65/65 Godot jobs plus Campaign and Rendered QA. The gameplay screenshot fixture freezes the village quota-assignment scheduler only during capture so it can display all ten requested roles; production job assignment is untouched.
 
 The complete visual overhaul remains in progress. Enemy/faction units, all building silhouettes and states, environment/biome assets, resources/wildlife/props, combat VFX and UI icons still require production and in-game review. Preserve gameplay, collision, save and animation contracts unless an atomic tested migration is documented.
 
