@@ -27,7 +27,7 @@ The overhaul is additive to the shipped Phase 08 work. It replaces generic const
 - [x] Establish `docs/ART_REFERENCE_BOARD.md` with historical construction, clothing/armor, pixel-art production and top-down atmosphere references.
 - [x] Identify the legacy generator's unsafe player overwrite: it previously emitted a 20×20 generic player sheet despite the integrated protagonist using 24×28 frames.
 - [x] Exclude the hand-authored player from the legacy renderer and add an explicit generator write guard.
-- [x] Extend `role_sprite_identity` to check player frame size, distinction from the generic soldier sheet and generator ownership. Exact-head Godot validation is pending.
+- [x] Extend `role_sprite_identity` to check player frame size, distinction from the generic soldier sheet and generator ownership. Exact-head Godot 4.7 CI passed 64/64 checks on PR #179 (run #42320928929); the deterministic Frontier Rendered World QA also passed (run #42320928830).
 - [ ] Inventory every current SVG, generator owner, resource reference, atlas size, collision/footprint dependency and actual screen usage.
 - [ ] Redesign the complete player/villager/enemy family with separate authored silhouettes and full directional animation. Do not treat color, hat or held tool overlays as complete role identity.
 - [ ] Redesign faction/archetype combinations, all shipped building silhouettes and construction/damage states.
