@@ -4,6 +4,7 @@ extends SceneTree
 
 const TREE_SCRIPT := preload("res://scripts/entities/resource_tree.gd")
 const ROCK_SCRIPT := preload("res://scripts/entities/rock.gd")
+const IRON_ORE_SCRIPT := preload("res://scripts/entities/iron_ore.gd")
 
 var world_config
 var game_clock
@@ -147,6 +148,56 @@ func _run_profile(profile_id: String) -> void:
         profile_id + " extracted resource behavior must transfer each stone hit into worker cargo")
     assert(int(rock.export_state().get("hp", 0)) == rock_hp_before - 1,
         profile_id + " extracted resource behavior must apply exactly one synchronized rock hit")
+
+    # Iron selection must use actual worker access and live connected stock, not
+    # the existence of any ore node anywhere on the map.
+    var saved_tech_flags: Dictionary = Tech._flags.duplicate(true)
+    var saved_inventory: Dictionary = Inventory.items.duplicate(true)
+    Tech._flags["iron_mining"] = true
+    Inventory.items["iron"] = 0
+    Inventory.items["stone"] = 10
+
+    var remote_iron = IRON_ORE_SCRIPT.new()
+    remote_iron.position = miner.position + Vector2(10000.0, 0.0)
+    main.world.entities.add_child(remote_iron)
+    await ticks(1)
+    assert(miner._resource_work_behavior._mine_kind() == "stone",
+        profile_id + " miner must not choose an inaccessible iron vein outside its work area")
+
+    var iron_cell := _find_reachable_cell(
+        main, worker_origin, keep.position, clearing_radius + 0.5, gather_radius - 0.5, reserved
+    )
+    assert(iron_cell.x >= 0, profile_id + " must expose a reachable local iron test cell")
+    reserved[iron_cell] = true
+    var local_iron = _spawn_resource(main, IRON_ORE_SCRIPT, iron_cell)
+    await ticks(1)
+    assert(miner._resource_work_behavior._mine_kind() == "iron",
+        profile_id + " miner must prefer a locally available iron vein when iron stock is low")
+
+    local_iron.worker = woodcutter
+    assert(miner._resource_work_behavior._mine_kind() == "stone",
+        profile_id + " miner must ignore a local iron vein already reserved by another worker")
+    local_iron.worker = null
+
+    var storage_cell: Vector2i = keep.cell + Vector2i(3, 0)
+    var storage = main.build.place_raw("storage", storage_cell)
+    assert(storage != null, profile_id + " must create the connected depot stock fixture")
+    await ticks(2)
+    main.supply.rebuild()
+    assert(main.supply.is_depot_connected(storage),
+        profile_id + " storage touching the Keep must be connected to the supply network")
+    assert(storage.store_resource("iron", 8),
+        profile_id + " connected storage must accept the local iron stock fixture")
+    assert(miner._resource_work_behavior._mine_kind() == "stone",
+        profile_id + " miner must count usable connected depot iron when choosing what to mine")
+
+    assert(storage.apply_sabotage(5.0),
+        profile_id + " storage fixture must accept sabotage")
+    assert(miner._resource_work_behavior._mine_kind() == "iron",
+        profile_id + " sabotaged depot stock must not suppress local iron production")
+
+    Tech._flags = saved_tech_flags
+    Inventory.items = saved_inventory
 
     # Builders must be dispatched by actual path reachability, not a circular
     # workplace radius. Keep's Frontier claim edge is 15 tiles (+2 tolerance),
