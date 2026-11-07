@@ -21,6 +21,19 @@ func advance_animation(seconds: float) -> void:
     await process_frame
 
 
+func clear_presentation_fx() -> void:
+    # Playblast-only reset: clear draw-only combat arcs, not gameplay events.
+    main_player._swing = 0.0
+    main_player._cleave_t = 0.0
+    main_player._dash_t = 0.0
+    main_player.combat_feedback.end_windup()
+    main_player.combat_feedback.impact_remaining = 0.0
+    main_player.combat_feedback.stagger_remaining = 0.0
+    main_player.combat_feedback.ability_remaining = 0.0
+    main_player.combat_feedback.ability_total = 0.0
+    main_player.queue_redraw()
+
+
 func capture(label: String, center: Vector2, width := 144, height := 96) -> void:
     await process_frame
     await RenderingServer.frame_post_draw
@@ -116,6 +129,7 @@ func _initialize() -> void:
     main_player._atk_cd = 0.0
     main_player._attack()
     main_player.set_physics_process(false)
+    clear_presentation_fx()
     await capture("Player · attack anticipation (frame 10)", center)
     await advance_animation(0.110)
     await capture("Player · attack impact (frame 12 / 0.11s)", center)
@@ -133,6 +147,7 @@ func _initialize() -> void:
     main_player._cleave_cd = 0.0
     main_player._use_cleave()
     main_player.set_physics_process(false)
+    clear_presentation_fx()
     await capture("Player · Cleave brace (frame 24)", center)
     await advance_animation(0.128)
     await capture("Player · Cleave wind-up (frame 25)", center)
@@ -151,8 +166,7 @@ func _initialize() -> void:
     main_player._dash_cd = 0.0
     main_player._use_dash()
     main_player.set_physics_process(false)
-    main_player._dash_t = 0.0
-    main_player.combat_feedback.ability_remaining = 0.0
+    clear_presentation_fx()
     await capture("Player · dash anticipation (frame 30)", center)
     await advance_animation(0.038)
     await capture("Player · dash acceleration (frame 31)", center)
@@ -172,7 +186,7 @@ func _initialize() -> void:
     main_player._rally_cd = 0.0
     main_player._use_rally()
     main_player.set_physics_process(false)
-    main_player.combat_feedback.ability_remaining = 0.0
+    clear_presentation_fx()
     await capture("Player · Rally call start (frame 36)", center)
     await advance_animation(0.085)
     await capture("Player · Rally arm lift (frame 37)", center)
@@ -200,7 +214,7 @@ func _initialize() -> void:
     main_player.take_damage(1)
     main_player.set_physics_process(false)
     main_player.modulate = Color.WHITE
-    main_player.combat_feedback.impact_remaining = 0.0
+    clear_presentation_fx()
     await capture("Player · hurt initial recoil (frame 42)", center)
     await advance_animation(0.052)
     await capture("Player · hurt guard (frame 43)", center)
@@ -212,6 +226,7 @@ func _initialize() -> void:
 
     # Gameplay _die() still respawns immediately. Preview the four authored
     # death beats independently; this must not change the gameplay respawn path.
+    clear_presentation_fx()
     main_player.anim.play_player_clip("death", true)
     await capture("Player · death collapse (frame 20)", center)
     await advance_animation(0.126)
