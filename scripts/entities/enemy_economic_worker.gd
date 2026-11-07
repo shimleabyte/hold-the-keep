@@ -60,11 +60,11 @@ func _ready() -> void:
     z_index = 5
 
 
-func setup(civilization_ref, workplace_ref: Node2D, role_id: String, index: int, main_ref: Node) -> bool:
+func setup(civilization_ref, workplace_ref: Node2D, role_id: String, index: int, main_ref: Node, saved_cargo: Dictionary = {}, detached_workplace_id: String = "") -> bool:
     civilization = civilization_ref
     owner_keep = civilization_ref.owner_keep
     workplace = workplace_ref
-    workplace_id = String(workplace_ref.structure_id) if workplace_ref != null else ""
+    workplace_id = String(workplace_ref.get("structure_id")) if workplace_ref != null else detached_workplace_id
     role = role_id
     slot_index = maxi(0, index)
     if main_ref == null or owner_keep == null or not is_instance_valid(owner_keep):
@@ -75,21 +75,25 @@ func setup(civilization_ref, workplace_ref: Node2D, role_id: String, index: int,
     if nav == null or world == null:
         return false
 
-    var horizontal := -5.0 if posmod(slot_index, 2) == 0 else 5.0
-    var vertical := float(floori(float(slot_index) / 2.0)) * 3.0
-    position = workplace.position + Vector2(horizontal, vertical)
+    if workplace != null and is_instance_valid(workplace):
+        var horizontal := -5.0 if posmod(slot_index, 2) == 0 else 5.0
+        var vertical := float(floori(float(slot_index) / 2.0)) * 3.0
+        position = workplace.position + Vector2(horizontal, vertical)
+    elif not saved_cargo.is_empty():
+        position = owner_keep.position
+        retiring = true
+    else:
+        return false
     match role:
         "lumber_camp": _anim.work_style = "woodcutter"
         "quarry", "forge": _anim.work_style = "miner"
         "farm": _anim.work_style = "farmer"
     _anim.face(Vector2.DOWN)
     _anim.play("idle", true)
+    if not saved_cargo.is_empty():
+        restore_cargo(String(saved_cargo.get("kind", "")), int(saved_cargo.get("amount", 0)))
     queue_redraw()
     return true
-
-
-func _process(delta: float) -> void:
-    tick(delta)
 
 
 func tick(delta: float) -> void:
@@ -370,8 +374,6 @@ func _find_resource_target() -> bool:
 
 
 func _resource_cell_is_available(cell: Vector2i, node: Node2D) -> bool:
-    if WorldConfig.is_frontier_profile() and String(world.region_id(cell)) != String(owner_keep.get("region_id")):
-        return false
     var max_distance := float(owner_keep.get("claim_radius")) + 6.0
     if owner_keep.position.distance_to(node.position) > max_distance * float(WorldConfig.tile_size):
         return false
@@ -481,7 +483,20 @@ func has_cargo() -> bool:
 
 
 func cargo_snapshot() -> Dictionary:
-    return {"kind": carry_kind, "amount": carry}
+    return {
+        "workplace": workplace_id,
+        "role": role,
+        "kind": carry_kind,
+        "amount": carry
+    }
+
+
+func restore_cargo(kind: String, amount: int) -> void:
+    if not ["wood", "stone", "food", "iron"].has(kind) or amount <= 0 or amount > CARRY_CAPACITY:
+        return
+    carry_kind = kind
+    carry = amount
+    _begin_return_to_keep()
 
 
 ## Saving transfers already-harvested cargo into the persistent stronghold ledger.
