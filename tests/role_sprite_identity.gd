@@ -62,8 +62,8 @@ func _initialize() -> void:
     var player_sprite := Image.new()
     var player_source := FileAccess.get_file_as_string("res://assets/sprites/player.svg")
     assert(player_sprite.load_svg_from_string(player_source) == OK, "Player atlas must decode")
-    assert(player_sprite.get_width() / SpriteAnim.FRAMES == 24,
-        "The blue-mantled player must retain 24px frame width")
+    assert(player_sprite.get_width() / SpriteAnim.PLAYER_FRAMES == 24,
+        "The blue-mantled player must retain 24px frame width and its 46-frame sequence")
     assert(player_sprite.get_height() / DIRECTIONS == 28,
         "The blue-mantled player must retain 28px frame height")
 
