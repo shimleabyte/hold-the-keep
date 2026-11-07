@@ -105,7 +105,7 @@ func _initialize() -> void:
             _check(bool(civilization.call("_has_structure", "farm")),
                 "Rival civilization should construct food infrastructure")
             _check(bool(civilization.call("_has_structure", "quarry")),
-                Rival civilization should construct a physical quarry for stone)
+                "Rival civilization should construct a physical quarry for stone")
             _check(bool(civilization.call("_has_structure", "barracks")),
                 "Rival civilization should eventually invest in military production")
             var technology_tier: int = int(civilization.get("technology_tier"))
