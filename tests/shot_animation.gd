@@ -30,6 +30,9 @@ func capture(label: String, center: Vector2, width := 144, height := 96) -> void
 
 func _initialize() -> void:
     print("PLAYER_PLAYBLAST_BEGIN")
+    # Project autoloads must finish their first ready frame before Player._ready connects signals.
+    await process_frame
+    print("PLAYER_PLAYBLAST_AUTOLOADS_READY")
     var clock := root.get_node_or_null("GameClock")
     if clock != null:
         clock.set_process(false)
@@ -63,8 +66,10 @@ func _initialize() -> void:
     ground_line.size = Vector2(root.get_visible_rect().size.x, 2)
     backdrop_layer.add_child(ground_line)
 
+    print("PLAYER_PLAYBLAST_INSTANTIATE_PLAYER")
     main_player = PLAYER_SCRIPT.new() as Player
     stage.add_child(main_player)
+    print("PLAYER_PLAYBLAST_PLAYER_READY")
     main_player.global_position = Vector2.ZERO
     main_player.velocity = Vector2.ZERO
     main_player.facing = Vector2.DOWN
