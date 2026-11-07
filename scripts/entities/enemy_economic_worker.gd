@@ -257,7 +257,8 @@ func _repath_current_state() -> bool:
         State.TO_RESOURCE:
             if _target == null or not is_instance_valid(_target):
                 return false
-            next_path = nav.path_adjacent(position, [Vector2i(_target.get("resource_cell"))])
+            var target_cells: Array[Vector2i] = [Vector2i(_target.get("resource_cell"))]
+            next_path = nav.path_adjacent(position, target_cells)
         State.TO_KEEP, State.WAITING_STORAGE:
             next_path = nav.path_adjacent(position, owner_keep.cells())
         State.TO_WORKPLACE:
