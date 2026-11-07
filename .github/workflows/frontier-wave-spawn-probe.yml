@@ -1,0 +1,41 @@
+name: Frontier wave spawn reachability
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/systems/wave_spawner.gd"
+      - "scripts/systems/flow_field.gd"
+      - "scripts/world/**"
+      - "scripts/main.gd"
+      - "tests/frontier_wave_spawn_reachability.gd"
+      - ".github/workflows/frontier-wave-spawn-probe.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontier-wave-spawn-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    name: Frontier wave spawn · Godot 4.7
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot 4.7
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Probe Frontier edge reachability and runtime spawning
+        run: timeout --signal=TERM --kill-after=10s 240s godot --headless --fixed-fps 60 --path . --script res://tests/frontier_wave_spawn_reachability.gd
