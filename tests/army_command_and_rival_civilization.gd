@@ -153,7 +153,7 @@ func _initialize() -> void:
                     if String(resource_world.call("region_id", resource_cell)) != String(stronghold.get("region_id")):
                         continue
                     target_scan["same_region"] = int(target_scan["same_region"]) + 1
-                    var max_distance := (float(stronghold.get("claim_radius")) + 6.0) * float(WorldConfig.tile_size)
+                    var max_distance := (float(stronghold.get("claim_radius")) + 6.0) * float(resource_world.get("tile_size"))
                     var distance := stronghold.position.distance_to(resource_node.position)
                     if distance > max_distance:
                         continue
