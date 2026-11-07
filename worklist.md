@@ -1,6 +1,6 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Current implementation baseline:** Phase 11.1 production code is integrated at `10747392ecdaebc6b7490b43fb82cf2cfa389468` (2026-11-07); current main's pre-audit tip was docs-only `f9a6a443db0f2bb8593f77a8ac93f1d3b834f95d`. See [docs/BRANCH_REGISTRY.md](docs/BRANCH_REGISTRY.md) for the 156-branch / 178-PR inventory, deferred work and retained candidates.  
+**Current implementation baseline:** Phase 11.1 production code is integrated at `10747392ecdaebc6b7490b43fb82cf2cfa389468` (2026-11-07); current main's pre-audit tip was docs-only `f9a6a443db0f2bb8593f77a8ac93f1d3b834f95d`. See [docs/BRANCH_REGISTRY.md](docs/BRANCH_REGISTRY.md) for the live branch / PR inventory, deferred work and retained candidates.  
 **Engine target:** Godot 4.7 only  
 **Release target:** Desktop-first — Windows x86_64 and Linux x86_64. Android remains deferred.  
 **Current save schema:** v17.
@@ -31,6 +31,23 @@ Committed on this branch:
 **Not yet completed:** complete asset inventory; authored character/faction sheets; building and biome rework; VFX and icon redesign; Godot-rendered preview sheets; multi-resolution screenshots; full Godot 4.7 CI passed 64/64 on PR #179 (run #42320928929), deterministic Frontier Rendered World QA passed (run #42320928830); human desktop review. Existing production artwork remains untouched outside the player-generator safety change. Do not describe this overhaul as complete until its visual acceptance evidence exists.
 
 Execution order is art inventory/ownership, character family and animation, faction combinations, architecture, biomes/resources/props, combat/UI art, then in-game render QA. Keep each package isolated and merge only after the exact head's blocking checks pass.
+
+### Player animation foundation — dedicated atlas and event-timed action
+
+**Branch:** animation/player-motion-timing  
+**PR:** [#181](https://github.com/shimleabyte/hold-the-keep/pull/181)  
+**Authority:** docs/ANIMATION_DIRECTION.md
+
+- [x] Audit the player atlas, shared SpriteAnim contract, hit-event timing, generator ownership and regression suite.
+- [x] Separate the player 24-frame atlas and clip map from shared 22-frame villager/enemy sheets.
+- [x] Give attack recovery, harvest, hurt and death independent player atlas regions.
+- [x] Key visible attack impact to existing combo/Cleave hit delays without changing gameplay resolution.
+- [x] Key player harvest contact to its existing 0.14-second resource event.
+- [x] Add regressions for combo/Cleave timings, work contact, atlas bounds, pose distinction and planted boot pixels.
+- [ ] Godot 4.7 exact-head CI and rendered in-game playblast; validation is running on PR #181.
+- [ ] Human visual acceptance of locomotion, dash, attacks, hurt/death and harvest before broad character production.
+
+This is an isolated presentation package. Do not mix economy, AI, save-schema or campaign changes into it. Preserve existing gameplay hit delays, damage, cooldowns, hit arcs and work yields.
 
 ### Phase 11 acceptance still open
 

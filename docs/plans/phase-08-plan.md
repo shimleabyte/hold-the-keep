@@ -38,6 +38,21 @@ The overhaul is additive to the shipped Phase 08 work. It replaces generic const
 
 **Current limitation:** only the art bible, reference board, generator safety guard and test assertions are committed on this branch. Existing shipped art remains in use until replacement packages are implemented and validated.
 
+## 08.9 — Player motion and event-timed animation foundation (active)
+
+Branch: animation/player-motion-timing — [PR #181](https://github.com/shimleabyte/hold-the-keep/pull/181)
+
+- [x] Audit SpriteAnim, the 24×28 hand-authored player art, shared worker/enemy 22×3 sheet contract, player combat profiles and harvest timing.
+- [x] Keep protagonist atlas and clip metadata independent from shared role sheets; expand the player atlas to 24 frames × 3 rows and allocate distinct attack recovery, harvest, hurt and death regions.
+- [x] Drive the player attack impact frame from existing combat hit delay and Cleave event time. Preserve damage, timing, range, cooldown, hit sectors and stagger.
+- [x] Separate player harvest poses and align tool contact with the existing 0.14-second harvest event.
+- [x] Add exact atlas, footplant, frame-distinction and animation-event regressions.
+- [ ] Pass exact-head Godot 4.7 CI and inspect any failures before merge.
+- [ ] Capture real Godot animation loops and combat playblasts; inspect at native gameplay zoom.
+- [ ] Complete player idle/walk/run/dash pose authoring and review cape/weapon overlap before extending the production method to villagers and enemies.
+
+**Boundary:** this is a player foundation, not a completed player animation set or a completed Phase 08.8 art overhaul. Three directional rows remain three authored facings; do not claim eight-direction animation.
+
 ## 08.2 — Terrain and regional identity
 - [x] Give Frontier biomes distinct ground textures in a dedicated seven-cell atlas (five land biomes, alternate Hearthland ground and water), preserving tile IDs, 16px tile size and water collision.
 - Create a distinct Old Frontier/ruin subregion treatment without introducing an unsupported sixth core biome.
