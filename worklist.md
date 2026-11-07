@@ -1,9 +1,9 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Current implementation baseline:** `main` is at `198c31f5f0c7241158e8e56024e1bc69aacf8b17` after PR #186 fixed the Frontier decoration process-state regression. Godot 4.7 CI passed 65/65 on the PR head; Campaign Simulation QA and Rendered World QA passed. Live inventory: 157 branches; 186 PRs (133 merged, 50 closed unmerged, 3 open). See [docs/SESSION_RECOVERY.md](docs/SESSION_RECOVERY.md) for the verified recovery matrix, current blockers and handoff.  
+**Current implementation baseline:** `main` is at `198c31f5f0c7241158e8e56024e1bc69aacf8b17` after PR #186 fixed the Frontier decoration process-state regression. Godot 4.7 CI passed 65/65 on the PR head; Campaign Simulation QA and Rendered World QA passed. Live inventory: 157 branches; 186 PRs (133 merged, 51 closed unmerged, 2 open). PR #181 is closed unmerged as superseded after comparison with #184; #150/#152 remain deferred. See [docs/SESSION_RECOVERY.md](docs/SESSION_RECOVERY.md) for the verified recovery matrix, current blockers and handoff.  
 ## Recovery execution update — 2026-11-07
 
-PR #186 (`198c31f`) fixes the Frontier decoration processing-state failure without changing the existing test or enabling ordinary ambient props. Exact PR-head Godot 4.7 CI passed 65/65; Campaign Simulation QA and Rendered World QA also passed. The current miner resource policy is already implemented in `villager_resource_behavior.gd` and verified by `frontier_worker_ai.gd`; the older resource-awareness branch is superseded. Automated results are not a substitute for the required desktop playtest.
+PR #186 (`198c31f`) fixes the Frontier decoration processing-state failure without changing the existing test or enabling ordinary ambient props. The latest docs-tip Godot CI run #42388208398 passed 65/65. Exact PR-head Godot 4.7 CI passed 65/65; Campaign Simulation QA and Rendered World QA also passed. The current miner resource policy is already implemented in `villager_resource_behavior.gd` and verified by `frontier_worker_ai.gd`; the older resource-awareness branch is superseded. Automated results are not a substitute for the required desktop playtest.
 
 ## Gameplay-overhaul status — 2026-11-07
 
