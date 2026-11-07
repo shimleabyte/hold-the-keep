@@ -1,9 +1,7 @@
 extends SceneTree
 
-const PLAYER_SCRIPT: Script = preload("res://scripts/entities/player.gd")
-
 var crops: Array = []
-var main_player: Player
+var main_player: Variant
 
 
 func ticks(count: int) -> void:
@@ -66,8 +64,14 @@ func _initialize() -> void:
     ground_line.size = Vector2(root.get_visible_rect().size.x, 2)
     backdrop_layer.add_child(ground_line)
 
+    print("PLAYER_PLAYBLAST_LOAD_PLAYER_SCRIPT")
+    var player_script: GDScript = load("res://scripts/entities/player.gd") as GDScript
+    if player_script == null or not player_script.can_instantiate():
+        push_error("Player script did not compile after project autoload initialization")
+        quit(1)
+        return
     print("PLAYER_PLAYBLAST_INSTANTIATE_PLAYER")
-    main_player = PLAYER_SCRIPT.new() as Player
+    main_player = player_script.new()
     stage.add_child(main_player)
     print("PLAYER_PLAYBLAST_PLAYER_READY")
     main_player.global_position = Vector2.ZERO
