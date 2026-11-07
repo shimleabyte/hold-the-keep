@@ -94,8 +94,13 @@ func _initialize() -> void:
             var resources: Dictionary = civilization.get("resources")
             var starting_wood: float = float(resources.get("wood", 0.0))
             _check(starting_wood > 0.0, "Rival civilization should start with a finite resource ledger")
+            # Keep the 500-second simulation deterministic while yielding one
+            # physics frame per strategic second so NavGrid consumes dirty cells
+            # from newly completed rival structures before workers pathfind.
+            stronghold.set_process(false)
             for tick: int in range(500):
                 civilization.call("advance", 1.0)
+                await physics_frame
 
             _check(bool(civilization.call("_has_structure", "lumber_camp")),
                 "Rival civilization should construct a visible lumber camp")
