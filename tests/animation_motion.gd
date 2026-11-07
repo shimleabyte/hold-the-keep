@@ -43,6 +43,67 @@ func _initialize() -> void:
     anim.update(0.15)
     assert(anim.motion_offset() == Vector2.ZERO, "Mirrored attack must also keep the sprite pivot planted")
 
+    assert(SpriteAnim.PLAYER_FRAMES == 30,
+        "The protagonist's authored atlas must remain independent from shared 22-frame role sheets")
+
+    var player_attack_timings: Array[Vector2] = [
+        Vector2(0.11, 0.24),
+        Vector2(0.13, 0.29),
+        Vector2(0.19, 0.42),
+        Vector2(0.22, 0.46),
+    ]
+    for timing in player_attack_timings:
+        anim.play_player_attack(timing.x, timing.y)
+        assert(anim.frame_index() == 10, "Player attack must begin in its authored anticipation pose")
+        var elapsed := 0.0
+        var impact_seen := false
+        for tick in range(60):
+            if anim.finished:
+                break
+            elapsed += 1.0 / 60.0
+            anim.update(1.0 / 60.0)
+            if not impact_seen and elapsed + 0.0001 >= timing.x:
+                assert(anim.frame_index() == 12,
+                    "Player attack must show its impact pose on the existing %.2fs damage marker" % timing.x)
+                impact_seen = true
+        assert(impact_seen, "Every player attack profile must expose its impact marker")
+        assert(anim.finished and anim.frame_index() == 15,
+            "Player attack must complete its authored follow-through and recovery sequence")
+
+    anim.play("idle", true)
+    assert(anim.frame_index() == 0,
+        "Switching out of a timed player attack must clear its frame timeline")
+
+    anim.play_player_cleave(0.22, 0.46)
+    assert(anim.frame_index() == 24 and anim.is_busy(),
+        "Cleave must start from the dedicated heavy anticipation pose")
+    var cleave_elapsed := 0.0
+    var cleave_impact_seen := false
+    for tick in range(60):
+        if anim.finished:
+            break
+        cleave_elapsed += 1.0 / 60.0
+        anim.update(1.0 / 60.0)
+        if not cleave_impact_seen and cleave_elapsed + 0.0001 >= 0.22:
+            assert(anim.frame_index() == 26,
+                "Cleave must show its heavy impact pose on the existing 0.22s hit event")
+            cleave_impact_seen = true
+    assert(cleave_impact_seen and anim.finished and anim.frame_index() == 29,
+        "Cleave must complete its dedicated follow-through and recovery sequence")
+
+    anim.play_player_clip("work", true, 14.0)
+    assert(anim.frame_index() == 16, "Player harvest must begin from its own neutral tool pose")
+    var harvest_elapsed := 0.0
+    for tick in 9:
+        harvest_elapsed += 1.0 / 60.0
+        anim.update(1.0 / 60.0)
+    assert(harvest_elapsed >= 0.14 and anim.frame_index() == 18,
+        "Player harvest's tool-contact pose must coincide with its existing 0.14s gameplay event")
+    anim.play_player_clip("hurt", true)
+    assert(anim.frame_index() == 20, "Player hurt must use its remapped 24-frame atlas cell")
+    anim.play_player_clip("death", true)
+    assert(anim.frame_index() == 21, "Player death must use its remapped three-frame fall sequence")
+
     anim.play("work", true)
     anim.work_style = "builder"
     anim.manual_progress = 0.0
@@ -166,7 +227,16 @@ func _initialize() -> void:
     gatherer.free()
 
     var player = PlayerScript.new()
-    player.anim.play("work", true)
+    player.anim.play_player_attack(0.11, 0.24)
+    assert(player.anim.is_busy(), "Player attack must enter its busy animation state")
+    player._hurt_t = 0.1
+    player._update_anim(0.0)
+    assert(player.anim.clip == "hurt" and player.anim.frame_index() == 20,
+        "A damage reaction must interrupt an active player attack into the dedicated hurt pose")
+    assert(not player.anim.is_busy(), "Hurt presentation must take priority over attack busy state")
+    player._hurt_t = 0.0
+
+    player.anim.play_player_clip("work", true)
     player._harvest_anim_active = true
     player._pending_harvest = RefCounted.new()
     player._harvest_t = 0.1

@@ -46,6 +46,21 @@ Give the Frontier campaign a coherent Grim Medieval Folklore Fantasy visual lang
 
 **Remaining Phase 08 scope:** enemy/faction identity, all building silhouettes and states, terrain/biome assets, resource nodes and wildlife, environmental props, VFX, UI icon families, whole-world rendered review and target-desktop performance. The overhaul is not complete while those groups remain generic or unreviewed.
 
+## 08.10 — Player combat and tool animation (PR #181 active)
+
+**Branch:** `animation/player-motion-timing`  
+**PR:** [#181](https://github.com/shimleabyte/hold-the-keep/pull/181)
+
+- [x] Separate the protagonist's 30-frame 24×28 atlas from shared 22-frame civilian/enemy sheets.
+- [x] Add a dedicated four-pose pick/axe work cycle and six-pose heavy Cleave sequence.
+- [x] Key light attack and Cleave contact poses to existing gameplay hit delays.
+- [x] Preserve civilian atlases from PR #182; their 440×60 / 20×20 / 22×3 contract remains unchanged.
+- [ ] Pass exact-head Godot 4.7 tests with both protagonist and civilian visual regressions.
+- [ ] Capture and inspect the player animation contact sheet/GIF at native gameplay zoom.
+- [ ] Author distinct Dash/Rally, extend hurt/death, and refine locomotion/cape/weapon overlap.
+
+**Boundary:** three player facing rows remain three facings. This is not an eight-direction or complete character animation pass.
+
 ## 08.2 — Terrain and regional identity
 - [x] Give Frontier biomes distinct ground textures in a dedicated seven-cell atlas (five land biomes, alternate Hearthland ground and water), preserving tile IDs, 16px tile size and water collision.
 - Create a distinct Old Frontier/ruin subregion treatment without introducing an unsupported sixth core biome.
