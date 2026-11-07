@@ -190,3 +190,22 @@ Already-harvested cargo is transferred into the existing civilization resource d
 New tests: `tests/rival_physical_workforce.gd`; expanded `tests/army_command_and_rival_civilization.gd`; added to the Godot CI matrix and `tools/run_tests.sh`. No exact-head CI result or rendered acceptance is claimed until the branch run completes. Manual desktop playtesting remains unavailable in this execution environment.
 
 **Next:** run the new focused test, rival civilization/persistence tests, then the full Godot 4.7 matrix; fix actual failures, inspect rendered captures and only then integrate.
+
+
+
+### Follow-up execution checkpoint — 2026-11-08 05:xx Asia/Jakarta
+
+- Active branch: `feat/rival-physical-workforce-hauling`.
+- Current HEAD: `48af993e544b5cbe55ab33dd2ee39127fbcd6d96`.
+- Base branch: `main` at `14f045198bcbd6d50b3b9909bce30a1f1f2c36d1`.
+- PR #187 remains open against `main`; it has not been merged.
+- Implementation remains a first-slice physical rival workforce: visible workers for completed Lumber Camp/Farm/Quarry/Forge workplaces; node reservation, harvesting and hauling; v17-compatible cargo reconciliation at export.
+- Runtime ownership corrections: workers are ticked only by their owning `EnemyCivilization.advance(delta)`; temporary civilization instances used by doctrine tests cannot spawn live workers; destroyed workplaces recall their own workers; saved cargo setup and courier return state have explicit support.
+- Test ownership was aligned to runtime ownership: tests no longer call worker ticks independently. The long campaign regression yields physics frames so NavGrid can consume building occupancy changes between strategic seconds.
+- Godot 4.7 exact-head import/parse passed on `48af993e544b5cbe55ab33dd2ee39127fbcd6d96` in run [#42424606533](https://github.com/shimleabyte/hold-the-keep/actions/runs/42424606533).
+- The focused `rival_physical_workforce` test passed on the immediately preceding test head `03a0460d29bded09ef096d3349e3bbcf808b0adc`; `archery_range` also passed on that head. Campaign Simulation QA passed on that head.
+- The integrated `army_command_and_rival_civilization` test remains pending on the current head. A previous run exposed that rival production was stalling because the test called workers outside the live stronghold update; the simulation now owns worker ticking. The next run adds candidate-scan diagnostics to distinguish region/claim filtering, territory ownership, path reachability and resource availability.
+- An intermediate diagnostic compile error was caught by exact-head CI (`WorldConfig` was referenced directly in a `SceneTree` test); it is corrected to read `WorldMap.tile_size`. Do not mistake that test-only diagnostic error for a runtime worker compile failure.
+- Save schema remains v17. No change to the validator contract or save version.
+- CI is not green yet. Do not merge PR #187 until the exact current head passes the integrated rival campaign, focused workforce, persistence and full Godot 4.7 matrix. Rendered/desktop playtesting has not been performed in this execution environment.
+- **Next action:** inspect the exact-head result of `army_command_and_rival_civilization`; use its `RIVAL_TARGET_SCAN` output to fix the first rejected stage, rerun focused tests, then the full matrix.
