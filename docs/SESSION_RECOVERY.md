@@ -264,3 +264,13 @@ Automated and integrated simulation acceptance is complete for this slice. The C
 The physical workforce's central destination is still its owning stronghold. Local depots, road-connected shipment routes, inter-settlement transfers, outposts, secondary settlements and coordinated rival logistics/raids remain separate unfinished systems. The next acceptance task is a dedicated in-game rendered capture/playtest of workers travelling, harvesting, hauling, handling blocked routes and returning after workplace destruction. After that, implement local storage and road-connected shipments as a separate tested logistics vertical slice.
 
 **Current resume point:** `main` at `dc060785b54b220a1b63d3149daa24fb59751b96`. PR #187 is merged and the feature branch is retained as history. Do not reimplement Phase 11.3.1. Start with rendered rival-worker acceptance, then proceed to local depot/road logistics.
+
+
+
+### Documentation reconciliation after integration — 2026-11-08
+
+The code integration point remains merge commit `dc060785b54b220a1b63d3149daa24fb59751b96`. Subsequent commits updated the related Phase 11.3 plan, RTS/rival notes, `CONTEXT.md`, `ROADMAP_NEXT_LEVEL.md` and `worklist.md` to replace pre-merge pending-verification statements with the verified state and the remaining visual acceptance boundary.
+
+**Current main HEAD after documentation reconciliation:** `5ee8609a1a860b2cc5083d7f3dc0652c8ffb3b5f`. These later commits are documentation-only. The exact merge commit itself passed Godot 4.7 CI 66/66 and Campaign Simulation QA; a new CI run has been triggered by the final documentation commits and should be checked before the next code change.
+
+Open PRs #150 and #152 concern Android/ARMv7 and remain deferred under the desktop-first scope. No other open PRs were present at this check.
