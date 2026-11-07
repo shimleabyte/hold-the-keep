@@ -106,6 +106,31 @@ func _initialize() -> void:
                 "Rival civilization should construct food infrastructure")
             _check(bool(civilization.call("_has_structure", "quarry")),
                 "Rival civilization should construct a physical quarry for stone")
+            if not bool(civilization.call("_has_structure", "barracks")):
+                var diagnostic_workers: Array[Dictionary] = []
+                for rival_worker: Node in get_nodes_in_group("enemy_economic_workers"):
+                    if is_instance_valid(rival_worker) and rival_worker.get("civilization") == civilization:
+                        var target_node: Variant = rival_worker.get("_target")
+                        var worker_path: PackedVector2Array = rival_worker.get("_path")
+                        diagnostic_workers.append({
+                            "role": rival_worker.get("role"),
+                            "state": rival_worker.get("_state"),
+                            "carry": rival_worker.get("carry"),
+                            "target": String(target_node.name) if target_node != null and is_instance_valid(target_node) else "",
+                            "path_points": worker_path.size(),
+                            "position": rival_worker.get("position")
+                        })
+                var diagnostic_ids: Array[String] = []
+                for structure_node: Node in civilization.get("structures"):
+                    diagnostic_ids.append(String(structure_node.get("structure_id")))
+                print("RIVAL_BUILD_DIAGNOSTIC ", {
+                    "resources": resources.duplicate(true),
+                    "structures": diagnostic_ids,
+                    "construction": civilization.get("construction"),
+                    "labor": civilization.call("labor_allocation"),
+                    "workers": diagnostic_workers,
+                    "world_resource_nodes": main_scene.get("world").get("resource_nodes_by_cell").size()
+                })
             _check(bool(civilization.call("_has_structure", "barracks")),
                 "Rival civilization should eventually invest in military production")
             var technology_tier: int = int(civilization.get("technology_tier"))
