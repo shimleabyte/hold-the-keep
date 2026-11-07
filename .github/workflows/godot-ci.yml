@@ -53,6 +53,53 @@ jobs:
       - name: Parse every GDScript file
         run: bash tools/check_gdscript.sh
 
+  player-animation-playblast:
+    name: Player animation playblast · Godot 4.7
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Capture in-game player animation
+        env:
+          HTK_AUTO_RESOLVE_EVENTS: "1"
+          HTK_AUTO_START_GAME: "1"
+        run: |
+          set -o pipefail
+          mkdir -p build/diagnostics/player-animation
+          timeout 180s godot --headless --fixed-fps 60 --path . --script res://tests/shot_animation.gd 2>&1 | tee build/diagnostics/player-animation/playblast.log
+          test -s build/diagnostics/player-animation/player-animation-contact.png
+          test -s build/diagnostics/player-animation/frames/00.png
+
+      - name: Encode looping player animation preview
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+          ffmpeg -y -framerate 5 -start_number 0 -i build/diagnostics/player-animation/frames/%02d.png \
+            -vf "fps=10,scale=448:-1:flags=neighbor,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=none" \
+            -loop 0 build/diagnostics/player-animation/player-animation-preview.gif
+
+      - name: Upload player animation playblast
+        uses: actions/upload-artifact@v4
+        with:
+          name: player-animation-playblast-godot-4.7
+          path: build/diagnostics/player-animation/
+          if-no-files-found: error
+          retention-days: 14
+
   regression:
     name: Godot 4.7 · ${{ matrix.test }}
     needs: validate

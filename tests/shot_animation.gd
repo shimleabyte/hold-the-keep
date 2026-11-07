@@ -29,12 +29,16 @@ func _initialize() -> void:
     sp.restore_enemy({"id": "bandit", "x": 538, "y": 580, "hp": 60})
     for e in get_nodes_in_group("enemies"): e.set_physics_process(false)
     await ticks(3)
+    p.facing = Vector2.RIGHT
+    p.anim.face(Vector2.RIGHT)
     p._atk_cd = 0.0
     p._attack()
-    await ticks(2); await crop("serang: aba-aba", Vector2(240, 135))
-    await ticks(4); await crop("serang: ayun", Vector2(240, 135))
-    await ticks(3); await crop("serang: benturan", Vector2(240, 135))
-    await ticks(4); await crop("serang: pulih", Vector2(240, 135))
+    # Capture at the authored event times: anticipation, impact, follow-through, recovery.
+    await ticks(2); await crop("attack: anticipation", Vector2(240, 135))
+    await ticks(4); await crop("attack: commitment", Vector2(240, 135))
+    await ticks(1); await crop("attack: impact", Vector2(240, 135))
+    await ticks(3); await crop("attack: follow-through", Vector2(240, 135))
+    await ticks(5); await crop("attack: recovery", Vector2(240, 135))
     for e in get_nodes_in_group("enemies"): e.retreat()
     # --- 2. lari (tahan Shift + kanan)
     Input.action_press("sprint"); Input.action_press("move_right")
@@ -73,5 +77,17 @@ func _initialize() -> void:
         var c: Image = crops[i][1]
         sheet.blit_rect(c, Rect2i(0, 0, c.get_width(), c.get_height()), Vector2i((i % cols) * (cw + 6), (i / cols) * (ch + 6)))
         print("crop ", i, " ", crops[i][0])
-    sheet.save_png("/tmp/shots/anim.png")
+    var output_root := ProjectSettings.globalize_path("res://build/diagnostics/player-animation")
+    var frames_dir := output_root.path_join("frames")
+    DirAccess.make_dir_recursive_absolute(output_root)
+    DirAccess.make_dir_recursive_absolute(frames_dir)
+    sheet.save_png(output_root.path_join("player-animation-contact.png"))
+
+    var legend := FileAccess.open(output_root.path_join("frames.txt"), FileAccess.WRITE)
+    for i in crops.size():
+        var frame_image: Image = crops[i][1]
+        frame_image.save_png(frames_dir.path_join("%02d.png" % i))
+        legend.store_line("%02d  %s" % [i, crops[i][0]])
+    legend.close()
+    print("PLAYER_ANIMATION_PLAYBLAST ", output_root)
     quit()
