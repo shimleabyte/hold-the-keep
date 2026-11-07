@@ -6,7 +6,7 @@ extends RefCounted
 
 const FRAMES := 22
 ## The protagonist has a separately authored 24-frame atlas; shared role sheets remain 22.
-const PLAYER_FRAMES := 24
+const PLAYER_FRAMES := 30
 const FRONT := 0
 const BACK := 1
 const SIDE := 2
@@ -23,10 +23,12 @@ const PLAYER_CLIPS := {
     "walk": {"start": 2, "count": 4, "fps": 8.0, "loop": true},
     "run": {"start": 6, "count": 4, "fps": 12.0, "loop": true},
     "work": {"start": 16, "count": 4, "fps": 14.0, "loop": true},
+    "cleave": {"start": 24, "count": 6, "fps": 1.0, "loop": false},
     "hurt": {"start": 20, "count": 1, "fps": 6.0, "loop": false},
     "death": {"start": 21, "count": 3, "fps": 6.0, "loop": false},
 }
 const PLAYER_ATTACK_FRAMES := [10, 11, 12, 13, 14, 15]
+const PLAYER_CLEAVE_FRAMES := [24, 25, 26, 27, 28, 29]
 
 const CLIPS := {
     "idle": {"start": 0, "count": 2, "fps": 2.0, "loop": true},
@@ -151,12 +153,12 @@ func play_timed_sequence(
     _total = duration
 
 
-## Player melee poses are keyed to the existing combat hit delay, not an independent FPS guess.
-func play_player_attack(hit_delay: float, duration: float) -> void:
+## Light and heavy player strikes share event timing but use different authored pose ranges.
+func _play_player_strike(sequence_clip: String, frame_indices: Array, hit_delay: float, duration: float) -> void:
     var impact_time := maxf(hit_delay, 0.0)
     var total_duration := maxf(duration, impact_time + 0.06)
     if impact_time < 0.04 or impact_time >= total_duration - 0.04:
-        push_error("Player attack timing must leave room for anticipation and recovery")
+        push_error("Player strike timing must leave room for anticipation and recovery")
         return
 
     var follow_through := total_duration - impact_time
@@ -168,11 +170,21 @@ func play_player_attack(hit_delay: float, duration: float) -> void:
         impact_time + follow_through * 0.48,
         impact_time + follow_through * 0.76,
     ])
-    play_timed_sequence("attack", PackedInt32Array(PLAYER_ATTACK_FRAMES), frame_times, total_duration)
+    play_timed_sequence(sequence_clip, PackedInt32Array(frame_indices), frame_times, total_duration)
+
+
+## Light attack impact is keyed to PlayerCombatFlow's existing hit delay.
+func play_player_attack(hit_delay: float, duration: float) -> void:
+    _play_player_strike("attack", PLAYER_ATTACK_FRAMES, hit_delay, duration)
+
+
+## Cleave has a dedicated six-pose heavy swing and keeps its existing 0.22s hit event.
+func play_player_cleave(hit_delay: float, duration: float) -> void:
+    _play_player_strike("cleave", PLAYER_CLEAVE_FRAMES, hit_delay, duration)
 
 
 func is_busy() -> bool:
-    return (clip == "attack" or clip == "work") and not finished
+    return (clip == "attack" or clip == "cleave" or clip == "work") and not finished
 
 
 ## Maju delta detik. Kembali true jika frame atau offset piksel yang terlihat berubah.

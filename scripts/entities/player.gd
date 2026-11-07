@@ -473,7 +473,7 @@ func _use_cleave() -> bool:
     _pending_attack = -1.0
     _swing = 0.0
     combat_feedback.end_windup()
-    anim.play_player_attack(0.22, _cleave_t)
+    anim.play_player_cleave(0.22, _cleave_t)
     Events.player_attacked.emit()
     Events.fx_burst.emit(
         "cleave_charge",

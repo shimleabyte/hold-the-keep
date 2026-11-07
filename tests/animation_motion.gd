@@ -43,7 +43,7 @@ func _initialize() -> void:
     anim.update(0.15)
     assert(anim.motion_offset() == Vector2.ZERO, "Mirrored attack must also keep the sprite pivot planted")
 
-    assert(SpriteAnim.PLAYER_FRAMES == 24,
+    assert(SpriteAnim.PLAYER_FRAMES == 30,
         "The protagonist's authored atlas must remain independent from shared 22-frame role sheets")
 
     var player_attack_timings: Array[Vector2] = [
@@ -73,6 +73,23 @@ func _initialize() -> void:
     anim.play("idle", true)
     assert(anim.frame_index() == 0,
         "Switching out of a timed player attack must clear its frame timeline")
+
+    anim.play_player_cleave(0.22, 0.46)
+    assert(anim.frame_index() == 24 and anim.is_busy(),
+        "Cleave must start from the dedicated heavy anticipation pose")
+    var cleave_elapsed := 0.0
+    var cleave_impact_seen := false
+    for tick in range(60):
+        if anim.finished:
+            break
+        cleave_elapsed += 1.0 / 60.0
+        anim.update(1.0 / 60.0)
+        if not cleave_impact_seen and cleave_elapsed + 0.0001 >= 0.22:
+            assert(anim.frame_index() == 26,
+                "Cleave must show its heavy impact pose on the existing 0.22s hit event")
+            cleave_impact_seen = true
+    assert(cleave_impact_seen and anim.finished and anim.frame_index() == 29,
+        "Cleave must complete its dedicated follow-through and recovery sequence")
 
     anim.play_player_clip("work", true, 14.0)
     assert(anim.frame_index() == 16, "Player harvest must begin from its own neutral tool pose")

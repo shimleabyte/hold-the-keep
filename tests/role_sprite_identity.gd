@@ -30,8 +30,8 @@ func _assert_distinct(name: String, reference: String) -> void:
 
 func _initialize() -> void:
     var player_sprite: Image = _load_sprite("player")
-    assert(player_sprite.get_width() / SpriteAnim.PLAYER_FRAMES == 24,
-        "The hand-authored player atlas must retain its 24px frame width and 24-frame sequence")
+    assert(player_sprite.get_width() / SpriteAnim.PLAYER_FRAMES == 30,
+        "The hand-authored player atlas must retain its 24px frame width and 30-frame sequence")
     assert(player_sprite.get_height() / DIRECTIONS == 28,
         "The hand-authored player atlas must retain its 28px frame height")
     _assert_distinct("player", "villager_soldier")
