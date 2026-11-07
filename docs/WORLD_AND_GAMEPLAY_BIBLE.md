@@ -375,3 +375,12 @@ This bible defines the intended identity. ROADMAP_NEXT_LEVEL.md defines what is 
 | Phase 10 — Viewport/UI | Protect the readable playfield and clear hierarchy at supported resolutions |
 
 **Current status:** the direction in this document is approved as the target design, but its future mechanics and art requirements remain proposals until implemented and verified through the roadmap's acceptance gates.
+
+
+## Gameplay direction update — 2026-11-07
+
+The long-term product target is now explicit: Hold the Keep is a kingdom strategy game in which the player remains a directly controlled blue-mantled knight while also stewarding a settlement, assigning autonomous civilian work, developing territory and commanding a separate military force. Rival factions must function as competing kingdoms whose growth and attacks emerge from resource, construction, recruitment, information and territorial decisions.
+
+The core strategic loop is **Establish → Produce → Develop → Explore → Expand → Compete → Defend or Conquer**. Classic's day/night survival pressure remains a useful onboarding and tactical pressure mode; it is not the ceiling for the campaign structure. Frontier's regional progression, strongholds, supply and discovery systems are the foundation for broader kingdom competition.
+
+Design gate for new work: a feature must change a decision or consequence, connect at least two existing systems, be observable in the world and have a recovery/counterplay path. Do not add passive stat upgrades or content volume as substitutes for strategic depth. Current implementation gaps are tracked in [docs/GAMEPLAY_AUDIT.md](docs/GAMEPLAY_AUDIT.md); the current delivery slice is documented in [docs/plans/phase-11.2-faction-strategy.md](docs/plans/phase-11.2-faction-strategy.md).

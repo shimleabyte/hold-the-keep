@@ -14,6 +14,25 @@ const BUILD_PLAN: Array[Dictionary] = [
     {"id": "forge", "cost": {"wood": 75, "stone": 45, "iron": 12}, "work": 28.0},
     {"id": "storage", "cost": {"wood": 55, "stone": 25}, "work": 18.0}
 ]
+## Rival factions now use different economic investment sequences. Each order contains
+## the same buildings and costs; doctrine changes opportunity cost, not resource supply.
+const DEFAULT_BUILD_ORDER: Array[String] = [
+    "lumber_camp", "farm", "quarry", "barracks", "tower", "forge", "storage"
+]
+const DOCTRINE_BUILD_ORDERS: Dictionary = {
+    "ambush": [
+        "lumber_camp", "quarry", "barracks", "farm", "tower", "forge", "storage"
+    ],
+    "fortress": [
+        "lumber_camp", "quarry", "tower", "farm", "barracks", "storage", "forge"
+    ],
+    "attrition": [
+        "farm", "lumber_camp", "quarry", "storage", "barracks", "tower", "forge"
+    ],
+    "siege": [
+        "quarry", "lumber_camp", "farm", "barracks", "forge", "tower", "storage"
+    ]
+}
 const MAX_RESOURCE: float = 999.0
 const STARTING_RESOURCES: Dictionary = {"wood": 100.0, "stone": 42.0, "food": 65.0, "iron": 4.0}
 
@@ -64,6 +83,7 @@ func setup(keep_ref: Node2D, saved: Dictionary = {}) -> void:
                 "remaining": clampf(saved_remaining, 0.0, float(saved_plan.get("work", 1.0)))
             }
     active = bool(saved.get("active", true))
+    _reconcile_build_order_index()
 
 
 func advance(delta: float) -> void:
@@ -106,27 +126,30 @@ func _produce_resources() -> void:
 
 
 func _try_start_construction() -> void:
-    if not construction.is_empty() or build_order_index >= BUILD_PLAN.size():
+    if not construction.is_empty():
         return
-    while build_order_index < BUILD_PLAN.size():
-        var plan: Dictionary = BUILD_PLAN[build_order_index]
-        if _has_structure(String(plan["id"])):
-            build_order_index += 1
-            continue
-        var anchor: Vector2i = _find_build_site(String(plan["id"]))
-        if anchor.x < 0:
-            return
-        var cost: Dictionary = plan["cost"]
-        if not _can_pay(cost):
-            return
-        _pay(cost)
-        construction = {
-            "id": String(plan["id"]),
-            "cx": anchor.x,
-            "cy": anchor.y,
-            "remaining": float(plan["work"])
-        }
+    _reconcile_build_order_index()
+    var order: Array[String] = development_order()
+    if build_order_index >= order.size():
         return
+
+    var id: String = order[build_order_index]
+    var plan: Dictionary = _build_plan_for(id)
+    if plan.is_empty():
+        return
+    var anchor: Vector2i = _find_build_site(id)
+    if anchor.x < 0:
+        return
+    var cost: Dictionary = plan["cost"]
+    if not _can_pay(cost):
+        return
+    _pay(cost)
+    construction = {
+        "id": id,
+        "cx": anchor.x,
+        "cy": anchor.y,
+        "remaining": float(plan["work"])
+    }
 
 
 func _advance_construction(delta: float) -> void:
@@ -145,8 +168,8 @@ func _advance_construction(delta: float) -> void:
     if float(construction["remaining"]) > 0.0:
         return
     if _spawn_structure(id, anchor, -1):
-        build_order_index = mini(build_order_index + 1, BUILD_PLAN.size())
         construction.clear()
+        _reconcile_build_order_index()
         Events.build_feedback.emit("%s completed construction of %s" % [
             _faction_label(), id.replace("_", " ").to_upper()
         ])
@@ -181,6 +204,43 @@ func _build_plan_for(id: String) -> Dictionary:
         if String(plan.get("id", "")) == id:
             return plan
     return {}
+
+
+func development_order() -> Array[String]:
+    var faction_id: String = String(owner_keep.get("faction_id")) if owner_keep != null else ""
+    var faction: Dictionary = FactionRegistry.factions.get(faction_id, {})
+    var doctrine: String = String(faction.get("doctrine", ""))
+    var selected_order: Variant = DOCTRINE_BUILD_ORDERS.get(doctrine, DEFAULT_BUILD_ORDER)
+    var candidates: Array = DEFAULT_BUILD_ORDER
+    if selected_order is Array:
+        candidates = selected_order
+
+    var order: Array[String] = []
+    for raw_id: Variant in candidates:
+        var id: String = String(raw_id)
+        if id.is_empty() or order.has(id) or _build_plan_for(id).is_empty():
+            continue
+        order.append(id)
+    # Defensively append any future building omitted by a doctrine definition.
+    for plan: Dictionary in BUILD_PLAN:
+        var fallback_id: String = String(plan.get("id", ""))
+        if not fallback_id.is_empty() and not order.has(fallback_id):
+            order.append(fallback_id)
+    return order
+
+
+func _reconcile_build_order_index() -> void:
+    var order: Array[String] = development_order()
+    if not construction.is_empty():
+        var active_index: int = order.find(String(construction.get("id", "")))
+        if active_index >= 0:
+            build_order_index = active_index
+            return
+    for index: int in range(order.size()):
+        if not _has_structure(order[index]):
+            build_order_index = index
+            return
+    build_order_index = order.size()
 
 
 func _has_structure(id: String) -> bool:
@@ -304,6 +364,9 @@ func _spawn_structure(id: String, anchor: Vector2i, saved_hp: int = -1) -> bool:
 
 func on_structure_destroyed(structure: EnemySettlementStructure) -> void:
     structures.erase(structure)
+    # A destroyed priority building becomes eligible for reconstruction. If another
+    # project is already active, its completion will reconcile the missing structure.
+    _reconcile_build_order_index()
 
 
 func garrison_capacity() -> int:

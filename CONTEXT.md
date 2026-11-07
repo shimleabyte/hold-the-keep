@@ -1,5 +1,15 @@
 # Konteks proyek: Hold the Keep
 
+## Gameplay overhaul progress — 2026-11-07
+
+The live remote `main` baseline inspected for the gameplay overhaul was `931cca8e065976da89a33d40ef42c5f70bd6b308` (commit #180: miner resource selection now respects reachability and connected depots). Phase 11.2 adds doctrine-driven rival settlement investment priorities. See [docs/GAMEPLAY_AUDIT.md](docs/GAMEPLAY_AUDIT.md) and [docs/plans/phase-11.2-faction-strategy.md](docs/plans/phase-11.2-faction-strategy.md).
+
+The four existing faction doctrines now select distinct orders over the same seven rival buildings. Resource costs, income rates, paid recruitment, construction time and save schema v17 are unchanged. The rival build cursor is derived from persisted structure/construction state, so old v17 civilization snapshots do not require a migration. This is a first strategy slice, not completion of the kingdom-strategy overhaul.
+
+Still open: visible rival workforce/logistics, rival outposts and secondary settlements, two-sided territory/supply, coordinated offensive military planning, player-selectable strategic objectives, and human rendered playtesting. Exact-baseline CI success is not human gameplay acceptance. This runtime had no local checkout or Godot executable, so no interactive playthrough is claimed.
+
+**Supersession note:** older SHA references and phase summaries lower in this document are historical integration checkpoints. Use the current remote `main` commit and the audit above for current status.
+
 Dokumen ini ringkasan keadaan proyek supaya sesi kerja berikutnya (manusia atau AI) bisa langsung
 melanjutkan tanpa membaca ulang seluruh riwayat. **Perbarui bagian "Status" dan "Riwayat" setiap
 selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; file ini = konteks.

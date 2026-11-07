@@ -1,6 +1,13 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Current implementation baseline:** Phase 11.1 production code is integrated at `10747392ecdaebc6b7490b43fb82cf2cfa389468` (2026-11-07); current main's pre-audit tip was docs-only `f9a6a443db0f2bb8593f77a8ac93f1d3b834f95d`. See [docs/BRANCH_REGISTRY.md](docs/BRANCH_REGISTRY.md) for the 156-branch / 178-PR inventory, deferred work and retained candidates.  
+## Gameplay-overhaul status — 2026-11-07
+
+The audit baseline was remote `main` SHA `931cca8e065976da89a33d40ef42c5f70bd6b308`. Read [docs/GAMEPLAY_AUDIT.md](docs/GAMEPLAY_AUDIT.md) before assigning new gameplay work. The first implementation slice (Phase 11.2) makes the `ambush`, `fortress`, `attrition` and `siege` doctrines choose different rival building priorities, while retaining identical costs, finite ledgers and save v17. Regression coverage is in `army_command_and_rival_civilization`.
+
+Next priority is not more unit/building volume: verify the actual ten-minute opening, then connect rival production to a bounded workforce/logistics model, followed by rival territory/outposts and coordinated military planning. Human rendered playtesting and target-PC profiling remain open. CI is necessary, not a fun/UX acceptance claim.
+
+
+**Current implementation baseline:** the gameplay audit started from `931cca8e065976da89a33d40ef42c5f70bd6b308`; Phase 11.2 doctrine-driven rival development is the next mainline gameplay slice. Historical branch/PR inventories below are snapshots, not live status. See [docs/GAMEPLAY_AUDIT.md](docs/GAMEPLAY_AUDIT.md) for current gaps.  
 **Engine target:** Godot 4.7 only  
 **Release target:** Desktop-first — Windows x86_64 and Linux x86_64. Android remains deferred.  
 **Current save schema:** v17.
