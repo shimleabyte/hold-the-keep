@@ -45,6 +45,38 @@ const DOCTRINE_LABOR_ORDERS: Dictionary = {
     "attrition": ["farm", "lumber_camp", "quarry", "forge"],
     "siege": ["quarry", "forge", "lumber_camp", "farm"]
 }
+const DEFAULT_RECRUITMENT_ROSTER: Array[String] = ["bandit", "archer", "brute"]
+const DEFAULT_RECRUITMENT_WEIGHTS: Dictionary = {
+    "bandit": 0.45, "archer": 0.35, "brute": 0.20
+}
+const DOCTRINE_RECRUITMENT_WEIGHTS: Dictionary = {
+    "ambush": {
+        "bandit": 0.35, "enemy_scout": 0.25, "enemy_saboteur": 0.20,
+        "enemy_beast_rider": 0.20
+    },
+    "fortress": {
+        "enemy_shieldbearer": 0.40, "archer": 0.35, "enemy_siege_engine": 0.25
+    },
+    "attrition": {
+        "wolf": 0.35, "enemy_war_shaman": 0.25,
+        "enemy_scout": 0.20, "enemy_beast_rider": 0.20
+    },
+    "siege": {
+        "enemy_siege_engine": 0.40, "enemy_shieldbearer": 0.25,
+        "enemy_war_shaman": 0.20, "enemy_saboteur": 0.15
+    }
+}
+const RECRUITMENT_COSTS: Dictionary = {
+    "bandit": {"food": 10.0, "wood": 4.0},
+    "enemy_scout": {"food": 10.0, "wood": 4.0},
+    "enemy_saboteur": {"food": 14.0, "wood": 6.0, "iron": 1.0},
+    "enemy_beast_rider": {"food": 18.0, "wood": 8.0, "iron": 2.0},
+    "enemy_shieldbearer": {"food": 14.0, "wood": 5.0, "stone": 4.0, "iron": 1.0},
+    "archer": {"food": 11.0, "wood": 6.0},
+    "enemy_siege_engine": {"food": 20.0, "wood": 10.0, "stone": 12.0, "iron": 3.0},
+    "wolf": {"food": 8.0},
+    "enemy_war_shaman": {"food": 16.0, "wood": 6.0, "iron": 1.0}
+}
 const BASE_STORAGE_CAPACITY: float = 240.0
 const STORAGE_BUILDING_BONUS: float = 360.0
 const MAX_RESOURCE: float = 999.0
@@ -503,23 +535,67 @@ func garrison_capacity() -> int:
     return clampi(capacity, 4, 8)
 
 
-func can_recruit() -> bool:
-    return _can_pay(_recruitment_cost())
+func can_recruit(unit_id: String = "") -> bool:
+    return _can_pay(_recruitment_cost(unit_id))
 
 
-func pay_recruitment() -> bool:
-    var cost: Dictionary = _recruitment_cost()
+func pay_recruitment(unit_id: String = "") -> bool:
+    var cost: Dictionary = _recruitment_cost(unit_id)
     if not _can_pay(cost):
         return false
     _pay(cost)
     return true
 
 
-func _recruitment_cost() -> Dictionary:
+func recruitment_cost_for(unit_id: String) -> Dictionary:
+    return _recruitment_cost(unit_id).duplicate(true)
+
+
+func _recruitment_cost(unit_id: String = "") -> Dictionary:
+    if not unit_id.is_empty() and RECRUITMENT_COSTS.has(unit_id):
+        return (RECRUITMENT_COSTS[unit_id] as Dictionary).duplicate(true)
     var cost: Dictionary = {"food": 10.0, "wood": 4.0}
     if technology_tier >= 1:
         cost["iron"] = 1.0
     return cost
+
+
+func choose_recruitment_unit(existing_unit_ids: Array[String]) -> String:
+    var faction_id: String = String(owner_keep.get("faction_id")) if owner_keep != null else ""
+    var faction: Dictionary = FactionRegistry.factions.get(faction_id, {})
+    var doctrine: String = String(faction.get("doctrine", ""))
+    var roster: Array[String] = FactionRegistry.roster_for(faction_id)
+    var weights: Dictionary = DOCTRINE_RECRUITMENT_WEIGHTS.get(
+        doctrine, DEFAULT_RECRUITMENT_WEIGHTS
+    )
+    if roster.is_empty():
+        for fallback_id: String in DEFAULT_RECRUITMENT_ROSTER:
+            roster.append(fallback_id)
+        weights = DEFAULT_RECRUITMENT_WEIGHTS
+
+    if roster.is_empty():
+        return ""
+
+    var counts: Dictionary = {}
+    for unit_id: String in roster:
+        counts[unit_id] = 0
+    for existing_id: String in existing_unit_ids:
+        counts[existing_id] = int(counts.get(existing_id, 0)) + 1
+
+    var total_after_recruitment: float = float(existing_unit_ids.size() + 1)
+    var selected_id: String = ""
+    var selected_score: float = -INF
+    for unit_id: String in roster:
+        if not DataDB.enemies.has(unit_id) or not can_recruit(unit_id):
+            continue
+        var target_share: float = maxf(0.0, float(weights.get(unit_id, 0.0)))
+        if target_share <= 0.0:
+            continue
+        var score: float = target_share * total_after_recruitment - float(counts.get(unit_id, 0))
+        if score > selected_score:
+            selected_score = score
+            selected_id = unit_id
+    return selected_id
 
 
 func on_keep_destroyed() -> void:

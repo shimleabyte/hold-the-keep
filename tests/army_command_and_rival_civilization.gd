@@ -282,6 +282,65 @@ func _initialize() -> void:
             _check(order_matches,
                 "%s doctrine must produce its own deterministic construction priority" % faction_id)
 
+            var expected_favorite_recruits: Dictionary = {
+                "greenwood_raiders": "bandit",
+                "iron_legion": "enemy_shieldbearer",
+                "fen_cult": "wolf",
+                "ashen_host": "enemy_siege_engine"
+            }
+            var faction_roster: Array[String] = FactionRegistry.roster_for(faction_id)
+            var favorite_recruit: String = String(expected_favorite_recruits[faction_id])
+            _check(faction_roster.has(favorite_recruit),
+                "%s doctrine favorite must belong to its faction roster" % faction_id)
+            var empty_garrison: Array[String] = []
+            var opening_recruit: String = strategy_civilization.call(
+                "choose_recruitment_unit", empty_garrison
+            )
+            _check(opening_recruit == favorite_recruit,
+                "%s doctrine must choose its signature recruitment first" % faction_id)
+
+            var balanced_garrison: Array[String] = []
+            for roster_id: String in faction_roster:
+                if roster_id != favorite_recruit:
+                    balanced_garrison.append(roster_id)
+            var composition_recruit: String = strategy_civilization.call(
+                "choose_recruitment_unit", balanced_garrison
+            )
+            _check(composition_recruit == favorite_recruit,
+                "%s doctrine must fill the largest composition deficit" % faction_id)
+
+            var unit_cost: Dictionary = strategy_civilization.call(
+                "recruitment_cost_for", composition_recruit
+            )
+            _check(not unit_cost.is_empty(),
+                "%s recruit must have an explicit economic cost" % faction_id)
+            var recruitment_balance_before: Dictionary = (
+                strategy_civilization.get("resources") as Dictionary
+            ).duplicate(true)
+            _check(bool(strategy_civilization.call("can_recruit", composition_recruit)),
+                "%s signature recruit must be affordable from its own ledger" % faction_id)
+            _check(bool(strategy_civilization.call("pay_recruitment", composition_recruit)),
+                "%s signature recruit must be paid before joining the garrison" % faction_id)
+            var recruitment_balance_after: Dictionary = strategy_civilization.get("resources")
+            for resource_kind: String in unit_cost:
+                _check(
+                    is_equal_approx(
+                        float(recruitment_balance_after.get(resource_kind, 0.0)),
+                        float(recruitment_balance_before.get(resource_kind, 0.0))
+                            - float(unit_cost[resource_kind])
+                    ),
+                    "%s recruitment must debit the correct %s cost" % [faction_id, resource_kind]
+                )
+
+            var saved_recruitment_balance: Dictionary = recruitment_balance_after.duplicate(true)
+            recruitment_balance_after["food"] = 0.0
+            var unaffordable_choice: String = strategy_civilization.call(
+                "choose_recruitment_unit", empty_garrison
+            )
+            _check(unaffordable_choice.is_empty(),
+                "%s faction must not recruit when no roster unit can be paid" % faction_id)
+            recruitment_balance_after.merge(saved_recruitment_balance, true)
+
             var first_plan: Dictionary = strategy_civilization.call("_build_plan_for", actual_order[0])
             var first_cost: Dictionary = first_plan.get("cost", {})
             var ledger_before: Dictionary = strategy_civilization.get("resources")

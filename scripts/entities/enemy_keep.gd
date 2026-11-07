@@ -142,11 +142,17 @@ func _process(delta: float) -> void:
     if civilization == null:
         _spawn_guard()
         return
-    if civilization.can_recruit() and _spawn_guard():
-        civilization.pay_recruitment()
+
+    var existing_unit_ids: Array[String] = []
+    for guard: Enemy in _local_garrison():
+        existing_unit_ids.append(guard.id)
+    var recruit_id: String = civilization.choose_recruitment_unit(existing_unit_ids)
+    if not recruit_id.is_empty() and civilization.can_recruit(recruit_id):
+        if _spawn_guard(recruit_id):
+            civilization.pay_recruitment(recruit_id)
 
 
-func _spawn_guard() -> bool:
+func _spawn_guard(requested_enemy_id: String = "") -> bool:
     var directions: int = GUARD_DIRECTIONS.size()
     var attempts: int = directions * GUARD_RINGS.size()
     var fortress_center: Vector2 = position + Vector2(0, -size.y * WorldConfig.tile_size / 2.0)
@@ -170,9 +176,15 @@ func _spawn_guard() -> bool:
         _spawn_index = (slot + 1) % attempts
         var guard: Enemy = ENEMY_SCRIPT.new() as Enemy
         var roster: Array[String] = FactionRegistry.roster_for(faction_id)
-        var guard_id: String = FactionRegistry.garrison_enemy(faction_id)
-        if not roster.is_empty() and not _local_garrison().is_empty():
-            guard_id = roster[posmod(_spawn_index, roster.size())]
+        var guard_id: String = requested_enemy_id
+        if guard_id.is_empty():
+            guard_id = FactionRegistry.garrison_enemy(faction_id)
+            if not roster.is_empty() and not _local_garrison().is_empty():
+                guard_id = roster[posmod(_spawn_index, roster.size())]
+        elif not DataDB.enemies.has(guard_id) or (not roster.is_empty() and not roster.has(guard_id)):
+            return false
+        if not DataDB.enemies.has(guard_id):
+            return false
         guard.setup_guard(DataDB.enemies[guard_id], world, flow, player, position, faction_id)
         guard.position = spawn_position
         world.entities.add_child(guard)

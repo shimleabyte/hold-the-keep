@@ -140,3 +140,11 @@ The rival Storage building now has an economic purpose. Each resource starts wit
 Existing v17 saves with balances above the new capacity are preserved rather than clamped downward. Those balances simply receive no new production until spending reduces them below the current capacity. The save schema is unchanged.
 
 Regression coverage verifies base/expanded capacity, saturation at the cap, labor release when a stockpile is full, and preservation of over-cap legacy balances.
+
+## 5d. Phase 11.5 — Doctrine-driven paid army composition (implementation)
+
+Periodic rival reinforcements now use the existing faction roster and doctrine composition targets rather than round-robin roster indexing. The recruiter counts the living stronghold garrison, measures each roster unit against the doctrine's target share, and chooses the most underrepresented affordable role. If no roster unit can be paid, the stronghold does not receive a reinforcement.
+
+Each recruit has an explicit resource cost. Scouts and basic infantry remain cheaper; saboteurs, beast riders, shield specialists, shamans and siege engines consume additional food, wood, stone and/or iron. Initial opening garrisons remain unchanged; only periodic paid reinforcement uses the planner. Costs are debited only after a valid spawn cell is found and the unit is created. Save schema v17 is unchanged because composition is derived from the live garrison.
+
+The existing army/rival regression now checks doctrine favorites, filling missing composition roles, per-unit costs and ledger debits, and refusal to recruit when no roster unit is affordable.
