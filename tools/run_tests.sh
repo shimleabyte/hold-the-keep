@@ -25,6 +25,7 @@ fi
 tests=(
     animation_motion
     army_command_and_rival_civilization
+    rival_civilization_persistence
     campaign_assault
     campaign_multi_stronghold
     workplace_assignments

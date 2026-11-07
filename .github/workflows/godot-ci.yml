@@ -100,6 +100,7 @@ jobs:
           - map_stages
           - player_combat_flow
           - army_command_and_rival_civilization
+          - rival_civilization_persistence
           - legacy_world_dimensions
           - player_combat
           - resource_save_state

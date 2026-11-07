@@ -720,7 +720,10 @@ func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vecto
             occupied_cells[keep_cell + Vector2i(keep_x, keep_y)] = true
 
     var raw_structures: Array = data["structures"]
-    if raw_structures.size() > footprints.size():
+    var raw_pending_structures: Variant = data.get("pending_structures", [])
+    if not (raw_pending_structures is Array):
+        return false
+    if raw_structures.size() + raw_pending_structures.size() > footprints.size():
         return false
     var seen_structures: Dictionary = {}
     for structure_index: int in range(raw_structures.size()):
@@ -746,6 +749,33 @@ func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vecto
         for y: int in footprint.y:
             for x: int in footprint.x:
                 var cell: Vector2i = anchor + Vector2i(x, y)
+                if occupied_cells.has(cell):
+                    return false
+                occupied_cells[cell] = true
+
+    for pending_index: int in range(raw_pending_structures.size()):
+        if not (raw_pending_structures[pending_index] is Dictionary):
+            return false
+        var pending_structure: Dictionary = raw_pending_structures[pending_index]
+        for key: String in ["id", "cx", "cy", "hp"]:
+            if not pending_structure.has(key):
+                return false
+        var pending_id: String = String(pending_structure["id"])
+        if not footprints.has(pending_id) or seen_structures.has(pending_id):
+            return false
+        if not _is_integral_number(pending_structure["cx"]) or not _is_integral_number(pending_structure["cy"]) or not _is_integral_number(pending_structure["hp"]):
+            return false
+        var pending_anchor := Vector2i(int(pending_structure["cx"]), int(pending_structure["cy"]))
+        var pending_footprint: Vector2i = footprints[pending_id]
+        var pending_hp: int = int(pending_structure["hp"])
+        if pending_anchor.x < 0 or pending_anchor.y < 0 or pending_anchor.x + pending_footprint.x > map_size or pending_anchor.y + pending_footprint.y > map_size:
+            return false
+        if pending_hp < 1 or pending_hp > int(hit_points[pending_id]):
+            return false
+        seen_structures[pending_id] = true
+        for y: int in pending_footprint.y:
+            for x: int in pending_footprint.x:
+                var cell: Vector2i = pending_anchor + Vector2i(x, y)
                 if occupied_cells.has(cell):
                     return false
                 occupied_cells[cell] = true
