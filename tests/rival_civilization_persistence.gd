@@ -1,10 +1,6 @@
 extends SceneTree
 ## Phase 11.1 regression: rival structures survive occupied-footprint restoration.
 
-const CIVILIZATION_SCRIPT: Script = preload("res://scripts/systems/enemy_civilization.gd")
-const STRUCTURE_SCRIPT: Script = preload("res://scripts/entities/enemy_settlement_structure.gd")
-
-
 var failed: bool = false
 
 
@@ -35,6 +31,15 @@ func _initialize() -> void:
         quit(1)
         return
 
+    var current_civilization: RefCounted = keep.get("civilization") as RefCounted
+    _check(current_civilization != null,
+        "The active stronghold must expose its initialized civilization script")
+    if current_civilization == null:
+        main_scene.queue_free()
+        await process_frame
+        quit(1)
+        return
+    var civilization_script: Script = current_civilization.get_script()
     keep.set_process(false)
     var candidate_sites: Array[Vector2i] = _find_candidate_sites(world, keep, Vector2i(2, 2), 2)
     _check(candidate_sites.size() >= 2,
@@ -52,7 +57,7 @@ func _initialize() -> void:
     # A player-owned object can occupy a previously valid rival structure footprint
     # before the campaign is reconstructed. The loader must relocate rather than drop it.
     world.occupied[saved_anchor] = player
-    var fallback_civilization: RefCounted = CIVILIZATION_SCRIPT.new() as RefCounted
+    var fallback_civilization: RefCounted = civilization_script.new() as RefCounted
     fallback_civilization.call("setup", keep, _saved_civilization_state(saved_record))
     var fallback_structures: Array = fallback_civilization.get("structures")
     _check(fallback_structures.size() == 1,
@@ -81,7 +86,7 @@ func _initialize() -> void:
             if world.is_buildable(cell) and String(world.region_id(cell)) == keep.region_id:
                 world.occupied[cell] = player
 
-    var pending_civilization: RefCounted = CIVILIZATION_SCRIPT.new() as RefCounted
+    var pending_civilization: RefCounted = civilization_script.new() as RefCounted
     pending_civilization.call("setup", keep, _saved_civilization_state(saved_record))
     var pending_state: Dictionary = pending_civilization.call("export_state")
     var pending_values: Array = pending_state.get("pending_structures", [])
@@ -92,7 +97,7 @@ func _initialize() -> void:
 
     # A second civilization instance simulates a save/load round trip while the
     # original site is still blocked. The pending record must survive unchanged.
-    var reloaded_civilization: RefCounted = CIVILIZATION_SCRIPT.new() as RefCounted
+    var reloaded_civilization: RefCounted = civilization_script.new() as RefCounted
     reloaded_civilization.call("setup", keep, pending_state)
     var reloaded_state: Dictionary = reloaded_civilization.call("export_state")
     var reloaded_pending: Array = reloaded_state.get("pending_structures", [])
