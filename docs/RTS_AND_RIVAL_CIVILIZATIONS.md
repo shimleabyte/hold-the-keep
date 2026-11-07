@@ -58,3 +58,17 @@ The previous defer-expansion decision is superseded by real player playtesting: 
 - Save resource balances, technology, completed structures, their HP and any active construction timer.
 - Reconstruct paths and transient caches after load rather than serializing navigation internals.
 
+
+
+## Phase 11.2 — Doctrine-driven investment (2026-11-07)
+
+The first faction-strategy slice is implemented in `EnemyCivilization`. The existing faction doctrine now selects an economic investment order:
+
+- Greenwood Raiders / ambush: Lumber Camp → Quarry → Barracks → Farm → Tower → Forge → Storage.
+- Iron Legion / fortress: Lumber Camp → Quarry → Tower → Farm → Barracks → Storage → Forge.
+- Fen Cult / attrition: Farm → Lumber Camp → Quarry → Storage → Barracks → Tower → Forge.
+- Ashen Host / siege: Quarry → Lumber Camp → Farm → Barracks → Forge → Tower → Storage.
+
+This changes which finite investment is chosen next, not how many resources a faction receives. All building costs, production values, work durations, research requirements and recruitment prices remain shared. Unknown doctrine IDs fall back to the original Classic plan. The build cursor is reconstructed from completed/pending structures and active construction state; structure loss can re-enter the priority plan. Save schema stays v17.
+
+This is not the full faction-strategy stage. Visible rival workers, local production logistics, secondary settlements, territory/supply expansion and coordinated offensive plans remain open. Regression coverage in `tests/army_command_and_rival_civilization.gd` verifies each order, first construction and resource debit. Rendered faction pacing still requires a live Frontier playthrough.

@@ -1,4 +1,5 @@
 extends SceneTree
+
 ## Verifies soldiers-only mouse orders and the first persistent rival civilization.
 
 var failed: bool = false
@@ -130,6 +131,66 @@ func _initialize() -> void:
                 _check(not occupied.has(occupied_cell),
                     "Destroying a rival structure must release its world footprint")
 
+
+    if stronghold != null:
+        var original_faction_id: String = String(stronghold.get("faction_id"))
+        var base_civilization: RefCounted = stronghold.get("civilization") as RefCounted
+        _check(base_civilization != null, "A live rival civilization instance must exist before testing doctrine strategy")
+        var civilization_script: Script = base_civilization.get_script() as Script if base_civilization != null else null
+        _check(civilization_script != null, "The live rival civilization must expose its compiled script")
+        var expected_orders: Dictionary = {
+            "greenwood_raiders": [
+                "lumber_camp", "quarry", "barracks", "farm", "tower", "forge", "storage"
+            ],
+            "iron_legion": [
+                "lumber_camp", "quarry", "tower", "farm", "barracks", "storage", "forge"
+            ],
+            "fen_cult": [
+                "farm", "lumber_camp", "quarry", "storage", "barracks", "tower", "forge"
+            ],
+            "ashen_host": [
+                "quarry", "lumber_camp", "farm", "barracks", "forge", "tower", "storage"
+            ]
+        }
+        for faction_key: Variant in expected_orders:
+            var faction_id: String = String(faction_key)
+            stronghold.set("faction_id", faction_id)
+            var strategy_civilization: RefCounted = civilization_script.new() as RefCounted if civilization_script != null else null
+            _check(strategy_civilization != null, "A doctrine test civilization must instantiate from the live compiled script")
+            if strategy_civilization == null:
+                continue
+            strategy_civilization.call("setup", stronghold, {})
+            var expected_order: Array = expected_orders[faction_id]
+            var actual_order: Array[String] = strategy_civilization.call("development_order")
+            _check(actual_order.size() == expected_order.size(),
+                "%s doctrine must retain every rival building" % faction_id)
+            var order_matches: bool = actual_order.size() == expected_order.size()
+            if order_matches:
+                for index: int in range(expected_order.size()):
+                    if actual_order[index] != String(expected_order[index]):
+                        order_matches = false
+                        break
+            _check(order_matches,
+                "%s doctrine must produce its own deterministic construction priority" % faction_id)
+
+            var first_plan: Dictionary = strategy_civilization.call("_build_plan_for", actual_order[0])
+            var first_cost: Dictionary = first_plan.get("cost", {})
+            var ledger_before: Dictionary = strategy_civilization.get("resources")
+            var wood_before: float = float(ledger_before.get("wood", 0.0))
+            var stone_before: float = float(ledger_before.get("stone", 0.0))
+            strategy_civilization.call("advance", 1.0)
+            var active_construction: Dictionary = strategy_civilization.get("construction")
+            _check(String(active_construction.get("id", "")) == actual_order[0],
+                "%s doctrine must start its preferred affordable building" % faction_id)
+            var ledger_after: Dictionary = strategy_civilization.get("resources")
+            var expected_wood: float = wood_before + 0.08 - float(first_cost.get("wood", 0.0))
+            var expected_stone: float = stone_before + 0.025 - float(first_cost.get("stone", 0.0))
+            _check(is_equal_approx(float(ledger_after.get("wood", 0.0)), expected_wood),
+                "%s construction must debit its own wood ledger" % faction_id)
+            _check(is_equal_approx(float(ledger_after.get("stone", 0.0)), expected_stone),
+                "%s construction must debit its own stone ledger" % faction_id)
+        stronghold.set("faction_id", original_faction_id)
+
     var remaining_workers: Array[Node] = get_nodes_in_group("villagers")
     var civilian_count: int = 0
     for unit_node: Node in remaining_workers:
@@ -143,7 +204,7 @@ func _initialize() -> void:
     if failed:
         quit(1)
         return
-    print("PASS: army-only selection, soldier move/attack orders, autonomous rival economy, construction, technology and persistence")
+    print("PASS: army-only commands, paid rival economies, doctrine-specific investment, construction, technology and persistence")
     quit()
 
 
