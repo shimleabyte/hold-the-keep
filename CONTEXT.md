@@ -644,3 +644,12 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 - Soldier targets are reserved per Forge. Workers reject expeditioning, recalling, hidden, fleeing or fighting targets; reservation cleanup runs on completion, invalid target, sabotage and workplace demolition.
 - Save schema increments to v17 for Blacksmith occupation, equipment flags and stat restoration. Classic v1–v17 and Frontier v7–v17 migration coverage passed in Godot 4.7 CI #635 (48/48 jobs).
 - `tests/blacksmith_forge.gd` covers capacity, reservations, costs, stat effects, v16 migration and demolition cleanup. Godot 4.7 CI #635 passed; rendered equipment visibility, animation and balance review remain manual.
+
+
+### Phase 11.3 — Rival workforce economy (2026-11-07)
+
+Rival strongholds now use a derived eight-citizen labor pool. Each living garrison soldier occupies one position, with a minimum of two civilian workers retained. Production buildings employ at most two workers, and faction doctrine determines the order in which available labor is assigned. Active construction reserves up to two builders; each adds 0.5 work/second. Worker and soldier food upkeep are 0.04 and 0.06/second respectively, in addition to the existing subsistence income.
+
+Staffed production rates are: Lumber Camp 0.525 wood/worker/second, Farm 0.625 food/worker/second, Quarry 0.31 stone + 0.04 iron/worker/second, and Forge 0.11 iron/worker/second. Recruitment now reduces productive labor capacity and increases food upkeep, creating a direct economy-versus-garrison decision.
+
+Assignments are derived from current stronghold garrison and completed structures each economy tick. They are not serialized, so save schema v17 remains unchanged. This is still an abstract workforce: visible rival workers, extractable resource nodes, travel, local storage, roads and shipments remain unimplemented. The exact-head Godot CI run is the acceptance gate; rendered Frontier pacing still requires human review.

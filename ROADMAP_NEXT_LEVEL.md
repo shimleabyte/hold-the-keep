@@ -436,3 +436,12 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 4. **11.5 — Map and campaign review:** complete human campaign-balance and target-hardware performance reviews before changing map dimensions or expanding settlement counts.
 
 **Validation boundary:** CI establishes automated correctness for the tested contracts, not campaign balance or target-PC performance. Human rendered playtesting, save continuation on an actual desktop build, target-hardware p50/p95/p99 profiling, audio listening and campaign-balance sign-off remain separate acceptance tasks.
+
+
+## Phase 11.3 — Rival workforce economy (2026-11-07)
+
+Rival production and construction now share a finite workforce. Each stronghold has up to eight citizens; living garrison soldiers occupy those positions, with two economic workers protected as the minimum. Production sites employ at most two workers and doctrine affects labor priority. Construction reserves up to two builders, each contributing 0.5 work/second. Worker and soldier upkeep are distinct, so expanding the garrison lowers productive labor and increases food consumption.
+
+The labor snapshot is derived from current structures and garrison each simulation tick rather than saved. The save schema remains v17. See [docs/plans/phase-11.3-rival-workforce.md](docs/plans/phase-11.3-rival-workforce.md).
+
+Next dependencies: rendered opening/middle-game acceptance; then visible rival labor and physical resource extraction/delivery; then rival storage, roads, outposts and secondary settlements; then coordinated offensive military planning. Do not build a second settlement until resource ownership, supply, storage, siege recovery and save/load are specified and tested.

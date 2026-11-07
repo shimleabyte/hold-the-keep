@@ -72,3 +72,17 @@ The first faction-strategy slice is implemented in `EnemyCivilization`. The exis
 This changes which finite investment is chosen next, not how many resources a faction receives. All building costs, production values, work durations, research requirements and recruitment prices remain shared. Unknown doctrine IDs fall back to the original Classic plan. The build cursor is reconstructed from completed/pending structures and active construction state; structure loss can re-enter the priority plan. Save schema stays v17.
 
 This is not the full faction-strategy stage. Visible rival workers, local production logistics, secondary settlements, territory/supply expansion and coordinated offensive plans remain open. Regression coverage in `tests/army_command_and_rival_civilization.gd` verifies each order, first construction and resource debit. Rendered faction pacing still requires a live Frontier playthrough.
+
+
+## Phase 11.3 — Rival workforce and economic constraints (2026-11-07)
+
+Rival production no longer grants the full building yield independently of labor. Each stronghold has an eight-citizen pool; living garrison soldiers occupy one citizen position each, with a two-worker minimum retained. Production sites employ up to two workers, and doctrine controls labor priority:
+
+- Ambush: Lumber Camp → Quarry → Farm → Forge.
+- Fortress: Quarry → Lumber Camp → Farm → Forge.
+- Attrition: Farm → Lumber Camp → Quarry → Forge.
+- Siege: Quarry → Forge → Lumber Camp → Farm.
+
+Per-worker production is 0.525 wood/second (Lumber Camp), 0.625 food/second (Farm), 0.31 stone plus 0.04 iron/second (Quarry), and 0.11 iron/second (Forge). Active construction reserves up to two builders at 0.5 work/second each. Worker food upkeep is 0.04/second and soldier upkeep 0.06/second alongside existing background subsistence income. Recruitment therefore consumes resources, removes productive capacity and increases food demand.
+
+Labor assignments are rebuilt from the live garrison and completed structures each bounded economy tick. They are transient and not serialized, so save schema v17 is unchanged. This remains an abstract workforce; it does not yet simulate visible rival laborers, resource exhaustion, travel, local depots, roads or shipments.

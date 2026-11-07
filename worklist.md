@@ -4,10 +4,10 @@
 
 The audit baseline was remote `main` SHA `931cca8e065976da89a33d40ef42c5f70bd6b308`. Read [docs/GAMEPLAY_AUDIT.md](docs/GAMEPLAY_AUDIT.md) before assigning new gameplay work. The first implementation slice (Phase 11.2) makes the `ambush`, `fortress`, `attrition` and `siege` doctrines choose different rival building priorities, while retaining identical costs, finite ledgers and save v17. Regression coverage is in `army_command_and_rival_civilization`.
 
-Next priority is not more unit/building volume: verify the actual ten-minute opening, then connect rival production to a bounded workforce/logistics model, followed by rival territory/outposts and coordinated military planning. Human rendered playtesting and target-PC profiling remain open. CI is necessary, not a fun/UX acceptance claim.
+The rival production loop now uses a bounded eight-citizen workforce: living soldiers reduce available labor, production buildings have two-worker caps, doctrine determines labor priority, and active construction consumes builder labor. Regression coverage checks staffing, upkeep, output and labor release. The next priority is rendered opening/middle-game acceptance, followed by physical resource logistics, rival territory/outposts and coordinated military planning. CI is not a fun/UX acceptance claim.
 
 
-**Current implementation baseline:** the gameplay audit started from `931cca8e065976da89a33d40ef42c5f70bd6b308`; Phase 11.2 doctrine-driven rival development is the next mainline gameplay slice. Historical branch/PR inventories below are snapshots, not live status. See [docs/GAMEPLAY_AUDIT.md](docs/GAMEPLAY_AUDIT.md) for current gaps.  
+**Current implementation baseline:** the gameplay audit started from `931cca8e065976da89a33d40ef42c5f70bd6b308`. Phase 11.2 differentiated rival investment order; Phase 11.3 adds doctrine-prioritized labor, staffed production, worker/soldier food upkeep and labor-consuming construction. Historical branch/PR inventories below are snapshots, not live status. See [docs/GAMEPLAY_AUDIT.md](docs/GAMEPLAY_AUDIT.md) for current gaps.  
 **Engine target:** Godot 4.7 only  
 **Release target:** Desktop-first — Windows x86_64 and Linux x86_64. Android remains deferred.  
 **Current save schema:** v17.
