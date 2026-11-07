@@ -28,7 +28,7 @@ var main_player: Player
 
 
 func _initialize() -> void:
-    var main := load("res://scenes/main.tscn").instantiate()
+    var main: HoldTheKeepMain = (load("res://scenes/main.tscn") as PackedScene).instantiate() as HoldTheKeepMain
     root.add_child(main)
     current_scene = main
     await ticks(5)
