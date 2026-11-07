@@ -61,6 +61,6 @@ The original phase established finite workforce allocation and deliberately avoi
 - Cargo is delivered to the owning stronghold's resource ledger subject to current stockpile capacity. Workers are separate from player villagers and military garrison groups.
 - Save export folds carried cargo into the existing resource ledger and clears it from live actors. No worker position/cargo fields or schema migration are introduced; v17 remains in force.
 
-New verification targets: `tests/rival_physical_workforce.gd` and expanded `tests/army_command_and_rival_civilization.gd`. This code is implemented on `feat/rival-physical-workforce-hauling`; its Godot 4.7 CI and rendered behavior are pending verification.
+Verification completed on merged `main` (`dc060785b54b220a1b63d3149daa24fb59751b96`). `rival_physical_workforce`, `rival_civilization_persistence` and the integrated `army_command_and_rival_civilization` tests passed on the merge commit; the full Godot 4.7 matrix passed 66/66 and Campaign Simulation QA passed. Save schema v17 remains unchanged. A dedicated rendered capture/playtest of rival workers has not yet been performed.
 
 Still deferred: local depots, road shipments, inter-settlement logistics, outposts, secondary settlements, coordinated military planning and target-desktop frame-time acceptance.
