@@ -158,6 +158,7 @@ jobs:
           - player_combat_flow
           - army_command_and_rival_civilization
           - rival_civilization_persistence
+          - rival_physical_workforce
           - legacy_world_dimensions
           - player_combat
           - enemy_melee_windup_fairness
