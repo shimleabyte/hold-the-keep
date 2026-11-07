@@ -1,6 +1,6 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Current implementation baseline:** Phase 11.1 merged as `10747392ecdaebc6b7490b43fb82cf2cfa389468` (2026-11-07); the status documents were synchronized in docs-only commit `173ce5e`.  
+**Current implementation baseline:** Phase 11.1 production code is integrated at `10747392ecdaebc6b7490b43fb82cf2cfa389468` (2026-11-07); current main's pre-audit tip was docs-only `f9a6a443db0f2bb8593f77a8ac93f1d3b834f95d`. See [docs/BRANCH_REGISTRY.md](docs/BRANCH_REGISTRY.md) for the 156-branch / 178-PR inventory, deferred work and retained candidates.  
 **Engine target:** Godot 4.7 only  
 **Release target:** Desktop-first — Windows x86_64 and Linux x86_64. Android remains deferred.  
 **Current save schema:** v17.
@@ -16,7 +16,7 @@ Phase 11's initial rival-civilization and army-command implementation is integra
 - New campaigns use Classic 128×128, Frontier 192×192 and Frontier Expedition 256×256 (160×160 starting heartland). Existing 64×64 / 128×128 / 192×192 saves retain their saved profile dimensions.
 - Player direct control remains active. Only living soldiers, including Archer-specialized soldiers, are selectable for army commands; civilian workers retain autonomous jobs.
 - **PR #166/#167** are closed as superseded by #177. **PR #169** is closed without merge because it conflicts with the player-control/civilian-autonomy contract.
-- PR #178's exact-head validation passed **63/63 Godot 4.7 CI jobs** (run #42316264733) and Campaign Simulation QA (run #42316264766). Post-merge mainline CI and Campaign Simulation runs #42316677174/#42316677164 were still running when this document update began.
+- PR #178's exact-head validation passed **63/63 Godot 4.7 CI jobs** (run #42316264733) and Campaign Simulation QA (run #42316264766). Post-merge Campaign Simulation QA passed on production code HEAD (run #42316677164). The next mainline Godot run on docs-only HEAD `f9a6a443` passed (run #42316888270); later registry/status documentation commits must be checked against their own push run.
 
 ### Phase 11 acceptance still open
 
