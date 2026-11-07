@@ -288,7 +288,9 @@ func _initialize() -> void:
                 "fen_cult": "wolf",
                 "ashen_host": "enemy_siege_engine"
             }
-            var faction_roster: Array[String] = FactionRegistry.roster_for(faction_id)
+            var faction_registry: Node = root.get_node_or_null("FactionRegistry")
+            _check(faction_registry != null, "Faction registry autoload must be initialized before recruitment strategy tests")
+            var faction_roster: Array[String] = faction_registry.call("roster_for", faction_id) if faction_registry != null else []
             var favorite_recruit: String = String(expected_favorite_recruits[faction_id])
             _check(faction_roster.has(favorite_recruit),
                 "%s doctrine favorite must belong to its faction roster" % faction_id)
