@@ -138,30 +138,35 @@ func _initialize() -> void:
                 "A full garrison must leave only the protected two-worker minimum")
 
             var stocks_before_production: Dictionary = resources.duplicate(true)
-            civilization.call("_produce_resources")
-            var expected_wood: float = clampf(
-                float(stocks_before_production.get("wood", 0.0))
-                + 0.08 + 0.525 * float(labor.get("lumber_camp", 0)),
-                0.0, 999.0
+            var active_capacity: float = civilization.call("resource_capacity", "wood")
+            var expected_wood: float = float(stocks_before_production.get("wood", 0.0)) + minf(
+                0.08 + 0.525 * float(labor.get("lumber_camp", 0)),
+                maxf(0.0, active_capacity - float(stocks_before_production.get("wood", 0.0)))
             )
-            var expected_stone: float = clampf(
-                float(stocks_before_production.get("stone", 0.0))
-                + 0.025 + 0.31 * float(labor.get("quarry", 0)),
-                0.0, 999.0
+            var stone_capacity: float = civilization.call("resource_capacity", "stone")
+            var expected_stone: float = float(stocks_before_production.get("stone", 0.0)) + minf(
+                0.025 + 0.31 * float(labor.get("quarry", 0)),
+                maxf(0.0, stone_capacity - float(stocks_before_production.get("stone", 0.0)))
             )
-            var expected_iron: float = clampf(
-                float(stocks_before_production.get("iron", 0.0))
-                + 0.04 * float(labor.get("quarry", 0))
-                + 0.11 * float(labor.get("forge", 0)),
-                0.0, 999.0
+            var iron_capacity: float = civilization.call("resource_capacity", "iron")
+            var expected_iron: float = float(stocks_before_production.get("iron", 0.0)) + minf(
+                0.04 * float(labor.get("quarry", 0))
+                    + 0.11 * float(labor.get("forge", 0)),
+                maxf(0.0, iron_capacity - float(stocks_before_production.get("iron", 0.0)))
             )
+            var food_capacity: float = civilization.call("resource_capacity", "food")
+            var expected_food_income: float = 0.42 + 0.625 * float(labor.get("farm", 0))
             var expected_food: float = maxf(
                 0.0,
                 float(stocks_before_production.get("food", 0.0))
-                + 0.42 + 0.625 * float(labor.get("farm", 0))
-                - 0.04 * float(labor.get("available", 0))
-                - 0.06 * float(labor.get("garrison", 0))
+                    + minf(
+                        expected_food_income,
+                        maxf(0.0, food_capacity - float(stocks_before_production.get("food", 0.0)))
+                    )
+                    - 0.04 * float(labor.get("available", 0))
+                    - 0.06 * float(labor.get("garrison", 0))
             )
+            civilization.call("_produce_resources")
             _check(is_equal_approx(float(resources.get("wood", 0.0)), expected_wood),
                 "Rival wood production must scale with assigned lumber workers")
             _check(is_equal_approx(float(resources.get("stone", 0.0)), expected_stone),
@@ -170,6 +175,27 @@ func _initialize() -> void:
                 "Rival iron production must be staffed by quarry/forge workers")
             _check(is_equal_approx(float(resources.get("food", 0.0)), expected_food),
                 "Rival food balance must include farm labor and population upkeep")
+
+            var base_storage_capacity: float = civilization.call("storage_capacity", false)
+            var expanded_storage_capacity: float = civilization.call("storage_capacity", true)
+            _check(is_equal_approx(base_storage_capacity, 240.0),
+                "Rival stockpiles must have a finite base capacity")
+            _check(is_equal_approx(expanded_storage_capacity, 600.0),
+                "Completing Storage must expand the rival stockpile capacity")
+            var original_wood_balance: float = float(resources.get("wood", 0.0))
+            resources["wood"] = base_storage_capacity - 0.25
+            civilization.call("_credit_income", "wood", 5.0)
+            _check(is_equal_approx(float(resources.get("wood", 0.0)), base_storage_capacity),
+                "Rival production must stop exactly at the stockpile capacity")
+            resources["wood"] = base_storage_capacity
+            var full_storage_labor: Dictionary = civilization.call("labor_allocation")
+            _check(int(full_storage_labor.get("lumber_camp", 0)) == 0,
+                "A full wood stockpile must release Lumber Camp labor to another task")
+            resources["wood"] = base_storage_capacity + 25.0
+            civilization.call("_credit_income", "wood", 5.0)
+            _check(is_equal_approx(float(resources.get("wood", 0.0)), base_storage_capacity + 25.0),
+                "Loading an over-cap v17 stockpile must not silently delete saved resources")
+            resources["wood"] = original_wood_balance
 
             var snapshot: Dictionary = stronghold.call("export_state")
             var saved_civilization: Dictionary = snapshot.get("civilization", {})

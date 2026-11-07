@@ -133,3 +133,10 @@ The rival workforce is still abstract. Visible laborers, resource-node depletion
 
 The existing army/rival regression now checks workforce conservation, workplace caps, recruitment-to-labor conversion, staffed output formulas, doctrine labor priority and worker release when a production structure is destroyed.
 
+## 5c. Phase 11.4 — Rival stockpile capacity (implementation)
+
+The rival Storage building now has an economic purpose. Each resource starts with a 240-unit local stockpile limit; completing Storage raises the limit to 600. Production is credited only up to the active capacity. A full resource type stops staffing its corresponding production workplace, and labor is reassigned by the faction's remaining priority order.
+
+Existing v17 saves with balances above the new capacity are preserved rather than clamped downward. Those balances simply receive no new production until spending reduces them below the current capacity. The save schema is unchanged.
+
+Regression coverage verifies base/expanded capacity, saturation at the cap, labor release when a stockpile is full, and preservation of over-cap legacy balances.

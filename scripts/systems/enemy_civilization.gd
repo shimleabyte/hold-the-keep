@@ -45,6 +45,8 @@ const DOCTRINE_LABOR_ORDERS: Dictionary = {
     "attrition": ["farm", "lumber_camp", "quarry", "forge"],
     "siege": ["quarry", "forge", "lumber_camp", "farm"]
 }
+const BASE_STORAGE_CAPACITY: float = 240.0
+const STORAGE_BUILDING_BONUS: float = 360.0
 const MAX_RESOURCE: float = 999.0
 const STARTING_RESOURCES: Dictionary = {"wood": 100.0, "stone": 42.0, "food": 65.0, "iron": 4.0}
 
@@ -151,6 +153,43 @@ func _has_active_structure(id: String) -> bool:
     return false
 
 
+func storage_capacity(has_storage: bool) -> float:
+    return BASE_STORAGE_CAPACITY + STORAGE_BUILDING_BONUS if has_storage else BASE_STORAGE_CAPACITY
+
+
+func resource_capacity(kind: String) -> float:
+    if not ["wood", "stone", "food", "iron"].has(kind):
+        return 0.0
+    return storage_capacity(_has_active_structure("storage"))
+
+
+func _workplace_has_storage_room(workplace_id: String) -> bool:
+    match workplace_id:
+        "lumber_camp":
+            return float(resources.get("wood", 0.0)) < resource_capacity("wood")
+        "farm":
+            return float(resources.get("food", 0.0)) < resource_capacity("food")
+        "quarry":
+            return (
+                float(resources.get("stone", 0.0)) < resource_capacity("stone")
+                or float(resources.get("iron", 0.0)) < resource_capacity("iron")
+            )
+        "forge":
+            return float(resources.get("iron", 0.0)) < resource_capacity("iron")
+    return false
+
+
+func _credit_income(kind: String, amount: float) -> float:
+    var current: float = maxf(0.0, float(resources.get(kind, 0.0)))
+    var capacity: float = resource_capacity(kind)
+    # Preserve existing v17 over-cap balances; they simply stop receiving income
+    # until spending brings the balance under the active storage limit.
+    var room: float = maxf(0.0, capacity - current)
+    var credited: float = minf(maxf(0.0, amount), room)
+    resources[kind] = current + credited
+    return credited
+
+
 func labor_allocation() -> Dictionary:
     var garrison_count: int = 0
     if owner_keep != null and is_instance_valid(owner_keep):
@@ -177,7 +216,7 @@ func labor_allocation() -> Dictionary:
     for workplace_id: String in labor_order():
         if remaining <= 0:
             break
-        if not _has_active_structure(workplace_id):
+        if not _has_active_structure(workplace_id) or not _workplace_has_storage_room(workplace_id):
             continue
         var assigned: int = mini(WORKERS_PER_WORKPLACE, remaining)
         allocation[workplace_id] = assigned
@@ -196,7 +235,7 @@ func _produce_resources() -> void:
         "iron": 0.04 * float(labor["quarry"]) + 0.11 * float(labor["forge"])
     }
     for kind: String in income:
-        resources[kind] = clampf(float(resources.get(kind, 0.0)) + float(income[kind]), 0.0, MAX_RESOURCE)
+        _credit_income(kind, float(income[kind]))
 
     # A fixed population pool makes recruitment an economic trade-off:
     # each living garrison soldier removes one available worker and costs more food.
