@@ -54,12 +54,12 @@ def validate_authored_svg(path: Path) -> list[str]:
         if tag == "rect":
             for attr in ("x", "y", "width", "height"):
                 value = element.attrib.get(attr, "0")
-                if not re.fullmatch(r"-?\\d+", value):
+                if not re.fullmatch(r"-?\d+", value):
                     failures.append(f"{path.name}: rect {attr}={value!r} is not integer-grid aligned")
                     break
         if tag == "polygon":
             points = element.attrib.get("points", "")
-            if not re.fullmatch(r"\\s*-?\\d+,-?\\d+(?:\\s+-?\\d+,-?\\d+)*\\s*", points):
+            if not re.fullmatch(r"\s*-?\d+,-?\d+(?:\s+-?\d+,-?\d+)*\s*", points):
                 failures.append(f"{path.name}: polygon points are not integer-grid aligned")
 
     top_level_frames = [node for node in list(root) if node.tag.rsplit("}", 1)[-1] == "g"]
