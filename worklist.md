@@ -844,3 +844,12 @@ The highest-risk structural areas are:
 6. `world_map.gd` — multiple deterministic generation stages in one script.
 
 **Primary objective:** make future gameplay development genuinely parallel by giving each subsystem a stable owner, narrow interface, independent tests and predictable integration boundary.
+
+
+## Next gameplay acceptance — rival physical workforce
+
+**Status:** implemented and automated-test verified on main (`dc060785b54b220a1b63d3149daa24fb59751b96`); rendered/desktop acceptance outstanding.
+
+Run a dedicated in-game capture/playtest for rival woodcutters, miners and farmers. Verify travel paths, resource-node reservation, visible work motion, cargo pickup, hauling to the owning stronghold, full-stockpile waiting, blocked-route recovery, and retirement after workplace/keep destruction. Keep workers outside player civilian and military selection. Do not infer rendered acceptance from the headless campaign/workforce tests.
+
+After visual acceptance, implement local depot storage and road-connected shipments as a separate logistics vertical slice. Defer inter-settlement logistics, rival outposts, second settlements and coordinated raids until local storage and route delivery are reliable.
