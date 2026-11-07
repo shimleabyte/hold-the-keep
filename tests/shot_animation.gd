@@ -1,77 +1,233 @@
 extends SceneTree
+
 var crops: Array = []
-func ticks(n: int) -> void:
-    for i in n:
-        await physics_frame
-func crop(label: String, center: Vector2, w := 112, h := 72) -> void:
+var main_player: Variant
+
+
+func ticks(count: int) -> void:
+    for _index in count:
+        await process_frame
+
+
+func advance_animation(seconds: float) -> void:
+    # Advance the actual SpriteAnim timeline in exact durations while physics
+    # is paused, so capture labels correspond to deterministic atlas markers.
+    var remaining := maxf(seconds, 0.0)
+    while remaining > 0.000001:
+        var step := minf(remaining, 1.0 / 120.0)
+        main_player.anim.update(step)
+        main_player.queue_redraw()
+        remaining -= step
+    await process_frame
+
+
+func capture(label: String, center: Vector2, width := 144, height := 96) -> void:
     await process_frame
     await RenderingServer.frame_post_draw
-    var img := root.get_texture().get_image()
-    var x := clampi(int(center.x - w / 2.0), 0, 480 - w)
-    var y := clampi(int(center.y - h / 2.0), 0, 270 - h)
-    var c := img.get_region(Rect2i(x, y, w, h))
-    c.resize(w * 4, h * 4, Image.INTERPOLATE_NEAREST)
-    crops.append([label, c])
+    var image := root.get_texture().get_image()
+    if image == null:
+        push_error("Player animation playblast could not read the rendered viewport")
+        return
+
+    var viewport_size := root.get_visible_rect().size
+    var x := clampi(int(center.x - width / 2.0), 0, maxi(0, int(viewport_size.x) - width))
+    var y := clampi(int(center.y - height / 2.0), 0, maxi(0, int(viewport_size.y) - height))
+    var frame := image.get_region(Rect2i(x, y, width, height))
+    frame.resize(width * 3, height * 3, Image.INTERPOLATE_NEAREST)
+    crops.append([label, frame])
+    print("PLAYER_PLAYBLAST_FRAME ", label, " atlas=", main_player.anim.frame_index())
+
+
 func _initialize() -> void:
-    var main = load("res://scenes/main.tscn").instantiate()
-    root.add_child(main)
-    current_scene = main
+    print("PLAYER_PLAYBLAST_BEGIN")
+    # Project autoloads must finish their first ready frame before Player._ready connects signals.
+    await process_frame
+    print("PLAYER_PLAYBLAST_AUTOLOADS_READY")
+    var clock := root.get_node_or_null("GameClock")
+    if clock != null:
+        clock.set_process(false)
+
+    # Lightweight neutral stage: the real Player entity, real sprite atlas,
+    # camera and animation code, without booting campaign/world generation.
+    var stage := Node2D.new()
+    stage.name = "PlayerAnimationPlayblastStage"
+    root.add_child(stage)
+    current_scene = stage
+
+    var backdrop_layer := CanvasLayer.new()
+    backdrop_layer.layer = -1
+    root.add_child(backdrop_layer)
+
+    var backdrop := ColorRect.new()
+    backdrop.color = Color("#151917")
+    backdrop.position = Vector2.ZERO
+    backdrop.size = root.get_visible_rect().size
+    backdrop_layer.add_child(backdrop)
+
+    var floor := ColorRect.new()
+    floor.color = Color("#242825")
+    floor.position = Vector2(0, root.get_visible_rect().size.y * 0.68)
+    floor.size = Vector2(root.get_visible_rect().size.x, root.get_visible_rect().size.y * 0.32)
+    backdrop_layer.add_child(floor)
+
+    var ground_line := ColorRect.new()
+    ground_line.color = Color("#555044")
+    ground_line.position = Vector2(0, floor.position.y)
+    ground_line.size = Vector2(root.get_visible_rect().size.x, 2)
+    backdrop_layer.add_child(ground_line)
+
+    print("PLAYER_PLAYBLAST_LOAD_PLAYER_SCRIPT")
+    var player_script: GDScript = load("res://scripts/entities/player.gd") as GDScript
+    if player_script == null or not player_script.can_instantiate():
+        push_error("Player script did not compile after project autoload initialization")
+        quit(1)
+        return
+    print("PLAYER_PLAYBLAST_INSTANTIATE_PLAYER")
+    main_player = player_script.new()
+    stage.add_child(main_player)
+    print("PLAYER_PLAYBLAST_PLAYER_READY")
+    main_player.global_position = Vector2.ZERO
+    main_player.velocity = Vector2.ZERO
+    main_player.facing = Vector2.DOWN
+    main_player.anim.face(Vector2.DOWN)
+    main_player.camera.position_smoothing_enabled = false
+    main_player.camera.make_current()
     await ticks(5)
-    var clock = root.get_node("GameClock"); clock.set_process(false)
-    var inv = root.get_node("Inventory"); inv.add("wood", 100)
-    main.build.player = null
-    var p = main.player
-    p.camera.position_smoothing_enabled = false
-    p.global_position = Vector2(520, 580)
-    await ticks(5)
-    var sp = main.spawner
-    # --- 1. serang: bandit di kanan pemain
-    sp.restore_enemy({"id": "bandit", "x": 538, "y": 580, "hp": 60})
-    for e in get_nodes_in_group("enemies"): e.set_physics_process(false)
+
+    var center := root.get_visible_rect().size * 0.5
+    print("PLAYER_PLAYBLAST_STAGE_READY size=", root.get_visible_rect().size)
+
+    main_player.anim.play_player_clip("idle", true)
+    await ticks(12)
+    await capture("Player · idle", center)
+
+    Input.action_press("move_right")
+    await ticks(12)
+    await capture("Player · walk right", center)
+    Input.action_press("sprint")
+    await ticks(12)
+    await capture("Player · run right", center)
+    Input.action_release("move_right")
+    Input.action_release("sprint")
+    await ticks(4)
+
+    main_player.facing = Vector2.RIGHT
+    main_player.anim.face(Vector2.RIGHT)
+    main_player._atk_cd = 0.0
+    main_player._attack()
+    main_player.set_physics_process(false)
+    # Isolate the authored character pose from draw-only slash and wind-up arcs.
+    main_player._swing = 0.0
+    main_player.combat_feedback.end_windup()
+    main_player.combat_feedback.impact_remaining = 0.0
+    await capture("Player · attack anticipation (frame 10)", center)
+    await advance_animation(0.110)
+    await capture("Player · attack impact (frame 12 / 0.11s)", center)
+    await advance_animation(0.024)
+    await capture("Player · attack follow-through (frame 13)", center)
+    await advance_animation(0.039)
+    await capture("Player · attack recovery (frame 14)", center)
+    await advance_animation(0.036)
+    await capture("Player · attack finish (frame 15)", center)
+    await advance_animation(0.031)
+    main_player.set_physics_process(true)
+
+    # Dedicated heavy Cleave sequence. Sample exact authored event/pose markers.
+    main_player.level = 2
+    main_player._cleave_cd = 0.0
+    main_player._use_cleave()
+    main_player.set_physics_process(false)
+    # The heavy arc is a separate draw-only effect; hide it to inspect the pose art.
+    main_player._cleave_t = 0.0
+    main_player.combat_feedback.ability_remaining = 0.0
+    await capture("Player · Cleave brace (frame 24)", center)
+    await advance_animation(0.128)
+    await capture("Player · Cleave wind-up (frame 25)", center)
+    await advance_animation(0.093)
+    await capture("Player · Cleave impact (frame 26 / 0.22s)", center)
+    await advance_animation(0.044)
+    await capture("Player · Cleave follow-through (frame 27)", center)
+    await advance_animation(0.072)
+    await capture("Player · Cleave recovery (frame 28)", center)
+    await advance_animation(0.067)
+    await capture("Player · Cleave final pose (frame 29)", center)
+    await advance_animation(0.058)
+    main_player.set_physics_process(true)
+
+    # Dash currently reuses the run clip. Hide trails to expose the character pose.
+    main_player._dash_cd = 0.0
+    main_player._use_dash()
+    main_player.set_physics_process(false)
+    main_player._dash_t = 0.0
+    main_player.combat_feedback.ability_remaining = 0.0
+    main_player.anim.play_player_clip("run", true, 18.0)
+    await advance_animation(0.08)
+    await capture("Player · dash (currently Run pose)", center)
+    main_player.set_physics_process(true)
+    await ticks(14)
+
+    # Rally currently reuses Idle; capture that limitation rather than implying unique art.
+    main_player.level = 3
+    main_player._rally_cd = 0.0
+    main_player._use_rally()
+    main_player.set_physics_process(false)
+    main_player.combat_feedback.ability_remaining = 0.0
+    await capture("Player · Rally (currently Idle pose)", center)
+    main_player.set_physics_process(true)
+
+    main_player.anim.play_player_clip("work", true, 14.0)
     await ticks(3)
-    p._atk_cd = 0.0
-    p._attack()
-    await ticks(2); await crop("serang: aba-aba", Vector2(240, 135))
-    await ticks(4); await crop("serang: ayun", Vector2(240, 135))
-    await ticks(3); await crop("serang: benturan", Vector2(240, 135))
-    await ticks(4); await crop("serang: pulih", Vector2(240, 135))
-    for e in get_nodes_in_group("enemies"): e.retreat()
-    # --- 2. lari (tahan Shift + kanan)
-    Input.action_press("sprint"); Input.action_press("move_right")
-    await ticks(14); await crop("lari (kanan)", Vector2(240, 135))
-    await ticks(3); await crop("lari (kanan) 2", Vector2(240, 135))
-    Input.action_release("move_right"); Input.action_press("move_down")
-    await ticks(14); await crop("lari (turun)", Vector2(240, 135))
-    Input.action_release("move_down"); Input.action_press("move_up")
-    await ticks(14); await crop("lari (naik)", Vector2(240, 135))
-    Input.action_release("move_up"); Input.action_release("sprint")
-    await ticks(10)
-    # --- 3. jalan kiri
-    Input.action_press("move_left")
-    await ticks(14); await crop("jalan (kiri)", Vector2(240, 135))
-    Input.action_release("move_left")
+    await capture("Player · harvest preparation", center)
     await ticks(6)
-    # --- 4. mayat: bunuh bandit & serigala
-    sp.restore_enemy({"id": "bandit", "x": p.position.x + 22, "y": p.position.y, "hp": 5})
-    sp.restore_enemy({"id": "wolf", "x": p.position.x - 24, "y": p.position.y + 2, "hp": 5})
-    for e in get_nodes_in_group("enemies"): e.set_physics_process(false); e.take_damage(99)
-    await ticks(4); await crop("mati: jatuh", Vector2(240, 135), 144, 72)
-    await ticks(12); await crop("mati: terbaring", Vector2(240, 135), 144, 72)
-    # --- 5. musuh menyerang bangunan & pemain
-    main.build.place("wall", Vector2i(35, 36))
-    sp.restore_enemy({"id": "soldier", "x": 575, "y": 590, "hp": 60})
-    sp.restore_enemy({"id": "wolf", "x": 520, "y": 560, "hp": 12})
-    p.global_position = Vector2(530, 580)
-    await ticks(30); await crop("musuh menyerang", Vector2(240, 135), 144, 72)
-    # susun lembar kontak
-    var cols := 3
-    var cw: int = crops[0][1].get_width(); var ch: int = crops[0][1].get_height()
-    var rows := int(ceil(crops.size() / float(cols)))
-    var sheet := Image.create(cols * (cw + 6), rows * (ch + 6), false, Image.FORMAT_RGBA8)
-    sheet.fill(Color("#222"))
-    for i in crops.size():
-        var c: Image = crops[i][1]
-        sheet.blit_rect(c, Rect2i(0, 0, c.get_width(), c.get_height()), Vector2i((i % cols) * (cw + 6), (i / cols) * (ch + 6)))
-        print("crop ", i, " ", crops[i][0])
-    sheet.save_png("/tmp/shots/anim.png")
-    quit()
+    await capture("Player · harvest contact", center)
+    await ticks(5)
+    await capture("Player · harvest recovery", center)
+
+    main_player.anim.play_player_clip("idle", true)
+    main_player._invuln = 0.0
+    main_player.take_damage(1)
+    await ticks(1)
+    await capture("Player · hurt recoil", center)
+
+    # Gameplay _die() respawns immediately. Preview the authored death clip
+    # independently so the three currently authored frames can be inspected.
+    main_player.set_physics_process(false)
+    main_player.anim.play_player_clip("death", true)
+    await capture("Player · death fall 1", center)
+    main_player.anim.update(1.0 / 6.0)
+    main_player.queue_redraw()
+    await capture("Player · death fall 2", center)
+    main_player.anim.update(1.0 / 6.0)
+    main_player.queue_redraw()
+    await capture("Player · death settled", center)
+
+    if crops.is_empty():
+        push_error("Player animation playblast produced no frames")
+        quit(1)
+        return
+
+    var output_root := ProjectSettings.globalize_path("res://build/diagnostics/player-animation")
+    var frames_dir := output_root.path_join("frames")
+    DirAccess.make_dir_recursive_absolute(output_root)
+    DirAccess.make_dir_recursive_absolute(frames_dir)
+
+    var columns := 3
+    var frame_width: int = crops[0][1].get_width()
+    var frame_height: int = crops[0][1].get_height()
+    var rows := int(ceil(crops.size() / float(columns)))
+    var contact := Image.create(columns * (frame_width + 8), rows * (frame_height + 8), false, Image.FORMAT_RGBA8)
+    contact.fill(Color("#222222"))
+
+    var legend := FileAccess.open(output_root.path_join("frames.txt"), FileAccess.WRITE)
+    for index in crops.size():
+        var frame: Image = crops[index][1]
+        var x := (index % columns) * (frame_width + 8) + 4
+        var y := int(index / columns) * (frame_height + 8) + 4
+        contact.blit_rect(frame, Rect2i(0, 0, frame_width, frame_height), Vector2i(x, y))
+        frame.save_png(frames_dir.path_join("%02d.png" % index))
+        legend.store_line("%02d  %s" % [index, crops[index][0]])
+    legend.close()
+
+    contact.save_png(output_root.path_join("player-animation-contact.png"))
+    print("PLAYER_ANIMATION_PLAYBLAST_COMPLETE frames=", crops.size(), " output=", output_root)
+    quit(0)
