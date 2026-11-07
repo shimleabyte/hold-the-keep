@@ -156,5 +156,39 @@ func _draw() -> void:
             "fenlands": texture = FENLANDS_TEX
             "ashen_march": texture = ASHEN_TEX
         draw_texture(texture, Vector2(-texture.get_width() / 2.0, -texture.get_height()))
+        if regional_style != "classic":
+            _draw_frontier_root_dressing()
     else:
         draw_texture(STUMP_TEX, Vector2(-STUMP_TEX.get_width() / 2.0, -STUMP_TEX.get_height()))
+
+
+## Draw-only regional ground detail. It adds no nodes, collision, occupancy or harvest state.
+func _draw_frontier_root_dressing() -> void:
+    match regional_style:
+        "greenwood":
+            draw_colored_polygon(PackedVector2Array([
+                Vector2(-10, -1), Vector2(-8, -4), Vector2(-5, -2), Vector2(-7, 0)
+            ]), Color("#425b3b"))
+            draw_colored_polygon(PackedVector2Array([
+                Vector2(5, -1), Vector2(8, -3), Vector2(11, -1), Vector2(8, 0)
+            ]), Color("#62704a"))
+            draw_rect(Rect2(-2, -1, 4, 1), Color("#786747"))
+        "fenlands":
+            draw_line(Vector2(-9, 0), Vector2(-11, -5), Color("#777e59"), 1.0)
+            draw_line(Vector2(-6, 0), Vector2(-5, -4), Color("#9b8a58"), 1.0)
+            draw_line(Vector2(8, 0), Vector2(10, -5), Color("#687653"), 1.0)
+        "ashen_march":
+            draw_colored_polygon(PackedVector2Array([
+                Vector2(-11, 0), Vector2(-9, -3), Vector2(-6, -1)
+            ]), Color("#51463e"))
+            draw_colored_polygon(PackedVector2Array([
+                Vector2(6, -1), Vector2(9, -4), Vector2(12, -1)
+            ]), Color("#76513f"))
+            draw_rect(Rect2(-2, -1, 3, 1), Color("#a36b49"))
+        _:
+            draw_colored_polygon(PackedVector2Array([
+                Vector2(-10, 0), Vector2(-8, -3), Vector2(-5, -1)
+            ]), Color("#756b49"))
+            draw_colored_polygon(PackedVector2Array([
+                Vector2(6, -1), Vector2(9, -3), Vector2(11, 0)
+            ]), Color("#526044"))
