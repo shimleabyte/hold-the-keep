@@ -1,6 +1,5 @@
 extends SceneTree
 
-const CIVILIZATION_SCRIPT: Script = preload("res://scripts/systems/enemy_civilization.gd")
 ## Verifies soldiers-only mouse orders and the first persistent rival civilization.
 
 var failed: bool = false
@@ -135,6 +134,10 @@ func _initialize() -> void:
 
     if stronghold != null:
         var original_faction_id: String = String(stronghold.get("faction_id"))
+        var base_civilization: RefCounted = stronghold.get("civilization") as RefCounted
+        _check(base_civilization != null, "A live rival civilization instance must exist before testing doctrine strategy")
+        var civilization_script: Script = base_civilization.get_script() as Script if base_civilization != null else null
+        _check(civilization_script != null, "The live rival civilization must expose its compiled script")
         var expected_orders: Dictionary = {
             "greenwood_raiders": [
                 "lumber_camp", "quarry", "barracks", "farm", "tower", "forge", "storage"
@@ -152,7 +155,10 @@ func _initialize() -> void:
         for faction_key: Variant in expected_orders:
             var faction_id: String = String(faction_key)
             stronghold.set("faction_id", faction_id)
-            var strategy_civilization: RefCounted = CIVILIZATION_SCRIPT.new() as RefCounted
+            var strategy_civilization: RefCounted = civilization_script.new() as RefCounted if civilization_script != null else null
+            _check(strategy_civilization != null, "A doctrine test civilization must instantiate from the live compiled script")
+            if strategy_civilization == null:
+                continue
             strategy_civilization.call("setup", stronghold, {})
             var expected_order: Array = expected_orders[faction_id]
             var actual_order: Array[String] = strategy_civilization.call("development_order")
