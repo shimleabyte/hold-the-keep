@@ -78,11 +78,18 @@ func setup(civilization_ref, workplace_ref: Node2D, role_id: String, index: int,
     var horizontal := -5.0 if posmod(slot_index, 2) == 0 else 5.0
     var vertical := float(floori(float(slot_index) / 2.0)) * 3.0
     position = workplace.position + Vector2(horizontal, vertical)
-    _anim.work_style = role
+    match role:
+        "lumber_camp": _anim.work_style = "woodcutter"
+        "quarry", "forge": _anim.work_style = "miner"
+        "farm": _anim.work_style = "farmer"
     _anim.face(Vector2.DOWN)
     _anim.play("idle", true)
     queue_redraw()
     return true
+
+
+func _process(delta: float) -> void:
+    tick(delta)
 
 
 func tick(delta: float) -> void:
@@ -186,6 +193,8 @@ func _tick_travel(delta: float, arrival_state: State) -> void:
     if _path_version != int(nav.version):
         if not _repath_current_state():
             _path.clear()
+            _path_index = 0
+            _path_version = int(nav.version)
             _retry_timer = 1.0
             if _state == State.TO_RESOURCE:
                 _release_target()
@@ -194,6 +203,13 @@ func _tick_travel(delta: float, arrival_state: State) -> void:
                 _play_clip("idle")
             else:
                 _state = State.IDLE
+            return
+    if _path.is_empty():
+        if _retry_timer > 0.0:
+            return
+        if not _repath_current_state():
+            _path_version = int(nav.version)
+            _retry_timer = 1.0
             return
     if _move_along_path(delta):
         _path.clear()
@@ -280,6 +296,12 @@ func _find_resource_target() -> bool:
             if node == null or not is_instance_valid(node) or not node.has_method("hit"):
                 continue
             if String(node.get("yield_kind")) != kind or int(node.get("_hp")) <= 0:
+                continue
+            # Rival research, not the player's global Iron Mining technology,
+            # controls access to this faction's iron supply.
+            if kind == "iron" and int(civilization.technology_tier) < 1:
+                continue
+            if node.has_method("is_available") and kind != "iron" and not bool(node.call("is_available", self)):
                 continue
             if node.has_method("is_cleared") and bool(node.call("is_cleared")):
                 continue
@@ -443,6 +465,15 @@ func has_cargo() -> bool:
 
 func cargo_snapshot() -> Dictionary:
     return {"kind": carry_kind, "amount": carry}
+
+
+## Saving transfers already-harvested cargo into the persistent stronghold ledger.
+func clear_cargo_for_save() -> Dictionary:
+    var snapshot := cargo_snapshot()
+    carry = 0
+    carry_kind = ""
+    queue_redraw()
+    return snapshot
 
 
 func recall_to_keep() -> void:
