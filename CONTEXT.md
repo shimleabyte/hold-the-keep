@@ -6,7 +6,7 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 
 ## 1. Ringkasan
 
-**Current source of truth:** `main` includes Frontier Expedition and the ordered specialist integration PRs #64 Hunter, #65 Scout, #67 Healer and #68 Blacksmith; the current save schema is v17. The active engine target is Godot 4.7 only. Development CI runs 4.7 import/parse, regression suites and Frontier/Expedition performance diagnostics; Windows/Linux exports are deferred until release. Specialist branch validation passed sequentially: #64 45/45 (#620), #65 46/46 (#621), #67 47/47 (#626), and #68 48/48 (#635). The four PRs are merged; rendered gameplay acceptance remains open.
+**Current source of truth (2026-11-07):** `main` is `10747392ecdaebc6b7490b43fb82cf2cfa389468`. It includes expanded Classic 128×128, Frontier 192×192 and Frontier Expedition 256×256 new-game profiles, soldier-only army commands, the initial rival civilization system, bounded FlowField/territory rebuilds and Phase 11.1 rival-structure restore recovery. Historical 64×64 / 128×128 / 192×192 saves retain their original profile dimensions. Save schema remains v17. Godot 4.7 is the only active development CI target. PR #178 passed 63/63 Godot 4.7 jobs (run #42316264733), including the new `rival_civilization_persistence` regression, and Campaign Simulation QA (run #42316264766). Post-merge mainline runs #42316677174 and #42316677164 were still running when this context update began. Rendered/manual campaign review and target-hardware performance acceptance remain open.
 
 **Recent mainline integration:** PR #64 merged Hunter/Hunting Lodge (`e59864d`); PR #65 merged Scout/Scout Post (`ea9a63c`); PR #67 merged Healer/Infirmary (`bf44703`); PR #68 merged Blacksmith/Forge and save v17 (`1b15f37`). Their Godot 4.7 branch workflows passed 45/45, 46/46, 47/47 and 48/48 respectively (#620, #621, #626, #635). The stack is integrated in dependency order. Rendered gameplay, equipment visibility, treatment/combat readability, economic pacing and balance still require manual acceptance.
 
@@ -19,27 +19,27 @@ selesai satu paket pekerjaan.** README.md = panduan pemain/pengembang singkat; f
 - Loop: siang (kumpul, bangun, atur villager) -> malam (gelombang musuh) -> fajar (event acak, autosave).
 
 ## 2. Status fitur
-Ringkasan implementasi aktual pada `main` setelah PR #68 (save schema v17; status per 3 November 2026). PR #62 (`4cc0420`) menggabungkan scripted combat-budget probe Phase 09.2; PR #63 menambahkan Frontier Expedition. PR #64/#65/#67/#68 kemudian mengintegrasikan Hunter, Scout, Healer dan Blacksmith secara berurutan, dengan migrasi save v14–v17. Godot 4.7 remains the only active development CI target; rendered gameplay acceptance and target-hardware balance/performance review remain manual.
+Ringkasan implementasi aktual pada `main` per 7 November 2026. PR #175 menambahkan expanded world profiles, soldier-only army command dan rival civilizations; PR #177 mengintegrasikan FlowField time budgeting dan regional land cache; PR #178 mengeraskan rival structure save restoration tanpa menaikkan schema v17. PR #62/#63/#64/#65/#67/#68 tetap menjadi bagian dari riwayat integrasi sebelumnya. Godot 4.7 remains the only active development CI target; rendered gameplay acceptance and target-hardware balance/performance review remain manual.
 
 | Area | Kondisi saat ini |
 |---|---|
-| Dunia | Classic 64×64 / 15 hari tetap tersedia; Frontier 128×128 / 20 hari / 4 act dengan lima biome deterministik, 32 urat besi, dan starting Keep claim radius 15 |
+| Dunia | New Classic 128×128 / 15 hari; Frontier 192×192 / 20 hari / 4 act; Frontier Expedition 256×256 dengan 160×160 starting heartland. Legacy 64×64 / 128×128 / 192×192 saves keep their saved dimensions. Five deterministic biomes and regional generation remain. |
 | Wilayah | Regional ownership neutral/player/enemy/contested; roads/bridges walkable; supply graph dari Keep; depot terputus tidak menerima deposit |
 | Logistik | **Parsial:** Storage 180 dan Outpost 120 unit memiliki local stockpile; worker deposits, bounded automatic Keep transfers, player-directed physical shipments, cargo escrow dan route recovery tersedia. Explicit Keep/Storage/Outpost cost source for construction/research/repair is merged; deterministic contested-depot warning and targeted Saboteur raids merged through PR #35 |
 | Kampanye | Classic satu stronghold; Frontier empat stronghold berurutan, garrison/reinforcement lokal, 11 objective regional, fog dan save/reload; Act I–IV + victory reload dilindungi `campaign_reload_hardening.gd` |
 | Pemain | Gerak 8 arah, lari, serang, panen, HP/regen, respawn di Keep; XP dan Dash/Cleave/Rally |
 | Bangunan | Keep, rumah, tembok, menara pengawas, Lumbung, Gudang, ladang, tembok batu, tempa, Outpost, Lumber Camp, Quarry, Hunting Lodge, Scout Post, Infirmary, road dan bridge; semua specialist workplaces sudah berada di `main`. |
 | Villager | On `main`: woodcutter, miner, farmer, Builder, Hunter, Scout, Healer, Blacksmith and soldier. Hunter, Scout, Healer and Blacksmith use explicit workplace capacity and assignment cleanup. |
-| Faksi/musuh | Empat faction registry dan enam archetype definitions; War Shaman, Shieldbearer, Scout, Saboteur, Siege Engine dan Beast Rider charge behaviors merged; four destructible Frontier faction camps, bounded A* patrols and finite reinforcement budgets merged via PR #43; connected infrastructure raids and bounded counterattacks merged via PR #44; manual Frontier balance/play review remains open |
+| Faksi/musuh | Four faction registries and six archetype definitions; faction camps, bounded patrols/raids and counterattacks; rival strongholds own a finite resource ledger, visible faction structures, bounded construction/research and paid garrison recruitment. Rival structures restore at saved cells, relocate when blocked or persist as pending v17 state until a legal site opens. Faction-specific strategic priorities and secondary settlements remain future work. |
 | Ekonomi | Kayu, batu, makanan, iron; kapasitas rumah dan upkeep; local depot economy dan trade belum tersedia |
 | Teknologi | 21 technologies in three eras; Field Medicine unlocks the Infirmary, while existing Iron Weapons/Armor research gates individual Blacksmith recipes. |
-| Save/load | v17 pada `main`; Hunter wildlife/occupation, Scout occupation, Healer occupation, Blacksmith occupation and individual soldier equipment are persisted. Classic v1–v16 and Frontier v7–v16 migration compatibility is covered. |
-| Kontrol | Rebind gerak, interaksi, serang, lari; shortcut UI/job/build belum dapat di-rebind |
+| Save/load | v17 on `main`; specialist roles/equipment and rival civilization state are persisted. Phase 11.1 adds optional `pending_structures` restore records without a schema bump. Existing v17 saves without additive civilization data remain valid; legacy world dimensions are preserved. |
+| Kontrol | Player avatar and direct control remain active. Army command selects living soldiers/Archer-specialized soldiers only; civilians retain autonomous work. Click/drag/Shift selection, right-click move/attack. Keyboard rebinding remains partial for UI/job/build shortcuts. |
 | Tampilan | Adaptive logical viewport = setengah ukuran client window, minimum 480×270, pixel scale tepat 2×; physical-display/fullscreen review belum dilakukan |
 | HUD | Top bar, vitals, stage, combat strip, JOBS drawer, strategic map with live tower sight, hotbar, objective tracker, tech panel, pause menu |
 | Audio | 10 procedural ambience loops (5 biome × siang/malam), 2 original music loops, 14 event cues; Master bus routing dan crossfade; human listening/level-balance QA masih terbuka |
 | Rilis | Export scripts/presets are retained; automatic Windows/Linux package checks are deferred until release phase |
-| CI | Active gate: Godot 4.7 import/parse, 45 regression suites and two Frontier performance diagnostics; no Godot 4.3 or release-export jobs |
+| CI | Godot 4.7 only. PR #178 exact-head matrix passed 63/63 jobs, including rival persistence; Campaign Simulation QA passed. Post-merge mainline validation is tracked separately. No Godot 4.3 or release-export jobs. |
 
 ## 3. Struktur
 ```
@@ -514,6 +514,10 @@ Jangan menambah ukuran map atau streaming runtime sebelum profiling pada hardwar
 
 
 ## Riwayat terbaru
+- 2026-11-07: PR #175 integrated Phase 11 initial rival civilization and soldier-only army command; expanded new-game profiles to Classic 128×128, Frontier 192×192 and Expedition 256×256. Main commit `fb3b167`.
+- 2026-11-07: PR #177 integrated a 2.5 ms FlowField rebuild slice, cached regional land totals and reference-count regressions; Godot 4.7 CI passed 62/62 and Campaign Simulation + Rendered World QA passed. Main commit `d5c2fe3`.
+- 2026-11-07: PR #178 completed Phase 11.1 persistence hardening. Blocked rival structures relocate deterministically or persist as retryable pending v17 records. The new persistence regression covers relocation, pending re-instantiation/retry, invalid HP rejection and legacy-v17 compatibility. Exact-head Godot 4.7 CI passed 63/63 and Campaign Simulation QA passed. Main commit `1074739`.
+- PRs #166/#167 closed as superseded by #177; PR #169 closed without merge because it conflicts with the direct-player-control and autonomous-civilian product contract.
 - 2026-11-02: PR #47 merged (`b06c355`), extracting archetype-specific behavior into six dedicated components; latest workflow #41394905158 passed 70/70 jobs on Godot 4.3/4.7.
 - 2026-11-02: Started Phase 08 on `feat/phase-08-visual-audio-identity-mainline`. Added `assets/sprites/tiles_frontier.svg`, a weathered seven-cell Frontier terrain atlas. `world_map.gd` selects it only for Frontier; Classic keeps `tiles.svg`. Extended `frontier_world.gd` to assert the atlas resource and dimensions. Phase plan and roadmap updated; rendered screenshot review and further environment/faction/audio work remain pending.
 

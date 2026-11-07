@@ -1,33 +1,35 @@
 # Hold the Keep — Parallel Developer Worklist
 
-**Audit baseline:** `main` at `44deb325fd8681a4181bbd073829a9965e98c112` (2026-11-06)  
+**Current audit baseline:** `main` at `10747392ecdaebc6b7490b43fb82cf2cfa389468` (2026-11-07)  
 **Engine target:** Godot 4.7 only  
 **Release target:** Desktop-first — Windows x86_64 and Linux x86_64. Android remains deferred.  
 **Current save schema:** v17.
 
+## Current integration status — 2026-11-07
 
-## New feature work — rival civilization and army command (2026-11-06)
+Phase 11's initial rival-civilization and army-command implementation is integrated. The performance reconciliation and Phase 11.1 persistence hardening are also merged:
 
-**Branch:** `feat/rival-civilization-expanded-worlds`  
-**State:** Integrated on current mainline base; enlarged map and legacy-save regressions added. Godot 4.7 validation and rendered gameplay acceptance pending.
+- **PR #175** — expanded Classic/Frontier/Expedition maps, rival civilization state and soldier-only army commands; merged at `fb3b167`.
+- **PR #177** — bounded FlowField rebuild slices and cached regional land/control accounting; merged at `d5c2fe3`.
+- **PR #178** — blocked rival-structure restoration now relocates deterministically or persists a pending record for retry; merged at `1074739`.
+- Save schema remains **v17**. Pending rival structures are additive optional state. Existing v17 saves without a civilization snapshot remain valid.
+- New campaigns use Classic 128×128, Frontier 192×192 and Frontier Expedition 256×256 (160×160 starting heartland). Existing 64×64 / 128×128 / 192×192 saves retain their saved profile dimensions.
+- Player direct control remains active. Only living soldiers, including Archer-specialized soldiers, are selectable for army commands; civilian workers retain autonomous jobs.
+- **PR #166/#167** are closed as superseded by #177. **PR #169** is closed without merge because it conflicts with the player-control/civilian-autonomy contract.
+- PR #178's exact-head validation passed **63/63 Godot 4.7 CI jobs** (run #42316264733) and Campaign Simulation QA (run #42316264766). Post-merge mainline CI and Campaign Simulation runs #42316677174/#42316677164 were still running when this document update began.
 
-- Army selection is restricted to living soldier/archer units. Civilians retain the existing autonomous job loop.
-- Mouse controls: click/drag/Shift-select; right-click ground to move; right-click visible hostile targets to attack.
-- Player avatar, player camera and direct-control loop remain enabled. Army-selection clicks are excluded from the player's left-click melee input; clicking hostile targets remains a player attack.
-- Enemy strongholds now own an additive civilization snapshot: resource balances, visible faction structures, construction progress, research tier/progress and bounded simulation time.
-- Rival structures use a separate entity type and do not join player workplace, depot or supply groups.
-- Recruitment consumes stored resources and only spends them after a guard can actually spawn.
-- The first rival economy uses abstracted workforce income. Visible enemy civilians, faction-specific strategic priorities, secondary settlements, enemy roads/supply and offensive plans are still pending.
-- World profile sizes are expanded for new games: 128×128 / 192×192 / 256×256; historical profile sizes remain supported by the save loader.
-- Save schema remains v17. Existing stronghold records without a civilization snapshot initialize the default rival economy.
-- New campaigns now use 128×128 Classic, 192×192 Frontier and 256×256 Expedition. Existing 64×64 / 128×128 / 192×192 saves must load in their original dimensions.
-- PR #169 is an overlapping proposal that retires player control and selects civilians. Do not merge it as-is; resolve its product-contract conflict before integrating any code.
+### Phase 11 acceptance still open
 
-Required acceptance: focused `army_command_and_rival_civilization` test, complete Godot 4.7 suite, Classic/Frontier/Expedition save reload, rendered Classic settlement review and desktop p50/p95/p99 profiling.
+- Human rendered/playable review of a Classic rival settlement and expanded Frontier/Expedition campaigns.
+- Old-save continuation and save/reload review across all three profiles on a desktop build.
+- Target-PC p50/p95/p99 and worst-frame profiling during rival construction, garrison recruitment and active waves.
+- Distinct faction strategy, rival military training queues, secondary settlements and rival supply/territory are follow-on phases, not part of the current implementation.
 
-## Live execution status — 2026-11-05 (P0–P2 desktop pass)
+The remainder of this file retains the earlier parallel worklist as a historical architecture and task record. Its old audit SHAs, branch states and CI counts are not the current repository status.
 
-**Current main at feature audit:** `a76077eb13de8489d706eca7e98c6063fad56aa6`. The software-side P0–P2 implementation is merged. Current-main changes include time-sliced enemy FlowField rebuilds, complete-snapshot publication, coalesced worker reassignment, worker animation redraw fixes, low-cost baked profession feedback, Builder reachability recovery, multi-cell navigation fallback, desktop resolution coverage, Godot 4.7 export guards, save-file recovery regression coverage, worker lifecycle regression coverage, and partial-quota HUD guards. Save schema remains v17.
+## Historical execution snapshot — 2026-11-05 (superseded by the current integration status above)
+
+**Historical main at this feature audit:** `a76077eb13de8489d706eca7e98c6063fad56aa6`. The software-side P0–P2 implementation is merged. Current-main changes include time-sliced enemy FlowField rebuilds, complete-snapshot publication, coalesced worker reassignment, worker animation redraw fixes, low-cost baked profession feedback, Builder reachability recovery, multi-cell navigation fallback, desktop resolution coverage, Godot 4.7 export guards, save-file recovery regression coverage, worker lifecycle regression coverage, and partial-quota HUD guards. Save schema remains v17.
 
 ### P0 — gameplay blockers
 

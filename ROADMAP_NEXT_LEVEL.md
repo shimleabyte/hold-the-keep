@@ -355,7 +355,13 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 
 ## Phase 11 — Rival civilizations and military command
 
-**Status (2026-11-06):** Initial implementation is isolated on `feat/rival-civilization-expanded-worlds`. It is not merged. The branch preserves the player avatar, camera, direct combat and autonomous civilian jobs. Following human playtest feedback that the original maps were too small to support an enjoyable strategy loop, new campaigns now use Classic 128×128, Frontier 192×192 and Expedition 256×256 (160×160 starting heartland). Historical map dimensions remain available to saves through the profile-aware loader; save schema remains v17.
+**Current status (2026-11-07):** Phase 11's initial implementation, performance integration and Phase 11.1 persistence hardening are merged into `main`. Current main is `10747392ecdaebc6b7490b43fb82cf2cfa389468`. Save schema remains v17.
+
+- **PR #175** merged the expanded maps, soldier-only army command and additive rival civilization economy at `fb3b167`.
+- **PR #177** merged time-bounded FlowField rebuild scheduling and regional land-count caching at `d5c2fe3`.
+- **PR #178** merged rival-structure restore recovery at `1074739`.
+- PR #178 exact-head validation: Godot 4.7 CI **63/63 passed** (run #42316264733); Campaign Simulation QA passed (run #42316264766). Post-merge mainline workflows #42316677174 (Godot CI) and #42316677164 (Campaign Simulation QA) were still running when this status was written.
+- PRs #166 and #167 were closed as superseded by #177. PR #169 was closed without merge because it conflicted with the product contract below.
 
 ### Product contract
 
@@ -366,17 +372,18 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - Rival strongholds own an independent finite resource ledger, construction plan, visible faction structures, paid garrison recruitment and technology tiers.
 - Rival buildings use a separate entity type; they must not register as player workplaces, depots, supply sources or player-buildable structures.
 - The first rival economy uses abstracted workforce production. Visible enemy workers, multi-settlement logistics, territorial expansion and offensive strategic plans remain later work.
-- Larger maps are part of this phase: Classic 128×128, Frontier 192×192 and Expedition 256×256. Keep historical save dimensions loadable and profile-specific; do not migrate old coordinates onto a newly generated map.
+- New campaigns use Classic 128×128, Frontier 192×192 and Expedition 256×256. Historical save dimensions remain loadable and profile-specific; old coordinates are not migrated onto newly generated maps.
 
-### Map expansion from direct playtest feedback
+### Map expansion acceptance
 
-- [x] Increase new Classic campaigns from 64×64 to 128×128 (4× tile area).
+- [x] Increase new Classic campaigns from 64×64 to 128×128.
 - [x] Increase new Frontier campaigns from 128×128 to 192×192.
 - [x] Increase new Frontier Expedition campaigns from 192×192 to 256×256 and heartland from 128×128 to 160×160.
 - [x] Preserve old 64×64 / 128×128 / 192×192 campaign dimensions when continuing existing saves.
-- [ ] Validate old-save loading, all new world generators, stronghold placement, strategic-map/fog behavior and target desktop performance on the expanded profiles.
+- [x] Exercise legacy dimensions and Frontier/Expedition generation, campaign and regional behavior in the current Godot 4.7 matrix.
+- [ ] Complete human review of strategic-map/fog behavior and expanded-profile performance on the target desktop.
 
-### Initial implementation on the feature branch
+### Initial implementation — merged via PR #175
 
 - [x] Add a separate army command controller; select only visible living soldiers.
 - [x] Add right-click movement and direct attack orders while retaining the soldier combat state machine.
@@ -385,22 +392,38 @@ Building concepts are candidates, not a commitment to ship all of them at once. 
 - [x] Add bounded rival economy ticks, resource stockpiles, construction costs, visible buildings and production income.
 - [x] Add a barracks-dependent garrison capacity, resource-paid periodic recruitment and military technology tiers.
 - [x] Add additive stronghold serialization for rival structures, resource balances, research and construction state; preserve schema v17.
-- [x] Add a focused regression test and include it in the Godot 4.7 runner/matrix.
-- [x] Replace the old “no remote military control” design restriction with autonomous civilians plus commandable armies.
-- [ ] Verify Godot 4.7 import and GDScript parse on the complete branch.
-- [ ] Pass the focused army/civilization regression and full mainline regression matrix.
-- [ ] Verify Classic new-game and existing v17 save/reload, plus Frontier and Expedition multi-stronghold reload.
-- [ ] Render and play a Classic rival-settlement session; inspect building overlap, pathing, recruitment pacing and combat challenge.
-- [ ] Measure frame-time p50/p95/p99 and worst frame during rival construction, garrison recruitment and active waves on a target desktop.
+- [x] Add the focused army/civilization regression to the Godot 4.7 runner and CI matrix.
+- [x] Replace the old “no remote military control” restriction with autonomous civilians plus commandable armies.
+- [x] Pass the current Godot 4.7 regression suite on the merged integration head; see PR #178 validation below.
+
+### Performance reconciliation — merged via PR #177
+
+- [x] Bound FlowField work per frame with an elapsed-time slice while retaining a deterministic heap-pop ceiling and complete-snapshot publication.
+- [x] Cache exact buildable land counts by region for Classic and Frontier generation.
+- [x] Update regional land counts as Expedition crossings seal and reopen.
+- [x] Rebuild regional ownership ratios from cached land totals plus player/enemy owned-cell sets.
+- [x] Compare cached land/ownership totals against independent reference scans in Classic, Frontier and Expedition regressions.
+- [x] Make performance-probe timeouts fail the diagnostic process rather than emitting a warning and returning success.
+- [x] Pass Godot 4.7 CI 62/62, Campaign Simulation QA and Rendered World QA on PR #177's exact head.
+
+### 11.1 — Acceptance and persistence — complete via PR #178
+
+- [x] Restore rival structures at their saved cell when the footprint remains available.
+- [x] If a saved footprint is blocked by reconstructed world occupancy, relocate the structure deterministically to a legal site in its owning stronghold's region, preserving HP.
+- [x] If no legal site exists, preserve the record as additive `pending_structures` state and retry from bounded civilization ticks.
+- [x] Count pending structures as existing so the build plan cannot create duplicates.
+- [x] Persist pending structure identity, coordinates and HP; clear pending restore work when the owning stronghold is destroyed.
+- [x] Validate optional pending records, duplicate IDs, footprint bounds/overlap and HP in the existing v17 validator.
+- [x] Preserve v17 compatibility for saves without additive civilization data; no save schema bump.
+- [x] Add `tests/rival_civilization_persistence.gd` to both `tools/run_tests.sh` and the blocking Godot 4.7 CI matrix.
+- [x] Pass relocation, pending serialization/re-instantiation, retry, malformed-state rejection and legacy-v17 compatibility checks.
+- [x] Pass Godot 4.7 CI 63/63 and Campaign Simulation QA on PR #178's exact head.
 
 ### Follow-on sequence
 
-1. **11.1 — Acceptance and persistence:** validate the initial branch; harden corrupted/blocked structure restore, rebuild behavior and save migration fixtures without a schema bump where possible.
-2. **11.2 — Rival strategy:** add faction-specific priorities and responses, use existing faction doctrine and archetype rosters, and make each faction's attack/defense strategy distinct.
-3. **11.3 — Rival military production:** convert barracks/archery facilities into explicit training queues and deploy new unit types only when paid costs and population/upkeep rules allow.
-4. **11.4 — Expansion and supply:** add secondary settlements, faction-owned territory, roads and local depots through explicit ownership contracts. Reuse the existing logistics architecture rather than mirroring it.
-5. **11.5 — Map and campaign review:** only after multiple settlements work, decide whether any profile needs more tiles. Run human campaign balance reviews and performance diagnostics before changing Classic or Frontier dimensions.
+1. **11.2 — Rival strategy:** add faction-specific priorities and responses using existing faction doctrine and archetype rosters; make each faction's attack/defense strategy distinct.
+2. **11.3 — Rival military production:** convert barracks/archery facilities into explicit training queues and deploy units only when paid costs and population/upkeep rules allow.
+3. **11.4 — Expansion and supply:** add secondary settlements, faction-owned territory, roads and local depots through explicit ownership contracts. Reuse the existing logistics architecture rather than mirroring it.
+4. **11.5 — Map and campaign review:** complete human campaign-balance and target-hardware performance reviews before changing map dimensions or expanding settlement counts.
 
-**Known overlap:** PR #169 (`feat/rts-command-foundation`) is a separate open proposal that retires the hero camera and exposes all villagers to direct selection/orders. That implementation conflicts with this phase's product contract. Do not merge it as-is; reconcile or close it before integrating any overlapping files. PRs #166/#167 and the open player-animation work must be rechecked for current branch compatibility before merging.
-
-**Validation boundary:** No engine runtime is available in the implementation environment. CI and rendered/manual acceptance must be reported from actual workflow and playtest results; source inspection alone is not a passing test.
+**Validation boundary:** CI establishes automated correctness for the tested contracts, not campaign balance or target-PC performance. Human rendered playtesting, save continuation on an actual desktop build, target-hardware p50/p95/p99 profiling, audio listening and campaign-balance sign-off remain separate acceptance tasks.
