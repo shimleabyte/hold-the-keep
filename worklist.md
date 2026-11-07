@@ -28,7 +28,7 @@ Committed on this branch:
 - `tools/gen_assets.py` — the legacy generic 20×20 renderer no longer emits the player and refuses to overwrite the hand-authored 24×28 player atlas.
 - `tests/role_sprite_identity.gd` — checks the player atlas dimensions, distinct pixel data and generator ownership.
 
-**Not yet completed:** complete asset inventory; authored character/faction sheets; building and biome rework; VFX and icon redesign; Godot-rendered preview sheets; multi-resolution screenshots; full Godot 4.7 CI on this exact branch; human desktop review. Existing production artwork remains untouched outside the player-generator safety change. Do not describe this overhaul as complete until its visual acceptance evidence exists.
+**Not yet completed:** complete asset inventory; authored character/faction sheets; building and biome rework; VFX and icon redesign; Godot-rendered preview sheets; multi-resolution screenshots; full Godot 4.7 CI passed 64/64 on PR #179 (run #42320928929), deterministic Frontier Rendered World QA passed (run #42320928830); human desktop review. Existing production artwork remains untouched outside the player-generator safety change. Do not describe this overhaul as complete until its visual acceptance evidence exists.
 
 Execution order is art inventory/ownership, character family and animation, faction combinations, architecture, biomes/resources/props, combat/UI art, then in-game render QA. Keep each package isolated and merge only after the exact head's blocking checks pass.
 
