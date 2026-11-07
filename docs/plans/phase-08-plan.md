@@ -38,6 +38,21 @@ The overhaul is additive to the shipped Phase 08 work. It replaces generic const
 
 **Current limitation:** only the art bible, reference board, generator safety guard and test assertions are committed on this branch. Existing shipped art remains in use until replacement packages are implemented and validated.
 
+## 08.9 — Player motion and event-timed animation foundation (active)
+
+Branch: `animation/player-motion-timing` — [PR #181](https://github.com/shimleabyte/hold-the-keep/pull/181)
+
+- [x] Split the protagonist's 24×28 atlas/clip contract from shared role sheets.
+- [x] Synchronize the light-attack impact frame to existing combo hit delays and the Cleave hit event.
+- [x] Add player animation interruption priority and timing/pose/foot-contact regression coverage.
+- [x] Keep gameplay damage, hit sectors, cooldowns and harvest yield unchanged.
+- [ ] Complete the Godot-rendered Player playblast and inspect attack/locomotion at native gameplay zoom.
+- [ ] Replace placeholder harvest poses with dedicated tool artwork.
+- [ ] Author genuinely distinct Cleave, Dash and Rally sequences plus multi-frame hurt/death.
+- [ ] Complete player locomotion and secondary cloth/weapon overlap before extending the character production method to villagers and enemies.
+
+**Boundary:** three authored facing rows remain three facings, not eight-direction art. This foundation is not a complete Player animation set and does not complete Phase 08.8.
+
 ## 08.2 — Terrain and regional identity
 - [x] Give Frontier biomes distinct ground textures in a dedicated seven-cell atlas (five land biomes, alternate Hearthland ground and water), preserving tile IDs, 16px tile size and water collision.
 - Create a distinct Old Frontier/ruin subregion treatment without introducing an unsupported sixth core biome.

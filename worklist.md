@@ -39,6 +39,23 @@ Committed on this branch:
 
 Execution order is art inventory/ownership, character family and animation, faction combinations, architecture, biomes/resources/props, combat/UI art, then in-game render QA. Keep each package isolated and merge only after the exact head's blocking checks pass.
 
+### Player animation foundation — dedicated atlas, timed combat and interruption
+
+**Branch:** `animation/player-motion-timing`  
+**PR:** [#181](https://github.com/shimleabyte/hold-the-keep/pull/181)  
+**Authority:** `docs/ANIMATION_DIRECTION.md`
+
+- [x] Separate the protagonist's 24-frame atlas/clip map from the shared 22-frame villager/enemy sheets.
+- [x] Key the light-attack impact pose to existing combo timings (0.11s / 0.13s / 0.19s) and Cleave's current 0.22s hit event without changing damage/cooldowns.
+- [x] Give work, hurt and death their own atlas ranges; the work artwork still needs a dedicated tool layer.
+- [x] Add timing, pose-distinction, atlas-bounds, foot-contact and attack-to-hurt interruption regressions.
+- [x] Remove the eager Player preload from the playblast harness; load the Player script after autoload initialization.
+- [ ] Re-run exact-head Godot 4.7 matrix and complete the rendered Player contact sheet/GIF.
+- [ ] Replace placeholder harvest artwork with a distinct harvesting tool cycle; author unique Cleave, Dash and Rally poses; extend hurt/death animation.
+- [ ] Inspect native-scale player motion and all facing rows before beginning broad villager/enemy animation production.
+
+Preserve gameplay hit delays, damage, cooldowns, hit sectors, harvest timing and yields. This package remains presentation-only; no AI, economy, save-schema or campaign changes belong here.
+
 ### Phase 11 acceptance still open
 
 - Human rendered/playable review of a Classic rival settlement and expanded Frontier/Expedition campaigns.

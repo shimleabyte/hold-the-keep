@@ -5,6 +5,8 @@ extends RefCounted
 ## Secondary motion tetap berbasis offset piksel agar sprite tidak kehilangan ketajaman.
 
 const FRAMES := 22
+## The protagonist has a separately authored 24-frame atlas; shared role sheets remain 22.
+const PLAYER_FRAMES := 24
 const FRONT := 0
 const BACK := 1
 const SIDE := 2
@@ -16,6 +18,16 @@ const WORK_FRAME_THRESHOLDS := {
     "blacksmith": [0.28, 0.46, 0.76, 1.0],
     "farmer": [0.18, 0.44, 0.78, 1.0],
 }
+const PLAYER_CLIPS := {
+    "idle": {"start": 0, "count": 2, "fps": 2.0, "loop": true},
+    "walk": {"start": 2, "count": 4, "fps": 8.0, "loop": true},
+    "run": {"start": 6, "count": 4, "fps": 12.0, "loop": true},
+    "work": {"start": 16, "count": 4, "fps": 14.0, "loop": true},
+    "hurt": {"start": 20, "count": 1, "fps": 6.0, "loop": false},
+    "death": {"start": 21, "count": 3, "fps": 6.0, "loop": false},
+}
+const PLAYER_ATTACK_FRAMES := [10, 11, 12, 13, 14, 15]
+
 const CLIPS := {
     "idle": {"start": 0, "count": 2, "fps": 2.0, "loop": true},
     "walk": {"start": 2, "count": 4, "fps": 8.0, "loop": true},
@@ -53,6 +65,9 @@ var _last_rendered_frame := -1
 var _last_rendered_offset := Vector2(999999.0, 999999.0)
 var _last_rendered_view := -1
 var _last_rendered_flip := false
+## Optional deterministic frame timeline for authored player combat sequences.
+var _timed_frames := PackedInt32Array()
+var _timed_frame_times := PackedFloat32Array()
 
 
 func _init() -> void:
@@ -66,12 +81,94 @@ func play(clip_name: String, restart := false, fps_override := 0.0) -> void:
     clip = clip_name
     _t = 0.0
     finished = false
+    _timed_frames = PackedInt32Array()
+    _timed_frame_times = PackedFloat32Array()
     var c: Dictionary = CLIPS[clip_name]
     _start = int(c["start"])
     _n = int(c["count"])
     _loop = bool(c["loop"])
     _fps = fps_override if fps_override > 0.0 else float(c["fps"])
     _total = float(_n) / _fps
+
+
+## Play the protagonist's own atlas clips without changing shared worker/enemy offsets.
+func play_player_clip(clip_name: String, restart := false, fps_override := 0.0) -> void:
+    var definition: Dictionary = PLAYER_CLIPS.get(clip_name, {})
+    if definition.is_empty():
+        push_error("Unknown player animation clip: %s" % clip_name)
+        return
+    if clip_name == clip and not restart and _timed_frames.is_empty():
+        return
+
+    clip = clip_name
+    _t = 0.0
+    finished = false
+    manual_progress = -1.0
+    _timed_frames = PackedInt32Array()
+    _timed_frame_times = PackedFloat32Array()
+    _start = int(definition["start"])
+    _n = int(definition["count"])
+    _loop = bool(definition["loop"])
+    _fps = fps_override if fps_override > 0.0 else float(definition["fps"])
+    _total = float(_n) / _fps
+
+
+## Play authored key poses against semantic event times. Times are seconds from clip start.
+func play_timed_sequence(
+    sequence_clip: String,
+    frames: PackedInt32Array,
+    frame_times: PackedFloat32Array,
+    duration: float
+) -> void:
+    if frames.is_empty() or frames.size() != frame_times.size() or duration <= 0.0:
+        push_error("Invalid timed animation sequence: empty/mismatched frames or duration")
+        return
+    if not is_zero_approx(frame_times[0]):
+        push_error("Timed animation sequences must begin at time zero")
+        return
+
+    var previous_time := -1.0
+    for index in range(frames.size()):
+        var frame_time: float = frame_times[index]
+        if frames[index] < 0 or frames[index] >= PLAYER_FRAMES:
+            push_error("Timed player animation frame is outside its atlas: %d" % frames[index])
+            return
+        if frame_time < 0.0 or frame_time >= duration or frame_time <= previous_time:
+            push_error("Timed animation markers must be strictly increasing and inside the clip")
+            return
+        previous_time = frame_time
+
+    clip = sequence_clip
+    _t = 0.0
+    finished = false
+    manual_progress = -1.0
+    _timed_frames = frames.duplicate()
+    _timed_frame_times = frame_times.duplicate()
+    _start = frames[0]
+    _n = frames.size()
+    _loop = false
+    _fps = 1.0
+    _total = duration
+
+
+## Player melee poses are keyed to the existing combat hit delay, not an independent FPS guess.
+func play_player_attack(hit_delay: float, duration: float) -> void:
+    var impact_time := maxf(hit_delay, 0.0)
+    var total_duration := maxf(duration, impact_time + 0.06)
+    if impact_time < 0.04 or impact_time >= total_duration - 0.04:
+        push_error("Player attack timing must leave room for anticipation and recovery")
+        return
+
+    var follow_through := total_duration - impact_time
+    var frame_times := PackedFloat32Array([
+        0.0,
+        impact_time * 0.58,
+        impact_time,
+        impact_time + follow_through * 0.18,
+        impact_time + follow_through * 0.48,
+        impact_time + follow_through * 0.76,
+    ])
+    play_timed_sequence("attack", PackedInt32Array(PLAYER_ATTACK_FRAMES), frame_times, total_duration)
 
 
 func is_busy() -> bool:
@@ -120,6 +217,15 @@ func frame_index() -> int:
                     return _start + mini(i, _n - 1)
             return _start + _n - 1
         return _start + int(clampf(manual_progress, 0.0, 0.9999) * _n)
+
+    if not _timed_frames.is_empty():
+        var selected := 0
+        for index in range(1, _timed_frames.size()):
+            if _t < _timed_frame_times[index]:
+                break
+            selected = index
+        return _timed_frames[selected]
+
     return _start + mini(int(_t * _fps), _n - 1)
 
 

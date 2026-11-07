@@ -12,8 +12,9 @@ func _load_sprite(name: String) -> Image:
     var image := Image.new()
     var result: Error = image.load_svg_from_string(source)
     assert(result == OK, "Could not decode sprite sheet: %s" % path)
-    assert(image.get_width() % SpriteAnim.FRAMES == 0,
-        "%s must preserve the 22-frame horizontal animation contract" % name)
+    var expected_frames := SpriteAnim.PLAYER_FRAMES if name == "player" else SpriteAnim.FRAMES
+    assert(image.get_width() % expected_frames == 0,
+        "%s must preserve its own horizontal animation-frame contract" % name)
     assert(image.get_height() % DIRECTIONS == 0,
         "%s must preserve the three-direction row contract" % name)
     assert(image.get_data().size() > 0, "%s must contain rendered pixels" % name)
@@ -29,8 +30,8 @@ func _assert_distinct(name: String, reference: String) -> void:
 
 func _initialize() -> void:
     var player_sprite: Image = _load_sprite("player")
-    assert(player_sprite.get_width() / SpriteAnim.FRAMES == 24,
-        "The hand-authored player atlas must retain its 24px frame width")
+    assert(player_sprite.get_width() / SpriteAnim.PLAYER_FRAMES == 24,
+        "The hand-authored player atlas must retain its 24px frame width and 24-frame sequence")
     assert(player_sprite.get_height() / DIRECTIONS == 28,
         "The hand-authored player atlas must retain its 28px frame height")
     _assert_distinct("player", "villager_soldier")
