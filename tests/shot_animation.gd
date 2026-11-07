@@ -116,6 +116,10 @@ func _initialize() -> void:
     main_player._atk_cd = 0.0
     main_player._attack()
     main_player.set_physics_process(false)
+    # Isolate the authored character pose from draw-only slash and wind-up arcs.
+    main_player._swing = 0.0
+    main_player.combat_feedback.end_windup()
+    main_player.combat_feedback.impact_remaining = 0.0
     await capture("Player · attack anticipation (frame 10)", center)
     await advance_animation(0.110)
     await capture("Player · attack impact (frame 12 / 0.11s)", center)
@@ -133,6 +137,9 @@ func _initialize() -> void:
     main_player._cleave_cd = 0.0
     main_player._use_cleave()
     main_player.set_physics_process(false)
+    # The heavy arc is a separate draw-only effect; hide it to inspect the pose art.
+    main_player._cleave_t = 0.0
+    main_player.combat_feedback.ability_remaining = 0.0
     await capture("Player · Cleave brace (frame 24)", center)
     await advance_animation(0.128)
     await capture("Player · Cleave wind-up (frame 25)", center)
@@ -147,12 +154,26 @@ func _initialize() -> void:
     await advance_animation(0.058)
     main_player.set_physics_process(true)
 
-    # Dash currently reuses the run clip.
+    # Dash currently reuses the run clip. Hide trails to expose the character pose.
     main_player._dash_cd = 0.0
     main_player._use_dash()
-    await ticks(4)
-    await capture("Player · dash (run clip)", center)
+    main_player.set_physics_process(false)
+    main_player._dash_t = 0.0
+    main_player.combat_feedback.ability_remaining = 0.0
+    main_player.anim.play_player_clip("run", true, 18.0)
+    await advance_animation(0.08)
+    await capture("Player · dash (currently Run pose)", center)
+    main_player.set_physics_process(true)
     await ticks(14)
+
+    # Rally currently reuses Idle; capture that limitation rather than implying unique art.
+    main_player.level = 3
+    main_player._rally_cd = 0.0
+    main_player._use_rally()
+    main_player.set_physics_process(false)
+    main_player.combat_feedback.ability_remaining = 0.0
+    await capture("Player · Rally (currently Idle pose)", center)
+    main_player.set_physics_process(true)
 
     main_player.anim.play_player_clip("work", true, 14.0)
     await ticks(3)
