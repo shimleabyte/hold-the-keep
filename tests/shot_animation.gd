@@ -9,6 +9,18 @@ func ticks(count: int) -> void:
         await process_frame
 
 
+func advance_animation(seconds: float) -> void:
+    # Advance the actual SpriteAnim timeline in exact durations while physics
+    # is paused, so capture labels correspond to deterministic atlas markers.
+    var remaining := maxf(seconds, 0.0)
+    while remaining > 0.000001:
+        var step := minf(remaining, 1.0 / 120.0)
+        main_player.anim.update(step)
+        main_player.queue_redraw()
+        remaining -= step
+    await process_frame
+
+
 func capture(label: String, center: Vector2, width := 144, height := 96) -> void:
     await process_frame
     await RenderingServer.frame_post_draw
@@ -103,34 +115,37 @@ func _initialize() -> void:
     main_player.anim.face(Vector2.RIGHT)
     main_player._atk_cd = 0.0
     main_player._attack()
-    await ticks(2)
-    await capture("Player · attack anticipation", center)
-    await ticks(4)
-    await capture("Player · attack commitment", center)
-    await ticks(1)
-    await capture("Player · attack impact", center)
-    await ticks(3)
-    await capture("Player · attack follow-through", center)
-    await ticks(5)
-    await capture("Player · attack recovery", center)
+    main_player.set_physics_process(false)
+    await capture("Player · attack anticipation (frame 10)", center)
+    await advance_animation(0.110)
+    await capture("Player · attack impact (frame 12 / 0.11s)", center)
+    await advance_animation(0.024)
+    await capture("Player · attack follow-through (frame 13)", center)
+    await advance_animation(0.039)
+    await capture("Player · attack recovery (frame 14)", center)
+    await advance_animation(0.036)
+    await capture("Player · attack finish (frame 15)", center)
+    await advance_animation(0.031)
+    main_player.set_physics_process(true)
 
-    # Dedicated heavy Cleave sequence: capture the six authored poses at their timeline markers.
+    # Dedicated heavy Cleave sequence. Sample exact authored event/pose markers.
     main_player.level = 2
     main_player._cleave_cd = 0.0
     main_player._use_cleave()
-    await ticks(2)
-    await capture("Player · Cleave brace", center)
-    await ticks(6)
-    await capture("Player · Cleave wind-up", center)
-    await ticks(6)
-    await capture("Player · Cleave impact", center)
-    await ticks(2)
-    await capture("Player · Cleave follow-through", center)
-    await ticks(5)
-    await capture("Player · Cleave recovery", center)
-    await ticks(5)
-    await capture("Player · Cleave settle", center)
-    await ticks(2)
+    main_player.set_physics_process(false)
+    await capture("Player · Cleave brace (frame 24)", center)
+    await advance_animation(0.128)
+    await capture("Player · Cleave wind-up (frame 25)", center)
+    await advance_animation(0.092)
+    await capture("Player · Cleave impact (frame 26 / 0.22s)", center)
+    await advance_animation(0.043)
+    await capture("Player · Cleave follow-through (frame 27)", center)
+    await advance_animation(0.072)
+    await capture("Player · Cleave recovery (frame 28)", center)
+    await advance_animation(0.067)
+    await capture("Player · Cleave final pose (frame 29)", center)
+    await advance_animation(0.058)
+    main_player.set_physics_process(true)
 
     # Dash currently reuses the run clip.
     main_player._dash_cd = 0.0
