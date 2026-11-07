@@ -20,7 +20,19 @@ OUT = os.path.normpath(os.environ.get("HTK_ASSET_OUTPUT_DIR", DEFAULT_OUT))
 
 # Hand-authored assets are protected from the legacy generic renderer.
 # player.svg uses a 24×28 frame contract; this generator only knows 20×20 characters.
-PROTECTED_AUTHORED_ASSETS = {"player"}
+PROTECTED_AUTHORED_ASSETS = {
+    "player",
+    "villager_idle",
+    "villager_woodcutter",
+    "villager_miner",
+    "villager_farmer",
+    "villager_builder",
+    "villager_hunter",
+    "villager_scout",
+    "villager_healer",
+    "villager_blacksmith",
+    "villager_soldier",
+}
 
 # ---------------------------------------------------------------- palet
 SKIN, SKIN_D = "#e8c39e", "#c99b73"
@@ -659,7 +671,6 @@ def make_role_variant(source_name, output_name, kind):
 
 
 def make_role_variants():
-    make_role_variant("villager_miner", "villager_builder", "builder")
     make_role_variant("enemy_bandit", "enemy_archer", "archer")
     make_role_variant("enemy_soldier", "enemy_brute", "brute")
 
@@ -754,16 +765,9 @@ def wolf_sheet(name):
 
 
 def make_characters():
-    # player.svg is hand-authored at 24×28 px per frame. The legacy humanoid
-    # renderer is 20×20 and must never replace the integrated blue-mantled knight.
-    humanoid_sheet("villager_idle", Look("#d9d2c3", "#b3ab9a"))
-    humanoid_sheet("villager_woodcutter", Look("#4e9a4a", "#3b7a38", hat="wood", tool_a="axe"))
-    humanoid_sheet("villager_miner", Look("#8a8f98", "#6e737b", hat="miner", tool_a="pick"))
-    humanoid_sheet("villager_blacksmith", Look("#985c3d", "#6f3e2a", pants="#3c3029", hat="band",
-                                                tool_a="hammer", tool_w="hammer", beard="#4a3024",
-                                                trim="#e19a55"))
-    humanoid_sheet("villager_farmer", Look("#d6b13c", "#a8892c", hat="farm", tool_a="fork"))
-    humanoid_sheet("villager_soldier", Look("#3f6fb5", "#2f548a", hat="helm", tool_a="sword", shield="#3f6fb5"))
+    # All ten civilian sheets are hand-authored, role-specific SVG atlases.
+    # Their ownership is protected above; the generic legacy humanoid renderer
+    # is reserved for its remaining enemy templates only.
     humanoid_sheet("enemy_bandit", Look("#a33b3b", "#7d2c2c", hat="hood", tool_a="dagger", mask=True))
     humanoid_sheet("enemy_archer", Look("#496c54", "#304b3b", pants="#373f32", hat="archer",
                                         cape="#253e32", tool_a="bow", tool_w="bow", quiver=True, trim="#a9b97c"))
