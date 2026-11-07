@@ -103,6 +103,7 @@ jobs:
           - rival_civilization_persistence
           - legacy_world_dimensions
           - player_combat
+          - enemy_melee_windup_fairness
           - resource_save_state
           - responsive_layout
           - territory_claims
