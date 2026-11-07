@@ -8,9 +8,9 @@ The target remains a kingdom strategy game with a directly controlled knight, au
 
 **Verified implementations:** player aim-lock and directional attack sectors; nine-second dusk warning; 46-frame player animation integration; ten authored civilian role atlases; Frontier terrain dressing and bounded ambient landmark motion; rival doctrine investment, workforce caps, staffed production, finite stockpiles, paid doctrine-aware recruitment and research gates; resource-aware miners using reachable local iron and connected non-sabotaged depot stock.
 
-**Unfinished work:** (1) human desktop opening/middle-game playtest and target-PC performance; (2) rival visible workforce and physical logistics; (3) rival outposts, secondary settlements and territorial supply; (4) coordinated rival offensive planning; (5) stronger authored player/civilian animation motion in actual gameplay; (6) enemy/faction visuals and animation families; (7) buildings/construction/damage states, biome resources/wildlife/props, combat VFX and UI iconography. Automated tests and sprite/map captures do not satisfy human gameplay acceptance.
+**Unfinished work:** (1) human desktop opening/middle-game playtest and target-PC performance; (2) local rival depots, road-connected shipments and inter-settlement logistics (visible workplace workers and stronghold hauling are implemented on a follow-up branch, exact-head CI pending); (3) rival outposts, secondary settlements and territorial supply; (4) coordinated rival offensive planning; (5) stronger authored player/civilian animation motion in actual gameplay; (6) enemy/faction visuals and animation families; (7) buildings/construction/damage states, biome resources/wildlife/props, combat VFX and UI iconography. Automated tests and sprite/map captures do not satisfy human gameplay acceptance.
 
-Required dependency order: desktop opening/middle-game playtest → rival physical workforce/logistics → rival outposts/territorial supply → coordinated military planner → strategic progression/objectives → balance and target-desktop validation. Do not implement secondary settlements before ownership, supply, save and recovery rules are defined. Keep animation events synchronized to gameplay-owned hit/work/build timings.
+Required dependency order: desktop opening/middle-game playtest → verify physical rival worker/hauling slice → local depot and road shipment logistics → rival outposts/territorial supply → coordinated military planner → strategic progression/objectives → balance and target-desktop validation. Do not implement secondary settlements before ownership, supply, save and recovery rules are defined. Keep animation events synchronized to gameplay-owned hit/work/build timings.
 
 See [docs/SESSION_RECOVERY.md](docs/SESSION_RECOVERY.md) for the recovery matrix, branch dispositions and exact run evidence.
 
@@ -472,3 +472,10 @@ Rival technology now changes available army composition. Saboteurs and War Shama
 Exact-head Godot 4.7 CI passed 64/64 and Campaign Simulation QA passed 1/1 on `dd5b7f41`. Save schema v17 remains unchanged; unlocks are derived from the existing technology tier and recruitment uses living guard composition.
 
 The next high-value gaps are physical rival resource extraction/delivery and rival expansion/supply, after human rendered opening/middle-game acceptance. The current rival labor pool is abstract and does not yet model resource-node depletion, worker travel, or shipments. Do not add secondary settlements before those logistics contracts are specified.
+
+
+## Follow-up — visible rival workforce (2026-11-08)
+
+Runtime-only workers now staff completed Lumber Camps, Farms, Quarries and Forges according to the existing finite labor allocation. They gather actual tree/rock/iron resource nodes, work farm plots, reserve targets, path with NavGrid, respect local ownership boundaries and haul cargo to the owning stronghold. Cargo is reconciled during save export into the existing resource ledger; save schema v17 remains unchanged. The implementation and test wiring are on `feat/rival-physical-workforce-hauling`; exact-head CI and rendered acceptance remain pending.
+
+Next work after verification: local storage buildings, road-connected shipments, supply interruption/raiding and then outposts/secondary settlements. Do not broaden into those systems before the first physical workforce regression and rendered review are green.
