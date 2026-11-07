@@ -1,3 +1,17 @@
+## Rival physical workforce execution — 2026-11-08
+
+Implementation branch: `feat/rival-physical-workforce-hauling`, based on main `14f045198bcbd6d50b3b9909bce30a1f1f2c36d1`.
+
+Added a runtime-only `EnemyEconomicWorker` for completed rival workplaces. Lumber Camp workers gather actual trees; Quarry workers gather rock; Forge workers gather iron after rival Tier II; Farm workers execute a visible work cycle. Each worker reserves a node, uses existing NavGrid paths, avoids player/contested territory, carries a bounded batch and delivers to its own stronghold. Worker counts remain derived from the existing eight-citizen workforce and two-worker workplace cap. Rival actors are not player villagers or army-selectable units.
+
+Save export transfers already-harvested cargo into the existing stronghold resource ledger and clears live worker cargo, preserving v17 with no worker save fields. Local depots, road shipments, outposts and secondary settlements remain unfinished.
+
+Added `rival_physical_workforce.gd`, expanded the army/rival economy test to advance physical workers, and registered the new test in both `tools/run_tests.sh` and Godot CI. **Status: implemented, exact-head tests pending; no rendered or manual playtest acceptance claimed.**
+
+Next: run focused worker/economy/persistence tests and the full Godot 4.7 CI matrix; address real failures before merging.
+
+---
+
 # Hold the Keep — Parallel Developer Worklist
 
 **Current implementation baseline:** `main` is at `198c31f5f0c7241158e8e56024e1bc69aacf8b17` after PR #186 fixed the Frontier decoration process-state regression. Godot 4.7 CI passed 65/65 on the PR head; Campaign Simulation QA and Rendered World QA passed. Live inventory: 157 branches; 186 PRs (133 merged, 51 closed unmerged, 2 open). PR #181 is closed unmerged as superseded after comparison with #184; #150/#152 remain deferred. See [docs/SESSION_RECOVERY.md](docs/SESSION_RECOVERY.md) for the verified recovery matrix, current blockers and handoff.  

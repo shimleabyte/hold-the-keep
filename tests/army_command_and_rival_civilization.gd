@@ -94,15 +94,118 @@ func _initialize() -> void:
             var resources: Dictionary = civilization.get("resources")
             var starting_wood: float = float(resources.get("wood", 0.0))
             _check(starting_wood > 0.0, "Rival civilization should start with a finite resource ledger")
-            for tick: int in range(270):
+            # Keep the 500-second simulation deterministic while yielding one
+            # physics frame per strategic second so NavGrid consumes dirty cells
+            # from newly completed rival structures before workers pathfind.
+            stronghold.set_process(false)
+            for tick: int in range(500):
                 civilization.call("advance", 1.0)
+                await physics_frame
 
             _check(bool(civilization.call("_has_structure", "lumber_camp")),
                 "Rival civilization should construct a visible lumber camp")
             _check(bool(civilization.call("_has_structure", "farm")),
                 "Rival civilization should construct food infrastructure")
             _check(bool(civilization.call("_has_structure", "quarry")),
-                "Rival civilization should construct a stone and iron source")
+                "Rival civilization should construct a physical quarry for stone")
+            if not bool(civilization.call("_has_structure", "barracks")):
+                var diagnostic_workers: Array[Dictionary] = []
+                var rival_woodcutter: Node2D
+                for rival_worker: Node in get_nodes_in_group("enemy_economic_workers"):
+                    if is_instance_valid(rival_worker) and rival_worker.get("civilization") == civilization:
+                        if String(rival_worker.get("role")) == "lumber_camp" and rival_woodcutter == null:
+                            rival_woodcutter = rival_worker as Node2D
+                        var target_node: Variant = rival_worker.get("_target")
+                        var worker_path: PackedVector2Array = rival_worker.get("_path")
+                        diagnostic_workers.append({
+                            "role": rival_worker.get("role"),
+                            "state": rival_worker.get("_state"),
+                            "carry": rival_worker.get("carry"),
+                            "target": String(target_node.name) if target_node != null and is_instance_valid(target_node) else "",
+                            "path_points": worker_path.size(),
+                            "position": rival_worker.get("position")
+                        })
+                var diagnostic_ids: Array[String] = []
+                for structure_node: Node in civilization.get("structures"):
+                    diagnostic_ids.append(String(structure_node.get("structure_id")))
+                var target_scan: Dictionary = {
+                    "region": stronghold.get("region_id"),
+                    "owner_cell": stronghold.get("cell"),
+                    "worker_cell": main_scene.get("nav").call("cell_of", rival_woodcutter.position),
+                    "resource_count": 0,
+                    "same_region": 0,
+                    "within_work_radius": 0,
+                    "nearest_same_region": [],
+                    "not_player_owned": 0,
+                    "reachable": 0,
+                    "safe_path": 0,
+                    "samples": []
+                }
+                var resource_world: Node = main_scene.get("world")
+                var resource_nav: Node = main_scene.get("nav")
+                var resource_territory: Node = main_scene.get("territory")
+                var debug_candidates: Array[Dictionary] = []
+                var same_region_candidates: Array[Dictionary] = []
+                for resource_cell_value in resource_world.get("resource_nodes_by_cell").keys():
+                    var resource_cell: Vector2i = Vector2i(resource_cell_value)
+                    var resource_node: Node2D = resource_world.call("resource_node_at", resource_cell)
+                    if resource_node == null or String(resource_node.get("yield_kind")) != "wood" or int(resource_node.get("_hp")) <= 0:
+                        continue
+                    target_scan["resource_count"] = int(target_scan["resource_count"]) + 1
+                    if String(resource_world.call("region_id", resource_cell)) != String(stronghold.get("region_id")):
+                        continue
+                    target_scan["same_region"] = int(target_scan["same_region"]) + 1
+                    var distance := stronghold.position.distance_to(resource_node.position)
+                    same_region_candidates.append({"cell": resource_cell, "distance": distance})
+                    var local_work_radius := maxf(
+                        float(stronghold.get("claim_radius")) + 6.0,
+                        float(stronghold.get("claim_radius")) * 4.0
+                    ) * float(resource_world.get("tile_size"))
+                    if distance > local_work_radius:
+                        continue
+                    target_scan["within_work_radius"] = int(target_scan["within_work_radius"]) + 1
+                    if String(resource_territory.call("owner_at", resource_cell)) in ["player", "contested"]:
+                        continue
+                    target_scan["not_player_owned"] = int(target_scan["not_player_owned"]) + 1
+                    debug_candidates.append({"cell": resource_cell, "node": resource_node, "distance": distance})
+                same_region_candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["distance"]) < float(b["distance"]))
+                for index in mini(12, same_region_candidates.size()):
+                    var nearest: Dictionary = same_region_candidates[index]
+                    target_scan["nearest_same_region"].append({
+                        "cell": nearest["cell"],
+                        "distance": nearest["distance"]
+                    })
+                debug_candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["distance"]) < float(b["distance"]))
+                for index in mini(24, debug_candidates.size()):
+                    var candidate: Dictionary = debug_candidates[index]
+                    var candidate_node: Node2D = candidate["node"]
+                    var candidate_path: PackedVector2Array = resource_nav.call("path_adjacent", rival_woodcutter.position, [candidate["cell"]])
+                    if not candidate_path.is_empty():
+                        target_scan["reachable"] = int(target_scan["reachable"]) + 1
+                    var safe_path := true
+                    for path_position in candidate_path:
+                        var path_cell: Vector2i = resource_nav.call("cell_of", path_position)
+                        if String(resource_territory.call("owner_at", path_cell)) in ["player", "contested"]:
+                            safe_path = false
+                            break
+                    if not candidate_path.is_empty() and safe_path:
+                        target_scan["safe_path"] = int(target_scan["safe_path"]) + 1
+                    target_scan["samples"].append({
+                        "cell": candidate["cell"],
+                        "distance": candidate["distance"],
+                        "path": candidate_path.size(),
+                        "safe": safe_path,
+                        "owner": resource_territory.call("owner_at", candidate["cell"])
+                    })
+                print("RIVAL_TARGET_SCAN ", target_scan)
+                print("RIVAL_BUILD_DIAGNOSTIC ", {
+                    "resources": resources.duplicate(true),
+                    "structures": diagnostic_ids,
+                    "construction": civilization.get("construction"),
+                    "labor": civilization.call("labor_allocation"),
+                    "workers": diagnostic_workers,
+                    "world_resource_nodes": main_scene.get("world").get("resource_nodes_by_cell").size()
+                })
             _check(bool(civilization.call("_has_structure", "barracks")),
                 "Rival civilization should eventually invest in military production")
             var technology_tier: int = int(civilization.get("technology_tier"))
@@ -138,43 +241,27 @@ func _initialize() -> void:
                 "A full garrison must leave only the protected two-worker minimum")
 
             var stocks_before_production: Dictionary = resources.duplicate(true)
-            var active_capacity: float = civilization.call("resource_capacity", "wood")
-            var expected_wood: float = float(stocks_before_production.get("wood", 0.0)) + minf(
-                0.08 + 0.525 * float(labor.get("lumber_camp", 0)),
-                maxf(0.0, active_capacity - float(stocks_before_production.get("wood", 0.0)))
-            )
-            var stone_capacity: float = civilization.call("resource_capacity", "stone")
-            var expected_stone: float = float(stocks_before_production.get("stone", 0.0)) + minf(
-                0.025 + 0.31 * float(labor.get("quarry", 0)),
-                maxf(0.0, stone_capacity - float(stocks_before_production.get("stone", 0.0)))
-            )
-            var iron_capacity: float = civilization.call("resource_capacity", "iron")
-            var expected_iron: float = float(stocks_before_production.get("iron", 0.0)) + minf(
-                0.04 * float(labor.get("quarry", 0))
-                    + 0.11 * float(labor.get("forge", 0)),
-                maxf(0.0, iron_capacity - float(stocks_before_production.get("iron", 0.0)))
-            )
-            var food_capacity: float = civilization.call("resource_capacity", "food")
-            var expected_food_income: float = 0.42 + 0.625 * float(labor.get("farm", 0))
             var expected_food: float = maxf(
                 0.0,
                 float(stocks_before_production.get("food", 0.0))
-                    + minf(
-                        expected_food_income,
-                        maxf(0.0, food_capacity - float(stocks_before_production.get("food", 0.0)))
-                    )
                     - 0.04 * float(labor.get("available", 0))
                     - 0.06 * float(labor.get("garrison", 0))
             )
-            civilization.call("_produce_resources")
-            _check(is_equal_approx(float(resources.get("wood", 0.0)), expected_wood),
-                "Rival wood production must scale with assigned lumber workers")
-            _check(is_equal_approx(float(resources.get("stone", 0.0)), expected_stone),
-                "Rival stone production must scale with assigned quarry workers")
-            _check(is_equal_approx(float(resources.get("iron", 0.0)), expected_iron),
-                "Rival iron production must be staffed by quarry/forge workers")
+            civilization.call("_produce_resources", labor)
+            _check(is_equal_approx(
+                float(resources.get("wood", 0.0)),
+                float(stocks_before_production.get("wood", 0.0))
+            ), "Rival wood must enter the ledger only through harvested and delivered cargo")
+            _check(is_equal_approx(
+                float(resources.get("stone", 0.0)),
+                float(stocks_before_production.get("stone", 0.0))
+            ), "Rival stone must enter the ledger only through harvested and delivered cargo")
+            _check(is_equal_approx(
+                float(resources.get("iron", 0.0)),
+                float(stocks_before_production.get("iron", 0.0))
+            ), "Rival iron must enter the ledger only through harvested and delivered cargo")
             _check(is_equal_approx(float(resources.get("food", 0.0)), expected_food),
-                "Rival food balance must include farm labor and population upkeep")
+                "Rival population upkeep must debit food without granting passive food income")
 
             var base_storage_capacity: float = civilization.call("storage_capacity", false)
             var expanded_storage_capacity: float = civilization.call("storage_capacity", true)
@@ -389,8 +476,8 @@ func _initialize() -> void:
             _check(String(active_construction.get("id", "")) == actual_order[0],
                 "%s doctrine must start its preferred affordable building" % faction_id)
             var ledger_after: Dictionary = strategy_civilization.get("resources")
-            var expected_wood: float = wood_before + 0.08 - float(first_cost.get("wood", 0.0))
-            var expected_stone: float = stone_before + 0.025 - float(first_cost.get("stone", 0.0))
+            var expected_wood: float = wood_before - float(first_cost.get("wood", 0.0))
+            var expected_stone: float = stone_before - float(first_cost.get("stone", 0.0))
             _check(is_equal_approx(float(ledger_after.get("wood", 0.0)), expected_wood),
                 "%s construction must debit its own wood ledger" % faction_id)
             _check(is_equal_approx(float(ledger_after.get("stone", 0.0)), expected_stone),
@@ -410,7 +497,7 @@ func _initialize() -> void:
     if failed:
         quit(1)
         return
-    print("PASS: army-only commands, staffed rival production, doctrine-specific labor/investment, paid construction, technology and persistence")
+    print("PASS: army-only commands, physical rival gathering/hauling, doctrine strategy, paid construction, technology and persistence")
     quit()
 
 

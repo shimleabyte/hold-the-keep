@@ -157,6 +157,29 @@ func _run() -> void:
             require(String(saved_villager.get("job", "")) == "soldier" and String(saved_villager.get("occupation", "")) == "",
                 "Save data must encode archers as the soldier role with an archer specialization")
     require(saved_archer_count == 2, "Save collection must preserve both archer specializations")
+    if not save_system._valid_save(snapshot):
+        var validator = load("res://scripts/persistence/save_validator.gd").new()
+        validator.configure(save_system.VERSION)
+        var world_data: Dictionary = snapshot.get("world", {})
+        var campaign_data: Dictionary = snapshot.get("campaign", {})
+        print("ARCHERY_SAVE_DIAGNOSTIC ", {
+            "version": snapshot.get("version"),
+            "profile": world_data.get("profile"),
+            "map_size": world_data.get("map_size"),
+            "valid_campaign": validator.call("_valid_campaign_state", campaign_data, String(world_data.get("profile", "")), int(world_data.get("map_size", 0))),
+            "valid_frontier": validator.call("_valid_frontier_campaign", snapshot.get("frontier_campaign", {}), String(world_data.get("profile", "")), int(world_data.get("map_size", 0))),
+            "supply": snapshot.get("supply"),
+            "resource_count": snapshot.get("resources", []).size(),
+            "buildings": snapshot.get("buildings", []).map(func(b): return [b.get("id"), b.get("cx"), b.get("cy")]),
+            "campaign": campaign_data
+        })
+        for objective: Dictionary in campaign_data.get("objectives", []):
+            if objective.has("civilization"):
+                print("ARCHERY_RIVAL_DIAGNOSTIC ", {
+                    "objective": objective.get("id"),
+                    "civilization": objective.get("civilization"),
+                    "valid": validator.call("_valid_rival_civilization", objective.get("civilization"), int(world_data.get("map_size", 0)), Vector2i(int(objective.get("cx", -1)), int(objective.get("cy", -1))))
+                })
     require(save_system._valid_save(snapshot), "SaveValidator must accept an archer roster within Archery Range capacity")
 
     var invalid_capacity := snapshot.duplicate(true)

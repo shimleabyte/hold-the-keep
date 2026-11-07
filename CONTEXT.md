@@ -1,3 +1,15 @@
+## Session follow-up — rival physical workforce (2026-11-08)
+
+A follow-up implementation is in progress on `feat/rival-physical-workforce-hauling`, based on main `14f045198bcbd6d50b3b9909bce30a1f1f2c36d1`.
+
+The existing bounded rival workforce now spawns separate runtime worker entities for completed Lumber Camps, Farms, Quarries and Forges. Workers gather actual world resources (wood, stone, and iron after rival Tier II), farm food, reserve nodes, travel using NavGrid, avoid player/contested territory, and return carried cargo to their owning stronghold. Save export transfers in-flight cargo into the existing resource ledger, avoiding v17 schema changes. Worker entities are not player villagers and cannot be selected by the army command system.
+
+New test: `tests/rival_physical_workforce.gd`; existing army/rival economy regression now simulates worker ticks; the test is registered with CI and `tools/run_tests.sh`. These changes are implemented but not verified on exact head yet. No rendered gameplay or manual desktop acceptance is claimed.
+
+Still open: local depots, road-connected shipments, inter-settlement logistics, outposts, secondary settlements, offensive planning and rendered animation QA. Follow [docs/SESSION_RECOVERY.md](docs/SESSION_RECOVERY.md) for exact state and next tests.
+
+---
+
 # Konteks proyek: Hold the Keep
 
 ## Session recovery status — 2026-11-07

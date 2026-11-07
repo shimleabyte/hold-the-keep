@@ -49,3 +49,18 @@ The existing `army_command_and_rival_civilization` test checks:
 ## Deferred
 
 This phase does not claim visible rival laborers, resource-node depletion, travel, local storage, road-connected shipments, outposts, secondary settlements or coordinated offensive planning. Those require a separate world/logistics model and rendered gameplay acceptance.
+
+
+## Follow-up implementation — visible rival workers (2026-11-08)
+
+The original phase established finite workforce allocation and deliberately avoided per-frame actors. The subsequent physical-workforce slice now realizes assigned production jobs as runtime-only `EnemyEconomicWorker` entities while retaining bounded population and labor rules.
+
+- Completed active Lumber Camp, Farm, Quarry and Forge structures spawn only the number of workers assigned by `labor_allocation()`, up to the existing two-worker cap.
+- Lumber Camp workers harvest tree nodes; Quarry workers harvest rock nodes; Forge workers harvest iron after the rival's own research reaches Tier II; Farm workers perform the farm cycle.
+- Workers reserve nodes through each resource node's existing `worker` field, path using `NavGrid.path_adjacent()`, stay in the owning local region/claim and reject player/contested territory.
+- Cargo is delivered to the owning stronghold's resource ledger subject to current stockpile capacity. Workers are separate from player villagers and military garrison groups.
+- Save export folds carried cargo into the existing resource ledger and clears it from live actors. No worker position/cargo fields or schema migration are introduced; v17 remains in force.
+
+New verification targets: `tests/rival_physical_workforce.gd` and expanded `tests/army_command_and_rival_civilization.gd`. This code is implemented on `feat/rival-physical-workforce-hauling`; its Godot 4.7 CI and rendered behavior are pending verification.
+
+Still deferred: local depots, road shipments, inter-settlement logistics, outposts, secondary settlements, coordinated military planning and target-desktop frame-time acceptance.
