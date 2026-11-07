@@ -193,7 +193,7 @@ New tests: `tests/rival_physical_workforce.gd`; expanded `tests/army_command_and
 
 
 
-### Follow-up execution checkpoint — 2026-11-08 05:xx Asia/Jakarta
+### Follow-up execution checkpoint — 2026-11-08
 
 - Active branch: `feat/rival-physical-workforce-hauling`.
 - Current HEAD: `48af993e544b5cbe55ab33dd2ee39127fbcd6d96`.
