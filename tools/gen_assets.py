@@ -3,7 +3,7 @@
 
 Jalankan:  python3 tools/gen_assets.py
 Hasil:     assets/sprites/*.svg  (semua pakai shape-rendering=crispEdges di grid 1px)
-Karakter/musuh berupa sprite sheet 4 frame (diam, jalan 1, jalan 2, aksi) berjajar horizontal.
+Karakter dan musuh menggunakan atlas animasi 22 frame × 3 arah. Player atlas adalah aset hand-authored dan tidak dimiliki generator legacy.
 
 Konvensi: sprite karakter/benda berdiri dengan titik tumpu di tengah-bawah kanvas,
 sehingga kode game cukup menggambar di offset (-lebar/2, -tinggi).
@@ -17,6 +17,10 @@ import re
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_OUT = os.path.join(HERE, "..", "assets", "sprites")
 OUT = os.path.normpath(os.environ.get("HTK_ASSET_OUTPUT_DIR", DEFAULT_OUT))
+
+# Hand-authored assets are protected from the legacy generic renderer.
+# player.svg uses a 24×28 frame contract; this generator only knows 20×20 characters.
+PROTECTED_AUTHORED_ASSETS = {"player"}
 
 # ---------------------------------------------------------------- palet
 SKIN, SKIN_D = "#e8c39e", "#c99b73"
@@ -73,6 +77,11 @@ class Svg:
         return self
 
     def save(self, name):
+        if name in PROTECTED_AUTHORED_ASSETS:
+            raise ValueError(
+                "Refusing to overwrite hand-authored asset '%s.svg'; "
+                "update its dedicated source and integration contract instead." % name
+            )
         os.makedirs(OUT, exist_ok=True)
         parts = [
             '<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d" '
@@ -745,7 +754,8 @@ def wolf_sheet(name):
 
 
 def make_characters():
-    humanoid_sheet("player", Look("#c9a227", "#a8841c", hat="band", cape="#8a2a2a", tool_a="sword", tool_w="axe"))
+    # player.svg is hand-authored at 24×28 px per frame. The legacy humanoid
+    # renderer is 20×20 and must never replace the integrated blue-mantled knight.
     humanoid_sheet("villager_idle", Look("#d9d2c3", "#b3ab9a"))
     humanoid_sheet("villager_woodcutter", Look("#4e9a4a", "#3b7a38", hat="wood", tool_a="axe"))
     humanoid_sheet("villager_miner", Look("#8a8f98", "#6e737b", hat="miner", tool_a="pick"))

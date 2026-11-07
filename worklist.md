@@ -18,6 +18,20 @@ Phase 11's initial rival-civilization and army-command implementation is integra
 - **PR #166/#167** are closed as superseded by #177. **PR #169** is closed without merge because it conflicts with the player-control/civilian-autonomy contract.
 - PR #178's exact-head validation passed **63/63 Godot 4.7 CI jobs** (run #42316264733) and Campaign Simulation QA (run #42316264766). Post-merge Campaign Simulation QA passed on production code HEAD (run #42316677164). The next mainline Godot run on docs-only HEAD `f9a6a443` passed (run #42316888270); later registry/status documentation commits must be checked against their own push run.
 
+## Active visual overhaul — Phase 08.8
+
+**Branch:** `art/phase-08.8-art-direction-lock` (based on current `main`). This is a separate visual workstream; no gameplay systems, save schema, AI, economy or campaign behavior are intentionally changed.
+
+Committed on this branch:
+- `docs/ART_DIRECTION.md` — authoritative material, palette, silhouette, animation, architecture, biome, effects, icon and acceptance specification.
+- `docs/ART_REFERENCE_BOARD.md` — historical medieval construction/clothing and relevant game-art production references.
+- `tools/gen_assets.py` — the legacy generic 20×20 renderer no longer emits the player and refuses to overwrite the hand-authored 24×28 player atlas.
+- `tests/role_sprite_identity.gd` — checks the player atlas dimensions, distinct pixel data and generator ownership.
+
+**Not yet completed:** complete asset inventory; authored character/faction sheets; building and biome rework; VFX and icon redesign; Godot-rendered preview sheets; multi-resolution screenshots; full Godot 4.7 CI passed 64/64 on PR #179 (run #42320928929), deterministic Frontier Rendered World QA passed (run #42320928830); human desktop review. Existing production artwork remains untouched outside the player-generator safety change. Do not describe this overhaul as complete until its visual acceptance evidence exists.
+
+Execution order is art inventory/ownership, character family and animation, faction combinations, architecture, biomes/resources/props, combat/UI art, then in-game render QA. Keep each package isolated and merge only after the exact head's blocking checks pass.
+
 ### Phase 11 acceptance still open
 
 - Human rendered/playable review of a Classic rival settlement and expanded Frontier/Expedition campaigns.

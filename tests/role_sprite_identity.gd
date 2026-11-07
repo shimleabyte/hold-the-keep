@@ -28,6 +28,19 @@ func _assert_distinct(name: String, reference: String) -> void:
 
 
 func _initialize() -> void:
+    var player_sprite: Image = _load_sprite("player")
+    assert(player_sprite.get_width() / SpriteAnim.FRAMES == 24,
+        "The hand-authored player atlas must retain its 24px frame width")
+    assert(player_sprite.get_height() / DIRECTIONS == 28,
+        "The hand-authored player atlas must retain its 28px frame height")
+    _assert_distinct("player", "villager_soldier")
+
+    var generator_source := FileAccess.get_file_as_string("res://tools/gen_assets.py")
+    assert(generator_source.contains('PROTECTED_AUTHORED_ASSETS = {"player"}'),
+        "The legacy asset generator must explicitly protect the hand-authored player atlas")
+    assert(not generator_source.contains('humanoid_sheet("player"'),
+        "The legacy 20x20 humanoid renderer must not regenerate the 24x28 player atlas")
+
     _assert_distinct("villager_builder", "villager_miner")
     _assert_distinct("enemy_archer", "enemy_bandit")
     _assert_distinct("enemy_brute", "enemy_soldier")
@@ -51,5 +64,5 @@ func _initialize() -> void:
     assert(default_scale.is_equal_approx(Vector2.ONE),
         "Enemies without a scale override must retain unit visual scale")
 
-    print("PASS: builder, archer and brute use distinct animated sprite sheets and data-driven enemy scale")
+    print("PASS: player atlas ownership and dimensions, specialist sprite identity, and data-driven enemy scale")
     quit(0)
