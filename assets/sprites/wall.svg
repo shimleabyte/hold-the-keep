@@ -1,20 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges">
-<rect x="0" y="3" width="4" height="13" fill="#8b6b43"/>
-<rect x="0" y="3" width="1" height="13" fill="#a98557"/>
-<rect x="3" y="3" width="1" height="13" fill="#6b4f2f"/>
-<rect x="1" y="2" width="2" height="1" fill="#a98557"/>
-<rect x="4" y="2" width="4" height="14" fill="#8b6b43"/>
-<rect x="4" y="2" width="1" height="14" fill="#a98557"/>
-<rect x="7" y="2" width="1" height="14" fill="#6b4f2f"/>
-<rect x="5" y="1" width="2" height="1" fill="#a98557"/>
-<rect x="8" y="3" width="4" height="13" fill="#8b6b43"/>
-<rect x="8" y="3" width="1" height="13" fill="#a98557"/>
-<rect x="11" y="3" width="1" height="13" fill="#6b4f2f"/>
-<rect x="9" y="2" width="2" height="1" fill="#a98557"/>
-<rect x="12" y="2" width="4" height="14" fill="#8b6b43"/>
-<rect x="12" y="2" width="1" height="14" fill="#a98557"/>
-<rect x="15" y="2" width="1" height="14" fill="#6b4f2f"/>
-<rect x="13" y="1" width="2" height="1" fill="#a98557"/>
-<rect x="0" y="6" width="16" height="1" fill="#4a3520"/>
-<rect x="0" y="12" width="16" height="1" fill="#4a3520"/>
+<!-- tightly lashed oak palisade -->
+<rect x="0" y="4" width="16" height="12" fill="#493426"/>
+<path d="M0 5L2 1L4 5L6 0L8 5L10 1L12 5L14 1L16 5V15H0Z" fill="#704a2e"/>
+<path d="M1 5L2 2L3 5V15H1ZM5 5L6 1L7 5V15H5ZM9 5L10 2L11 5V15H9ZM13 5L14 2L15 5V15H13Z" fill="#a57445"/>
+<path d="M4 5V15M8 5V15M12 5V15" stroke="#39281d" stroke-width="1"/>
+<!-- horizontal binding rails -->
+<path d="M0 7H16M0 12H16" stroke="#3b2a1e" stroke-width="2"/>
+<path d="M0 6H16M0 11H16" stroke="#b17e4d" stroke-width="1"/>
+<!-- iron nail heads -->
+<rect x="3" y="6" width="1" height="1" fill="#b8b5a9"/><rect x="7" y="6" width="1" height="1" fill="#b8b5a9"/><rect x="11" y="6" width="1" height="1" fill="#b8b5a9"/>
+<rect x="1" y="14" width="14" height="2" fill="#35271e"/>
 </svg>
