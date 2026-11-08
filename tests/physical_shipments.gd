@@ -92,20 +92,26 @@ func _initialize() -> void:
     var source_disconnect_id: int = main.supply.create_shipment(source_cell, destination_cell, "wood", 4)
     require(source_disconnect_id > 0,
         "A connected source must be able to dispatch cargo before losing its road link")
-    await ticks(12)
+    var source_disconnect_carrier: Node2D
+    # Wait for observable movement instead of assuming a fixed number of physics
+    # frames is enough on every headless runner. The shipment must still depart
+    # before the source is disconnected; a missing/stationary courier is failure.
+    for _frame in range(60):
+        source_disconnect_carrier = null
+        for carrier: Node in get_nodes_in_group("supply_carriers"):
+            if int(carrier.get("order_id")) == source_disconnect_id:
+                source_disconnect_carrier = carrier as Node2D
+                break
+        if source_disconnect_carrier != null                 and source_disconnect_carrier.position.distance_to(source.position) > 0.5:
+            break
+        await physics_frame
     var source_disconnect_order := order_for(main.supply.get_shipment_orders(), source_disconnect_id)
     require(String(source_disconnect_order.get("status", "")) == "in_transit",
         "The origin-disconnect scenario must begin with a moving courier")
-    var source_disconnect_carrier: Node2D
-    for carrier: Node in get_nodes_in_group("supply_carriers"):
-        if int(carrier.get("order_id")) == source_disconnect_id:
-            source_disconnect_carrier = carrier as Node2D
-            break
     require(source_disconnect_carrier != null,
         "The in-flight shipment must retain its visible courier")
-    if source_disconnect_carrier != null:
-        require(source_disconnect_carrier.position.distance_to(source.position) > 0.5,
-            "The courier must have departed before the origin is disconnected")
+    require(source_disconnect_carrier.position.distance_to(source.position) > 0.5,
+        "The courier must have departed before the origin is disconnected")
     main.supply._depot_connections[source.get_instance_id()] = false
     main.supply.advance_shipment_orders()
     var origin_isolated_order := order_for(main.supply.get_shipment_orders(), source_disconnect_id)
