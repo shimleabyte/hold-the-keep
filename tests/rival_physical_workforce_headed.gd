@@ -12,6 +12,7 @@ const ORE_SCRIPT := preload("res://scripts/entities/iron_ore.gd")
 
 var failed := false
 var output_dir := ""
+var world_config: Node
 
 
 func check(condition: bool, message: String) -> void:
@@ -50,6 +51,7 @@ func seed_owner_region_resources(main: Node, keep: Node2D) -> Dictionary:
     var world: Node = main.get("world")
     var territory: Node = main.get("territory")
     var nav: Node = main.get("nav")
+    var tile_size := float(world_config.get("tile_size"))
     territory.call("_ensure_current")
     var owner_region := String(keep.get("region_id"))
     var anchor: Vector2i = keep.get("cell")
@@ -61,7 +63,7 @@ func seed_owner_region_resources(main: Node, keep: Node2D) -> Dictionary:
                 if maxi(absi(x), absi(y)) != radius:
                     continue
                 var cell := anchor + Vector2i(x, y)
-                if not WorldConfig.is_valid_cell(cell):
+                if not bool(world_config.call("is_valid_cell", cell)):
                     continue
                 if not bool(world.call("is_buildable", cell)) or world.get("occupied").has(cell):
                     continue
@@ -71,10 +73,10 @@ func seed_owner_region_resources(main: Node, keep: Node2D) -> Dictionary:
                 if owner == "player" or owner == "contested":
                     continue
                 var foot := Vector2(
-                    (float(cell.x) + 0.5) * float(WorldConfig.tile_size),
-                    (float(cell.y) + 1.0) * float(WorldConfig.tile_size)
+                    (float(cell.x) + 0.5) * tile_size,
+                    (float(cell.y) + 1.0) * tile_size
                 )
-                if keep.global_position.distance_to(foot) <= 35.0 * float(WorldConfig.tile_size):
+                if keep.global_position.distance_to(foot) <= 35.0 * tile_size:
                     cells.append(cell)
 
     var cursor := 0
@@ -86,8 +88,8 @@ func seed_owner_region_resources(main: Node, keep: Node2D) -> Dictionary:
         var cell: Vector2i = cells[cursor]
         cursor += 1
         node.position = Vector2(
-            (float(cell.x) + 0.5) * float(WorldConfig.tile_size),
-            (float(cell.y) + 1.0) * float(WorldConfig.tile_size)
+            (float(cell.x) + 0.5) * tile_size,
+            (float(cell.y) + 1.0) * tile_size
         )
         world.call("_register_resource_node", node, cell)
         counts["wood"] = int(counts["wood"]) + 1
@@ -99,8 +101,8 @@ func seed_owner_region_resources(main: Node, keep: Node2D) -> Dictionary:
         var cell: Vector2i = cells[cursor]
         cursor += 1
         node.position = Vector2(
-            (float(cell.x) + 0.5) * float(WorldConfig.tile_size),
-            (float(cell.y) + 1.0) * float(WorldConfig.tile_size)
+            (float(cell.x) + 0.5) * tile_size,
+            (float(cell.y) + 1.0) * tile_size
         )
         world.call("_register_resource_node", node, cell)
         counts["stone"] = int(counts["stone"]) + 1
@@ -112,8 +114,8 @@ func seed_owner_region_resources(main: Node, keep: Node2D) -> Dictionary:
         var cell: Vector2i = cells[cursor]
         cursor += 1
         node.position = Vector2(
-            (float(cell.x) + 0.5) * float(WorldConfig.tile_size),
-            (float(cell.y) + 1.0) * float(WorldConfig.tile_size)
+            (float(cell.x) + 0.5) * tile_size,
+            (float(cell.y) + 1.0) * tile_size
         )
         world.call("_register_resource_node", node, cell)
         counts["iron"] = int(counts["iron"]) + 1
@@ -280,7 +282,7 @@ func test_capacity_and_retry(main: Node, civilization: Variant, worker: Node2D) 
     for y in range(-4, 5):
         for x in range(-4, 5):
             var cell := blocked_cell + Vector2i(x, y)
-            if WorldConfig.is_valid_cell(cell):
+            if bool(world_config.call("is_valid_cell", cell)):
                 nav.get("astar").set_point_solid(cell, true)
     nav.set("version", int(nav.get("version")) + 1)
     worker.call("_begin_return_to_keep")
@@ -348,8 +350,9 @@ func _initialize() -> void:
     OS.set_environment("HTK_AUTO_START_GAME", "1")
     OS.set_environment("HTK_AUTO_RESOLVE_EVENTS", "1")
     await frames(1)
-    WorldConfig.apply_profile("classic")
-    WorldConfig.world_seed = 1337
+    world_config = root.get_node("WorldConfig")
+    world_config.call("apply_profile", "classic")
+    world_config.set("world_seed", 1337)
     output_dir = ProjectSettings.globalize_path(OUTPUT_DIR)
     var dir_error := DirAccess.make_dir_recursive_absolute(output_dir)
     if dir_error != OK and dir_error != ERR_ALREADY_EXISTS:
