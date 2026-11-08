@@ -307,7 +307,14 @@ func _repath_current_state() -> bool:
 func _find_resource_target() -> bool:
     if world == null or not is_instance_valid(world) or nav == null:
         return false
-    var resource_kinds: Array[String] = civilization.worker_resource_kinds(role)
+    # The civilization is held through a dynamic reference, so its method
+    # returns an untyped Array at this call site. Normalize values explicitly
+    # before assigning them to a typed GDScript collection (notably Forge -> iron).
+    var resource_kinds: Array[String] = []
+    var resource_kind_values: Variant = civilization.call("worker_resource_kinds", role)
+    if resource_kind_values is Array:
+        for resource_kind: Variant in resource_kind_values:
+            resource_kinds.append(String(resource_kind))
     if resource_kinds.is_empty():
         return false
 

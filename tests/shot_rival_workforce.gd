@@ -4,6 +4,8 @@ extends SceneTree
 
 const OUTPUT_DIR := "/tmp/hold-the-keep-rival-workforce-qa"
 const FRAME_DIR := OUTPUT_DIR + "/frames"
+const ROCK_SCRIPT := preload("res://scripts/entities/rock.gd")
+const IRON_ORE_SCRIPT := preload("res://scripts/entities/iron_ore.gd")
 
 var _main: Node2D
 var _keep: Node2D
@@ -89,6 +91,23 @@ func _initialize() -> void:
     _main.player.set_process(false)
     _main.player.set_physics_process(false)
     _main.player.camera.position_smoothing_enabled = false
+    # Campaign strongholds can spawn near a map edge. Expand capture-only camera
+    # limits so worker close-ups can center on their real world positions.
+    var map_pixels: Vector2i = _main.world.get("pixel_size")
+    _main.player.camera.limit_left = -map_pixels.x
+    _main.player.camera.limit_top = -map_pixels.y
+    _main.player.camera.limit_right = map_pixels.x * 2
+    _main.player.camera.limit_bottom = map_pixels.y * 2
+
+    # Hide transient onboarding notices in the evidence fixture only.
+    for child in _main.get_children():
+        if child is CanvasLayer:
+            var banner: Variant = child.get("_banner")
+            if banner is CanvasItem:
+                banner.hide()
+            var message_bubble: Variant = child.get("_msg_bubble")
+            if message_bubble is CanvasItem:
+                message_bubble.hide()
 
     var campaign: Node = _main.get("campaign")
     _keep = campaign.call("current_target_node") as Node2D if campaign != null else null
@@ -131,7 +150,7 @@ func _initialize() -> void:
         return
     _check_limits(rival_workers, labor)
 
-    await _capture("overview-rival-settlement", _keep.global_position + Vector2(0, -32), 0.8)
+    await _capture("overview-rival-settlement", _keep.global_position + Vector2(0, -24), 0.55)
     print("RIVAL_WORKFORCE_OVERVIEW workplaces=", _civilization.get("structures").size(),
         " workers=", rival_workers.size(), " labor=", labor)
 
@@ -203,11 +222,18 @@ func _initialize() -> void:
         if is_instance_valid(worker_node) and worker_node.get("civilization") == _civilization and String(worker_node.get("role")) == "farm":
             farmer = worker_node as Node2D
             break
+    var farmer_state_snapshot := -1
+    var farmer_cargo_snapshot := 0
     if farmer != null:
-        await _advance(0.1)
+        await _advance(1.0)
         for frame_index in 5:
             await _advance(1.0)
+            if not is_instance_valid(farmer):
+                break
             await _capture("farmer-work-%02d" % frame_index, farmer.global_position, 2.0)
+        if is_instance_valid(farmer):
+            farmer_state_snapshot = int(farmer.get("_state"))
+            farmer_cargo_snapshot = int(farmer.get("carry"))
     else:
         _fail("Farm workers were not assigned under the farm-first doctrine")
         return
@@ -228,27 +254,78 @@ func _initialize() -> void:
     if miner == null or forge_worker == null:
         _fail("Tier II rival doctrine did not staff both Quarry and Forge workers")
         return
+    # Some deterministic map seeds have no suitable natural node inside the
+    # stronghold's allowed local radius. Add a real resource entity in the same
+    # region only when the natural search cannot supply this existing workplace.
     for _step in 80:
         await _advance(1.0)
-        if int(miner.get("_state")) == 2 and int(forge_worker.get("_state")) == 2:
+        if forge_worker.get("_target") != null:
             break
-    if int(forge_worker.get("_state")) == 2:
-        await _capture("tier-two-forge-iron-work", forge_worker.global_position, 2.0)
-    else:
-        await _capture("tier-two-forge-worker", forge_worker.global_position, 2.0)
-    if int(miner.get("_state")) == 2:
-        await _capture("quarry-stone-work", miner.global_position, 2.0)
-    else:
-        await _capture("quarry-miner", miner.global_position, 2.0)
+    if forge_worker.get("_target") == null:
+        var iron_created: bool = await _ensure_resource_node("iron", forge_worker)
+        if not iron_created:
+            _fail("Could not place a reachable iron node for the Tier II Forge acceptance")
+            return
+        await _advance(1.0)
+
+    for _step in 80:
+        if int(forge_worker.get("_state")) == 2:
+            break
+        await _advance(1.0)
+    var forge_target: Node2D = forge_worker.get("_target") as Node2D
+    if int(forge_worker.get("_state")) != 2 or forge_target == null or String(forge_target.get("yield_kind")) != "iron":
+        _fail("Tier II Forge worker did not reach and reserve an actual iron resource node")
+        return
+    await _capture("tier-two-forge-iron-work", forge_worker.global_position, 2.2)
+    var forge_harvested := false
+    for harvest_step in 16:
+        await _advance(1.0)
+        if harvest_step % 4 == 0:
+            await _capture("tier-two-forge-harvest-%02d" % harvest_step, forge_worker.global_position, 2.2)
+        if int(forge_worker.get("carry")) > 0:
+            forge_harvested = true
+            break
+    if not forge_harvested or String(forge_worker.get("carry_kind")) != "iron":
+        _fail("Tier II Forge worker did not harvest iron into physical cargo")
+        return
+
+    for _step in 80:
+        if miner.get("_target") != null:
+            break
+        await _advance(1.0)
+    if miner.get("_target") == null:
+        var stone_created: bool = await _ensure_resource_node("stone", miner)
+        if not stone_created:
+            _fail("Could not place a reachable stone node for the Quarry acceptance")
+            return
+        await _advance(1.0)
+    for _step in 80:
+        if int(miner.get("_state")) == 2:
+            break
+        await _advance(1.0)
+    var quarry_target: Node2D = miner.get("_target") as Node2D
+    if int(miner.get("_state")) != 2 or quarry_target == null or String(quarry_target.get("yield_kind")) != "stone":
+        _fail("Quarry miner did not reach and reserve an actual stone resource node")
+        return
+    await _capture("quarry-stone-work", miner.global_position, 2.2)
+    var quarry_harvested := false
+    for harvest_step in 8:
+        await _advance(1.0)
+        if int(miner.get("carry")) > 0:
+            quarry_harvested = true
+            break
+    if not quarry_harvested or String(miner.get("carry_kind")) != "stone":
+        _fail("Quarry miner did not harvest stone into physical cargo")
+        return
 
     var manifest := FileAccess.open(OUTPUT_DIR + "/worker-lifecycle.txt", FileAccess.WRITE)
     if manifest != null:
         manifest.store_line("seed=1337 profile=classic")
         manifest.store_line("woodcutter: reserved target -> travel -> work -> cargo -> return -> ledger delivery")
-        manifest.store_line("farmer state=%s cargo=%s" % [str(farmer.get("_state")), str(farmer.get("carry"))])
-        manifest.store_line("quarry state=%s target=%s" % [str(miner.get("_state")), str(miner.get("_target") != null)])
-        manifest.store_line("forge tier=%s state=%s target=%s" % [
-            str(_civilization.get("technology_tier")), str(forge_worker.get("_state")), str(forge_worker.get("_target") != null)
+        manifest.store_line("farmer state=%s cargo=%s" % [str(farmer_state_snapshot), str(farmer_cargo_snapshot)])
+        manifest.store_line("quarry state=%s target=%s harvested=%s" % [str(miner.get("_state")), str(quarry_target != null), str(quarry_harvested)])
+        manifest.store_line("forge tier=%s state=%s target=%s harvested=%s" % [
+            str(_civilization.get("technology_tier")), str(forge_worker.get("_state")), str(forge_target != null), str(forge_harvested)
         ])
         for line in _frame_log:
             manifest.store_line(line)
@@ -256,6 +333,55 @@ func _initialize() -> void:
 
     print("PASS: rival workforce rendered lifecycle captures saved to ", OUTPUT_DIR)
     quit(0)
+
+
+func _ensure_resource_node(kind: String, worker: Node2D) -> bool:
+    var world: Node = _main.get("world")
+    var nav: Node = _main.get("nav")
+    var territory: Node = _main.get("territory")
+    var owner_region := String(_keep.get("region_id"))
+    var worker_cell: Vector2i = nav.call("cell_of", worker.global_position)
+    var claim_radius := float(_keep.get("claim_radius"))
+    var local_radius := maxf(claim_radius + 6.0, claim_radius * 4.0) * float(WorldConfig.tile_size)
+
+    for radius in range(2, 20):
+        for y in range(-radius, radius + 1):
+            for x in range(-radius, radius + 1):
+                if maxi(absi(x), absi(y)) != radius:
+                    continue
+                var cell := worker_cell + Vector2i(x, y)
+                if not bool(world.call("is_buildable", cell)) or world.get("occupied").has(cell):
+                    continue
+                if String(world.call("region_id", cell)) != owner_region:
+                    continue
+                if String(territory.call("owner_at", cell)) in ["player", "contested"]:
+                    continue
+                var node_position: Vector2 = nav.call("center_of", cell)
+                if _keep.position.distance_to(node_position) > local_radius:
+                    continue
+                var approach_path: PackedVector2Array = nav.call("path_adjacent", worker.global_position, [cell])
+                if approach_path.is_empty() or not bool(worker.call("_path_avoids_player_territory", approach_path)):
+                    continue
+
+                var resource_node: Node2D
+                if kind == "iron":
+                    resource_node = IRON_ORE_SCRIPT.new() as Node2D
+                elif kind == "stone":
+                    resource_node = ROCK_SCRIPT.new() as Node2D
+                else:
+                    return false
+                resource_node.position = node_position
+                resource_node.set("resource_cell", cell)
+                resource_node.set("world_map", world)
+                resource_node.name = "RivalWorkforceQA_%s_%d_%d" % [kind, cell.x, cell.y]
+                var entities: Node = world.get("entities")
+                entities.add_child(resource_node)
+                world.get("resource_nodes_by_cell")[cell] = resource_node
+                world.get("occupied")[cell] = resource_node
+                Events.resource_occupancy_changed.emit(cell)
+                await physics_frame
+                return true
+    return false
 
 
 func _check_limits(workers: Array[Node], labor: Dictionary) -> void:
