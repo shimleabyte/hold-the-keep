@@ -207,12 +207,16 @@ func _initialize() -> void:
     require(restored_main != null, "Save reload must recreate the campaign")
     restored_main.supply.set_process(false)
     var restored_destination = null
+    var restored_source = null
     for depot in get_nodes_in_group("depots"):
         if depot.id == "storage" and depot.cell == destination_cell:
             restored_destination = depot
-            break
+        elif depot.id == "storage" and depot.cell == source_cell:
+            restored_source = depot
     require(restored_destination != null,
         "The destination storage must be recreated on load")
+    require(restored_source != null,
+        "The source storage must be recreated on load")
     var restored_order := order_for(restored_main.supply.get_shipment_orders(), interrupted_id)
     require(int(restored_order.get("cargo", 0)) == 6,
         "Reload must preserve reserved cargo without duplication or loss")
@@ -220,6 +224,9 @@ func _initialize() -> void:
         "A saved interrupted order must be resumable after load")
 
     restored_main.supply._depot_connections[restored_destination.get_instance_id()] = true
+    # The cargo is already in escrow. Reconnecting the destination must resume
+    # it even when the original source remains isolated from the Keep.
+    restored_main.supply._depot_connections[restored_source.get_instance_id()] = false
     restored_main.supply.advance_shipment_orders()
     await ticks(300)
     var resumed_order := order_for(restored_main.supply.get_shipment_orders(), interrupted_id)

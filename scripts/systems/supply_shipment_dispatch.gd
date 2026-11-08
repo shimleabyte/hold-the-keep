@@ -57,14 +57,10 @@ func route_available(network: Variant, order_id: int) -> bool:
     )
     if destination == null or not network.is_depot_connected(destination):
         return false
-    # Queued cargo still needs a connected source. Once dispatched, the cargo is
-    # escrowed in transit; disconnecting the origin must not strand the courier.
-    if String(order.get("status", "")) == "in_transit":
-        return true
-    var source = network._find_depot(
-        Vector2i(int(order["source_x"]), int(order["source_y"]))
-    )
-    return source == null or network.is_depot_connected(source)
+    # Source and destination connectivity were validated before cargo left
+    # the source. From this point onward, escrow belongs to the order; a later
+    # origin disconnection must not strand queued, moving or saved cargo.
+    return true
 
 
 func carrier_blocked(network: Variant, order_id: int, carrier_position: Vector2) -> void:
