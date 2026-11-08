@@ -182,7 +182,7 @@ static func workforce_for_garrison(garrison_count: int) -> int:
 func workforce_size() -> int:
     var garrison_count: int = 0
     if owner_keep != null and is_instance_valid(owner_keep):
-        garrison_count = int(owner_keep.call("local_garrison_count"))
+        garrison_count = int(owner_keep.call("total_garrison_count"))
     return workforce_for_garrison(garrison_count)
 
 
@@ -250,7 +250,7 @@ func _credit_income(kind: String, amount: float) -> float:
 func labor_allocation() -> Dictionary:
     var garrison_count: int = 0
     if owner_keep != null and is_instance_valid(owner_keep):
-        garrison_count = int(owner_keep.call("local_garrison_count"))
+        garrison_count = int(owner_keep.call("total_garrison_count"))
     var remaining: int = workforce_for_garrison(garrison_count)
     var allocation: Dictionary = {
         "available": remaining,
@@ -644,6 +644,17 @@ func _spawn_structure(id: String, anchor: Vector2i, saved_hp: int = -1) -> bool:
 
 func on_structure_destroyed(structure: EnemySettlementStructure) -> void:
     structures.erase(structure)
+    if structure.structure_id == "outpost" and owner_keep != null and is_instance_valid(owner_keep):
+        # A lost forward position does not delete its defenders. They fall back to
+        # the stronghold and remain part of its paid garrison and civilian upkeep.
+        for guard_node: Node in owner_keep.get_tree().get_nodes_in_group("enemy_garrison"):
+            var guard: Enemy = guard_node as Enemy
+            if guard == null or not is_instance_valid(guard) or guard.is_queued_for_deletion():
+                continue
+            if guard.is_garrison and not guard.is_patrol and not guard.is_faction_raider:
+                if guard.guard_origin.distance_squared_to(structure.position) < 1.0:
+                    guard.reassign_garrison_post(owner_keep.position)
+
     for worker: Node in owner_keep.get_tree().get_nodes_in_group("enemy_economic_workers"):
         if not is_instance_valid(worker) or worker.get("civilization") != self:
             continue

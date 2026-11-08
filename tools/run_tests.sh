@@ -27,6 +27,7 @@ tests=(
     army_command_and_rival_civilization
     rival_civilization_persistence
     rival_physical_workforce
+    rival_outpost_garrison
     campaign_assault
     campaign_multi_stronghold
     workplace_assignments

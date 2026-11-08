@@ -209,6 +209,16 @@ func setup_guard(data: Dictionary, world_ref, flow_ref, player_ref, origin: Vect
     guard_origin = origin
 
 
+## Reassign a stronghold-owned guard without creating or deleting a military unit.
+## Patrol and camp-raid units retain their own command lifecycle.
+func reassign_garrison_post(origin: Vector2) -> void:
+    if not is_garrison or is_patrol or is_faction_raider:
+        return
+    guard_origin = origin
+    _guard_target_cache = null
+    _guard_target_scan_t = 0.0
+
+
 func setup_patrol(
     data: Dictionary,
     world_ref,

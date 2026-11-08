@@ -27,13 +27,15 @@
 ### Rival civilization foundation
 - Each enemy stronghold owns an independent resource ledger and scheduled development simulation.
 - Rival construction produces visible, destructible structures using existing art.
-- Initial development order: lumber camp, farm, quarry, barracks, tower, forge and storage.
+- Initial development order: lumber camp, farm, quarry, barracks, tower, forge, storage and a forward outpost.
 - Buildings generate resources; upkeep and construction/recruitment costs consume resources.
 - Barracks increase garrison capacity. Recruitment consumes food and wood, with an iron cost at higher technology.
 - Technology progresses through three military tiers using prerequisites, time and stored resources.
 - Rival structures and economy state are persisted as additive stronghold state.
 
-**Current limitation:** the initial economy foundation used abstract labor. The follow-up branch now instantiates visible rival workplace workers: lumber camps harvest trees, quarries harvest stone, forges harvest iron after rival Tier II research, and farms produce food on-site. Workers reserve world nodes, path locally and haul cargo to their own stronghold. Local depots, road-connected shipments, multi-settlement logistics, territorial expansion and coordinated offensive campaigns remain unfinished.
+**Current implementation:** rival workplace workers harvest real resources and haul cargo to their stronghold. Completed outposts project enemy territory and receive one defender by redeploying an existing stronghold guard. The home keep retains a two-guard minimum; outpost defenders count toward the same total garrison cap, food upkeep and eight-citizen workforce. Destroyed outposts send their defenders back to the stronghold. Guard origin is already part of save v17, so this does not add save fields.
+
+**Remaining limitation:** rival outposts do not yet have local depots or road-connected shipments. Secondary settlements, coordinated offensive campaigns, siege staging and retreat planning remain unfinished.
 
 ## Map-scale decision
 
