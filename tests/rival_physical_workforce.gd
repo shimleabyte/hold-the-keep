@@ -221,6 +221,7 @@ func _initialize() -> void:
 
     # Exercise the normal delivery path separately from save-time reconciliation:
     # harvested cargo must be credited once to this worker's owning rival ledger.
+    civilization.set("active", false)
     civilization.get("resources")["wood"] = 100.0
     var delivery_before: float = float(civilization.get("resources").get("wood", 0.0))
     _check(bool(woodcutter.call("receive", "wood", 5)),
@@ -243,6 +244,7 @@ func _initialize() -> void:
             str((woodcutter.get("_path") as PackedVector2Array).size()) if is_instance_valid(woodcutter) else "0",
             str(woodcutter.get("_retry_timer")) if is_instance_valid(woodcutter) else "0"
         ])
+    civilization.set("active", true)
 
     # Reconcile runtime staffing after the retired worker leaves; this is a
     # separate economy tick from the isolated delivery assertion above.
@@ -433,7 +435,8 @@ func _assert_quarry_acquires_iron_and_pays_forge(
     civilization: RefCounted
 ) -> void:
     keep.set("faction_id", "ashen_host")
-    for structure_id: String in ["farm", "quarry", "barracks"]:
+    civilization.set("active", false)
+    for structure_id: String in ["lumber_camp", "farm", "quarry", "barracks"]:
         if bool(civilization.call("_has_active_structure", structure_id)):
             continue
         var build_cell: Vector2i = civilization.call("_find_build_site", structure_id)
@@ -558,6 +561,11 @@ func _assert_quarry_acquires_iron_and_pays_forge(
     # the Forge transaction funded by the physical Quarry delivery.
     civilization.get("construction").clear()
     civilization.call("_reconcile_build_order_index")
+    var expected_forge_index: int = civilization.call("development_order").find("forge")
+    _check(int(civilization.get("build_order_index")) == expected_forge_index,
+        "The Forge must be the next missing siege-doctrine building after its prerequisites are present (order=%s index=%s expected=%s)" % [
+            str(civilization.call("development_order")), str(civilization.get("build_order_index")), str(expected_forge_index)
+        ])
     var iron_before := float(resources.get("iron", 0.0))
     var wood_before := float(resources.get("wood", 0.0))
     var stone_before := float(resources.get("stone", 0.0))
@@ -571,3 +579,4 @@ func _assert_quarry_acquires_iron_and_pays_forge(
         "Starting Forge construction must debit its full 75-wood cost from the rival ledger")
     _check(is_equal_approx(float(resources.get("stone", 0.0)), stone_before - 45.0),
         "Starting Forge construction must debit its full 45-stone cost from the rival ledger")
+    civilization.set("active", true)
