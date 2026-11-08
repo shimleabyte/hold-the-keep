@@ -55,6 +55,29 @@ func _run() -> void:
                 "Every faction/archetype pair must resolve both heraldic and specialist visual layers")
             enemy.free()
 
+    var stronghold_script := load("res://scripts/entities/enemy_keep.gd") as GDScript
+    assert(stronghold_script != null and stronghold_script.can_instantiate(),
+        "Rival stronghold renderer must compile with faction-specific architecture")
+    var stronghold_constants: Dictionary = stronghold_script.get_script_constant_map()
+    var stronghold_sprites: Dictionary = stronghold_constants.get("FACTION_SPRITES", {})
+    assert(stronghold_sprites.size() == EXPECTED_MOTIFS.size(),
+        "Each Frontier faction must have its own stronghold sprite")
+    var seen_stronghold_sprites: Dictionary = {}
+    for faction_id in EXPECTED_MOTIFS:
+        var stronghold_texture: Texture2D = stronghold_sprites.get(faction_id) as Texture2D
+        assert(stronghold_texture != null
+            and stronghold_texture.get_width() == 48
+            and stronghold_texture.get_height() == 56,
+            "Faction stronghold art must preserve the shared 3x3 footprint silhouette: " + faction_id)
+        assert(not seen_stronghold_sprites.has(stronghold_texture.get_instance_id()),
+            "Faction strongholds must not alias a shared placeholder sprite")
+        seen_stronghold_sprites[stronghold_texture.get_instance_id()] = faction_id
+    var fallback_stronghold: Texture2D = stronghold_constants.get("SPRITE") as Texture2D
+    assert(fallback_stronghold != null
+        and fallback_stronghold.get_width() == 48
+        and fallback_stronghold.get_height() == 56,
+        "Classic/legacy rival keeps must retain the neutral fallback sprite")
+
     var classic_enemy = enemy_script.new()
     classic_enemy.setup(data_db.enemies["bandit"], null, null, null, "")
     assert(classic_enemy.faction_visual.is_empty(),
