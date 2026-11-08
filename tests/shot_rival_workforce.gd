@@ -145,26 +145,26 @@ func _initialize() -> void:
         _fail("No lumber-camp worker was assigned in the rendered scenario")
         return
 
-    for _step in 240:
-        await _advance(0.1)
+    for _step in 40:
+        await _advance(1.0)
         if int(_worker.get("_state")) == 1 and _worker.get("_target") != null:
             break
     if int(_worker.get("_state")) != 1 or _worker.get("_target") == null:
         _fail("Woodcutter did not enter the reserved-resource travel state")
         return
     for frame_index in 4:
-        await _advance(0.5)
+        await _advance(1.0)
         await _capture("woodcutter-travel-%02d" % frame_index, _worker.global_position, 2.0, true)
 
-    for _step in 480:
+    for _step in 80:
         if int(_worker.get("_state")) == 2:
             break
-        await _advance(0.1)
+        await _advance(1.0)
     if int(_worker.get("_state")) != 2:
         _fail("Woodcutter did not reach the resource-work state")
         return
     for frame_index in 6:
-        await _advance(0.5)
+        await _advance(1.0)
         await _capture("woodcutter-harvest-%02d" % frame_index, _worker.global_position, 2.0, true)
         if int(_worker.get("carry")) > 0:
             break
@@ -179,12 +179,12 @@ func _initialize() -> void:
         _fail("Worker with harvested cargo did not begin its return trip")
         return
     for frame_index in 5:
-        await _advance(0.5)
+        await _advance(1.0)
         await _capture("woodcutter-hauling-%02d" % frame_index, _worker.global_position, 2.0, true)
 
     var delivered := false
-    for _step in 600:
-        await _advance(0.1)
+    for _step in 80:
+        await _advance(1.0)
         if int(_worker.get("carry")) == 0 and float(_civilization.get("resources").get("wood", 0.0)) > wood_before:
             delivered = true
             break
@@ -205,8 +205,8 @@ func _initialize() -> void:
             break
     if farmer != null:
         await _advance(0.1)
-        for frame_index in 3:
-            await _advance(0.8)
+        for frame_index in 5:
+            await _advance(1.0)
             await _capture("farmer-work-%02d" % frame_index, farmer.global_position, 2.0)
     else:
         _fail("Farm workers were not assigned under the farm-first doctrine")
@@ -228,8 +228,8 @@ func _initialize() -> void:
     if miner == null or forge_worker == null:
         _fail("Tier II rival doctrine did not staff both Quarry and Forge workers")
         return
-    for _step in 480:
-        await _advance(0.1)
+    for _step in 80:
+        await _advance(1.0)
         if int(miner.get("_state")) == 2 and int(forge_worker.get("_state")) == 2:
             break
     if int(forge_worker.get("_state")) == 2:
