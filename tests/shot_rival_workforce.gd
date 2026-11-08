@@ -339,6 +339,7 @@ func _ensure_resource_node(kind: String, worker: Node2D) -> bool:
     var world: Node = _main.get("world")
     var nav: Node = _main.get("nav")
     var territory: Node = _main.get("territory")
+    var event_bus: Node = root.get_node_or_null("Events")
     var owner_region := String(_keep.get("region_id"))
     var worker_cell: Vector2i = nav.call("cell_of", worker.global_position)
     var claim_radius := float(_keep.get("claim_radius"))
@@ -378,7 +379,8 @@ func _ensure_resource_node(kind: String, worker: Node2D) -> bool:
                 entities.add_child(resource_node)
                 world.get("resource_nodes_by_cell")[cell] = resource_node
                 world.get("occupied")[cell] = resource_node
-                Events.resource_occupancy_changed.emit(cell)
+                if event_bus != null:
+                    event_bus.emit_signal("resource_occupancy_changed", cell)
                 await physics_frame
                 return true
     return false
