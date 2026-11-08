@@ -364,6 +364,7 @@ func _initialize() -> void:
         quit(1)
         return
     var main: Variant = packed.instantiate()
+    var nav: Node = main.get("nav")
     root.add_child(main)
     current_scene = main
     await frames(8)
