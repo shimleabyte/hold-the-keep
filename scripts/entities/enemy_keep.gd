@@ -34,6 +34,7 @@ var stronghold_id: String = "classic_enemy_keep"
 var region_id: String = "HEARTHLAND"
 var faction_id: String = "classic_raiders"
 var _reinforce_timer: float = REINFORCE_INTERVAL
+var _outpost_guard_sync_timer := 0.0
 var _spawn_index: int = 0
 var _initial_garrison_pending: bool = false
 var civilization: EnemyCivilization
@@ -120,12 +121,41 @@ func _spawn_initial_garrison_now() -> void:
         _spawn_guard()
 
 
-func _local_garrison() -> Array[Enemy]:
+func _guards_at_origin(origin: Vector2) -> Array[Enemy]:
     var guards: Array[Enemy] = []
     for guard_node: Node in get_tree().get_nodes_in_group("enemy_garrison"):
         var guard: Enemy = guard_node as Enemy
-        if guard != null and is_instance_valid(guard) and guard.guard_origin.distance_squared_to(position) < 1.0:
+        if guard == null or not is_instance_valid(guard) or guard.is_queued_for_deletion():
+            continue
+        if not guard.is_garrison or guard.is_patrol or guard.is_faction_raider:
+            continue
+        if guard.guard_origin.distance_squared_to(origin) < 1.0:
             guards.append(guard)
+    return guards
+
+
+func _local_garrison() -> Array[Enemy]:
+    return _guards_at_origin(position)
+
+
+func _owned_garrison() -> Array[Enemy]:
+    var origins: Array[Vector2] = [position]
+    if civilization != null:
+        for structure: EnemySettlementStructure in civilization.structures:
+            if is_instance_valid(structure) and structure.structure_id == "outpost":
+                origins.append(structure.position)
+
+    var guards: Array[Enemy] = []
+    for guard_node: Node in get_tree().get_nodes_in_group("enemy_garrison"):
+        var guard: Enemy = guard_node as Enemy
+        if guard == null or not is_instance_valid(guard) or guard.is_queued_for_deletion():
+            continue
+        if not guard.is_garrison or guard.is_patrol or guard.is_faction_raider:
+            continue
+        for origin: Vector2 in origins:
+            if guard.guard_origin.distance_squared_to(origin) < 1.0:
+                guards.append(guard)
+                break
     return guards
 
 
@@ -133,24 +163,49 @@ func local_garrison_count() -> int:
     return _local_garrison().size()
 
 
+func total_garrison_count() -> int:
+    return _owned_garrison().size()
+
+
+## Give each completed outpost one defender by redeploying an existing home guard.
+## The stronghold keeps a two-unit defensive minimum; the total army cap is shared.
+func _sync_outpost_garrisons() -> void:
+    if civilization == null:
+        return
+    for structure: EnemySettlementStructure in civilization.structures:
+        if not is_instance_valid(structure) or structure.structure_id != "outpost":
+            continue
+        if not _guards_at_origin(structure.position).is_empty():
+            continue
+        var home_guards := _local_garrison()
+        if home_guards.size() <= 2:
+            continue
+        var guard: Enemy = home_guards[home_guards.size() - 1]
+        guard.reassign_garrison_post(structure.position)
+
+
 func _process(delta: float) -> void:
     if hp <= 0:
         return
     if civilization != null:
         civilization.advance(delta)
+        _outpost_guard_sync_timer -= delta
+        if _outpost_guard_sync_timer <= 0.0:
+            _outpost_guard_sync_timer = 1.0
+            _sync_outpost_garrisons()
     _reinforce_timer -= delta
     if _reinforce_timer > 0.0:
         return
     _reinforce_timer = REINFORCE_INTERVAL
     var garrison_cap: int = civilization.garrison_capacity() if civilization != null else 4
-    if _local_garrison().size() >= garrison_cap:
+    if total_garrison_count() >= garrison_cap:
         return
     if civilization == null:
         _spawn_guard()
         return
 
     var existing_unit_ids: Array[String] = []
-    for guard: Enemy in _local_garrison():
+    for guard: Enemy in _owned_garrison():
         existing_unit_ids.append(guard.id)
     var recruit_id: String = civilization.choose_recruitment_unit(existing_unit_ids)
     if not recruit_id.is_empty() and civilization.can_recruit(recruit_id):
@@ -215,7 +270,7 @@ func take_damage(amount: int) -> void:
     for occupied_cell: Vector2i in cells():
         if world.occupied.get(occupied_cell) == self:
             world.occupied.erase(occupied_cell)
-    for guard: Enemy in _local_garrison():
+    for guard: Enemy in _owned_garrison():
         guard.retreat()
     if civilization != null:
         civilization.on_keep_destroyed()

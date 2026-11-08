@@ -688,7 +688,7 @@ func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vecto
     if not _is_integral_number(data["build_order_index"]):
         return false
     var build_order_index: int = int(data["build_order_index"])
-    if build_order_index < 0 or build_order_index > 7:
+    if build_order_index < 0 or build_order_index > 8:
         return false
     if typeof(data["tick_accumulator"]) not in [TYPE_INT, TYPE_FLOAT]:
         return false
@@ -703,7 +703,8 @@ func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vecto
         "barracks": Vector2i(2, 2),
         "tower": Vector2i(1, 1),
         "forge": Vector2i(2, 2),
-        "storage": Vector2i(2, 2)
+        "storage": Vector2i(2, 2),
+        "outpost": Vector2i(2, 2)
     }
     var hit_points: Dictionary = {
         "lumber_camp": 180,
@@ -712,7 +713,8 @@ func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vecto
         "barracks": 260,
         "tower": 320,
         "forge": 240,
-        "storage": 190
+        "storage": 190,
+        "outpost": 260
     }
     var occupied_cells: Dictionary = {}
     for keep_y: int in 3:
@@ -807,6 +809,8 @@ func _valid_rival_civilization(data: Dictionary, map_size: int, keep_cell: Vecto
                 required_work = 18.0
             "forge":
                 required_work = 28.0
+            "outpost":
+                required_work = 26.0
             _:
                 required_work = 16.0
         if not is_finite(remaining) or remaining < 0.0 or remaining > required_work:
