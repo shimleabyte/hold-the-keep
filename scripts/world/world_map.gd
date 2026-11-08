@@ -601,7 +601,11 @@ func _place_iron_node(cell: Vector2i) -> void:
     if not generate_resource_nodes:
         occupied[cell] = true
         return
-    var ore := IRON_SCRIPT.new()
+    # StaticBody2D provides the native base instance; attach the authored
+    # IronOre behavior before entering the scene tree. This avoids the failing
+    # GDScript .new() path observed in Godot 4.7 during Classic world generation.
+    var ore := StaticBody2D.new()
+    ore.set_script(IRON_SCRIPT)
     ore.position = Vector2(
         cell.x * tile_size + tile_size / 2.0,
         cell.y * tile_size + tile_size

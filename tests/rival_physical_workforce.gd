@@ -38,6 +38,14 @@ func _initialize() -> void:
     var navigation: Node = main_scene.get("nav")
     _check(navigation != null and int(navigation.get("version")) > 0,
         "Physical rival workers require an initialized navigation grid")
+    var world: Node = main_scene.get("world")
+    var generated_iron_nodes := 0
+    for cell_value in world.get("resource_nodes_by_cell").keys():
+        var resource_node: Node = world.call("resource_node_at", Vector2i(cell_value))
+        if resource_node != null and is_instance_valid(resource_node) and String(resource_node.get("yield_kind")) == "iron" and int(resource_node.get("_hp")) > 0:
+            generated_iron_nodes += 1
+    _check(generated_iron_nodes > 0,
+        "Classic world generation must instantiate live IronOre nodes for Tier II rival Forges")
 
     # The opening lumber camp is funded by the existing finite starting stock.
     # Advance the deterministic economy clock until the first workplace completes.

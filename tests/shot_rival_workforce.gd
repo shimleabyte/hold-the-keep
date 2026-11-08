@@ -4,6 +4,7 @@ extends SceneTree
 
 const OUTPUT_DIR := "/tmp/hold-the-keep-rival-workforce-qa"
 const FRAME_DIR := OUTPUT_DIR + "/frames"
+const TREE_SCRIPT := preload("res://scripts/entities/resource_tree.gd")
 const ROCK_SCRIPT := preload("res://scripts/entities/rock.gd")
 const IRON_ORE_SCRIPT := preload("res://scripts/entities/iron_ore.gd")
 
@@ -164,12 +165,18 @@ func _initialize() -> void:
         _fail("No lumber-camp worker was assigned in the rendered scenario")
         return
 
-    for _step in 40:
+    for _step in 120:
         await _advance(1.0)
         if int(_worker.get("_state")) == 1 and _worker.get("_target") != null:
             break
     if int(_worker.get("_state")) != 1 or _worker.get("_target") == null:
-        _fail("Woodcutter did not enter the reserved-resource travel state")
+        var wood_created: bool = await _ensure_resource_node("wood", _worker)
+        if not wood_created:
+            _fail("Could not place a reachable tree for the woodcutter acceptance")
+            return
+        await _advance(1.0)
+    if int(_worker.get("_state")) != 1 or _worker.get("_target") == null:
+        _fail("Woodcutter did not enter the reserved-resource travel state after deterministic fallback")
         return
     for frame_index in 4:
         await _advance(1.0)
@@ -364,21 +371,19 @@ func _ensure_resource_node(kind: String, worker: Node2D) -> bool:
                 if approach_path.is_empty() or not bool(worker.call("_path_avoids_player_territory", approach_path)):
                     continue
 
-                var resource_node: Node2D
-                if kind == "iron":
-                    resource_node = IRON_ORE_SCRIPT.new() as Node2D
-                elif kind == "stone":
-                    resource_node = ROCK_SCRIPT.new() as Node2D
-                else:
-                    return false
-                resource_node.position = node_position
-                resource_node.set("resource_cell", cell)
-                resource_node.set("world_map", world)
+                var resource_node: StaticBody2D = StaticBody2D.new()
+                match kind:
+                    "wood":
+                        resource_node.set_script(TREE_SCRIPT)
+                    "stone":
+                        resource_node.set_script(ROCK_SCRIPT)
+                    "iron":
+                        resource_node.set_script(IRON_ORE_SCRIPT)
+                    _:
+                        return false
                 resource_node.name = "RivalWorkforceQA_%s_%d_%d" % [kind, cell.x, cell.y]
-                var entities: Node = world.get("entities")
-                entities.add_child(resource_node)
-                world.get("resource_nodes_by_cell")[cell] = resource_node
-                world.get("occupied")[cell] = resource_node
+                resource_node.position = node_position
+                world.call("_register_resource_node", resource_node, cell)
                 if event_bus != null:
                     event_bus.emit_signal("resource_occupancy_changed", cell)
                 await physics_frame
