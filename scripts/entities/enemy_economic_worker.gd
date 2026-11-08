@@ -169,12 +169,24 @@ func _tick_resource_work(delta: float) -> void:
 
     var kind := String(_target.get("yield_kind"))
     var interval := float(RESOURCE_WORK_SECONDS.get(kind, 4.0))
-    if not civilization.can_receive(kind, int(RESOURCE_BATCH_YIELD.get(kind, 1))):
+    # RESOURCE_BATCH_YIELD includes the ordinary hits and the depletion bonus.
+    # Reserve room for the complete possible node yield before starting another hit.
+    var batch_yield := int(RESOURCE_BATCH_YIELD.get(kind, 1))
+    if (
+        not civilization.can_receive(kind, batch_yield)
+        or carry + batch_yield > CARRY_CAPACITY
+    ):
         _begin_return_to_keep()
         return
 
     _work_timer += delta
     while _work_timer >= interval and _state == State.WORKING_RESOURCE:
+        if (
+            not civilization.can_receive(kind, batch_yield)
+            or carry + batch_yield > CARRY_CAPACITY
+        ):
+            _begin_return_to_keep()
+            return
         _work_timer -= interval
         if not _target_is_claimed_and_harvestable():
             _release_target()
@@ -194,16 +206,24 @@ func _tick_resource_work(delta: float) -> void:
 
 
 func _tick_farming(delta: float) -> void:
-    if retiring or not civilization.can_receive("food", FARM_CYCLE_YIELD):
+    if (
+        retiring
+        or not civilization.can_receive("food", FARM_CYCLE_YIELD)
+        or carry + FARM_CYCLE_YIELD > CARRY_CAPACITY
+    ):
         _begin_return_to_keep()
         return
     _work_timer += delta
     while _work_timer >= FARM_CYCLE_SECONDS and _state == State.FARMING:
-        _work_timer -= FARM_CYCLE_SECONDS
-        receive("food", FARM_CYCLE_YIELD)
-        if carry >= CARRY_CAPACITY:
+        # A complete farm cycle is atomic: never start one unless all its food fits.
+        if (
+            not civilization.can_receive("food", FARM_CYCLE_YIELD)
+            or carry + FARM_CYCLE_YIELD > CARRY_CAPACITY
+        ):
             _begin_return_to_keep()
             return
+        _work_timer -= FARM_CYCLE_SECONDS
+        receive("food", FARM_CYCLE_YIELD)
     _play_clip("work")
 
 
@@ -456,6 +476,9 @@ func _begin_return_to_keep() -> void:
     _path.clear()
     _path_version = -1
     if not _repath_current_state():
+        # Remember this failed topology. Without the version stamp, TO_KEEP
+        # retries the same A* request every rendered frame before its cooldown.
+        _path_version = int(nav.version)
         _retry_timer = 1.0
     _play_clip("walk")
 
@@ -505,12 +528,17 @@ func _target_work_interval(kind: String) -> float:
     return float(RESOURCE_WORK_SECONDS.get(kind, 4.0))
 
 
-func receive(kind: String, amount: int) -> void:
+func receive(kind: String, amount: int) -> bool:
     if amount <= 0 or (not carry_kind.is_empty() and carry_kind != kind):
-        return
+        return false
+    # Reject an impossible transfer atomically. Harvest/farm callers must check
+    # capacity before producing so this never silently clamps valid output.
+    if carry + amount > CARRY_CAPACITY:
+        return false
     carry_kind = kind
-    carry = mini(CARRY_CAPACITY, carry + amount)
+    carry += amount
     queue_redraw()
+    return true
 
 
 func has_cargo() -> bool:
