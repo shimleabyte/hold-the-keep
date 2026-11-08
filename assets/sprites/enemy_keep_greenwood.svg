@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="56" viewBox="0 0 48 56" shape-rendering="crispEdges">
+<!-- Greenwood: a thorn-wrapped timber ringfort -->
+<path d="M2 54V23L7 18L12 22L17 15L23 21L29 14L34 20L41 17L46 24V54Z" fill="#252e2a"/>
+<path d="M5 52V25L11 27L17 19L23 25L29 18L35 25L42 22L44 52Z" fill="#425346"/>
+<!-- uneven timber courses -->
+<path d="M7 29H42M6 37H43M5 45H44" stroke="#293c31" stroke-width="2"/>
+<path d="M8 28H15M20 28H27M32 28H40M8 36H19M24 36H40M7 44H16M22 44H41" stroke="#87906b" stroke-width="1"/>
+<path d="M13 24V51M35 24V51" stroke="#293b30" stroke-width="2"/>
+<!-- crooked thorn towers -->
+<path d="M1 23L1 12L4 16L6 7L9 15L12 11L14 24Z" fill="#334337"/>
+<path d="M34 23L36 11L39 15L41 6L43 15L47 11L47 24Z" fill="#334337"/>
+<path d="M2 15L5 18L7 12L10 17M37 15L40 18L42 11L45 17" stroke="#a0a078" stroke-width="1"/>
+<!-- central timber hall under root-like roof -->
+<path d="M13 26L24 9L36 26V32H13Z" fill="#252b27"/><path d="M16 25L24 12L33 25V29H16Z" fill="#6b6748"/>
+<path d="M16 25L24 13L32 25" stroke="#bac08a" stroke-width="1.5" fill="none"/>
+<path d="M24 9L21 4L18 7M24 9L27 3L31 7" stroke="#6c8a58" stroke-width="2" fill="none"/>
+<!-- thorn banner -->
+<rect x="33" y="1" width="2" height="17" fill="#3e3024"/>
+<path d="M35 3H46L42 7L46 11H35Z" fill="#4f7a54"/>
+<path d="M35 3H42L39 7H35Z" fill="#9ca875"/>
+<path d="M38 4L40 7L38 10" stroke="#d0c99b" stroke-width="1" fill="none"/>
+<!-- root gate -->
+<path d="M16 53V39L20 33H28L32 39V53Z" fill="#242a27"/>
+<path d="M19 52V40L21 36H27L29 40V52Z" fill="#4c4937"/>
+<path d="M20 39L24 35L28 39M21 42L27 49M27 42L21 49" stroke="#a18a5c" stroke-width="1"/>
+<rect x="23" y="45" width="2" height="2" fill="#d4bc7e"/>
+<!-- moss, roots and earthwork -->
+<path d="M4 50L8 48L11 51L15 49L18 53M30 53L34 49L38 51L43 47L46 51" stroke="#73845a" stroke-width="2" fill="none"/>
+<rect x="2" y="54" width="44" height="2" fill="#28332d"/>
+</svg>
