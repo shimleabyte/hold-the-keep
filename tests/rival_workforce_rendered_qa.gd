@@ -122,7 +122,7 @@ func _find_free_cell(origin: Vector2, reserved: Dictionary) -> Vector2i:
                 if maxi(absi(x), absi(y)) != radius:
                     continue
                 var cell := origin_cell + Vector2i(x, y)
-                if not bool(world_config.call("is_valid_cell", cell) or reserved.has(cell):
+                if not bool(world_config.call("is_valid_cell", cell)) or reserved.has(cell):
                     continue
                 if not world.is_buildable(cell) or world.occupied.has(cell):
                     continue
@@ -446,7 +446,7 @@ func _initialize() -> void:
     for keep_cell in keep_cells:
         for direction in DIRS4:
             var adjacent := keep_cell + direction
-            if bool(world_config.call("is_valid_cell", adjacent) and not keep_cells.has(adjacent):
+            if bool(world_config.call("is_valid_cell", adjacent)) and not keep_cells.has(adjacent):
                 navigation.get("astar").set_point_solid(adjacent, true)
                 blocked_cells[adjacent] = true
     navigation.set("version", int(navigation.get("version")) + 1)
