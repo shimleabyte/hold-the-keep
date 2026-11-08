@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="56" viewBox="0 0 48 56" shape-rendering="crispEdges">
+<!-- Fen Cult: a stilted reed shrine-fort above dark water -->
+<path d="M4 54V26L9 21H39L44 26V54Z" fill="#29342f"/><path d="M7 52V28L12 24H36L41 28V52Z" fill="#596b5c"/>
+<!-- reed lattice and bark panels -->
+<path d="M10 25V52M15 25V52M20 25V52M28 25V52M33 25V52M38 25V52" stroke="#34493e" stroke-width="1.5"/>
+<path d="M8 33H40M8 41H40M8 49H40" stroke="#87927b" stroke-width="1"/>
+<path d="M9 29L15 34L9 39M39 29L33 34L39 39" stroke="#a4a184" stroke-width="1" fill="none"/>
+<!-- raised stilts -->
+<path d="M8 49L5 56M16 49L14 56M32 49L34 56M40 49L43 56" stroke="#493f2c" stroke-width="3"/>
+<path d="M5 54H43" stroke="#2c4944" stroke-width="2"/>
+<!-- broad sagging reed roof -->
+<path d="M1 27L7 16L17 11L23 6L30 11L41 16L47 27L43 30L38 22L10 22L5 30Z" fill="#333b30"/>
+<path d="M5 25L10 17L23 9L29 13L42 20L44 25H5Z" fill="#7a805e"/>
+<path d="M7 23L13 17M14 19L21 13M25 12L30 16M33 16L39 22" stroke="#b1a87b" stroke-width="1.5"/>
+<path d="M10 24L14 22L18 25M28 24L32 21L37 25" stroke="#4b5842" stroke-width="2" fill="none"/>
+<!-- reed spires -->
+<path d="M8 17L5 5M5 5L2 2M5 5L9 1M40 17L43 5M43 5L39 2M43 5L47 1" stroke="#8d9872" stroke-width="2" fill="none"/>
+<path d="M21 12L20 2M20 2L17 0M20 2L23 0" stroke="#aab18b" stroke-width="1.5" fill="none"/>
+<!-- ivory reed sigil -->
+<rect x="34" y="1" width="2" height="18" fill="#4c3e2c"/>
+<path d="M36 3L43 6L36 11M36 6L30 9L36 13" stroke="#c3c1a0" stroke-width="1.5" fill="none"/>
+<circle cx="36" cy="7" r="2" fill="#d1c59d"/>
+<!-- shrine gate and pale bones -->
+<path d="M16 53V38L20 31H28L32 38V53Z" fill="#27312d"/>
+<path d="M19 52V39L22 34H26L29 39V52Z" fill="#3d4e42"/>
+<path d="M19 39L24 34L29 39M20 42L28 49M28 42L20 49" stroke="#b6b194" stroke-width="1.5" fill="none"/>
+<rect x="23" y="44" width="2" height="3" fill="#d4c9a5"/>
+<!-- shallow water and lantern -->
+<path d="M2 54H11L14 52L18 54H30L34 52L39 54H46" stroke="#59776f" stroke-width="1.5" fill="none"/>
+<rect x="4" y="35" width="2" height="5" fill="#b67b45"/><rect x="4" y="33" width="2" height="3" fill="#e2b96c"/>
+</svg>
