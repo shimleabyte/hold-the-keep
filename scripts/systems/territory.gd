@@ -17,6 +17,7 @@ func _ready() -> void:
     Events.building_destroyed.connect(_mark_dirty)
     Events.enemy_stronghold_placed.connect(_mark_enemy_dirty)
     Events.enemy_stronghold_destroyed.connect(_mark_enemy_dirty)
+    Events.enemy_outpost_changed.connect(_mark_enemy_dirty)
     Events.campaign_objective_completed.connect(_on_campaign_objective_completed)
 
 
@@ -66,17 +67,11 @@ func rebuild() -> void:
     for stronghold in get_tree().get_nodes_in_group("enemy_strongholds"):
         if not is_instance_valid(stronghold):
             continue
-        var center := Vector2(stronghold.cell) + Vector2(stronghold.size) / 2.0
-        var radius := float(stronghold.claim_radius)
-        var min_x := maxi(0, floori(center.x - radius))
-        var max_x := mini(WorldConfig.map_size - 1, ceili(center.x + radius))
-        var min_y := maxi(0, floori(center.y - radius))
-        var max_y := mini(WorldConfig.map_size - 1, ceili(center.y + radius))
-        for y in range(min_y, max_y + 1):
-            for x in range(min_x, max_x + 1):
-                var tile_center := Vector2(x + 0.5, y + 0.5)
-                if tile_center.distance_squared_to(center) <= radius * radius:
-                    enemy_next[Vector2i(x, y)] = true
+        _add_enemy_claim(enemy_next, stronghold.cell, stronghold.size, float(stronghold.claim_radius))
+    for structure in get_tree().get_nodes_in_group("enemy_buildings"):
+        if not is_instance_valid(structure) or String(structure.get("structure_id")) != "outpost":
+            continue
+        _add_enemy_claim(enemy_next, structure.get("cell"), structure.get("size"), float(structure.get("claim_radius")))
     # A conquered region becomes player-controlled land, not merely neutral land
     # after its last stronghold is removed.
     if not conquered_regions.is_empty():
@@ -91,6 +86,21 @@ func rebuild() -> void:
     _rebuild_region_states()
     Events.territory_changed.emit(claimed_cells.size())
     queue_redraw()
+
+
+func _add_enemy_claim(target: Dictionary, anchor: Vector2i, footprint: Vector2i, radius: float) -> void:
+    if radius <= 0.0:
+        return
+    var center := Vector2(anchor) + Vector2(footprint) / 2.0
+    var min_x := maxi(0, floori(center.x - radius))
+    var max_x := mini(WorldConfig.map_size - 1, ceili(center.x + radius))
+    var min_y := maxi(0, floori(center.y - radius))
+    var max_y := mini(WorldConfig.map_size - 1, ceili(center.y + radius))
+    for y in range(min_y, max_y + 1):
+        for x in range(min_x, max_x + 1):
+            var tile_center := Vector2(x + 0.5, y + 0.5)
+            if tile_center.distance_squared_to(center) <= radius * radius:
+                target[Vector2i(x, y)] = true
 
 
 func _rebuild_region_states() -> void:
@@ -203,6 +213,33 @@ func can_place(id: String, anchor: Vector2i, size: Vector2i) -> bool:
 
 func _is_frontier_cell(cell: Vector2i) -> bool:
     return not claimed_cells.has(cell) and not enemy_claimed_cells.has(cell) and _touches_claim(cell)
+
+
+func can_enemy_place_outpost(anchor: Vector2i, size: Vector2i) -> bool:
+    _ensure_current()
+    var touches_frontier := false
+    var has_neutral_footprint := false
+    for y in range(size.y):
+        for x in range(size.x):
+            var cell := anchor + Vector2i(x, y)
+            if not world.is_buildable(cell):
+                return false
+            var owner := owner_at(cell)
+            if owner == "player" or owner == "contested":
+                return false
+            if owner != "enemy":
+                has_neutral_footprint = true
+                if _touches_enemy_claim(cell):
+                    touches_frontier = true
+    return touches_frontier and has_neutral_footprint
+
+
+func _touches_enemy_claim(cell: Vector2i) -> bool:
+    for y in range(-1, 2):
+        for x in range(-1, 2):
+            if enemy_claimed_cells.has(cell + Vector2i(x, y)):
+                return true
+    return false
 
 
 func owner_at(cell: Vector2i) -> String:

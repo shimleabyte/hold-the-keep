@@ -21,6 +21,7 @@ const FARM_CYCLE_SECONDS := 4.8
 const FARM_CYCLE_YIELD := 3
 const TARGET_RETRY_SECONDS := 2.5
 const MAX_PATH_CHECKS := 24
+const OUTPOST_WORK_RADIUS := 24.0
 const RESOURCE_WORK_SECONDS := {
     "wood": 3.0,
     "stone": 4.8,
@@ -445,7 +446,17 @@ func _resource_cell_is_available(cell: Vector2i, node: Node2D) -> bool:
         float(owner_keep.get("claim_radius")) + 6.0,
         float(owner_keep.get("claim_radius")) * 4.0
     )
-    if owner_keep.position.distance_to(node.position) > local_work_radius * float(WorldConfig.tile_size):
+    var within_work_radius := owner_keep.position.distance_to(node.position) <= local_work_radius * float(WorldConfig.tile_size)
+    if not within_work_radius and owner_keep.is_inside_tree():
+        for outpost: Node in owner_keep.get_tree().get_nodes_in_group("enemy_buildings"):
+            if not is_instance_valid(outpost) or String(outpost.get("structure_id")) != "outpost":
+                continue
+            if outpost.get("owner_keep") != owner_keep:
+                continue
+            if outpost.position.distance_to(node.position) <= OUTPOST_WORK_RADIUS * float(WorldConfig.tile_size):
+                within_work_radius = true
+                break
+    if not within_work_radius:
         return false
     if territory != null and is_instance_valid(territory):
         var ownership := String(territory.call("owner_at", cell))

@@ -113,5 +113,28 @@ func _initialize() -> void:
     assert(not main.territory.is_claimed(expansion_target),
         "Removing Outpost must release its exclusive claim")
 
-    print("PASS: Keep claims, build restriction, Outpost frontier placement, expansion, and claim release")
+    var rival_strongholds: Array = get_nodes_in_group("enemy_strongholds")
+    assert(not rival_strongholds.is_empty(), "Classic campaign must expose a rival stronghold")
+    if not rival_strongholds.is_empty():
+        var rival_keep: Node2D = rival_strongholds[0] as Node2D
+        var rival_civilization: RefCounted = rival_keep.get("civilization") as RefCounted
+        var rival_outpost_cell: Vector2i = rival_civilization.call("_find_build_site", "outpost")
+        assert(rival_outpost_cell.x >= 0,
+            "Rival civilization must find a neutral frontier site for its first outpost")
+        assert(main.territory.can_enemy_place_outpost(rival_outpost_cell, Vector2i(2, 2)),
+            "Rival outpost placement must touch rival land without occupying player or contested land")
+        assert(rival_civilization.call("_spawn_structure", "outpost", rival_outpost_cell, -1),
+            "Rival civilization must be able to complete a paid-plan outpost structure")
+        main.territory.rebuild()
+        assert(main.territory.owner_at(rival_outpost_cell) == "enemy",
+            "A rival outpost must extend enemy territory beyond its stronghold")
+        var rival_outpost: Node = main.world.occupied.get(rival_outpost_cell)
+        assert(rival_outpost != null and String(rival_outpost.get("structure_id")) == "outpost",
+            "Rival outpost must be a distinct destructible faction structure")
+        rival_outpost.call("take_damage", 9999)
+        main.territory.rebuild()
+        assert(main.territory.owner_at(rival_outpost_cell) != "enemy",
+            "Destroying a rival outpost must release its exclusive territorial claim")
+
+    print("PASS: player and rival Outposts expand frontier claims and release them when destroyed")
     quit()

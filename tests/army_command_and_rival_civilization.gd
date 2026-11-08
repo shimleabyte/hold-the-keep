@@ -323,16 +323,16 @@ func _initialize() -> void:
         }
         var expected_orders: Dictionary = {
             "greenwood_raiders": [
-                "lumber_camp", "quarry", "barracks", "farm", "tower", "forge", "storage"
+                "lumber_camp", "quarry", "barracks", "farm", "tower", "forge", "storage", "outpost"
             ],
             "iron_legion": [
-                "lumber_camp", "quarry", "tower", "farm", "barracks", "storage", "forge"
+                "lumber_camp", "quarry", "tower", "farm", "barracks", "storage", "forge", "outpost"
             ],
             "fen_cult": [
-                "farm", "lumber_camp", "quarry", "storage", "barracks", "tower", "forge"
+                "farm", "lumber_camp", "quarry", "storage", "barracks", "tower", "forge", "outpost"
             ],
             "ashen_host": [
-                "quarry", "lumber_camp", "farm", "barracks", "forge", "tower", "storage"
+                "quarry", "lumber_camp", "farm", "barracks", "forge", "tower", "storage", "outpost"
             ]
         }
         for faction_key: Variant in expected_orders:

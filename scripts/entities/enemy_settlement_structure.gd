@@ -10,7 +10,8 @@ const TEXTURES: Dictionary = {
     "barracks": preload("res://assets/sprites/barracks.svg"),
     "tower": preload("res://assets/sprites/tower.svg"),
     "forge": preload("res://assets/sprites/forge.svg"),
-    "storage": preload("res://assets/sprites/storage.svg")
+    "storage": preload("res://assets/sprites/storage.svg"),
+    "outpost": preload("res://assets/sprites/outpost.svg")
 }
 const FOOTPRINTS: Dictionary = {
     "lumber_camp": Vector2i(2, 2),
@@ -19,7 +20,8 @@ const FOOTPRINTS: Dictionary = {
     "barracks": Vector2i(2, 2),
     "tower": Vector2i(1, 1),
     "forge": Vector2i(2, 2),
-    "storage": Vector2i(2, 2)
+    "storage": Vector2i(2, 2),
+    "outpost": Vector2i(2, 2)
 }
 const HIT_POINTS: Dictionary = {
     "lumber_camp": 180,
@@ -28,7 +30,8 @@ const HIT_POINTS: Dictionary = {
     "barracks": 260,
     "tower": 320,
     "forge": 240,
-    "storage": 190
+    "storage": 190,
+    "outpost": 260
 }
 
 var world: WorldMap
@@ -39,6 +42,7 @@ var cell: Vector2i = Vector2i.ZERO
 var size: Vector2i = Vector2i.ONE
 var hp: int = 100
 var max_hp: int = 100
+var claim_radius: float = 0.0
 
 
 func setup(world_ref: WorldMap, keep_ref: Node2D, id: String, anchor: Vector2i, saved_hp: int = -1) -> void:
@@ -49,6 +53,7 @@ func setup(world_ref: WorldMap, keep_ref: Node2D, id: String, anchor: Vector2i, 
     cell = anchor
     size = FOOTPRINTS.get(id, Vector2i.ONE)
     max_hp = int(HIT_POINTS.get(id, 120))
+    claim_radius = 6.5 if id == "outpost" else 0.0
     hp = max_hp if saved_hp < 0 else clampi(saved_hp, 1, max_hp)
     position = Vector2(
         (cell.x + size.x / 2.0) * WorldConfig.tile_size,
@@ -100,6 +105,8 @@ func _die() -> void:
             Events.resource_occupancy_changed.emit(occupied_cell)
     remove_from_group("campaign_targets")
     remove_from_group("enemy_buildings")
+    if structure_id == "outpost":
+        Events.enemy_outpost_changed.emit(cell)
     if owner_keep != null and is_instance_valid(owner_keep):
         var owner_civilization: RefCounted = owner_keep.get("civilization") as RefCounted
         if owner_civilization != null:

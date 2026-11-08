@@ -13,25 +13,26 @@ const BUILD_PLAN: Array[Dictionary] = [
     {"id": "barracks", "cost": {"wood": 80, "stone": 45, "food": 25}, "work": 25.0},
     {"id": "tower", "cost": {"wood": 40, "stone": 50}, "work": 18.0},
     {"id": "forge", "cost": {"wood": 75, "stone": 45, "iron": 12}, "work": 28.0},
-    {"id": "storage", "cost": {"wood": 55, "stone": 25}, "work": 18.0}
+    {"id": "storage", "cost": {"wood": 55, "stone": 25}, "work": 18.0},
+    {"id": "outpost", "cost": {"wood": 75, "stone": 45}, "work": 26.0}
 ]
 ## Rival factions now use different economic investment sequences. Each order contains
 ## the same buildings and costs; doctrine changes opportunity cost, not resource supply.
 const DEFAULT_BUILD_ORDER: Array[String] = [
-    "lumber_camp", "farm", "quarry", "barracks", "tower", "forge", "storage"
+    "lumber_camp", "farm", "quarry", "barracks", "tower", "forge", "storage", "outpost"
 ]
 const DOCTRINE_BUILD_ORDERS: Dictionary = {
     "ambush": [
-        "lumber_camp", "quarry", "barracks", "farm", "tower", "forge", "storage"
+        "lumber_camp", "quarry", "barracks", "farm", "tower", "forge", "storage", "outpost"
     ],
     "fortress": [
-        "lumber_camp", "quarry", "tower", "farm", "barracks", "storage", "forge"
+        "lumber_camp", "quarry", "tower", "farm", "barracks", "storage", "forge", "outpost"
     ],
     "attrition": [
-        "farm", "lumber_camp", "quarry", "storage", "barracks", "tower", "forge"
+        "farm", "lumber_camp", "quarry", "storage", "barracks", "tower", "forge", "outpost"
     ],
     "siege": [
-        "quarry", "lumber_camp", "farm", "barracks", "forge", "tower", "storage"
+        "quarry", "lumber_camp", "farm", "barracks", "forge", "tower", "storage", "outpost"
     ]
 }
 const WORKFORCE_CAPACITY: int = 8
@@ -580,7 +581,9 @@ func _find_build_site(id: String) -> Vector2i:
     if owner_keep == null or not is_instance_valid(owner_keep):
         return Vector2i(-1, -1)
     var footprint: Vector2i = STRUCTURE_SCRIPT.FOOTPRINTS.get(id, Vector2i.ONE)
-    for radius: int in range(4, 15):
+    var search_start := 8 if id == "outpost" else 4
+    var search_end := 23 if id == "outpost" else 15
+    for radius: int in range(search_start, search_end):
         for y: int in range(-radius, radius + 1):
             for x: int in range(-radius, radius + 1):
                 if maxi(absi(x), absi(y)) != radius:
@@ -603,6 +606,10 @@ func _placement_valid(id: String, anchor: Vector2i, footprint: Vector2i = Vector
         actual_size = STRUCTURE_SCRIPT.FOOTPRINTS.get(id, Vector2i.ONE)
     if not STRUCTURE_SCRIPT.FOOTPRINTS.has(id) or not WorldConfig.is_valid_cell(anchor):
         return false
+    if id == "outpost":
+        var territory_node: Node = _main_scene.get("territory") as Node if _main_scene != null else null
+        if territory_node == null or not territory_node.call("can_enemy_place_outpost", anchor, actual_size):
+            return false
     for y: int in actual_size.y:
         for x: int in actual_size.x:
             var cell: Vector2i = anchor + Vector2i(x, y)
@@ -628,6 +635,8 @@ func _spawn_structure(id: String, anchor: Vector2i, saved_hp: int = -1) -> bool:
         owner_world.occupied[occupied_cell] = structure
         Events.resource_occupancy_changed.emit(occupied_cell)
     structures.append(structure)
+    if id == "outpost":
+        Events.enemy_outpost_changed.emit(anchor)
     return true
 
 
