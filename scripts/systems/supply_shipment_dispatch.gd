@@ -57,7 +57,10 @@ func route_available(network: Variant, order_id: int) -> bool:
     )
     if destination == null or not network.is_depot_connected(destination):
         return false
-    # Source stock was already withdrawn. A destroyed source no longer blocks delivery.
+    # Queued cargo still needs a connected source. Once dispatched, the cargo is
+    # escrowed in transit; disconnecting the origin must not strand the courier.
+    if String(order.get("status", "")) == "in_transit":
+        return true
     var source = network._find_depot(
         Vector2i(int(order["source_x"]), int(order["source_y"]))
     )

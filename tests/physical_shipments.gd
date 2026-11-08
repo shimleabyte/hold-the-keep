@@ -87,6 +87,35 @@ func _initialize() -> void:
     require(String(order_for(main.supply.get_shipment_orders(), withdrawal_id)["status"]) == "delivered",
         "The Keep-bound physical withdrawal must complete")
 
+    # A source may become isolated after its cargo has left. The in-flight
+    # courier must still finish when the destination remains connected.
+    var source_disconnect_id: int = main.supply.create_shipment(source_cell, destination_cell, "wood", 4)
+    require(source_disconnect_id > 0,
+        "A connected source must be able to dispatch cargo before losing its road link")
+    await ticks(12)
+    var source_disconnect_order := order_for(main.supply.get_shipment_orders(), source_disconnect_id)
+    require(String(source_disconnect_order.get("status", "")) == "in_transit",
+        "The origin-disconnect scenario must begin with a moving courier")
+    var source_disconnect_position := Vector2(
+        float(source_disconnect_order["x"]), float(source_disconnect_order["y"])
+    )
+    require(source_disconnect_position.distance_to(source.position) > 0.5,
+        "The courier must have departed before the origin is disconnected")
+    main.supply._depot_connections[source.get_instance_id()] = false
+    main.supply.advance_shipment_orders()
+    var origin_isolated_order := order_for(main.supply.get_shipment_orders(), source_disconnect_id)
+    require(String(origin_isolated_order.get("status", "")) == "in_transit"
+        and int(origin_isolated_order.get("cargo", 0)) == 4,
+        "An isolated source must not interrupt an already-dispatched shipment")
+    await ticks(300)
+    var origin_isolated_delivery := order_for(main.supply.get_shipment_orders(), source_disconnect_id)
+    require(String(origin_isolated_delivery.get("status", "")) == "delivered"
+        and int(origin_isolated_delivery.get("cargo", -1)) == 0,
+        "An in-flight courier must settle cargo at its connected destination after source isolation")
+    require(destination.take_resource("wood", 4),
+        "The isolated-origin regression cargo must be cleared before later capacity checks")
+    main.supply._depot_connections[source.get_instance_id()] = true
+
     var cancel_source_before: int = source.stockpile_amount("wood")
     var cancel_id: int = main.supply.create_shipment(source_cell, destination_cell, "wood", 2)
     require(cancel_id > 0, "A cancellable shipment must be accepted")
