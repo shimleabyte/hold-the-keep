@@ -73,7 +73,7 @@ func _run() -> void:
         return
 
     _check(bool(civilization.call("_spawn_structure", "outpost", outpost_anchor)),
-        "The rival civilization must be able to complete its paid outpost structure")
+        "The rival civilization must register a completed outpost for the forward-defense fixture")
     await _ticks(2)
     main.territory.rebuild()
 
