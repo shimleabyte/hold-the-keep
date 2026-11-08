@@ -1,17 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges">
-<rect x="0" y="2" width="16" height="14" fill="#8a8f98"/>
-<rect x="0" y="2" width="16" height="2" fill="#a3a8b1"/>
-<rect x="0" y="0" width="4" height="2" fill="#8a8f98"/>
-<rect x="0" y="0" width="4" height="1" fill="#a3a8b1"/>
-<rect x="6" y="0" width="4" height="2" fill="#8a8f98"/>
-<rect x="6" y="0" width="4" height="1" fill="#a3a8b1"/>
-<rect x="12" y="0" width="4" height="2" fill="#8a8f98"/>
-<rect x="12" y="0" width="4" height="1" fill="#a3a8b1"/>
-<rect x="0" y="7" width="16" height="1" fill="#767b83"/>
-<rect x="3" y="3" width="1" height="4" fill="#767b83"/>
-<rect x="11" y="3" width="1" height="4" fill="#767b83"/>
-<rect x="0" y="12" width="16" height="1" fill="#767b83"/>
-<rect x="7" y="8" width="1" height="4" fill="#767b83"/>
-<rect x="15" y="8" width="1" height="4" fill="#767b83"/>
-<rect x="0" y="15" width="16" height="1" fill="#6e737b"/>
+<!-- dressed limestone curtain wall -->
+<rect x="0" y="2" width="16" height="14" fill="#515b5d"/>
+<rect x="0" y="1" width="16" height="3" fill="#9da49e"/>
+<rect x="1" y="0" width="4" height="3" fill="#767f7e"/><rect x="1" y="0" width="4" height="1" fill="#c0c1b1"/>
+<rect x="6" y="0" width="4" height="3" fill="#767f7e"/><rect x="6" y="0" width="4" height="1" fill="#c0c1b1"/>
+<rect x="11" y="0" width="4" height="3" fill="#767f7e"/><rect x="11" y="0" width="4" height="1" fill="#c0c1b1"/>
+<!-- staggered ashlar courses -->
+<path d="M0 6H16M0 11H16" stroke="#424c4e" stroke-width="1"/>
+<path d="M4 3V6M12 3V6M2 7V11M8 7V11M14 7V11M5 12V15M11 12V15" stroke="#515b5c" stroke-width="1"/>
+<path d="M1 5H3M7 5H10M12 5H15M1 10H6M9 10H13M2 14H4M7 14H10M13 14H15" stroke="#b7b8a9" stroke-width="1"/>
+<!-- iron pins and dark foundation -->
+<rect x="3" y="8" width="1" height="1" fill="#c5a875"/><rect x="12" y="13" width="1" height="1" fill="#c5a875"/>
+<rect x="0" y="15" width="16" height="1" fill="#303a3d"/>
 </svg>
