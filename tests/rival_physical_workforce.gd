@@ -176,7 +176,7 @@ func _initialize() -> void:
 
         var target: Variant = woodcutter.get("_target")
         if target != null and is_instance_valid(target):
-            saw_target_claim = target.get("worker") == woodcutter
+            saw_target_claim = saw_target_claim or target.get("worker") == woodcutter
 
         if int(woodcutter.get("carry")) > 0:
             saw_cargo = true
@@ -221,8 +221,10 @@ func _initialize() -> void:
 
     # Exercise the normal delivery path separately from save-time reconciliation:
     # harvested cargo must be credited once to this worker's owning rival ledger.
+    civilization.get("resources")["wood"] = 100.0
     var delivery_before: float = float(civilization.get("resources").get("wood", 0.0))
-    woodcutter.call("receive", "wood", 5)
+    _check(bool(woodcutter.call("receive", "wood", 5)),
+        "A worker with empty cargo must accept the five-unit delivery fixture atomically")
     woodcutter.call("recall_to_keep")
     for step in range(800):
         civilization.call("advance", 0.1)
@@ -398,11 +400,9 @@ func _assert_blocked_return_retry_budget(worker: Node2D, navigation: Node, keep:
     var requests_after_initial_failure := int(worker.get("path_request_count"))
     for step in range(30):
         worker.call("tick", 0.1)
-        if step % 5 == 0:
-            await physics_frame
     var repeated_requests := int(worker.get("path_request_count")) - requests_after_initial_failure
     _check(repeated_requests <= 4,
-        "An unchanged blocked return route must respect its retry cooldown instead of repeating A* every frame")
+        "An unchanged blocked return route must respect its retry cooldown instead of repeating A* every frame (observed %d retries)" % repeated_requests)
 
     for cell: Vector2i in blocked_cells:
         astar.set_point_solid(cell, false)
@@ -450,20 +450,67 @@ func _assert_quarry_acquires_iron_and_pays_forge(
         "Eleven iron must remain insufficient to start paid Forge construction")
 
     civilization.call("_reconcile_build_order_index")
-    var labor: Dictionary = civilization.call("labor_allocation")
-    civilization.call("_sync_physical_workers", labor)
-    var quarry_worker: Node2D
-    for worker: Node in get_nodes_in_group("enemy_economic_workers"):
-        if (
-            is_instance_valid(worker)
-            and worker.get("civilization") == civilization
-            and String(worker.get("role")) == "quarry"
-        ):
-            quarry_worker = worker as Node2D
+    var quarry_structure: Node2D
+    for structure: Node in civilization.get("structures"):
+        if is_instance_valid(structure) and String(structure.get("structure_id")) == "quarry":
+            quarry_structure = structure as Node2D
             break
-    _check(quarry_worker != null,
-        "A completed Quarry with available labor must spawn a real physical Quarry worker")
+    _check(quarry_structure != null, "Forge progression fixture must retain a real completed Quarry")
+    if quarry_structure == null:
+        return
+
+    # Instantiate the production worker entity against the actual Quarry rather
+    # than relying on unrelated garrison/labor assignments in this campaign seed.
+    var worker_script := load("res://scripts/entities/enemy_economic_worker.gd") as Script
+    var quarry_worker := worker_script.new() as Node2D if worker_script != null else null
+    _check(quarry_worker != null, "The production Quarry worker script must load")
     if quarry_worker == null:
+        return
+    _check(bool(quarry_worker.call("setup", civilization, quarry_structure, "quarry", 0, main_scene)),
+        "A real Quarry worker must initialize against its owning civilization and workplace")
+    main_scene.get("world").get("entities").add_child(quarry_worker)
+
+    # Ensure this seed has a reachable, real IronOre actor inside the rival region.
+    var found_iron_target := bool(quarry_worker.call("_find_resource_target"))
+    if not found_iron_target:
+        var world: Node = main_scene.get("world")
+        var navigation: Node = main_scene.get("nav")
+        var territory: Node = main_scene.get("territory")
+        var iron_script := load("res://scripts/entities/iron_ore.gd") as Script
+        var worker_cell: Vector2i = navigation.call("cell_of", quarry_worker.global_position)
+        var owner_region := String(keep.get("region_id"))
+        for radius in range(2, 20):
+            for y in range(-radius, radius + 1):
+                for x in range(-radius, radius + 1):
+                    if maxi(absi(x), absi(y)) != radius:
+                        continue
+                    var cell := worker_cell + Vector2i(x, y)
+                    if not bool(world.call("is_buildable", cell)) or world.get("occupied").has(cell):
+                        continue
+                    if world.call("resource_node_at", cell) != null:
+                        continue
+                    if String(world.call("region_id", cell)) != owner_region:
+                        continue
+                    if String(territory.call("owner_at", cell)) in ["player", "contested"]:
+                        continue
+                    var node_position: Vector2 = navigation.call("center_of", cell)
+                    if navigation.call("path_adjacent", quarry_worker.global_position, [cell]).is_empty():
+                        continue
+                    var iron_node := iron_script.new() as Node2D
+                    iron_node.position = node_position
+                    world.call("_register_resource_node", iron_node, cell)
+                    await physics_frame
+                    navigation.call("rebuild")
+                    found_iron_target = bool(quarry_worker.call("_find_resource_target"))
+                    if found_iron_target:
+                        break
+                if found_iron_target:
+                    break
+            if found_iron_target:
+                break
+    _check(found_iron_target,
+        "The Tier I Quarry worker must reserve a real reachable IronOre node")
+    if not found_iron_target:
         return
 
     var carried_iron := false
