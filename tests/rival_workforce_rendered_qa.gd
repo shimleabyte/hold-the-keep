@@ -304,7 +304,7 @@ func _initialize() -> void:
         var target: Variant = worker.get("_target")
         if target == null or not is_instance_valid(target):
             continue
-        var id := target.get_instance_id()
+        var id: int = target.get_instance_id()
         _check(not claimed.has(id), "Workers must reserve different available resource nodes")
         claimed[id] = worker.get_instance_id()
         claim_count += 1
