@@ -400,11 +400,11 @@ func _try_start_construction() -> void:
     var plan: Dictionary = _build_plan_for(id)
     if plan.is_empty():
         return
-    var anchor: Vector2i = _find_build_site(id)
-    if anchor.x < 0:
-        return
     var cost: Dictionary = plan["cost"]
     if not _can_pay(cost):
+        return
+    var anchor: Vector2i = _find_build_site(id)
+    if anchor.x < 0:
         return
     _pay(cost)
     construction = {
@@ -607,6 +607,8 @@ func _placement_valid(id: String, anchor: Vector2i, footprint: Vector2i = Vector
     if not STRUCTURE_SCRIPT.FOOTPRINTS.has(id) or not WorldConfig.is_valid_cell(anchor):
         return false
     if id == "outpost":
+        if _main_scene == null or not is_instance_valid(_main_scene):
+            _main_scene = owner_keep.get_tree().get_first_node_in_group("main")
         var territory_node: Node = _main_scene.get("territory") as Node if _main_scene != null else null
         if territory_node == null or not territory_node.call("can_enemy_place_outpost", anchor, actual_size):
             return false

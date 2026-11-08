@@ -121,6 +121,8 @@ func _initialize() -> void:
         var rival_outpost_cell: Vector2i = rival_civilization.call("_find_build_site", "outpost")
         assert(rival_outpost_cell.x >= 0,
             "Rival civilization must find a neutral frontier site for its first outpost")
+        assert(main.territory.owner_at(rival_outpost_cell) == "neutral",
+            "Rival outpost footprint must begin outside the stronghold's existing claim")
         assert(main.territory.can_enemy_place_outpost(rival_outpost_cell, Vector2i(2, 2)),
             "Rival outpost placement must touch rival land without occupying player or contested land")
         assert(rival_civilization.call("_spawn_structure", "outpost", rival_outpost_cell, -1),
@@ -133,7 +135,7 @@ func _initialize() -> void:
             "Rival outpost must be a distinct destructible faction structure")
         rival_outpost.call("take_damage", 9999)
         main.territory.rebuild()
-        assert(main.territory.owner_at(rival_outpost_cell) != "enemy",
+        assert(main.territory.owner_at(rival_outpost_cell) == "neutral",
             "Destroying a rival outpost must release its exclusive territorial claim")
 
     print("PASS: player and rival Outposts expand frontier claims and release them when destroyed")

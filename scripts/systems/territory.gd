@@ -218,20 +218,19 @@ func _is_frontier_cell(cell: Vector2i) -> bool:
 func can_enemy_place_outpost(anchor: Vector2i, size: Vector2i) -> bool:
     _ensure_current()
     var touches_frontier := false
-    var has_neutral_footprint := false
     for y in range(size.y):
         for x in range(size.x):
             var cell := anchor + Vector2i(x, y)
             if not world.is_buildable(cell):
                 return false
             var owner := owner_at(cell)
-            if owner == "player" or owner == "contested":
+            # Place the entire footprint outside current rival territory. It
+            # must touch the frontier, not overlap the stronghold's existing claim.
+            if owner != "neutral":
                 return false
-            if owner != "enemy":
-                has_neutral_footprint = true
-                if _touches_enemy_claim(cell):
-                    touches_frontier = true
-    return touches_frontier and has_neutral_footprint
+            if _touches_enemy_claim(cell):
+                touches_frontier = true
+    return touches_frontier
 
 
 func _touches_enemy_claim(cell: Vector2i) -> bool:
