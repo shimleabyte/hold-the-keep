@@ -1,37 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="36" height="38" viewBox="0 0 36 38" shape-rendering="crispEdges">
-<rect x="26" y="3" width="4" height="10" fill="#6e737b"/>
-<rect x="25" y="2" width="6" height="1" fill="#a3a8b1"/>
-<rect x="17" y="1" width="2" height="1" fill="#9b3d2e"/>
-<rect x="16" y="2" width="4" height="1" fill="#9b3d2e"/>
-<rect x="15" y="3" width="6" height="1" fill="#7f2f23"/>
-<rect x="14" y="4" width="8" height="1" fill="#9b3d2e"/>
-<rect x="13" y="5" width="10" height="1" fill="#9b3d2e"/>
-<rect x="12" y="6" width="12" height="1" fill="#7f2f23"/>
-<rect x="11" y="7" width="14" height="1" fill="#9b3d2e"/>
-<rect x="10" y="8" width="16" height="1" fill="#9b3d2e"/>
-<rect x="9" y="9" width="18" height="1" fill="#7f2f23"/>
-<rect x="8" y="10" width="20" height="1" fill="#9b3d2e"/>
-<rect x="7" y="11" width="22" height="1" fill="#9b3d2e"/>
-<rect x="6" y="12" width="24" height="1" fill="#7f2f23"/>
-<rect x="5" y="13" width="26" height="1" fill="#9b3d2e"/>
-<rect x="4" y="14" width="28" height="1" fill="#9b3d2e"/>
-<rect x="3" y="15" width="30" height="1" fill="#7f2f23"/>
-<rect x="2" y="16" width="32" height="1" fill="#9b3d2e"/>
-<rect x="1" y="17" width="34" height="1" fill="#9b3d2e"/>
-<rect x="0" y="18" width="36" height="2" fill="#7a2f23"/>
-<rect x="2" y="20" width="32" height="18" fill="#b08a5a"/>
-<rect x="2" y="20" width="32" height="1" fill="#6b4a2b"/>
-<rect x="2" y="20" width="2" height="18" fill="#6b4a2b"/>
-<rect x="32" y="20" width="2" height="18" fill="#6b4a2b"/>
-<rect x="2" y="36" width="32" height="2" fill="#6e737b"/>
-<rect x="15" y="28" width="6" height="8" fill="#5a3b22"/>
-<rect x="19" y="33" width="1" height="1" fill="#e8c23a"/>
-<rect x="6" y="25" width="5" height="5" fill="#f2d98a"/>
-<rect x="6" y="25" width="5" height="1" fill="#6b4a2b"/>
-<rect x="6" y="29" width="5" height="1" fill="#6b4a2b"/>
-<rect x="8" y="25" width="1" height="5" fill="#6b4a2b"/>
-<rect x="25" y="25" width="5" height="5" fill="#f2d98a"/>
-<rect x="25" y="25" width="5" height="1" fill="#6b4a2b"/>
-<rect x="25" y="29" width="5" height="1" fill="#6b4a2b"/>
-<rect x="27" y="25" width="1" height="5" fill="#6b4a2b"/>
+<!-- chimney -->
+<rect x="25" y="2" width="5" height="12" fill="#514b43"/><rect x="26" y="3" width="3" height="10" fill="#8b8170"/><rect x="24" y="1" width="7" height="2" fill="#b0a38a"/>
+<!-- roof silhouette, weathered thatch -->
+<path d="M1 18L17 4L35 18V21H1Z" fill="#302a25"/><path d="M3 17L17 5L33 17V19H3Z" fill="#68513b"/><path d="M5 16L17 7L31 17" fill="none" stroke="#a17e51" stroke-width="2"/>
+<path d="M5 17L9 13L11 15L15 10L18 12L22 9L25 12L29 12L33 17" fill="none" stroke="#c09a62" stroke-width="1"/>
+<path d="M4 19H32M7 16L10 18M13 11L16 14M21 10L24 13M28 14L31 17" stroke="#49392c" stroke-width="1"/>
+<!-- timber frame and wattle infill -->
+<rect x="4" y="19" width="28" height="18" fill="#574333"/><rect x="6" y="20" width="24" height="16" fill="#9b8058"/>
+<rect x="6" y="20" width="24" height="2" fill="#c0a174"/><rect x="6" y="20" width="2" height="16" fill="#65462f"/><rect x="28" y="20" width="2" height="16" fill="#65462f"/>
+<rect x="8" y="23" width="20" height="1" fill="#b19468"/><rect x="8" y="27" width="20" height="1" fill="#816744"/><rect x="8" y="31" width="20" height="1" fill="#b19468"/>
+<!-- cross braces -->
+<path d="M8 22L15 35M28 22L21 35" stroke="#61432e" stroke-width="2"/>
+<path d="M8 22L15 35M28 22L21 35" stroke="#ad8554" stroke-width="1"/>
+<!-- recessed door -->
+<rect x="15" y="27" width="7" height="10" fill="#352820"/><rect x="16" y="28" width="5" height="9" fill="#63432c"/><path d="M17 30V36M19 30V36" stroke="#8e6942" stroke-width="1"/><rect x="20" y="32" width="1" height="1" fill="#d0b47c"/>
+<!-- shuttered window -->
+<rect x="8" y="25" width="5" height="5" fill="#302a24"/><rect x="9" y="26" width="3" height="3" fill="#d4a45e"/><path d="M8 25V30M13 25V30M8 27H13" stroke="#49372a" stroke-width="1"/>
+<rect x="24" y="25" width="4" height="5" fill="#302a24"/><rect x="25" y="26" width="2" height="3" fill="#d4a45e"/><path d="M24 25V30M28 25V30" stroke="#49372a" stroke-width="1"/>
+<!-- foundation and repairs -->
+<rect x="3" y="36" width="30" height="2" fill="#4d514d"/><rect x="5" y="35" width="5" height="2" fill="#77786e"/><rect x="12" y="35" width="6" height="2" fill="#62675f"/><rect x="22" y="35" width="9" height="2" fill="#77786e"/>
+<rect x="2" y="18" width="32" height="2" fill="#42362b"/>
 </svg>
