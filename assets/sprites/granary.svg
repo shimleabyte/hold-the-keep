@@ -1,27 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="32" viewBox="0 0 48 32" shape-rendering="crispEdges">
-<rect x="1" y="9" width="46" height="23" fill="#5b3f27"/>
-<rect x="3" y="12" width="42" height="17" fill="#a17b48"/>
-<rect x="0" y="7" width="48" height="5" fill="#59402a"/>
-<rect x="3" y="3" width="42" height="5" fill="#73502f"/>
-<path d="M1 8 L24 0 L47 8 L45 10 L24 3 L3 10 Z" fill="#46301f"/>
-<path d="M5 8 L24 2 L43 8" fill="none" stroke="#c49a5c" stroke-width="2"/>
-<rect x="5" y="14" width="38" height="2" fill="#795833"/>
-<rect x="8" y="16" width="1" height="12" fill="#6d4c2d"/>
-<rect x="39" y="16" width="1" height="12" fill="#6d4c2d"/>
-<rect x="5" y="29" width="38" height="3" fill="#4c3321"/>
-<rect x="12" y="18" width="8" height="10" fill="#704a2c"/>
-<rect x="12" y="18" width="8" height="1" fill="#c7a15f"/>
-<rect x="14" y="20" width="4" height="8" fill="#3e2b1e"/>
-<rect x="24" y="19" width="8" height="9" fill="#d5b66f"/>
-<rect x="25" y="18" width="6" height="2" fill="#e6cf8b"/>
-<rect x="25" y="21" width="6" height="1" fill="#9d7c45"/>
-<rect x="25" y="24" width="6" height="1" fill="#9d7c45"/>
-<rect x="25" y="27" width="6" height="1" fill="#9d7c45"/>
-<rect x="34" y="20" width="7" height="8" fill="#d7bd7a"/>
-<rect x="35" y="19" width="5" height="2" fill="#e8d79e"/>
-<rect x="35" y="23" width="5" height="1" fill="#a28651"/>
-<rect x="35" y="26" width="5" height="1" fill="#a28651"/>
-<rect x="3" y="12" width="42" height="1" fill="#d4ad6b"/>
-<rect x="5" y="14" width="38" height="1" fill="#b68e55"/>
-<rect x="1" y="31" width="46" height="1" fill="#332419"/>
+<!-- raised stone footings -->
+<rect x="2" y="27" width="44" height="4" fill="#343a39"/><rect x="4" y="28" width="40" height="2" fill="#73786f"/>
+<!-- timber storehouse -->
+<rect x="4" y="10" width="40" height="19" fill="#49382a"/><rect x="6" y="12" width="36" height="15" fill="#94764f"/>
+<path d="M6 16H42M6 22H42" stroke="#5d4933" stroke-width="1"/><path d="M10 12V27M38 12V27" stroke="#5c432d" stroke-width="2"/>
+<!-- deep pitched roof -->
+<path d="M1 10L23 1L47 10V13H1Z" fill="#302b28"/><path d="M4 9L23 2L44 9V11H4Z" fill="#66513b"/>
+<path d="M5 9L23 3L43 9" stroke="#b59a6d" stroke-width="1.5" fill="none"/><path d="M9 9L13 7M17 6L21 5M27 5L31 6M36 7L40 9" stroke="#8e7653" stroke-width="1"/>
+<!-- ventilation gable and carved grain mark -->
+<path d="M20 7L23 5L26 7V10H20Z" fill="#2c2924"/><path d="M22 7H24M23 6V9" stroke="#c5a66e" stroke-width="1"/>
+<!-- broad double doors -->
+<rect x="17" y="17" width="14" height="12" fill="#39291f"/><rect x="18" y="18" width="6" height="10" fill="#725236"/><rect x="24" y="18" width="6" height="10" fill="#80603d"/>
+<path d="M19 20H23M25 20H29M19 24H23M25 24H29" stroke="#b18b57" stroke-width="1"/><rect x="23" y="21" width="2" height="2" fill="#d0b06f"/>
+<!-- grain sacks and barrel -->
+<path d="M7 20Q7 17 10 17H14Q17 19 15 27H8Z" fill="#c3a46b"/><path d="M8 20H15M9 24H15" stroke="#826744" stroke-width="1"/>
+<rect x="33" y="20" width="6" height="8" fill="#59412c"/><path d="M33 22H39M33 26H39" stroke="#bd9860" stroke-width="1"/><rect x="34" y="19" width="4" height="2" fill="#c6a36a"/>
+<rect x="3" y="11" width="42" height="2" fill="#c1a06a"/>
 </svg>
