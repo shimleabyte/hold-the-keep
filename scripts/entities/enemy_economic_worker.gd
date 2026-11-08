@@ -31,6 +31,16 @@ const RESOURCE_BATCH_YIELD := {
     "stone": 6,
     "iron": 9
 }
+const RESOURCE_HIT_YIELD := {
+    "wood": 1,
+    "stone": 1,
+    "iron": 1
+}
+const RESOURCE_FINAL_HIT_BONUS := {
+    "wood": 2,
+    "stone": 2,
+    "iron": 3
+}
 
 var civilization
 var owner_keep: Node2D
@@ -44,6 +54,7 @@ var slot_index := 0
 var carry_kind := ""
 var carry := 0
 var retiring := false
+var path_request_count := 0
 
 var _state: State = State.IDLE
 var _target: Node2D
@@ -169,12 +180,25 @@ func _tick_resource_work(delta: float) -> void:
 
     var kind := String(_target.get("yield_kind"))
     var interval := float(RESOURCE_WORK_SECONDS.get(kind, 4.0))
-    if not civilization.can_receive(kind, int(RESOURCE_BATCH_YIELD.get(kind, 1))):
+    # A normal hit yields one unit; the depletion hit also grants the node bonus.
+    # Check the exact next-hit yield so the final harvest cannot overflow cargo.
+    var next_hit_yield := _next_resource_hit_yield(kind)
+    if (
+        not civilization.can_receive(kind, next_hit_yield)
+        or carry + next_hit_yield > CARRY_CAPACITY
+    ):
         _begin_return_to_keep()
         return
 
     _work_timer += delta
     while _work_timer >= interval and _state == State.WORKING_RESOURCE:
+        next_hit_yield = _next_resource_hit_yield(kind)
+        if (
+            not civilization.can_receive(kind, next_hit_yield)
+            or carry + next_hit_yield > CARRY_CAPACITY
+        ):
+            _begin_return_to_keep()
+            return
         _work_timer -= interval
         if not _target_is_claimed_and_harvestable():
             _release_target()
@@ -193,22 +217,48 @@ func _tick_resource_work(delta: float) -> void:
             return
 
 
+func _next_resource_hit_yield(kind: String) -> int:
+    var ordinary_yield := int(RESOURCE_HIT_YIELD.get(kind, 1))
+    if _target != null and is_instance_valid(_target) and int(_target.get("_hp")) == 1:
+        return ordinary_yield + int(RESOURCE_FINAL_HIT_BONUS.get(kind, 0))
+    return ordinary_yield
+
+
 func _tick_farming(delta: float) -> void:
-    if retiring or not civilization.can_receive("food", FARM_CYCLE_YIELD):
+    if (
+        retiring
+        or not civilization.can_receive("food", FARM_CYCLE_YIELD)
+        or carry + FARM_CYCLE_YIELD > CARRY_CAPACITY
+    ):
         _begin_return_to_keep()
         return
     _work_timer += delta
     while _work_timer >= FARM_CYCLE_SECONDS and _state == State.FARMING:
-        _work_timer -= FARM_CYCLE_SECONDS
-        receive("food", FARM_CYCLE_YIELD)
-        if carry >= CARRY_CAPACITY:
+        # A complete farm cycle is atomic: never start one unless all its food fits.
+        if (
+            not civilization.can_receive("food", FARM_CYCLE_YIELD)
+            or carry + FARM_CYCLE_YIELD > CARRY_CAPACITY
+        ):
             _begin_return_to_keep()
             return
+        _work_timer -= FARM_CYCLE_SECONDS
+        receive("food", FARM_CYCLE_YIELD)
     _play_clip("work")
 
 
 func _tick_travel(delta: float, arrival_state: State) -> void:
     if nav == null or not is_instance_valid(nav):
+        return
+    # Territory can change while a worker is already travelling. Revalidate both
+    # the reservation and the remaining route before taking another movement step.
+    if _state == State.TO_RESOURCE and (
+        not _target_is_claimed_and_harvestable()
+        or not _path_avoids_player_territory(_path)
+    ):
+        _release_target()
+        _state = State.IDLE
+        _retry_timer = 0.25
+        _play_clip("idle")
         return
     if _path_version != int(nav.version):
         if not _repath_current_state():
@@ -270,6 +320,7 @@ func _move_along_path(delta: float) -> bool:
 
 
 func _repath_current_state() -> bool:
+    path_request_count += 1
     var next_path := PackedVector2Array()
     match _state:
         State.TO_RESOURCE:
@@ -285,6 +336,8 @@ func _repath_current_state() -> bool:
             next_path = nav.path_adjacent(position, workplace.cells())
     if next_path.is_empty():
         return false
+    if _state == State.TO_RESOURCE and not _path_avoids_player_territory(next_path):
+        return false
     _path = next_path
     _path_index = 1 if _path.size() > 1 else 0
     _path_version = int(nav.version)
@@ -294,7 +347,14 @@ func _repath_current_state() -> bool:
 func _find_resource_target() -> bool:
     if world == null or not is_instance_valid(world) or nav == null:
         return false
-    var resource_kinds: Array[String] = civilization.worker_resource_kinds(role)
+    # The civilization is held through a dynamic reference, so its method
+    # returns an untyped Array at this call site. Normalize values explicitly
+    # before assigning them to a typed GDScript collection (notably Forge -> iron).
+    var resource_kinds: Array[String] = []
+    var resource_kind_values: Variant = civilization.call("worker_resource_kinds", role)
+    if resource_kind_values is Array:
+        for resource_kind: Variant in resource_kind_values:
+            resource_kinds.append(String(resource_kind))
     if resource_kinds.is_empty():
         return false
 
@@ -408,6 +468,11 @@ func _path_avoids_player_territory(path: PackedVector2Array) -> bool:
 func _target_is_claimed_and_harvestable() -> bool:
     if _target == null or not is_instance_valid(_target) or int(_target.get("_hp")) <= 0:
         return false
+    # Ownership and region are dynamic. A target that was neutral when reserved
+    # must be abandoned if the player later claims it or the cell becomes contested.
+    var cell: Vector2i = Vector2i(_target.get("resource_cell"))
+    if not _resource_cell_is_available(cell, _target):
+        return false
     var node_worker: Variant = _target.get("worker")
     return node_worker == self
 
@@ -431,6 +496,9 @@ func _begin_return_to_keep() -> void:
     _path.clear()
     _path_version = -1
     if not _repath_current_state():
+        # Remember this failed topology. Without the version stamp, TO_KEEP
+        # retries the same A* request every rendered frame before its cooldown.
+        _path_version = int(nav.version)
         _retry_timer = 1.0
     _play_clip("walk")
 
@@ -480,12 +548,17 @@ func _target_work_interval(kind: String) -> float:
     return float(RESOURCE_WORK_SECONDS.get(kind, 4.0))
 
 
-func receive(kind: String, amount: int) -> void:
+func receive(kind: String, amount: int) -> bool:
     if amount <= 0 or (not carry_kind.is_empty() and carry_kind != kind):
-        return
+        return false
+    # Reject an impossible transfer atomically. Harvest/farm callers must check
+    # capacity before producing so this never silently clamps valid output.
+    if carry + amount > CARRY_CAPACITY:
+        return false
     carry_kind = kind
-    carry = mini(CARRY_CAPACITY, carry + amount)
+    carry += amount
     queue_redraw()
+    return true
 
 
 func has_cargo() -> bool:

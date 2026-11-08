@@ -274,3 +274,17 @@ The code integration point remains merge commit `dc060785b54b220a1b63d3149daa24f
 **Current main HEAD after documentation reconciliation:** `5ee8609a1a860b2cc5083d7f3dc0652c8ffb3b5f`. These later commits are documentation-only. The exact merge commit itself passed Godot 4.7 CI 66/66 and Campaign Simulation QA; a new CI run has been triggered by the final documentation commits and should be checked before the next code change.
 
 Open PRs #150 and #152 concern Android/ARMv7 and remain deferred under the desktop-first scope. No other open PRs were present at this check.
+
+## Rival workforce consolidation checkpoint — 2026-11-08
+
+PR #189 (fix/rival-workforce-rendered-acceptance) is the single authoritative integration for rival physical workforce work. It consolidates the unique cargo-conservation and Forge-priority changes from PR #188 and the bounded failed-return NavGrid retry correction from PR #190. PRs #188 and #190 are superseded by #189; do not continue parallel implementation on those branches.
+
+The integrated behavior includes exact ordinary/final-hit cargo preflight, atomic cargo acceptance, complete farm-cycle capacity checks, Tier I Quarry iron priority until the existing 12-iron Forge requirement is met, territory and reservation revalidation, physical resource-node harvesting, delivery to the owning stronghold, worker retirement, and save-time cargo reconciliation. Save schema remains v17. No depot, road-shipment, multi-settlement logistics, or new economy feature is included in this slice.
+
+Focused regression coverage now explicitly exercises two previously missing acceptance cases:
+- A blocked return-to-keep route is held against the unchanged NavGrid version and repeated A* requests remain bounded by the retry cooldown.
+- A real Tier I Quarry worker reserves and harvests an actual IronOre node, carries and delivers iron to its own stronghold, then enables Forge construction only after the 12-iron requirement is met; construction must debit the existing 75 wood, 45 stone, and 12 iron cost.
+
+The prior exact PR #189 head f26f24db004475c147314941706642513c971639 passed Godot CI (29 jobs), Campaign Simulation QA, and Rival Workforce Rendered QA. Those results are a baseline only; the new focused regressions and documentation update require fresh checks on the resulting PR head before merge. The rendered workflow uses a real Godot window under Xvfb/Mesa and automated PNG/GIF evidence. It is not a human desktop playtest, and no such playtest is claimed.
+
+Integration order: validate the exact updated PR #189 head and inspect rendered artifacts; merge #189 into main; close #188 and #190 as superseded; then record the final merge SHA and closure state here. Keep local depot storage and road-connected shipments as a separate later vertical slice.

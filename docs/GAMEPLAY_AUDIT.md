@@ -163,3 +163,17 @@ No unit-composition state is stored; it is derived from living garrison entities
 Rival military research now changes which units a faction can actually recruit. Saboteurs and War Shamans require Military Tier II; Beast Riders and Siege Engines require Military Tier III. Basic infantry, scouts, wolves, archers and shield infantry remain available without advanced research. Composition planning filters locked units, and direct payment also checks the technology gate so callers cannot bypass it.
 
 This makes a rival's research investment unlock battlefield options rather than merely incrementing a tier label. It does not grant units for free; advanced units still require their full unit-specific costs. Tests verify the Siege faction's early shield infantry, Tier II support/disruption unlocks, and Tier III access to its signature Siege Engine. Save schema v17 remains unchanged.
+
+## Rival workforce consolidation checkpoint — 2026-11-08
+
+PR #189 (fix/rival-workforce-rendered-acceptance) is the single authoritative integration for rival physical workforce work. It consolidates the unique cargo-conservation and Forge-priority changes from PR #188 and the bounded failed-return NavGrid retry correction from PR #190. PRs #188 and #190 are superseded by #189; do not continue parallel implementation on those branches.
+
+The integrated behavior includes exact ordinary/final-hit cargo preflight, atomic cargo acceptance, complete farm-cycle capacity checks, Tier I Quarry iron priority until the existing 12-iron Forge requirement is met, territory and reservation revalidation, physical resource-node harvesting, delivery to the owning stronghold, worker retirement, and save-time cargo reconciliation. Save schema remains v17. No depot, road-shipment, multi-settlement logistics, or new economy feature is included in this slice.
+
+Focused regression coverage now explicitly exercises two previously missing acceptance cases:
+- A blocked return-to-keep route is held against the unchanged NavGrid version and repeated A* requests remain bounded by the retry cooldown.
+- A real Tier I Quarry worker reserves and harvests an actual IronOre node, carries and delivers iron to its own stronghold, then enables Forge construction only after the 12-iron requirement is met; construction must debit the existing 75 wood, 45 stone, and 12 iron cost.
+
+The prior exact PR #189 head f26f24db004475c147314941706642513c971639 passed Godot CI (29 jobs), Campaign Simulation QA, and Rival Workforce Rendered QA. Those results are a baseline only; the new focused regressions and documentation update require fresh checks on the resulting PR head before merge. The rendered workflow uses a real Godot window under Xvfb/Mesa and automated PNG/GIF evidence. It is not a human desktop playtest, and no such playtest is claimed.
+
+Integration order: validate the exact updated PR #189 head and inspect rendered artifacts; merge #189 into main; close #188 and #190 as superseded; then record the final merge SHA and closure state here. Keep local depot storage and road-connected shipments as a separate later vertical slice.

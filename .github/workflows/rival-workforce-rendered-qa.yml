@@ -1,0 +1,91 @@
+name: Rival Workforce Rendered QA
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/rival-workforce-rendered-qa.yml"
+      - "scripts/entities/enemy_economic_worker.gd"
+      - "scripts/systems/enemy_civilization.gd"
+      - "tests/rival_physical_workforce.gd"
+      - "tests/shot_rival_workforce.gd"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/rival-workforce-rendered-qa.yml"
+      - "scripts/entities/enemy_economic_worker.gd"
+      - "scripts/systems/enemy_civilization.gd"
+      - "tests/rival_physical_workforce.gd"
+      - "tests/shot_rival_workforce.gd"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rival-workforce-rendered-qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rendered-workforce:
+    name: Rival workforce rendered acceptance · Godot 4.7
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot 4.7
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Install Xvfb, Mesa and FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0 ffmpeg
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Run focused headless rival workforce regression
+        env:
+          HTK_AUTO_START_GAME: "1"
+          HTK_AUTO_RESOLVE_EVENTS: "1"
+        run: timeout --signal=TERM --kill-after=10s 180s godot --headless --fixed-fps 60 --path . --script res://tests/rival_physical_workforce.gd
+
+      - name: Run deterministic rival workforce rendered scenario
+        env:
+          HTK_AUTO_START_GAME: "1"
+          HTK_AUTO_RESOLVE_EVENTS: "1"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/hold-the-keep-rival-workforce-qa
+          timeout --signal=TERM --kill-after=15s 540s \
+            xvfb-run -a -s "-screen 0 1600x900x24" \
+            godot --path . --rendering-driver opengl3 --fixed-fps 30 \
+            --script res://tests/shot_rival_workforce.gd \
+            2>&1 | tee /tmp/hold-the-keep-rival-workforce-qa/render.log
+
+      - name: Encode worker lifecycle animation
+        if: always()
+        run: |
+          if compgen -G "/tmp/hold-the-keep-rival-workforce-qa/frames/*.png" > /dev/null; then
+            ffmpeg -y -framerate 3 -start_number 1 \
+              -i /tmp/hold-the-keep-rival-workforce-qa/frames/%02d.png \
+              -vf "fps=6,scale=640:-1:flags=neighbor,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=none" \
+              -loop 0 /tmp/hold-the-keep-rival-workforce-qa/rival-worker-lifecycle.gif
+          fi
+
+      - name: Upload rival workforce rendered evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rival-workforce-rendered-godot-4.7
+          path: /tmp/hold-the-keep-rival-workforce-qa/
+          if-no-files-found: warn
+          retention-days: 14
