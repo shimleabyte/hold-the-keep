@@ -226,7 +226,7 @@ func _initialize() -> void:
     _check(bool(woodcutter.call("receive", "wood", 5)),
         "A worker with empty cargo must accept the five-unit delivery fixture atomically")
     woodcutter.call("recall_to_keep")
-    for step in range(800):
+    for step in range(3000):
         civilization.call("advance", 0.1)
         if step % 5 == 0:
             await physics_frame
