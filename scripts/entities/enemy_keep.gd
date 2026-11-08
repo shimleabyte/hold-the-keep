@@ -4,6 +4,12 @@ extends Node2D
 
 const ENEMY_SCRIPT: Script = preload("res://scripts/entities/enemy.gd")
 const SPRITE: Texture2D = preload("res://assets/sprites/enemy_keep.svg")
+const FACTION_SPRITES: Dictionary = {
+    "greenwood_raiders": preload("res://assets/sprites/enemy_keep_greenwood.svg"),
+    "iron_legion": preload("res://assets/sprites/enemy_keep_iron.svg"),
+    "fen_cult": preload("res://assets/sprites/enemy_keep_fen.svg"),
+    "ashen_host": preload("res://assets/sprites/enemy_keep_ashen.svg")
+}
 const CIVILIZATION_SCRIPT: Script = preload("res://scripts/systems/enemy_civilization.gd")
 const SIZE: Vector2i = Vector2i(3, 3)
 const MAX_HP: int = 900
@@ -222,9 +228,10 @@ func take_damage(amount: int) -> void:
 
 
 func _draw() -> void:
-    draw_texture(SPRITE, Vector2(-SPRITE.get_width() / 2.0, -SPRITE.get_height()))
+    var sprite: Texture2D = FACTION_SPRITES.get(faction_id, SPRITE) as Texture2D
+    draw_texture(sprite, Vector2(-sprite.get_width() / 2.0, -sprite.get_height()))
     var width: float = 46.0
-    var y: float = -float(SPRITE.get_height()) - 6.0
+    var y: float = -float(sprite.get_height()) - 6.0
     draw_rect(Rect2(-width / 2.0, y, width, 4), Color(0.04, 0.03, 0.03, 0.9))
     draw_rect(Rect2(-width / 2.0, y, width * float(hp) / max_hp, 4), Color("#a63d36"))
     draw_rect(Rect2(-width / 2.0, y, width, 4), Color("#e3ba84"), false, 1.0)
