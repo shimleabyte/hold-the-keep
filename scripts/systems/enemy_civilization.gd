@@ -296,6 +296,15 @@ func worker_resource_kinds(workplace_id: String) -> Array[String]:
         "lumber_camp":
             return ["wood"]
         "quarry":
+            # Tier I iron access closes the existing Forge construction gap.
+            # Quarry workers prioritize iron only until the Forge's paid iron
+            # requirement is present, then return to their normal stone role.
+            if technology_tier >= 1:
+                var forge_plan: Dictionary = _build_plan_for("forge")
+                var forge_cost: Dictionary = forge_plan.get("cost", {})
+                var forge_iron_required := int(forge_cost.get("iron", 0))
+                if float(resources.get("iron", 0.0)) < float(forge_iron_required):
+                    return ["iron", "stone"]
             return ["stone"]
         "forge":
             return ["iron"] if technology_tier >= 1 else []
