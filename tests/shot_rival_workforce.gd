@@ -112,18 +112,12 @@ func _initialize() -> void:
     _main.player.camera.limit_right = map_pixels.x * 2
     _main.player.camera.limit_bottom = map_pixels.y * 2
 
-    # Hide transient onboarding notices in the evidence fixture only.
+    # The fixture captures the game world, not HUD coverage. Hide only
+    # CanvasLayers; gameplay actors, structures, resources and world rendering
+    # remain active and unchanged.
     for child in _main.get_children():
         if child is CanvasLayer:
-            var banner: Variant = child.get("_banner")
-            if banner is CanvasItem:
-                banner.hide()
-            var message_bubble: Variant = child.get("_msg_bubble")
-            if message_bubble is CanvasItem:
-                message_bubble.hide()
-            var message_label: Variant = child.get("_msg")
-            if message_label is CanvasItem:
-                message_label.hide()
+            child.hide()
 
     var campaign: Node = _main.get("campaign")
     _keep = campaign.call("current_target_node") as Node2D if campaign != null else null
@@ -204,7 +198,11 @@ func _initialize() -> void:
         return
     for frame_index in 4:
         await _advance(1.0)
-        await _capture("woodcutter-travel-%02d" % frame_index, _worker.global_position, 2.0, true)
+        var travel_target: Node2D = _worker.get("_target") as Node2D
+        var travel_focus := _worker.global_position
+        if travel_target != null and is_instance_valid(travel_target):
+            travel_focus = (_worker.global_position + travel_target.global_position) * 0.5
+        await _capture("woodcutter-travel-%02d" % frame_index, travel_focus, 1.8, true)
 
     for _step in 80:
         if int(_worker.get("_state")) == 2:
@@ -215,7 +213,11 @@ func _initialize() -> void:
         return
     for frame_index in 6:
         await _advance(1.0)
-        await _capture("woodcutter-harvest-%02d" % frame_index, _worker.global_position, 2.0, true)
+        var harvest_target: Node2D = _worker.get("_target") as Node2D
+        var harvest_focus := _worker.global_position
+        if harvest_target != null and is_instance_valid(harvest_target):
+            harvest_focus = (_worker.global_position + harvest_target.global_position) * 0.5
+        await _capture("woodcutter-harvest-%02d" % frame_index, harvest_focus, 1.8, true)
         if int(_worker.get("carry")) > 0:
             break
     if int(_worker.get("carry")) <= 0:
@@ -307,12 +309,14 @@ func _initialize() -> void:
     if int(forge_worker.get("_state")) != 2 or forge_target == null or String(forge_target.get("yield_kind")) != "iron":
         _fail("Tier II Forge worker did not reach and reserve an actual iron resource node")
         return
-    await _capture("tier-two-forge-iron-work", forge_worker.global_position, 2.2)
+    var forge_focus: Vector2 = (forge_worker.global_position + forge_target.global_position) * 0.5
+    await _capture("tier-two-forge-iron-work", forge_focus, 1.8)
     var forge_harvested := false
     for harvest_step in 16:
         await _advance(1.0)
         if harvest_step % 4 == 0:
-            await _capture("tier-two-forge-harvest-%02d" % harvest_step, forge_worker.global_position, 2.2)
+            forge_focus = (forge_worker.global_position + forge_target.global_position) * 0.5
+            await _capture("tier-two-forge-harvest-%02d" % harvest_step, forge_focus, 1.8)
         if int(forge_worker.get("carry")) > 0:
             forge_harvested = true
             break
@@ -338,7 +342,8 @@ func _initialize() -> void:
     if int(miner.get("_state")) != 2 or quarry_target == null or String(quarry_target.get("yield_kind")) != "stone":
         _fail("Quarry miner did not reach and reserve an actual stone resource node")
         return
-    await _capture("quarry-stone-work", miner.global_position, 2.2)
+    var quarry_focus: Vector2 = (miner.global_position + quarry_target.global_position) * 0.5
+    await _capture("quarry-stone-work", quarry_focus, 1.8)
     var quarry_harvested := false
     for harvest_step in 8:
         await _advance(1.0)
