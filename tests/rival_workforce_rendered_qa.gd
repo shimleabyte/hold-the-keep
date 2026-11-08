@@ -13,6 +13,8 @@ const DIRS4: Array[Vector2i] = [
 ]
 
 var failed := false
+var world_config: Node
+var game_clock: Node
 var main_scene: Node2D
 var keep: Node2D
 var civilization: RefCounted
@@ -120,7 +122,7 @@ func _find_free_cell(origin: Vector2, reserved: Dictionary) -> Vector2i:
                 if maxi(absi(x), absi(y)) != radius:
                     continue
                 var cell := origin_cell + Vector2i(x, y)
-                if not WorldConfig.is_valid_cell(cell) or reserved.has(cell):
+                if not bool(world_config.call("is_valid_cell", cell) or reserved.has(cell):
                     continue
                 if not world.is_buildable(cell) or world.occupied.has(cell):
                     continue
@@ -129,7 +131,7 @@ func _find_free_cell(origin: Vector2, reserved: Dictionary) -> Vector2i:
                 var ownership := String(territory.call("owner_at", cell))
                 if ownership == "player" or ownership == "contested":
                     continue
-                if keep.position.distance_to(navigation.center_of(cell))                         > radius_limit * float(WorldConfig.tile_size):
+                if keep.position.distance_to(navigation.center_of(cell))                         > radius_limit * float(int(world_config.get("tile_size"))):
                     continue
                 return cell
     return Vector2i(-1, -1)
@@ -143,8 +145,8 @@ func _spawn_resource(script: Script, origin: Vector2, reserved: Dictionary) -> N
     reserved[cell] = true
     var node := script.new() as Node2D
     node.position = Vector2(
-        float(cell.x * WorldConfig.tile_size) + WorldConfig.tile_size / 2.0,
-        float((cell.y + 1) * WorldConfig.tile_size)
+        float(cell.x * int(world_config.get("tile_size"))) + int(world_config.get("tile_size")) / 2.0,
+        float((cell.y + 1) * int(world_config.get("tile_size")))
     )
     world.call("_register_resource_node", node, cell)
     await process_frame
@@ -198,8 +200,15 @@ func _initialize() -> void:
         "Rendered QA output directory must be writable")
     OS.set_environment("HTK_AUTO_START_GAME", "1")
     OS.set_environment("HTK_AUTO_RESOLVE_EVENTS", "1")
-    _check(WorldConfig.apply_profile("classic"), "Classic profile must be available")
-    WorldConfig.world_seed = 1337
+    world_config = root.get_node_or_null("WorldConfig")
+    game_clock = root.get_node_or_null("GameClock")
+    _check(world_config != null and game_clock != null,
+        "WorldConfig and GameClock autoloads must be available in the running SceneTree")
+    if world_config == null or game_clock == null:
+        quit(1)
+        return
+    _check(bool(world_config.call("apply_profile", "classic")), "Classic profile must be available")
+    world_config.set("world_seed", 1337)
     await process_frame
 
     main_scene = load("res://scenes/main.tscn").instantiate() as Node2D
@@ -228,7 +237,7 @@ func _initialize() -> void:
         quit(1)
         return
     keep.set_process(false)
-    GameClock.set_process(false)
+    game_clock.set_process(false)
     navigation.call("rebuild")
     territory.call("rebuild")
     _check(int(navigation.get("version")) > 0, "NavGrid must be initialized")
@@ -437,7 +446,7 @@ func _initialize() -> void:
     for keep_cell in keep_cells:
         for direction in DIRS4:
             var adjacent := keep_cell + direction
-            if WorldConfig.is_valid_cell(adjacent) and not keep_cells.has(adjacent):
+            if bool(world_config.call("is_valid_cell", adjacent) and not keep_cells.has(adjacent):
                 navigation.get("astar").set_point_solid(adjacent, true)
                 blocked_cells[adjacent] = true
     navigation.set("version", int(navigation.get("version")) + 1)
@@ -487,7 +496,7 @@ func _initialize() -> void:
         var cell: Vector2i = cell_value
         if not world.is_buildable(cell) or world.occupied.has(cell):
             continue
-        if keep.position.distance_to(navigation.center_of(cell))                 <= maxf(float(keep.get("claim_radius")) * 4.0, float(keep.get("claim_radius")) + 6.0) * float(WorldConfig.tile_size):
+        if keep.position.distance_to(navigation.center_of(cell))                 <= maxf(float(keep.get("claim_radius")) * 4.0, float(keep.get("claim_radius")) + 6.0) * float(int(world_config.get("tile_size"))):
             player_cell = cell
             break
     _check(player_cell.x >= 0,
@@ -495,8 +504,8 @@ func _initialize() -> void:
     if player_cell.x >= 0:
         var player_tree := TREE_SCRIPT.new() as Node2D
         player_tree.position = Vector2(
-            float(player_cell.x * WorldConfig.tile_size) + WorldConfig.tile_size / 2.0,
-            float((player_cell.y + 1) * WorldConfig.tile_size)
+            float(player_cell.x * int(world_config.get("tile_size"))) + int(world_config.get("tile_size")) / 2.0,
+            float((player_cell.y + 1) * int(world_config.get("tile_size")))
         )
         world.call("_register_resource_node", player_tree, player_cell)
         await process_frame
