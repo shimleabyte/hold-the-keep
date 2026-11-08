@@ -161,6 +161,8 @@ func _initialize() -> void:
         _check(woodcutter.get("_target") != null,
             "A worker must retry target selection after the blocked route becomes reachable")
 
+    _assert_blocked_return_retry_budget(woodcutter, navigation, keep)
+
     var resource_before: float = float(civilization.get("resources").get("wood", 0.0))
     var saw_target_claim := false
     var saw_cargo := false
@@ -232,6 +234,8 @@ func _initialize() -> void:
         "A retiring worker must finish its return and leave after successful delivery")
     _check(float(civilization.get("resources").get("wood", 0.0)) >= delivery_before + 5.0,
         "Physical delivery must credit wood to the correct owning stronghold ledger")
+
+    await _assert_quarry_acquires_iron_and_pays_forge(main_scene, keep, civilization)
 
     # Destroying a staffed workplace while its worker carries cargo must release
     # the current node reservation, return the cargo and remove the orphan actor.
@@ -367,3 +371,140 @@ func _check(condition: bool, message: String) -> void:
         return
     failed = true
     push_error("FAIL: " + message)
+
+
+func _assert_blocked_return_retry_budget(worker: Node2D, navigation: Node, keep: Node2D) -> void:
+    var astar: AStarGrid2D = navigation.get("astar") as AStarGrid2D
+    var blocked_cells: Array[Vector2i] = []
+    var keep_cells: Array[Vector2i] = keep.call("cells")
+    for keep_cell: Vector2i in keep_cells:
+        for direction: Vector2i in [
+            Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)
+        ]:
+            var approach := keep_cell + direction
+            if bool(navigation.call("is_walkable", approach)) and not blocked_cells.has(approach):
+                astar.set_point_solid(approach, true)
+                blocked_cells.append(approach)
+    _check(not blocked_cells.is_empty(),
+        "Blocked-return regression must close every walkable stronghold approach cell")
+    if blocked_cells.is_empty():
+        return
+
+    navigation.set("version", int(navigation.get("version")) + 1)
+    worker.call("_release_target")
+    worker.set("carry_kind", "wood")
+    worker.set("carry", 1)
+    worker.call("_begin_return_to_keep")
+    var requests_after_initial_failure := int(worker.get("path_request_count"))
+    for step in range(30):
+        worker.call("tick", 0.1)
+        if step % 5 == 0:
+            await physics_frame
+    var repeated_requests := int(worker.get("path_request_count")) - requests_after_initial_failure
+    _check(repeated_requests <= 4,
+        "An unchanged blocked return route must respect its retry cooldown instead of repeating A* every frame")
+
+    for cell: Vector2i in blocked_cells:
+        astar.set_point_solid(cell, false)
+    navigation.set("version", int(navigation.get("version")) + 1)
+    worker.set("carry", 0)
+    worker.set("carry_kind", "")
+    worker.set("_state", 0)
+    worker.set("_path", PackedVector2Array())
+    worker.set("_path_version", -1)
+    worker.set("_retry_timer", 0.0)
+
+
+func _assert_quarry_acquires_iron_and_pays_forge(
+    main_scene: Node2D,
+    keep: Node2D,
+    civilization: RefCounted
+) -> void:
+    keep.set("faction_id", "ashen_host")
+    for structure_id: String in ["farm", "quarry", "barracks"]:
+        if bool(civilization.call("_has_active_structure", structure_id)):
+            continue
+        var build_cell: Vector2i = civilization.call("_find_build_site", structure_id)
+        _check(build_cell.x >= 0, "Forge progression fixture needs a legal " + structure_id + " site")
+        if build_cell.x >= 0:
+            _check(bool(civilization.call("_spawn_structure", structure_id, build_cell)),
+                "Forge progression fixture must instantiate " + structure_id)
+    if not (
+        bool(civilization.call("_has_active_structure", "farm"))
+        and bool(civilization.call("_has_active_structure", "quarry"))
+        and bool(civilization.call("_has_active_structure", "barracks"))
+    ):
+        return
+
+    civilization.set("technology_tier", 1)
+    var resources: Dictionary = civilization.get("resources")
+    resources["wood"] = 500.0
+    resources["stone"] = 300.0
+    resources["food"] = 200.0
+    resources["iron"] = 11.0
+    var forge_plan: Dictionary = civilization.call("_build_plan_for", "forge")
+    var forge_cost: Dictionary = forge_plan.get("cost", {})
+    _check(int(forge_cost.get("iron", 0)) == 12,
+        "The physical Quarry progression test must use the existing 12-iron Forge cost")
+    _check(not bool(civilization.call("_can_pay", forge_cost)),
+        "Eleven iron must remain insufficient to start paid Forge construction")
+
+    civilization.call("_reconcile_build_order_index")
+    var labor: Dictionary = civilization.call("labor_allocation")
+    civilization.call("_sync_physical_workers", labor)
+    var quarry_worker: Node2D
+    for worker: Node in get_nodes_in_group("enemy_economic_workers"):
+        if (
+            is_instance_valid(worker)
+            and worker.get("civilization") == civilization
+            and String(worker.get("role")) == "quarry"
+        ):
+            quarry_worker = worker as Node2D
+            break
+    _check(quarry_worker != null,
+        "A completed Quarry with available labor must spawn a real physical Quarry worker")
+    if quarry_worker == null:
+        return
+
+    var carried_iron := false
+    for step in range(12000):
+        civilization.call("advance", 0.1)
+        if (
+            int(quarry_worker.get("carry")) > 0
+            and String(quarry_worker.get("carry_kind")) == "iron"
+        ):
+            carried_iron = true
+            quarry_worker.call("_begin_return_to_keep")
+            break
+        if step % 10 == 0:
+            await physics_frame
+    _check(carried_iron,
+        "A Tier I Quarry worker must reserve and physically harvest a real IronOre node")
+    if not carried_iron:
+        return
+
+    for step in range(12000):
+        civilization.call("advance", 0.1)
+        if float(resources.get("iron", 0.0)) >= 12.0:
+            break
+        if step % 10 == 0:
+            await physics_frame
+    _check(float(resources.get("iron", 0.0)) >= 12.0,
+        "The Quarry worker must deliver its harvested iron to the owning stronghold ledger")
+    if float(resources.get("iron", 0.0)) < 12.0:
+        return
+
+    civilization.call("_reconcile_build_order_index")
+    var iron_before := float(resources.get("iron", 0.0))
+    var wood_before := float(resources.get("wood", 0.0))
+    var stone_before := float(resources.get("stone", 0.0))
+    civilization.call("_try_start_construction")
+    var active_construction: Dictionary = civilization.get("construction")
+    _check(String(active_construction.get("id", "")) == "forge",
+        "The rival must begin Forge construction after its physical Quarry delivery funds the iron requirement")
+    _check(is_equal_approx(float(resources.get("iron", 0.0)), iron_before - 12.0),
+        "Starting Forge construction must debit its full 12-iron cost from the rival ledger")
+    _check(is_equal_approx(float(resources.get("wood", 0.0)), wood_before - 75.0),
+        "Starting Forge construction must debit its full 75-wood cost from the rival ledger")
+    _check(is_equal_approx(float(resources.get("stone", 0.0)), stone_before - 45.0),
+        "Starting Forge construction must debit its full 45-stone cost from the rival ledger")
