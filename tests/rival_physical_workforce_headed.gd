@@ -457,7 +457,7 @@ func _initialize() -> void:
     await advance_civilization(civilization, 180.0)
     var after: Dictionary = civilization.get("resources")
     for kind: String in RESOURCES:
-        check(float(after.get(kind, 0.0)) > float(before.get(kind, 0.0)),
+        check(float(after.get(kind, 0.0)) > float(resources_before.get(kind, 0.0)),
             "Physical harvesting/production and delivery raises rival " + kind)
     log_workers(civilization, "after_180_seconds")
     await test_capacity_and_retry(main, civilization, wood_worker)
