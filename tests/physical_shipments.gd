@@ -96,11 +96,16 @@ func _initialize() -> void:
     var source_disconnect_order := order_for(main.supply.get_shipment_orders(), source_disconnect_id)
     require(String(source_disconnect_order.get("status", "")) == "in_transit",
         "The origin-disconnect scenario must begin with a moving courier")
-    var source_disconnect_position := Vector2(
-        float(source_disconnect_order["x"]), float(source_disconnect_order["y"])
-    )
-    require(source_disconnect_position.distance_to(source.position) > 0.5,
-        "The courier must have departed before the origin is disconnected")
+    var source_disconnect_carrier: Node2D
+    for carrier: Node in get_nodes_in_group("supply_carriers"):
+        if int(carrier.get("order_id")) == source_disconnect_id:
+            source_disconnect_carrier = carrier as Node2D
+            break
+    require(source_disconnect_carrier != null,
+        "The in-flight shipment must retain its visible courier")
+    if source_disconnect_carrier != null:
+        require(source_disconnect_carrier.position.distance_to(source.position) > 0.5,
+            "The courier must have departed before the origin is disconnected")
     main.supply._depot_connections[source.get_instance_id()] = false
     main.supply.advance_shipment_orders()
     var origin_isolated_order := order_for(main.supply.get_shipment_orders(), source_disconnect_id)
