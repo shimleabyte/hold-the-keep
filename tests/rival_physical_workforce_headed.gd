@@ -453,7 +453,7 @@ func _initialize() -> void:
     await capture_worker_movement(main, civilization, keep, wood_worker)
     await tick_worker(wood_worker, 100.0)
 
-    var before := civilization.get("resources").duplicate(true)
+    var resources_before: Dictionary = civilization.get("resources").duplicate(true)
     await advance_civilization(civilization, 180.0)
     var after: Dictionary = civilization.get("resources")
     for kind: String in RESOURCES:
