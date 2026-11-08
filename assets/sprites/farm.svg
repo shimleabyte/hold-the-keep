@@ -1,86 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="32" viewBox="0 0 48 32" shape-rendering="crispEdges">
-<rect x="0" y="0" width="48" height="32" fill="#6b4a2b"/>
-<rect x="2" y="3" width="44" height="4" fill="#4f7a2e"/>
-<rect x="2" y="3" width="44" height="1" fill="#6a9a3d"/>
-<rect x="3" y="2" width="2" height="2" fill="#7fb84a"/>
-<rect x="4" y="4" width="1" height="2" fill="#e8c23a"/>
-<rect x="7" y="2" width="2" height="2" fill="#7fb84a"/>
-<rect x="8" y="4" width="1" height="2" fill="#e8c23a"/>
-<rect x="11" y="2" width="2" height="2" fill="#7fb84a"/>
-<rect x="12" y="4" width="1" height="2" fill="#e8c23a"/>
-<rect x="15" y="2" width="2" height="2" fill="#7fb84a"/>
-<rect x="19" y="2" width="2" height="2" fill="#7fb84a"/>
-<rect x="23" y="2" width="2" height="2" fill="#7fb84a"/>
-<rect x="24" y="4" width="1" height="2" fill="#e8c23a"/>
-<rect x="27" y="2" width="2" height="2" fill="#7fb84a"/>
-<rect x="28" y="4" width="1" height="2" fill="#e8c23a"/>
-<rect x="31" y="2" width="2" height="2" fill="#7fb84a"/>
-<rect x="35" y="2" width="2" height="2" fill="#7fb84a"/>
-<rect x="36" y="4" width="1" height="2" fill="#e8c23a"/>
-<rect x="39" y="2" width="2" height="2" fill="#7fb84a"/>
-<rect x="40" y="4" width="1" height="2" fill="#e8c23a"/>
-<rect x="43" y="2" width="2" height="2" fill="#7fb84a"/>
-<rect x="2" y="10" width="44" height="4" fill="#4f7a2e"/>
-<rect x="2" y="10" width="44" height="1" fill="#6a9a3d"/>
-<rect x="3" y="9" width="2" height="2" fill="#7fb84a"/>
-<rect x="4" y="11" width="1" height="2" fill="#e8c23a"/>
-<rect x="7" y="9" width="2" height="2" fill="#7fb84a"/>
-<rect x="11" y="9" width="2" height="2" fill="#7fb84a"/>
-<rect x="12" y="11" width="1" height="2" fill="#e8c23a"/>
-<rect x="15" y="9" width="2" height="2" fill="#7fb84a"/>
-<rect x="19" y="9" width="2" height="2" fill="#7fb84a"/>
-<rect x="20" y="11" width="1" height="2" fill="#e8c23a"/>
-<rect x="23" y="9" width="2" height="2" fill="#7fb84a"/>
-<rect x="27" y="9" width="2" height="2" fill="#7fb84a"/>
-<rect x="31" y="9" width="2" height="2" fill="#7fb84a"/>
-<rect x="32" y="11" width="1" height="2" fill="#e8c23a"/>
-<rect x="35" y="9" width="2" height="2" fill="#7fb84a"/>
-<rect x="39" y="9" width="2" height="2" fill="#7fb84a"/>
-<rect x="43" y="9" width="2" height="2" fill="#7fb84a"/>
-<rect x="44" y="11" width="1" height="2" fill="#e8c23a"/>
-<rect x="2" y="17" width="44" height="4" fill="#4f7a2e"/>
-<rect x="2" y="17" width="44" height="1" fill="#6a9a3d"/>
-<rect x="3" y="16" width="2" height="2" fill="#7fb84a"/>
-<rect x="7" y="16" width="2" height="2" fill="#7fb84a"/>
-<rect x="8" y="18" width="1" height="2" fill="#e8c23a"/>
-<rect x="11" y="16" width="2" height="2" fill="#7fb84a"/>
-<rect x="12" y="18" width="1" height="2" fill="#e8c23a"/>
-<rect x="15" y="16" width="2" height="2" fill="#7fb84a"/>
-<rect x="16" y="18" width="1" height="2" fill="#e8c23a"/>
-<rect x="19" y="16" width="2" height="2" fill="#7fb84a"/>
-<rect x="23" y="16" width="2" height="2" fill="#7fb84a"/>
-<rect x="24" y="18" width="1" height="2" fill="#e8c23a"/>
-<rect x="27" y="16" width="2" height="2" fill="#7fb84a"/>
-<rect x="31" y="16" width="2" height="2" fill="#7fb84a"/>
-<rect x="35" y="16" width="2" height="2" fill="#7fb84a"/>
-<rect x="39" y="16" width="2" height="2" fill="#7fb84a"/>
-<rect x="43" y="16" width="2" height="2" fill="#7fb84a"/>
-<rect x="44" y="18" width="1" height="2" fill="#e8c23a"/>
-<rect x="2" y="24" width="44" height="4" fill="#4f7a2e"/>
-<rect x="2" y="24" width="44" height="1" fill="#6a9a3d"/>
-<rect x="3" y="23" width="2" height="2" fill="#7fb84a"/>
-<rect x="7" y="23" width="2" height="2" fill="#7fb84a"/>
-<rect x="8" y="25" width="1" height="2" fill="#e8c23a"/>
-<rect x="11" y="23" width="2" height="2" fill="#7fb84a"/>
-<rect x="15" y="23" width="2" height="2" fill="#7fb84a"/>
-<rect x="19" y="23" width="2" height="2" fill="#7fb84a"/>
-<rect x="20" y="25" width="1" height="2" fill="#e8c23a"/>
-<rect x="23" y="23" width="2" height="2" fill="#7fb84a"/>
-<rect x="24" y="25" width="1" height="2" fill="#e8c23a"/>
-<rect x="27" y="23" width="2" height="2" fill="#7fb84a"/>
-<rect x="28" y="25" width="1" height="2" fill="#e8c23a"/>
-<rect x="31" y="23" width="2" height="2" fill="#7fb84a"/>
-<rect x="35" y="23" width="2" height="2" fill="#7fb84a"/>
-<rect x="36" y="25" width="1" height="2" fill="#e8c23a"/>
-<rect x="39" y="23" width="2" height="2" fill="#7fb84a"/>
-<rect x="43" y="23" width="2" height="2" fill="#7fb84a"/>
-<rect x="44" y="25" width="1" height="2" fill="#e8c23a"/>
-<rect x="0" y="0" width="48" height="1" fill="#8a6338"/>
-<rect x="0" y="31" width="48" height="1" fill="#8a6338"/>
-<rect x="0" y="0" width="1" height="32" fill="#8a6338"/>
-<rect x="47" y="0" width="1" height="32" fill="#8a6338"/>
-<rect x="0" y="0" width="2" height="3" fill="#553a22"/>
-<rect x="46" y="0" width="2" height="3" fill="#553a22"/>
-<rect x="0" y="29" width="2" height="3" fill="#553a22"/>
-<rect x="46" y="29" width="2" height="3" fill="#553a22"/>
+<!-- dark turned earth and field boundary -->
+<rect width="48" height="32" fill="#342c22"/><rect x="1" y="1" width="46" height="30" fill="#59412c"/><path d="M2 2H46M2 30H46" stroke="#9b7548" stroke-width="1"/>
+<!-- four raised furrows -->
+<path d="M2 5H46V9H2ZM2 12H46V16H2ZM2 19H46V23H2ZM2 26H46V29H2Z" fill="#705235"/>
+<path d="M2 5H46M2 12H46M2 19H46M2 26H46" stroke="#b18a55" stroke-width="1"/>
+<path d="M2 9H46M2 16H46M2 23H46M2 29H46" stroke="#382c20" stroke-width="1"/>
+<!-- distinct wheat clusters -->
+<g fill="#c5a45c"><path d="M5 4h2v3H5zM9 4h2v3H9zM17 4h2v3h-2zM21 4h2v3h-2zM29 4h2v3h-2zM33 4h2v3h-2zM41 4h2v3h-2z"/><path d="M7 11h2v4H7zM13 11h2v4h-2zM25 11h2v4h-2zM31 11h2v4h-2zM39 11h2v4h-2zM43 11h2v4h-2z"/><path d="M4 18h2v4H4zM11 18h2v4h-2zM19 18h2v4h-2zM27 18h2v4h-2zM35 18h2v4h-2zM42 18h2v4h-2z"/><path d="M7 25h2v3H7zM15 25h2v3h-2zM23 25h2v3h-2zM31 25h2v3h-2zM39 25h2v3h-2z"/></g>
+<g fill="#78904b"><path d="M5 3h1v3H5zM9 3h1v3H9zM17 3h1v3h-1zM21 3h1v3h-1zM29 3h1v3h-1zM33 3h1v3h-1zM41 3h1v3h-1z"/><path d="M7 10h1v4H7zM13 10h1v4h-1zM25 10h1v4h-1zM31 10h1v4h-1zM39 10h1v4h-1zM43 10h1v4h-1z"/></g>
+<!-- irrigation channels and field stakes -->
+<path d="M3 8H45M3 15H45M3 22H45M3 28H45" stroke="#2d3930" stroke-width="1"/>
+<rect x="1" y="0" width="2" height="3" fill="#b59a6b"/><rect x="45" y="0" width="2" height="3" fill="#b59a6b"/><rect x="1" y="29" width="2" height="3" fill="#b59a6b"/><rect x="45" y="29" width="2" height="3" fill="#b59a6b"/>
+<path d="M2 1L5 4M46 1L43 4M2 30L5 27M46 30L43 27" stroke="#4b3928" stroke-width="1"/>
 </svg>
