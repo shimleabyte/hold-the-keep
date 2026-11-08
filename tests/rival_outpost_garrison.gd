@@ -11,11 +11,12 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-    WorldConfig.apply_profile("frontier")
+    var world_config: Node = root.get_node("WorldConfig")
+    world_config.call("apply_profile", "frontier")
     for path in ["user://save.json", "user://save.tmp", "user://save.bak"]:
         DirAccess.remove_absolute(path)
 
-    var main := load("res://scenes/main.tscn").instantiate() as Node2D
+    var main = load("res://scenes/main.tscn").instantiate()
     if main == null:
         _check(false, "Main scene must instantiate for the rival outpost fixture")
         quit(1)
@@ -173,7 +174,8 @@ func _run() -> void:
     quit()
 
 
-func _find_outpost_anchor(main: Node, keep: Node2D) -> Vector2i:
+func _find_outpost_anchor(main: Variant, keep: Node2D) -> Vector2i:
+    var world_config: Node = root.get_node("WorldConfig")
     var footprint := Vector2i(2, 2)
     for radius in range(1, 28):
         for y in range(-radius, radius + 1):
@@ -185,7 +187,7 @@ func _find_outpost_anchor(main: Node, keep: Node2D) -> Vector2i:
                 for fy in footprint.y:
                     for fx in footprint.x:
                         var cell := anchor + Vector2i(fx, fy)
-                        if not WorldConfig.is_valid_cell(cell) or not main.world.is_buildable(cell):
+                        if not bool(world_config.call("is_valid_cell", cell)) or not main.world.is_buildable(cell):
                             valid = false
                             break
                         if main.world.occupied.has(cell):
