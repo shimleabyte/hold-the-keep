@@ -4,9 +4,10 @@ extends SceneTree
 
 const OUTPUT_DIR := "/tmp/hold-the-keep-rival-workforce-qa"
 const FRAME_DIR := OUTPUT_DIR + "/frames"
-const TREE_SCRIPT := preload("res://scripts/entities/resource_tree.gd")
-const ROCK_SCRIPT := preload("res://scripts/entities/rock.gd")
-const IRON_ORE_SCRIPT := preload("res://scripts/entities/iron_ore.gd")
+
+var _tree_script: GDScript
+var _rock_script: GDScript
+var _iron_ore_script: GDScript
 
 var _main: Node2D
 var _keep: Node2D
@@ -64,6 +65,16 @@ func _initialize() -> void:
     OS.set_environment("HTK_AUTO_START_GAME", "1")
     OS.set_environment("HTK_AUTO_RESOLVE_EVENTS", "1")
     await process_frame
+
+    # These gameplay scripts reference project autoloads. Load them only after
+    # the SceneTree has initialized the autoload nodes; preloading them at script
+    # parse time causes unresolved Events identifiers and invalid GDScript resources.
+    _tree_script = load("res://scripts/entities/resource_tree.gd") as GDScript
+    _rock_script = load("res://scripts/entities/rock.gd") as GDScript
+    _iron_ore_script = load("res://scripts/entities/iron_ore.gd") as GDScript
+    if _tree_script == null or _rock_script == null or _iron_ore_script == null:
+        _fail("Could not load gameplay resource scripts after autoload initialization")
+        return
 
     var world_config: Node = root.get_node_or_null("WorldConfig")
     if world_config == null or not bool(world_config.call("apply_profile", "classic")):
@@ -367,20 +378,23 @@ func _ensure_resource_node(kind: String, worker: Node2D) -> bool:
                 var node_position: Vector2 = nav.call("center_of", cell)
                 if _keep.position.distance_to(node_position) > local_radius:
                     continue
-                var approach_path: PackedVector2Array = nav.call("path_adjacent", worker.global_position, [cell])
+                var approach_cells: Array[Vector2i] = [cell]
+                var approach_path: PackedVector2Array = nav.call("path_adjacent", worker.global_position, approach_cells)
                 if approach_path.is_empty() or not bool(worker.call("_path_avoids_player_territory", approach_path)):
                     continue
 
-                var resource_node: StaticBody2D = StaticBody2D.new()
+                var resource_node: Node2D
                 match kind:
                     "wood":
-                        resource_node.set_script(TREE_SCRIPT)
+                        resource_node = _tree_script.new() as Node2D
                     "stone":
-                        resource_node.set_script(ROCK_SCRIPT)
+                        resource_node = _rock_script.new() as Node2D
                     "iron":
-                        resource_node.set_script(IRON_ORE_SCRIPT)
+                        resource_node = _iron_ore_script.new() as Node2D
                     _:
                         return false
+                if resource_node == null:
+                    return false
                 resource_node.name = "RivalWorkforceQA_%s_%d_%d" % [kind, cell.x, cell.y]
                 resource_node.position = node_position
                 world.call("_register_resource_node", resource_node, cell)
