@@ -304,6 +304,10 @@ func _initialize() -> void:
                 stockpile["wood"] = wood_before_backpressure
 
     civilization.set("active", true)
+    # The preceding storage-recovery fixture intentionally fills the rival's
+    # wood stockpile. Reopen capacity before asserting that the Lumber Camp
+    # receives labor again; a full stockpile correctly suspends woodcutters.
+    civilization.get("resources")["wood"] = 100.0
 
     # Reconcile runtime staffing after the retired worker leaves; this is a
     # separate economy tick from the isolated delivery assertion above.

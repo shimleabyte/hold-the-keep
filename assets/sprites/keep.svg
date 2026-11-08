@@ -1,86 +1,33 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="56" height="62" viewBox="0 0 56 62" shape-rendering="crispEdges">
-<rect x="27" y="2" width="1" height="16" fill="#4a3a2a"/>
-<rect x="28" y="2" width="9" height="1" fill="#e05a4b"/>
-<rect x="28" y="3" width="8" height="1" fill="#c0392b"/>
-<rect x="28" y="4" width="6" height="1" fill="#c0392b"/>
-<rect x="28" y="5" width="5" height="1" fill="#c0392b"/>
-<rect x="28" y="6" width="3" height="1" fill="#c0392b"/>
-<rect x="28" y="7" width="1" height="1" fill="#c0392b"/>
-<rect x="13" y="21" width="30" height="41" fill="#9a9fa8"/>
-<rect x="13" y="21" width="30" height="1" fill="#b5bac2"/>
-<rect x="14" y="17" width="4" height="4" fill="#9a9fa8"/>
-<rect x="14" y="17" width="4" height="1" fill="#b5bac2"/>
-<rect x="19" y="17" width="4" height="4" fill="#9a9fa8"/>
-<rect x="19" y="17" width="4" height="1" fill="#b5bac2"/>
-<rect x="24" y="17" width="4" height="4" fill="#9a9fa8"/>
-<rect x="24" y="17" width="4" height="1" fill="#b5bac2"/>
-<rect x="29" y="17" width="4" height="4" fill="#9a9fa8"/>
-<rect x="29" y="17" width="4" height="1" fill="#b5bac2"/>
-<rect x="34" y="17" width="4" height="4" fill="#9a9fa8"/>
-<rect x="34" y="17" width="4" height="1" fill="#b5bac2"/>
-<rect x="39" y="17" width="4" height="4" fill="#9a9fa8"/>
-<rect x="39" y="17" width="4" height="1" fill="#b5bac2"/>
-<rect x="13" y="25" width="30" height="1" fill="#868b94"/>
-<rect x="13" y="26" width="1" height="4" fill="#868b94"/>
-<rect x="23" y="26" width="1" height="4" fill="#868b94"/>
-<rect x="33" y="26" width="1" height="4" fill="#868b94"/>
-<rect x="13" y="30" width="30" height="1" fill="#868b94"/>
-<rect x="18" y="31" width="1" height="4" fill="#868b94"/>
-<rect x="28" y="31" width="1" height="4" fill="#868b94"/>
-<rect x="38" y="31" width="1" height="4" fill="#868b94"/>
-<rect x="13" y="35" width="30" height="1" fill="#868b94"/>
-<rect x="13" y="36" width="1" height="4" fill="#868b94"/>
-<rect x="23" y="36" width="1" height="4" fill="#868b94"/>
-<rect x="33" y="36" width="1" height="4" fill="#868b94"/>
-<rect x="13" y="40" width="30" height="1" fill="#868b94"/>
-<rect x="18" y="41" width="1" height="4" fill="#868b94"/>
-<rect x="28" y="41" width="1" height="4" fill="#868b94"/>
-<rect x="38" y="41" width="1" height="4" fill="#868b94"/>
-<rect x="13" y="45" width="30" height="1" fill="#868b94"/>
-<rect x="13" y="46" width="1" height="4" fill="#868b94"/>
-<rect x="23" y="46" width="1" height="4" fill="#868b94"/>
-<rect x="33" y="46" width="1" height="4" fill="#868b94"/>
-<rect x="13" y="50" width="30" height="1" fill="#868b94"/>
-<rect x="18" y="51" width="1" height="4" fill="#868b94"/>
-<rect x="28" y="51" width="1" height="4" fill="#868b94"/>
-<rect x="38" y="51" width="1" height="4" fill="#868b94"/>
-<rect x="13" y="55" width="30" height="1" fill="#868b94"/>
-<rect x="13" y="56" width="1" height="4" fill="#868b94"/>
-<rect x="23" y="56" width="1" height="4" fill="#868b94"/>
-<rect x="33" y="56" width="1" height="4" fill="#868b94"/>
-<rect x="1" y="10" width="12" height="52" fill="#7d828b"/>
-<rect x="1" y="10" width="2" height="52" fill="#a3a8b1"/>
-<rect x="11" y="10" width="2" height="52" fill="#6e737b"/>
-<rect x="1" y="6" width="3" height="4" fill="#7d828b"/>
-<rect x="1" y="6" width="3" height="1" fill="#a3a8b1"/>
-<rect x="6" y="6" width="3" height="4" fill="#7d828b"/>
-<rect x="6" y="6" width="3" height="1" fill="#a3a8b1"/>
-<rect x="10" y="6" width="3" height="4" fill="#7d828b"/>
-<rect x="10" y="6" width="3" height="1" fill="#a3a8b1"/>
-<rect x="6" y="26" width="2" height="6" fill="#23262b"/>
-<rect x="6" y="40" width="2" height="6" fill="#23262b"/>
-<rect x="0" y="10" width="14" height="1" fill="#6e737b"/>
-<rect x="43" y="10" width="12" height="52" fill="#7d828b"/>
-<rect x="43" y="10" width="2" height="52" fill="#a3a8b1"/>
-<rect x="53" y="10" width="2" height="52" fill="#6e737b"/>
-<rect x="43" y="6" width="3" height="4" fill="#7d828b"/>
-<rect x="43" y="6" width="3" height="1" fill="#a3a8b1"/>
-<rect x="48" y="6" width="3" height="4" fill="#7d828b"/>
-<rect x="48" y="6" width="3" height="1" fill="#a3a8b1"/>
-<rect x="52" y="6" width="3" height="4" fill="#7d828b"/>
-<rect x="52" y="6" width="3" height="1" fill="#a3a8b1"/>
-<rect x="48" y="26" width="2" height="6" fill="#23262b"/>
-<rect x="48" y="40" width="2" height="6" fill="#23262b"/>
-<rect x="42" y="10" width="14" height="1" fill="#6e737b"/>
-<rect x="22" y="46" width="12" height="16" fill="#2b2118"/>
-<rect x="23" y="44" width="10" height="2" fill="#2b2118"/>
-<rect x="24" y="43" width="8" height="1" fill="#2b2118"/>
-<rect x="26" y="44" width="1" height="18" fill="#4a3520"/>
-<rect x="29" y="44" width="1" height="18" fill="#4a3520"/>
-<rect x="22" y="52" width="12" height="1" fill="#4a3520"/>
-<rect x="26" y="32" width="4" height="9" fill="#c0392b"/>
-<rect x="26" y="32" width="4" height="1" fill="#e8c23a"/>
-<rect x="27" y="41" width="2" height="1" fill="#c0392b"/>
-<rect x="1" y="58" width="54" height="4" fill="#6e737b"/>
-<rect x="22" y="58" width="12" height="4" fill="#2b2118"/>
+<!-- Crown pennant and mast -->
+<rect x="27" y="1" width="2" height="18" fill="#493b2d"/><rect x="28" y="2" width="10" height="1" fill="#c6ae7c"/><path d="M29 3H39L35 8H29Z" fill="#7e3732"/><path d="M29 3H36L33 6H29Z" fill="#b7654e"/>
+<!-- rear curtain wall -->
+<rect x="7" y="17" width="42" height="45" fill="#343b3c"/><rect x="9" y="18" width="38" height="43" fill="#747b76"/><rect x="10" y="19" width="36" height="41" fill="#92958a"/>
+<rect x="10" y="20" width="36" height="2" fill="#b5b4a2"/><rect x="10" y="22" width="36" height="1" fill="#5d6562"/>
+<!-- stone courses -->
+<path d="M10 27H46M10 35H46M10 43H46M10 51H46M10 58H46" stroke="#626b68" stroke-width="1"/>
+<path d="M17 23V27M35 23V27M27 27V35M15 35V43M38 35V43M25 43V51M17 51V58M37 51V58" stroke="#626b68" stroke-width="1"/>
+<path d="M11 24H21M29 24H42M12 31H24M30 39H43M12 47H20M31 55H43" stroke="#b0ad9b" stroke-width="1"/>
+<!-- twin gate towers -->
+<rect x="0" y="10" width="15" height="52" fill="#454d4e"/><rect x="1" y="11" width="12" height="50" fill="#858b84"/><rect x="2" y="12" width="2" height="48" fill="#b0b1a1"/><rect x="11" y="12" width="2" height="48" fill="#626b68"/>
+<rect x="0" y="7" width="15" height="5" fill="#626b68"/><rect x="1" y="7" width="4" height="5" fill="#92958a"/><rect x="6" y="7" width="4" height="5" fill="#92958a"/><rect x="11" y="7" width="3" height="5" fill="#92958a"/>
+<rect x="41" y="10" width="15" height="52" fill="#454d4e"/><rect x="43" y="11" width="12" height="50" fill="#858b84"/><rect x="43" y="12" width="2" height="48" fill="#b0b1a1"/><rect x="53" y="12" width="2" height="48" fill="#626b68"/>
+<rect x="41" y="7" width="15" height="5" fill="#626b68"/><rect x="42" y="7" width="4" height="5" fill="#92958a"/><rect x="47" y="7" width="4" height="5" fill="#92958a"/><rect x="52" y="7" width="3" height="5" fill="#92958a"/>
+<!-- tower arrow slits -->
+<rect x="6" y="25" width="2" height="7" fill="#303536"/><rect x="6" y="39" width="2" height="7" fill="#303536"/><rect x="48" y="25" width="2" height="7" fill="#303536"/><rect x="48" y="39" width="2" height="7" fill="#303536"/>
+<!-- central gatehouse -->
+<rect x="18" y="28" width="20" height="34" fill="#4a514e"/><rect x="20" y="29" width="16" height="32" fill="#777d75"/><rect x="21" y="30" width="14" height="30" fill="#99988a"/>
+<rect x="20" y="28" width="16" height="2" fill="#c0b69c"/><rect x="22" y="32" width="12" height="2" fill="#626964"/>
+<path d="M21 36H35M21 44H35M21 52H35" stroke="#666d68" stroke-width="1"/><path d="M25 36V44M32 44V52" stroke="#666d68" stroke-width="1"/>
+<!-- portcullis arch -->
+<rect x="22" y="42" width="12" height="20" fill="#292d2d"/><rect x="24" y="40" width="8" height="2" fill="#b2a17d"/><rect x="23" y="42" width="10" height="20" fill="#342a24"/>
+<path d="M24 43V58M27 43V58M30 43V58M32 43V58M23 49H33" stroke="#80684c" stroke-width="1"/>
+<rect x="20" y="60" width="16" height="2" fill="#4b4034"/>
+<!-- gatehouse battlements -->
+<rect x="18" y="23" width="4" height="6" fill="#747b76"/><rect x="25" y="23" width="5" height="6" fill="#747b76"/><rect x="33" y="23" width="5" height="6" fill="#747b76"/>
+<rect x="18" y="22" width="4" height="1" fill="#c0b69c"/><rect x="25" y="22" width="5" height="1" fill="#c0b69c"/><rect x="33" y="22" width="5" height="1" fill="#c0b69c"/>
+<!-- defensive timber braces and torch -->
+<rect x="3" y="56" width="50" height="3" fill="#555d59"/><rect x="4" y="59" width="48" height="3" fill="#3c4443"/>
+<rect x="14" y="38" width="2" height="7" fill="#493a2b"/><rect x="13" y="36" width="4" height="3" fill="#b16c3c"/><rect x="14" y="34" width="2" height="3" fill="#e2a451"/>
+<rect x="40" y="38" width="2" height="7" fill="#493a2b"/><rect x="39" y="36" width="4" height="3" fill="#b16c3c"/><rect x="40" y="34" width="2" height="3" fill="#e2a451"/>
 </svg>
