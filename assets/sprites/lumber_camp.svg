@@ -1,16 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="40" viewBox="0 0 48 40" shape-rendering="crispEdges">
-<rect x="4" y="31" width="40" height="5" fill="#60452e"/>
-<rect x="8" y="13" width="30" height="19" fill="#8d6038"/>
-<rect x="7" y="11" width="32" height="4" fill="#493322"/>
-<path d="M5 12 L22 2 L42 12 Z" fill="#70472f"/>
-<path d="M9 11 L22 4 L37 11 Z" fill="#9b6840"/>
-<rect x="13" y="17" width="20" height="2" fill="#bd8a53"/>
-<rect x="13" y="21" width="20" height="2" fill="#68462e"/>
-<rect x="20" y="23" width="8" height="9" fill="#32271f"/>
-<rect x="22" y="24" width="4" height="8" fill="#a97849"/>
-<rect x="2" y="29" width="13" height="3" fill="#9d6739"/>
-<rect x="2" y="26" width="13" height="3" fill="#c18a50"/>
-<rect x="34" y="27" width="12" height="3" fill="#9d6739"/>
-<rect x="34" y="24" width="12" height="3" fill="#c18a50"/>
-<rect x="10" y="35" width="28" height="2" fill="#392b20"/>
+<!-- timber store and lean-to -->
+<rect x="6" y="15" width="36" height="21" fill="#443327"/><rect x="8" y="17" width="32" height="17" fill="#8b603b"/>
+<path d="M5 15L22 3L43 15V18H5Z" fill="#2e2925"/><path d="M8 14L22 5L40 14V16H8Z" fill="#6c4a31"/>
+<path d="M9 14L22 6L39 14" stroke="#b48755" stroke-width="1.5" fill="none"/>
+<!-- visible log construction -->
+<path d="M9 20H39M9 24H39M9 28H39" stroke="#5c3d29" stroke-width="2"/><path d="M11 19H37M11 23H37M11 27H37" stroke="#b27b47" stroke-width="1"/>
+<rect x="19" y="27" width="10" height="9" fill="#30251e"/><rect x="21" y="28" width="6" height="8" fill="#6b472d"/><rect x="23" y="30" width="1" height="6" fill="#b17b49"/>
+<!-- stacked cut timber -->
+<rect x="1" y="29" width="15" height="4" fill="#583a27"/><rect x="2" y="28" width="14" height="2" fill="#b37c48"/><ellipse cx="2" cy="30" rx="2" ry="2" fill="#d0a06a"/>
+<rect x="33" y="32" width="14" height="4" fill="#583a27"/><rect x="34" y="31" width="13" height="2" fill="#b37c48"/><ellipse cx="34" cy="33" rx="2" ry="2" fill="#d0a06a"/>
+<!-- hand axe and stump -->
+<rect x="4" y="21" width="2" height="8" fill="#604329"/><path d="M3 21H9L8 24H4Z" fill="#a9b0a8"/><path d="M5 22H8" stroke="#e0d7bf" stroke-width="1"/>
+<rect x="36" y="22" width="7" height="4" fill="#a67a4d"/><path d="M37 22H42M39 23V25" stroke="#d3a36a" stroke-width="1"/>
+<!-- roof braces and base -->
+<path d="M8 16L13 22M40 16L35 22" stroke="#4b3324" stroke-width="2"/>
+<rect x="4" y="35" width="40" height="3" fill="#36322d"/><rect x="8" y="35" width="32" height="1" fill="#a58a62"/>
 </svg>
