@@ -51,6 +51,12 @@ jobs:
       - name: Import project
         run: godot --headless --path . --import
 
+      - name: Run focused headless rival workforce regression
+        env:
+          HTK_AUTO_START_GAME: "1"
+          HTK_AUTO_RESOLVE_EVENTS: "1"
+        run: timeout --signal=TERM --kill-after=10s 180s godot --headless --fixed-fps 60 --path . --script res://tests/rival_physical_workforce.gd
+
       - name: Run deterministic rival workforce rendered scenario
         env:
           HTK_AUTO_START_GAME: "1"
