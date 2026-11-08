@@ -244,6 +244,11 @@ func _initialize() -> void:
             str(woodcutter.get("_retry_timer")) if is_instance_valid(woodcutter) else "0"
         ])
 
+    # Reconcile runtime staffing after the retired worker leaves; this is a
+    # separate economy tick from the isolated delivery assertion above.
+    civilization.call("advance", 1.0)
+    await physics_frame
+
     # Destroying a staffed workplace while its worker carries cargo must release
     # the current node reservation, return the cargo and remove the orphan actor.
     var lumber_camp: Node2D
