@@ -853,3 +853,17 @@ The highest-risk structural areas are:
 Run a dedicated in-game capture/playtest for rival woodcutters, miners and farmers. Verify travel paths, resource-node reservation, visible work motion, cargo pickup, hauling to the owning stronghold, full-stockpile waiting, blocked-route recovery, and retirement after workplace/keep destruction. Keep workers outside player civilian and military selection. Do not infer rendered acceptance from the headless campaign/workforce tests.
 
 After visual acceptance, implement local depot storage and road-connected shipments as a separate logistics vertical slice. Defer inter-settlement logistics, rival outposts, second settlements and coordinated raids until local storage and route delivery are reliable.
+
+## Rival workforce consolidation checkpoint — 2026-11-08
+
+PR #189 (fix/rival-workforce-rendered-acceptance) is the single authoritative integration for rival physical workforce work. It consolidates the unique cargo-conservation and Forge-priority changes from PR #188 and the bounded failed-return NavGrid retry correction from PR #190. PRs #188 and #190 are superseded by #189; do not continue parallel implementation on those branches.
+
+The integrated behavior includes exact ordinary/final-hit cargo preflight, atomic cargo acceptance, complete farm-cycle capacity checks, Tier I Quarry iron priority until the existing 12-iron Forge requirement is met, territory and reservation revalidation, physical resource-node harvesting, delivery to the owning stronghold, worker retirement, and save-time cargo reconciliation. Save schema remains v17. No depot, road-shipment, multi-settlement logistics, or new economy feature is included in this slice.
+
+Focused regression coverage now explicitly exercises two previously missing acceptance cases:
+- A blocked return-to-keep route is held against the unchanged NavGrid version and repeated A* requests remain bounded by the retry cooldown.
+- A real Tier I Quarry worker reserves and harvests an actual IronOre node, carries and delivers iron to its own stronghold, then enables Forge construction only after the 12-iron requirement is met; construction must debit the existing 75 wood, 45 stone, and 12 iron cost.
+
+The prior exact PR #189 head f26f24db004475c147314941706642513c971639 passed Godot CI (29 jobs), Campaign Simulation QA, and Rival Workforce Rendered QA. Those results are a baseline only; the new focused regressions and documentation update require fresh checks on the resulting PR head before merge. The rendered workflow uses a real Godot window under Xvfb/Mesa and automated PNG/GIF evidence. It is not a human desktop playtest, and no such playtest is claimed.
+
+Integration order: validate the exact updated PR #189 head and inspect rendered artifacts; merge #189 into main; close #188 and #190 as superseded; then record the final merge SHA and closure state here. Keep local depot storage and road-connected shipments as a separate later vertical slice.
