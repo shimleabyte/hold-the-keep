@@ -210,6 +210,17 @@ func _tick_farming(delta: float) -> void:
 func _tick_travel(delta: float, arrival_state: State) -> void:
     if nav == null or not is_instance_valid(nav):
         return
+    # Territory can change while a worker is already travelling. Revalidate both
+    # the reservation and the remaining route before taking another movement step.
+    if _state == State.TO_RESOURCE and (
+        not _target_is_claimed_and_harvestable()
+        or not _path_avoids_player_territory(_path)
+    ):
+        _release_target()
+        _state = State.IDLE
+        _retry_timer = 0.25
+        _play_clip("idle")
+        return
     if _path_version != int(nav.version):
         if not _repath_current_state():
             _path.clear()
@@ -284,6 +295,8 @@ func _repath_current_state() -> bool:
                 return false
             next_path = nav.path_adjacent(position, workplace.cells())
     if next_path.is_empty():
+        return false
+    if _state == State.TO_RESOURCE and not _path_avoids_player_territory(next_path):
         return false
     _path = next_path
     _path_index = 1 if _path.size() > 1 else 0
@@ -407,6 +420,11 @@ func _path_avoids_player_territory(path: PackedVector2Array) -> bool:
 
 func _target_is_claimed_and_harvestable() -> bool:
     if _target == null or not is_instance_valid(_target) or int(_target.get("_hp")) <= 0:
+        return false
+    # Ownership and region are dynamic. A target that was neutral when reserved
+    # must be abandoned if the player later claims it or the cell becomes contested.
+    var cell: Vector2i = Vector2i(_target.get("resource_cell"))
+    if not _resource_cell_is_available(cell, _target):
         return false
     var node_worker: Variant = _target.get("worker")
     return node_worker == self
