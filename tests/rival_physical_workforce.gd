@@ -244,6 +244,61 @@ func _initialize() -> void:
             str((woodcutter.get("_path") as PackedVector2Array).size()) if is_instance_valid(woodcutter) else "0",
             str(woodcutter.get("_retry_timer")) if is_instance_valid(woodcutter) else "0"
         ])
+    # Full stockpiles apply backpressure: partial deliveries stay with the worker
+    # and resume exactly once after spending opens enough room.
+    var storage_workplace: Node2D
+    for structure: Node in civilization.get("structures"):
+        if (
+            is_instance_valid(structure)
+            and String(structure.get("structure_id")) == "lumber_camp"
+            and int(structure.get("hp")) > 0
+        ):
+            storage_workplace = structure as Node2D
+            break
+    _check(storage_workplace != null, "Stockpile recovery fixture needs a live Lumber Camp")
+    if storage_workplace != null:
+        var storage_worker_script := load("res://scripts/entities/enemy_economic_worker.gd") as Script
+        var storage_worker := storage_worker_script.new() as Node2D if storage_worker_script != null else null
+        _check(storage_worker != null, "Stockpile recovery fixture must load the physical worker")
+        if storage_worker != null:
+            var storage_worker_ready := bool(storage_worker.call(
+                "setup", civilization, storage_workplace, "lumber_camp", 1, main_scene
+            ))
+            _check(storage_worker_ready, "Stockpile recovery worker must initialize against the live workplace")
+            if storage_worker_ready:
+                world.get("entities").add_child(storage_worker)
+                storage_worker.position = keep.position
+                var wood_capacity := float(civilization.call("resource_capacity", "wood"))
+                var stockpile: Dictionary = civilization.get("resources")
+                stockpile["wood"] = wood_capacity - 2.0
+                _check(bool(storage_worker.call("receive", "wood", 5)),
+                    "Stockpile recovery worker must accept a five-unit cargo batch")
+                storage_worker.call("_deposit_at_keep")
+                _check(is_equal_approx(float(stockpile.get("wood", 0.0)), wood_capacity),
+                    "A partial delivery must fill only the two available stockpile units")
+                _check(int(storage_worker.get("carry")) == 3,
+                    "The worker must retain the three undelivered units instead of discarding cargo")
+                _check(int(storage_worker.get("_state")) == 5,
+                    "A worker with undelivered cargo must wait for storage capacity")
+                storage_worker.call("tick", 1.0)
+                _check(int(storage_worker.get("carry")) == 3,
+                    "A full stockpile retry must preserve the remaining cargo")
+                _check(is_equal_approx(float(stockpile.get("wood", 0.0)), wood_capacity),
+                    "A waiting worker must never push the stronghold above storage capacity")
+
+                # Spending creates room; the next scheduled storage retry must finish
+                # the same delivery without duplication or a second resource source.
+                stockpile["wood"] = wood_capacity - 3.0
+                storage_worker.call("tick", 1.0)
+                _check(int(storage_worker.get("carry")) == 0,
+                    "The worker must clear its cargo after the remaining three units fit")
+                _check(is_equal_approx(float(stockpile.get("wood", 0.0)), wood_capacity),
+                    "The resumed delivery must credit exactly the newly available capacity")
+                _check(int(storage_worker.get("_state")) == 0,
+                    "A worker that completes delivery must return to its normal idle cycle")
+                storage_worker.call("shutdown")
+                await process_frame
+
     civilization.set("active", true)
 
     # Reconcile runtime staffing after the retired worker leaves; this is a
