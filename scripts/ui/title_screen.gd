@@ -46,7 +46,7 @@ func _build_screen() -> void:
     landscape.name = "TitleLandscape"
     landscape.texture = TITLE_LANDSCAPE
     landscape.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-    landscape.stretch_mode = TextureRect.STRETCH_SCALE
+    landscape.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
     landscape.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     landscape.mouse_filter = Control.MOUSE_FILTER_IGNORE
     root.add_child(landscape)
