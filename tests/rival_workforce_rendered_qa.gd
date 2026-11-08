@@ -317,6 +317,10 @@ func _initialize() -> void:
         quit(1)
         return
 
+    var wood_worker: Node2D = woodcutters[0]
+    # Save the worker's workplace position before any simulation steps. This
+    # baseline proves actual movement instead of comparing two post-arrival frames.
+    var wood_start := wood_worker.global_position
     await _tick_all(8)
     var claimed: Dictionary = {}
     var claim_count := 0
@@ -334,7 +338,6 @@ func _initialize() -> void:
     _check(claim_count >= 3, "Lumber, quarry and forge workers must establish physical resource claims")
     await _capture("01-settlement-wide", keep.position, 0.58)
 
-    var wood_worker: Node2D = woodcutters[0]
     var wood_target: Variant = wood_worker.get("_target")
     if wood_target == null or not is_instance_valid(wood_target):
         wood_worker.call("_tick_idle")
@@ -345,7 +348,6 @@ func _initialize() -> void:
         quit(1)
         return
     var wood_hp_before := int(wood_target.get("_hp"))
-    var wood_start := wood_worker.global_position
     _trace(wood_worker, "travel_to_tree")
     await _capture("02-woodcutter-travel-close", wood_worker.global_position, 1.8)
     var wood_harvested := false
@@ -416,8 +418,14 @@ func _initialize() -> void:
     var quarry_kinds: Array = civilization.call("worker_resource_kinds", "quarry")
     _check(quarry_kinds.has("iron") and quarry_kinds.has("stone"),
         "Tier I quarry workers must unlock iron supply for the existing Forge construction cost")
-    var iron_worker: Node2D = forge_workers[0]
+    # Exercise the Quarry progression gate directly: before a Forge exists,
+    # a Tier-I Quarry worker must prioritize the ore needed to pay its iron cost.
+    var iron_worker: Node2D = miners[1]
     iron_worker.call("_release_target")
+    iron_worker.set("_retry_timer", 0.0)
+    iron_worker.set("carry_kind", "")
+    iron_worker.set("carry", 0)
+    iron_worker.set("_state", 0)
     iron_worker.call("_tick_idle")
     var iron_target: Variant = iron_worker.get("_target")
     _check(iron_target != null and is_instance_valid(iron_target)
@@ -500,19 +508,20 @@ func _initialize() -> void:
         "Farmer must return before a food cycle exceeds remaining capacity")
     _trace(farmer, "farm_capacity_guard", "no_food_loss")
 
-    # Direct ownership checks cover both player-only and overlapping contested cells.
-    var player_cell := Vector2i(-1, -1)
-    var player_claims: Dictionary = territory.get("claimed_cells")
-    for cell_value in player_claims:
-        var cell: Vector2i = cell_value
-        if not world.is_buildable(cell) or world.occupied.has(cell):
-            continue
-        if keep.position.distance_to(navigation.center_of(cell))                 <= maxf(float(keep.get("claim_radius")) * 4.0, float(keep.get("claim_radius")) + 6.0) * float(int(world_config.get("tile_size"))):
-            player_cell = cell
-            break
+    # Ownership fixtures are deliberately local and deterministic. Use a
+    # legal unoccupied cell inside the rival's own bounded work radius, then
+    # toggle player-only and contested ownership to test the same runtime gate.
+    var player_cell: Vector2i = _find_free_cell(keep.position, reserved_cells)
     _check(player_cell.x >= 0,
-        "A player-owned cell inside the rival bounded work radius must exist in the deterministic seed")
+        "A free cell inside the rival region and worker radius must exist for ownership acceptance")
     if player_cell.x >= 0:
+        var player_claims: Dictionary = territory.get("claimed_cells")
+        var enemy_claims: Dictionary = territory.get("enemy_claimed_cells")
+        var was_player_claimed: bool = player_claims.has(player_cell)
+        var was_enemy_claimed: bool = enemy_claims.has(player_cell)
+        enemy_claims.erase(player_cell)
+        player_claims[player_cell] = true
+
         var player_tree := tree_script.new() as Node2D
         player_tree.position = Vector2(
             float(player_cell.x * int(world_config.get("tile_size"))) + int(world_config.get("tile_size")) / 2.0,
@@ -520,13 +529,20 @@ func _initialize() -> void:
         )
         world.call("_register_resource_node", player_tree, player_cell)
         await process_frame
+        player_tree.set("worker", wood_worker)
         _check(not bool(wood_worker.call("_resource_cell_is_available", player_cell, player_tree)),
             "Rival worker must reject a resource in player-owned territory")
-        var enemy_claims: Dictionary = territory.get("enemy_claimed_cells")
+
         enemy_claims[player_cell] = true
         _check(not bool(wood_worker.call("_resource_cell_is_available", player_cell, player_tree)),
             "Rival worker must reject contested territory")
-        enemy_claims.erase(player_cell)
+
+        if not was_player_claimed:
+            player_claims.erase(player_cell)
+        if was_enemy_claimed:
+            enemy_claims[player_cell] = true
+        else:
+            enemy_claims.erase(player_cell)
         territory.call("rebuild")
         print("RIVAL_WORKER_OWNERSHIP_GUARD cell=%s player_rejected=true contested_rejected=true" % str(player_cell))
 
