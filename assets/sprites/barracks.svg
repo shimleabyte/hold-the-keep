@@ -1,12 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-  <path d="M4 19 24 7 44 19v24H4Z" fill="#574331" stroke="#241d18" stroke-width="2"/>
-  <path d="M7 19 24 9 41 19v21H7Z" fill="#96744f" stroke="#d1b276" stroke-width="1.4"/>
-  <path d="M7 19 24 9 41 19" fill="none" stroke="#d8bd88" stroke-width="2"/>
-  <path d="M10 22h28v4H10zM10 31h28v3H10z" fill="#5b402b"/>
-  <path d="M18 40V27q6-8 12 0v13Z" fill="#29231e" stroke="#d1b276" stroke-width="1.2"/>
-  <path d="M24 8v-5" stroke="#d1b276" stroke-width="2"/>
-  <path d="M25 4h8l-3 4h-5Z" fill="#a34d37"/>
-  <path d="M9 18 15 14l2 2-6 5ZM39 18l-6-4-2 2 6 5Z" fill="#c4a06c"/>
-  <path d="M12 23v7M36 23v7" stroke="#dfc28d" stroke-width="1.5"/>
-  <path d="M4 43h40" stroke="#241d18" stroke-width="2"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" shape-rendering="crispEdges">
+<!-- roof and ridge -->
+<path d="M2 20L23 5L46 20V25H2Z" fill="#302a25"/><path d="M4 19L23 6L44 19V23H4Z" fill="#554536"/>
+<path d="M6 18L23 8L42 18" fill="none" stroke="#aa875a" stroke-width="2"/><path d="M7 20L11 17L14 19L19 14L22 17L27 12L31 16L35 14L41 19" fill="none" stroke="#c2a06c" stroke-width="1"/>
+<path d="M4 22H44" stroke="#312a24" stroke-width="2"/>
+<!-- stone plinth and timber hall -->
+<rect x="5" y="22" width="38" height="24" fill="#343a39"/><rect x="7" y="23" width="34" height="21" fill="#735d43"/><rect x="8" y="24" width="32" height="18" fill="#967a55"/>
+<rect x="7" y="23" width="34" height="2" fill="#c0a176"/><rect x="7" y="23" width="3" height="21" fill="#4b392b"/><rect x="38" y="23" width="3" height="21" fill="#4b392b"/>
+<!-- timber framing -->
+<path d="M10 25V42M38 25V42M10 29H38M10 38H38M11 26L19 37M37 26L29 37" stroke="#513a29" stroke-width="2"/>
+<path d="M11 26L19 37M37 26L29 37" stroke="#b18a59" stroke-width="1"/>
+<!-- central reinforced doors -->
+<rect x="18" y="30" width="12" height="14" fill="#2c2723"/><rect x="19" y="31" width="10" height="12" fill="#5d402c"/>
+<path d="M20 32V42M23 32V42M26 32V42M28 32V42" stroke="#8c6844" stroke-width="1"/>
+<rect x="18" y="35" width="12" height="2" fill="#b59a6b"/><rect x="23" y="35" width="2" height="2" fill="#4c3b2a"/>
+<!-- shield over entry -->
+<path d="M20 26H28V31L24 34L20 31Z" fill="#713b32"/><path d="M22 27H26V30L24 32L22 30Z" fill="#c4a36c"/><path d="M24 27V32" stroke="#44352a" stroke-width="1"/>
+<!-- side windows -->
+<rect x="11" y="30" width="4" height="6" fill="#292c2a"/><rect x="12" y="31" width="2" height="4" fill="#d5a45d"/><path d="M11 33H15" stroke="#4b392a" stroke-width="1"/>
+<rect x="33" y="30" width="4" height="6" fill="#292c2a"/><rect x="34" y="31" width="2" height="4" fill="#d5a45d"/><path d="M33 33H37" stroke="#4b392a" stroke-width="1"/>
+<!-- training yard: racks and practice spear -->
+<rect x="1" y="39" width="46" height="7" fill="#3e3b31"/><path d="M2 41H46M2 44H46" stroke="#776448" stroke-width="1"/>
+<rect x="3" y="34" width="2" height="9" fill="#493a2b"/><path d="M2 35L6 31M6 35L2 31" stroke="#9c8159" stroke-width="1"/>
+<rect x="42" y="31" width="2" height="12" fill="#493a2b"/><path d="M43 31L40 35" stroke="#b5a17a" stroke-width="1"/>
+<!-- foundation -->
+<rect x="4" y="45" width="40" height="3" fill="#515853"/><rect x="7" y="45" width="7" height="2" fill="#8c8d80"/><rect x="18" y="45" width="9" height="2" fill="#777e76"/><rect x="32" y="45" width="8" height="2" fill="#8c8d80"/>
 </svg>
