@@ -31,6 +31,16 @@ const RESOURCE_BATCH_YIELD := {
     "stone": 6,
     "iron": 9
 }
+const RESOURCE_HIT_YIELD := {
+    "wood": 1,
+    "stone": 1,
+    "iron": 1
+}
+const RESOURCE_FINAL_HIT_BONUS := {
+    "wood": 2,
+    "stone": 2,
+    "iron": 3
+}
 
 var civilization
 var owner_keep: Node2D
@@ -169,21 +179,22 @@ func _tick_resource_work(delta: float) -> void:
 
     var kind := String(_target.get("yield_kind"))
     var interval := float(RESOURCE_WORK_SECONDS.get(kind, 4.0))
-    # RESOURCE_BATCH_YIELD includes the ordinary hits and the depletion bonus.
-    # Reserve room for the complete possible node yield before starting another hit.
-    var batch_yield := int(RESOURCE_BATCH_YIELD.get(kind, 1))
+    # A normal hit yields one unit; the depletion hit also grants the node bonus.
+    # Check the exact next-hit yield so the final harvest cannot overflow cargo.
+    var next_hit_yield := _next_resource_hit_yield(kind)
     if (
-        not civilization.can_receive(kind, batch_yield)
-        or carry + batch_yield > CARRY_CAPACITY
+        not civilization.can_receive(kind, next_hit_yield)
+        or carry + next_hit_yield > CARRY_CAPACITY
     ):
         _begin_return_to_keep()
         return
 
     _work_timer += delta
     while _work_timer >= interval and _state == State.WORKING_RESOURCE:
+        next_hit_yield = _next_resource_hit_yield(kind)
         if (
-            not civilization.can_receive(kind, batch_yield)
-            or carry + batch_yield > CARRY_CAPACITY
+            not civilization.can_receive(kind, next_hit_yield)
+            or carry + next_hit_yield > CARRY_CAPACITY
         ):
             _begin_return_to_keep()
             return
@@ -203,6 +214,13 @@ func _tick_resource_work(delta: float) -> void:
             _state = State.IDLE
             _retry_timer = 0.1
             return
+
+
+func _next_resource_hit_yield(kind: String) -> int:
+    var ordinary_yield := int(RESOURCE_HIT_YIELD.get(kind, 1))
+    if _target != null and is_instance_valid(_target) and int(_target.get("_hp")) == 1:
+        return ordinary_yield + int(RESOURCE_FINAL_HIT_BONUS.get(kind, 0))
+    return ordinary_yield
 
 
 func _tick_farming(delta: float) -> void:
