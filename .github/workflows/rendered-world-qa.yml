@@ -8,6 +8,9 @@ on:
       - ".github/workflows/rendered-world-qa.yml"
       - "scripts/world/**"
       - "scripts/autoload/world_config.gd"
+      - "scripts/entities/enemy_economic_worker.gd"
+      - "scripts/systems/enemy_civilization.gd"
+      - "tests/rival_workforce_rendered_qa.gd"
       - "scripts/entities/resource_tree.gd"
       - "scripts/entities/rock.gd"
       - "scripts/entities/iron_ore.gd"
@@ -23,6 +26,9 @@ on:
       - ".github/workflows/rendered-world-qa.yml"
       - "scripts/world/**"
       - "scripts/autoload/world_config.gd"
+      - "scripts/entities/enemy_economic_worker.gd"
+      - "scripts/systems/enemy_civilization.gd"
+      - "tests/rival_workforce_rendered_qa.gd"
       - "scripts/entities/resource_tree.gd"
       - "scripts/entities/rock.gd"
       - "scripts/entities/iron_ore.gd"
@@ -84,5 +90,55 @@ jobs:
           path: |
             /tmp/hold-the-keep-rendered-qa/*.png
             /tmp/hold-the-keep-rendered-qa/render.log
+          if-no-files-found: warn
+          retention-days: 14
+
+  rival-workforce-render:
+    name: Rival workforce rendered acceptance · Godot 4.7
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      LIBGL_ALWAYS_SOFTWARE: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot 4.7
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Install Xvfb and Mesa
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Run rendered rival workforce acceptance
+        env:
+          HTK_AUTO_RESOLVE_EVENTS: "1"
+          HTK_AUTO_START_GAME: "1"
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/hold-the-keep-rival-workforce-qa
+          touch /tmp/hold-the-keep-rival-workforce-qa/render.log
+          timeout --signal=TERM --kill-after=15s 600s \
+            xvfb-run -a -s "-screen 0 1600x900x24" \
+            godot --path . --rendering-driver opengl3 --fixed-fps 30 \
+            --script res://tests/rival_workforce_rendered_qa.gd \
+            2>&1 | tee /tmp/hold-the-keep-rival-workforce-qa/render.log
+          grep -q "^PASS: rendered rival workforce lifecycle" /tmp/hold-the-keep-rival-workforce-qa/render.log
+
+      - name: Upload rival workforce captures and trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rival-workforce-rendered-qa-godot-4.7
+          path: |
+            /tmp/hold-the-keep-rival-workforce-qa/*.png
+            /tmp/hold-the-keep-rival-workforce-qa/render.log
           if-no-files-found: warn
           retention-days: 14

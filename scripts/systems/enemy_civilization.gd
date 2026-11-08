@@ -296,6 +296,15 @@ func worker_resource_kinds(workplace_id: String) -> Array[String]:
         "lumber_camp":
             return ["wood"]
         "quarry":
+            # Tier I opens iron mining. Quarry workers gather iron first until
+            # the existing Forge construction cost is covered, then resume stone.
+            # Costs, yields, work intervals and workforce limits remain unchanged.
+            if technology_tier >= 1:
+                var forge_plan: Dictionary = _build_plan_for("forge")
+                var forge_cost: Dictionary = forge_plan.get("cost", {})
+                var iron_required := int(forge_cost.get("iron", 0))
+                if float(resources.get("iron", 0.0)) < float(iron_required):
+                    return ["iron", "stone"]
             return ["stone"]
         "forge":
             return ["iron"] if technology_tier >= 1 else []

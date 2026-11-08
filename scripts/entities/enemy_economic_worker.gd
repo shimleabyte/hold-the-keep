@@ -169,7 +169,13 @@ func _tick_resource_work(delta: float) -> void:
 
     var kind := String(_target.get("yield_kind"))
     var interval := float(RESOURCE_WORK_SECONDS.get(kind, 4.0))
-    if not civilization.can_receive(kind, int(RESOURCE_BATCH_YIELD.get(kind, 1))):
+    var batch_yield := int(RESOURCE_BATCH_YIELD.get(kind, 1))
+    if not civilization.can_receive(kind, batch_yield):
+        _begin_return_to_keep()
+        return
+    # Reserve room for the complete node batch, including the final-hit bonus.
+    # Clamping receive() after the hit would silently destroy harvested cargo.
+    if carry + batch_yield > CARRY_CAPACITY:
         _begin_return_to_keep()
         return
 
@@ -197,8 +203,14 @@ func _tick_farming(delta: float) -> void:
     if retiring or not civilization.can_receive("food", FARM_CYCLE_YIELD):
         _begin_return_to_keep()
         return
+    if carry + FARM_CYCLE_YIELD > CARRY_CAPACITY:
+        _begin_return_to_keep()
+        return
     _work_timer += delta
     while _work_timer >= FARM_CYCLE_SECONDS and _state == State.FARMING:
+        if carry + FARM_CYCLE_YIELD > CARRY_CAPACITY:
+            _begin_return_to_keep()
+            return
         _work_timer -= FARM_CYCLE_SECONDS
         receive("food", FARM_CYCLE_YIELD)
         if carry >= CARRY_CAPACITY:
