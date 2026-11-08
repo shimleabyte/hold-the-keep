@@ -44,6 +44,10 @@ var slot_index := 0
 var carry_kind := ""
 var carry := 0
 var retiring := false
+var retirement_reason := ""
+var path_request_count := 0
+var last_delivery_amount := 0
+var last_delivery_result := "none"
 
 var _state: State = State.IDLE
 var _target: Node2D
@@ -100,16 +104,18 @@ func tick(delta: float) -> void:
     if delta <= 0.0 or owner_keep == null or not is_instance_valid(owner_keep):
         return
     if int(owner_keep.get("hp")) <= 0:
-        shutdown()
+        shutdown("stronghold_destroyed")
         return
 
     if workplace == null or not is_instance_valid(workplace) or int(workplace.get("hp")) <= 0:
         retiring = true
+        if retirement_reason.is_empty():
+            retirement_reason = "workplace_destroyed"
         if carry > 0:
             if not [State.TO_KEEP, State.WAITING_STORAGE].has(_state):
                 _begin_return_to_keep()
         else:
-            shutdown()
+            shutdown("workplace_destroyed")
             return
 
     _retry_timer = maxf(0.0, _retry_timer - delta)
@@ -276,12 +282,15 @@ func _repath_current_state() -> bool:
             if _target == null or not is_instance_valid(_target):
                 return false
             var target_cells: Array[Vector2i] = [Vector2i(_target.get("resource_cell"))]
+            path_request_count += 1
             next_path = nav.path_adjacent(position, target_cells)
         State.TO_KEEP, State.WAITING_STORAGE:
+            path_request_count += 1
             next_path = nav.path_adjacent(position, owner_keep.cells())
         State.TO_WORKPLACE:
             if workplace == null or not is_instance_valid(workplace):
                 return false
+            path_request_count += 1
             next_path = nav.path_adjacent(position, workplace.cells())
     if next_path.is_empty():
         return false
@@ -356,6 +365,7 @@ func _find_resource_target() -> bool:
             path_checks += 1
             var candidate_node: Node2D = candidate["node"] as Node2D
             var candidate_cells: Array[Vector2i] = [Vector2i(candidate["cell"])]
+            path_request_count += 1
             var candidate_path: PackedVector2Array = nav.path_adjacent(position, candidate_cells)
             if candidate_path.is_empty() or not _path_avoids_player_territory(candidate_path):
                 continue
@@ -431,6 +441,9 @@ func _begin_return_to_keep() -> void:
     _path.clear()
     _path_version = -1
     if not _repath_current_state():
+        # Keep an unchanged failed topology inside the retry cooldown. Without
+        # this version stamp, TO_KEEP repeats the same A* search every frame.
+        _path_version = int(nav.version)
         _retry_timer = 1.0
     _play_clip("walk")
 
@@ -454,12 +467,17 @@ func _deposit_at_keep() -> void:
         _finish_delivery()
         return
     var delivered: int = int(civilization.deliver_resource(carry_kind, carry))
+    last_delivery_amount = delivered
     carry -= delivered
     if carry <= 0:
         carry = 0
         carry_kind = ""
+        last_delivery_result = "delivered"
+        print("RIVAL_WORKER_DELIVERY ", JSON.stringify(debug_snapshot()))
         _finish_delivery()
     else:
+        last_delivery_result = "partial" if delivered > 0 else "blocked_full"
+        print("RIVAL_WORKER_DELIVERY ", JSON.stringify(debug_snapshot()))
         _state = State.WAITING_STORAGE
         _retry_timer = 1.0
         _play_clip("idle")
@@ -518,18 +536,69 @@ func clear_cargo_for_save() -> Dictionary:
     return snapshot
 
 
-func recall_to_keep() -> void:
+func recall_to_keep(reason: String = "workplace_destroyed") -> void:
     retiring = true
+    if retirement_reason.is_empty():
+        retirement_reason = reason
     if carry > 0:
         _begin_return_to_keep()
     else:
-        shutdown()
+        shutdown(retirement_reason)
 
 
-func shutdown() -> void:
+func shutdown(reason: String = "shutdown") -> void:
+    if retirement_reason.is_empty():
+        retirement_reason = reason
+    print("RIVAL_WORKER_RETIRE ", JSON.stringify(debug_snapshot()))
     _release_target()
     remove_from_group("enemy_economic_workers")
     queue_free()
+
+
+func debug_snapshot() -> Dictionary:
+    var task := "idle"
+    match _state:
+        State.TO_RESOURCE: task = "to_resource"
+        State.WORKING_RESOURCE: task = "working_resource"
+        State.FARMING: task = "farming"
+        State.TO_KEEP: task = "to_keep"
+        State.WAITING_STORAGE: task = "waiting_storage"
+        State.TO_WORKPLACE: task = "to_workplace"
+
+    var target_kind := ""
+    var target_cell := [-1, -1]
+    if _target != null and is_instance_valid(_target):
+        target_kind = String(_target.get("yield_kind"))
+        var cell: Vector2i = _target.get("resource_cell")
+        target_cell = [cell.x, cell.y]
+
+    var route_status := "not_routed"
+    if _state in [State.TO_RESOURCE, State.TO_KEEP, State.TO_WORKPLACE]:
+        route_status = "moving" if not _path.is_empty() else (
+            "retry_wait" if _retry_timer > 0.0 else "route_unavailable"
+        )
+    elif _state == State.WORKING_RESOURCE or _state == State.FARMING:
+        route_status = "at_workplace"
+
+    return {
+        "worker_id": get_instance_id(),
+        "owner": String(owner_keep.get("stronghold_id")) if owner_keep != null and is_instance_valid(owner_keep) else "destroyed",
+        "workplace": workplace_id,
+        "task": task,
+        "target_resource": target_kind,
+        "target_cell": target_cell,
+        "cargo_kind": carry_kind,
+        "cargo": carry,
+        "cargo_capacity": CARRY_CAPACITY,
+        "route_status": route_status,
+        "route_points": _path.size(),
+        "route_index": _path_index,
+        "path_requests": path_request_count,
+        "last_delivery_amount": last_delivery_amount,
+        "last_delivery_result": last_delivery_result,
+        "retiring": retiring,
+        "retirement_reason": retirement_reason
+    }
 
 
 func _play_clip(clip_name: String) -> void:

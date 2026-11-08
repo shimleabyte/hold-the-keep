@@ -347,7 +347,7 @@ func _sync_physical_workers(labor: Dictionary) -> void:
 
         while valid_workers.size() > desired_count:
             var excess: Node = valid_workers.pop_back() as Node
-            excess.call("recall_to_keep")
+            excess.call("recall_to_keep", "labor_reassigned")
 
         while valid_workers.size() < desired_count:
             var worker: Node2D = WORKER_SCRIPT.new() as Node2D
@@ -628,7 +628,7 @@ func on_structure_destroyed(structure: EnemySettlementStructure) -> void:
         if not is_instance_valid(worker) or worker.get("civilization") != self:
             continue
         if worker.get("workplace") == structure:
-            worker.call("recall_to_keep")
+            worker.call("recall_to_keep", "workplace_destroyed")
     # A destroyed priority building becomes eligible for reconstruction. If another
     # project is already active, its completion will reconcile the missing structure.
     _reconcile_build_order_index()
@@ -716,7 +716,7 @@ func on_keep_destroyed() -> void:
     if owner_keep != null and is_instance_valid(owner_keep) and owner_keep.is_inside_tree():
         for worker: Node in owner_keep.get_tree().get_nodes_in_group("enemy_economic_workers"):
             if is_instance_valid(worker) and worker.get("civilization") == self:
-                worker.call("shutdown")
+                worker.call("shutdown", "stronghold_destroyed")
     _workers_by_structure.clear()
     for structure: EnemySettlementStructure in structures:
         if is_instance_valid(structure):
