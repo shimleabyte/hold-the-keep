@@ -4,6 +4,7 @@ extends CanvasLayer
 signal mode_selected(profile_id: String)
 
 const PIXEL_FONT := preload("res://scripts/ui/pixel_font.gd")
+const TITLE_LANDSCAPE := preload("res://assets/ui/title_keep_landscape.svg")
 
 const INK := Color("#111719")
 const PANEL := Color("#1a2223")
@@ -40,6 +41,22 @@ func _build_screen() -> void:
     background.color = INK
     background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     root.add_child(background)
+
+    var landscape := TextureRect.new()
+    landscape.name = "TitleLandscape"
+    landscape.texture = TITLE_LANDSCAPE
+    landscape.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    landscape.stretch_mode = TextureRect.STRETCH_SCALE
+    landscape.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    landscape.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    root.add_child(landscape)
+
+    var atmosphere := ColorRect.new()
+    atmosphere.name = "LandscapeAtmosphere"
+    atmosphere.color = Color(0.035, 0.05, 0.05, 0.46)
+    atmosphere.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    atmosphere.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    root.add_child(atmosphere)
 
     var frame := Panel.new()
     frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -93,7 +110,7 @@ func _build_screen() -> void:
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     title_block.add_child(title)
 
-    var subtitle := _label("Raise a settlement. Hold the line. Outlast the dark.", 9, MUTED)
+    var subtitle := _label("A kingdom is built in daylight. Its worth is tested at night.", 9, MUTED)
     subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     title_block.add_child(subtitle)
 
