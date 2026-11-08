@@ -1,55 +1,75 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="112" height="16" viewBox="0 0 112 16" shape-rendering="crispEdges">
-<!-- Hearthland: worn pasture and trampled earth -->
+<!-- Hearthland: worn pasture, dry seed heads and trampled seams -->
 <g>
 <rect width="16" height="16" fill="#65734a"/>
-<path d="M1 3h3v1H1zM9 2h2v1H9zM5 8h1v2H5zM12 11h3v1h-3zM2 13h2v1H2z" fill="#7f895b"/>
-<path d="M6 2h1v1H6zM13 5h1v2h-1zM3 9h2v1H3zM8 14h2v1H8z" fill="#4f5c3d"/>
-<path d="M0 6h2v1H0zM10 7h2v1h-2zM5 12h1v1H5z" fill="#8d8059"/>
+<path d="M1 2h3v1H1zM9 1h2v1H9zM12 4h2v1h-2zM4 7h2v1H4zM10 10h4v1h-4zM2 13h3v1H2z" fill="#7f895b"/>
+<path d="M6 2h1v2H6zM14 6h1v2h-1zM3 9h2v1H3zM8 14h2v1H8zM0 5h1v2H0z" fill="#4f5c3d"/>
+<path d="M0 11h2v1H0zM6 6h2v1H6zM11 13h2v1h-2zM13 2h1v1h-1z" fill="#8d8059"/>
+<path d="M2 4l2-1M10 7l2-1M5 12l2-1" stroke="#a09568" stroke-width="1"/>
+<path d="M7 4v2M8 5L6 4M13 11v2M14 12l-2-1" stroke="#9ba06a" stroke-width="1"/>
+<rect x="3" y="15" width="2" height="1" fill="#494a34"/><rect x="14" y="9" width="1" height="1" fill="#c0a773"/>
 </g>
-<!-- Hearthland alternate: compacted soil and sparse grass -->
+<!-- Hearthland alternate: compacted track, pale grit and sparse grass -->
 <g>
-<rect x="16" width="16" height="16" fill="#706b4c"/>
-<path d="M18 2h3v1h-3zM25 4h2v1h-2zM21 9h1v2h-1zM28 12h2v1h-2zM17 14h3v1h-3z" fill="#8b8058"/>
-<path d="M23 1h1v2h-1zM29 6h1v2h-1zM19 7h2v1h-2zM25 13h1v2h-1z" fill="#55563e"/>
-<path d="M22 5h2v1h-2zM30 10h1v1h-1zM17 4h1v1h-1z" fill="#a09163"/>
+<rect x="16" width="16" height="16" fill="#70674a"/>
+<path d="M17 2h4v1h-4zM25 4h3v1h-3zM20 9h2v1h-2zM28 12h3v1h-3zM17 14h3v1h-3z" fill="#887b56"/>
+<path d="M23 1h1v3h-1zM29 6h1v2h-1zM19 7h2v1h-2zM25 13h1v2h-1z" fill="#56543c"/>
+<path d="M22 5h3v1h-3zM30 10h1v1h-1zM17 4h1v1h-1zM27 2h2v1h-2z" fill="#a09163"/>
+<path d="M16 11h4v1h-4zM21 12h3v1h-3zM26 8h4v1h-4z" fill="#5b513b"/>
+<path d="M18 5l2 1M24 10l2 1M28 14l2-1" stroke="#b09a68" stroke-width="1"/>
+<rect x="21" y="3" width="1" height="1" fill="#c0a773"/><rect x="18" y="10" width="1" height="1" fill="#c0a773"/>
 </g>
-<!-- Water: cold, opaque slate water -->
+<!-- Water: deep slate pool, broken reflections and quiet current -->
 <g>
-<rect x="32" width="16" height="16" fill="#344e5a"/>
-<path d="M34 3h5v1h-5zM41 7h5v1h-5zM33 11h4v1h-4zM40 14h5v1h-5z" fill="#4b6970"/>
-<path d="M37 2h2v1h-2zM43 10h2v1h-2zM35 8h1v1h-1zM39 12h2v1h-2z" fill="#78908a"/>
-<path d="M34 5h2v1h-2zM42 3h1v1h-1zM37 14h1v1h-1z" fill="#263c48"/>
+<rect x="32" width="16" height="16" fill="#304b59"/>
+<path d="M33 2h5v1h-5zM41 5h5v1h-5zM34 10h4v1h-4zM40 13h6v1h-6z" fill="#42636d"/>
+<path d="M37 1h2v1h-2zM43 8h2v1h-2zM35 7h1v1h-1zM39 11h2v1h-2z" fill="#78908a"/>
+<path d="M32 5h3v1h-3zM43 2h2v1h-2zM36 14h2v1h-2zM40 3h1v1h-1z" fill="#263b47"/>
+<path d="M34 4h2v1h-2zM39 8h3v1h-3zM33 12h2v1h-2zM44 14h2v1h-2z" fill="#567780"/>
+<path d="M37 5h3M38 6h2M42 10h2" stroke="#9ab6aa" stroke-width="1"/>
+<rect x="35" y="2" width="1" height="1" fill="#b2c6b5"/><rect x="45" y="9" width="1" height="1" fill="#a4bdb0"/>
 </g>
-<!-- Greenwood: damp pine floor, needles and leaf litter -->
+<!-- Greenwood: black pine duff, needles, leaves and small fungus -->
 <g>
-<rect x="48" width="16" height="16" fill="#354b38"/>
+<rect x="48" width="16" height="16" fill="#304637"/>
 <path d="M50 2h3v1h-3zM57 4h2v1h-2zM61 9h2v1h-2zM52 13h3v1h-3z" fill="#526348"/>
-<path d="M49 7h2v1h-2zM55 10h1v2h-1zM59 2h1v2h-1zM62 14h1v1h-1z" fill="#283c31"/>
-<path d="M53 5h1v2h-1zM60 6h2v1h-2zM50 11h2v1h-2z" fill="#71805a"/>
-<path d="M56 1h1v1h-1zM49 14h1v1h-1z" fill="#9a8a60"/>
+<path d="M49 7h2v1h-2zM55 10h1v2h-1zM59 2h1v2h-1zM62 14h1v1h-1z" fill="#263a30"/>
+<path d="M53 5h1v2h-1zM60 6h2v1h-2zM50 11h2v1h-2zM56 1h1v1h-1z" fill="#71805a"/>
+<path d="M49 4l3-2M55 7l2-2M59 12l3-2M51 15l2-2" stroke="#9a8a60" stroke-width="1"/>
+<path d="M54 3l2 2M57 11l3 2M50 9l2 2" stroke="#87936a" stroke-width="1"/>
+<rect x="53" y="9" width="1" height="2" fill="#a28b61"/><rect x="60" y="4" width="1" height="1" fill="#c0a773"/>
+<path d="M58 14v-2m-1 0h3m-2-1v1" stroke="#b59a70" stroke-width="1"/>
 </g>
-<!-- Highlands: fractured shale and exposed stone -->
+<!-- Highlands: fractured shale shelves, pale mineral facets and grit -->
 <g>
-<rect x="64" width="16" height="16" fill="#686c68"/>
+<rect x="64" width="16" height="16" fill="#626965"/>
 <path d="M66 2h4v1h-4zM74 4h3v1h-3zM68 9h2v1h-2zM75 13h4v1h-4z" fill="#85877d"/>
-<path d="M65 6h2v2h-2zM72 7h1v2h-1zM77 2h1v1h-1zM70 13h2v1h-2z" fill="#4d5353"/>
-<path d="M68 4h1v1h-1zM74 10h2v1h-2zM66 14h2v1h-2z" fill="#a2a08f"/>
-<path d="M71 2h1v1h-1zM78 8h1v2h-1z" fill="#77796f"/>
+<path d="M65 6h2v2h-2zM72 7h1v2h-1zM77 2h1v1h-1zM70 13h2v1h-2z" fill="#484f50"/>
+<path d="M68 4h1v1h-1zM74 10h2v1h-2zM66 14h2v1h-2zM71 2h1v1h-1z" fill="#a2a08f"/>
+<path d="M64 4l4 1-2 2M71 6l2-2 2 1M76 9l3 1-2 2M68 12l3-1 1 2" fill="none" stroke="#4f5554" stroke-width="1"/>
+<path d="M66 3h2M73 3h2M69 10h2M76 14h2" stroke="#bab7a4" stroke-width="1"/>
+<rect x="65" y="11" width="1" height="1" fill="#c7c0a8"/><rect x="78" y="6" width="1" height="1" fill="#b9b5a4"/>
 </g>
-<!-- Fenlands: peat, shallow pools and reed traces -->
+<!-- Fenlands: peat, reed roots, shallow dark pools -->
 <g>
-<rect x="80" width="16" height="16" fill="#5b6045"/>
+<rect x="80" width="16" height="16" fill="#515b43"/>
 <path d="M82 2h3v1h-3zM89 5h2v1h-2zM84 11h4v1h-4zM92 13h3v1h-3z" fill="#747653"/>
-<path d="M81 7h2v1h-2zM88 2h1v2h-1zM94 8h1v2h-1zM86 14h2v1h-2z" fill="#414d3d"/>
-<path d="M83 4h1v3h-1zM91 9h1v4h-1zM95 2h1v3h-1z" fill="#9a9566"/>
-<path d="M85 8h2v1h-2zM90 3h2v1h-2z" fill="#858b68"/>
+<path d="M81 7h2v1h-2zM88 2h1v2h-1zM94 8h1v2h-1zM86 14h2v1h-2z" fill="#3e4a3c"/>
+<path d="M83 4h1v4h-1zM91 9h1v4h-1zM95 2h1v4h-1zM87 6h1v3h-1z" fill="#9a9566"/>
+<path d="M80 10h4v1h-4zM88 3h3v1h-3zM92 14h4v1h-4z" fill="#344a43"/>
+<path d="M82 9h3M90 7h4M84 14h2" stroke="#758d7b" stroke-width="1"/>
+<path d="M85 2v3m-1-2h2M93 4v3m-1-2h2" stroke="#b3a778" stroke-width="1"/>
+<rect x="89" y="12" width="2" height="1" fill="#a4a174"/><rect x="81" y="13" width="1" height="1" fill="#b9ac7c"/>
 </g>
-<!-- Ashen March: burnt earth, soot and pale ash -->
+<!-- Ashen March: soot crust, shattered cinder and isolated ember seams -->
 <g>
-<rect x="96" width="16" height="16" fill="#514b45"/>
+<rect x="96" width="16" height="16" fill="#494643"/>
 <path d="M98 2h3v1h-3zM105 4h3v1h-3zM100 9h2v1h-2zM108 13h3v1h-3z" fill="#6d6255"/>
-<path d="M97 7h2v1h-2zM103 12h3v1h-3zM109 2h1v2h-1zM101 14h1v1h-1z" fill="#383a38"/>
+<path d="M97 7h2v1h-2zM103 12h3v1h-3zM109 2h1v2h-1zM101 14h1v1h-1z" fill="#333637"/>
 <path d="M99 5h1v2h-1zM106 8h2v1h-2zM110 10h1v2h-1z" fill="#8a7964"/>
-<path d="M104 2h1v1h-1zM97 13h1v1h-1zM107 15h2v1h-2z" fill="#b0a18a"/>
+<path d="M96 11l3-1 2 2M104 2l2 2-1 2M108 7l3-1" fill="none" stroke="#332f2c" stroke-width="1"/>
+<path d="M98 13h3M105 11h2M108 3h2" stroke="#a08a70" stroke-width="1"/>
+<path d="M100 10l2 1-1 2M107 6l2 1" stroke="#a45b3b" stroke-width="1"/>
+<rect x="103" y="11" width="1" height="1" fill="#d1884b"/><rect x="110" y="14" width="1" height="1" fill="#be7041"/>
 </g>
 </svg>
