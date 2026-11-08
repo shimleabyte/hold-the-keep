@@ -235,9 +235,14 @@ func _initialize() -> void:
     _check(not is_instance_valid(woodcutter),
         "A retiring worker must finish its return and leave after successful delivery")
     _check(float(civilization.get("resources").get("wood", 0.0)) >= delivery_before + 5.0,
-        "Physical delivery must credit wood to the correct owning stronghold ledger")
-
-    await _assert_quarry_acquires_iron_and_pays_forge(main_scene, keep, civilization)
+        "Physical delivery must credit wood to the correct owning stronghold ledger (before=%s after=%s worker_valid=%s state=%s carry=%s path=%s retry=%s)" % [
+            str(delivery_before), str(civilization.get("resources").get("wood", 0.0)),
+            str(is_instance_valid(woodcutter)),
+            str(woodcutter.get("_state")) if is_instance_valid(woodcutter) else "freed",
+            str(woodcutter.get("carry")) if is_instance_valid(woodcutter) else "0",
+            str((woodcutter.get("_path") as PackedVector2Array).size()) if is_instance_valid(woodcutter) else "0",
+            str(woodcutter.get("_retry_timer")) if is_instance_valid(woodcutter) else "0"
+        ])
 
     # Destroying a staffed workplace while its worker carries cargo must release
     # the current node reservation, return the cargo and remove the orphan actor.
@@ -275,6 +280,8 @@ func _initialize() -> void:
             "A worker whose workplace is destroyed must not remain orphaned")
         _check(float(civilization.get("resources").get("wood", 0.0)) >= destruction_delivery_before + 5.0,
             "A worker must deliver its already-carried cargo before retiring after workplace destruction")
+
+    await _assert_quarry_acquires_iron_and_pays_forge(main_scene, keep, civilization)
 
     var save_system: Node = root.get_node("SaveSystem")
     var snapshot: Dictionary = save_system.call("collect", main_scene)
@@ -494,7 +501,8 @@ func _assert_quarry_acquires_iron_and_pays_forge(
                     if String(territory.call("owner_at", cell)) in ["player", "contested"]:
                         continue
                     var node_position: Vector2 = navigation.call("center_of", cell)
-                    if navigation.call("path_adjacent", quarry_worker.global_position, [cell]).is_empty():
+                    var approach_cells: Array[Vector2i] = [cell]
+                    if navigation.call("path_adjacent", quarry_worker.global_position, approach_cells).is_empty():
                         continue
                     var iron_node := iron_script.new() as Node2D
                     iron_node.position = node_position
