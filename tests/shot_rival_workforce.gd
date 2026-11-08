@@ -166,9 +166,10 @@ func _initialize() -> void:
         return
     _check_limits(rival_workers, labor)
 
-    # Pan inward from the Classic map's lower-left rival stronghold so the
-    # settlement and its four workplaces share the camera instead of empty map.
-    var overview_center: Vector2 = _keep.global_position + Vector2(140, -110)
+    # Center the compact settlement cluster rather than aiming far beyond it.
+    # This avoids leaving the stronghold against the map edge with empty terrain
+    # occupying most of the overview frame.
+    var overview_center: Vector2 = _keep.global_position + Vector2(40, -35)
     await _capture("overview-rival-settlement", overview_center, 0.8)
     print("RIVAL_WORKFORCE_OVERVIEW workplaces=", _civilization.get("structures").size(),
         " workers=", rival_workers.size(), " labor=", labor)
