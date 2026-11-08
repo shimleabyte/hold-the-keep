@@ -106,6 +106,7 @@ func _initialize() -> void:
     _check(reserved_target != null and woodcutter.get("_target") == reserved_target,
         "A rival worker must reserve a real resource node before ownership-change checks")
     if reserved_target != null:
+        _assert_cargo_capacity_guards(woodcutter, reserved_target)
         _assert_worker_rejects_territory(woodcutter, reserved_target, territory, "player")
         _check(bool(woodcutter.call("_find_resource_target")),
             "A worker must be able to retry a resource search after abandoning a newly player-owned target")
@@ -268,6 +269,46 @@ func _initialize() -> void:
         return
     print("PASS: rival workforce spawning, resource-node reservation, physical harvesting, hauling cargo and v17 save reconciliation")
     quit()
+
+
+func _assert_cargo_capacity_guards(worker: Node2D, target: Node2D) -> void:
+    var original_hp := int(target.get("_hp"))
+    var original_state := int(worker.get("_state"))
+    var original_carry := int(worker.get("carry"))
+    var original_kind := String(worker.get("carry_kind"))
+    var original_timer := float(worker.get("_work_timer"))
+
+    # The last wood hit includes the node's depletion bonus. Ten carried units
+    # cannot retain that complete three-unit final hit in a twelve-unit load.
+    target.set("_hp", 1)
+    worker.set("carry", 10)
+    worker.set("carry_kind", "wood")
+    worker.set("_state", 2)
+    worker.set("_work_timer", 3.0)
+    worker.call("_tick_resource_work", 3.0)
+    _check(int(target.get("_hp")) == 1 and int(worker.get("carry")) == 10,
+        "A nearly full woodcutter must return before a final harvest that cannot fit")
+    _check(int(worker.get("carry")) <= int(worker.get_script().get_script_constant_map().get("CARRY_CAPACITY", 0)),
+        "Resource harvesting must never exceed configured worker cargo capacity")
+
+    # A complete three-food farm cycle is atomic and must not start at ten cargo.
+    worker.set("carry", 10)
+    worker.set("carry_kind", "food")
+    worker.set("_state", 3)
+    worker.set("_work_timer", 4.8)
+    worker.call("_tick_farming", 4.8)
+    _check(int(worker.get("carry")) == 10,
+        "A nearly full farmer must return before a farm cycle whose complete yield cannot fit")
+    _check(int(worker.get("carry")) <= int(worker.get_script().get_script_constant_map().get("CARRY_CAPACITY", 0)),
+        "Farm production must never exceed configured worker cargo capacity")
+
+    # Restore the fixture so the ownership and lifecycle checks remain independent.
+    target.set("_hp", original_hp)
+    worker.set("carry", original_carry)
+    worker.set("carry_kind", original_kind)
+    worker.set("_state", original_state)
+    worker.set("_work_timer", original_timer)
+    worker.call("_release_target")
 
 
 func _assert_worker_rejects_territory(
