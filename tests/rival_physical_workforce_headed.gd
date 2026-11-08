@@ -137,11 +137,12 @@ func log_workers(civilization: Variant, stage: String) -> void:
 
 
 func capture(main: Node, label: String, center: Vector2, zoom: float, file_name: String) -> void:
-    var camera: Camera2D = main.player.get("camera") as Camera2D
+    var player: Node2D = main.get("player") as Node2D
+    var camera: Camera2D = player.get("camera") as Camera2D
     check(camera != null, "Camera exists for capture " + label)
     if camera == null:
         return
-    main.player.global_position = center
+    player.global_position = center
     camera.position = Vector2.ZERO
     camera.zoom = Vector2(zoom, zoom)
     camera.make_current()
@@ -158,6 +159,7 @@ func capture(main: Node, label: String, center: Vector2, zoom: float, file_name:
 
 func find_free_tree(main: Node, worker: Node2D) -> Node2D:
     var world: Node = main.get("world")
+    var nav: Node = main.get("nav")
     var best: Node2D
     var best_distance := INF
     for cell_value in world.get("resource_nodes_by_cell").keys():
@@ -169,7 +171,7 @@ func find_free_tree(main: Node, worker: Node2D) -> Node2D:
             continue
         if not bool(worker.call("_resource_cell_is_available", cell, node)):
             continue
-        var path: PackedVector2Array = main.nav.call("path_adjacent", worker.global_position, [cell])
+        var path: PackedVector2Array = nav.call("path_adjacent", worker.global_position, [cell])
         if path.is_empty() or not bool(worker.call("_path_avoids_player_territory", path)):
             continue
         var distance := worker.global_position.distance_squared_to(node.global_position)
@@ -227,6 +229,7 @@ func capture_worker_movement(main: Node, civilization: Variant, keep: Node2D, wo
 
 
 func test_capacity_and_retry(main: Node, civilization: Variant, worker: Node2D) -> void:
+    var nav: Node = main.get("nav")
     var cap := int(civilization.call("resource_capacity", "wood"))
     if int(worker.get("carry")) == 0:
         var tree := find_free_tree(main, worker)
@@ -273,13 +276,13 @@ func test_capacity_and_retry(main: Node, civilization: Variant, worker: Node2D) 
 
     civilization.get("resources")["wood"] = 40.0
     worker.call("receive", "wood", 3)
-    var blocked_cell: Vector2i = main.nav.call("cell_of", worker.global_position)
+    var blocked_cell: Vector2i = nav.call("cell_of", worker.global_position)
     for y in range(-4, 5):
         for x in range(-4, 5):
             var cell := blocked_cell + Vector2i(x, y)
             if WorldConfig.is_valid_cell(cell):
-                main.nav.get("astar").set_point_solid(cell, true)
-    main.nav.set("version", int(main.nav.get("version")) + 1)
+                nav.get("astar").set_point_solid(cell, true)
+    nav.set("version", int(nav.get("version")) + 1)
     worker.call("_begin_return_to_keep")
     var count_after_failure := int(worker.get("path_request_count"))
     check(String(worker.call("debug_snapshot").get("route_status")) == "retry_wait",
@@ -288,7 +291,7 @@ func test_capacity_and_retry(main: Node, civilization: Variant, worker: Node2D) 
         worker.call("tick", 0.1)
     check(int(worker.get("path_request_count")) == count_after_failure,
         "Unchanged blocked route does not repeat A* requests each frame")
-    main.nav.call("rebuild")
+    nav.call("rebuild")
     worker.call("tick", STEP)
     check(not worker.get("_path").is_empty(), "Worker replans after navigation topology recovers")
     await tick_worker(worker, 100.0)
@@ -360,7 +363,7 @@ func _initialize() -> void:
     if packed == null:
         quit(1)
         return
-    var main := packed.instantiate()
+    var main: Variant = packed.instantiate()
     root.add_child(main)
     current_scene = main
     await frames(8)
@@ -432,7 +435,7 @@ func _initialize() -> void:
                 check(owner != "player" and owner != "contested",
                     "Rival harvest target is outside player and contested territory")
                 for point in worker.get("_path"):
-                    var route_cell: Vector2i = main.nav.call("cell_of", point)
+                    var route_cell: Vector2i = nav.call("cell_of", point)
                     var route_owner := String(main.territory.call("owner_at", route_cell))
                     check(route_owner != "player" and route_owner != "contested",
                         "Rival worker route avoids player and contested territory")
