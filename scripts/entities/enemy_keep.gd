@@ -34,6 +34,7 @@ var stronghold_id: String = "classic_enemy_keep"
 var region_id: String = "HEARTHLAND"
 var faction_id: String = "classic_raiders"
 var _reinforce_timer: float = REINFORCE_INTERVAL
+var _outpost_guard_sync_timer := 0.0
 var _spawn_index: int = 0
 var _initial_garrison_pending: bool = false
 var civilization: EnemyCivilization
@@ -188,7 +189,10 @@ func _process(delta: float) -> void:
         return
     if civilization != null:
         civilization.advance(delta)
-        _sync_outpost_garrisons()
+        _outpost_guard_sync_timer -= delta
+        if _outpost_guard_sync_timer <= 0.0:
+            _outpost_guard_sync_timer = 1.0
+            _sync_outpost_garrisons()
     _reinforce_timer -= delta
     if _reinforce_timer > 0.0:
         return
