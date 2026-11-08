@@ -353,13 +353,22 @@ func _initialize() -> void:
     if not quarry_harvested or String(miner.get("carry_kind")) != "stone":
         _fail("Quarry miner did not harvest stone into physical cargo")
         return
+    # Keep the miner and its actual reserved rock visible together, then provide
+    # a node-centred detail capture so the resource/work relationship is readable.
+    var quarry_pair_focus: Vector2 = (miner.global_position + quarry_target.global_position) * 0.5
+    await _capture("quarry-stone-miner-and-node", quarry_pair_focus, 1.8)
+    await _capture("quarry-stone-node-detail", quarry_target.global_position, 1.5)
 
     var manifest := FileAccess.open(OUTPUT_DIR + "/worker-lifecycle.txt", FileAccess.WRITE)
     if manifest != null:
         manifest.store_line("seed=1337 profile=classic")
         manifest.store_line("woodcutter: reserved target -> travel -> work -> cargo -> return -> ledger delivery")
         manifest.store_line("farmer state=%s cargo=%s" % [str(farmer_state_snapshot), str(farmer_cargo_snapshot)])
-        manifest.store_line("quarry state=%s target=%s harvested=%s" % [str(miner.get("_state")), str(quarry_target != null), str(quarry_harvested)])
+        manifest.store_line("quarry state=%s target=%s harvested=%s worker_position=%s target_position=%s target_cell=%s target_hp=%s" % [
+            str(miner.get("_state")), str(quarry_target != null), str(quarry_harvested),
+            str(miner.global_position), str(quarry_target.global_position),
+            str(quarry_target.get("resource_cell")), str(quarry_target.get("_hp"))
+        ])
         manifest.store_line("forge tier=%s state=%s target=%s harvested=%s" % [
             str(_civilization.get("technology_tier")), str(forge_worker.get("_state")), str(forge_target != null), str(forge_harvested)
         ])
