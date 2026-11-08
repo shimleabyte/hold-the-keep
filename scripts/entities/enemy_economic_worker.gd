@@ -54,6 +54,7 @@ var slot_index := 0
 var carry_kind := ""
 var carry := 0
 var retiring := false
+var path_request_count := 0
 
 var _state: State = State.IDLE
 var _target: Node2D
@@ -319,6 +320,7 @@ func _move_along_path(delta: float) -> bool:
 
 
 func _repath_current_state() -> bool:
+    path_request_count += 1
     var next_path := PackedVector2Array()
     match _state:
         State.TO_RESOURCE:
