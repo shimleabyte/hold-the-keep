@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="56" viewBox="0 0 48 56" shape-rendering="crispEdges">
+<!-- Ashen Host: a fractured basalt bastion built around a furnace gate -->
+<path d="M2 54V23L7 18L12 23L17 13L23 19L28 11L35 20L41 16L46 23V54Z" fill="#242729"/>
+<path d="M5 52V25L11 27L17 18L23 24L29 16L35 25L42 22L44 52Z" fill="#4d4d4a"/>
+<!-- fractured black stone courses -->
+<path d="M6 31H42M5 40H43M5 48H43" stroke="#292e30" stroke-width="2"/>
+<path d="M12 26L15 32L12 36M34 25L31 32L35 37M21 40L24 45L21 49" stroke="#77736b" stroke-width="1.5" fill="none"/>
+<path d="M8 29H14M19 29H27M33 29H40M8 38H18M25 38H40M9 46H17M27 46H39" stroke="#8a8171" stroke-width="1"/>
+<!-- jagged furnace towers -->
+<path d="M1 23V12L4 14L6 5L9 13L12 10L15 23Z" fill="#333637"/>
+<path d="M33 23L35 11L38 14L41 4L44 13L47 10V23Z" fill="#333637"/>
+<path d="M6 10L8 16L10 12M38 10L41 15L43 11" stroke="#b25d3c" stroke-width="1.5" fill="none"/>
+<!-- molten crown and ash vents -->
+<path d="M14 22L24 7L34 22V28H14Z" fill="#22272a"/><path d="M17 21L24 10L31 21V25H17Z" fill="#5b554d"/>
+<path d="M18 20L24 12L30 20" stroke="#b87b4b" stroke-width="1.5" fill="none"/>
+<rect x="23" y="0" width="2" height="14" fill="#47362a"/>
+<path d="M25 2H39L34 7H25Z" fill="#74332f"/><path d="M26 3H34L31 6H26Z" fill="#c05b3e"/>
+<path d="M19 27H29M20 29H28" stroke="#c25b39" stroke-width="1.5"/>
+<!-- furnace gate glowing through the portcullis -->
+<path d="M14 54V39L18 32H30L34 39V54Z" fill="#1c2022"/>
+<path d="M18 53V40L21 35H27L30 40V53Z" fill="#552d27"/>
+<path d="M20 51V41L22 37H26L28 41V51Z" fill="#aa4c32"/>
+<path d="M22 50V42L24 38L26 42V50Z" fill="#e58b3f"/>
+<path d="M23 49V43L24 41L25 43V49Z" fill="#f4c16b"/>
+<path d="M17 40V52M21 37V53M27 37V53M31 40V52" stroke="#8f775b" stroke-width="1"/>
+<!-- charred braces and slag -->
+<path d="M5 52H43M3 55H45" stroke="#24282a" stroke-width="2"/>
+<path d="M5 48L9 45M39 47L43 44" stroke="#a44b34" stroke-width="1.5"/>
+<rect x="7" y="54" width="4" height="2" fill="#b65c37"/><rect x="37" y="54" width="4" height="2" fill="#b65c37"/>
+</svg>
