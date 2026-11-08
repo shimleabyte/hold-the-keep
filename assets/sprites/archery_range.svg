@@ -1,16 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-  <path d="M3 20 24 7 45 20v24H3Z" fill="#493526" stroke="#241c16" stroke-width="2"/>
-  <path d="M7 20 24 10 41 20v20H7Z" fill="#96744c" stroke="#d5b77c" stroke-width="1.4"/>
-  <path d="M7 20 24 10 41 20" fill="none" stroke="#dbc28e" stroke-width="2"/>
-  <path d="M10 23h28v4H10zM10 33h28v3H10z" fill="#63452d"/>
-  <path d="M16 39V27h7v12Z" fill="#34271e" stroke="#c7a36e" stroke-width="1"/>
-  <path d="M25 39V27h7v12Z" fill="#34271e" stroke="#c7a36e" stroke-width="1"/>
-  <circle cx="19.5" cy="29.5" r="3.2" fill="#b96a43" stroke="#2c2119" stroke-width="1"/>
-  <circle cx="19.5" cy="29.5" r="1.4" fill="#e0c17e"/>
-  <circle cx="28.5" cy="29.5" r="3.2" fill="#b96a43" stroke="#2c2119" stroke-width="1"/>
-  <circle cx="28.5" cy="29.5" r="1.4" fill="#e0c17e"/>
-  <path d="M12 18h7M12 16l5-3M36 18h-7M36 16l-5-3" stroke="#e0c17e" stroke-width="1.4"/>
-  <path d="M22 8V3h4v5" fill="#63452d" stroke="#241c16"/>
-  <path d="M22 4h10l-4 4h-6Z" fill="#a34d37"/>
-  <path d="M8 41h32" stroke="#241c16" stroke-width="2"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" shape-rendering="crispEdges">
+<!-- training yard floor -->
+<path d="M3 20L24 8L45 20V44H3Z" fill="#3a3026"/><path d="M6 21L24 11L42 21V41H6Z" fill="#806344"/>
+<path d="M8 23H40M8 36H40" stroke="#b28a56" stroke-width="1"/>
+<!-- roofed command shelter -->
+<path d="M3 20L24 6L45 20V24H3Z" fill="#292a26"/><path d="M6 19L24 8L42 19V22H6Z" fill="#62513a"/><path d="M7 19L24 9L41 19" stroke="#c2a16d" stroke-width="1.5" fill="none"/>
+<rect x="7" y="22" width="34" height="3" fill="#4b3828"/><path d="M9 25V40M39 25V40" stroke="#4b3828" stroke-width="3"/>
+<!-- two distinct target boards -->
+<rect x="12" y="27" width="8" height="12" fill="#392b22"/><rect x="13" y="28" width="6" height="10" fill="#d0b37a"/>
+<circle cx="16" cy="32" r="3" fill="#9d4937"/><circle cx="16" cy="32" r="1.5" fill="#e2c77f"/><rect x="15" y="31" width="2" height="2" fill="#f2e2b8"/>
+<rect x="28" y="27" width="8" height="12" fill="#392b22"/><rect x="29" y="28" width="6" height="10" fill="#d0b37a"/>
+<circle cx="32" cy="32" r="3" fill="#9d4937"/><circle cx="32" cy="32" r="1.5" fill="#e2c77f"/><rect x="31" y="31" width="2" height="2" fill="#f2e2b8"/>
+<!-- rack of bows and arrow bundle -->
+<path d="M5 28Q10 31 5 36M6 28Q12 32 6 36" stroke="#d4c49d" stroke-width="1.2" fill="none"/>
+<path d="M40 28L44 35M42 27L45 34M39 29L43 36" stroke="#b6a27c" stroke-width="1"/>
+<path d="M11 42H37" stroke="#38291f" stroke-width="2"/><path d="M14 43H34" stroke="#b08b58" stroke-width="1"/>
+<!-- crest -->
+<rect x="22" y="4" width="4" height="4" fill="#6c4931"/><path d="M24 4V1H34L30 5H24Z" fill="#913f36"/>
 </svg>
