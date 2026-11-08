@@ -103,6 +103,7 @@ func _initialize() -> void:
     _main.player.set_process(false)
     _main.player.set_physics_process(false)
     _main.player.camera.position_smoothing_enabled = false
+    _main.player.camera.offset = Vector2.ZERO
     # Campaign strongholds can spawn near a map edge. Expand capture-only camera
     # limits so worker close-ups can center on their real world positions.
     var map_pixels: Vector2i = _main.world.get("pixel_size")
@@ -120,6 +121,9 @@ func _initialize() -> void:
             var message_bubble: Variant = child.get("_msg_bubble")
             if message_bubble is CanvasItem:
                 message_bubble.hide()
+            var message_label: Variant = child.get("_msg")
+            if message_label is CanvasItem:
+                message_label.hide()
 
     var campaign: Node = _main.get("campaign")
     _keep = campaign.call("current_target_node") as Node2D if campaign != null else null
@@ -131,6 +135,12 @@ func _initialize() -> void:
     if _civilization == null:
         _fail("The rival stronghold does not own its civilization simulation")
         return
+    # This is a renderer acceptance fixture, not a player-visibility test.
+    # Hiding the overlay exposes the real map and worker sprites without editing
+    # explored cells or changing the production fog-of-war rules.
+    var fog: CanvasItem = _main.get("fog") as CanvasItem
+    if fog != null:
+        fog.hide()
 
     # Complete the first production workplace through the actual rival economy.
     for _second in 24:
@@ -162,7 +172,10 @@ func _initialize() -> void:
         return
     _check_limits(rival_workers, labor)
 
-    await _capture("overview-rival-settlement", _keep.global_position + Vector2(0, -24), 0.55)
+    # Pan inward from the Classic map's lower-left rival stronghold so the
+    # settlement and its four workplaces share the camera instead of empty map.
+    var overview_center: Vector2 = _keep.global_position + Vector2(140, -110)
+    await _capture("overview-rival-settlement", overview_center, 0.8)
     print("RIVAL_WORKFORCE_OVERVIEW workplaces=", _civilization.get("structures").size(),
         " workers=", rival_workers.size(), " labor=", labor)
 
