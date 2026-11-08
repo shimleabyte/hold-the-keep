@@ -120,6 +120,8 @@ func _initialize() -> void:
     require(destination.take_resource("wood", 4),
         "The isolated-origin regression cargo must be cleared before later capacity checks")
     main.supply._depot_connections[source.get_instance_id()] = true
+    require(source.store_resource("wood", 2),
+        "Cancellation fixture must restore two source units after the isolation delivery")
 
     var cancel_source_before: int = source.stockpile_amount("wood")
     var cancel_id: int = main.supply.create_shipment(source_cell, destination_cell, "wood", 2)
