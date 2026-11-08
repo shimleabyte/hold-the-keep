@@ -47,6 +47,22 @@ func _initialize() -> void:
     _check(generated_iron_nodes > 0,
         "Classic world generation must instantiate live IronOre nodes for Tier II rival Forges")
 
+    # Tier I Quarry labor must bridge the existing 12-iron Forge cost, then
+    # return to stone once that exact paid construction requirement is covered.
+    var original_tier := int(civilization.get("technology_tier"))
+    var original_iron := float(civilization.get("resources").get("iron", 0.0))
+    civilization.set("technology_tier", 1)
+    civilization.get("resources")["iron"] = 11.0
+    var quarry_priority: Array = civilization.call("worker_resource_kinds", "quarry")
+    _check(not quarry_priority.is_empty() and String(quarry_priority[0]) == "iron",
+        "Tier I Quarry workers must prioritize real iron nodes while the Forge cost is unmet")
+    civilization.get("resources")["iron"] = 12.0
+    quarry_priority = civilization.call("worker_resource_kinds", "quarry")
+    _check(not quarry_priority.is_empty() and String(quarry_priority[0]) == "stone",
+        "Quarry workers must resume normal stone priority after the Forge iron cost is met")
+    civilization.set("technology_tier", original_tier)
+    civilization.get("resources")["iron"] = original_iron
+
     # The opening lumber camp is funded by the existing finite starting stock.
     # Advance the deterministic economy clock until the first workplace completes.
     for _tick in range(24):
