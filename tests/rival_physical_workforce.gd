@@ -270,6 +270,7 @@ func _initialize() -> void:
                 storage_worker.position = keep.position
                 var wood_capacity := float(civilization.call("resource_capacity", "wood"))
                 var stockpile: Dictionary = civilization.get("resources")
+                var wood_before_backpressure := float(stockpile.get("wood", 0.0))
                 stockpile["wood"] = wood_capacity - 2.0
                 _check(bool(storage_worker.call("receive", "wood", 5)),
                     "Stockpile recovery worker must accept a five-unit cargo batch")
@@ -298,6 +299,9 @@ func _initialize() -> void:
                     "A worker that completes delivery must return to its normal idle cycle")
                 storage_worker.call("shutdown")
                 await process_frame
+                # Do not leave the real rival stockpile saturated: the normal
+                # staffing pass correctly releases woodcutters while storage is full.
+                stockpile["wood"] = wood_before_backpressure
 
     civilization.set("active", true)
 
