@@ -227,7 +227,7 @@ func _initialize() -> void:
         "A worker with empty cargo must accept the five-unit delivery fixture atomically")
     woodcutter.call("recall_to_keep")
     for step in range(3000):
-        civilization.call("advance", 0.1)
+        woodcutter.call("tick", 0.1)
         if step % 5 == 0:
             await physics_frame
         if not is_instance_valid(woodcutter):
@@ -271,7 +271,7 @@ func _initialize() -> void:
             _check(reserved_before_destroy.get("worker") != retiring_worker,
                 "Workplace destruction must release the worker's resource reservation immediately")
         for step in range(800):
-            civilization.call("advance", 0.1)
+            retiring_worker.call("tick", 0.1)
             if step % 5 == 0:
                 await physics_frame
             if not is_instance_valid(retiring_worker):
@@ -523,7 +523,7 @@ func _assert_quarry_acquires_iron_and_pays_forge(
 
     var carried_iron := false
     for step in range(12000):
-        civilization.call("advance", 0.1)
+        quarry_worker.call("tick", 0.1)
         if (
             int(quarry_worker.get("carry")) > 0
             and String(quarry_worker.get("carry_kind")) == "iron"
@@ -539,7 +539,7 @@ func _assert_quarry_acquires_iron_and_pays_forge(
         return
 
     for step in range(12000):
-        civilization.call("advance", 0.1)
+        quarry_worker.call("tick", 0.1)
         if float(resources.get("iron", 0.0)) >= 12.0:
             break
         if step % 10 == 0:
@@ -549,6 +549,9 @@ func _assert_quarry_acquires_iron_and_pays_forge(
     if float(resources.get("iron", 0.0)) < 12.0:
         return
 
+    # Clear any unrelated opening construction so this assertion measures only
+    # the Forge transaction funded by the physical Quarry delivery.
+    civilization.get("construction").clear()
     civilization.call("_reconcile_build_order_index")
     var iron_before := float(resources.get("iron", 0.0))
     var wood_before := float(resources.get("wood", 0.0))
