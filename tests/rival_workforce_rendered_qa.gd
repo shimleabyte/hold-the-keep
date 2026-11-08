@@ -5,9 +5,9 @@ extends SceneTree
 ## test fixtures; no production values or gameplay costs are changed.
 
 const OUTPUT_DIR := "/tmp/hold-the-keep-rival-workforce-qa"
-const TREE_SCRIPT := preload("res://scripts/entities/resource_tree.gd")
-const ROCK_SCRIPT := preload("res://scripts/entities/rock.gd")
-const IRON_SCRIPT := preload("res://scripts/entities/iron_ore.gd")
+var tree_script: Script
+var rock_script: Script
+var iron_script: Script
 const DIRS4: Array[Vector2i] = [
     Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)
 ]
@@ -211,6 +211,17 @@ func _initialize() -> void:
     world_config.set("world_seed", 1337)
     await process_frame
 
+    # These entity scripts reference project autoloads such as Events. Load them
+    # only after the SceneTree has initialized the project's autoload singletons.
+    tree_script = load("res://scripts/entities/resource_tree.gd")
+    rock_script = load("res://scripts/entities/rock.gd")
+    iron_script = load("res://scripts/entities/iron_ore.gd")
+    _check(tree_script != null and rock_script != null and iron_script != null,
+        "Resource-node scripts must compile after autoload initialization")
+    if tree_script == null or rock_script == null or iron_script == null:
+        quit(1)
+        return
+
     main_scene = load("res://scenes/main.tscn").instantiate() as Node2D
     _check(main_scene != null, "Main gameplay scene must instantiate")
     if main_scene == null:
@@ -272,9 +283,9 @@ func _initialize() -> void:
         return
 
     var reserved_cells: Dictionary = {}
-    var test_tree := await _spawn_resource(TREE_SCRIPT, lumber.position, reserved_cells)
-    var test_rock := await _spawn_resource(ROCK_SCRIPT, quarry.position, reserved_cells)
-    var test_ore := await _spawn_resource(IRON_SCRIPT, forge.position, reserved_cells)
+    var test_tree := await _spawn_resource(tree_script, lumber.position, reserved_cells)
+    var test_rock := await _spawn_resource(rock_script, quarry.position, reserved_cells)
+    var test_ore := await _spawn_resource(iron_script, forge.position, reserved_cells)
     _check(test_tree != null and test_rock != null and test_ore != null,
         "Deterministic tree, stone and iron nodes must be placed within the rival region")
     navigation.call("rebuild")
@@ -502,7 +513,7 @@ func _initialize() -> void:
     _check(player_cell.x >= 0,
         "A player-owned cell inside the rival bounded work radius must exist in the deterministic seed")
     if player_cell.x >= 0:
-        var player_tree := TREE_SCRIPT.new() as Node2D
+        var player_tree := tree_script.new() as Node2D
         player_tree.position = Vector2(
             float(player_cell.x * int(world_config.get("tile_size"))) + int(world_config.get("tile_size")) / 2.0,
             float((player_cell.y + 1) * int(world_config.get("tile_size")))
