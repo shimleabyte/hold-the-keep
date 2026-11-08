@@ -342,7 +342,7 @@ func _ensure_resource_node(kind: String, worker: Node2D) -> bool:
     var owner_region := String(_keep.get("region_id"))
     var worker_cell: Vector2i = nav.call("cell_of", worker.global_position)
     var claim_radius := float(_keep.get("claim_radius"))
-    var local_radius := maxf(claim_radius + 6.0, claim_radius * 4.0) * float(WorldConfig.tile_size)
+    var local_radius := maxf(claim_radius + 6.0, claim_radius * 4.0) * float(world.get("tile_size"))
 
     for radius in range(2, 20):
         for y in range(-radius, radius + 1):
