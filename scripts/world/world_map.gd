@@ -147,7 +147,7 @@ func keep_center_position() -> Vector2:
 func spawn_point() -> Vector2:
     return keep_center_position() + Vector2(0.0, 48.0)
 
-## Stable regional labels used by terrain generation and the strategic map.
+
 func region_id(cell: Vector2i) -> String:
     if WorldConfig.is_frontier_profile():
         return _frontier_region_name(_frontier_region_at(cell))
@@ -158,7 +158,6 @@ func region_name_at(cell: Vector2i) -> String:
     return region_id(cell)
 
 
-## Atlas tile index, exposed read-only for the strategic map.
 func tile_type_at(cell: Vector2i) -> int:
     if cell.x < 0 or cell.y < 0 or cell.x >= map_size or cell.y >= map_size:
         return T_WATER
@@ -178,7 +177,6 @@ func _build_tileset() -> TileSet:
     for i in 7:
         src.create_tile(Vector2i(i, 0))
 
-    # Air = penghalang
     var data := src.get_tile_data(Vector2i(T_WATER, 0), 0)
     data.add_collision_polygon(0)
     var h := tile_size / 2.0
@@ -254,8 +252,6 @@ func _generate_frontier() -> void:
         var placement_cell: Vector2i = placement["cell"]
         resource_by_cell[placement_cell] = String(placement["kind"])
 
-    # Keep TileMap mutation and scene-node creation in WorldMap. Applying the
-    # returned row-major placements during this loop preserves node creation order.
     for y in map_size:
         for x in map_size:
             var cell := Vector2i(x, y)
@@ -291,8 +287,6 @@ func _generate_frontier() -> void:
                     occupied[cell] = true
 
 
-## Scatter non-blocking regional props after resource placement so the two never overlap.
-## The decoration RNG is independent of terrain/resource RNG to preserve existing generation.
 func _spawn_frontier_decorations() -> void:
     generated_decoration_layout.clear()
     generated_decoration_eligibility = _frontier_decoration_eligibility()
@@ -309,7 +303,6 @@ func _spawn_frontier_decorations() -> void:
 
 
 func _spawn_frontier_decoration_batches() -> void:
-    # One CanvasItem per world row and z-layer preserves the original Y-sort foot.
     var row_batches: Array = []
     row_batches.resize(map_size * 2)
     for entry in generated_decoration_layout:
@@ -334,14 +327,12 @@ func _spawn_frontier_decoration_batches() -> void:
             continue
         var row := floori(float(batch_index) / 2.0)
         var landmark := batch_index % 2 == 1
-        var batch_node = FRONTIER_DECORATION_SCRIPT.new()
+        var batch_node := FRONTIER_DECORATION_SCRIPT.new()
         batch_node.setup_batch(batch_entries, landmark)
         batch_node.position = Vector2(0.0, (row + 1) * tile_size)
         entities.add_child(batch_node)
 
 
-## Snapshot the current map constraints for the pure decoration stage.
-## In Expedition this includes sealed crossings and reserved gate approaches/landings.
 func _frontier_decoration_eligibility() -> PackedByteArray:
     var eligible := PackedByteArray()
     eligible.resize(map_size * map_size)
@@ -361,7 +352,6 @@ func _record_frontier_decoration(cell: Vector2i, kind: String, variation: int, l
         "variant": variation,
         "landmark": landmark
     })
-    # Visual creation is deferred until all deterministic records can be batched.
 
 
 func _build_frontier_regions() -> void:
@@ -472,8 +462,6 @@ func _spawn_frontier_iron() -> void:
             veins += 1
 
 
-## Place finite, renewable small-game nodes outside the protected starting clearing.
-## A separate seed keeps wood/stone/iron layouts unchanged and reproducible.
 func _spawn_wildlife() -> void:
     generated_wildlife_layout.clear()
     var rng := RandomNumberGenerator.new()
@@ -485,10 +473,6 @@ func _spawn_wildlife() -> void:
         float(map_size) * (0.15 if frontier else 0.10)
     )
     var target_count: int = mini(240, maxi(12, roundi(float(map_size * map_size) / 340.0)))
-    # A selected wildlife node blocks at most eight other candidate cells (its 3x3
-    # neighborhood). Therefore the first 9 * target_count candidates in score order
-    # are sufficient to reproduce the greedy spacing pass; later candidates cannot
-    # be visited before the target count is reached.
     var candidate_limit := target_count * 9
     var candidates: Array[Dictionary] = []
     for y in range(2, map_size - 2):
@@ -510,7 +494,6 @@ func _spawn_wildlife() -> void:
                     "order": order
                 })
             elif _wildlife_candidate_is_better(score, order, candidates[0]):
-                # Reuse the root dictionary; do not allocate one for every heap replacement.
                 var worst_candidate: Dictionary = candidates[0]
                 worst_candidate["cell"] = cell
                 worst_candidate["score"] = score
@@ -535,7 +518,7 @@ func _spawn_wildlife() -> void:
         var region := region_id(cell)
         generated_wildlife_layout.append({"cell": cell, "region": region})
         if generate_resource_nodes:
-            var wildlife = WILDLIFE_SCRIPT.new()
+            var wildlife := WILDLIFE_SCRIPT.new()
             wildlife.regional_style = region.to_lower()
             wildlife.position = Vector2(
                 cell.x * tile_size + tile_size / 2.0,
@@ -630,9 +613,6 @@ func _frontier_region_name(region: int) -> String:
     return "HEARTHLAND"
 
 
-## Frontier Expedition keeps a 160x160 heartland accessible first.
-## Four water-sealed crossings open only after the matching regional discovery objective.
-## The full 256x256 terrain is generated once; this is exploration gating, not chunk streaming.
 func _setup_expedition_barriers() -> void:
     _expedition_barrier_cells.clear()
     _expedition_gate_cells.clear()
@@ -651,7 +631,6 @@ func _setup_expedition_barriers() -> void:
         push_error("Frontier Expedition: starting heartland has no reachable survey network")
     var barriers: Dictionary = {}
 
-    # Seal the four sides of the initial heartland.
     for x in range(core_min, core_max):
         barriers[Vector2i(x, core_min - 1)] = true
         barriers[Vector2i(x, core_max)] = true
@@ -659,7 +638,6 @@ func _setup_expedition_barriers() -> void:
         barriers[Vector2i(core_min - 1, y)] = true
         barriers[Vector2i(core_max, y)] = true
 
-    # Keep the four outer marches separate until their own crossing is surveyed.
     for y in range(0, core_min):
         barriers[Vector2i(center - 1, y)] = true
     for y in range(core_max, map_size):
@@ -722,8 +700,6 @@ func _expedition_core_reachable_cells(core_min: int, core_max: int) -> Dictionar
     return reachable
 
 
-## Build the walkable outer component from the far side of each sealed gate.
-## These cells remain unreachable from the Keep until the corresponding gate opens.
 func _build_expedition_outer_reachability() -> void:
     _expedition_outer_reachable.clear()
     var directions: Array[Vector2i] = [
@@ -756,7 +732,6 @@ func _build_expedition_outer_reachability() -> void:
         _expedition_outer_reachable[String(region)] = visited
 
 
-## True only for tiles on the walkable outer component belonging to this march.
 func is_expedition_outer_cell(cell: Vector2i, region: String) -> bool:
     if not WorldConfig.is_frontier_expedition() or not WorldConfig.is_valid_cell(cell):
         return false
@@ -785,8 +760,6 @@ func _find_expedition_gate_cell(
             var candidate := target + Vector2i(radius * direction, 0)
             var approach := candidate + inward
             var landing := candidate + outward
-            # Gates must replace a cell on the actual core perimeter, never a
-            # nearby tile outside it or the fixed wall dividing adjacent marches.
             if candidate.x < core_min or candidate.x >= core_max or candidate.x == center - 1:
                 continue
             if not core_reachable.has(approach):
@@ -832,7 +805,6 @@ func _seal_expedition_cell(cell: Vector2i) -> void:
     _layer.set_cell(cell, 0, Vector2i(T_WATER, 0))
 
 
-## Returns the regions newly opened by a completed discovery objective.
 func apply_expedition_sector_unlocks(discovered_regions: Dictionary) -> Array[String]:
     var opened: Array[String] = []
     if not WorldConfig.is_frontier_expedition():
@@ -888,5 +860,3 @@ func _spawn_iron() -> void:
         _spawn_frontier_iron()
     else:
         _spawn_classic_iron()
-
-
