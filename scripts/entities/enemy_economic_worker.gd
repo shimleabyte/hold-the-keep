@@ -306,7 +306,9 @@ func _repath_current_state() -> bool:
 func _find_resource_target() -> bool:
     if world == null or not is_instance_valid(world) or nav == null:
         return false
-    var resource_kinds: Array[String] = civilization.worker_resource_kinds(role)
+    # civilization is accessed through an owner-polymorphic reference here;
+    # the dynamic call erases the typed-array metadata, so retain a Variant Array.
+    var resource_kinds: Array = civilization.worker_resource_kinds(role)
     if resource_kinds.is_empty():
         return false
 
