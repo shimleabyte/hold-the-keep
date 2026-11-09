@@ -77,7 +77,7 @@ func _run() -> void:
         clock.set_process(false)
         clock.time_of_day = 0.22
 
-    main.player.global_position = main.world.keep_center_position() + Vector2(0, 50)
+    main.player.global_position = main.world.keep_center_position() + Vector2(0, 230)
     main.player.camera.position_smoothing_enabled = false
     main.player.camera.zoom = Vector2.ONE
     main.player.hide()
