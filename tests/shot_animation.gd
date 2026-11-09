@@ -9,6 +9,17 @@ func ticks(count: int) -> void:
         await process_frame
 
 
+func advance_animation(seconds: float) -> void:
+    # Advance the SpriteAnim timeline in exact durations for event-keyed clips.
+    var remaining := maxf(seconds, 0.0)
+    while remaining > 0.000001:
+        var step := minf(remaining, 1.0 / 120.0)
+        main_player.anim.update(step)
+        main_player.queue_redraw()
+        remaining -= step
+    await process_frame
+
+
 func capture_locomotion_cycle(clip_name: String, frame_count: int, fps: float, center: Vector2) -> void:
     main_player.velocity = Vector2.ZERO
     main_player.facing = Vector2.RIGHT
