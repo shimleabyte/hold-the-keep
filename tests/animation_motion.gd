@@ -27,11 +27,29 @@ func _initialize() -> void:
 
     anim.play("walk", true)
     anim.update(0.08)
-    assert(anim.motion_offset().y < 0.0, "Walk cycle must lift the body between steps")
+    assert(anim.motion_offset().y < 0.0, "Shared villager walk cycle must retain its subtle body lift")
 
     anim.play("run", true)
     anim.update(0.083)
-    assert(anim.motion_offset().y <= -2.0, "Run cycle must have a stronger lift than walking")
+    assert(anim.motion_offset().y <= -2.0, "Shared villager run cycle must retain its stronger lift")
+
+    anim.play_player_clip("walk", true)
+    assert(anim.frame_index() == 2, "Player walk must begin on its first authored stride pose")
+    for expected_frame in [3, 4, 5]:
+        anim.update(0.125)
+        assert(anim.frame_index() == expected_frame,
+            "Player walk must expose four distinct authored poses across all facing rows")
+    assert(anim.motion_offset() == Vector2.ZERO,
+        "Player walk must keep the pelvis planted; the authored stride carries the motion")
+
+    anim.play_player_clip("run", true)
+    assert(anim.frame_index() == 6, "Player run must begin on its first drive pose")
+    for expected_frame in [7, 8, 9]:
+        anim.update(1.0 / 12.0)
+        assert(anim.frame_index() == expected_frame,
+            "Player run must expose four distinct authored poses across all facing rows")
+    assert(anim.motion_offset().y >= -1.0 and anim.motion_offset().y <= 0.0,
+        "Player run must use restrained lift rather than a two-pixel bounce")
 
     anim.face(Vector2.RIGHT)
     anim.play("attack", true)
