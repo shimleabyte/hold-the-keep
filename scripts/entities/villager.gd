@@ -105,6 +105,7 @@ var _goal_cells: Array[Vector2i] = []
 var _blocked_targets: Dictionary = {}
 var _blocked_nav_version := -1
 var _blocked_target_cleanup_t := BLOCKED_TARGET_CLEANUP_INTERVAL
+var _blocked_target_clock := 0.0
 var work_ai_status := "UNASSIGNED"
 var work_ai_detail := ""
 var _decide_t := 0.0
@@ -1182,19 +1183,27 @@ func _set_work_status(status: String, detail: String = "") -> void:
 func _is_target_blocked(candidate: Variant) -> bool:
     if candidate == null or not is_instance_valid(candidate):
         return false
-    return _blocked_targets.has(candidate.get_instance_id())
+    var target_id := candidate.get_instance_id()
+    if not _blocked_targets.has(target_id):
+        return false
+    var record: Dictionary = _blocked_targets[target_id]
+    if _blocked_target_clock >= float(record.get("expires_at", 0.0)):
+        _blocked_targets.erase(target_id)
+        return false
+    return true
 
 
 func _mark_target_blocked(candidate: Variant, reason: String) -> void:
     if candidate == null or not is_instance_valid(candidate):
         return
     _blocked_targets[candidate.get_instance_id()] = {
-        "remaining": TARGET_RETRY_COOLDOWN,
+        "expires_at": _blocked_target_clock + TARGET_RETRY_COOLDOWN,
         "reason": reason
     }
 
 
 func _tick_blocked_targets(delta: float) -> void:
+    _blocked_target_clock += delta
     if nav == null:
         return
     if nav.version != _blocked_nav_version:
@@ -1207,16 +1216,13 @@ func _tick_blocked_targets(delta: float) -> void:
     _blocked_target_cleanup_t -= delta
     if _blocked_target_cleanup_t > 0.0:
         return
-    var elapsed := BLOCKED_TARGET_CLEANUP_INTERVAL - _blocked_target_cleanup_t
     _blocked_target_cleanup_t = BLOCKED_TARGET_CLEANUP_INTERVAL
     for target_id in _blocked_targets.keys():
         var record: Dictionary = _blocked_targets[target_id]
-        var remaining := maxf(0.0, float(record.get("remaining", 0.0)) - elapsed)
-        if remaining <= 0.0 or not is_instance_valid(instance_from_id(int(target_id))):
+        if _blocked_target_clock >= float(record.get("expires_at", 0.0)) \
+                or not is_instance_valid(instance_from_id(int(target_id))):
             _blocked_targets.erase(target_id)
-        else:
-            record["remaining"] = remaining
-            _blocked_targets[target_id] = record
+
 
 
 func worker_ai_diagnostics() -> Dictionary:
