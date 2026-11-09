@@ -258,12 +258,10 @@ func motion_offset() -> Vector2:
         "idle":
             # Napas halus satu piksel, dengan fase awal berbeda per unit.
             return Vector2(0, -roundf(sin(_motion_t * TAU * 0.7 + _motion_phase) * 0.55))
-        "walk":
-            var walk_lift := absf(sin(progress * TAU))
-            return Vector2(0, -roundf(walk_lift))
-        "run":
-            var run_lift := absf(sin(progress * TAU))
-            return Vector2(0, -roundf(run_lift * 2.0))
+        "walk", "run":
+            # Locomotion lift/contact is authored in the atlas poses. A global
+            # vertical bob would detach the planted boot from the ground pivot.
+            return Vector2.ZERO
         "work":
             return _work_motion_offset(progress, forward)
         "hurt":
