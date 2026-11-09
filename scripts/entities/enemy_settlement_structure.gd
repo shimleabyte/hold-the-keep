@@ -1,5 +1,7 @@
 class_name EnemySettlementStructure
 extends Node2D
+
+const BuildingVisual := preload("res://scripts/entities/building_visual_identity.gd")
 ## Destructible faction-owned settlement building. It is separate from player
 ## buildings so civilian workplace and supply systems never claim it.
 
@@ -120,6 +122,24 @@ func _draw() -> void:
     var footprint_pixels: Vector2 = Vector2(size) * float(WorldConfig.tile_size)
     if texture != null:
         draw_texture(texture, Vector2(-texture.get_width() / 2.0, -texture.get_height()))
+        var database := get_tree().root.get_node_or_null("DataDB")
+        if database != null and database.buildings.has(structure_id):
+            var definition: Dictionary = database.buildings[structure_id]
+            var profile: Variant = definition.get("visual", {})
+            if profile is Dictionary:
+                BuildingVisual.draw_identity(
+                    self,
+                    structure_id,
+                    profile,
+                    Vector2(texture.get_width(), texture.get_height()),
+                    float(hp) / float(maxi(1, max_hp))
+                )
+        var registry := get_tree().root.get_node_or_null("FactionRegistry")
+        if registry != null and registry.has_method("faction_for_stronghold"):
+            var faction: Dictionary = registry.faction_for_stronghold(faction_id)
+            var ownership: Variant = faction.get("visual", {})
+            if ownership is Dictionary:
+                BuildingVisual.draw_owner_identity(self, ownership, Vector2(texture.get_width(), texture.get_height()))
     else:
         draw_rect(Rect2(-footprint_pixels.x / 2.0, -footprint_pixels.y, footprint_pixels.x, footprint_pixels.y), Color("#78664c"))
 
