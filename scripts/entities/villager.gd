@@ -52,6 +52,7 @@ const REACH := 11.0
 const DEFAULT_WORK_RADIUS := 12.0
 const MAX_WORK_PATH_CHECKS := 8
 const TARGET_RETRY_COOLDOWN := 6.0
+const BLOCKED_TARGET_CLEANUP_INTERVAL := 0.5
 const BUILDER_REPAIR_INTERVAL := 1.6
 const BUILDER_REPAIR_AMOUNT := 12
 const HEAL_INTERVAL := 3.2
@@ -103,6 +104,7 @@ var _path_ver := -1
 var _goal_cells: Array[Vector2i] = []
 var _blocked_targets: Dictionary = {}
 var _blocked_nav_version := -1
+var _blocked_target_cleanup_t := BLOCKED_TARGET_CLEANUP_INTERVAL
 var work_ai_status := "UNASSIGNED"
 var work_ai_detail := ""
 var _decide_t := 0.0
@@ -1198,10 +1200,18 @@ func _tick_blocked_targets(delta: float) -> void:
     if nav.version != _blocked_nav_version:
         _blocked_targets.clear()
         _blocked_nav_version = nav.version
+        _blocked_target_cleanup_t = BLOCKED_TARGET_CLEANUP_INTERVAL
         return
+    if _blocked_targets.is_empty():
+        return
+    _blocked_target_cleanup_t -= delta
+    if _blocked_target_cleanup_t > 0.0:
+        return
+    var elapsed := BLOCKED_TARGET_CLEANUP_INTERVAL - _blocked_target_cleanup_t
+    _blocked_target_cleanup_t = BLOCKED_TARGET_CLEANUP_INTERVAL
     for target_id in _blocked_targets.keys():
         var record: Dictionary = _blocked_targets[target_id]
-        var remaining := maxf(0.0, float(record.get("remaining", 0.0)) - delta)
+        var remaining := maxf(0.0, float(record.get("remaining", 0.0)) - elapsed)
         if remaining <= 0.0 or not is_instance_valid(instance_from_id(int(target_id))):
             _blocked_targets.erase(target_id)
         else:
@@ -1585,16 +1595,23 @@ func _hide() -> void:
 
 func _nearest_enemy():
     var best = null
-    var best_d := ARCHER_SEARCH if is_archer() else SOLDIER_SEARCH
+    var best_distance_squared := pow(ARCHER_SEARCH if is_archer() else SOLDIER_SEARCH, 2.0)
+    var guarded := is_outpost_guard()
+    var guard_radius_squared := 0.0
+    if guarded:
+        var guard_radius := float(guard_outpost.data.get("guard_radius", OUTPOST_GUARD_RADIUS))
+        guard_radius_squared = guard_radius * guard_radius
     var candidates := get_tree().get_nodes_in_group("enemy_garrison") if _expeditioning else get_tree().get_nodes_in_group("enemies")
     for e in candidates:
-        var enemy := e as Node2D
-        if is_outpost_guard() and enemy.position.distance_to(guard_outpost.position) > float(guard_outpost.data.get("guard_radius", OUTPOST_GUARD_RADIUS)):
+        if not is_instance_valid(e) or not (e is Node2D):
             continue
-        var d := position.distance_to(enemy.position)
-        if d < best_d:
-            best_d = d
-            best = e
+        var enemy := e as Node2D
+        if guarded and enemy.position.distance_squared_to(guard_outpost.position) > guard_radius_squared:
+            continue
+        var distance_squared := position.distance_squared_to(enemy.position)
+        if distance_squared < best_distance_squared:
+            best_distance_squared = distance_squared
+            best = enemy
     return best
 
 
