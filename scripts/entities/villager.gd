@@ -1601,7 +1601,8 @@ func _hide() -> void:
 
 func _nearest_enemy():
     var best = null
-    var best_distance_squared := pow(ARCHER_SEARCH if is_archer() else SOLDIER_SEARCH, 2.0)
+    var search_radius: float = ARCHER_SEARCH if is_archer() else SOLDIER_SEARCH
+    var best_distance_squared := search_radius * search_radius
     var guarded := is_outpost_guard()
     var guard_radius_squared := 0.0
     if guarded:
