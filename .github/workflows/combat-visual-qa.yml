@@ -80,6 +80,9 @@ jobs:
           test -s /tmp/hold-the-keep-combat-visual-qa/battlefield-melee-contact.png
           test -s /tmp/hold-the-keep-combat-visual-qa/battlefield-shield-and-projectiles.png
           test -s /tmp/hold-the-keep-combat-visual-qa/battlefield-siege-structure-impact.png
+          test -s /tmp/hold-the-keep-combat-visual-qa/battlefield-melee-contact-1280x720.png
+          test -s /tmp/hold-the-keep-combat-visual-qa/battlefield-shield-and-projectiles-1280x720.png
+          test -s /tmp/hold-the-keep-combat-visual-qa/battlefield-siege-structure-impact-1280x720.png
 
       - name: Upload live combat evidence
         if: always()
