@@ -1,4 +1,4 @@
-name: Frontier wave spawn reachability
+name: Frontier and Expedition wave spawn reachability
 
 on:
   pull_request:
@@ -10,6 +10,7 @@ on:
       - "scripts/world/**"
       - "scripts/main.gd"
       - "tests/frontier_wave_spawn_reachability.gd"
+      - "tests/expedition_wave_spawn_reachability.gd"
       - ".github/workflows/frontier-wave-spawn-probe.yml"
 
 permissions:
@@ -21,7 +22,7 @@ concurrency:
 
 jobs:
   probe:
-    name: Frontier wave spawn · Godot 4.7
+    name: Frontier and Expedition wave spawns · Godot 4.7
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -42,3 +43,9 @@ jobs:
           HTK_AUTO_START_GAME: "1"
           HTK_AUTO_RESOLVE_EVENTS: "1"
         run: timeout --signal=TERM --kill-after=10s 240s godot --headless --fixed-fps 60 --path . --script res://tests/frontier_wave_spawn_reachability.gd
+
+      - name: Probe Expedition heartland-edge reachability with all outer gates sealed
+        env:
+          HTK_AUTO_START_GAME: "1"
+          HTK_AUTO_RESOLVE_EVENTS: "1"
+        run: timeout --signal=TERM --kill-after=10s 300s godot --headless --fixed-fps 60 --path . --script res://tests/expedition_wave_spawn_reachability.gd
