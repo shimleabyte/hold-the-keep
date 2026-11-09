@@ -190,7 +190,10 @@ func _tick_assault_retreat(enemy: Variant, delta: float) -> void:
         enemy._raid_path_version = enemy.raid_nav.version
         enemy._raid_repath_timer = 1.0
         if enemy._raid_path.is_empty():
-            enemy.retreat()
+            # A blocked return route is not a reason to despawn a surviving
+            # assault member. Keep the withdrawal order active and retry after
+            # navigation changes or a later route refresh.
+            enemy._raid_repath_timer = 0.5
             return
     while enemy._raid_path_index < enemy._raid_path.size() and enemy.position.distance_to(enemy._raid_path[enemy._raid_path_index]) <= 3.0:
         enemy._raid_path_index += 1
