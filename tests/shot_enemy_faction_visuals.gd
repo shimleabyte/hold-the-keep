@@ -49,6 +49,16 @@ func _run() -> void:
         _fail("Gameplay did not finish initializing")
         return
 
+    # Remove transient stage/tutorial announcements from the review capture only.
+    for child in main.get_children():
+        if child is CanvasLayer:
+            var banner = child.get("_banner")
+            if banner is CanvasItem:
+                banner.hide()
+            var message_bubble = child.get("_msg_bubble")
+            if message_bubble is CanvasItem:
+                message_bubble.hide()
+
     var data_db = root.get_node_or_null("DataDB")
     var enemy_script := load("res://scripts/entities/enemy.gd") as GDScript
     if enemy_script == null or not enemy_script.can_instantiate():
