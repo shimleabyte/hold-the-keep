@@ -8,7 +8,8 @@ const RAID_SELECTOR_SCRIPT := preload("res://scripts/systems/faction_raid_target
 const CAMP_SCAN_INTERVAL := 0.5
 const CAMP_SITE_CLEARANCE := 10.0
 const CAMP_SPACING := 12.0
-const MAX_ACTIVE_FACTION_RAIDERS := 4
+const MAX_ACTIVE_FACTION_ASSAULTS := 4
+const FACTION_ASSAULT_SIZE := 3
 var main
 var _patrol_planner
 var _raid_selector
@@ -282,7 +283,67 @@ func destroy_camp(camp_id: String) -> void:
 func _retreat_faction_raiders(camp_id: String) -> void:
     for raider in get_tree().get_nodes_in_group("faction_raiders"):
         if is_instance_valid(raider) and String(raider.faction_raid_camp_id) == camp_id:
-            raider.retreat()
+            raider.begin_faction_assault_retreat()
+
+
+func _assault_keys_for_camp(camp_id: String = "") -> Dictionary:
+    var keys: Dictionary = {}
+    for raider in get_tree().get_nodes_in_group("faction_raiders"):
+        if not is_instance_valid(raider) or raider.is_queued_for_deletion():
+            continue
+        if not camp_id.is_empty() and String(raider.faction_raid_camp_id) != camp_id:
+            continue
+        var assault_id := String(raider.faction_raid_group_id)
+        if assault_id.is_empty():
+            assault_id = "legacy:%s:%s:%d:%d" % [
+                String(raider.faction_raid_camp_id),
+                String(raider.faction_raid_target_kind),
+                int(raider.raid_target_cell.x),
+                int(raider.raid_target_cell.y)
+            ]
+        keys[assault_id] = true
+    return keys
+
+
+func _faction_assault_composition(camp: Dictionary) -> Array[Dictionary]:
+    var faction_id := String(camp.get("faction_id", camp.get("id", "")))
+    var roster: Array[String] = FactionRegistry.roster_for(faction_id)
+    var leader_id := String(camp.get("raid_unit", ""))
+    if not DataDB.enemies.has(leader_id):
+        leader_id = FactionRegistry.garrison_enemy(faction_id)
+    if not DataDB.enemies.has(leader_id):
+        return []
+
+    var composition: Array[Dictionary] = []
+    var selected: Dictionary = {}
+    var leader_archetype := String(DataDB.enemies[leader_id].get("archetype", ""))
+    var siege_id := ""
+    for candidate_id in roster:
+        if not DataDB.enemies.has(candidate_id):
+            continue
+        if String(DataDB.enemies[candidate_id].get("archetype", "")) == "siege_engine":
+            siege_id = candidate_id
+            break
+
+    var leader_role := "siege" if leader_archetype == "siege_engine" else "leader"
+    composition.append({"id": leader_id, "role": leader_role})
+    selected[leader_id] = true
+
+    if not siege_id.is_empty() and not selected.has(siege_id) and composition.size() < FACTION_ASSAULT_SIZE:
+        composition.append({"id": siege_id, "role": "siege"})
+        selected[siege_id] = true
+
+    for candidate_id in roster:
+        if composition.size() >= FACTION_ASSAULT_SIZE:
+            break
+        if selected.has(candidate_id) or not DataDB.enemies.has(candidate_id):
+            continue
+        if String(DataDB.enemies[candidate_id].get("archetype", "")) == "siege_engine":
+            continue
+        composition.append({"id": candidate_id, "role": "escort"})
+        selected[candidate_id] = true
+
+    return composition
 
 
 func _raid_target_exposed(target, camp: Dictionary) -> bool:
@@ -295,22 +356,57 @@ func _find_raid_target(camp: Dictionary) -> Dictionary:
 
 
 func _spawn_faction_raid(camp: Dictionary, target: Dictionary) -> bool:
-    if get_tree().get_nodes_in_group("faction_raiders").size() >= MAX_ACTIVE_FACTION_RAIDERS:
+    if _assault_keys_for_camp().size() >= MAX_ACTIVE_FACTION_ASSAULTS:
         return false
-    var enemy_id := String(camp.get("raid_unit", "enemy_saboteur"))
-    if not DataDB.enemies.has(enemy_id):
-        push_warning("Faction camps: missing raid unit %s" % enemy_id)
+    var composition := _faction_assault_composition(camp)
+    if composition.size() != FACTION_ASSAULT_SIZE:
         return false
+
     var raid_origin := Vector2(target.get("origin", camp["position"]))
-    var raider = ENEMY_SCRIPT.new()
-    raider.setup(DataDB.enemies[enemy_id], main.world, main.flow, main.player, String(camp["faction_id"]))
-    raider.setup_faction_raid(
-        Vector2i(target["cell"]), String(target["kind"]), main.nav,
-        String(camp["id"]), String(camp["region_id"]), raid_origin
-    )
-    raider.position = raid_origin
-    main.world.entities.add_child(raider)
-    return true
+    var target_cell: Vector2i = Vector2i(target["cell"])
+    var camp_id := String(camp["id"])
+    var region_id := String(camp["region_id"])
+    var faction_id := String(camp["faction_id"])
+    var assault_id := "%s:%d:%d:%d" % [
+        camp_id, target_cell.x, target_cell.y, Time.get_ticks_usec()
+    ]
+    var siege_required := false
+    for member_definition in composition:
+        if String(member_definition.get("role", "")) == "siege":
+            siege_required = true
+            break
+
+    var formation_offsets: Array[Vector2] = [
+        Vector2.ZERO,
+        Vector2(-18.0, -12.0),
+        Vector2(18.0, -12.0)
+    ]
+    var spawned: Array[Node] = []
+    for index in composition.size():
+        var enemy_id := String(composition[index]["id"])
+        if not DataDB.enemies.has(enemy_id):
+            for partial in spawned:
+                partial.retreat()
+            return false
+        var raider = ENEMY_SCRIPT.new()
+        raider.setup(DataDB.enemies[enemy_id], main.world, main.flow, main.player, faction_id)
+        raider.setup_faction_raid(
+            target_cell, String(target["kind"]), main.nav,
+            camp_id, region_id, raid_origin,
+            assault_id, String(composition[index]["role"]),
+            composition.size(), siege_required
+        )
+        var spawn_position := raid_origin + formation_offsets[index]
+        var target_node = main.world.occupied.get(target_cell)
+        if target_node != null and is_instance_valid(target_node) and target_node.has_method("cells"):
+            var route: PackedVector2Array = main.nav.path_adjacent(spawn_position, target_node.cells())
+            if route.is_empty():
+                spawn_position = raid_origin
+        raider.position = spawn_position
+        main.world.entities.add_child(raider)
+        spawned.append(raider)
+
+    return spawned.size() == FACTION_ASSAULT_SIZE
 
 
 func _spawn_patrol(camp: Dictionary) -> bool:
@@ -352,13 +448,6 @@ func _process(delta: float) -> void:
             continue
         var camp_id := String(enemy.patrol_camp_id)
         patrol_counts[camp_id] = int(patrol_counts.get(camp_id, 0)) + 1
-
-    var raid_counts: Dictionary = {}
-    for raider in get_tree().get_nodes_in_group("faction_raiders"):
-        if not is_instance_valid(raider) or raider.is_queued_for_deletion():
-            continue
-        var camp_id := String(raider.faction_raid_camp_id)
-        raid_counts[camp_id] = int(raid_counts.get(camp_id, 0)) + 1
 
     for camp_id in camps:
         var camp: Dictionary = camps[camp_id]
@@ -410,7 +499,7 @@ func _process(delta: float) -> void:
                     camp["timer"] = float(camp["reinforcement_cooldown"])
                     patrol_counts[camp_id] = active_count + 1
 
-        var active_raids := int(raid_counts.get(camp_id, 0))
+        var active_raids := _assault_keys_for_camp(String(camp_id)).size()
         if active_raids < int(camp["raid_active_cap"]) and int(camp["raid_budget"]) > 0:
             camp["raid_timer"] = maxf(0.0, float(camp["raid_timer"]) - elapsed)
             if float(camp["raid_timer"]) <= 0.0:
@@ -418,13 +507,12 @@ func _process(delta: float) -> void:
                 if not raid_target.is_empty() and _spawn_faction_raid(camp, raid_target):
                     camp["raid_budget"] = maxi(0, int(camp["raid_budget"]) - 1)
                     camp["raid_timer"] = float(camp["raid_cooldown"])
-                    raid_counts[camp_id] = active_raids + 1
                     var faction_name := String(FactionRegistry.factions[camp_id].get("name", camp_id))
                     var target_label := String(raid_target.get("node_id", "infrastruktur")).to_upper()
                     var origin_label := "pos terdepan" if String(raid_target.get("origin_kind", "camp")) == "outpost" else "kamp"
                     Events.event_triggered.emit(
                         "RAID PERBATASAN TERDETEKSI",
-                        "%s meluncurkan penyerbu dari %s ke %s di %d,%d. Hadang penyerbu atau rebut kembali kendali wilayah sebelum jalur logistik terputus."
+                        "%s meluncurkan pasukan serbu dari %s ke %s di %d,%d. Hadang pasukan itu atau rebut kembali kendali wilayah sebelum jalur logistik terputus."
                         % [faction_name, origin_label, target_label, raid_target["cell"].x, raid_target["cell"].y]
                     )
                 else:

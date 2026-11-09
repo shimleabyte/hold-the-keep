@@ -270,6 +270,74 @@ func tick(delta: float) -> void:
         scan_timer = 0.0
 
 
+## Target the assault's assigned infrastructure rather than selecting a separate local target.
+## The normal siege windup, counterplay and structural damage multiplier remain in use.
+func tick_faction_assault_target(target_node: Node2D, delta: float) -> void:
+    if target_node == null or not is_instance_valid(target_node) \
+            or int(target_node.get("hp")) <= 0 \
+            or not target_node.has_method("take_damage") \
+            or not target_node.has_method("cells"):
+        _clear_target()
+        return
+
+    target = target_node
+    var disruptor := _nearest_disruptor()
+    if disruptor != null:
+        if windup_timer > 0.0:
+            interrupt()
+        actor._moving = false
+        var retreat_direction: Vector2 = actor.position - disruptor.position
+        if retreat_direction.length_squared() > 0.01:
+            actor._move_toward(actor.position + retreat_direction.normalized() * 26.0, delta)
+        return
+
+    if windup_timer > 0.0:
+        if not is_instance_valid(target) or int(target.get("hp")) <= 0 \
+                or actor.position.distance_to(target.position) > 58.0:
+            interrupt()
+            return
+        var aim: Vector2 = target.position - actor.position
+        if aim.length_squared() > 0.01:
+            actor.anim.face(aim)
+        actor._moving = false
+        windup_timer = maxf(0.0, windup_timer - delta)
+        if windup_timer <= 0.0:
+            var impact_damage := maxi(1, roundi(float(actor.damage) * damage_multiplier))
+            target.call("take_damage", impact_damage)
+            Events.fx_burst.emit("debris", target.global_position + Vector2(0, -8), -aim.normalized(), 1.5)
+            Audio.play("siege_impact", 1.0, -2.0)
+            Events.screen_shake.emit(1.0, 0.16)
+            cooldown = cooldown_duration
+            actor.queue_redraw()
+        return
+
+    var distance := actor.position.distance_to(target.position)
+    if distance <= maxf(24.0, actor._attack_reach() + 10.0):
+        actor._moving = false
+        if cooldown <= 0.0:
+            windup_timer = windup_duration
+            actor.anim.face(target.position - actor.position)
+            Events.fx_burst.emit("dust", actor.position + Vector2(0, -4), Vector2.ZERO, 0.9)
+            Audio.play("siege_windup", 1.0, -3.0)
+            actor.queue_redraw()
+        return
+
+    if navigation == null:
+        return
+    if path_version != navigation.version or path.is_empty() or repath_timer <= 0.0:
+        var target_cells: Array[Vector2i] = target.call("cells")
+        path = navigation.path_adjacent(actor.position, target_cells)
+        path_index = 1 if path.size() > 1 else 0
+        path_version = navigation.version
+        repath_timer = 0.9
+        if path.is_empty():
+            return
+    while path_index < path.size() and actor.position.distance_to(path[path_index]) <= 3.0:
+        path_index += 1
+    if path_index < path.size():
+        actor._move_toward(path[path_index], delta)
+
+
 func interrupt() -> void:
     if windup_timer <= 0.0:
         return

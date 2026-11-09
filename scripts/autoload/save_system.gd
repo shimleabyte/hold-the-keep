@@ -117,6 +117,11 @@ func collect(main: Node) -> Dictionary:
             "raid_kind": enemy.faction_raid_target_kind if enemy.is_faction_raider else "",
             "raid_camp": enemy.faction_raid_camp_id if enemy.is_faction_raider else "",
             "raid_region": enemy.faction_raid_region_id if enemy.is_faction_raider else "",
+            "raid_group": enemy.faction_raid_group_id if enemy.is_faction_raider else "",
+            "raid_role": enemy.faction_raid_role if enemy.is_faction_raider else "",
+            "raid_group_size": enemy.faction_raid_group_size if enemy.is_faction_raider else 1,
+            "raid_siege_required": enemy.faction_raid_siege_required if enemy.is_faction_raider else false,
+            "raid_retreating": enemy.faction_raid_retreating if enemy.is_faction_raider else false,
             "raid_target": {"cx": enemy.raid_target_cell.x, "cy": enemy.raid_target_cell.y}
                 if enemy.is_supply_raider or enemy.is_faction_raider else null,
             "raid_hits": enemy.supply_raid_hits,

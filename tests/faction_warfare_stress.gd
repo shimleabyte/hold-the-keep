@@ -10,7 +10,9 @@ const FACTION_IDS: Array[String] = [
 const GARRISONS_PER_FACTION := 12
 const PATROLS_PER_CAMP := 2
 const VILLAGERS := 48
-const EXPECTED_RAIDERS := 4
+const ASSAULT_SIZE := 3
+const EXPECTED_ASSAULTS := 4
+const EXPECTED_RAIDERS := ASSAULT_SIZE * EXPECTED_ASSAULTS
 const GLOBAL_RAID_CAP := 4
 const EXPECTED_ARCHETYPES: Array[String] = [
     "scout", "shieldbearer", "saboteur", "war_shaman", "siege_engine", "beast_rider"
@@ -207,19 +209,19 @@ func _run() -> void:
         }
         require(manager._spawn_faction_raid(camp, target),
             "Each faction must dispatch one infrastructure raider: " + faction_id)
-        total_raiders += 1
+        total_raiders += ASSAULT_SIZE
 
         var raider = faction_raider_count(main)
         require(raider == total_raiders,
-            "Raid dispatch count must increase by one per faction without skipping or duplicating units")
+            "Each faction dispatch must add exactly one complete three-unit squad")
 
     require(total_garrisons == GARRISONS_PER_FACTION * FACTION_IDS.size(),
         "All four factions must contribute their full garrison load")
     require(total_patrols == PATROLS_PER_CAMP * FACTION_IDS.size(),
         "All four camps must contribute their patrol load")
-    require(total_raiders == EXPECTED_RAIDERS and total_raiders == GLOBAL_RAID_CAP
+    require(total_raiders == EXPECTED_RAIDERS and EXPECTED_ASSAULTS == GLOBAL_RAID_CAP
         and faction_raider_count(main) == EXPECTED_RAIDERS,
-        "All four camps must run simultaneous faction raids")
+        "All four camps must run simultaneous coordinated assaults within the four-squad global cap")
 
     var first_camp: Dictionary = manager.camps[FACTION_IDS[0]]
     var extra_target: Dictionary = {
@@ -227,7 +229,7 @@ func _run() -> void:
         "kind": "road"
     }
     require(not manager._spawn_faction_raid(first_camp, extra_target),
-        "The global raid ceiling must reject a fifth active faction raider")
+        "The global assault ceiling must reject a fifth active squad")
 
     # Keep the player outside the camp perimeter so this pathing fixture tests infrastructure approach,
     # not the separate player-interception branch covered by faction_raids.gd.
@@ -259,13 +261,52 @@ func _run() -> void:
         raider._tick_faction_raid(0.016)
         var route_is_current: bool = not raider._raid_path.is_empty() \
             and raider._raid_path_version == main.nav.version
+        if String(raider.faction_raid_role) == "siege":
+            route_is_current = not raider.siege_behavior.path.is_empty() \
+                and raider.siege_behavior.path_version == main.nav.version
         var target_in_attack_reach: bool = target != null \
             and raider.position.distance_to(target.position) <= maxf(raider._attack_reach(), 28.0)
         require(route_is_current or target_in_attack_reach,
-            "Every simultaneous raider must route or engage its reachable target: " + expected_camp)
+            "Every assault member, including siege support, must route or engage its shared objective: " + expected_camp)
 
+    var siege_member: Node2D
+    var siege_target: Node2D
     for raider in raiders:
-        raider.player = main.player
+        if String(raider.faction_raid_role) == "siege":
+            siege_member = raider as Node2D
+            siege_target = raider._find_faction_raid_target() as Node2D
+            break
+    require(siege_member != null and siege_target != null,
+        "Iron Legion and Ashen Host assaults must include a live Siege Engine and shared structure target")
+    if siege_member != null and siege_target != null:
+        siege_member.player = null
+        siege_member.position = siege_target.position + Vector2(0.0, -18.0)
+        var structure_hp_before: int = int(siege_target.get("hp"))
+        siege_member.siege_behavior.tick_faction_assault_target(siege_target, 0.016)
+        require(float(siege_member.siege_behavior.windup_timer) > 0.0,
+            "The assault Siege Engine must begin its readable structural windup at the shared target")
+        siege_member.siege_behavior.tick_faction_assault_target(siege_target, 2.0)
+        require(int(siege_target.get("hp")) < structure_hp_before,
+            "The assault Siege Engine must apply its multiplied structural impact to the assigned target")
+
+        var siege_group_id := String(siege_member.faction_raid_group_id)
+        siege_member.retreat()
+        await ticks(1)
+        var surviving_squad: Array = []
+        for candidate in get_nodes_in_group("faction_raiders"):
+            if String(candidate.faction_raid_group_id) == siege_group_id:
+                surviving_squad.append(candidate)
+        require(surviving_squad.size() == ASSAULT_SIZE - 1,
+            "A destroyed Siege Engine must leave the surviving escorts in the same assault identity")
+        for survivor in surviving_squad:
+            survivor.faction_raid_strength_scan_timer = 0.0
+            survivor._tick_faction_raid(0.1)
+            require(bool(survivor.faction_raid_retreating),
+                "The loss of required siege support must order the remaining squad to withdraw together")
+
+    for raider in get_nodes_in_group("faction_raiders"):
+        if is_instance_valid(raider):
+            raider.player = main.player
     for defender in defender_nodes:
         if is_instance_valid(defender):
             defender.add_to_group("defenders")
@@ -368,8 +409,8 @@ func _run() -> void:
     var patrol_count := get_nodes_in_group("enemy_patrols").size()
     var raider_count := faction_raider_count(main)
     var villager_count := get_nodes_in_group("villagers").size()
-    require(patrol_count == total_patrols and raider_count == EXPECTED_RAIDERS,
-        "Faction patrol and raider group membership must remain consistent under load")
+    require(patrol_count == total_patrols and raider_count == EXPECTED_RAIDERS - 1,
+        "Patrol membership and the surviving assault population must remain consistent after siege-loss withdrawal")
     require(villager_count == initial_villager_count + VILLAGERS,
         "The stress population must retain all newly spawned villagers alongside the initial population")
 
@@ -381,14 +422,14 @@ func _run() -> void:
     require(snapshot["enemies"].size() == enemy_count,
         "Stress snapshot must include the full garrison, patrol and raid population")
     require(save_system._valid_save(snapshot),
-        "The combined garrison/patrol/raid snapshot must pass save-v13 validation")
+        "The combined garrison/patrol/assault snapshot must pass save validation")
 
     var saved_raids := 0
     for enemy_state in snapshot["enemies"]:
         if enemy_state is Dictionary and bool(enemy_state.get("faction_raid", false)):
             saved_raids += 1
-    require(saved_raids == EXPECTED_RAIDERS,
-        "Save v13 must persist every simultaneous faction raid assignment")
+    require(saved_raids == EXPECTED_RAIDERS - 1,
+        "Save v17 must persist the remaining live and retreating assault members after siege loss")
 
     if not failures.is_empty():
         push_error("FAIL: Frontier warfare stress collected %d failed assertions: %s" % [
@@ -397,7 +438,7 @@ func _run() -> void:
         quit(1)
         return
 
-    print("PASS: Frontier warfare stress: %d garrison AI ticks across six archetypes, %d patrols, %d simultaneous raids, %d enemies, %d additional villagers (%d total)" % [
-        garrison_ai_ticks, total_patrols, total_raiders, enemy_count, VILLAGERS, villager_count
+    print("PASS: Frontier warfare stress: %d garrison AI ticks across six archetypes, %d patrols, %d surviving assault units, %d enemies, %d additional villagers (%d total)" % [
+        garrison_ai_ticks, total_patrols, raider_count, enemy_count, VILLAGERS, villager_count
     ])
     quit(0)

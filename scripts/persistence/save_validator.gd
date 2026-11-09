@@ -564,32 +564,59 @@ func is_valid_save(data: Variant, enforce_world_compatibility := true) -> bool:
             var faction_definition: Dictionary = FactionRegistry.factions[faction_raid_camp]
             if faction_raid_region != String(faction_definition.get("region", "")):
                 return false
-            if String(enemy.get("id", "")) != String(faction_definition.get("raid_unit", "")):
+            var assault_id := String(enemy.get("raid_group", ""))
+            var assault_role := String(enemy.get("raid_role", "raider"))
+            var assault_size := int(enemy.get("raid_group_size", 1))
+            var siege_required: Variant = enemy.get("raid_siege_required", false)
+            var retreating: Variant = enemy.get("raid_retreating", false)
+            if typeof(siege_required) != TYPE_BOOL or typeof(retreating) != TYPE_BOOL:
                 return false
+            if assault_id.is_empty():
+                # Legacy v13 faction raids were single-unit dispatches.
+                if String(enemy.get("id", "")) != String(faction_definition.get("raid_unit", "")):
+                    return false
+                if assault_size != 1 or assault_role != "raider" or bool(siege_required) or bool(retreating):
+                    return false
+            else:
+                if assault_id.length() > 128 or assault_size != 3:
+                    return false
+                if not ["leader", "escort", "siege"].has(assault_role):
+                    return false
+                var allowed_assault_units: Array[String] = FactionRegistry.roster_for(faction_raid_camp)
+                var legacy_leader := String(faction_definition.get("raid_unit", ""))
+                if not allowed_assault_units.has(String(enemy.get("id", ""))) and String(enemy.get("id", "")) != legacy_leader:
+                    return false
+                if assault_role == "siege":
+                    var siege_data: Dictionary = DataDB.enemies.get(String(enemy.get("id", "")), {})
+                    if String(siege_data.get("archetype", "")) != "siege_engine" or not bool(siege_required):
+                        return false
             var faction_raid_target: Dictionary = enemy["raid_target"]
             if not faction_raid_target.has("cx") or not faction_raid_target.has("cy") or int(enemy.get("raid_hits", 0)) < 0:
                 return false
             var faction_raid_cell := Vector2i(int(faction_raid_target["cx"]), int(faction_raid_target["cy"]))
             if not WorldConfig.is_valid_cell(faction_raid_cell):
                 return false
-            var target_ids: Array = ["storage", "outpost", "granary"] if faction_raid_kind == "depot" else ["road", "bridge"]
-            var faction_target_exists := false
-            for saved_building in buildings:
-                var saved_cell := Vector2i(int(saved_building.get("cx", -1)), int(saved_building.get("cy", -1)))
-                if saved_cell == faction_raid_cell and target_ids.has(String(saved_building.get("id", ""))):
-                    faction_target_exists = true
-                    break
-            if not faction_target_exists:
-                return false
+            if not bool(retreating):
+                var target_ids: Array = ["storage", "outpost", "granary"] if faction_raid_kind == "depot" else ["road", "bridge"]
+                var faction_target_exists := false
+                for saved_building in buildings:
+                    var saved_cell := Vector2i(int(saved_building.get("cx", -1)), int(saved_building.get("cy", -1)))
+                    if saved_cell == faction_raid_cell and target_ids.has(String(saved_building.get("id", ""))):
+                        faction_target_exists = true
+                        break
+                if not faction_target_exists:
+                    return false
             var frontier_state: Dictionary = data.get("frontier_campaign", {})
             var camp_state: Dictionary = frontier_state.get("camps", {})
             var camp_records: Array = camp_state.get("records", [])
+            var camp_record_found := false
             var active_camp_found := false
             for camp_record in camp_records:
                 if camp_record is Dictionary and String(camp_record.get("id", "")) == faction_raid_camp:
+                    camp_record_found = true
                     active_camp_found = not bool(camp_record.get("destroyed", false))
                     break
-            if not active_camp_found:
+            if not camp_record_found or (not bool(retreating) and not active_camp_found):
                 return false
     for job in quota:
         var allowed_jobs := ["woodcutter", "miner", "farmer", "soldier"]

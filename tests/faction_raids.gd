@@ -45,6 +45,7 @@ func find_storage_cell(main, camp: Dictionary) -> Vector2i:
 
 
 func find_forward_outpost_anchor(main, keep, camp: Dictionary, target) -> Vector2i:
+    var config: Node = root.get_node("WorldConfig")
     var camp_path: PackedVector2Array = main.nav.path_adjacent(Vector2(camp["position"]), target.cells())
     if camp_path.is_empty():
         return Vector2i(-1, -1)
@@ -72,8 +73,8 @@ func find_forward_outpost_anchor(main, keep, camp: Dictionary, target) -> Vector
                 if not valid or not main.territory.can_enemy_place_outpost(anchor, footprint):
                     continue
                 var origin := Vector2(
-                    (anchor.x + 1.0) * WorldConfig.tile_size,
-                    (anchor.y + 2.0) * WorldConfig.tile_size
+                    (anchor.x + 1.0) * int(config.get("tile_size")),
+                    (anchor.y + 2.0) * float(config.get("tile_size"))
                 )
                 var path: PackedVector2Array = main.nav.path_adjacent(origin, target.cells())
                 if not path.is_empty() and path.size() < best_path_size:
@@ -143,10 +144,23 @@ func expose_cell(main, cell: Vector2i) -> void:
 
 
 func faction_raider_for(raiders: Array, camp_id: String) -> Node:
+    var fallback: Node
+    for raider in raiders:
+        if not is_instance_valid(raider) or String(raider.faction_raid_camp_id) != camp_id:
+            continue
+        if fallback == null:
+            fallback = raider
+        if String(raider.faction_raid_role) == "leader":
+            return raider
+    return fallback
+
+
+func faction_raiders_for(raiders: Array, camp_id: String) -> Array:
+    var members: Array = []
     for raider in raiders:
         if is_instance_valid(raider) and String(raider.faction_raid_camp_id) == camp_id:
-            return raider
-    return null
+            members.append(raider)
+    return members
 
 
 func saved_faction_raid(enemies: Array) -> Dictionary:
@@ -269,22 +283,32 @@ func _run() -> void:
     manager._scan_timer = 0.0
     manager._process(0.5)
     var raiders := get_nodes_in_group("faction_raiders")
+    var assault_group := faction_raiders_for(raiders, camp_id)
     var raider = faction_raider_for(raiders, camp_id)
-    require(raider != null and raiders.size() == 1,
-        "A ready camp must dispatch one targeted raider within the global active cap")
+    require(raider != null and assault_group.size() == 3,
+        "A ready camp must dispatch a three-unit coordinated assault within the global squad cap")
     require(raider.is_faction_raider and raider.is_garrison and raider.id == "bandit"
-        and raider.raid_target_cell == storage_cell and raider.faction_raid_target_kind == "depot",
-        "The Greenwood raider must preserve its faction-native unit, camp, depot target and garrison assignment")
+        and raider.raid_target_cell == storage_cell and raider.faction_raid_target_kind == "depot"
+        and raider.faction_raid_role == "leader",
+        "The assault leader must preserve its faction-native unit, shared target and campaign identity")
     require(raider.position.distance_to(forward_outpost.position) < 1.0
         and raider.guard_origin.distance_to(forward_outpost.position) < 1.0,
-        "The dispatched raider must physically launch from and retain the forward outpost origin")
+        "The assault leader must launch from and retain the forward outpost origin")
+    var unique_roles: Dictionary = {}
+    for member in assault_group:
+        unique_roles[String(member.faction_raid_role)] = true
+        require(String(member.faction_raid_group_id) == String(raider.faction_raid_group_id)
+            and member.raid_target_cell == storage_cell,
+            "All assault members must share one assault identity and the same infrastructure objective")
+    require(unique_roles.has("leader") and unique_roles.has("escort") and not unique_roles.has("siege"),
+        "Greenwood's assault must field a leader and faction-native escorts without inventing siege equipment")
     require(int(manager.camps[camp_id]["raid_budget"]) == 1,
-        "A successful dispatch must consume exactly one finite raid-budget charge")
+        "A full three-unit assault must consume one finite raid-budget charge")
 
     manager._process(0.5)
-    require(get_nodes_in_group("faction_raiders").size() == 1
+    require(faction_raiders_for(get_nodes_in_group("faction_raiders"), camp_id).size() == 3
         and int(manager.camps[camp_id]["raid_budget"]) == 1,
-        "A camp must not exceed one active raider or consume budget while its raider is alive")
+        "A camp must count a live squad as one active raid and not spend budget twice")
 
     raider._tick_faction_raid(0.1)
     require(not raider._raid_path.is_empty() and raider._raid_path_version == main.nav.version,
@@ -318,33 +342,48 @@ func _run() -> void:
         and int(saved_camp_record.get("raid_budget", -1)) == 1
         and float(saved_camp_record.get("raid_timer", -1.0)) >= 0.0,
         "Save v13 must preserve the finite camp raid budget and cooldown")
-    var saved_raider := saved_faction_raid(snapshot["enemies"])
-    require(not saved_raider.is_empty()
-        and String(saved_raider.get("raid_kind", "")) == "depot"
-        and String(saved_raider.get("raid_camp", "")) == camp_id,
-        "Save v13 must persist the faction raid kind and dispatching camp")
+    var saved_assault_id := String(raider.faction_raid_group_id)
+    var saved_assault: Array[Dictionary] = []
+    for enemy_state in snapshot["enemies"]:
+        if enemy_state is Dictionary and bool(enemy_state.get("faction_raid", false)) \
+                and String(enemy_state.get("raid_group", "")) == saved_assault_id:
+            saved_assault.append(enemy_state)
+    require(saved_assault.size() == 3,
+        "Save v17 must persist every member and shared identity of the coordinated assault")
+    require(String(saved_assault[0].get("raid_kind", "")) == "depot"
+        and String(saved_assault[0].get("raid_camp", "")) == camp_id,
+        "The saved squad must retain its faction, depot target and dispatching camp")
     require(save_system._valid_save(snapshot),
-        "A live faction raid with its camp and target must pass save validation")
+        "A live coordinated faction assault must pass save payload validation")
 
-    raider.retreat()
+    for member in assault_group:
+        member.retreat()
     await ticks(1)
-    main.spawner.restore_enemy(saved_raider)
+    for saved_member in saved_assault:
+        main.spawner.restore_enemy(saved_member)
     await ticks(1)
-    var restored_raider = faction_raider_for(get_nodes_in_group("faction_raiders"), camp_id)
-    require(restored_raider != null and restored_raider.raid_target_cell == storage_cell
-        and restored_raider.faction_raid_target_kind == "depot",
-        "Save restoration must rehydrate the active faction raid assignment")
+    var restored_group := faction_raiders_for(get_nodes_in_group("faction_raiders"), camp_id)
+    var restored_raider = faction_raider_for(restored_group, camp_id)
+    require(restored_group.size() == 3 and restored_raider != null
+        and restored_raider.raid_target_cell == storage_cell
+        and restored_raider.faction_raid_group_id == saved_assault_id,
+        "Save restoration must rehydrate all members under their original shared assault identity")
     require(restored_raider.guard_origin.distance_to(forward_outpost.position) < 1.0,
-        "Save restoration must preserve the forward outpost launch origin through existing guard-origin fields")
+        "Save restoration must preserve the forward outpost staging origin")
 
-    main.territory.enemy_claimed_cells.erase(storage.cell)
-    var reclaimed_region: Dictionary = main.territory.region_states[String(camp["region_id"])]
-    reclaimed_region["control"] = "player"
-    main.territory.region_states[String(camp["region_id"])] = reclaimed_region
-    main.territory._dirty = false
+    # Losing the forward staging structure must recall the entire squad to its
+    # regional stronghold; the squad must not continue attacking from a dead post.
+    forward_outpost.call("take_damage", 99999)
+    await ticks(1)
     restored_raider._tick_faction_raid(0.1)
-    require(restored_raider.is_queued_for_deletion(),
-        "A faction raider must withdraw immediately when its target region is reclaimed")
+    for member in restored_group:
+        require(bool(member.faction_raid_retreating),
+            "Destroying the launch outpost must order every assault member to withdraw")
+        member.position = rival_keep.position
+        member._tick_faction_raid(0.1)
+    await ticks(1)
+    require(faction_raiders_for(get_nodes_in_group("faction_raiders"), camp_id).is_empty(),
+        "The outpost-loss withdrawal must reach the stronghold and clear the active squad")
 
     var road_target: Dictionary = {}
     for _attempt in 12:
@@ -359,26 +398,29 @@ func _run() -> void:
     require(target_road != null and is_instance_valid(target_road) and target_road.is_in_group("roads"),
         "Road raid targets must resolve to a live road or bridge building")
     require(manager._spawn_faction_raid(camp, road_target),
-        "A camp must be able to dispatch a road-targeting raider")
-    var road_raider = faction_raider_for(get_nodes_in_group("faction_raiders"), camp_id)
-    require(road_raider != null and road_raider.faction_raid_target_kind == "road",
-        "The road raider must preserve the road target type")
+        "A camp must be able to dispatch a road-targeting assault")
+    var road_group := faction_raiders_for(get_nodes_in_group("faction_raiders"), camp_id)
+    var road_raider = faction_raider_for(road_group, camp_id)
+    require(road_group.size() == 3 and road_raider != null
+        and road_raider.faction_raid_target_kind == "road",
+        "The road assault must preserve its three-unit composition and shared target type")
     road_raider.position = target_road.position
     road_raider._atk_cd = 0.0
     road_raider._tick_faction_raid(0.1)
     road_raider._resolve_pending(0.5)
     require(target_road.hp < target_road.max_hp,
-        "A faction raider must apply structural damage to connected road infrastructure")
+        "A faction assault must apply structural damage to connected road infrastructure")
 
     require(main.build.demolish_at(road_cell),
         "The targeted road fixture must be removable through the normal build system")
     road_raider._tick_faction_raid(0.1)
-    require(road_raider.is_queued_for_deletion(),
-        "A raider must abandon a target as soon as its building is removed")
-
-    road_raider.retreat()
+    for member in road_group:
+        require(bool(member.faction_raid_retreating),
+            "Destroying the assault target must send every surviving unit into coordinated withdrawal")
+        member.position = member.guard_origin
+        member._tick_faction_raid(0.1)
     await ticks(1)
     require(get_nodes_in_group("faction_raiders").is_empty(),
-        "Withdrawn faction raiders must release their active group slot")
+        "Withdrawn assault members must return to staging and release the active squad slot")
 
     quit(0)

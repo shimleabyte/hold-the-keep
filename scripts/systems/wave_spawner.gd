@@ -161,7 +161,10 @@ func restore_enemy(d: Dictionary) -> void:
         e.setup_faction_raid(
             Vector2i(int(raid_target.get("cx", -1)), int(raid_target.get("cy", -1))),
             String(d.get("raid_kind", "")), nav, String(d.get("raid_camp", "")),
-            String(d.get("raid_region", "")), camp_origin
+            String(d.get("raid_region", "")), camp_origin,
+            String(d.get("raid_group", "")), String(d.get("raid_role", "raider")),
+            int(d.get("raid_group_size", 1)), bool(d.get("raid_siege_required", false)),
+            bool(d.get("raid_retreating", false))
         )
         e.supply_raid_hits = int(d.get("raid_hits", 0))
     world.entities.add_child(e)

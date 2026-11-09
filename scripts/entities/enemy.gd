@@ -68,6 +68,12 @@ var is_faction_raider := false
 var faction_raid_target_kind := ""
 var faction_raid_camp_id := ""
 var faction_raid_region_id := ""
+var faction_raid_group_id := ""
+var faction_raid_role := "raider"
+var faction_raid_group_size := 1
+var faction_raid_siege_required := false
+var faction_raid_retreating := false
+var faction_raid_strength_scan_timer := 0.0
 var raid_target_cell := Vector2i(-1, -1)
 var supply_raid_hits := 0
 var raid_nav
@@ -165,6 +171,12 @@ func setup(data: Dictionary, world_ref, flow_ref, player_ref, faction_override :
     faction_raid_target_kind = ""
     faction_raid_camp_id = ""
     faction_raid_region_id = ""
+    faction_raid_group_id = ""
+    faction_raid_role = "raider"
+    faction_raid_group_size = 1
+    faction_raid_siege_required = false
+    faction_raid_retreating = false
+    faction_raid_strength_scan_timer = 0.0
     raid_target_cell = Vector2i(-1, -1)
     supply_raid_hits = 0
     raid_nav = null
@@ -443,7 +455,12 @@ func setup_faction_raid(
     navigation,
     camp_id: String,
     region_id: String,
-    camp_origin: Vector2
+    camp_origin: Vector2,
+    assault_id: String = "",
+    assault_role: String = "raider",
+    assault_size: int = 1,
+    siege_required: bool = false,
+    retreating: bool = false
 ) -> void:
     is_supply_raider = false
     is_faction_raider = true
@@ -451,6 +468,14 @@ func setup_faction_raid(
     faction_raid_target_kind = target_kind
     faction_raid_camp_id = camp_id
     faction_raid_region_id = region_id
+    faction_raid_group_id = assault_id if not assault_id.is_empty() else (
+        "legacy:%s:%s:%d:%d" % [camp_id, target_kind, target_cell.x, target_cell.y]
+    )
+    faction_raid_role = assault_role
+    faction_raid_group_size = clampi(assault_size, 1, 3)
+    faction_raid_siege_required = siege_required
+    faction_raid_retreating = retreating
+    faction_raid_strength_scan_timer = 0.0
     raid_target_cell = target_cell
     raid_nav = navigation
     guard_origin = camp_origin
@@ -458,6 +483,10 @@ func setup_faction_raid(
     _raid_path_index = 0
     _raid_path_version = -1
     _raid_repath_timer = 0.0
+
+
+func begin_faction_assault_retreat() -> void:
+    raid_behavior.begin_faction_assault_retreat()
 
 
 func _find_faction_raid_target():
