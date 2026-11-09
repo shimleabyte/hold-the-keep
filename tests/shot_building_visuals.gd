@@ -197,6 +197,7 @@ func _run() -> void:
     if rival == null:
         return
 
+    var rival_outpost: Node2D
     var settlement_script := load("res://scripts/entities/enemy_settlement_structure.gd") as GDScript
     if settlement_script != null and settlement_script.can_instantiate():
         var rival_outpost = settlement_script.new()
@@ -204,6 +205,13 @@ func _run() -> void:
         rival_outpost.set_process(false)
         game.world.entities.add_child(rival_outpost)
         rival_outpost.queue_redraw()
+
+    # Reveal only this review area so the actual rival architecture is not covered by unexplored fog.
+    if game.fog != null:
+        game.fog.reveal_position(rival.global_position, 176.0)
+        if rival_outpost != null:
+            game.fog.reveal_position(rival_outpost.global_position, 96.0)
+        game.fog._flush_dirty_chunks()
 
     for _frame in 3:
         await process_frame
