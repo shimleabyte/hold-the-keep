@@ -124,6 +124,24 @@ func _initialize() -> void:
     Input.action_release("sprint")
     await ticks(4)
 
+    # Capture every authored locomotion pose at gameplay scale in all three
+    # supported facing rows. This exposes contact, passing and recovery reads.
+    var locomotion_views := [
+        {"label": "front", "direction": Vector2.DOWN},
+        {"label": "back", "direction": Vector2.UP},
+        {"label": "side", "direction": Vector2.RIGHT},
+    ]
+    for view in locomotion_views:
+        main_player.anim.face(view["direction"])
+        main_player.anim.play_player_clip("walk", true)
+        for pose in range(4):
+            await capture("Player · walk %s pose %d" % [view["label"], pose + 1], center)
+            await advance_animation(0.125)
+        main_player.anim.play_player_clip("run", true)
+        for pose in range(4):
+            await capture("Player · run %s pose %d" % [view["label"], pose + 1], center)
+            await advance_animation(1.0 / 12.0)
+
     main_player.facing = Vector2.RIGHT
     main_player.anim.face(Vector2.RIGHT)
     main_player._atk_cd = 0.0
