@@ -6,6 +6,11 @@ on:
       - main
     paths:
       - ".github/workflows/role-sprite-visual-qa.yml"
+      - "scripts/entities/enemy_faction_visual.gd"
+      - "data/factions.json"
+      - "data/enemy_archetypes.json"
+      - "tests/faction_visual_identity.gd"
+      - "tests/shot_enemy_faction_visuals.gd"
       - "assets/sprites/villager_*.svg"
       - "tools/gen_assets.py"
       - "tools/check_role_sprite_reproducibility.py"
@@ -21,6 +26,11 @@ on:
       - main
     paths:
       - ".github/workflows/role-sprite-visual-qa.yml"
+      - "scripts/entities/enemy_faction_visual.gd"
+      - "data/factions.json"
+      - "data/enemy_archetypes.json"
+      - "tests/faction_visual_identity.gd"
+      - "tests/shot_enemy_faction_visuals.gd"
       - "assets/sprites/villager_*.svg"
       - "tools/gen_assets.py"
       - "tools/check_role_sprite_reproducibility.py"
@@ -88,6 +98,19 @@ jobs:
             --script res://tests/shot_role_sprite_gameplay.gd \
             2>&1 | tee /tmp/hold-the-keep-role-visual-qa/render.log
 
+      - name: Render faction and specialist silhouettes in gameplay
+        env:
+          HTK_AUTO_START_GAME: "1"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/hold-the-keep-faction-visual-qa
+          timeout --signal=TERM --kill-after=15s 180s \
+            xvfb-run -a -s "-screen 0 1600x900x24" \
+            godot --path . --rendering-driver opengl3 --fixed-fps 30 \
+            --script res://tests/shot_enemy_faction_visuals.gd \
+            2>&1 | tee /tmp/hold-the-keep-faction-visual-qa/render.log
+
       - name: Upload gameplay captures and logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -96,6 +119,8 @@ jobs:
           path: |
             /tmp/hold-the-keep-role-visual-qa/*.png
             /tmp/hold-the-keep-role-visual-qa/render.log
+            /tmp/hold-the-keep-faction-visual-qa/*.png
+            /tmp/hold-the-keep-faction-visual-qa/render.log
             /tmp/hold-the-keep-villager-visual-qa/*.png
           if-no-files-found: warn
           retention-days: 14
