@@ -104,7 +104,7 @@ func play_player_clip(clip_name: String, restart := false, fps_override := 0.0) 
     if definition.is_empty():
         push_error("Unknown player animation clip: %s" % clip_name)
         return
-    if clip_name == clip and not restart and _timed_frames.is_empty():
+    if clip_name == clip and not restart and _uses_player_atlas and _timed_frames.is_empty():
         return
 
     _uses_player_atlas = true
