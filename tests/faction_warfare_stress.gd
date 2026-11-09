@@ -290,7 +290,7 @@ func _run() -> void:
             "The assault Siege Engine must apply its multiplied structural impact to the assigned target")
 
         var siege_group_id := String(siege_member.faction_raid_group_id)
-        siege_member.retreat()
+        siege_member.take_damage(999999)
         await ticks(1)
         var surviving_squad: Array = []
         for candidate in get_nodes_in_group("faction_raiders"):
