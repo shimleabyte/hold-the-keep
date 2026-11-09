@@ -27,8 +27,8 @@ Three rows do not mean eight-direction animation. Diagonal input currently selec
 | Frames | Current use | Status / outstanding defect |
 |---|---|---|
 | 0–1 | Idle | Existing two-pose idle; breathing and cape overlap need authored refinement |
-| 2–5 | Walk | Existing two-step-pose alternation repeated; upper body/cape mostly static |
-| 6–9 | Run | Existing two-pose alternation repeated; not yet a complete stride cycle |
+| 2–5 | Walk | Four authored contact/pass/alternate/recovery poses with torso counter-shift and delayed cape overlap |
+| 6–9 | Run | Four authored push-off/flight/opposite-contact/recovery poses; grounded pivot, torso counter-shift and cape lag |
 | 10–15 | Light sword attack | Six-pose timed sequence; impact frame 12 follows live gameplay hit delay |
 | 16–19 | Work/harvest | Four-pose hand-authored pick/axe tool cycle; contact frame 18 follows the existing 0.14s event |
 | 20–23 | Death | Four-pose collapse, drop, fall and settled-prone preview; gameplay still respawns immediately |
@@ -74,6 +74,6 @@ Gameplay remains authoritative for damage, hit sectors, cooldowns, combo state, 
 - The player playblast previously failed because the harness eagerly preloaded `player.gd` before the `Events` autoload was available. The harness now loads Player after autoload initialization and captures exact action-time markers.
 - The tool, heavy Cleave, Dash, Rally, Hurt and Death now have separate art/clip ranges. Exact-head visual acceptance of the expanded action set remains pending.
 - Death remains preview-only because gameplay immediately respawns; do not change that gameplay rule as part of this presentation task.
-- Player locomotion still needs more complete leg cycles and torso/cape overlap.
+- Player walk/run use four authored leg-contact phases per facing row. Ground contact is atlas-owned; the old whole-sprite vertical bob is removed. Torso counter-shift and cape lag are pose-authored. Rendered playblast review remains required.
 - Villager, enemy, faction-specific and specialist animation production remains open.
 

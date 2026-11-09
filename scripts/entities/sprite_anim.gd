@@ -43,6 +43,8 @@ const CLIPS := {
 }
 
 var clip := "idle"
+## True only while the protagonist is using its separately authored locomotion atlas.
+var _uses_player_atlas := false
 var view := FRONT
 var flip := false
 var finished := false
@@ -80,8 +82,9 @@ func _init() -> void:
 
 
 func play(clip_name: String, restart := false, fps_override := 0.0) -> void:
-    if clip_name == clip and not restart:
+    if clip_name == clip and not restart and not _uses_player_atlas:
         return
+    _uses_player_atlas = false
     clip = clip_name
     _t = 0.0
     finished = false
@@ -101,9 +104,10 @@ func play_player_clip(clip_name: String, restart := false, fps_override := 0.0) 
     if definition.is_empty():
         push_error("Unknown player animation clip: %s" % clip_name)
         return
-    if clip_name == clip and not restart and _timed_frames.is_empty():
+    if clip_name == clip and not restart and _uses_player_atlas and _timed_frames.is_empty():
         return
 
+    _uses_player_atlas = true
     clip = clip_name
     _t = 0.0
     finished = false
@@ -142,6 +146,7 @@ func play_timed_sequence(
             return
         previous_time = frame_time
 
+    _uses_player_atlas = true
     clip = sequence_clip
     _t = 0.0
     finished = false
@@ -258,12 +263,15 @@ func motion_offset() -> Vector2:
         "idle":
             # Napas halus satu piksel, dengan fase awal berbeda per unit.
             return Vector2(0, -roundf(sin(_motion_t * TAU * 0.7 + _motion_phase) * 0.55))
-        "walk":
-            var walk_lift := absf(sin(progress * TAU))
-            return Vector2(0, -roundf(walk_lift))
-        "run":
-            var run_lift := absf(sin(progress * TAU))
-            return Vector2(0, -roundf(run_lift * 2.0))
+        "walk", "run":
+            if _uses_player_atlas:
+                # The protagonist's atlas owns contact, compression and recovery.
+                # Keep its ground pivot fixed so the planted boot cannot slide.
+                return Vector2.ZERO
+            # Shared villager/enemy sheets still use runtime lift; their atlas
+            # has not yet received the protagonist's authored contact treatment.
+            var lift := absf(sin(progress * TAU))
+            return Vector2(0, -roundf(lift * (2.0 if clip == "run" else 1.0)))
         "work":
             return _work_motion_offset(progress, forward)
         "hurt":

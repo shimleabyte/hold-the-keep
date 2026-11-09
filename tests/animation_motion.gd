@@ -25,13 +25,88 @@ func _initialize() -> void:
             idle_motion_seen = true
     assert(idle_motion_seen, "Idle breathing must produce subtle motion over time")
 
+    # Shared role sheets retain their existing runtime lift until their atlases
+    # receive equivalent authored contact poses.
     anim.play("walk", true)
     anim.update(0.08)
-    assert(anim.motion_offset().y < 0.0, "Walk cycle must lift the body between steps")
-
+    assert(anim.motion_offset().y < 0.0,
+        "Shared walk animation must retain its existing body lift")
     anim.play("run", true)
     anim.update(0.083)
-    assert(anim.motion_offset().y <= -2.0, "Run cycle must have a stronger lift than walking")
+    assert(anim.motion_offset().y <= -2.0,
+        "Shared run animation must retain its stronger body lift")
+
+    # A same-named shared clip must still switch to the protagonist's atlas.
+    anim.play("walk", true)
+    anim.play_player_clip("walk")
+    anim.update(0.125)
+    assert(anim.motion_offset() == Vector2.ZERO,
+        "Switching an already-active shared walk clip must activate the planted player gait")
+
+    # The protagonist uses four authored contact/transfer/opposite-contact/recovery frames.
+    anim.play_player_clip("walk", true)
+    assert(anim.frame_index() == 2, "Player walk must begin on its first authored contact pose")
+    for phase in range(1, 4):
+        anim.update(0.125)
+        assert(anim.frame_index() == 2 + phase,
+            "Player walk must advance through all four authored locomotion phases")
+        assert(anim.motion_offset() == Vector2.ZERO,
+            "Player walk must keep the ground pivot fixed while the torso transfers weight")
+    anim.update(0.125)
+    assert(anim.frame_index() == 2, "Player walk must loop cleanly after recovery")
+
+    anim.play_player_clip("run", true)
+    assert(anim.frame_index() == 6, "Player run must begin on its first authored contact pose")
+    for phase in range(1, 4):
+        anim.update(1.0 / 12.0)
+        assert(anim.frame_index() == 6 + phase,
+            "Player run must advance through all four authored locomotion phases")
+        assert(anim.motion_offset() == Vector2.ZERO,
+            "Player run must keep the ground pivot fixed while the torso transfers weight")
+    anim.update(1.0 / 12.0)
+    assert(anim.frame_index() == 6, "Player run must loop cleanly after recovery")
+
+    var player_atlas := FileAccess.get_file_as_string("res://assets/sprites/player.svg")
+    assert(not player_atlas.is_empty(), "Player locomotion atlas must be readable in regression tests")
+    for direction in ["front", "back", "side"]:
+        var torso_transform := RegEx.new()
+        var regex_error := torso_transform.compile(
+            'href="#%s_upper" transform="translate\\((-?\\d+) (-?\\d+)\\)"' % direction
+        )
+        if regex_error != OK:
+            push_error("Could not compile torso-transform parser for %s" % direction)
+            quit(1)
+            return
+        for pose in [
+            ["walk", 2, [0, 2, 0, -1]],
+            ["run", 6, [0, 2, 0, -1]],
+        ]:
+            var clip_name: String = pose[0]
+            var first_frame: int = pose[1]
+            var transfer: Array = pose[2]
+            for phase in range(4):
+                var frame_id := 'id="frame_%s_%d"' % [direction, first_frame + phase]
+                var frame_start := player_atlas.find(frame_id)
+                var frame_end := player_atlas.find("</g>", frame_start)
+                if frame_start < 0 or frame_end <= frame_start:
+                    push_error("%s %s phase %d is missing from the authored atlas" % [direction, clip_name, phase])
+                    quit(1)
+                    return
+                var frame_markup := player_atlas.substr(frame_start, frame_end - frame_start)
+                var torso_match := torso_transform.search(frame_markup)
+                if torso_match == null:
+                    push_error("%s %s phase %d has no parseable torso transform" % [direction, clip_name, phase])
+                    quit(1)
+                    return
+                var authored_y := int(torso_match.get_string(2))
+                var expected_y := int(transfer[phase])
+                if authored_y != expected_y:
+                    push_error(
+                        "%s %s phase %d torso Y is %d; authored weight transfer requires %d"
+                        % [direction, clip_name, phase, authored_y, expected_y]
+                    )
+                    quit(1)
+                    return
 
     anim.face(Vector2.RIGHT)
     anim.play("attack", true)
