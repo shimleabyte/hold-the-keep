@@ -17,6 +17,8 @@ const WORK_FRAME_THRESHOLDS := {
     "builder": [0.28, 0.46, 0.70, 1.0],
     "blacksmith": [0.28, 0.46, 0.76, 1.0],
     "farmer": [0.18, 0.44, 0.78, 1.0],
+    "hunter": [0.30, 0.48, 0.66, 1.0],
+    "healer": [0.18, 0.40, 0.72, 1.0],
 }
 const PLAYER_CLIPS := {
     "idle": {"start": 0, "count": 2, "fps": 2.0, "loop": true},
@@ -369,6 +371,20 @@ func _work_motion_offset(progress: float, forward: Vector2) -> Vector2:
                 local_motion = Vector2(-2, 2)
             elif progress < 0.78:
                 local_motion = Vector2(-1, 1)
+        "hunter":
+            if progress < 0.30:
+                local_motion = Vector2(-1, -1)
+            elif progress < 0.48:
+                local_motion = Vector2(2, 0)
+            elif progress < 0.66:
+                local_motion = Vector2(1, 1)
+        "healer":
+            if progress < 0.18:
+                local_motion = Vector2(0, -1)
+            elif progress < 0.40:
+                local_motion = Vector2(1, 1)
+            elif progress < 0.72:
+                local_motion = Vector2(-1, 0)
         _:
             var strike := 1.0 - absf(progress - 0.5) * 2.0
             local_motion = Vector2(roundf(clampf(strike, 0.0, 1.0)), 0.0)
