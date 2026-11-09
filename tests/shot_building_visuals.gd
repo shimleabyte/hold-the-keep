@@ -77,6 +77,9 @@ func _add_construction_site(id: String, cell: Vector2i, ratio: float) -> Node:
     site.set_process(false)
     game.world.entities.add_child(site)
     site.queue_redraw()
+    if game.fog != null:
+        game.fog.reveal_position(site.global_position, 80.0)
+        game.fog._flush_dirty_chunks()
     return site
 
 
