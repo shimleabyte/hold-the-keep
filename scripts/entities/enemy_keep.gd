@@ -3,6 +3,7 @@ extends Node2D
 ## Enemy stronghold and its persistent defensive garrison.
 
 const ENEMY_SCRIPT: Script = preload("res://scripts/entities/enemy.gd")
+const BuildingVisual := preload("res://scripts/entities/building_visual_identity.gd")
 const SPRITE: Texture2D = preload("res://assets/sprites/enemy_keep.svg")
 const FACTION_SPRITES: Dictionary = {
     "greenwood_raiders": preload("res://assets/sprites/enemy_keep_greenwood.svg"),
