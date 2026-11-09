@@ -234,9 +234,9 @@
  </g></g><g id="frame_front_0"><use href="#front_cape"/><use href="#front_legs_neutral"/><use href="#front_upper"/><use href="#front_sword_0"/></g>
 <g id="frame_front_1"><use href="#front_cape"/><use href="#front_legs_neutral"/><use href="#front_upper"/><use href="#front_sword_0"/><path d="M5 15h1v2H5Z" fill="#416b99"/></g>
 <g id="frame_front_2"><use href="#front_cape"/><use href="#front_legs_walk_a"/><use href="#front_upper"/><use href="#front_sword_0"/></g>
-<g id="frame_front_3"><use href="#front_cape" transform="-1 -1"/><use href="#front_legs_walk_c"/><use href="#front_upper" transform="translate(0 -1)"/><use href="#front_sword_0"/></g>
-<g id="frame_front_4"><use href="#front_cape" transform="1 0"/><use href="#front_legs_walk_b"/><use href="#front_upper"/><use href="#front_sword_0"/></g>
-<g id="frame_front_5"><use href="#front_cape" transform="0 -1"/><use href="#front_legs_walk_d"/><use href="#front_upper" transform="translate(0 1)"/><use href="#front_sword_0"/></g>
+<g id="frame_front_3"><use href="#front_cape" transform="translate(-1 -1)"/><use href="#front_legs_walk_c"/><use href="#front_upper" transform="translate(0 -1)"/><use href="#front_sword_0"/></g>
+<g id="frame_front_4"><use href="#front_cape" transform="translate(1 0)"/><use href="#front_legs_walk_b"/><use href="#front_upper"/><use href="#front_sword_0"/></g>
+<g id="frame_front_5"><use href="#front_cape" transform="translate(0 -1)"/><use href="#front_legs_walk_d"/><use href="#front_upper" transform="translate(0 1)"/><use href="#front_sword_0"/></g>
 <g id="frame_front_6"><use href="#front_cape"/><use href="#front_legs_run_a"/><use href="#front_upper"/><use href="#front_sword_0"/></g>
 <g id="frame_front_7"><use href="#front_cape"/><use href="#front_legs_run_c"/><use href="#front_upper"/><use href="#front_sword_0"/></g>
 <g id="frame_front_8"><use href="#front_cape"/><use href="#front_legs_run_b"/><use href="#front_upper"/><use href="#front_sword_0"/></g>
@@ -258,9 +258,9 @@
 <g id="frame_back_0"><use href="#back_cape"/><use href="#back_legs_neutral"/><use href="#back_upper"/><use href="#back_sword_0"/></g>
 <g id="frame_back_1"><use href="#back_cape"/><use href="#back_legs_neutral"/><use href="#back_upper"/><use href="#back_sword_0"/><path d="M5 15h1v2H5Z" fill="#416b99"/></g>
 <g id="frame_back_2"><use href="#back_cape"/><use href="#back_legs_walk_a"/><use href="#back_upper"/><use href="#back_sword_0"/></g>
-<g id="frame_back_3"><use href="#back_cape" transform="-1 -1"/><use href="#back_legs_walk_c"/><use href="#back_upper" transform="translate(0 -1)"/><use href="#back_sword_0"/></g>
-<g id="frame_back_4"><use href="#back_cape" transform="1 0"/><use href="#back_legs_walk_b"/><use href="#back_upper"/><use href="#back_sword_0"/></g>
-<g id="frame_back_5"><use href="#back_cape" transform="0 -1"/><use href="#back_legs_walk_d"/><use href="#back_upper" transform="translate(0 1)"/><use href="#back_sword_0"/></g>
+<g id="frame_back_3"><use href="#back_cape" transform="translate(-1 -1)"/><use href="#back_legs_walk_c"/><use href="#back_upper" transform="translate(0 -1)"/><use href="#back_sword_0"/></g>
+<g id="frame_back_4"><use href="#back_cape" transform="translate(1 0)"/><use href="#back_legs_walk_b"/><use href="#back_upper"/><use href="#back_sword_0"/></g>
+<g id="frame_back_5"><use href="#back_cape" transform="translate(0 -1)"/><use href="#back_legs_walk_d"/><use href="#back_upper" transform="translate(0 1)"/><use href="#back_sword_0"/></g>
 <g id="frame_back_6"><use href="#back_cape"/><use href="#back_legs_run_a"/><use href="#back_upper"/><use href="#back_sword_0"/></g>
 <g id="frame_back_7"><use href="#back_cape"/><use href="#back_legs_run_c"/><use href="#back_upper"/><use href="#back_sword_0"/></g>
 <g id="frame_back_8"><use href="#back_cape"/><use href="#back_legs_run_b"/><use href="#back_upper"/><use href="#back_sword_0"/></g>
@@ -282,9 +282,9 @@
 <g id="frame_side_0"><use href="#side_cape"/><use href="#side_legs_neutral"/><use href="#side_upper"/><use href="#side_sword_0"/></g>
 <g id="frame_side_1"><use href="#side_cape"/><use href="#side_legs_neutral"/><use href="#side_upper"/><use href="#side_sword_0"/><path d="M5 15h1v2H5Z" fill="#416b99"/></g>
 <g id="frame_side_2"><use href="#side_cape"/><use href="#side_legs_walk_a"/><use href="#side_upper"/><use href="#side_sword_0"/></g>
-<g id="frame_side_3"><use href="#side_cape" transform="-1 -1"/><use href="#side_legs_walk_c"/><use href="#side_upper" transform="translate(0 -1)"/><use href="#side_sword_0"/></g>
-<g id="frame_side_4"><use href="#side_cape" transform="1 0"/><use href="#side_legs_walk_b"/><use href="#side_upper"/><use href="#side_sword_0"/></g>
-<g id="frame_side_5"><use href="#side_cape" transform="0 -1"/><use href="#side_legs_walk_d"/><use href="#side_upper" transform="translate(0 1)"/><use href="#side_sword_0"/></g>
+<g id="frame_side_3"><use href="#side_cape" transform="translate(-1 -1)"/><use href="#side_legs_walk_c"/><use href="#side_upper" transform="translate(0 -1)"/><use href="#side_sword_0"/></g>
+<g id="frame_side_4"><use href="#side_cape" transform="translate(1 0)"/><use href="#side_legs_walk_b"/><use href="#side_upper"/><use href="#side_sword_0"/></g>
+<g id="frame_side_5"><use href="#side_cape" transform="translate(0 -1)"/><use href="#side_legs_walk_d"/><use href="#side_upper" transform="translate(0 1)"/><use href="#side_sword_0"/></g>
 <g id="frame_side_6"><use href="#side_cape"/><use href="#side_legs_run_a"/><use href="#side_upper"/><use href="#side_sword_0"/></g>
 <g id="frame_side_7"><use href="#side_cape"/><use href="#side_legs_run_c"/><use href="#side_upper"/><use href="#side_sword_0"/></g>
 <g id="frame_side_8"><use href="#side_cape"/><use href="#side_legs_run_b"/><use href="#side_upper"/><use href="#side_sword_0"/></g>
