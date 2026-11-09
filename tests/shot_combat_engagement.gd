@@ -37,7 +37,19 @@ func capture(main: Node, file_name: String, note: String) -> void:
     if region.save_png(output_path) != OK:
         _fail("Could not save combat screenshot: " + output_path)
         return
+    # The project renders a 640x360 logical viewport at a 2x desktop window scale.
+    # Preserve that actual nearest-neighbour presentation for easy gameplay review.
+    var desktop_image := region.duplicate()
+    desktop_image.resize(1280, 720, Image.INTERPOLATE_NEAREST)
+    var desktop_path := OUTPUT_DIR.path_join(file_name.get_basename() + "-1280x720.png")
+    if desktop_image.save_png(desktop_path) != OK:
+        _fail("Could not save the desktop-scale combat screenshot: " + desktop_path)
+        return
     print("COMBAT_VISUAL_CAPTURE ", output_path, " | ", note)
+    print("COMBAT_VISUAL_CAPTURE_DESKTOP ", desktop_path)
+    print("COMBAT_VISUAL_ACTORS enemies=", get_nodes_in_group("enemies").size(),
+        " defenders=", get_nodes_in_group("defenders").size(),
+        " projectiles=", get_nodes_in_group("enemy_projectiles").size())
     print("COMBAT_VISUAL_ACTORS enemies=", get_nodes_in_group("enemies").size(),
         " defenders=", get_nodes_in_group("defenders").size(),
         " projectiles=", get_nodes_in_group("enemy_projectiles").size())
@@ -128,7 +140,7 @@ func _run() -> void:
     spawn_enemy(main, data_db, enemy_script, "bandit",
         main.player.global_position + Vector2(-49, -24), "iron_legion")
     var shield = spawn_enemy(main, data_db, enemy_script, "enemy_shieldbearer",
-        main.player.global_position + Vector2(-58, 37), "iron_legion")
+        main.player.global_position + Vector2(-38, 22), "iron_legion")
     spawn_enemy(main, data_db, enemy_script, "archer",
         main.player.global_position + Vector2(-124, -54), "fen_cult")
 
@@ -143,7 +155,7 @@ func _run() -> void:
         _fail("Could not find the live Keep for siege interaction")
         return
     var siege = spawn_enemy(main, data_db, enemy_script, "enemy_siege_engine",
-        keep.global_position + Vector2(-44, -1), "ashen_host")
+        keep.global_position + Vector2(-50, 5), "ashen_host")
     siege.siege_behavior.target = keep
     siege.siege_behavior.cooldown = 0.0
 
@@ -156,13 +168,40 @@ func _run() -> void:
     await capture(main, "battlefield-melee-contact.png",
         "sustained soldier and raider melee with active attack and hit-reaction states")
 
-    await wait_seconds(2.6)
+    # Wait for the shieldbearer's real defensive state. Do not force the pose;
+    # the live behavior must enter its own brace cycle against an incoming attacker.
+    var shield_braced := false
+    for _frame in 600:
+        if not is_instance_valid(shield):
+            _fail("Shieldbearer died before its defensive state could be inspected")
+            return
+        if shield.shield_behavior.active_timer > 0.0 or shield.shield_behavior.windup_timer > 0.0:
+            shield_braced = true
+            break
+        await physics_frame
+    if not shield_braced:
+        _fail("Shieldbearer did not enter its natural brace state during the live encounter")
+        return
+    print("COMBAT_VISUAL_SHIELD_STATE windup=", shield.shield_behavior.windup_timer,
+        " active=", shield.shield_behavior.active_timer)
     await capture(main, "battlefield-shield-and-projectiles.png",
-        "shieldbearer brace, enemy archer fire and friendly support positioning")
+        "shieldbearer captured during its natural defensive brace with live ranged fire")
 
-    await wait_seconds(3.0)
+    # Capture when the real siege transaction has damaged the Keep and its directional
+    # impact mark is still active. This proves structure contact rather than proximity.
+    var siege_contact := false
+    for _frame in 900:
+        if keep.hp < keep.max_hp and keep._combat_impact_remaining > 0.0:
+            siege_contact = true
+            break
+        await physics_frame
+    if not siege_contact:
+        _fail("Live siege engine did not produce a visible directional Keep impact")
+        return
+    print("COMBAT_VISUAL_SIEGE_CONTACT keep_hp=", keep.hp, "/", keep.max_hp,
+        " impact_remaining=", keep._combat_impact_remaining)
     await capture(main, "battlefield-siege-structure-impact.png",
-        "siege wind-up and directional structure impact during the same live engagement")
+        "live siege damage confirmed on the Keep; directional fracture mark still active")
 
     print("PASS: three actual gameplay captures recorded with active enemy, soldier, projectile and siege simulation")
     quit(0)
