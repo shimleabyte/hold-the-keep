@@ -25,13 +25,64 @@ func _initialize() -> void:
             idle_motion_seen = true
     assert(idle_motion_seen, "Idle breathing must produce subtle motion over time")
 
+    # Shared role sheets keep the actor pivot fixed; their own atlas poses carry locomotion.
     anim.play("walk", true)
     anim.update(0.08)
-    assert(anim.motion_offset().y < 0.0, "Walk cycle must lift the body between steps")
-
+    assert(anim.motion_offset() == Vector2.ZERO,
+        "Shared walk poses must not add global bob that detaches planted feet")
     anim.play("run", true)
     anim.update(0.083)
-    assert(anim.motion_offset().y <= -2.0, "Run cycle must have a stronger lift than walking")
+    assert(anim.motion_offset() == Vector2.ZERO,
+        "Shared run poses must not add global bob that detaches planted feet")
+
+    # The protagonist uses four authored contact/transfer/opposite-contact/recovery frames.
+    anim.play_player_clip("walk", true)
+    assert(anim.frame_index() == 2, "Player walk must begin on its first authored contact pose")
+    for phase in range(1, 4):
+        anim.update(0.125)
+        assert(anim.frame_index() == 2 + phase,
+            "Player walk must advance through all four authored locomotion phases")
+        assert(anim.motion_offset() == Vector2.ZERO,
+            "Player walk must keep the ground pivot fixed while the torso transfers weight")
+    anim.update(0.125)
+    assert(anim.frame_index() == 2, "Player walk must loop cleanly after recovery")
+
+    anim.play_player_clip("run", true)
+    assert(anim.frame_index() == 6, "Player run must begin on its first authored contact pose")
+    for phase in range(1, 4):
+        anim.update(1.0 / 12.0)
+        assert(anim.frame_index() == 6 + phase,
+            "Player run must advance through all four authored locomotion phases")
+        assert(anim.motion_offset() == Vector2.ZERO,
+            "Player run must keep the ground pivot fixed while the torso transfers weight")
+    anim.update(1.0 / 12.0)
+    assert(anim.frame_index() == 6, "Player run must loop cleanly after recovery")
+
+    var player_atlas := FileAccess.get_file_as_string("res://assets/sprites/player.svg")
+    assert(not player_atlas.is_empty(), "Player locomotion atlas must be readable in regression tests")
+    for direction in ["front", "back", "side"]:
+        for pose in [
+            ["walk", 2, [0, 1, 0, -1]],
+            ["run", 6, [0, 2, 0, -1]],
+        ]:
+            var clip_name: String = pose[0]
+            var first_frame: int = pose[1]
+            var transfer: Array = pose[2]
+            for phase in range(4):
+                var frame_id := 'id="frame_%s_%d"' % [direction, first_frame + phase]
+                var frame_start := player_atlas.find(frame_id)
+                var frame_end := player_atlas.find("</g>", frame_start)
+                assert(frame_start >= 0 and frame_end > frame_start,
+                    "%s %s phase %d must exist in the authored atlas" % [direction, clip_name, phase])
+                var frame_markup := player_atlas.substr(frame_start, frame_end - frame_start)
+                var expected_upper := 'href="#%s_upper" transform="translate(' % direction
+                var upper_start := frame_markup.find(expected_upper)
+                assert(upper_start >= 0,
+                    "%s %s phase %d must contain a separately weighted torso" % [direction, clip_name, phase])
+                var expected_y := int(transfer[phase])
+                var expected_transform := " %d)"/expected_y
+                assert(frame_markup.find(expected_transform, upper_start) >= 0,
+                    "%s %s phase %d must apply its authored vertical weight transfer" % [direction, clip_name, phase])
 
     anim.face(Vector2.RIGHT)
     anim.play("attack", true)
