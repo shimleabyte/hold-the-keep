@@ -43,12 +43,12 @@ func capture(main: Node, file_name: String, note: String) -> void:
         " projectiles=", get_nodes_in_group("enemy_projectiles").size())
 
 
-func spawn_enemy(main: Node, data_db: Node, enemy_script: Script, enemy_id: String,
-        position: Vector2, faction_id: String = "greenwood_raiders") -> Node2D:
+func spawn_enemy(main, data_db, enemy_script: Script, enemy_id: String,
+        position: Vector2, faction_id: String = "greenwood_raiders"):
     if not data_db.enemies.has(enemy_id):
         _fail("Missing combat fixture enemy definition: " + enemy_id)
         return null
-    var enemy: Node2D = enemy_script.new()
+    var enemy = enemy_script.new()
     enemy.setup(data_db.enemies[enemy_id], main.world, main.flow, main.player, faction_id)
     enemy.global_position = position
     main.world.entities.add_child(enemy)
