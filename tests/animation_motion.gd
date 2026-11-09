@@ -36,6 +36,13 @@ func _initialize() -> void:
     assert(anim.motion_offset().y <= -2.0,
         "Shared run animation must retain its stronger body lift")
 
+    # A same-named shared clip must still switch to the protagonist's atlas.
+    anim.play("walk", true)
+    anim.play_player_clip("walk")
+    anim.update(0.125)
+    assert(anim.motion_offset() == Vector2.ZERO,
+        "Switching an already-active shared walk clip must activate the planted player gait")
+
     # The protagonist uses four authored contact/transfer/opposite-contact/recovery frames.
     anim.play_player_clip("walk", true)
     assert(anim.frame_index() == 2, "Player walk must begin on its first authored contact pose")
