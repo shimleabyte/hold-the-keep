@@ -2,10 +2,16 @@ extends RefCounted
 ## Owns enemy raid target validation and movement while Enemy retains combat, identity and persistence state.
 
 var _enemy: Variant
+var _cached_faction_target: Variant
+var _cached_return_target: Dictionary = {}
+var _return_target_refresh_timer := 0.0
 
 
 func configure(enemy: Variant) -> void:
     _enemy = enemy
+    _cached_faction_target = null
+    _cached_return_target.clear()
+    _return_target_refresh_timer = 0.0
 
 
 func find_raid_depot():
@@ -90,6 +96,8 @@ func _begin_assault_retreat(enemy: Variant) -> void:
         member._raid_path_index = 0
         member._raid_path_version = -1
         member._raid_repath_timer = 0.0
+    _cached_return_target.clear()
+    _return_target_refresh_timer = 0.0
 
 
 func _assault_needs_retreat(enemy: Variant) -> bool:
@@ -170,10 +178,15 @@ func _find_assault_return_target(enemy: Variant) -> Dictionary:
 
 
 func _tick_assault_retreat(enemy: Variant, delta: float) -> void:
-    var return_target := _find_assault_return_target(enemy)
-    if return_target.is_empty():
+    _return_target_refresh_timer = maxf(0.0, _return_target_refresh_timer - delta)
+    var cached_node: Variant = _cached_return_target.get("node")
+    if _return_target_refresh_timer <= 0.0 or not is_instance_valid(cached_node) or cached_node.is_queued_for_deletion():
+        _cached_return_target = _find_assault_return_target(enemy)
+        _return_target_refresh_timer = 0.75 if not _cached_return_target.is_empty() else 0.5
+    if _cached_return_target.is_empty():
         enemy.retreat()
         return
+    var return_target := _cached_return_target
     var target_node: Node2D = return_target["node"]
     var target_cells: Array[Vector2i] = return_target["cells"]
     if enemy.position.distance_to(target_node.position) <= 30.0:
@@ -210,25 +223,26 @@ func tick_faction_raid(delta: float):
     enemy.faction_raid_strength_scan_timer = maxf(0.0, float(enemy.faction_raid_strength_scan_timer) - delta)
     if enemy.faction_raid_strength_scan_timer <= 0.0:
         enemy.faction_raid_strength_scan_timer = 0.4
-        if _assault_needs_retreat(enemy):
+        if _assault_needs_retreat(enemy) or not _assault_origin_is_live(enemy):
             _begin_assault_retreat(enemy)
             _tick_assault_retreat(enemy, delta)
             return
 
-    if not _assault_origin_is_live(enemy):
-        _begin_assault_retreat(enemy)
-        _tick_assault_retreat(enemy, delta)
-        return
+        # Raid orders are shared for the assault's lifetime. Revalidate the
+        # world-level target and supply ownership at a short cadence instead
+        # of repeating the same group and territory scans every physics tick.
+        var refreshed_target = find_faction_raid_target()
+        var supply = enemy.get_tree().get_first_node_in_group("supply_network")
+        if not faction_raid_target_valid(refreshed_target, supply):
+            _cached_faction_target = null
+            _begin_assault_retreat(enemy)
+            _tick_assault_retreat(enemy, delta)
+            return
+        _cached_faction_target = refreshed_target
 
-    var return_target := _find_assault_return_target(enemy)
-    if return_target.is_empty():
-        _begin_assault_retreat(enemy)
-        _tick_assault_retreat(enemy, delta)
-        return
-
-    var target = find_faction_raid_target()
-    var supply = enemy.get_tree().get_first_node_in_group("supply_network")
-    if not faction_raid_target_valid(target, supply):
+    var target = _cached_faction_target
+    if not is_instance_valid(target) or int(target.hp) <= 0:
+        _cached_faction_target = null
         _begin_assault_retreat(enemy)
         _tick_assault_retreat(enemy, delta)
         return
