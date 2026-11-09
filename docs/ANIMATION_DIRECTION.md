@@ -60,6 +60,12 @@ Gameplay remains authoritative for damage, hit sectors, cooldowns, combo state, 
 9. **Interruption.** Hurt/death and ability transitions must explicitly take animation priority according to gameplay state.
 10. **No false completion.** Distinct frame indices or tiny pixel translations alone do not prove a convincing animation.
 
+## Protagonist locomotion pass
+
+- Walk and run use four distinct authored leg poses in each of the front, back and side rows. The cycle alternates planted contact and passing/extension poses instead of repeating a two-pose shuffle.
+- Player locomotion keeps the pelvis planted on walk and limits run lift to one pixel. Shared villager/enemy locomotion retains its existing secondary-motion profile.
+- The player playblast captures every locomotion pose at native gameplay framing for all three authored facing rows before reviewing the action clips.
+
 ## Review/QA gates
 
 - GDScript import/parse and the full Godot 4.7 regression matrix pass on the exact PR head.
