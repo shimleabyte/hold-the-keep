@@ -25,15 +25,16 @@ func _initialize() -> void:
             idle_motion_seen = true
     assert(idle_motion_seen, "Idle breathing must produce subtle motion over time")
 
-    # Shared role sheets keep the actor pivot fixed; their own atlas poses carry locomotion.
+    # Shared role sheets retain their existing runtime lift until their atlases
+    # receive equivalent authored contact poses.
     anim.play("walk", true)
     anim.update(0.08)
-    assert(anim.motion_offset() == Vector2.ZERO,
-        "Shared walk poses must not add global bob that detaches planted feet")
+    assert(anim.motion_offset().y < 0.0,
+        "Shared walk animation must retain its existing body lift")
     anim.play("run", true)
     anim.update(0.083)
-    assert(anim.motion_offset() == Vector2.ZERO,
-        "Shared run poses must not add global bob that detaches planted feet")
+    assert(anim.motion_offset().y <= -2.0,
+        "Shared run animation must retain its stronger body lift")
 
     # The protagonist uses four authored contact/transfer/opposite-contact/recovery frames.
     anim.play_player_clip("walk", true)
