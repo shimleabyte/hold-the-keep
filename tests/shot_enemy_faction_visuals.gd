@@ -72,12 +72,21 @@ func _run() -> void:
             _fail("Missing specialist definition: " + enemy_id)
             return
 
+    # Keep the actual world and camera, but clear unrelated actors from the review area.
+    var review_keep: Variant = main.get("enemy_keep")
+    if review_keep is CanvasItem:
+        review_keep.hide()
+    for group_name in ["enemies", "villagers"]:
+        for actor in get_nodes_in_group(group_name):
+            if actor is CanvasItem:
+                actor.hide()
+
     var clock = root.get_node_or_null("GameClock")
     if clock != null:
         clock.set_process(false)
         clock.time_of_day = 0.22
 
-    main.player.global_position = main.world.keep_center_position() + Vector2(0, 230)
+    main.player.global_position = main.world.keep_center_position() + Vector2(0, 50)
     main.player.camera.position_smoothing_enabled = false
     main.player.camera.zoom = Vector2.ONE
     main.player.hide()
