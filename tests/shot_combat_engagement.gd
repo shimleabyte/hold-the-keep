@@ -127,7 +127,7 @@ func _run() -> void:
         main.player.global_position + Vector2(-48, 19), "ashen_host")
     spawn_enemy(main, data_db, enemy_script, "bandit",
         main.player.global_position + Vector2(-49, -24), "iron_legion")
-    var shield := spawn_enemy(main, data_db, enemy_script, "enemy_shieldbearer",
+    var shield = spawn_enemy(main, data_db, enemy_script, "enemy_shieldbearer",
         main.player.global_position + Vector2(-58, 37), "iron_legion")
     spawn_enemy(main, data_db, enemy_script, "archer",
         main.player.global_position + Vector2(-124, -54), "fen_cult")
@@ -142,7 +142,7 @@ func _run() -> void:
     if keep == null:
         _fail("Could not find the live Keep for siege interaction")
         return
-    var siege := spawn_enemy(main, data_db, enemy_script, "enemy_siege_engine",
+    var siege = spawn_enemy(main, data_db, enemy_script, "enemy_siege_engine",
         keep.global_position + Vector2(-44, -1), "ashen_host")
     siege.siege_behavior.target = keep
     siege.siege_behavior.cooldown = 0.0
