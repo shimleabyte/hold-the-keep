@@ -6,6 +6,11 @@ const OUTPUT_DIR := "/tmp/hold-the-keep-building-visual-qa"
 const CAPTURE_SIZE := Vector2i(640, 360)
 
 var game
+var db
+var world_config
+var game_clock
+var tech
+var events
 
 
 func _initialize() -> void:
@@ -42,7 +47,7 @@ func _capture(name: String) -> void:
 
 
 func _place(id: String, cell: Vector2i) -> Node:
-    if not DataDB.buildings.has(id):
+    if not db.buildings.has(id):
         _fail("Unknown building definition: " + id)
         return null
     var node = game.build.place_raw(id, cell)
@@ -66,7 +71,7 @@ func _add_construction_site(id: String, cell: Vector2i, ratio: float) -> Node:
         return null
     var site = site_script.new()
     var required := 100.0
-    site.setup(DataDB.buildings[id], cell, cell, DataDB.cost_of(id), required * ratio, required)
+    site.setup(db.buildings[id], cell, cell, db.cost_of(id), required * ratio, required)
     site.world = game.world
     site.build_system = game.build
     site.set_process(false)
@@ -116,7 +121,13 @@ func _run() -> void:
         _fail("Could not create visual QA output directory")
         return
 
-    if not WorldConfig.apply_profile("frontier"):
+    world_config = root.get_node("WorldConfig")
+    game_clock = root.get_node("GameClock")
+    tech = root.get_node("Tech")
+    events = root.get_node("Events")
+    db = root.get_node("DataDB")
+
+    if not world_config.apply_profile("frontier"):
         _fail("Could not select Frontier for the gameplay review")
         return
 
@@ -143,12 +154,12 @@ func _run() -> void:
         _fail("Player building renderer is unavailable")
         return
 
-    print("BUILDING_VISUAL_QA profile=", WorldConfig.profile_id, " zoom=", game.player.camera.zoom, " catalog=", DataDB.buildings.size())
+    print("BUILDING_VISUAL_QA profile=", world_config.profile_id, " zoom=", game.player.camera.zoom, " catalog=", db.buildings.size())
 
-    GameClock.set_process(false)
+    game_clock.set_process(false)
     game.player.camera.position_smoothing_enabled = false
     game.player.camera.zoom = Vector2.ONE
-    game.player.global_position = Vector2(98 * WorldConfig.tile_size, 99 * WorldConfig.tile_size)
+    game.player.global_position = Vector2(98 * world_config.tile_size, 99 * world_config.tile_size)
     game.player.hide()
 
     # Ordinary settlement composition: housing, logistics, extraction, production,
@@ -202,9 +213,9 @@ func _run() -> void:
 
     # Research the existing visual upgrade paths without advancing time or changing
     # costs, work rates, building completion, health calculations or save state.
-    Tech.researched = ["longhouse", "palisade", "stone_towers", "iron_towers", "fortress"]
-    Tech._recompute()
-    Events.tech_researched.emit("")
+    tech.researched = ["longhouse", "palisade", "stone_towers", "iron_towers", "fortress"]
+    tech._recompute()
+    events.tech_researched.emit("")
 
     var damage := {
         "house": 0.68,
