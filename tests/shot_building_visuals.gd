@@ -177,7 +177,7 @@ func _run() -> void:
         ["lumber_camp", Vector2i(91, 91)],
         ["granary", Vector2i(99, 91)],
         ["storage", Vector2i(103, 91)],
-                ["hunting_lodge", Vector2i(88, 96)],
+        ["hunting_lodge", Vector2i(88, 96)],
         ["quarry", Vector2i(92, 96)],
         ["forge", Vector2i(100, 96)],
         ["barracks", Vector2i(103, 96)],
@@ -200,7 +200,7 @@ func _run() -> void:
     var rival_outpost: Node2D
     var settlement_script := load("res://scripts/entities/enemy_settlement_structure.gd") as GDScript
     if settlement_script != null and settlement_script.can_instantiate():
-        var rival_outpost = settlement_script.new()
+        rival_outpost = settlement_script.new()
         rival_outpost.setup(game.world, rival, "outpost", Vector2i(109, 96))
         rival_outpost.set_process(false)
         game.world.entities.add_child(rival_outpost)
