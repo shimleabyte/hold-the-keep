@@ -94,8 +94,8 @@ static func draw_construction(
     # Prepared ground and rough footings are present at every construction stage.
     canvas.draw_rect(Rect2(-footprint.x * 0.5, -4.0, footprint.x, 4.0), shadow)
     canvas.draw_line(Vector2(-footprint.x * 0.5 + 2.0, -5.0), Vector2(footprint.x * 0.5 - 2.0, -5.0), accent, 1.0)
-    for corner in [-1.0, 1.0]:
-        var x := corner * minf(footprint.x * 0.5 - 3.0, half_width * 0.42)
+    for corner: float in [-1.0, 1.0]:
+        var x: float = corner * minf(footprint.x * 0.5 - 3.0, half_width * 0.42)
         canvas.draw_rect(Rect2(x - 3.0, -8.0, 6.0, 4.0), stone)
         canvas.draw_rect(Rect2(x - 3.0, -8.0, 6.0, 1.0), accent)
         canvas.draw_line(Vector2(x, -8.0), Vector2(x, -13.0), shadow, 1.0)
