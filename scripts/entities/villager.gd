@@ -1183,7 +1183,7 @@ func _set_work_status(status: String, detail: String = "") -> void:
 func _is_target_blocked(candidate: Variant) -> bool:
     if candidate == null or not is_instance_valid(candidate):
         return false
-    var target_id := candidate.get_instance_id()
+    var target_id: int = candidate.get_instance_id()
     if not _blocked_targets.has(target_id):
         return false
     var record: Dictionary = _blocked_targets[target_id]
