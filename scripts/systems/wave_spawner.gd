@@ -267,6 +267,8 @@ func _pick_type() -> String:
 
 
 func _pick_edge_cell() -> Vector2i:
+    if WorldConfig.is_frontier_expedition():
+        return _pick_expedition_heartland_edge_cell()
     for i in 30:
         var side := randi() % 4
         var t := randi_range(1, WorldConfig.map_size - 2)
@@ -278,4 +280,33 @@ func _pick_edge_cell() -> Vector2i:
             _: c = Vector2i(WorldConfig.map_size - 2, t)
         if world.is_buildable(c) and not world.occupied.has(c) and flow.is_reachable(c):
             return c
+    return Vector2i(-1, -1)
+
+
+## Expedition's outer map perimeter is sealed behind four discovery gates.
+## Spawn night attackers along the accessible heartland perimeter instead;
+## they still enter at the edge of the playable territory and use the normal
+## Keep-directed FlowField, without appearing inside locked outer marches.
+func _pick_expedition_heartland_edge_cell() -> Vector2i:
+    var profile: Dictionary = WorldConfig.profile_definition(WorldConfig.profile_id)
+    var core_size := int(profile.get("expedition_core_size", 160))
+    var core_min := int((WorldConfig.map_size - core_size) / 2)
+    var core_max := core_min + core_size
+    var sides: Array[int] = [0, 1, 2, 3]
+    sides.shuffle()
+
+    for side in sides:
+        var start := randi_range(0, core_size - 1)
+        for offset in range(core_size):
+            var t := core_min + ((start + offset) % core_size)
+            var cell := Vector2i.ZERO
+            match side:
+                0: cell = Vector2i(t, core_min)
+                1: cell = Vector2i(t, core_max - 1)
+                2: cell = Vector2i(core_min, t)
+                _: cell = Vector2i(core_max - 1, t)
+            if world.is_expedition_reserved_cell(cell):
+                continue
+            if world.is_buildable(cell) and not world.occupied.has(cell) and flow.is_reachable(cell):
+                return cell
     return Vector2i(-1, -1)
