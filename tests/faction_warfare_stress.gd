@@ -293,39 +293,24 @@ func _run() -> void:
             "The assault Siege Engine must apply its multiplied structural impact to the assigned target")
 
         var siege_group_id := String(siege_member.faction_raid_group_id)
-        var siege_unit_id := String(siege_member.id)
-        var siege_hp_before_death := int(siege_member.hp)
-        var siege_was_boss := bool(siege_member.is_boss)
+        # Keep the escorts at the contested objective so the test observes an
+        # actual withdrawal journey, not an instant return by units still at camp.
+        var squad_index := 0
+        for candidate in get_nodes_in_group("faction_raiders"):
+            if String(candidate.faction_raid_group_id) != siege_group_id:
+                continue
+            candidate.player = null
+            if candidate != siege_member:
+                candidate.position = siege_target.position + Vector2(24.0 * squad_index, 18.0)
+                squad_index += 1
         siege_member.take_damage(999999)
         await ticks(1)
         var surviving_squad: Array = []
-        var assault_members_after_death: Array[String] = []
         for candidate in get_nodes_in_group("faction_raiders"):
-            assault_members_after_death.append(
-                "%s:%s:%s:%d" % [
-                    String(candidate.id),
-                    String(candidate.faction_raid_group_id),
-                    String(candidate.faction_raid_role),
-                    int(candidate.hp)
-                ]
-            )
             if String(candidate.faction_raid_group_id) == siege_group_id:
                 surviving_squad.append(candidate)
-        var siege_freed_after_damage := not is_instance_valid(siege_member)
-        print("ASSAULT_CASUALTY_DEBUG " + JSON.stringify({
-            "group_id": siege_group_id,
-            "siege_id": siege_unit_id,
-            "siege_hp_before_death": siege_hp_before_death,
-            "siege_was_boss": siege_was_boss,
-            "siege_freed_after_damage": siege_freed_after_damage,
-            "same_group_survivors": surviving_squad.size(),
-            "all_raiders": assault_members_after_death
-        }))
         require(surviving_squad.size() == ASSAULT_SIZE - 1,
-            "A destroyed Siege Engine must leave two escorts in its assault: found %d; siege freed=%s; all=%s" % [
-                surviving_squad.size(), str(siege_freed_after_damage),
-                JSON.stringify(assault_members_after_death)
-            ])
+            "A destroyed Siege Engine must leave both escorts alive during their withdrawal")
         for survivor in surviving_squad:
             survivor.faction_raid_strength_scan_timer = 0.0
             survivor.position = survivor.guard_origin + Vector2(80.0, 0.0)
