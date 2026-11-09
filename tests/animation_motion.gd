@@ -235,7 +235,7 @@ func _initialize() -> void:
     assert(anim.motion_offset().x < 0.0, "Work lean must follow left-facing direction")
     anim.manual_progress = -1.0
 
-    var work_styles := ["woodcutter", "miner", "builder", "blacksmith", "farmer"]
+    var work_styles := ["woodcutter", "miner", "builder", "blacksmith", "farmer", "hunter", "healer"]
     var distinct_offsets: Array[Vector2] = []
     for style in work_styles:
         anim.work_style = style
@@ -244,7 +244,7 @@ func _initialize() -> void:
         if not distinct_offsets.has(offset):
             distinct_offsets.append(offset)
     assert(distinct_offsets.size() == work_styles.size(),
-        "Each profession must have a distinct body-weight transfer during its work cycle")
+        "Each civilian work role must have a distinct body-weight transfer during its work cycle")
 
     anim.work_style = "woodcutter"
     anim.manual_progress = 0.23
