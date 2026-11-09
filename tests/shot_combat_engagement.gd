@@ -55,6 +55,15 @@ func capture(main: Node, file_name: String, note: String) -> void:
         " projectiles=", get_nodes_in_group("enemy_projectiles").size())
 
 
+func find_active_melee_swing():
+    for group_name in ["defenders", "enemies"]:
+        for combatant in get_nodes_in_group(group_name):
+            var feedback = combatant.get("combat_feedback")
+            if feedback != null and float(feedback.get("swing_remaining")) > 0.15:
+                return combatant
+    return null
+
+
 func spawn_enemy(main, data_db, enemy_script: Script, enemy_id: String,
         position: Vector2, faction_id: String = "greenwood_raiders"):
     if not data_db.enemies.has(enemy_id):
@@ -185,8 +194,24 @@ func _run() -> void:
         "shieldbearer captured during its natural defensive brace with live ranged fire")
 
     await wait_seconds(2.2)
+    # Sample a real attack animation window, rather than hoping a 0.28s sweep
+    # happens to overlap a fixed screenshot timestamp.
+    var swinging_combatant = null
+    for _frame in 600:
+        swinging_combatant = find_active_melee_swing()
+        if swinging_combatant != null:
+            break
+        await physics_frame
+    if swinging_combatant == null:
+        _fail("No live melee combatant entered its directional swing window")
+        return
+    var swing_feedback = swinging_combatant.get("combat_feedback")
+    print("COMBAT_VISUAL_MELEE_SWING actor=", swinging_combatant.name,
+        " direction=", swing_feedback.swing_direction,
+        " remaining=", swing_feedback.swing_remaining,
+        " total=", swing_feedback.swing_total)
     await capture(main, "battlefield-melee-contact.png",
-        "sustained soldier and raider melee with active attack and hit-reaction states")
+        "live melee swing sampled while its directional weapon-contact sweep is active")
 
     # Capture when the real siege transaction has damaged the Keep and its directional
     # impact mark is still active. This proves structure contact rather than proximity.
