@@ -26,11 +26,16 @@ func capture_locomotion_cycle(clip_name: String, frame_count: int, fps: float, c
     main_player.facing = Vector2.RIGHT
     main_player.anim.face(Vector2.RIGHT)
     main_player.velocity = Vector2.ZERO
+    # Disable the Player's automatic _process animation tick. The playblast
+    # advances SpriteAnim manually so each captured phase is exactly one step.
+    main_player.set_process(false)
     main_player.set_physics_process(false)
+    main_player.anim.play_player_clip(clip_name, true, fps)
     for phase in frame_count:
         await capture("Player · %s phase %d/%d" % [clip_name, phase + 1, frame_count], center)
         await advance_animation(1.0 / fps)
     main_player.set_physics_process(true)
+    main_player.set_process(true)
 
 
 func clear_presentation_fx() -> void:
