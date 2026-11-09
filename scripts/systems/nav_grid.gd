@@ -61,7 +61,7 @@ func _set_cell_solid(cell: Vector2i) -> bool:
     var occupant = world.occupied.get(cell)
     var is_bridge: bool = occupant != null and is_instance_valid(occupant) and occupant.is_in_group("buildings") and String(occupant.id) == "bridge"
     var blocks_path: bool = occupant != null and not (is_instance_valid(occupant) and occupant.is_in_group("roads"))
-    var next_solid := (not world.is_buildable(cell) and not is_bridge) or blocks_path
+    var next_solid: bool = (not world.is_buildable(cell) and not is_bridge) or blocks_path
     if astar.is_point_solid(cell) == next_solid:
         return false
     astar.set_point_solid(cell, next_solid)
