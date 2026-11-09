@@ -1,7 +1,6 @@
 extends SceneTree
 ## One gameplay-zoom matrix: faction rows, specialist columns, rendered by the live Enemy scene.
 
-const EnemyScript := preload("res://scripts/entities/enemy.gd")
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const FACTIONS: Array[String] = [
     "greenwood_raiders",
@@ -51,6 +50,10 @@ func _run() -> void:
         return
 
     var data_db = root.get_node_or_null("DataDB")
+    var enemy_script := load("res://scripts/entities/enemy.gd") as GDScript
+    if enemy_script == null or not enemy_script.can_instantiate():
+        _fail("Enemy renderer did not compile after autoload initialization")
+        return
     if data_db == null:
         _fail("DataDB autoload is unavailable")
         return
@@ -73,7 +76,7 @@ func _run() -> void:
     for faction_index in FACTIONS.size():
         for archetype_index in ARCHETYPES.size():
             var enemy_data: Dictionary = data_db.enemies[ARCHETYPES[archetype_index]]
-            var enemy = EnemyScript.new()
+            var enemy = enemy_script.new()
             enemy.setup(enemy_data, main.world, main.flow, main.player, FACTIONS[faction_index])
             main.world.add_child(enemy)
             enemy.global_position = center + Vector2(
