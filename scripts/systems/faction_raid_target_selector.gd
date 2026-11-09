@@ -26,9 +26,37 @@ func _raid_target_exposed(target, camp: Dictionary) -> bool:
     return owner == "contested" or (owner == "player" and control in ["enemy", "contested"])
 
 
+func _raid_origins(camp: Dictionary) -> Array[Vector2]:
+    var origins: Array[Vector2] = [Vector2(camp["position"])]
+    var faction_id := String(camp["faction_id"])
+    var region_id := String(camp["region_id"])
+    for outpost in main.get_tree().get_nodes_in_group("enemy_buildings"):
+        if not is_instance_valid(outpost) or outpost.is_queued_for_deletion():
+            continue
+        if String(outpost.get("structure_id")) != "outpost" or int(outpost.get("hp")) <= 0:
+            continue
+        var owner_keep = outpost.get("owner_keep")
+        if owner_keep == null or not is_instance_valid(owner_keep):
+            continue
+        if String(owner_keep.get("faction_id")) != faction_id:
+            continue
+        if String(owner_keep.get("region_id")) != region_id:
+            continue
+        origins.append(outpost.position)
+    return origins
+
+
+func _nearest_origin_distance(target_position: Vector2, origins: Array[Vector2]) -> float:
+    var best_distance := INF
+    for origin in origins:
+        best_distance = minf(best_distance, origin.distance_to(target_position))
+    return best_distance
+
+
 func _find_raid_target(camp: Dictionary) -> Dictionary:
     main.supply._ensure_current()
     main.territory._ensure_current()
+    var origins := _raid_origins(camp)
     var candidates: Array[Dictionary] = []
     var scanned := 0
 
@@ -40,7 +68,7 @@ func _find_raid_target(camp: Dictionary) -> Dictionary:
             continue
         if not main.supply.is_depot_connected(depot) or not _raid_target_exposed(depot, camp):
             continue
-        var distance := Vector2(camp["position"]).distance_to(depot.position)
+        var distance := _nearest_origin_distance(depot.position, origins)
         if distance > 760.0:
             continue
         var priority := 7 if String(depot.id) == "outpost" else (6 if String(depot.id) == "granary" else 5)
@@ -66,7 +94,7 @@ func _find_raid_target(camp: Dictionary) -> Dictionary:
                 break
         if not connected or not _raid_target_exposed(road, camp):
             continue
-        var distance := Vector2(camp["position"]).distance_to(road.position)
+        var distance := _nearest_origin_distance(road.position, origins)
         if distance > 760.0:
             continue
         var priority := 3 if String(road.id) == "bridge" else 2
@@ -88,12 +116,21 @@ func _find_raid_target(camp: Dictionary) -> Dictionary:
         var candidate: Dictionary = candidates[index]
         var target = candidate["node"]
         var target_cells: Array[Vector2i] = target.cells()
-        var path: PackedVector2Array = main.nav.path_adjacent(camp["position"], target_cells)
-        if path.is_empty():
+        var best_origin := Vector2.ZERO
+        var best_path_size := 2147483647
+        for origin in origins:
+            var path: PackedVector2Array = main.nav.path_adjacent(origin, target_cells)
+            if not path.is_empty() and path.size() < best_path_size:
+                best_path_size = path.size()
+                best_origin = origin
+        if best_path_size == 2147483647:
             continue
+        var origin_kind := "outpost" if best_origin.distance_squared_to(Vector2(camp["position"])) > 1.0 else "camp"
         return {
             "cell": candidate["cell"],
             "kind": candidate["kind"],
-            "node_id": candidate["node_id"]
+            "node_id": candidate["node_id"],
+            "origin": best_origin,
+            "origin_kind": origin_kind
         }
     return {}

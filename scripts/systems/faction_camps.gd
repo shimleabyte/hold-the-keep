@@ -301,13 +301,14 @@ func _spawn_faction_raid(camp: Dictionary, target: Dictionary) -> bool:
     if not DataDB.enemies.has(enemy_id):
         push_warning("Faction camps: missing raid unit %s" % enemy_id)
         return false
+    var raid_origin := Vector2(target.get("origin", camp["position"]))
     var raider = ENEMY_SCRIPT.new()
     raider.setup(DataDB.enemies[enemy_id], main.world, main.flow, main.player, String(camp["faction_id"]))
     raider.setup_faction_raid(
         Vector2i(target["cell"]), String(target["kind"]), main.nav,
-        String(camp["id"]), String(camp["region_id"]), Vector2(camp["position"])
+        String(camp["id"]), String(camp["region_id"]), raid_origin
     )
-    raider.position = Vector2(camp["position"])
+    raider.position = raid_origin
     main.world.entities.add_child(raider)
     return true
 
@@ -420,10 +421,11 @@ func _process(delta: float) -> void:
                     raid_counts[camp_id] = active_raids + 1
                     var faction_name := String(FactionRegistry.factions[camp_id].get("name", camp_id))
                     var target_label := String(raid_target.get("node_id", "infrastruktur")).to_upper()
+                    var origin_label := "pos terdepan" if String(raid_target.get("origin_kind", "camp")) == "outpost" else "kamp"
                     Events.event_triggered.emit(
                         "RAID PERBATASAN TERDETEKSI",
-                        "%s mengirim penyerbu ke %s di %d,%d. Hadang penyerbu atau rebut kembali kendali wilayah sebelum jalur logistik terputus."
-                        % [faction_name, target_label, raid_target["cell"].x, raid_target["cell"].y]
+                        "%s meluncurkan penyerbu dari %s ke %s di %d,%d. Hadang penyerbu atau rebut kembali kendali wilayah sebelum jalur logistik terputus."
+                        % [faction_name, origin_label, target_label, raid_target["cell"].x, raid_target["cell"].y]
                     )
                 else:
                     camp["raid_timer"] = 12.0

@@ -44,6 +44,44 @@ func find_storage_cell(main, camp: Dictionary) -> Vector2i:
     return Vector2i(-1, -1)
 
 
+func find_forward_outpost_anchor(main, keep, camp: Dictionary, target) -> Vector2i:
+    var camp_path: PackedVector2Array = main.nav.path_adjacent(Vector2(camp["position"]), target.cells())
+    if camp_path.is_empty():
+        return Vector2i(-1, -1)
+    var best_path_size := camp_path.size()
+    var best_anchor := Vector2i(-1, -1)
+    var footprint := Vector2i(2, 2)
+    for radius in range(1, 28):
+        for y in range(-radius, radius + 1):
+            for x in range(-radius, radius + 1):
+                if maxi(absi(x), absi(y)) != radius:
+                    continue
+                var anchor: Vector2i = Vector2i(keep.get("cell")) + Vector2i(x, y)
+                var valid := true
+                for fy in footprint.y:
+                    for fx in footprint.x:
+                        var cell := anchor + Vector2i(fx, fy)
+                        if not main.world.is_buildable(cell) or main.world.occupied.has(cell):
+                            valid = false
+                            break
+                        if String(main.world.region_id(cell)) != String(keep.get("region_id")):
+                            valid = false
+                            break
+                    if not valid:
+                        break
+                if not valid or not main.territory.can_enemy_place_outpost(anchor, footprint):
+                    continue
+                var origin := Vector2(
+                    (anchor.x + 1.0) * WorldConfig.tile_size,
+                    (anchor.y + 2.0) * WorldConfig.tile_size
+                )
+                var path: PackedVector2Array = main.nav.path_adjacent(origin, target.cells())
+                if not path.is_empty() and path.size() < best_path_size:
+                    best_path_size = path.size()
+                    best_anchor = anchor
+    return best_anchor
+
+
 func road_cell_passable(main, cell: Vector2i) -> bool:
     if not main.world.is_buildable(cell):
         return false
@@ -170,6 +208,26 @@ func _run() -> void:
     var storage = main.build.place_raw("storage", storage_cell)
     await ticks(3)
     main.nav.rebuild()
+
+    var rival_keep = main.campaign._nodes.get(camp_id)
+    require(rival_keep != null and is_instance_valid(rival_keep),
+        "The faction camp must resolve its matching regional stronghold")
+    var outpost_anchor := find_forward_outpost_anchor(main, rival_keep, camp, storage)
+    require(outpost_anchor.x >= 0,
+        "A legal outpost site must provide a shorter reachable route to the exposed depot")
+    require(bool(rival_keep.civilization.call("_spawn_structure", "outpost", outpost_anchor)),
+        "The regional civilization must complete a forward outpost for raid staging")
+    await ticks(2)
+    main.nav.rebuild()
+    main.territory.rebuild()
+    var forward_outpost: Node2D
+    for structure in rival_keep.civilization.structures:
+        if is_instance_valid(structure) and String(structure.structure_id) == "outpost":
+            forward_outpost = structure
+            break
+    require(forward_outpost != null,
+        "The faction's completed outpost must be registered as a live enemy building")
+
     var road_path := find_road_path(main, keep, storage)
     require(not road_path.is_empty(), "A road connection must be routable from the Keep to remote infrastructure")
     for road_cell in road_path:
@@ -200,6 +258,9 @@ func _run() -> void:
     require(not target.is_empty() and String(target.get("kind", "")) == "depot"
         and Vector2i(target.get("cell", Vector2i(-1, -1))) == storage_cell,
         "A faction camp must prioritize reachable, exposed, connected depots")
+    require(String(target.get("origin_kind", "")) == "outpost"
+        and Vector2(target.get("origin", Vector2.ZERO)).distance_to(forward_outpost.position) < 1.0,
+        "A reachable forward outpost with the shorter route must become the faction raid launch point")
 
     camp["activated"] = true
     camp["raid_budget"] = 2
@@ -214,6 +275,9 @@ func _run() -> void:
     require(raider.is_faction_raider and raider.is_garrison and raider.id == "bandit"
         and raider.raid_target_cell == storage_cell and raider.faction_raid_target_kind == "depot",
         "The Greenwood raider must preserve its faction-native unit, camp, depot target and garrison assignment")
+    require(raider.position.distance_to(forward_outpost.position) < 1.0
+        and raider.guard_origin.distance_to(forward_outpost.position) < 1.0,
+        "The dispatched raider must physically launch from and retain the forward outpost origin")
     require(int(manager.camps[camp_id]["raid_budget"]) == 1,
         "A successful dispatch must consume exactly one finite raid-budget charge")
 
@@ -270,6 +334,8 @@ func _run() -> void:
     require(restored_raider != null and restored_raider.raid_target_cell == storage_cell
         and restored_raider.faction_raid_target_kind == "depot",
         "Save restoration must rehydrate the active faction raid assignment")
+    require(restored_raider.guard_origin.distance_to(forward_outpost.position) < 1.0,
+        "Save restoration must preserve the forward outpost launch origin through existing guard-origin fields")
 
     main.territory.enemy_claimed_cells.erase(storage.cell)
     var reclaimed_region: Dictionary = main.territory.region_states[String(camp["region_id"])]
