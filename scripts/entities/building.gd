@@ -44,6 +44,10 @@ var _blacksmith_assignments: Dictionary = {}
 var local_stockpile: Dictionary = {}
 var stockpile_capacity := 0
 var _sabotage_remaining := 0.0
+var _combat_impact_remaining := 0.0
+var _combat_impact_total := 0.0
+var _combat_impact_direction := Vector2.LEFT
+var _combat_impact_strength := 1.0
 
 var _range := 0.0
 var _damage := 0
@@ -108,14 +112,18 @@ func apply_sabotage(duration: float) -> bool:
 
 
 func _process(delta: float) -> void:
-    if _sabotage_remaining <= 0.0:
-        set_process(false)
-        return
-    _sabotage_remaining = maxf(0.0, _sabotage_remaining - delta)
-    if _sabotage_remaining <= 0.0:
-        set_process(false)
+    if _sabotage_remaining > 0.0:
+        _sabotage_remaining = maxf(0.0, _sabotage_remaining - delta)
+        if _sabotage_remaining <= 0.0:
+            queue_redraw()
+            Events.build_feedback.emit("%s kembali berfungsi" % String(id).to_upper())
+
+    if _combat_impact_remaining > 0.0:
+        _combat_impact_remaining = maxf(0.0, _combat_impact_remaining - delta)
         queue_redraw()
-        Events.build_feedback.emit("%s kembali berfungsi" % String(id).to_upper())
+
+    if _sabotage_remaining <= 0.0 and _combat_impact_remaining <= 0.0:
+        set_process(false)
 
 
 func accepts_resource(kind: String) -> bool:
@@ -238,6 +246,20 @@ func _on_tech(_tech_id: String) -> void:
     queue_redraw()
     if id == "keep":
         Events.keep_hp_changed.emit(hp, max_hp)
+
+
+func take_damage_from(amount: int, source_position: Vector2) -> void:
+    if hp <= 0:
+        return
+    var incoming := source_position - global_position
+    _combat_impact_direction = incoming.normalized() if incoming.length_squared() > 0.001 else Vector2.LEFT
+    _combat_impact_strength = clampf(float(amount) / 36.0, 0.75, 1.8)
+    _combat_impact_total = 0.42
+    _combat_impact_remaining = _combat_impact_total
+    take_damage(amount)
+    if hp > 0:
+        set_process(true)
+        queue_redraw()
 
 
 func take_damage(amount: int) -> void:
@@ -517,3 +539,26 @@ func _draw() -> void:
         draw_rect(Rect2(-9.0, mark_y, 18.0, 7.0), Color("#5f2626"))
         draw_line(Vector2(-6.0, mark_y + 1.0), Vector2(6.0, mark_y + 6.0), Color("#e8b76d"), 1.5)
         draw_line(Vector2(6.0, mark_y + 1.0), Vector2(-6.0, mark_y + 6.0), Color("#e8b76d"), 1.5)
+
+    if _combat_impact_remaining > 0.0:
+        var progress := 1.0 - _combat_impact_remaining / maxf(0.001, _combat_impact_total)
+        var alpha := 1.0 - smoothstep(0.18, 1.0, progress)
+        var source := _combat_impact_direction
+        var inward := -source
+        var tangent := source.rotated(PI * 0.5)
+        var strike_center := Vector2(
+            roundf(source.x * minf(w * 0.34, 22.0)),
+            roundf(-tex_h * 0.55 + source.y * minf(tex_h * 0.22, 12.0))
+        )
+        var reach := 4.0 + _combat_impact_strength * 2.5
+        var crack_ink := Color(0.12, 0.13, 0.12, alpha * 0.92)
+        var hot_edge := Color(0.88, 0.66, 0.42, alpha * 0.82)
+        draw_circle(strike_center, 2.0 + _combat_impact_strength * 0.6, crack_ink)
+        draw_line(strike_center, strike_center + inward * reach, crack_ink, 1.4)
+        draw_line(strike_center + inward * 2.0, strike_center + inward * reach + tangent * 3.0,
+            crack_ink, 1.0)
+        draw_line(strike_center + inward * 2.0, strike_center + inward * reach - tangent * 3.0,
+            crack_ink, 1.0)
+        draw_line(strike_center - tangent * 2.0, strike_center + tangent * 2.0,
+            hot_edge, 1.0)
+
