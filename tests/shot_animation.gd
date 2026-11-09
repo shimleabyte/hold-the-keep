@@ -9,34 +9,23 @@ func ticks(count: int) -> void:
         await process_frame
 
 
-func advance_animation(seconds: float) -> void:
-    # Advance the actual SpriteAnim timeline in exact durations while physics
-    # is paused, so capture labels correspond to deterministic atlas markers.
-    var remaining := maxf(seconds, 0.0)
-    while remaining > 0.000001:
-        var step := minf(remaining, 1.0 / 120.0)
-        main_player.anim.update(step)
-        main_player.queue_redraw()
-        remaining -= step
-    await process_frame
-
-
 func capture_locomotion_cycle(clip_name: String, frame_count: int, fps: float, center: Vector2) -> void:
-    main_player.anim.play_player_clip(clip_name, true)
+    main_player.velocity = Vector2.ZERO
     main_player.facing = Vector2.RIGHT
     main_player.anim.face(Vector2.RIGHT)
-    main_player.velocity = Vector2.ZERO
-    # Disable the Player's automatic _process animation tick. The playblast
-    # advances SpriteAnim manually so each captured phase is exactly one step.
+    # Disable both automatic actor ticks while sampling the protagonist atlas.
     main_player.set_process(false)
     main_player.set_physics_process(false)
     main_player.anim.play_player_clip(clip_name, true, fps)
     for phase in frame_count:
+        # Sample the middle of each frame's time slice. This avoids floating-point
+        # boundary ambiguity (e.g. 0.12499999 * 8 flooring to the previous frame).
+        main_player.anim._t = (float(phase) + 0.5) / fps
+        main_player.anim.update(0.0)
+        main_player.queue_redraw()
         await capture("Player · %s phase %d/%d" % [clip_name, phase + 1, frame_count], center)
-        await advance_animation(1.0 / fps)
     main_player.set_physics_process(true)
     main_player.set_process(true)
-
 
 func clear_presentation_fx() -> void:
     # Playblast-only reset: clear draw-only combat arcs, not gameplay events.
