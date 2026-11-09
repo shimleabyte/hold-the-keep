@@ -241,7 +241,7 @@ func tick_faction_raid(delta: float):
         _cached_faction_target = refreshed_target
 
     var target = _cached_faction_target
-    if not is_instance_valid(target) or int(target.hp) <= 0:
+    if not is_instance_valid(target) or target.is_queued_for_deletion() or int(target.hp) <= 0:
         _cached_faction_target = null
         _begin_assault_retreat(enemy)
         _tick_assault_retreat(enemy, delta)
