@@ -148,6 +148,7 @@ func _initialize() -> void:
     builder._find_work()
     assert(builder.target == site and builder.state == builder.State.TO_WORK,
         "Builder must discover and claim the nearest reachable construction site")
+    var nav_version_before_completion: int = main.nav.version
     site.work_required = 1.0
     site.queue_redraw()
     await ticks(180)
@@ -164,6 +165,8 @@ func _initialize() -> void:
             "Construction completion must eventually publish its refreshed enemy flow field")
     assert(not main.flow._dirty and not main.flow._build_active,
         "Construction completion must settle its refreshed enemy flow field without a blocking rebuild")
+    assert(main.nav.version == nav_version_before_completion,
+        "Replacing a solid construction site with a solid building must not invalidate every villager route")
     builder.set_physics_process(false)
     var second_cell := find_house_cell(main, keep.cell)
     assert(second_cell.x >= 0 and second_cell != house_cell,
