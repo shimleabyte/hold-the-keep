@@ -81,6 +81,10 @@ func _run() -> void:
             if actor is CanvasItem:
                 actor.hide()
 
+    for building in get_nodes_in_group("buildings"):
+        if is_instance_valid(building) and String(building.id) == "keep" and building is CanvasItem:
+            building.hide()
+
     var clock = root.get_node_or_null("GameClock")
     if clock != null:
         clock.set_process(false)
