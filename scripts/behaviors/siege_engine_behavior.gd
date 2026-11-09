@@ -216,7 +216,10 @@ func tick(delta: float) -> void:
         if windup_timer <= 0.0:
             var impact_target: Node2D = target
             var impact_damage := maxi(1, roundi(float(actor.damage) * damage_multiplier))
-            impact_target.call("take_damage", impact_damage)
+            if impact_target.has_method("take_damage_from"):
+                impact_target.call("take_damage_from", impact_damage, actor.global_position)
+            else:
+                impact_target.call("take_damage", impact_damage)
             Events.fx_burst.emit("debris", impact_target.global_position + Vector2(0, -8), -aim.normalized(), 1.5)
             Audio.play("siege_impact", 1.0, -2.0)
             Events.screen_shake.emit(1.0, 0.16)
