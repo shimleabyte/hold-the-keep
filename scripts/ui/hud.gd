@@ -824,8 +824,10 @@ func _build_overlay() -> void:
     add_child(_over)
     _over_label = Label.new()
     _over_label.position = Vector2(0, 85)
-    _over_label.size = Vector2(480, 100)
+    _over_label.size = Vector2(480, 144)
     _over_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _over_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    _over_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     _over_label.add_theme_font_override("font", _font)
     _over_label.add_theme_font_size_override("font_size", 16)
     _over.add_child(_over_label)
@@ -1198,7 +1200,7 @@ func _on_campaign_won(day: int) -> void:
     var main_node = get_tree().get_first_node_in_group("main")
     var objective_count: int = main_node.campaign.objectives_in_order().size() if main_node != null else 1
     var victory_title := "SELURUH WILAYAH DITAKLUK" if objective_count > 1 else "BENTENG LAWAN TAKLUK"
-    _over_label.text = "%s\\nWilayah musuh jatuh pada hari %d\\nTekan R untuk main lagi" % [victory_title, day] + _load_hint()
+    _over_label.text = "%s\nWilayah musuh jatuh pada hari %d\nTekan R untuk main lagi" % [victory_title, day] + _load_hint()
     _over.visible = true
     get_tree().paused = true
 
