@@ -146,6 +146,7 @@ func play_timed_sequence(
             return
         previous_time = frame_time
 
+    _uses_player_atlas = true
     clip = sequence_clip
     _t = 0.0
     finished = false
