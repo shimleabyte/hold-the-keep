@@ -296,8 +296,30 @@ func _run() -> void:
         for candidate in get_nodes_in_group("faction_raiders"):
             if String(candidate.faction_raid_group_id) == siege_group_id:
                 surviving_squad.append(candidate)
+        var assault_members_after_death: Array[String] = []
+        for candidate in get_nodes_in_group("faction_raiders"):
+            assault_members_after_death.append(
+                "%s:%s:%s:%s" % [
+                    String(candidate.get("id")),
+                    String(candidate.get("faction_raid_group_id")),
+                    String(candidate.get("faction_raid_role")),
+                    str(int(candidate.get("hp")))
+                ]
+            )
+        print("ASSAULT_CASUALTY_DEBUG " + JSON.stringify({
+            "group_id": siege_group_id,
+            "siege_id": String(siege_member.get("id")),
+            "siege_hp": int(siege_member.get("hp")),
+            "siege_boss": bool(siege_member.get("is_boss")),
+            "siege_queued": siege_member.is_queued_for_deletion(),
+            "same_group_survivors": surviving_squad.size(),
+            "all_raiders": assault_members_after_death
+        }))
         require(surviving_squad.size() == ASSAULT_SIZE - 1,
-            "A destroyed Siege Engine must leave the surviving escorts in the same assault identity")
+            "A destroyed Siege Engine must leave two escorts in its assault: found %d; siege hp=%d; queued=%s; all=%s" % [
+                surviving_squad.size(), int(siege_member.get("hp")),
+                str(siege_member.is_queued_for_deletion()), JSON.stringify(assault_members_after_death)
+            ])
         for survivor in surviving_squad:
             survivor.faction_raid_strength_scan_timer = 0.0
             survivor._tick_faction_raid(0.1)
