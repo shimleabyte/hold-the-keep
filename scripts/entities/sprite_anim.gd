@@ -259,11 +259,12 @@ func motion_offset() -> Vector2:
             # Napas halus satu piksel, dengan fase awal berbeda per unit.
             return Vector2(0, -roundf(sin(_motion_t * TAU * 0.7 + _motion_phase) * 0.55))
         "walk":
-            var walk_lift := absf(sin(progress * TAU))
-            return Vector2(0, -roundf(walk_lift))
+            # The authored leg poses carry the gait; keep the pelvis planted.
+            return Vector2.ZERO
         "run":
-            var run_lift := absf(sin(progress * TAU))
-            return Vector2(0, -roundf(run_lift * 2.0))
+            # Restrained one-pixel lift keeps sprint energy without pogo-bouncing.
+            var run_lift := maxf(0.0, sin(progress * TAU))
+            return Vector2(0, -roundf(run_lift))
         "work":
             return _work_motion_offset(progress, forward)
         "hurt":
