@@ -1,5 +1,5 @@
 extends RefCounted
-## Frontier-only building material, silhouette detail and deterministic damage marks.
+## Shared building material, silhouette detail and deterministic damage marks across world profiles.
 ## This layer is decorative: it never changes footprint, collision, HP or construction logic.
 
 const SUPPORTED_FEATURES := [
