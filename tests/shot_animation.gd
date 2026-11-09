@@ -20,10 +20,17 @@ func advance_animation(seconds: float) -> void:
     await process_frame
 
 
-func capture_locomotion_cycle(clip_name: String, frame_count: int, fps: float, center: Vector2) -> void:
+func capture_locomotion_cycle(
+    clip_name: String,
+    facing_label: String,
+    direction: Vector2,
+    frame_count: int,
+    fps: float,
+    center: Vector2
+) -> void:
     main_player.velocity = Vector2.ZERO
-    main_player.facing = Vector2.RIGHT
-    main_player.anim.face(Vector2.RIGHT)
+    main_player.facing = direction
+    main_player.anim.face(direction)
     # Disable both automatic actor ticks while sampling the protagonist atlas.
     main_player.set_process(false)
     main_player.set_physics_process(false)
@@ -34,7 +41,10 @@ func capture_locomotion_cycle(clip_name: String, frame_count: int, fps: float, c
         main_player.anim._t = (float(phase) + 0.5) / fps
         main_player.anim.update(0.0)
         main_player.queue_redraw()
-        await capture("Player · %s phase %d/%d" % [clip_name, phase + 1, frame_count], center)
+        await capture(
+            "Player · %s %s phase %d/%d" % [facing_label, clip_name, phase + 1, frame_count],
+            center
+        )
     main_player.set_physics_process(true)
     main_player.set_process(true)
 
@@ -134,11 +144,17 @@ func _initialize() -> void:
     Input.action_press("move_right")
     await ticks(12)
     await capture("Player · walk right", center)
-    await capture_locomotion_cycle("walk", 4, 8.0, center)
+    var locomotion_facings := [
+        {"label": "front", "direction": Vector2.DOWN},
+        {"label": "back", "direction": Vector2.UP},
+        {"label": "side", "direction": Vector2.RIGHT},
+    ]
+    for facing in locomotion_facings:
+        await capture_locomotion_cycle("walk", facing["label"], facing["direction"], 4, 8.0, center)
+        await capture_locomotion_cycle("run", facing["label"], facing["direction"], 4, 12.0, center)
     Input.action_press("sprint")
     await ticks(12)
     await capture("Player · run right", center)
-    await capture_locomotion_cycle("run", 4, 12.0, center)
     Input.action_release("move_right")
     Input.action_release("sprint")
     await ticks(4)
