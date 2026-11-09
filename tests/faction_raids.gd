@@ -385,6 +385,14 @@ func _run() -> void:
     require(faction_raiders_for(get_nodes_in_group("faction_raiders"), camp_id).is_empty(),
         "The outpost-loss withdrawal must reach the stronghold and clear the active squad")
 
+    # Reclaim the first depot so the raid selector must choose the still-exposed
+    # connected road network instead of repeatedly preferring the same storage.
+    main.territory.enemy_claimed_cells.erase(storage.cell)
+    var reclaimed_region: Dictionary = main.territory.region_states[String(camp["region_id"])]
+    reclaimed_region["control"] = "player"
+    main.territory.region_states[String(camp["region_id"])] = reclaimed_region
+    main.territory._dirty = false
+
     var road_target: Dictionary = {}
     for _attempt in 12:
         road_target = manager._find_raid_target(camp)
