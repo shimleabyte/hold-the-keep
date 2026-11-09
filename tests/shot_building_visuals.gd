@@ -143,6 +143,8 @@ func _run() -> void:
         _fail("Player building renderer is unavailable")
         return
 
+    print("BUILDING_VISUAL_QA profile=", WorldConfig.profile_id, " zoom=", game.player.camera.zoom, " catalog=", DataDB.buildings.size())
+
     GameClock.set_process(false)
     game.player.camera.position_smoothing_enabled = false
     game.player.camera.zoom = Vector2.ONE
