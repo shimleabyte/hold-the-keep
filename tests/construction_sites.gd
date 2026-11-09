@@ -114,6 +114,7 @@ func _initialize() -> void:
     var house_cell := find_house_cell(main, keep.cell)
     assert(house_cell.x >= 0, "The test must find a valid house footprint inside player build range")
     var wood_before: int = inventory.get_amount("wood")
+    var nav_version_before_placement: int = main.nav.version
     assert(main.build.place("house", house_cell) == "", "A valid house order must be accepted")
     var site = main.world.occupied.get(house_cell)
     assert(site != null and site.is_in_group("construction_sites"),
@@ -126,6 +127,8 @@ func _initialize() -> void:
     main.flow.rebuild_pops_per_frame = main.flow.DEFAULT_REBUILD_POPS_PER_FRAME
     main.flow.rebuild_budget_usec = 1
     await ticks(2)
+    assert(main.nav.version == nav_version_before_placement + 1,
+        "Placing a blueprint on walkable terrain must invalidate routes because topology changed")
     assert(main.flow._build_active and main.flow.version == flow_version_before,
         "A tiny elapsed-time budget must keep the previous complete field published across frames")
     main.flow.rebuild_budget_usec = main.flow.DEFAULT_REBUILD_BUDGET_USEC
@@ -148,6 +151,7 @@ func _initialize() -> void:
     builder._find_work()
     assert(builder.target == site and builder.state == builder.State.TO_WORK,
         "Builder must discover and claim the nearest reachable construction site")
+    var nav_version_before_completion: int = main.nav.version
     site.work_required = 1.0
     site.queue_redraw()
     await ticks(180)
@@ -164,6 +168,8 @@ func _initialize() -> void:
             "Construction completion must eventually publish its refreshed enemy flow field")
     assert(not main.flow._dirty and not main.flow._build_active,
         "Construction completion must settle its refreshed enemy flow field without a blocking rebuild")
+    assert(main.nav.version == nav_version_before_completion,
+        "Replacing a solid construction site with a solid building must not invalidate every villager route")
     builder.set_physics_process(false)
     var second_cell := find_house_cell(main, keep.cell)
     assert(second_cell.x >= 0 and second_cell != house_cell,

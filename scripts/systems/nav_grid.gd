@@ -55,13 +55,17 @@ func _physics_process(_delta: float) -> void:
         _rebuild_dirty_cells()
 
 
-func _set_cell_solid(cell: Vector2i) -> void:
+func _set_cell_solid(cell: Vector2i) -> bool:
     if cell.x < 0 or cell.y < 0 or cell.x >= WorldConfig.map_size or cell.y >= WorldConfig.map_size:
-        return
+        return false
     var occupant = world.occupied.get(cell)
     var is_bridge: bool = occupant != null and is_instance_valid(occupant) and occupant.is_in_group("buildings") and String(occupant.id) == "bridge"
     var blocks_path: bool = occupant != null and not (is_instance_valid(occupant) and occupant.is_in_group("roads"))
-    astar.set_point_solid(cell, (not world.is_buildable(cell) and not is_bridge) or blocks_path)
+    var next_solid: bool = (not world.is_buildable(cell) and not is_bridge) or blocks_path
+    if astar.is_point_solid(cell) == next_solid:
+        return false
+    astar.set_point_solid(cell, next_solid)
+    return true
 
 
 func rebuild() -> void:
@@ -74,10 +78,14 @@ func rebuild() -> void:
 
 
 func _rebuild_dirty_cells() -> void:
+    var topology_changed := false
     for cell_value in _dirty_cells:
-        _set_cell_solid(cell_value)
+        topology_changed = _set_cell_solid(cell_value) or topology_changed
     _dirty_cells.clear()
-    version += 1
+    # Construction-site completion replaces one solid occupant with another.
+    # Do not invalidate every villager's route when walkability did not change.
+    if topology_changed:
+        version += 1
 
 
 func cell_of(pos: Vector2) -> Vector2i:

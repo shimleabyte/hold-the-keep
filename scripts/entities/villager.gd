@@ -1070,10 +1070,9 @@ func _find_work() -> void:
                         _set_work_status("NO_WORKPLACE", "Builder requires an available Keep or Outpost slot")
                         return
                 var radius := float(workplace.data.get("work_radius", DEFAULT_WORK_RADIUS)) * WorldConfig.tile_size
+                # The complete candidate list is sorted below, preserving queue_order.
+                # Sorting this intermediate list repeats the same work for every builder.
                 var construction_sites: Array = get_tree().get_nodes_in_group("construction_sites")
-                construction_sites.sort_custom(func(a, b) -> bool:
-                    return int(a.queue_order) < int(b.queue_order)
-                )
                 for site in construction_sites:
                     # A blueprint is a valid task wherever this Builder can route to it.
                     # The later bounded A* candidate pass rejects genuinely unreachable sites.
