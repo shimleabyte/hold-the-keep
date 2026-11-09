@@ -157,7 +157,9 @@ func _run() -> void:
     var siege = spawn_enemy(main, data_db, enemy_script, "enemy_siege_engine",
         keep.global_position + Vector2(-50, 5), "ashen_host")
     siege.siege_behavior.target = keep
-    siege.siege_behavior.cooldown = 0.0
+    # Delay only this fixture's first shot so the melee frame is captured
+    # before any structure impact. The engine then uses its normal attack cycle.
+    siege.siege_behavior.cooldown = 3.5
 
     if shield == null or siege == null:
         _fail("Combat fixture failed to create its defensive or siege specialist")
@@ -166,11 +168,11 @@ func _run() -> void:
     # Ensure all actors have entered the scene tree. Capture the first natural
     # shield brace as soon as the behavior enters it, before the crowded melee resolves.
     var shield_braced := false
-    for _frame in 300:
+    for _frame in 180:
         if not is_instance_valid(shield):
             _fail("Shieldbearer died before its defensive state could be inspected")
             return
-        if shield.shield_behavior.active_timer > 0.0 or shield.shield_behavior.windup_timer > 0.0:
+        if shield.shield_behavior.active_timer > 0.0:
             shield_braced = true
             break
         await physics_frame
