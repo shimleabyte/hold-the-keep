@@ -40,6 +40,13 @@ func begin_attack(target, direction: Vector2) -> void:
     else:
         enemy._pending_t = ATTACK_HIT_DELAY
     enemy.combat_feedback.begin_windup(_pending_melee_direction, enemy._pending_t, false)
+    # The sweep follows the existing attack clip; it is presentation-only and
+    # cannot advance, delay or alter the committed hit event.
+    enemy.combat_feedback.register_swing(
+        _pending_melee_direction,
+        0.28 if enemy.role != "pouncer" else 0.34,
+        1.0 if enemy.role != "pouncer" else 1.5
+    )
     Audio.play("charge" if enemy.role == "pouncer" else "windup", 1.0, -9.0)
 
 
@@ -73,6 +80,7 @@ func resolve_pending(delta: float) -> void:
     enemy.combat_feedback.end_windup()
     if not is_instance_valid(target):
         enemy._pending_is_projectile = false
+        enemy.combat_feedback.end_swing()
         return
     if enemy._pending_is_projectile:
         enemy._pending_is_projectile = false
@@ -119,6 +127,7 @@ func apply_stagger(duration: float) -> void:
     enemy._pending_is_projectile = false
     enemy._pending_t = 0.0
     enemy.combat_feedback.end_windup()
+    enemy.combat_feedback.end_swing()
     enemy._pounce_windup_t = 0.0
     enemy._pounce_t = 0.0
     if enemy.archetype == "shieldbearer":
