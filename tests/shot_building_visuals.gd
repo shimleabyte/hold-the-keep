@@ -85,10 +85,10 @@ func _add_rival_stronghold() -> Node:
     if script == null or not script.can_instantiate():
         _fail("EnemyKeep renderer did not compile")
         return null
-    var anchor := Vector2i(110, 89)
+    var anchor := Vector2i(107, 91)
     var found := false
-    for y in range(87, 93):
-        for x in range(108, 116):
+    for y in range(89, 95):
+        for x in range(105, 114):
             var candidate := Vector2i(x, y)
             var clear := true
             for row in 3:
@@ -145,6 +145,14 @@ func _run() -> void:
         _fail("Gameplay did not finish initializing")
         return
 
+    # Hide only transient in-game tutorial notices for the visual review image.
+    for child in game.get_children():
+        if child is CanvasLayer:
+            for property_name in ["_banner", "_msg_bubble"]:
+                var overlay: Variant = child.get(property_name)
+                if overlay is CanvasItem:
+                    overlay.hide()
+
     var enemy_renderer := load("res://scripts/entities/enemy_keep.gd") as GDScript
     var building_renderer := load("res://scripts/entities/building.gd") as GDScript
     if enemy_renderer == null or not enemy_renderer.can_instantiate():
@@ -159,7 +167,7 @@ func _run() -> void:
     game_clock.set_process(false)
     game.player.camera.position_smoothing_enabled = false
     game.player.camera.zoom = Vector2.ONE
-    game.player.global_position = Vector2(98 * world_config.tile_size, 99 * world_config.tile_size)
+    game.player.global_position = Vector2(100 * world_config.tile_size, 96 * world_config.tile_size)
     game.player.hide()
 
     # Ordinary settlement composition: housing, logistics, extraction, production,
@@ -169,8 +177,7 @@ func _run() -> void:
         ["lumber_camp", Vector2i(91, 91)],
         ["granary", Vector2i(99, 91)],
         ["storage", Vector2i(103, 91)],
-        ["outpost", Vector2i(107, 91)],
-        ["hunting_lodge", Vector2i(88, 96)],
+                ["hunting_lodge", Vector2i(88, 96)],
         ["quarry", Vector2i(92, 96)],
         ["forge", Vector2i(100, 96)],
         ["barracks", Vector2i(103, 96)],
@@ -193,23 +200,25 @@ func _run() -> void:
     var settlement_script := load("res://scripts/entities/enemy_settlement_structure.gd") as GDScript
     if settlement_script != null and settlement_script.can_instantiate():
         var rival_outpost = settlement_script.new()
-        rival_outpost.setup(game.world, rival, "outpost", Vector2i(110, 95))
+        rival_outpost.setup(game.world, rival, "outpost", Vector2i(109, 96))
         rival_outpost.set_process(false)
         game.world.entities.add_child(rival_outpost)
         rival_outpost.queue_redraw()
 
     for _frame in 3:
         await process_frame
-    await _capture("before-settlement")
+    await _capture("after-settlement")
 
     # Same placement and camera: four real construction sites at four work ratios.
-    _add_construction_site("house", Vector2i(109, 91), 0.08)
-    _add_construction_site("storage", Vector2i(112, 91), 0.34)
-    _add_construction_site("forge", Vector2i(109, 96), 0.63)
-    _add_construction_site("barracks", Vector2i(112, 96), 0.91)
-    for _frame in 2:
+    _add_construction_site("house", Vector2i(88, 104), 0.08)
+    _add_construction_site("storage", Vector2i(93, 104), 0.34)
+    _add_construction_site("forge", Vector2i(98, 104), 0.63)
+    _add_construction_site("barracks", Vector2i(103, 104), 0.91)
+    game.player.global_position = Vector2(97 * world_config.tile_size, 101 * world_config.tile_size)
+    game.player.camera.reset_smoothing()
+    for _frame in 4:
         await process_frame
-    await _capture("before-construction-progression")
+    await _capture("after-construction-progression")
 
     # Research the existing visual upgrade paths without advancing time or changing
     # costs, work rates, building completion, health calculations or save state.
@@ -236,7 +245,7 @@ func _run() -> void:
 
     for _frame in 2:
         await process_frame
-    await _capture("before-upgrades-and-damage")
+    await _capture("after-upgrades-and-damage")
 
     print("PASS: settlement, four construction ratios, five upgrade paths and seven damage ratios rendered in gameplay")
     quit(0)
