@@ -375,6 +375,9 @@ func _run() -> void:
     # regional stronghold; the squad must not continue attacking from a dead post.
     forward_outpost.call("take_damage", 99999)
     await ticks(1)
+    # Camp/origin validity is deliberately rechecked on the 400ms raid
+    # decision cadence, not redundantly on every physics tick.
+    restored_raider.faction_raid_strength_scan_timer = 0.0
     restored_raider._tick_faction_raid(0.1)
     for member in restored_group:
         require(bool(member.faction_raid_retreating),
