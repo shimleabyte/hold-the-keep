@@ -113,6 +113,9 @@ func _run() -> void:
     siege.siege_behavior.tick(siege.siege_behavior.windup_duration + 0.02)
     assert(wall.hp == wall_hp_before - 72,
         "Siege impact must apply the configured heavy structure damage")
+    assert(wall._combat_impact_remaining > 0.0
+        and wall._combat_impact_direction.dot((siege.global_position - wall.global_position).normalized()) > 0.99,
+        "Siege impact must leave a brief directional mark on the struck structure")
     assert(siege.siege_behavior.cooldown > 0.0,
         "Successful impact must enter a recovery cooldown")
     siege.siege_behavior.tick(0.016)
