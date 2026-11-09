@@ -241,6 +241,9 @@ func _run() -> void:
         defender.remove_from_group("defenders")
     for raider in raiders:
         raider.player = null
+        # This stress fixture drives raid AI manually below. Keep natural physics
+        # from advancing all four squads during the single awaited casualty frame.
+        raider.set_physics_process(false)
 
     for raider in raiders:
         require(is_instance_valid(raider) and raider.is_faction_raider and raider.is_garrison,
@@ -325,6 +328,7 @@ func _run() -> void:
             ])
         for survivor in surviving_squad:
             survivor.faction_raid_strength_scan_timer = 0.0
+            survivor.position = survivor.guard_origin + Vector2(80.0, 0.0)
             survivor._tick_faction_raid(0.1)
             require(bool(survivor.faction_raid_retreating),
                 "The loss of required siege support must order the remaining squad to withdraw together")
