@@ -91,3 +91,5 @@ Untuk status implementasi, keputusan arsitektur, roadmap dan inventaris branch/P
 ## Kredit
 
 Font HUD menggunakan **Silkscreen**. Lisensinya tersedia di `assets/fonts/OFL-Silkscreen.txt`.
+
+<!-- Temporary baseline marker for identical Frontier performance workload comparison; remove after measurement. -->
