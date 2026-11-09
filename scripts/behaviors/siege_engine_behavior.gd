@@ -311,7 +311,7 @@ func tick_faction_assault_target(target_node: Node2D, delta: float) -> void:
             actor.queue_redraw()
         return
 
-    var distance := actor.position.distance_to(target.position)
+    var distance: float = actor.position.distance_to(target.position)
     if distance <= maxf(24.0, actor._attack_reach() + 10.0):
         actor._moving = false
         if cooldown <= 0.0:
