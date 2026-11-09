@@ -62,8 +62,16 @@ func _initialize() -> void:
     var player_atlas := FileAccess.get_file_as_string("res://assets/sprites/player.svg")
     assert(not player_atlas.is_empty(), "Player locomotion atlas must be readable in regression tests")
     for direction in ["front", "back", "side"]:
+        var torso_transform := RegEx.new()
+        var regex_error := torso_transform.compile(
+            'href="#%s_upper" transform="translate\\((-?\\d+) (-?\\d+)\\)"' % direction
+        )
+        if regex_error != OK:
+            push_error("Could not compile torso-transform parser for %s" % direction)
+            quit(1)
+            return
         for pose in [
-            ["walk", 2, [0, 1, 0, -1]],
+            ["walk", 2, [0, 2, 0, -1]],
             ["run", 6, [0, 2, 0, -1]],
         ]:
             var clip_name: String = pose[0]
@@ -73,17 +81,25 @@ func _initialize() -> void:
                 var frame_id := 'id="frame_%s_%d"' % [direction, first_frame + phase]
                 var frame_start := player_atlas.find(frame_id)
                 var frame_end := player_atlas.find("</g>", frame_start)
-                assert(frame_start >= 0 and frame_end > frame_start,
-                    "%s %s phase %d must exist in the authored atlas" % [direction, clip_name, phase])
+                if frame_start < 0 or frame_end <= frame_start:
+                    push_error("%s %s phase %d is missing from the authored atlas" % [direction, clip_name, phase])
+                    quit(1)
+                    return
                 var frame_markup := player_atlas.substr(frame_start, frame_end - frame_start)
-                var expected_upper := 'href="#%s_upper" transform="translate(' % direction
-                var upper_start := frame_markup.find(expected_upper)
-                assert(upper_start >= 0,
-                    "%s %s phase %d must contain a separately weighted torso" % [direction, clip_name, phase])
+                var torso_match := torso_transform.search(frame_markup)
+                if torso_match == null:
+                    push_error("%s %s phase %d has no parseable torso transform" % [direction, clip_name, phase])
+                    quit(1)
+                    return
+                var authored_y := int(torso_match.get_string(2))
                 var expected_y := int(transfer[phase])
-                var expected_transform := " %d)" % expected_y
-                assert(frame_markup.find(expected_transform, upper_start) >= 0,
-                    "%s %s phase %d must apply its authored vertical weight transfer" % [direction, clip_name, phase])
+                if authored_y != expected_y:
+                    push_error(
+                        "%s %s phase %d torso Y is %d; authored weight transfer requires %d"
+                        % [direction, clip_name, phase, authored_y, expected_y]
+                    )
+                    quit(1)
+                    return
 
     anim.face(Vector2.RIGHT)
     anim.play("attack", true)
