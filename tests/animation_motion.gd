@@ -80,7 +80,7 @@ func _initialize() -> void:
                 assert(upper_start >= 0,
                     "%s %s phase %d must contain a separately weighted torso" % [direction, clip_name, phase])
                 var expected_y := int(transfer[phase])
-                var expected_transform := " %d)"/expected_y
+                var expected_transform := " %d)" % expected_y
                 assert(frame_markup.find(expected_transform, upper_start) >= 0,
                     "%s %s phase %d must apply its authored vertical weight transfer" % [direction, clip_name, phase])
 
