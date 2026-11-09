@@ -140,7 +140,7 @@ func _run() -> void:
     spawn_enemy(main, data_db, enemy_script, "bandit",
         main.player.global_position + Vector2(-49, -24), "iron_legion")
     var shield = spawn_enemy(main, data_db, enemy_script, "enemy_shieldbearer",
-        main.player.global_position + Vector2(-38, 22), "iron_legion")
+        main.player.global_position + Vector2(-75, -10), "iron_legion")
     spawn_enemy(main, data_db, enemy_script, "archer",
         main.player.global_position + Vector2(-124, -54), "fen_cult")
 
@@ -163,15 +163,10 @@ func _run() -> void:
         _fail("Combat fixture failed to create its defensive or siege specialist")
         return
 
-    # Ensure all actors have entered the scene tree and begun their real combat ticks.
-    await wait_seconds(2.2)
-    await capture(main, "battlefield-melee-contact.png",
-        "sustained soldier and raider melee with active attack and hit-reaction states")
-
-    # Wait for the shieldbearer's real defensive state. Do not force the pose;
-    # the live behavior must enter its own brace cycle against an incoming attacker.
+    # Ensure all actors have entered the scene tree. Capture the first natural
+    # shield brace as soon as the behavior enters it, before the crowded melee resolves.
     var shield_braced := false
-    for _frame in 600:
+    for _frame in 300:
         if not is_instance_valid(shield):
             _fail("Shieldbearer died before its defensive state could be inspected")
             return
@@ -183,9 +178,13 @@ func _run() -> void:
         _fail("Shieldbearer did not enter its natural brace state during the live encounter")
         return
     print("COMBAT_VISUAL_SHIELD_STATE windup=", shield.shield_behavior.windup_timer,
-        " active=", shield.shield_behavior.active_timer)
+        " active=", shield.shield_behavior.active_timer, " hp=", shield.hp)
     await capture(main, "battlefield-shield-and-projectiles.png",
         "shieldbearer captured during its natural defensive brace with live ranged fire")
+
+    await wait_seconds(2.2)
+    await capture(main, "battlefield-melee-contact.png",
+        "sustained soldier and raider melee with active attack and hit-reaction states")
 
     # Capture when the real siege transaction has damaged the Keep and its directional
     # impact mark is still active. This proves structure contact rather than proximity.
