@@ -51,6 +51,8 @@ var speed_scale := 1.0
 var work_style := "default"
 ## >= 0: frame ditentukan dari progres 0..1 (misalnya disinkronkan dengan timer kerja), tidak maju sendiri.
 var manual_progress := -1.0
+## True only while using the protagonist atlas; shared worker/enemy gait remains unchanged.
+var _uses_player_atlas := false
 
 var _t := 0.0
 var _motion_t := 0.0
@@ -80,6 +82,7 @@ func _init() -> void:
 
 
 func play(clip_name: String, restart := false, fps_override := 0.0) -> void:
+    _uses_player_atlas = false
     if clip_name == clip and not restart:
         return
     clip = clip_name
@@ -97,6 +100,7 @@ func play(clip_name: String, restart := false, fps_override := 0.0) -> void:
 
 ## Play the protagonist's own atlas clips without changing shared worker/enemy offsets.
 func play_player_clip(clip_name: String, restart := false, fps_override := 0.0) -> void:
+    _uses_player_atlas = true
     var definition: Dictionary = PLAYER_CLIPS.get(clip_name, {})
     if definition.is_empty():
         push_error("Unknown player animation clip: %s" % clip_name)
@@ -124,6 +128,7 @@ func play_timed_sequence(
     frame_times: PackedFloat32Array,
     duration: float
 ) -> void:
+    _uses_player_atlas = true
     if frames.is_empty() or frames.size() != frame_times.size() or duration <= 0.0:
         push_error("Invalid timed animation sequence: empty/mismatched frames or duration")
         return
@@ -259,12 +264,18 @@ func motion_offset() -> Vector2:
             # Napas halus satu piksel, dengan fase awal berbeda per unit.
             return Vector2(0, -roundf(sin(_motion_t * TAU * 0.7 + _motion_phase) * 0.55))
         "walk":
-            # The authored leg poses carry the gait; keep the pelvis planted.
-            return Vector2.ZERO
+            if _uses_player_atlas:
+                # The protagonist's authored leg poses carry the gait; keep its pelvis planted.
+                return Vector2.ZERO
+            var walk_lift := absf(sin(progress * TAU))
+            return Vector2(0, -roundf(walk_lift))
         "run":
-            # Restrained one-pixel lift keeps sprint energy without pogo-bouncing.
-            var run_lift := maxf(0.0, sin(progress * TAU))
-            return Vector2(0, -roundf(run_lift))
+            if _uses_player_atlas:
+                # Restrained one-pixel lift keeps sprint energy without pogo-bouncing.
+                var player_run_lift := maxf(0.0, sin(progress * TAU))
+                return Vector2(0, -roundf(player_run_lift))
+            var run_lift := absf(sin(progress * TAU))
+            return Vector2(0, -roundf(run_lift * 2.0))
         "work":
             return _work_motion_offset(progress, forward)
         "hurt":
