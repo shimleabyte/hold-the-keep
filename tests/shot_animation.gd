@@ -21,6 +21,18 @@ func advance_animation(seconds: float) -> void:
     await process_frame
 
 
+func capture_locomotion_cycle(clip_name: String, frame_count: int, fps: float, center: Vector2) -> void:
+    main_player.anim.play_player_clip(clip_name, true)
+    main_player.facing = Vector2.RIGHT
+    main_player.anim.face(Vector2.RIGHT)
+    main_player.velocity = Vector2.ZERO
+    main_player.set_physics_process(false)
+    for phase in frame_count:
+        await capture("Player · %s phase %d/%d" % [clip_name, phase + 1, frame_count], center)
+        await advance_animation(1.0 / fps)
+    main_player.set_physics_process(true)
+
+
 func clear_presentation_fx() -> void:
     # Playblast-only reset: clear draw-only combat arcs, not gameplay events.
     main_player._swing = 0.0
@@ -117,9 +129,11 @@ func _initialize() -> void:
     Input.action_press("move_right")
     await ticks(12)
     await capture("Player · walk right", center)
+    await capture_locomotion_cycle("walk", 4, 8.0, center)
     Input.action_press("sprint")
     await ticks(12)
     await capture("Player · run right", center)
+    await capture_locomotion_cycle("run", 4, 12.0, center)
     Input.action_release("move_right")
     Input.action_release("sprint")
     await ticks(4)
