@@ -223,13 +223,13 @@
  </g></g><g id="frame_front_0"><use href="#front_cape"/><use href="#front_legs_neutral"/><use href="#front_upper"/><use href="#front_sword_0"/></g>
 <g id="frame_front_1"><use href="#front_cape"/><use href="#front_legs_neutral"/><use href="#front_upper"/><use href="#front_sword_0"/><path d="M5 15h1v2H5Z" fill="#416b99"/></g>
 <g id="frame_front_2"><use href="#front_cape" transform="translate(-1 0)"/><use href="#front_locomotion_legs_walk_0"/><use href="#front_upper" transform="translate(0 0)"/><use href="#front_sword_0" transform="translate(0 0)"/></g>
-<g id="frame_front_3"><use href="#front_cape" transform="translate(-1 1)"/><use href="#front_locomotion_legs_walk_1"/><use href="#front_upper" transform="translate(1 0)"/><use href="#front_sword_0" transform="translate(1 0)"/></g>
+<g id="frame_front_3"><use href="#front_cape" transform="translate(-1 1)"/><use href="#front_locomotion_legs_walk_1"/><use href="#front_upper" transform="translate(1 1)"/><use href="#front_sword_0" transform="translate(1 1)"/></g>
 <g id="frame_front_4"><use href="#front_cape" transform="translate(1 1)"/><use href="#front_locomotion_legs_walk_2"/><use href="#front_upper" transform="translate(0 0)"/><use href="#front_sword_0" transform="translate(0 0)"/></g>
-<g id="frame_front_5"><use href="#front_cape" transform="translate(1 0)"/><use href="#front_locomotion_legs_walk_3"/><use href="#front_upper" transform="translate(-1 0)"/><use href="#front_sword_0" transform="translate(-1 0)"/></g>
+<g id="frame_front_5"><use href="#front_cape" transform="translate(1 0)"/><use href="#front_locomotion_legs_walk_3"/><use href="#front_upper" transform="translate(-1 -1)"/><use href="#front_sword_0" transform="translate(-1 -1)"/></g>
 <g id="frame_front_6"><use href="#front_cape" transform="translate(-2 1)"/><use href="#front_locomotion_legs_run_0"/><use href="#front_upper" transform="translate(1 0)"/><use href="#front_sword_0" transform="translate(1 0)"/></g>
-<g id="frame_front_7"><use href="#front_cape" transform="translate(-1 2)"/><use href="#front_locomotion_legs_run_1"/><use href="#front_upper" transform="translate(1 0)"/><use href="#front_sword_0" transform="translate(1 0)"/></g>
+<g id="frame_front_7"><use href="#front_cape" transform="translate(-1 2)"/><use href="#front_locomotion_legs_run_1"/><use href="#front_upper" transform="translate(1 2)"/><use href="#front_sword_0" transform="translate(1 2)"/></g>
 <g id="frame_front_8"><use href="#front_cape" transform="translate(2 1)"/><use href="#front_locomotion_legs_run_2"/><use href="#front_upper" transform="translate(-1 0)"/><use href="#front_sword_0" transform="translate(-1 0)"/></g>
-<g id="frame_front_9"><use href="#front_cape" transform="translate(1 0)"/><use href="#front_locomotion_legs_run_3"/><use href="#front_upper" transform="translate(-1 0)"/><use href="#front_sword_0" transform="translate(-1 0)"/></g>
+<g id="frame_front_9"><use href="#front_cape" transform="translate(1 0)"/><use href="#front_locomotion_legs_run_3"/><use href="#front_upper" transform="translate(-1 -1)"/><use href="#front_sword_0" transform="translate(-1 -1)"/></g>
 <g id="frame_front_10"><use href="#front_cape"/><use href="#front_legs_neutral"/><use href="#front_upper" transform="translate(-1 0)"/><use href="#front_sword_1"/></g>
 <g id="frame_front_11"><use href="#front_cape"/><use href="#front_legs_neutral"/><use href="#front_upper" transform="translate(1 0)"/><use href="#front_sword_2"/></g>
 <g id="frame_front_12"><use href="#front_cape"/><use href="#front_legs_neutral"/><use href="#front_upper" transform="translate(1 0)"/><use href="#front_sword_3"/></g>
@@ -247,13 +247,13 @@
 <g id="frame_back_0"><use href="#back_cape"/><use href="#back_legs_neutral"/><use href="#back_upper"/><use href="#back_sword_0"/></g>
 <g id="frame_back_1"><use href="#back_cape"/><use href="#back_legs_neutral"/><use href="#back_upper"/><use href="#back_sword_0"/><path d="M5 15h1v2H5Z" fill="#416b99"/></g>
 <g id="frame_back_2"><use href="#back_cape" transform="translate(-1 0)"/><use href="#back_locomotion_legs_walk_0"/><use href="#back_upper" transform="translate(0 0)"/><use href="#back_sword_0" transform="translate(0 0)"/></g>
-<g id="frame_back_3"><use href="#back_cape" transform="translate(-1 1)"/><use href="#back_locomotion_legs_walk_1"/><use href="#back_upper" transform="translate(1 0)"/><use href="#back_sword_0" transform="translate(1 0)"/></g>
+<g id="frame_back_3"><use href="#back_cape" transform="translate(-1 1)"/><use href="#back_locomotion_legs_walk_1"/><use href="#back_upper" transform="translate(1 1)"/><use href="#back_sword_0" transform="translate(1 1)"/></g>
 <g id="frame_back_4"><use href="#back_cape" transform="translate(1 1)"/><use href="#back_locomotion_legs_walk_2"/><use href="#back_upper" transform="translate(0 0)"/><use href="#back_sword_0" transform="translate(0 0)"/></g>
-<g id="frame_back_5"><use href="#back_cape" transform="translate(1 0)"/><use href="#back_locomotion_legs_walk_3"/><use href="#back_upper" transform="translate(-1 0)"/><use href="#back_sword_0" transform="translate(-1 0)"/></g>
+<g id="frame_back_5"><use href="#back_cape" transform="translate(1 0)"/><use href="#back_locomotion_legs_walk_3"/><use href="#back_upper" transform="translate(-1 -1)"/><use href="#back_sword_0" transform="translate(-1 -1)"/></g>
 <g id="frame_back_6"><use href="#back_cape" transform="translate(-2 1)"/><use href="#back_locomotion_legs_run_0"/><use href="#back_upper" transform="translate(1 0)"/><use href="#back_sword_0" transform="translate(1 0)"/></g>
-<g id="frame_back_7"><use href="#back_cape" transform="translate(-1 2)"/><use href="#back_locomotion_legs_run_1"/><use href="#back_upper" transform="translate(1 0)"/><use href="#back_sword_0" transform="translate(1 0)"/></g>
+<g id="frame_back_7"><use href="#back_cape" transform="translate(-1 2)"/><use href="#back_locomotion_legs_run_1"/><use href="#back_upper" transform="translate(1 2)"/><use href="#back_sword_0" transform="translate(1 2)"/></g>
 <g id="frame_back_8"><use href="#back_cape" transform="translate(2 1)"/><use href="#back_locomotion_legs_run_2"/><use href="#back_upper" transform="translate(-1 0)"/><use href="#back_sword_0" transform="translate(-1 0)"/></g>
-<g id="frame_back_9"><use href="#back_cape" transform="translate(1 0)"/><use href="#back_locomotion_legs_run_3"/><use href="#back_upper" transform="translate(-1 0)"/><use href="#back_sword_0" transform="translate(-1 0)"/></g>
+<g id="frame_back_9"><use href="#back_cape" transform="translate(1 0)"/><use href="#back_locomotion_legs_run_3"/><use href="#back_upper" transform="translate(-1 -1)"/><use href="#back_sword_0" transform="translate(-1 -1)"/></g>
 <g id="frame_back_10"><use href="#back_cape"/><use href="#back_legs_neutral"/><use href="#back_upper" transform="translate(-1 0)"/><use href="#back_sword_1"/></g>
 <g id="frame_back_11"><use href="#back_cape"/><use href="#back_legs_neutral"/><use href="#back_upper" transform="translate(1 0)"/><use href="#back_sword_2"/></g>
 <g id="frame_back_12"><use href="#back_cape"/><use href="#back_legs_neutral"/><use href="#back_upper" transform="translate(1 0)"/><use href="#back_sword_3"/></g>
@@ -271,13 +271,13 @@
 <g id="frame_side_0"><use href="#side_cape"/><use href="#side_legs_neutral"/><use href="#side_upper"/><use href="#side_sword_0"/></g>
 <g id="frame_side_1"><use href="#side_cape"/><use href="#side_legs_neutral"/><use href="#side_upper"/><use href="#side_sword_0"/><path d="M5 15h1v2H5Z" fill="#416b99"/></g>
 <g id="frame_side_2"><use href="#side_cape" transform="translate(-1 0)"/><use href="#side_locomotion_legs_walk_0"/><use href="#side_upper" transform="translate(0 0)"/><use href="#side_sword_0" transform="translate(0 0)"/></g>
-<g id="frame_side_3"><use href="#side_cape" transform="translate(-1 1)"/><use href="#side_locomotion_legs_walk_1"/><use href="#side_upper" transform="translate(1 0)"/><use href="#side_sword_0" transform="translate(1 0)"/></g>
+<g id="frame_side_3"><use href="#side_cape" transform="translate(-1 1)"/><use href="#side_locomotion_legs_walk_1"/><use href="#side_upper" transform="translate(1 1)"/><use href="#side_sword_0" transform="translate(1 1)"/></g>
 <g id="frame_side_4"><use href="#side_cape" transform="translate(1 1)"/><use href="#side_locomotion_legs_walk_2"/><use href="#side_upper" transform="translate(0 0)"/><use href="#side_sword_0" transform="translate(0 0)"/></g>
-<g id="frame_side_5"><use href="#side_cape" transform="translate(1 0)"/><use href="#side_locomotion_legs_walk_3"/><use href="#side_upper" transform="translate(-1 0)"/><use href="#side_sword_0" transform="translate(-1 0)"/></g>
+<g id="frame_side_5"><use href="#side_cape" transform="translate(1 0)"/><use href="#side_locomotion_legs_walk_3"/><use href="#side_upper" transform="translate(-1 -1)"/><use href="#side_sword_0" transform="translate(-1 -1)"/></g>
 <g id="frame_side_6"><use href="#side_cape" transform="translate(-2 1)"/><use href="#side_locomotion_legs_run_0"/><use href="#side_upper" transform="translate(1 0)"/><use href="#side_sword_0" transform="translate(1 0)"/></g>
-<g id="frame_side_7"><use href="#side_cape" transform="translate(-1 2)"/><use href="#side_locomotion_legs_run_1"/><use href="#side_upper" transform="translate(1 0)"/><use href="#side_sword_0" transform="translate(1 0)"/></g>
+<g id="frame_side_7"><use href="#side_cape" transform="translate(-1 2)"/><use href="#side_locomotion_legs_run_1"/><use href="#side_upper" transform="translate(1 2)"/><use href="#side_sword_0" transform="translate(1 2)"/></g>
 <g id="frame_side_8"><use href="#side_cape" transform="translate(2 1)"/><use href="#side_locomotion_legs_run_2"/><use href="#side_upper" transform="translate(-1 0)"/><use href="#side_sword_0" transform="translate(-1 0)"/></g>
-<g id="frame_side_9"><use href="#side_cape" transform="translate(1 0)"/><use href="#side_locomotion_legs_run_3"/><use href="#side_upper" transform="translate(-1 0)"/><use href="#side_sword_0" transform="translate(-1 0)"/></g>
+<g id="frame_side_9"><use href="#side_cape" transform="translate(1 0)"/><use href="#side_locomotion_legs_run_3"/><use href="#side_upper" transform="translate(-1 -1)"/><use href="#side_sword_0" transform="translate(-1 -1)"/></g>
 <g id="frame_side_10"><use href="#side_cape"/><use href="#side_legs_neutral"/><use href="#side_upper" transform="translate(-1 0)"/><use href="#side_sword_1"/></g>
 <g id="frame_side_11"><use href="#side_cape"/><use href="#side_legs_neutral"/><use href="#side_upper" transform="translate(1 0)"/><use href="#side_sword_2"/></g>
 <g id="frame_side_12"><use href="#side_cape"/><use href="#side_legs_neutral"/><use href="#side_upper" transform="translate(1 0)"/><use href="#side_sword_3"/></g>
