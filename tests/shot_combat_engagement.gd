@@ -71,7 +71,7 @@ func _run() -> void:
         _fail("Gameplay scene or Enemy script failed to load")
         return
 
-    var main := main_scene.instantiate()
+    var main = main_scene.instantiate()
     root.add_child(main)
     current_scene = main
     for _frame in 8:
@@ -81,7 +81,7 @@ func _run() -> void:
         _fail("Gameplay did not finish initializing")
         return
 
-    var data_db := root.get_node_or_null("DataDB")
+    var data_db = root.get_node_or_null("DataDB")
     var clock := root.get_node_or_null("GameClock")
     if data_db == null or clock == null:
         _fail("Combat capture requires DataDB and GameClock autoloads")
