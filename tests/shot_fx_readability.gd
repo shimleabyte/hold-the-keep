@@ -215,7 +215,7 @@ func _run() -> void:
     _player.set_physics_process(false)
     _player.global_position = keep.global_position + Vector2(132, 56)
     _player.velocity = Vector2.ZERO
-    _player.camera.offset = Vector2.ZERO
+    _player.camera.offset = Vector2(-132, -56)
     var siege = spawn_enemy("enemy_siege_engine", keep.global_position + Vector2(-18, 0), "ashen_host")
     if siege == null:
         return
@@ -226,6 +226,9 @@ func _run() -> void:
     if siege.siege_behavior.windup_timer <= 0.0:
         _fail("Siege Engine did not enter its structural strike wind-up")
         return
+    # Keep the committed attack valid, but move the large siege sprite away from
+    # the impact contact point so it cannot hide the debris in the visual review.
+    siege.global_position = keep.global_position + Vector2(-40, -24)
     siege.siege_behavior.tick(siege.siege_behavior.windup_duration + 0.02)
     if keep.hp >= keep_hp_before:
         _fail("Siege Engine did not damage the live Keep")
@@ -233,8 +236,9 @@ func _run() -> void:
     if _fx_layer.count() <= 0:
         _fail("Structural impact did not emit debris particles")
         return
+    var impact_direction := (siege.global_position - keep.global_position).normalized()
     print("FX_READABILITY_BUILDING keep_hp=", keep.hp, "/", keep.max_hp,
-        " impact_direction=", Vector2.LEFT, " particles=", _fx_layer.count())
+        " impact_direction=", impact_direction, " particles=", _fx_layer.count())
     await capture_sequence("building-debris", BUILDING_FRAME_COUNT)
 
     print("PASS: live melee impact, player dash trail and directional siege debris captured at gameplay scale")
