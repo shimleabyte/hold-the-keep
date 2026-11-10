@@ -17,12 +17,6 @@ on:
       - "tests/fx_layer.gd"
       - "tests/siege_engine_behavior.gd"
       - "tools/run_tests.sh"
-      - "scripts/entities/arrow.gd"
-      - "scripts/behaviors/enemies/enemy_combat_lifecycle.gd"
-      - "tests/combat_visual_feedback.gd"
-      - "tests/fx_layer.gd"
-      - "tests/siege_engine_behavior.gd"
-      - "tools/run_tests.sh"
   push:
     branches:
       - main
@@ -33,6 +27,12 @@ on:
       - "scripts/entities/building.gd"
       - "scripts/behaviors/siege_engine_behavior.gd"
       - "tests/shot_fx_readability.gd"
+      - "scripts/entities/arrow.gd"
+      - "scripts/behaviors/enemies/enemy_combat_lifecycle.gd"
+      - "tests/combat_visual_feedback.gd"
+      - "tests/fx_layer.gd"
+      - "tests/siege_engine_behavior.gd"
+      - "tools/run_tests.sh"
 
 permissions:
   contents: read
