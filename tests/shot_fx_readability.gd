@@ -32,7 +32,7 @@ func find_fx_layer(node: Node) -> Node2D:
     return null
 
 
-func find_building(building_id: String) -> Node2D:
+func find_building(building_id: String):
     for candidate in get_nodes_in_group("buildings"):
         if is_instance_valid(candidate) and String(candidate.get("id")) == building_id:
             return candidate as Node2D
@@ -152,7 +152,7 @@ func _run() -> void:
         _fail("Could not find the production FX renderer attached to the world")
         return
 
-    var keep := find_building("keep")
+    var keep = find_building("keep")
     if keep == null:
         _fail("Could not find the live Keep")
         return
