@@ -133,7 +133,11 @@ func _run() -> void:
 
     _player = _main.player
     _data_db = root.get_node_or_null("DataDB")
-    Events.fx_burst.connect(_on_fx_burst)
+    var fx_events = root.get_node_or_null("Events")
+    if fx_events == null:
+        _fail("FX readability capture requires the Events autoload")
+        return
+    fx_events.fx_burst.connect(_on_fx_burst)
     var clock := root.get_node_or_null("GameClock")
     if _data_db == null or clock == null:
         _fail("FX capture requires DataDB and GameClock autoloads")
