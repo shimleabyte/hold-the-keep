@@ -236,7 +236,7 @@ func _run() -> void:
     if _fx_layer.count() <= 0:
         _fail("Structural impact did not emit debris particles")
         return
-    var impact_direction := (siege.global_position - keep.global_position).normalized()
+    var impact_direction: Vector2 = (siege.global_position - keep.global_position).normalized()
     print("FX_READABILITY_BUILDING keep_hp=", keep.hp, "/", keep.max_hp,
         " impact_direction=", impact_direction, " particles=", _fx_layer.count())
     await capture_sequence("building-debris", BUILDING_FRAME_COUNT)
