@@ -120,15 +120,47 @@ func blocks_hit_from(source_position: Vector2) -> bool:
 func draw_telegraph(canvas: CanvasItem, frame_height: int) -> void:
     if windup_timer <= 0.0 and active_timer <= 0.0:
         return
-    var brace_center := Vector2(0, -frame_height * 0.55)
-    var brace_angle := brace_direction.angle()
-    if windup_timer > 0.0:
-        canvas.draw_arc(brace_center, 17.0, brace_angle - 0.82, brace_angle + 0.82,
-            12, Color("#d8bd87"), 1.5)
-        canvas.draw_line(brace_center, brace_center + brace_direction * 20.0,
-            Color("#f0d7a5"), 2.0)
-    else:
-        canvas.draw_arc(brace_center, 18.0, brace_angle - 0.92, brace_angle + 0.92,
-            12, Color("#d8bd87"), 2.0)
-        canvas.draw_arc(brace_center, 22.0, brace_angle - 0.72, brace_angle + 0.72,
-            12, Color("#8795a5"), 1.0)
+
+    var direction := brace_direction.normalized() if brace_direction.length_squared() > 0.001 else Vector2.DOWN
+    var side := direction.rotated(PI * 0.5)
+    var center := Vector2(0.0, -float(frame_height) * 0.55)
+    var progress := 1.0
+    var active := active_timer > 0.0
+    if not active:
+        progress = clampf(1.0 - windup_timer / maxf(0.001, windup_duration), 0.0, 1.0)
+
+    # Present the shield on the incoming side, rather than floating a ring over
+    # the unit. The same locked brace direction still controls the real block.
+    var reach := 7.0 + progress * 2.0
+    var shield_center := center + direction * reach
+    var upper := shield_center - direction * 4.0 - side * 6.0
+    var lower := shield_center + direction * 3.0 - side * 5.0
+    var lower_tip := shield_center + direction * 7.0
+    var lower_far := shield_center + direction * 3.0 + side * 5.0
+    var upper_far := shield_center - direction * 4.0 + side * 6.0
+    var silhouette := PackedVector2Array([upper, lower, lower_tip, lower_far, upper_far])
+    var fill := PackedVector2Array([
+        upper + direction * 1.5 + side * 1.0,
+        lower + direction * 1.0 + side * 0.8,
+        lower_tip - direction * 1.0,
+        lower_far + direction * 1.0 - side * 0.8,
+        upper_far + direction * 1.5 - side * 1.0
+    ])
+    var alpha := 0.78 if active else lerpf(0.48, 0.82, progress)
+    var rim := Color(0.13, 0.16, 0.17, alpha)
+    var metal := Color(0.55, 0.60, 0.59, alpha)
+    var edge := Color(0.82, 0.74, 0.56, alpha)
+    canvas.draw_colored_polygon(silhouette, rim)
+    canvas.draw_colored_polygon(fill, metal)
+    canvas.draw_line(upper + direction * 2.0, lower_tip - direction * 2.0, edge, 1.2)
+    canvas.draw_line(lower + side * 1.0, lower_far - side * 1.0, rim, 1.0)
+    var boss := shield_center + direction * 1.0
+    canvas.draw_circle(boss, 1.8, edge)
+    canvas.draw_line(boss - side * 2.0, boss + side * 2.0, rim, 1.0)
+
+    # A compressed footprint is visible only while the unit is committed to its brace.
+    var foot := Vector2(0.0, -1.5)
+    canvas.draw_line(foot - side * 4.0, foot + side * 4.0, Color(0.12, 0.14, 0.13, alpha * 0.75), 1.0)
+    if not active:
+        canvas.draw_line(center, center + direction * 17.0,
+            Color(0.82, 0.69, 0.46, 0.55 + progress * 0.25), 1.0)

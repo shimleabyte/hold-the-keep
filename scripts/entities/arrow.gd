@@ -33,4 +33,6 @@ func _physics_process(delta: float) -> void:
 
 
 func _draw() -> void:
+    # A restrained tail makes the arrow's actual travel direction easier to track.
+    draw_line(Vector2(-13, 1), Vector2(-4, 1), Color(0.58, 0.39, 0.25, 0.52), 1.0)
     draw_texture(SPRITE, Vector2(-8, -1))

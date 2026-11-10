@@ -56,6 +56,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _draw() -> void:
+    draw_line(Vector2(-9, 0), Vector2(-3, 0), Color(0.52, 0.25, 0.22, 0.52), 1.0)
     draw_line(Vector2(-4, 0), Vector2(4, 0), Color("#b86f55"), 2.0)
     draw_line(Vector2(2, -2), Vector2(4, 0), Color("#f1c7a3"), 1.0)
     draw_line(Vector2(2, 2), Vector2(4, 0), Color("#f1c7a3"), 1.0)

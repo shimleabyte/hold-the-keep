@@ -7,6 +7,7 @@ extends Node2D
 
 const SpriteAnim := preload("res://scripts/entities/sprite_anim.gd")
 const Corpse := preload("res://scripts/entities/corpse.gd")
+const CombatVisualFeedback := preload("res://scripts/entities/combat_visual_feedback.gd")
 const ArcherCombat := preload("res://scripts/entities/villager_archer_combat.gd")
 const ScoutBehavior := preload("res://scripts/entities/villager_scout_behavior.gd")
 const HealerBehavior := preload("res://scripts/entities/villager_healer_behavior.gd")
@@ -113,6 +114,7 @@ var _scan_t := 0.0
 var _repath_t := 0.0
 var _foe = null
 var anim := SpriteAnim.new()
+var combat_feedback := CombatVisualFeedback.new()
 var _archer_combat := ArcherCombat.new()
 var _scout_behavior = ScoutBehavior.new()
 var _healer_behavior = HealerBehavior.new()
@@ -237,6 +239,8 @@ func set_job(j: String, preferred_workplace = null) -> bool:
     release_outpost_guard()
     _release()
     _release_workplace()
+    combat_feedback.end_windup()
+    combat_feedback.end_swing()
     _expeditioning = false
     _expedition_target = null
     _manual_goal_cell = Vector2i(-1, -1)
@@ -417,6 +421,8 @@ func leave() -> void:
 func _physics_process(delta: float) -> void:
     _atk_cd = maxf(0.0, _atk_cd - delta)
     _hurt_t = maxf(0.0, _hurt_t - delta)
+    if combat_feedback.advance(delta):
+        queue_redraw()
     _rally_t = maxf(0.0, _rally_t - delta)
     if _rally_t <= 0.0:
         _rally_damage_mult = 1.0
@@ -567,8 +573,11 @@ func _resolve_pending(delta: float) -> void:
         return
     var f = _pending_foe
     _pending_foe = null
+    combat_feedback.end_windup()
     if is_instance_valid(f):
         f.take_damage(_soldier_damage())
+    else:
+        combat_feedback.end_swing()
 
 
 func _tick_idle(delta: float) -> void:
@@ -938,6 +947,8 @@ func _tick_expedition(delta: float) -> void:
 func _tick_fight(delta: float) -> void:
     if _manual_attack_target != null:
         if not is_instance_valid(_manual_attack_target) or not _manual_attack_target.visible:
+            combat_feedback.end_windup()
+            combat_feedback.end_swing()
             _manual_attack_target = null
             _foe = null
             state = State.IDLE
@@ -945,6 +956,8 @@ func _tick_fight(delta: float) -> void:
             return
         var manual_hp: Variant = _manual_attack_target.get("hp")
         if manual_hp != null and int(manual_hp) <= 0:
+            combat_feedback.end_windup()
+            combat_feedback.end_swing()
             _manual_attack_target = null
             _foe = null
             state = State.IDLE
@@ -957,6 +970,8 @@ func _tick_fight(delta: float) -> void:
             _scan_t = 0.3
             _foe = _nearest_enemy()
     if _foe == null or not is_instance_valid(_foe):
+        combat_feedback.end_windup()
+        combat_feedback.end_swing()
         _foe = null
         if is_outpost_guard():
             _path = PackedVector2Array()
@@ -979,6 +994,8 @@ func _tick_fight(delta: float) -> void:
             _atk_cd = _soldier_attack_interval()
             _pending_foe = _foe
             _pending_t = ATTACK_HIT_DELAY
+            combat_feedback.begin_windup(_foe.position - position, ATTACK_HIT_DELAY, false)
+            combat_feedback.register_swing(_foe.position - position, 0.28, 1.0)
             anim.play("attack", true)
         return
     _repath_t -= delta
@@ -1696,10 +1713,18 @@ func _job_color() -> Color:
 
 func _draw() -> void:
     anim.draw(self, TEXTURES.get(job, TEXTURES[""]), FW, FH)
+    combat_feedback.draw(self, FH)
     if is_archer():
         draw_arc(Vector2(7, -9), 7.0, -PI * 0.45, PI * 0.45, 12, Color("#a9824d"), 1.6)
         draw_line(Vector2(2, -14), Vector2(2, -4), Color("#d4bd8e"), 0.7)
-        draw_line(Vector2(2, -9), Vector2(10, -9), Color("#c7a36e"), 0.8)
+        var pull := 0.0
+        if anim.clip == "attack" and not anim.finished:
+            pull = 1.0 - smoothstep(0.0, 2.0, float(anim.frame_index() - 10))
+        var nock := Vector2(2.0 - pull * 2.5, -9.0)
+        draw_line(Vector2(2, -14), nock, Color("#ead8b6"), 0.8)
+        draw_line(nock, Vector2(2, -4), Color("#ead8b6"), 0.8)
+        if anim.clip == "attack" and not anim.finished:
+            draw_line(nock, nock + Vector2(8, 0), Color("#d8c8a4", 0.86), 1.0)
         draw_line(Vector2(-6, -14), Vector2(-4, -18), Color("#87603b"), 1.4)
     if job == "soldier" and armor_equipped:
         draw_rect(Rect2(-3, -13, 6, 5), Color("#64727b"))

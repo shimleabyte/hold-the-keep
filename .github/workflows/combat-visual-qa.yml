@@ -1,0 +1,94 @@
+name: Battlefield Combat Visual QA
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/combat-visual-qa.yml"
+      - "scripts/entities/combat_visual_feedback.gd"
+      - "scripts/entities/player.gd"
+      - "scripts/entities/enemy.gd"
+      - "scripts/entities/villager.gd"
+      - "scripts/entities/arrow.gd"
+      - "scripts/entities/enemy_bolt.gd"
+      - "scripts/entities/building.gd"
+      - "scripts/behaviors/enemies/enemy_combat_lifecycle.gd"
+      - "scripts/behaviors/shieldbearer_behavior.gd"
+      - "scripts/behaviors/siege_engine_behavior.gd"
+      - "tests/shot_combat_engagement.gd"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/combat-visual-qa.yml"
+      - "scripts/entities/combat_visual_feedback.gd"
+      - "scripts/entities/player.gd"
+      - "scripts/entities/enemy.gd"
+      - "scripts/entities/villager.gd"
+      - "scripts/entities/arrow.gd"
+      - "scripts/entities/enemy_bolt.gd"
+      - "scripts/entities/building.gd"
+      - "scripts/behaviors/enemies/enemy_combat_lifecycle.gd"
+      - "scripts/behaviors/shieldbearer_behavior.gd"
+      - "scripts/behaviors/siege_engine_behavior.gd"
+      - "tests/shot_combat_engagement.gd"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: combat-visual-qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  battlefield-combat-capture:
+    name: Live mixed-unit battlefield capture · Godot 4.7
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot 4.7
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Install Xvfb and Mesa
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Render sustained mixed-unit combat in gameplay
+        env:
+          HTK_AUTO_START_GAME: "1"
+          HTK_AUTO_RESOLVE_EVENTS: "1"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/hold-the-keep-combat-visual-qa
+          timeout --signal=TERM --kill-after=15s 240s \
+            xvfb-run -a -s "-screen 0 1600x900x24" \
+            godot --path . --rendering-driver opengl3 --fixed-fps 60 \
+            --script res://tests/shot_combat_engagement.gd \
+            2>&1 | tee /tmp/hold-the-keep-combat-visual-qa/render.log
+          test -s /tmp/hold-the-keep-combat-visual-qa/battlefield-melee-contact.png
+          test -s /tmp/hold-the-keep-combat-visual-qa/battlefield-shield-and-projectiles.png
+          test -s /tmp/hold-the-keep-combat-visual-qa/battlefield-siege-structure-impact.png
+          test -s /tmp/hold-the-keep-combat-visual-qa/battlefield-melee-contact-1280x720.png
+          test -s /tmp/hold-the-keep-combat-visual-qa/battlefield-shield-and-projectiles-1280x720.png
+          test -s /tmp/hold-the-keep-combat-visual-qa/battlefield-siege-structure-impact-1280x720.png
+
+      - name: Upload live combat evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: battlefield-combat-visual-qa-godot-4.7
+          path: /tmp/hold-the-keep-combat-visual-qa/
+          if-no-files-found: warn
+          retention-days: 14

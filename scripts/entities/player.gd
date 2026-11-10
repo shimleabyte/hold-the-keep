@@ -300,6 +300,8 @@ func _attack() -> void:
     anim.play_player_attack(hit_delay, swing_time)
     _pending_attack = hit_delay
     combat_feedback.begin_windup(_attack_direction, hit_delay, false)
+    var strike_weight := 1.5 if String(_attack_profile.get("visual", "quick")) in ["finisher", "riposte"] else 1.0
+    combat_feedback.register_swing(_attack_direction, swing_time, strike_weight)
     _swing = swing_time
     Events.player_attacked.emit()
     Events.fx_burst.emit("blade_trail", global_position + Vector2(0, -7), _attack_direction, 1.0)
@@ -424,6 +426,7 @@ func _use_dash() -> bool:
     _invuln = maxf(_invuln, DASH_DURATION + 0.12)
     _pending_attack = -1.0
     combat_feedback.end_windup()
+    combat_feedback.end_swing()
     _pending_harvest = null
     _harvest_anim_active = false
     facing = _dash_dir
