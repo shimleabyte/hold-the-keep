@@ -53,12 +53,23 @@ func capture(main: Node, file_name: String, note: String) -> void:
 
 
 func find_active_melee_swing():
+    var best_actor = null
+    var best_distance_squared := INF
+    var focus: Node2D = current_scene.player if current_scene != null else null
     for group_name in ["defenders", "enemies"]:
         for combatant in get_nodes_in_group(group_name):
             var feedback = combatant.get("combat_feedback")
-            if feedback != null and float(feedback.get("swing_remaining")) > 0.15:
-                return combatant
-    return null
+            if feedback == null or float(feedback.get("swing_remaining")) <= 0.15:
+                continue
+            var distance_squared := (
+                focus.global_position.distance_squared_to(combatant.global_position)
+                if is_instance_valid(focus)
+                else 0.0
+            )
+            if best_actor == null or distance_squared < best_distance_squared:
+                best_actor = combatant
+                best_distance_squared = distance_squared
+    return best_actor
 
 
 func spawn_enemy(main, data_db, enemy_script: Script, enemy_id: String,
@@ -126,7 +137,7 @@ func _run() -> void:
     var keep_center: Vector2 = main.world.keep_center_position()
     # Put the player on the actual frontline. A neutral camera keeps the Keep,
     # shieldbearer, infantry and incoming raiders visible in one gameplay-scale frame.
-    main.player.global_position = keep_center + Vector2(-95, 55)
+    main.player.global_position = keep_center + Vector2(-108, 18)
     main.player.velocity = Vector2.ZERO
     main.player.camera.position_smoothing_enabled = false
     main.player.camera.offset = Vector2.ZERO
@@ -134,7 +145,7 @@ func _run() -> void:
     main.player.camera.make_current()
 
     # Friendly infantry holds a visible line south-west of the Keep.
-    for offset in [Vector2(-42, 32), Vector2(-28, 54), Vector2(-10, 34)]:
+    for offset in [Vector2(-76, 48), Vector2(-58, 68), Vector2(-40, 48)]:
         var soldier = main.village.spawn_villager(keep_center + offset)
         if soldier == null or not soldier.set_job("soldier"):
             _fail("Could not create a working friendly soldier for the battle fixture")
