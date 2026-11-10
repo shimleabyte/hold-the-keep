@@ -216,7 +216,7 @@ func _run() -> void:
     _player.global_position = keep.global_position + Vector2(132, 56)
     _player.velocity = Vector2.ZERO
     _player.camera.offset = Vector2(-132, -56)
-    var siege = spawn_enemy("enemy_siege_engine", keep.global_position + Vector2(-18, 0), "ashen_host")
+    var siege = spawn_enemy("enemy_siege_engine", keep.global_position + Vector2(0, 18), "ashen_host")
     if siege == null:
         return
     siege.siege_behavior.target = keep
@@ -228,7 +228,7 @@ func _run() -> void:
         return
     # Keep the committed attack valid, but move the large siege sprite away from
     # the impact contact point so it cannot hide the debris in the visual review.
-    siege.global_position = keep.global_position + Vector2(-40, -24)
+    siege.global_position = keep.global_position + Vector2(0, 44)
     siege.siege_behavior.tick(siege.siege_behavior.windup_duration + 0.02)
     if keep.hp >= keep_hp_before:
         _fail("Siege Engine did not damage the live Keep")
