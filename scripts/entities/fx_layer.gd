@@ -22,7 +22,7 @@ const KINDS := {
         "colors": ["#d9d2c3", "#c4bba8", "#e8e2d0", "#b3ab9a"], "alpha": 0.8},
     "debris": {"n": 6, "speed": [20.0, 65.0], "up": [25.0, 70.0], "g": 280.0, "life": [0.4, 0.7], "size": [1, 2],
         "colors": ["#8b6b43", "#6b4a2b", "#8a8f98", "#6e737b", "#b08a5a"]},
-    "structure_debris": {"n": 8, "speed": [28.0, 82.0], "up": [24.0, 68.0], "g": 340.0, "life": [0.38, 0.64], "size": [1, 2],
+    "structure_debris": {"n": 8, "speed": [28.0, 82.0], "up": [24.0, 68.0], "g": 340.0, "life": [0.38, 0.64], "size": [2, 3],
         "colors": ["#a77a45", "#765333", "#aeb3b9", "#858b91", "#c28a52", "#d4c7aa"]},
     "blade_trail": {"n": 5, "speed": [28.0, 78.0], "up": [7.0, 24.0], "g": 190.0, "life": [0.10, 0.22], "size": [1, 2],
         "colors": ["#fff5dc", "#e9d4a6", "#d9e6d6"], "alpha": 0.9},
