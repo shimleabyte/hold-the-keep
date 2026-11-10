@@ -26,9 +26,18 @@ func _initialize() -> void:
         and first._life == second._life and first._col == second._col,
         "Equivalent burst inputs and sequence numbers must render deterministically")
 
-    for velocity in first._vel:
-        assert(velocity.normalized().dot(Vector2.LEFT) >= 0.90,
-            "Directed impact particles must stay inside the authored forward cone")
+    var test_directions := [
+        Vector2.RIGHT, Vector2.UP, Vector2.LEFT, Vector2.DOWN,
+        Vector2(1.0, -1.0).normalized(), Vector2(-1.0, 1.0).normalized()
+    ]
+    for direction in test_directions:
+        var directed := FXLayer.new()
+        directed.spawn("heavy_impact", Vector2.ZERO, direction, 1.0)
+        var minimum_dot := cos(float(FXLayer.DIRECTIONAL_SPREAD["heavy_impact"])) - 0.0001
+        for velocity in directed._vel:
+            assert(velocity.normalized().dot(direction) >= minimum_dot,
+                "Directional cones must preserve their exact axis, including diagonal and vertical directions")
+        directed.free()
 
     var capped := FXLayer.new()
     capped.spawn("impact", Vector2.ZERO, Vector2.ZERO, 100.0)
