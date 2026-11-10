@@ -67,10 +67,12 @@ jobs:
             2>&1 | tee build/diagnostics/fx-readability/render.log
           test -s build/diagnostics/fx-readability/melee-impact-1280x720.png
           test -s build/diagnostics/fx-readability/dash-trail-1280x720.png
+          test -s build/diagnostics/fx-readability/projectile-impact-1280x720.png
           test -s build/diagnostics/fx-readability/building-debris-1280x720.png
           for index in 00 01 02 03 04 05 06 07; do
             test -s "build/diagnostics/fx-readability/melee-impact-${index}.png"
             test -s "build/diagnostics/fx-readability/dash-trail-${index}.png"
+            test -s "build/diagnostics/fx-readability/projectile-impact-${index}.png"
           done
           for index in 00 01 02 03 04 05 06 07 08 09 10 11 12 13; do
             test -s "build/diagnostics/fx-readability/building-debris-${index}.png"
