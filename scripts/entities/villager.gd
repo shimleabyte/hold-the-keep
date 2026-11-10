@@ -533,7 +533,7 @@ func _update_anim(delta: float) -> void:
         anim.play("hurt")
     elif state == State.WORKING:
         anim.play("work")
-        if job in ["woodcutter", "miner", "builder", "blacksmith", "farmer"]:
+        if job in ["woodcutter", "miner", "builder", "blacksmith", "farmer", "hunter", "healer"]:
             anim.work_style = job
         if job == "farmer":
             anim.speed_scale = 1.0
@@ -546,6 +546,10 @@ func _update_anim(delta: float) -> void:
         elif job == "builder":
             anim.speed_scale = 1.0
             anim.manual_progress = fposmod(_work_t, BUILDER_REPAIR_INTERVAL) / BUILDER_REPAIR_INTERVAL
+        elif job == "healer":
+            # Treatment has its own cadence; let the pose cycle independently so
+            # visual treatment never advances or delays the healing transaction.
+            anim.speed_scale = 1.0
         else:
             anim.speed_scale = 1.0
             anim.manual_progress = fposmod(_work_t, _hit_interval()) / _hit_interval()
