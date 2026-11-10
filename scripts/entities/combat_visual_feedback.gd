@@ -36,8 +36,14 @@ func end_windup() -> void:
     windup_projectile = false
 
 
+func impact_particle_direction(source_position: Vector2, actor_position: Vector2) -> Vector2:
+    if source_position.length_squared() <= 0.001:
+        return Vector2.ZERO
+    return (source_position - actor_position).normalized()
+
+
 func register_hit(source_position: Vector2, actor_position: Vector2, strength: float = 1.0) -> void:
-    impact_direction = (source_position - actor_position).normalized() if source_position != Vector2.ZERO else Vector2.ZERO
+    impact_direction = impact_particle_direction(source_position, actor_position)
     impact_strength = clampf(strength, 0.5, 2.5)
     impact_remaining = HIT_DURATION
 
