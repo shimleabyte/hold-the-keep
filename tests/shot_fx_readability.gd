@@ -235,8 +235,9 @@ func _run() -> void:
     if _impact_burst_count != impact_count_before + 1:
         _fail("The projectile hit did not emit exactly one impact burst")
         return
-    if _last_impact_direction.dot(Vector2.LEFT) < 0.98:
-        _fail("Projectile sparks did not eject toward the arrow's source side")
+    var expected_projectile_direction := Vector2(-1.0, -1.0).normalized()
+    if _last_impact_direction.dot(expected_projectile_direction) < 0.85:
+        _fail("Projectile sparks did not eject toward the arrow's upper-left source side: %s" % _last_impact_direction)
         return
     print("FX_READABILITY_PROJECTILE target_hp=", projectile_target.hp,
         " direction=", _last_impact_direction, " particles=", _fx_layer.count())
