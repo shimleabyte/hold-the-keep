@@ -50,9 +50,6 @@ func capture(main: Node, file_name: String, note: String) -> void:
     print("COMBAT_VISUAL_ACTORS enemies=", get_nodes_in_group("enemies").size(),
         " defenders=", get_nodes_in_group("defenders").size(),
         " projectiles=", get_nodes_in_group("enemy_projectiles").size())
-    print("COMBAT_VISUAL_ACTORS enemies=", get_nodes_in_group("enemies").size(),
-        " defenders=", get_nodes_in_group("defenders").size(),
-        " projectiles=", get_nodes_in_group("enemy_projectiles").size())
 
 
 func find_active_melee_swing():
@@ -127,15 +124,18 @@ func _run() -> void:
                 message_bubble.hide()
 
     var keep_center: Vector2 = main.world.keep_center_position()
-    main.player.global_position = keep_center + Vector2(0, 38)
+    # Frame the Keep, the defensive line and the incoming formation together instead
+    # of centering on the player and compressing the entire engagement into one cluster.
+    main.player.global_position = keep_center + Vector2(10, 86)
     main.player.velocity = Vector2.ZERO
     main.player.camera.position_smoothing_enabled = false
-    main.player.camera.zoom = Vector2.ONE
+    main.player.camera.offset = Vector2(-90, -68)
+    main.player.camera.zoom = Vector2(1.25, 1.25)
     main.player.camera.make_current()
 
-    # Friendly infantry holds the front while an archer supports from behind.
-    for offset in [Vector2(-17, -3), Vector2(-17, 15), Vector2(4, 25)]:
-        var soldier = main.village.spawn_villager(main.player.global_position + offset)
+    # Friendly infantry holds a visible line south-west of the Keep.
+    for offset in [Vector2(-42, 32), Vector2(-28, 54), Vector2(-10, 34)]:
+        var soldier = main.village.spawn_villager(keep_center + offset)
         if soldier == null or not soldier.set_job("soldier"):
             _fail("Could not create a working friendly soldier for the battle fixture")
             return
@@ -143,15 +143,15 @@ func _run() -> void:
     # Live opposing melee, ranged, shield and siege actors. No actor is frozen or
     # manually advanced: the capture is a naturally ticking engagement.
     spawn_enemy(main, data_db, enemy_script, "bandit",
-        main.player.global_position + Vector2(-32, -2), "greenwood_raiders")
+        keep_center + Vector2(-146, -18), "greenwood_raiders")
     spawn_enemy(main, data_db, enemy_script, "bandit",
-        main.player.global_position + Vector2(-48, 19), "ashen_host")
+        keep_center + Vector2(-138, 34), "ashen_host")
     spawn_enemy(main, data_db, enemy_script, "bandit",
-        main.player.global_position + Vector2(-49, -24), "iron_legion")
+        keep_center + Vector2(-112, -62), "iron_legion")
     var shield = spawn_enemy(main, data_db, enemy_script, "enemy_shieldbearer",
-        main.player.global_position + Vector2(-75, -10), "iron_legion")
+        keep_center + Vector2(-82, 15), "iron_legion")
     spawn_enemy(main, data_db, enemy_script, "archer",
-        main.player.global_position + Vector2(-124, -54), "fen_cult")
+        keep_center + Vector2(-175, -55), "fen_cult")
 
     # Place the siege unit within its existing 52px impact range of the Keep.
     # Its target and all attack timing remain governed by SiegeEngineBehavior.

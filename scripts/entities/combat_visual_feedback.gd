@@ -117,21 +117,29 @@ func draw(canvas: CanvasItem, frame_height: int, faction_tint: Color = Color.WHI
     if swing_remaining > 0.0:
         var progress := 1.0 - swing_remaining / maxf(0.001, swing_total)
         var eased := smoothstep(0.0, 1.0, progress)
-        var contact_angle := swing_direction.angle() + lerpf(-0.76, 0.58, eased)
-        var arc_length := lerpf(0.3, 0.68, swing_weight / 1.8)
-        var radius := 12.0 + swing_weight * 2.0
-        var fade := 1.0 - smoothstep(0.76, 1.0, progress)
-        var slash := Color(0.93, 0.86, 0.68, fade * 0.88)
-        var edge := Color(0.98, 0.95, 0.84, fade)
-        canvas.draw_arc(center, radius, contact_angle - arc_length, contact_angle,
-            8, slash, 1.0 + swing_weight * 0.65)
+        var contact_angle := swing_direction.angle() + lerpf(-0.92, 0.82, eased)
+        var arc_length := lerpf(0.68, 1.05, swing_weight / 1.8)
+        var radius := 13.0 + swing_weight * 2.5
+        var fade := 1.0 - smoothstep(0.78, 1.0, progress)
+        var shadow := Color("#30251f", fade * 0.86)
+        var slash := Color("#e6d5ad", fade * 0.98)
+        var edge := Color("#fff3d1", fade)
+        var start_angle := contact_angle - arc_length
+        # A dark outer edge keeps the sweep legible over grass, armour and sprite silhouettes.
+        canvas.draw_arc(center, radius + 1.5, start_angle, contact_angle,
+            10, shadow, 3.0)
+        canvas.draw_arc(center, radius, start_angle + 0.04, contact_angle - 0.02,
+            10, slash, 1.8 + swing_weight * 0.35)
         var tip := center + Vector2.RIGHT.rotated(contact_angle) * (radius + 1.0)
-        var tail := center + Vector2.RIGHT.rotated(contact_angle - arc_length) * (radius - 1.0)
-        canvas.draw_line(tail, tip, edge, 1.0 + swing_weight * 0.45)
+        var tail := center + Vector2.RIGHT.rotated(start_angle) * (radius - 1.0)
+        canvas.draw_line(tail, tip, edge, 1.6 + swing_weight * 0.4)
         if swing_weight > 1.25:
-            var inner := center + Vector2.RIGHT.rotated(contact_angle - arc_length * 0.7) * (radius - 4.0)
-            var inner_tip := center + Vector2.RIGHT.rotated(contact_angle) * (radius - 3.0)
-            canvas.draw_line(inner, inner_tip, Color(1.0, 0.88, 0.66, fade * 0.72), 1.0)
+            var inner_start := contact_angle - arc_length * 0.78
+            canvas.draw_arc(center, radius - 3.5, inner_start, contact_angle - 0.12,
+                8, Color("#c58a4e", fade * 0.82), 1.25)
+            var inner := center + Vector2.RIGHT.rotated(inner_start) * (radius - 4.0)
+            var inner_tip := center + Vector2.RIGHT.rotated(contact_angle - 0.12) * (radius - 4.0)
+            canvas.draw_line(inner, inner_tip, Color("#fff0c5", fade * 0.9), 1.1)
 
     if impact_remaining > 0.0:
         var progress := 1.0 - impact_remaining / HIT_DURATION
