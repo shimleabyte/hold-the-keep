@@ -2,7 +2,6 @@ extends SceneTree
 ## Phase 08.6 regression: combat visual cues are deterministic, transient and behavior-neutral.
 
 const CombatVisualFeedback := preload("res://scripts/entities/combat_visual_feedback.gd")
-const EnemyCombatLifecycle := preload("res://scripts/behaviors/enemies/enemy_combat_lifecycle.gd")
 
 
 func _initialize() -> void:
@@ -23,13 +22,13 @@ func _initialize() -> void:
         "Ranged anticipation must expose the projectile cue")
     feedback.end_windup()
 
-    assert(EnemyCombatLifecycle.impact_particle_direction(
+    assert(feedback.impact_particle_direction(
             Vector2(-10.0, 0.0), Vector2.ZERO) == Vector2.LEFT,
         "Projectile impact particles must eject toward a source positioned to the left")
-    assert(EnemyCombatLifecycle.impact_particle_direction(
+    assert(feedback.impact_particle_direction(
             Vector2(0.0, -10.0), Vector2.ZERO) == Vector2.UP,
         "Projectile impact particles must preserve vertical source direction")
-    assert(EnemyCombatLifecycle.impact_particle_direction(
+    assert(feedback.impact_particle_direction(
             Vector2.ZERO, Vector2(12.0, 4.0)) == Vector2.ZERO,
         "Hits without a known source must retain radial particle behavior")
 
