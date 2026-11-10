@@ -31,13 +31,14 @@ func _initialize() -> void:
         Vector2(1.0, -1.0).normalized(), Vector2(-1.0, 1.0).normalized()
     ]
     for direction in test_directions:
-        var directed := FXLayer.new()
-        directed.spawn("heavy_impact", Vector2.ZERO, direction, 1.0)
-        var minimum_dot := cos(float(FXLayer.DIRECTIONAL_SPREAD["heavy_impact"])) - 0.0001
-        for velocity in directed._vel:
-            assert(velocity.normalized().dot(direction) >= minimum_dot,
-                "Directional cones must preserve their exact axis, including diagonal and vertical directions")
-        directed.free()
+        for effect_kind in ["heavy_impact", "structure_debris"]:
+            var directed := FXLayer.new()
+            directed.spawn(effect_kind, Vector2.ZERO, direction, 1.0)
+            var minimum_dot := cos(float(FXLayer.DIRECTIONAL_SPREAD[effect_kind])) - 0.0001
+            for velocity in directed._vel:
+                assert(velocity.normalized().dot(direction) >= minimum_dot,
+                    "Directional cones must preserve their exact axis for %s, including diagonal and vertical directions" % effect_kind)
+            directed.free()
 
     var capped := FXLayer.new()
     capped.spawn("impact", Vector2.ZERO, Vector2.ZERO, 100.0)
