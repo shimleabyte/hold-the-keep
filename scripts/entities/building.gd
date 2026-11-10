@@ -255,11 +255,12 @@ func take_damage(amount: int, impact_direction: Vector2 = Vector2.ZERO) -> void:
         direction.x * footprint_width * 0.30,
         -footprint_height * 0.72 + direction.y * footprint_height * 0.16
     )
+    var debris_amount := clampf(0.8 + float(amount) / 100.0, 0.8, 1.6)
     Events.fx_burst.emit(
-        "debris",
+        "structure_debris",
         global_position + contact_offset,
         direction,
-        0.5
+        debris_amount
     )
     if amount >= 12:
         Events.screen_shake.emit(1.2, 0.12)
