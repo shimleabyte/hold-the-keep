@@ -106,7 +106,6 @@ func spawn(kind: String, at: Vector2, dir := Vector2.ZERO, amount := 1.0) -> voi
     rng.seed = hash(seed_key)
 
     var directed := dir.length_squared() > 0.0001
-    var base_angle := dir.angle() if directed else 0.0
     var spread := float(DIRECTIONAL_SPREAD.get(kind, 1.0))
     for i in n:
         if _pos.size() >= MAX_PARTICLES:
@@ -118,7 +117,8 @@ func spawn(kind: String, at: Vector2, dir := Vector2.ZERO, amount := 1.0) -> voi
             var angle_offset := rng.randf_range(-spread, spread)
             travel_direction = axis * cos(angle_offset) + side * sin(angle_offset)
         else:
-            travel_direction = Vector2.RIGHT.rotated(rng.randf_range(0.0, TAU))
+            var angle := rng.randf_range(0.0, TAU)
+            travel_direction = Vector2(cos(angle), sin(angle) * 0.6).normalized()
         var speed := rng.randf_range(float(k["speed"][0]), float(k["speed"][1]))
         var velocity := travel_direction * speed
         var life := rng.randf_range(float(k["life"][0]), float(k["life"][1]))
