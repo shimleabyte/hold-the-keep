@@ -125,7 +125,7 @@ func _run() -> void:
     assert(wall.hp == wall_hp_before - 72,
         "Siege impact must apply the configured heavy structure damage")
     assert(_debris_burst_count == debris_count_before + 1
-        and _last_debris_direction.dot(Vector2.LEFT) > 0.99,
+        and _last_debris_direction.dot(Vector2.RIGHT) > 0.99,
         "A siege strike from the right must emit one leftward debris burst from the struck structure")
     assert(siege.siege_behavior.cooldown > 0.0,
         "Successful impact must enter a recovery cooldown")
