@@ -11,6 +11,14 @@ var _main
 var _player
 var _fx_layer
 var _data_db
+var _last_impact_direction := Vector2.ZERO
+var _impact_burst_count := 0
+
+
+func _on_fx_burst(kind: String, _at: Vector2, direction: Vector2, _amount: float) -> void:
+    if kind == "impact":
+        _last_impact_direction = direction
+        _impact_burst_count += 1
 
 
 func _fail(message: String) -> void:
@@ -125,6 +133,7 @@ func _run() -> void:
 
     _player = _main.player
     _data_db = root.get_node_or_null("DataDB")
+    Events.fx_burst.connect(_on_fx_burst)
     var clock := root.get_node_or_null("GameClock")
     if _data_db == null or clock == null:
         _fail("FX capture requires DataDB and GameClock autoloads")
@@ -193,6 +202,42 @@ func _run() -> void:
         " facing=", _player.facing, " particles=", _fx_layer.count())
     await capture_sequence("melee-impact", MELEE_DASH_FRAME_COUNT)
 
+    # Test an actual tower arrow. Arrow.take_damage_from forwards the arrow
+    # source position into the enemy lifecycle, which must eject sparks back
+    # toward the projectile's approach side.
+    await wait_physics_frames(30)
+    var projectile_target = spawn_enemy("bandit", _player.global_position + Vector2(38, 2))
+    if projectile_target == null:
+        return
+    var arrow_script := load("res://scripts/entities/arrow.gd") as GDScript
+    if arrow_script == null or not arrow_script.can_instantiate():
+        _fail("The production tower arrow script could not be loaded")
+        return
+    var arrow = arrow_script.new()
+    arrow.global_position = projectile_target.global_position + Vector2(-26, 0)
+    arrow.setup(projectile_target, 5)
+    _main.world.add_child(arrow)
+    var projectile_hp_before := int(projectile_target.hp)
+    var impact_count_before := _impact_burst_count
+    var projectile_hit := false
+    for _frame in 24:
+        if int(projectile_target.hp) < projectile_hp_before:
+            projectile_hit = true
+            break
+        await physics_frame
+    if not projectile_hit:
+        _fail("The live tower arrow did not resolve against its fixture target")
+        return
+    if _impact_burst_count != impact_count_before + 1:
+        _fail("The projectile hit did not emit exactly one impact burst")
+        return
+    if _last_impact_direction.dot(Vector2.LEFT) < 0.98:
+        _fail("Projectile sparks did not eject toward the arrow's source side")
+        return
+    print("FX_READABILITY_PROJECTILE target_hp=", projectile_target.hp,
+        " direction=", _last_impact_direction, " particles=", _fx_layer.count())
+    await capture_sequence("projectile-impact", MELEE_DASH_FRAME_COUNT)
+
     # Let short-lived hit and blade particles expire before testing the dash.
     await wait_physics_frames(30)
     _player._dash_cd = 0.0
@@ -241,5 +286,5 @@ func _run() -> void:
         " impact_direction=", impact_direction, " particles=", _fx_layer.count())
     await capture_sequence("building-debris", BUILDING_FRAME_COUNT)
 
-    print("PASS: live melee impact, player dash trail and directional siege debris captured at gameplay scale")
+    print("PASS: live melee impact, directional tower projectile sparks, player dash trail and structural siege debris captured at gameplay scale")
     quit(0)
