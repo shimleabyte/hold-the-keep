@@ -240,12 +240,27 @@ func _on_tech(_tech_id: String) -> void:
         Events.keep_hp_changed.emit(hp, max_hp)
 
 
-func take_damage(amount: int) -> void:
-    if hp <= 0:
+## impact_direction points from the structure toward the source-side of the strike.
+## A zero vector means the source direction is unknown and keeps a radial burst.
+func take_damage(amount: int, impact_direction: Vector2 = Vector2.ZERO) -> void:
+    if hp <= 0 or amount <= 0:
         return
     hp -= amount
     modulate = Color(1.6, 0.8, 0.8)
-    Events.fx_burst.emit("debris", global_position + Vector2(randf_range(-size.x * 6.0, size.x * 6.0), -randf_range(4.0, size.y * 12.0)), Vector2.ZERO, 0.5)
+
+    var direction := impact_direction.normalized() if impact_direction.length_squared() > 0.001 else Vector2.ZERO
+    var footprint_width := float(size.x * WorldConfig.tile_size)
+    var footprint_height := float(size.y * WorldConfig.tile_size)
+    var contact_offset := Vector2(
+        direction.x * footprint_width * 0.30,
+        -footprint_height * 0.72 + direction.y * footprint_height * 0.16
+    )
+    Events.fx_burst.emit(
+        "debris",
+        global_position + contact_offset,
+        direction,
+        0.5
+    )
     if amount >= 12:
         Events.screen_shake.emit(1.2, 0.12)
     create_tween().tween_property(self, "modulate", Color.WHITE, 0.15)
