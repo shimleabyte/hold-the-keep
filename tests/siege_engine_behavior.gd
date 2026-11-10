@@ -81,7 +81,8 @@ func _run() -> void:
     main.village.set_process(false)
 
     var data_db = root.get_node("DataDB")
-    Events.fx_burst.connect(_on_fx_burst)
+    var events = root.get_node("Events")
+    events.fx_burst.connect(_on_fx_burst)
     main.player.global_position = Vector2(820, 820)
 
     # High-value defensive structures outrank a nearby Keep and production sites.
