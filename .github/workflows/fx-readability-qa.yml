@@ -1,0 +1,86 @@
+name: Pixel FX Readability QA
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/fx-readability-qa.yml"
+      - "scripts/entities/fx_layer.gd"
+      - "scripts/entities/player.gd"
+      - "scripts/entities/building.gd"
+      - "scripts/behaviors/siege_engine_behavior.gd"
+      - "tests/shot_fx_readability.gd"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/fx-readability-qa.yml"
+      - "scripts/entities/fx_layer.gd"
+      - "scripts/entities/player.gd"
+      - "scripts/entities/building.gd"
+      - "scripts/behaviors/siege_engine_behavior.gd"
+      - "tests/shot_fx_readability.gd"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fx-readability-qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fx-readability:
+    name: Live FX readability capture · Godot 4.7
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot 4.7
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Install Xvfb, Mesa and FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0 ffmpeg
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Capture live gameplay FX at native zoom
+        env:
+          HTK_AUTO_START_GAME: "1"
+          HTK_AUTO_RESOLVE_EVENTS: "1"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          set -o pipefail
+          mkdir -p build/diagnostics/fx-readability
+          timeout --signal=TERM --kill-after=15s 240s \
+            xvfb-run -a -s "-screen 0 1600x900x24" \
+            godot --path . --rendering-driver opengl3 --fixed-fps 60 \
+            --script res://tests/shot_fx_readability.gd \
+            2>&1 | tee build/diagnostics/fx-readability/render.log
+          test -s build/diagnostics/fx-readability/melee-impact-1280x720.png
+          test -s build/diagnostics/fx-readability/dash-trail-1280x720.png
+          test -s build/diagnostics/fx-readability/building-debris-1280x720.png
+          for effect in melee-impact dash-trail building-debris; do
+            ffmpeg -y -framerate 10 -start_number 0 \
+              -i "build/diagnostics/fx-readability/${effect}-%02d.png" \
+              -vf "fps=10,split[s0][s1];[s0]palettegen=max_colors=96[p];[s1][p]paletteuse=dither=none" \
+              "build/diagnostics/fx-readability/${effect}.gif"
+            test -s "build/diagnostics/fx-readability/${effect}.gif"
+          done
+
+      - name: Upload gameplay-scale FX evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-fx-readability-godot-4.7
+          path: build/diagnostics/fx-readability/
+          if-no-files-found: warn
+          retention-days: 14
