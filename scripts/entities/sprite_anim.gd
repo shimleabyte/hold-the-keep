@@ -236,14 +236,17 @@ func update(delta: float) -> bool:
 
 
 func frame_index() -> int:
+    # Most work roles provide progress from their real work transaction. The healer
+    # owns an independent visual cycle, but still uses its authored phase thresholds.
+    if clip == "work" and (manual_progress >= 0.0 or work_style == "healer"):
+        var thresholds: Array = WORK_FRAME_THRESHOLDS.get(work_style, WORK_FRAME_THRESHOLDS["default"])
+        var raw_progress := manual_progress if manual_progress >= 0.0 else _clip_progress()
+        var progress := clampf(raw_progress, 0.0, 0.9999)
+        for i in thresholds.size():
+            if progress < float(thresholds[i]):
+                return _start + mini(i, _n - 1)
+        return _start + _n - 1
     if manual_progress >= 0.0:
-        if clip == "work":
-            var thresholds: Array = WORK_FRAME_THRESHOLDS.get(work_style, WORK_FRAME_THRESHOLDS["default"])
-            var progress := clampf(manual_progress, 0.0, 0.9999)
-            for i in thresholds.size():
-                if progress < float(thresholds[i]):
-                    return _start + mini(i, _n - 1)
-            return _start + _n - 1
         return _start + int(clampf(manual_progress, 0.0, 0.9999) * _n)
 
     if not _timed_frames.is_empty():

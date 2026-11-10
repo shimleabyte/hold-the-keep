@@ -265,6 +265,21 @@ func _initialize() -> void:
         anim.manual_progress = 0.50
         assert(anim.frame_index() == 16,
             "%s contact must use the baked work impact frame" % style)
+
+    anim.work_style = "hunter"
+    anim.manual_progress = 0.29
+    assert(anim.frame_index() == 14, "Hunter must hold its own wind-up threshold")
+    anim.manual_progress = 0.31
+    assert(anim.frame_index() == 15, "Hunter must enter the authored pull/contact approach")
+
+    # Healer work is intentionally not tied to the 3.2-second heal transaction.
+    # Its autonomous visual cycle must nevertheless respect its authored thresholds.
+    anim.play("work", true)
+    anim.work_style = "healer"
+    anim.manual_progress = -1.0
+    anim.update(0.12)
+    assert(anim.frame_index() == 15,
+        "Healer's autonomous work animation must use its custom phase threshold")
     anim.manual_progress = -1.0
 
     var builder = VillagerScript.new()
