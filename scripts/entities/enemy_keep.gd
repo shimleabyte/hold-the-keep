@@ -3,6 +3,7 @@ extends Node2D
 ## Enemy stronghold and its persistent defensive garrison.
 
 const ENEMY_SCRIPT: Script = preload("res://scripts/entities/enemy.gd")
+const BuildingVisual := preload("res://scripts/entities/building_visual_identity.gd")
 const SPRITE: Texture2D = preload("res://assets/sprites/enemy_keep.svg")
 const FACTION_SPRITES: Dictionary = {
     "greenwood_raiders": preload("res://assets/sprites/enemy_keep_greenwood.svg"),
@@ -285,6 +286,18 @@ func take_damage(amount: int) -> void:
 func _draw() -> void:
     var sprite: Texture2D = FACTION_SPRITES.get(faction_id, SPRITE) as Texture2D
     draw_texture(sprite, Vector2(-sprite.get_width() / 2.0, -sprite.get_height()))
+    var damage_visual := {
+        "primary": "#777e79",
+        "accent": "#c6b68d",
+        "shadow": "#292d2d"
+    }
+    BuildingVisual.draw_damage(
+        self,
+        "keep",
+        damage_visual,
+        Vector2(sprite.get_width(), sprite.get_height()),
+        float(hp) / float(maxi(1, max_hp))
+    )
     var width: float = 46.0
     var y: float = -float(sprite.get_height()) - 6.0
     draw_rect(Rect2(-width / 2.0, y, width, 4), Color(0.04, 0.03, 0.03, 0.9))

@@ -1,6 +1,7 @@
 extends Node2D
 ## A funded blueprint that becomes a normal Building only after Builder labor completes.
 const BuildingScript := preload("res://scripts/entities/building.gd")
+const BuildingVisual := preload("res://scripts/entities/building_visual_identity.gd")
 const MAX_BUILDERS := 2
 const EXTRA_BUILDER_EFFICIENCY := 0.65
 var build_system
@@ -136,19 +137,31 @@ func _finish() -> void:
         build_system.complete_site(self)
 
 func _draw() -> void:
-    var footprint := Vector2(size) * WorldConfig.tile_size
+    var footprint := Vector2(size) * float(WorldConfig.tile_size)
     var rect := Rect2(Vector2(-footprint.x / 2.0, -footprint.y), footprint)
     var texture_height := footprint.y
+    var texture: Texture2D
+    var texture_size := footprint
     if BuildingScript.TEXTURES.has(id):
-        var texture: Texture2D = BuildingScript.TEXTURES[id]
+        texture = BuildingScript.TEXTURES[id]
         texture_height = float(texture.get_height())
-        draw_texture(texture, Vector2(-float(texture.get_width()) / 2.0, -texture_height),
-            Color(0.72, 0.86, 0.79, 0.42))
-    draw_rect(rect, Color(0.24, 0.34, 0.31, 0.16))
+        texture_size = Vector2(texture.get_width(), texture.get_height())
+    var visual_profile: Variant = data.get("visual", {})
+    if visual_profile is Dictionary:
+        BuildingVisual.draw_construction(
+            self,
+            id,
+            visual_profile,
+            footprint,
+            texture_size,
+            texture,
+            progress_ratio()
+        )
+    else:
+        # Unknown legacy definitions retain a simple prepared footprint.
+        draw_rect(rect, Color(0.24, 0.34, 0.31, 0.18))
+    draw_rect(rect, Color(0.24, 0.34, 0.31, 0.10))
     draw_rect(rect, Color("#d4c18a", 0.92), false, 1.0)
-    draw_line(rect.position, rect.end, Color("#d4c18a", 0.55), 1.0)
-    draw_line(Vector2(rect.position.x, rect.end.y), Vector2(rect.end.x, rect.position.y),
-        Color("#d4c18a", 0.55), 1.0)
     var bar_width := maxf(28.0, footprint.x)
     var bar_y := -texture_height - 8.0
     draw_rect(Rect2(Vector2(-bar_width / 2.0, bar_y), Vector2(bar_width, 3.0)),

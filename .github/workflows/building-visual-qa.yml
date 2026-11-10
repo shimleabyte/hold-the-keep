@@ -1,0 +1,92 @@
+name: Building Visual QA
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/building-visual-qa.yml"
+      - "assets/sprites/**"
+      - "data/buildings.json"
+      - "data/techs.json"
+      - "scripts/autoload/tech.gd"
+      - "scripts/entities/building.gd"
+      - "scripts/entities/building_visual_identity.gd"
+      - "scripts/entities/construction_site.gd"
+      - "scripts/entities/enemy_keep.gd"
+      - "scripts/entities/enemy_settlement_structure.gd"
+      - "tests/building_visual_identity.gd"
+      - "tests/building_visual_progression.gd"
+      - "tests/shot_building_visuals.gd"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/building-visual-qa.yml"
+      - "assets/sprites/**"
+      - "data/buildings.json"
+      - "data/techs.json"
+      - "scripts/autoload/tech.gd"
+      - "scripts/entities/building.gd"
+      - "scripts/entities/building_visual_identity.gd"
+      - "scripts/entities/construction_site.gd"
+      - "scripts/entities/enemy_keep.gd"
+      - "scripts/entities/enemy_settlement_structure.gd"
+      - "tests/building_visual_identity.gd"
+      - "tests/building_visual_progression.gd"
+      - "tests/shot_building_visuals.gd"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: building-visual-qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  building-gameplay-capture:
+    name: Settlement architecture at gameplay zoom · Godot 4.7
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Godot 4.7
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: "4.7.0"
+          use-dotnet: false
+
+      - name: Install Xvfb and Mesa
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Capture settlement and structure states in gameplay
+        env:
+          HTK_AUTO_START_GAME: "1"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/hold-the-keep-building-visual-qa
+          timeout --signal=TERM --kill-after=15s 180s \
+            xvfb-run -a -s "-screen 0 1600x900x24" \
+            godot --path . --rendering-driver opengl3 --fixed-fps 30 \
+            --script res://tests/shot_building_visuals.gd \
+            2>&1 | tee /tmp/hold-the-keep-building-visual-qa/render.log
+
+      - name: Upload rendered gameplay evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: building-visual-gameplay-godot-4.7
+          path: |
+            /tmp/hold-the-keep-building-visual-qa/*.png
+            /tmp/hold-the-keep-building-visual-qa/render.log
+          if-no-files-found: warn
+          retention-days: 14
