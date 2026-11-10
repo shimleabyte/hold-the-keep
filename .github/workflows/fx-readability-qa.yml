@@ -44,10 +44,10 @@ jobs:
           version: "4.7.0"
           use-dotnet: false
 
-      - name: Install Xvfb, Mesa and FFmpeg
+      - name: Install Xvfb and Mesa
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0 ffmpeg
+          sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
 
       - name: Import project
         run: godot --headless --path . --import
@@ -68,12 +68,12 @@ jobs:
           test -s build/diagnostics/fx-readability/melee-impact-1280x720.png
           test -s build/diagnostics/fx-readability/dash-trail-1280x720.png
           test -s build/diagnostics/fx-readability/building-debris-1280x720.png
-          for effect in melee-impact dash-trail building-debris; do
-            ffmpeg -y -framerate 10 -start_number 0 \
-              -i "build/diagnostics/fx-readability/${effect}-%02d.png" \
-              -vf "fps=10,split[s0][s1];[s0]palettegen=max_colors=96[p];[s1][p]paletteuse=dither=none" \
-              "build/diagnostics/fx-readability/${effect}.gif"
-            test -s "build/diagnostics/fx-readability/${effect}.gif"
+          for index in 00 01 02 03 04 05 06 07; do
+            test -s "build/diagnostics/fx-readability/melee-impact-${index}.png"
+            test -s "build/diagnostics/fx-readability/dash-trail-${index}.png"
+          done
+          for index in 00 01 02 03 04 05 06 07 08 09 10 11 12 13; do
+            test -s "build/diagnostics/fx-readability/building-debris-${index}.png"
           done
 
       - name: Upload gameplay-scale FX evidence
