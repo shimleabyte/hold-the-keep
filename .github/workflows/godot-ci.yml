@@ -139,6 +139,7 @@ jobs:
           - faction_visual_identity
           - role_sprite_identity
           - building_visual_identity
+          - building_visual_progression
           - combat_visual_feedback
           - audio_identity
           - frontier_campaign
