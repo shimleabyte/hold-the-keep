@@ -251,9 +251,12 @@ func take_damage(amount: int, impact_direction: Vector2 = Vector2.ZERO) -> void:
     var direction := impact_direction.normalized() if impact_direction.length_squared() > 0.001 else Vector2.ZERO
     var footprint_width := float(size.x * WorldConfig.tile_size)
     var footprint_height := float(size.y * WorldConfig.tile_size)
+    # Building origin is its bottom-center anchor. Map the impulse to the
+    # matching footprint edge so debris starts at the struck face, not inside
+    # the building's central silhouette.
     var contact_offset := Vector2(
-        direction.x * footprint_width * 0.30,
-        -footprint_height * 0.72 + direction.y * footprint_height * 0.16
+        direction.x * footprint_width * 0.46,
+        -footprint_height * 0.5 + direction.y * footprint_height * 0.46
     )
     var debris_amount := clampf(0.8 + float(amount) / 100.0, 0.8, 1.6)
     Events.fx_burst.emit(
