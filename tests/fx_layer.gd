@@ -40,6 +40,15 @@ func _initialize() -> void:
                     "Directional cones must preserve their exact axis for %s, including diagonal and vertical directions" % effect_kind)
             directed.free()
 
+    var rubble := FXLayer.new()
+    rubble.spawn("structure_debris", Vector2.ZERO, Vector2.DOWN, 1.5)
+    assert(rubble.count() == 12,
+        "A heavy structural hit should eject a bounded cluster of 12 visible debris pieces")
+    for particle_size in rubble._size:
+        assert(particle_size >= 2.0 and particle_size <= 3.0,
+            "Structure debris must read as material fragments rather than one-pixel sparks")
+    rubble.free()
+
     var capped := FXLayer.new()
     capped.spawn("impact", Vector2.ZERO, Vector2.ZERO, 100.0)
     assert(capped.count() == 500,
