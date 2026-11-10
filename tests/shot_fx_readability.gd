@@ -3,7 +3,9 @@ extends SceneTree
 
 const OUTPUT_DIR := "res://build/diagnostics/fx-readability"
 const CAPTURE_SIZE := Vector2i(640, 360)
-const FRAME_COUNT := 5
+const MELEE_DASH_FRAME_COUNT := 8
+const BUILDING_FRAME_COUNT := 14
+const FRAME_STEP_PHYSICS_TICKS := 3
 
 var _main
 var _player
@@ -74,10 +76,10 @@ func capture_frame(prefix: String, frame_index: int) -> void:
         " particles=", _fx_layer.count(), " path=", frame_path)
 
 
-func capture_sequence(prefix: String) -> void:
-    for index in FRAME_COUNT:
+func capture_sequence(prefix: String, frame_count: int) -> void:
+    for index in frame_count:
         await capture_frame(prefix, index)
-        await physics_frame
+        await wait_physics_frames(FRAME_STEP_PHYSICS_TICKS)
 
 
 func spawn_enemy(enemy_id: String, position: Vector2, faction_id: String = "greenwood_raiders"):
@@ -189,7 +191,7 @@ func _run() -> void:
         return
     print("FX_READABILITY_MELEE target_hp=", melee_target.hp,
         " facing=", _player.facing, " particles=", _fx_layer.count())
-    await capture_sequence("melee-impact")
+    await capture_sequence("melee-impact", MELEE_DASH_FRAME_COUNT)
 
     # Let short-lived hit and blade particles expire before testing the dash.
     await wait_physics_frames(30)
@@ -205,7 +207,7 @@ func _run() -> void:
         return
     print("FX_READABILITY_DASH direction=", _player._dash_dir,
         " remaining=", _player._dash_t, " particles=", _fx_layer.count() - dash_particles_before)
-    await capture_sequence("dash-trail")
+    await capture_sequence("dash-trail", MELEE_DASH_FRAME_COUNT)
 
     # 3. A real Siege Engine strike calls Building.take_damage with its source-side
     # direction. This checks the complete source -> building -> FX renderer path.
@@ -233,7 +235,7 @@ func _run() -> void:
         return
     print("FX_READABILITY_BUILDING keep_hp=", keep.hp, "/", keep.max_hp,
         " impact_direction=", Vector2.LEFT, " particles=", _fx_layer.count())
-    await capture_sequence("building-debris")
+    await capture_sequence("building-debris", BUILDING_FRAME_COUNT)
 
     print("PASS: live melee impact, player dash trail and directional siege debris captured at gameplay scale")
     quit(0)
