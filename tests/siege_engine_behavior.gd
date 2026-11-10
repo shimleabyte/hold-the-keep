@@ -6,7 +6,7 @@ var _debris_burst_count := 0
 
 
 func _on_fx_burst(kind: String, _at: Vector2, direction: Vector2, _amount: float) -> void:
-    if kind == "debris":
+    if kind == "structure_debris":
         _last_debris_direction = direction
         _debris_burst_count += 1
 
