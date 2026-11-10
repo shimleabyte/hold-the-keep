@@ -156,7 +156,7 @@ func _run() -> void:
     if keep == null:
         _fail("Could not find the live Keep")
         return
-    var keep_center := _main.world.keep_center_position()
+    var keep_center: Vector2 = _main.world.keep_center_position()
 
     _player.global_position = keep_center + Vector2(-104, 28)
     _player.velocity = Vector2.ZERO
