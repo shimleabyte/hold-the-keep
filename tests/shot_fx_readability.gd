@@ -5,9 +5,9 @@ const OUTPUT_DIR := "res://build/diagnostics/fx-readability"
 const CAPTURE_SIZE := Vector2i(640, 360)
 const FRAME_COUNT := 5
 
-var _main: Node
-var _player: Node2D
-var _fx_layer: Node2D
+var _main
+var _player
+var _fx_layer
 var _data_db
 
 
@@ -71,7 +71,7 @@ func capture_frame(prefix: String, frame_index: int) -> void:
             return
 
     print("FX_READABILITY_CAPTURE ", prefix, " frame=", frame_index,
-        " particles=", _fx_layer.get(""), " path=", frame_path)
+        " particles=", _fx_layer.count(), " path=", frame_path)
 
 
 func capture_sequence(prefix: String) -> void:
