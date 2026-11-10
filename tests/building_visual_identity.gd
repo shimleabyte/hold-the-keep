@@ -47,8 +47,8 @@ func _run() -> void:
         "All building feature signatures must be unique")
     assert(BuildingVisual.enabled("frontier", data_db.buildings["keep"]["visual"]),
         "Frontier must enable the visual identity overlay")
-    assert(not BuildingVisual.enabled("classic", data_db.buildings["keep"]["visual"]),
-        "Classic visuals must remain unchanged by the Frontier identity pass")
+    assert(BuildingVisual.enabled("classic", data_db.buildings["keep"]["visual"]),
+        "Classic must use the same authored architectural detail layer")
     assert(not BuildingVisual.enabled("frontier", {}),
         "Buildings with no visual metadata must safely skip the overlay")
 

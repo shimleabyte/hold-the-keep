@@ -529,6 +529,8 @@ func _draw() -> void:
             self, id, visual_profile, visual_size,
             float(hp) / float(maxi(1, max_hp))
         )
+    if visual_profile is Dictionary:
+        BuildingVisual.draw_upgrades(self, id, visual_size, Tech.researched)
 
     if hp < max_hp:
         var by := -tex_h - 5.0
