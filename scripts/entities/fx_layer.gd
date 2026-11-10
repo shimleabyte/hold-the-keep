@@ -111,11 +111,16 @@ func spawn(kind: String, at: Vector2, dir := Vector2.ZERO, amount := 1.0) -> voi
     for i in n:
         if _pos.size() >= MAX_PARTICLES:
             _remove(0)
-        var angle := rng.randf_range(0.0, TAU)
+        var travel_direction := Vector2.RIGHT
         if directed:
-            angle = base_angle + rng.randf_range(-spread, spread)
+            var axis := dir.normalized()
+            var side := axis.orthogonal()
+            var angle_offset := rng.randf_range(-spread, spread)
+            travel_direction = axis * cos(angle_offset) + side * sin(angle_offset)
+        else:
+            travel_direction = Vector2.RIGHT.rotated(rng.randf_range(0.0, TAU))
         var speed := rng.randf_range(float(k["speed"][0]), float(k["speed"][1]))
-        var velocity := Vector2(cos(angle), sin(angle) * 0.6) * speed
+        var velocity := travel_direction * speed
         var life := rng.randf_range(float(k["life"][0]), float(k["life"][1]))
         var colors: Array = k["colors"]
         var color := Color(String(colors[rng.randi_range(0, colors.size() - 1)]))
