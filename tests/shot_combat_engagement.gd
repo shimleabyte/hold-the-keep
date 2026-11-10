@@ -124,13 +124,13 @@ func _run() -> void:
                 message_bubble.hide()
 
     var keep_center: Vector2 = main.world.keep_center_position()
-    # Frame the Keep, the defensive line and the incoming formation together instead
-    # of centering on the player and compressing the entire engagement into one cluster.
-    main.player.global_position = keep_center + Vector2(10, 86)
+    # Put the player on the actual frontline. A neutral camera keeps the Keep,
+    # shieldbearer, infantry and incoming raiders visible in one gameplay-scale frame.
+    main.player.global_position = keep_center + Vector2(-95, 55)
     main.player.velocity = Vector2.ZERO
     main.player.camera.position_smoothing_enabled = false
-    main.player.camera.offset = Vector2(-90, -68)
-    main.player.camera.zoom = Vector2(1.25, 1.25)
+    main.player.camera.offset = Vector2.ZERO
+    main.player.camera.zoom = Vector2.ONE
     main.player.camera.make_current()
 
     # Friendly infantry holds a visible line south-west of the Keep.
