@@ -146,14 +146,6 @@ func receive_healing(amount: int) -> void:
         enemy.queue_redraw()
 
 
-## Direction from the impacted actor back toward the strike source.
-## Unknown sources preserve the existing radial hit burst.
-static func impact_particle_direction(source_position: Vector2, actor_position: Vector2) -> Vector2:
-    if source_position.length_squared() <= 0.001:
-        return Vector2.ZERO
-    return (source_position - actor_position).normalized()
-
-
 func take_damage(amount: int) -> void:
     _take_damage_from(amount, Vector2.ZERO)
 
@@ -176,7 +168,9 @@ func _take_damage_from(amount: int, source_position: Vector2) -> void:
         Events.fx_burst.emit("stone", enemy.position + Vector2(0, -enemy._fh * 0.4), -enemy.shield_behavior.brace_direction, 0.8)
         Audio.play("block", 1.0, -5.0)
     else:
-        var impact_direction := impact_particle_direction(source_position, enemy.global_position)
+        var impact_direction: Vector2 = enemy.combat_feedback.impact_particle_direction(
+            source_position, enemy.global_position
+        )
         Events.fx_burst.emit(
             "impact",
             enemy.position + Vector2(0, -enemy._fh * 0.4),
