@@ -75,7 +75,9 @@ const DIRECTIONAL_SPREAD := {
 
 func _ready() -> void:
     z_index = 5
-    Events.fx_burst.connect(_on_burst)
+    var events := get_node_or_null("/root/Events")
+    if events != null:
+        events.fx_burst.connect(_on_burst)
 
 
 func count() -> int:
