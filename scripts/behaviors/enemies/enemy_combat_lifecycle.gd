@@ -168,7 +168,15 @@ func _take_damage_from(amount: int, source_position: Vector2) -> void:
         Events.fx_burst.emit("stone", enemy.position + Vector2(0, -enemy._fh * 0.4), -enemy.shield_behavior.brace_direction, 0.8)
         Audio.play("block", 1.0, -5.0)
     else:
-        Events.fx_burst.emit("impact", enemy.position + Vector2(0, -enemy._fh * 0.4), Vector2.ZERO, 2.0 if enemy.is_boss else 1.0)
+        var impact_direction: Vector2 = enemy.combat_feedback.impact_particle_direction(
+            source_position, enemy.global_position
+        )
+        Events.fx_burst.emit(
+            "impact",
+            enemy.position + Vector2(0, -enemy._fh * 0.4),
+            impact_direction,
+            2.0 if enemy.is_boss else 1.0
+        )
         Audio.play("impact_hit", 1.0, -9.0)
     enemy.modulate = Color(1.8, 1.8, 1.8)
     enemy.combat_feedback.register_hit(source_position, enemy.global_position, 2.0 if enemy.is_boss else 1.0)

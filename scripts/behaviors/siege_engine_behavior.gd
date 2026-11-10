@@ -216,8 +216,7 @@ func tick(delta: float) -> void:
         if windup_timer <= 0.0:
             var impact_target: Node2D = target
             var impact_damage := maxi(1, roundi(float(actor.damage) * damage_multiplier))
-            impact_target.call("take_damage", impact_damage)
-            Events.fx_burst.emit("debris", impact_target.global_position + Vector2(0, -8), -aim.normalized(), 1.5)
+            impact_target.call("take_damage", impact_damage, -aim.normalized())
             Audio.play("siege_impact", 1.0, -2.0)
             Events.screen_shake.emit(1.0, 0.16)
             cooldown = cooldown_duration
@@ -303,8 +302,7 @@ func tick_faction_assault_target(target_node: Node2D, delta: float) -> void:
         windup_timer = maxf(0.0, windup_timer - delta)
         if windup_timer <= 0.0:
             var impact_damage := maxi(1, roundi(float(actor.damage) * damage_multiplier))
-            target.call("take_damage", impact_damage)
-            Events.fx_burst.emit("debris", target.global_position + Vector2(0, -8), -aim.normalized(), 1.5)
+            target.call("take_damage", impact_damage, -aim.normalized())
             Audio.play("siege_impact", 1.0, -2.0)
             Events.screen_shake.emit(1.0, 0.16)
             cooldown = cooldown_duration

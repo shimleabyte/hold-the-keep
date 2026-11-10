@@ -22,6 +22,8 @@ const KINDS := {
         "colors": ["#d9d2c3", "#c4bba8", "#e8e2d0", "#b3ab9a"], "alpha": 0.8},
     "debris": {"n": 6, "speed": [20.0, 65.0], "up": [25.0, 70.0], "g": 280.0, "life": [0.4, 0.7], "size": [1, 2],
         "colors": ["#8b6b43", "#6b4a2b", "#8a8f98", "#6e737b", "#b08a5a"]},
+    "structure_debris": {"n": 8, "speed": [28.0, 82.0], "up": [24.0, 68.0], "g": 340.0, "life": [0.38, 0.64], "size": [2, 3],
+        "colors": ["#a77a45", "#765333", "#aeb3b9", "#858b91", "#c28a52", "#d4c7aa"]},
     "blade_trail": {"n": 5, "speed": [28.0, 78.0], "up": [7.0, 24.0], "g": 190.0, "life": [0.10, 0.22], "size": [1, 2],
         "colors": ["#fff5dc", "#e9d4a6", "#d9e6d6"], "alpha": 0.9},
     "dash": {"n": 7, "speed": [36.0, 105.0], "up": [5.0, 26.0], "g": 170.0, "life": [0.12, 0.24], "size": [1, 2],
@@ -47,11 +49,35 @@ var _max := PackedFloat32Array()
 var _size := PackedFloat32Array()
 var _g := PackedFloat32Array()
 var _col := PackedColorArray()
+var _burst_serial := 0
+
+## Half-angle in radians for directed effects. Zero direction remains radial.
+const DIRECTIONAL_SPREAD := {
+    "spark": 0.90,
+    "impact": 0.52,
+    "hurt": 1.15,
+    "wood": 1.00,
+    "stone": 0.90,
+    "food": 1.30,
+    "dust": 1.35,
+    "puff": 1.55,
+    "debris": 1.05,
+    "structure_debris": 0.72,
+    "blade_trail": 0.42,
+    "dash": 0.36,
+    "dash_impact": 0.54,
+    "perfect_dodge": 0.62,
+    "cleave_charge": 1.18,
+    "heavy_impact": 0.40,
+    "rally": 1.55,
+}
 
 
 func _ready() -> void:
     z_index = 5
-    Events.fx_burst.connect(_on_burst)
+    var events := get_node_or_null("/root/Events")
+    if events != null:
+        events.fx_burst.connect(_on_burst)
 
 
 func count() -> int:
@@ -62,32 +88,57 @@ func _on_burst(kind: String, at: Vector2, dir: Vector2, amount: float) -> void:
     spawn(kind, at, dir, amount)
 
 
-## dir: arah dorongan; nol = menyebar ke segala arah.
+## dir: arah gerak utama; partikel menyebar dalam kerucut, nol = radial.
+## Each burst owns its RNG so visual noise never advances gameplay's global RNG.
 func spawn(kind: String, at: Vector2, dir := Vector2.ZERO, amount := 1.0) -> void:
-    if not KINDS.has(kind):
+    if not KINDS.has(kind) or amount <= 0.0:
         return
     var k: Dictionary = KINDS[kind]
-    var n := maxi(1, int(round(float(k["n"]) * amount)))
+    var requested := roundi(float(k["n"]) * amount)
+    var n := clampi(requested, 1, MAX_PARTICLES)
+
+    _burst_serial += 1
+    var rng := RandomNumberGenerator.new()
+    var seed_key := "%s|%d|%d|%d|%d|%d|%d" % [
+        kind,
+        roundi(at.x * 16.0),
+        roundi(at.y * 16.0),
+        roundi(dir.x * 1000.0),
+        roundi(dir.y * 1000.0),
+        roundi(amount * 1000.0),
+        _burst_serial
+    ]
+    rng.seed = hash(seed_key)
+
+    var directed := dir.length_squared() > 0.0001
+    var spread := float(DIRECTIONAL_SPREAD.get(kind, 1.0))
     for i in n:
         if _pos.size() >= MAX_PARTICLES:
             _remove(0)
-        var ang := randf() * TAU
-        var spd := randf_range(k["speed"][0], k["speed"][1])
-        var v := Vector2(cos(ang), sin(ang) * 0.6) * spd
-        if dir != Vector2.ZERO:
-            v += dir.normalized() * spd * 0.9
-        var life := randf_range(k["life"][0], k["life"][1])
-        var c := Color(k["colors"][randi() % k["colors"].size()])
-        c.a = float(k.get("alpha", 1.0))
-        _pos.append(at + Vector2(randf_range(-2.0, 2.0), randf_range(-1.0, 1.0)))
-        _vel.append(v)
+        var travel_direction := Vector2.RIGHT
+        if directed:
+            var axis := dir.normalized()
+            var side := axis.orthogonal()
+            var angle_offset := rng.randf_range(-spread, spread)
+            travel_direction = axis * cos(angle_offset) + side * sin(angle_offset)
+        else:
+            var angle := rng.randf_range(0.0, TAU)
+            travel_direction = Vector2(cos(angle), sin(angle) * 0.6).normalized()
+        var speed := rng.randf_range(float(k["speed"][0]), float(k["speed"][1]))
+        var velocity := travel_direction * speed
+        var life := rng.randf_range(float(k["life"][0]), float(k["life"][1]))
+        var colors: Array = k["colors"]
+        var color := Color(String(colors[rng.randi_range(0, colors.size() - 1)]))
+        color.a = float(k.get("alpha", 1.0))
+        _pos.append(at + Vector2(rng.randf_range(-2.0, 2.0), rng.randf_range(-1.0, 1.0)))
+        _vel.append(velocity)
         _z.append(0.0)
-        _vz.append(randf_range(k["up"][0], k["up"][1]))
+        _vz.append(rng.randf_range(float(k["up"][0]), float(k["up"][1])))
         _life.append(life)
         _max.append(life)
-        _size.append(float(randi_range(k["size"][0], k["size"][1])))
+        _size.append(float(rng.randi_range(int(k["size"][0]), int(k["size"][1]))))
         _g.append(float(k["g"]))
-        _col.append(c)
+        _col.append(color)
     queue_redraw()
 
 

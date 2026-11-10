@@ -22,6 +22,16 @@ func _initialize() -> void:
         "Ranged anticipation must expose the projectile cue")
     feedback.end_windup()
 
+    assert(feedback.impact_particle_direction(
+            Vector2(-10.0, 0.0), Vector2.ZERO) == Vector2.LEFT,
+        "Projectile impact particles must eject toward a source positioned to the left")
+    assert(feedback.impact_particle_direction(
+            Vector2(0.0, -10.0), Vector2.ZERO) == Vector2.UP,
+        "Projectile impact particles must preserve vertical source direction")
+    assert(feedback.impact_particle_direction(
+            Vector2.ZERO, Vector2(12.0, 4.0)) == Vector2.ZERO,
+        "Hits without a known source must retain radial particle behavior")
+
     feedback.register_hit(Vector2(-10.0, 0.0), Vector2.ZERO, 1.8)
     assert(feedback.impact_remaining > 0.0
         and feedback.impact_direction == Vector2.LEFT
