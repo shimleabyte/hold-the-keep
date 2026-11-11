@@ -48,7 +48,7 @@ func _run() -> void:
     current_scene = main
     await process_frame
 
-    if not is_instance_valid(main) or main.get_node_or_null("World") == null:
+    if not is_instance_valid(main) or main.world == null:
         push_error("Hardware probe: campaign failed to initialize")
         quit(1)
         return
