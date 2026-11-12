@@ -12,6 +12,7 @@ var _frame_wall_ms: Array[float] = []
 var _process_ms: Array[float] = []
 var _physics_ms: Array[float] = []
 var _memory_bytes: Array[float] = []
+var _rss_bytes: Array[float] = []
 var _node_counts: Array[float] = []
 var _physics_objects: Array[float] = []
 var _started_usec := 0
@@ -69,6 +70,7 @@ func _run() -> void:
         _process_ms.append(float(Performance.get_monitor(Performance.TIME_PROCESS)) * 1000.0)
         _physics_ms.append(float(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)) * 1000.0)
         _memory_bytes.append(float(Performance.get_monitor(Performance.MEMORY_STATIC)))
+        _rss_bytes.append(_read_process_rss_bytes())
         _node_counts.append(float(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)))
         _physics_objects.append(float(Performance.get_monitor(Performance.PHYSICS_2D_ACTIVE_OBJECTS)))
 
@@ -97,6 +99,12 @@ func _run() -> void:
             "start": _to_mb(_memory_bytes[0]),
             "peak": _to_mb(_max_value(_memory_bytes)),
             "end": _to_mb(_memory_bytes[_memory_bytes.size() - 1])
+        },
+        "process_rss_mb": {
+            "available": _rss_bytes[0] > 0.0,
+            "start": _to_mb(_rss_bytes[0]),
+            "peak": _to_mb(_max_value(_rss_bytes)),
+            "end": _to_mb(_rss_bytes[_rss_bytes.size() - 1])
         },
         "node_count": {
             "start": int(_node_counts[0]),
@@ -154,6 +162,20 @@ func _max_value(values: Array[float]) -> float:
     for value in values:
         maximum = maxf(maximum, value)
     return maximum
+
+
+func _read_process_rss_bytes() -> float:
+    var status := FileAccess.open("/proc/self/status", FileAccess.READ)
+    if status == null:
+        return 0.0
+    while not status.eof_reached():
+        var line := status.get_line()
+        if line.begins_with("VmRSS:"):
+            var fields := line.split(" ", false)
+            if fields.size() >= 2:
+                return float(fields[1]) * 1024.0
+            return 0.0
+    return 0.0
 
 
 func _to_mb(bytes: float) -> float:
