@@ -270,3 +270,34 @@ A separate 180-frame performance sample reported:
 - Expedition (256): 108 enemies, 82 villagers; wall-frame p50 7.67 ms, p95 9.91 ms, p99 39.11 ms.
 
 These are short synthetic samples on a generic CI runner, not target-hardware results and not a five-minute soak. The Godot `TIME_PROCESS` monitor reported values much larger than wall-frame time in the same run; do not interpret those as frame latency until the monitor semantics are reconciled. The reported five-minute gameplay slowdown remains unverified and requires a dedicated long-session soak plus the real low-end laptop probe.
+
+
+## Latest actions — 2026-11-19
+
+**Main SHA at this update:** `09517a54ddea9aa21c4c4f8bf0b5a96da5827f83`
+
+### PR state normalization
+All six open PRs are now drafts. This prevents the parked or unaccepted work from being merged accidentally:
+- #212 returned to draft after visual review found melee/shield/fracture cues too subtle at gameplay scale. Review comment ID `5969321353`; PR body records the acceptance gap.
+- #213 remains draft pending exact-head Godot CI and overlap reconciliation with #212.
+- #210 remains draft pending a multi-frame live work-cycle capture and reconciliation of shared `villager.gd` changes. Review comment ID `5969356029`.
+- #214 remains draft pending actual Acer Aspire One A0756 measurements.
+- #150 and #152 remain draft because Android is deferred. #152 was converted from ready to draft and has a dirty merge state.
+
+### PR #213 implementation follow-up
+Latest branch head: `c336f7923e9b522898bd778f311c0382bf68d4d2`.
+- Fixed the earlier FFmpeg-install timeout by raising the playblast timeout to 15 minutes and using `--no-install-recommends`.
+- Structural debris now spawns just outside the struck face, uses larger 5–6 px material fragments, and renders at high world z-index so it is not hidden by actors.
+- The FX unit test asserts the actual structure-debris burst and its bounded particle count. Assertion failures now exit the test instead of hanging until timeout.
+- The desktop-scale still is captured at frame 6; the artifact retains the full sequence, including later spread/fade frames.
+- Pixel FX Readability QA, Building Visual QA and Campaign Simulation QA passed on exact head `c336f7923e9b522898bd778f311c0382bf68d4d2`. At the latest poll, the full Godot 4.7 run had 19/72 checks completed successfully, 6 in progress, 47 queued, and no failures. Recheck the final result before any merge.
+- Submitted follow-up COMMENT review `5969591218`: the debris-visibility concern is resolved by the latest 1280×720 artifact, but full CI and #212 overlap remain.
+
+### A–D status after this work
+- A: the 43 behind-only branch candidates remain documented; deletion is still blocked because the GitHub connection exposes no branch-delete operation.
+- B: sample disposition has been expanded across supply, construction, faction behavior, presentation, responsive UI, workstream, QA and performance families. Two performance candidates are preserved for targeted integration review. Full disposition of all 122 diverged branches remains incomplete.
+- C: all six open PRs are draft; no PR has been merged or closed. This is deliberate because visual acceptance, exact-head checks, hardware evidence, or overlap reconciliation remains outstanding.
+- D: the authoritative checkpoint and worklist pointer are in main. Branch protection is still disabled; the connected GitHub tools expose no ruleset/branch-protection write operation.
+
+### Autonomous schedule
+The five previous schedules were disabled. The replacement daily `Autonomous repository cleanup` task starts 2026-11-20 at 08:00 Asia/Jakarta and continues A–D from this checkpoint. It must not start Stage E until every A–D exit criterion is verified. Once complete, it disables itself and creates the Stage E task.
