@@ -42,11 +42,11 @@ func _initialize() -> void:
 
     var rubble := FXLayer.new()
     rubble.spawn("structure_debris", Vector2.ZERO, Vector2.DOWN, 1.5)
-    assert(rubble.count() == 12,
-        "A heavy structural hit should eject a bounded cluster of 12 visible debris pieces")
+    assert(rubble.count() == 18,
+        "A heavy structural hit should eject a bounded cluster of 18 visible debris pieces")
     for particle_size in rubble._size:
-        assert(particle_size >= 2.0 and particle_size <= 3.0,
-            "Structure debris must read as material fragments rather than one-pixel sparks")
+        assert(particle_size >= 3.0 and particle_size <= 4.0,
+            "Structure debris must read as larger material fragments rather than small sparks")
     rubble.free()
 
     var capped := FXLayer.new()
