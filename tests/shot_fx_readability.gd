@@ -13,12 +13,15 @@ var _fx_layer
 var _data_db
 var _last_impact_direction := Vector2.ZERO
 var _impact_burst_count := 0
+var _structure_debris_burst_count := 0
 
 
 func _on_fx_burst(kind: String, _at: Vector2, direction: Vector2, _amount: float) -> void:
     if kind == "impact":
         _last_impact_direction = direction
         _impact_burst_count += 1
+    elif kind == "structure_debris":
+        _structure_debris_burst_count += 1
 
 
 func _fail(message: String) -> void:
@@ -271,6 +274,7 @@ func _run() -> void:
     siege.siege_behavior.target = keep
     siege.siege_behavior.cooldown = 0.0
     var keep_hp_before: int = keep.hp
+    var debris_bursts_before := _structure_debris_burst_count
     siege.siege_behavior.tick(0.016)
     if siege.siege_behavior.windup_timer <= 0.0:
         _fail("Siege Engine did not enter its structural strike wind-up")
@@ -282,8 +286,11 @@ func _run() -> void:
     if keep.hp >= keep_hp_before:
         _fail("Siege Engine did not damage the live Keep")
         return
-    if _fx_layer.count() <= 0:
-        _fail("Structural impact did not emit debris particles")
+    if _structure_debris_burst_count != debris_bursts_before + 1:
+        _fail("Structural impact did not emit exactly one directional structure-debris burst")
+        return
+    if _fx_layer.count() < 12:
+        _fail("Structural impact debris burst did not retain its expected visible particle count")
         return
     var impact_direction: Vector2 = (siege.global_position - keep.global_position).normalized()
     print("FX_READABILITY_BUILDING keep_hp=", keep.hp, "/", keep.max_hp,
