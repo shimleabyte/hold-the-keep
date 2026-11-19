@@ -90,3 +90,54 @@ A-D are complete only when:
 - The new checkpoint SHA is recorded and the worklist no longer presents stale branch counts as current.
 
 Only then move to the next product stage: desktop campaign acceptance, rival civilization/logistics validation, and performance profiling.
+
+
+## Behind-only branch deletion candidates
+
+The following 43 branch tips were confirmed contained in the audited main SHA. Delete only after checking live PR/workflow references and only when branch-delete capability is available:
+
+```text
+art/faction-equipment-silhouette-pass
+combat/player-skills-enemy-ai
+docs/update-phase-11-integration-status
+feat/blacksmith-forge
+feat/character-animation-pass
+feat/frontier-world-generation-mainline
+feat/healer-infirmary
+feat/hunter-hunting-lodge
+feat/multi-stronghold-campaign
+feat/phase-05-resource-worksites
+feat/phase-06-factions-territorial-ai-rebased
+feat/phase-06-shieldbearer-brace
+feat/phase-06.4-faction-raids
+feat/phase-06.5-faction-warfare-stress
+feat/phase-07-conquest-objectives-mainline
+feat/phase-09-balance-performance-release-mainline
+feat/phase-10-adaptive-viewport-mainline
+feat/regional-control-roads-mainline
+feat/responsive-resolution-visual-pass
+feat/rival-local-depots-road-delivery
+feat/scout-specialist
+feat/strategic-map-stage-hud
+feat/workplaces-and-specialist-jobs
+fix/ci-regression-test-timeouts
+fix/hud-discovered-type
+fix/rival-worker-cargo-conservation
+integrate/data-db-validation-mainline
+overhaul/territory-expansion
+qa/desktop-export-acceptance
+qa/headed-mode-source-export
+work/dev-b-faction-ai-components
+work/dev-c-autonomous-wave-diagnostic-integrated
+work/dev-c-campaign-simulation
+work/dev-d-supply-network-decomposition
+work/dev-e-save-validator-mainline
+work/dev-e-sequential-migration-pipeline-current-main
+work/dev-g-hud-widget-modules
+work/dev-h-world-generation
+work/dev-i-enemy-patrol-controller
+work/dev-j-decision-events
+work/dev-k-input-command-registry
+work/dev-l-archery-range-ranged-training
+work/dev-l-barracks-garrison
+```
