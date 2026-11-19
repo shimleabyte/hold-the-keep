@@ -191,8 +191,4 @@ func _draw() -> void:
             particle_size,
             particle_size
         )
-        if particle_size >= 4.0:
-            var outline := Color("#3b3028")
-            outline.a = c.a
-            draw_rect(particle_rect.grow(1.0), outline)
         draw_rect(particle_rect, c)
