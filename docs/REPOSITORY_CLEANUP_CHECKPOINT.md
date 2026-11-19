@@ -215,3 +215,58 @@ PR #213 follow-up:
 - Increased structural debris to 12 fragments per base burst, larger 3–4 px chunks, brighter contrasting materials, and longer lifetime.
 - Strengthened `shot_fx_readability.gd` to assert exactly one `structure_debris` event rather than relying only on total FX particle count.
 - Exact-head validation was running at the time of this update: 72 checks registered, 5 completed successfully, 8 in progress and 59 queued. Recheck before disposition.
+
+
+### Diverged-branch sample audit — workstream and QA branches
+
+The following workstream families have later implementations in main and are **superseded candidates**, subject to final unique-commit review:
+
+- Data validation and simulation diagnostics: `work/dev-a-data-validation`, `work/dev-c-autonomous-wave-diagnostic`, `work/dev-c-campaign-simulation`. Main has the current schema validator, campaign simulation suite and autonomous-wave diagnostic workflow.
+- Supply/logistics decomposition: `work/dev-d-shipment-dispatch`, `work/dev-d-shipment-ledger`, `work/dev-d-supply-network-decomposition`, `work/dev-d-supply-pressure`, `work/dev-d-supply-pressure-manager`. Main has current shipment dispatch/ledger, supply pressure and road/logistics systems.
+- Save migration/validation: `work/dev-e-canonical-save-migration`, `work/dev-e-canonical-save-migration-final`, `work/dev-e-canonical-save-migration-latest`, `work/dev-e-canonical-save-migration-mainline`, `work/dev-e-save-validator-extraction`, `work/dev-e-save-validator-mainline`, `work/dev-e-sequential-migration-pipeline`. Main has current save migration pipeline, validator and recovery contract.
+- Villager role behaviors: `work/dev-f-blacksmith-behavior`, `work/dev-f-builder-behavior`, `work/dev-f-healer-behavior`, `work/dev-f-scout-behavior`, `work/dev-f-villager-archer-combat`, `work/worker-resource-awareness`. Main has dedicated role behavior modules and bounded reachable-work assignment. `work/dev-f-villager-role-architecture` is a separate registry-based architecture proposal; keep for final semantic review rather than deleting automatically.
+- UI/world generation: `work/dev-g-construction-queue-panel`, `work/dev-g-outpost-panel`, `work/dev-h-frontier-decoration`, `work/dev-h-frontier-resources`, `work/dev-h-frontier-terrain`, `work/dev-h-rendered-ci-clean`. Main has later panels, batched decoration/resource generation and rendered-world QA.
+- Enemy systems: `work/dev-i-enemy-combat-lifecycle`, `work/dev-i-enemy-raid-behavior`, `work/dev-j-decision-events`, `work/dev-k-input-command-registry`, `work/dev-l-archery-range-ranged-training`, `work/dev-l-barracks-garrison`. Main has current lifecycle, decision event, input, ranged training and garrison modules.
+- Documentation snapshots: `work/integration-live-status-2026-11-05`, `work/roadmap-audit-implementation`. Main's worklist now points to this current checkpoint.
+
+Additional QA candidates:
+- `fix/title-menu-small-viewport`: current main has newer responsive title-screen handling and tests.
+- `fix/phase-06.5-stress-parse`: main has the current faction warfare stress suite.
+- `test/phase-09-campaign-combat-simulation`: main has current campaign combat simulation coverage.
+- `test/save-file-store-recovery-contract`, `test/save-file-store-recovery-mainline`, `test/villager-lifecycle-recovery`: main has later save and villager recovery tests.
+- `qa/rival-workforce-headed-acceptance`, `qa/rival-workforce-rendered-acceptance`: main has physical rival workforce and rendered QA coverage.
+- `fix/p0-gameplay-ux-combined` has 20 unique commits but is 367 commits behind main and overlaps current player/HUD/combat/wave systems. Keep as a patch-review candidate until every unique fix is compared; do not merge wholesale.
+
+### Performance branches — preserve selected candidates
+
+Main already contains the core changes from several old performance branches:
+- `perf/flowfield-time-budget-mainline`: superseded by main's incremental 2,500 µs FlowField rebuild budget and resource-occupancy invalidation.
+- `perf/p1-skip-road-pathfield-rebuilds`: main already skips road-only path invalidations.
+- `perf/p1-specialist-interceptor-scans`: main already has bounded interceptor/target caches.
+- `perf/p2-bounded-wildlife-selection`: main already uses bounded wildlife candidate selection.
+- `perf/territory-region-count-cache-mainline`: main already uses per-region land counts.
+- `perf/priority-performance-pass`: old overlapping 11-file package; main already has incremental navigation/flow rebuilds, target caches, bounded wildlife selection and debounced villager job assignment. Review unique patches only.
+
+Preserve for targeted performance review:
+- `perf/reduce-raid-simulation-scans`: 8 commits ahead / 24 behind main, 4 changed files. It adds a 0.4 s faction-raid validation cadence, cached return targets, timestamp-based blocked-target expiry and squared-distance checks. Current main does not contain all of these optimizations. Candidate for a focused performance PR after the active combat/FX PRs are settled.
+- `perf/territory-region-index-mainline`: 1 commit ahead / 228 behind main, 3 changed files. It builds a per-region land-cell index and updates it from buildable-cell changes; main still scans all map cells when applying conquered-region claims. Candidate for targeted review and rebase.
+- `perf/p1-village-job-assignment-counters`: retain only if the unique counters reveal a real assignment hotspot; main already debounces job assignment.
+- `perf/acer-a0756-live-acceptance-probe` remains PR #214 and requires actual target-device data.
+
+### Performance evidence from main CI
+
+The main SHA `d46a35807aea1218874aa5f9c110d970eaaccd23` produced a successful synthetic performance/transition run on GitHub's generic Linux runner:
+
+| Profile | Map | World creation | Navigation rebuild avg | Territory rebuild avg | Flow rebuild settle | Flow peak frame |
+|---|---:|---:|---:|---:|---:|---:|
+| Classic | 128 | 718 ms | 12.0 ms | 1.77 ms | 168 ms / 64 frames | 5.50 ms |
+| Frontier | 192 | 1,306 ms | 29.6 ms | 3.66 ms | 528 ms / 183 frames | 3.65 ms |
+| Expedition | 256 | 2,142 ms | 51.2 ms | 3.62 ms | 367 ms / 134 frames | 3.14 ms |
+
+Construction-completion synchronous transition calls were only 0.34–0.40 ms; the flow-field work was spread across frames. This benchmark does not reproduce a long construction freeze on the CI device. Full navigation rebuild is a startup cost and should not be confused with the incremental dirty-cell update used for normal building changes.
+
+A separate 180-frame performance sample reported:
+- Frontier (192): 119 enemies, 82 villagers; wall-frame p50 7.11 ms, p95 9.20 ms, p99 15.39 ms.
+- Expedition (256): 108 enemies, 82 villagers; wall-frame p50 7.67 ms, p95 9.91 ms, p99 39.11 ms.
+
+These are short synthetic samples on a generic CI runner, not target-hardware results and not a five-minute soak. The Godot `TIME_PROCESS` monitor reported values much larger than wall-frame time in the same run; do not interpret those as frame latency until the monitor semantics are reconciled. The reported five-minute gameplay slowdown remains unverified and requires a dedicated long-session soak plus the real low-end laptop probe.
