@@ -57,7 +57,7 @@ jobs:
     name: Player animation playblast · Godot 4.7
     needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -95,8 +95,8 @@ jobs:
       - name: Encode looping player animation preview
         run: |
           if ! command -v ffmpeg >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y ffmpeg
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends ffmpeg
           fi
           ffmpeg -y -framerate 5 -start_number 0 -i build/diagnostics/player-animation/frames/%02d.png \
             -vf "fps=10,scale=448:-1:flags=neighbor,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=none" \
