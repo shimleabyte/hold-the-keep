@@ -179,3 +179,21 @@ The following groups were compared against the current mainline and inspected at
 - `feat/phase-09-balance-performance-release` and its `-rebased`, `-v2`, `-v3`, `-v4`, `-v5` variants: overlapping historical release/balance snapshots. Main now has later versions of the balance and release tests. Treat the family as consolidation candidates; identify any unique, unmerged fixes before superseding the whole group.
 
 The sample audit is not a substitute for the required disposition of all 122 branches. Continue with other branch families, especially active PR heads and any unique features not represented in main. No branch was deleted or merged during this audit pass.
+
+
+### Diverged-branch sample audit — second batch
+
+Compared another 20 branches against current `main`. These are **superseded candidates** because main contains later versions of the same feature/test areas. They still require a final unique-commit check before any deletion:
+
+- Supply/economy family: `feat/phase-02-depot-cost-sources`, `feat/phase-02-outpost-garrisons`, `feat/phase-02-physical-shipments`, `feat/phase-02-supply-pressure`. Main has current tests for depot cost sources, outpost garrisons, physical shipments, local stockpiles, and supply pressure, plus later shipment ledger/dispatch and supply transaction systems.
+- Construction family: `feat/phase-05-builder-construction-sites`, `feat/phase-05-construction-queue-ui`, `feat/phase-05.2b-construction-queue`. Main contains the current construction-site system, queue UI and construction regression suite.
+- Frontier infrastructure: `feat/phase-05.3a-watchtower-vision`, `feat/phase-05.3b-granary-food-storage`. Main includes watchtower vision, granary storage and building visual progression, with later implementations and tests.
+- Enemy/faction behavior family: `feat/phase-06-beast-rider-charge`, `feat/phase-06-faction-camps-patrols`, `feat/phase-06-factions-territorial-ai`, `feat/phase-06-saboteur-disruption`, `feat/phase-06-scout-marking`, `feat/phase-06-scout-marking-mainline`, `feat/phase-06-siege-engine-cycle`, `feat/phase-06.2-composable-behaviors`. Main includes these behavior systems and regression tests; its behavior modules are later/current versions.
+- Conquest objective family: `feat/phase-07-conquest-objectives`. Main contains the later campaign objective, faction registry, frontier campaign and multi-stronghold test coverage.
+
+Two branches in this batch were confirmed fully behind main, with no unique commits: `feat/phase-06-factions-territorial-ai-rebased` and `feat/phase-07-conquest-objectives-mainline`. They remain in the 43 deletion candidates and are not deleted because branch deletion is unavailable.
+
+### Current validation snapshot
+- Main `d46a35807aea1218874aa5f9c110d970eaaccd23` had a successful Godot CI run (`44454267413`). The documentation update that recorded the latest review/audit state created main `caac028e14d3470cb3bde60bc5bab045e7e12115`; its Godot CI run `44459260701` was queued when checked.
+- PR #213 exact-head `50dfdbcdea239e16713d70d5763dff356520b3b4` had 72 checks registered; 24 completed successfully, 4 were in progress, and 2 queued at the last poll. No failures were present in the returned completed checks. Recheck all checks before deciding.
+- Exact duplicate-tip scan of all 170 branches found only the two pairs already recorded above. No additional duplicate tips were found.
