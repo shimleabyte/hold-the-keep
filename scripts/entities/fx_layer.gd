@@ -74,7 +74,9 @@ const DIRECTIONAL_SPREAD := {
 
 
 func _ready() -> void:
-    z_index = 5
+    # Keep world-space impact fragments above Y-sorted actors and structures.
+    z_as_relative = false
+    z_index = 100
     var events := get_node_or_null("/root/Events")
     if events != null:
         events.fx_burst.connect(_on_burst)
