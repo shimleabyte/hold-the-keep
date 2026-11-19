@@ -258,6 +258,9 @@ func take_damage(amount: int, impact_direction: Vector2 = Vector2.ZERO) -> void:
         direction.x * footprint_width * 0.46,
         -footprint_height * 0.5 + direction.y * footprint_height * 0.46
     )
+    # Push fragments just beyond the struck face so the structure sprite cannot
+    # occlude the first frames of the burst.
+    contact_offset += direction * 10.0
     var debris_amount := clampf(0.8 + float(amount) / 100.0, 0.8, 1.6)
     Events.fx_burst.emit(
         "structure_debris",
