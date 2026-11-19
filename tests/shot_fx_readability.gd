@@ -75,8 +75,7 @@ func capture_frame(prefix: String, frame_index: int) -> void:
         _fail("Could not save frame " + frame_path)
         return
 
-    # Capture the desktop still after fragments have spread beyond the struck face.
-    if frame_index == 8:
+    if frame_index == 2:
         var desktop := region.duplicate()
         desktop.resize(1280, 720, Image.INTERPOLATE_NEAREST)
         var desktop_path := output_dir.path_join("%s-1280x720.png" % prefix)
