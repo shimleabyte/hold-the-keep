@@ -1,3 +1,5 @@
+> **Current repository checkpoint (2026-11-19):** The branch/PR inventory and cleanup sequence are maintained in [docs/REPOSITORY_CLEANUP_CHECKPOINT.md](docs/REPOSITORY_CLEANUP_CHECKPOINT.md). Older branch counts and audit SHAs below are historical snapshots and must not be used as live state. Current main baseline at checkpoint creation: `d6a54036f7d7587c6e4cbd7188a620a6f9bc9d19`.
+
 ## Rival physical workforce execution — 2026-11-08
 
 Implementation branch: `feat/rival-physical-workforce-hauling`, based on main `14f045198bcbd6d50b3b9909bce30a1f1f2c36d1`.
