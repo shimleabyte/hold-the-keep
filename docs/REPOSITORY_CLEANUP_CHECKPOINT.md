@@ -197,3 +197,21 @@ Two branches in this batch were confirmed fully behind main, with no unique comm
 - Main `d46a35807aea1218874aa5f9c110d970eaaccd23` had a successful Godot CI run (`44454267413`). The documentation update that recorded the latest review/audit state created main `caac028e14d3470cb3bde60bc5bab045e7e12115`; its Godot CI run `44459260701` was queued when checked.
 - PR #213 exact-head `50dfdbcdea239e16713d70d5763dff356520b3b4` had 72 checks registered; 24 completed successfully, 4 were in progress, and 2 queued at the last poll. No failures were present in the returned completed checks. Recheck all checks before deciding.
 - Exact duplicate-tip scan of all 170 branches found only the two pairs already recorded above. No additional duplicate tips were found.
+
+
+### Diverged-branch sample audit — third batch
+
+Compared 20 additional branch tips with current main. Main contains the later implementation/test surface for these feature families. Treat the diverged versions as **superseded candidates**, pending a final unique-commit review:
+
+- Biome/resource presentation: `feat/phase-08-biome-prop-identity`, `feat/phase-08.3-frontier-biome-props`, `feat/phase-08.3-resource-cluster-dressing`. Main has Frontier decoration generation and current resource-node rendering.
+- Faction/building/combat/audio presentation: `feat/phase-08.4-faction-visual-identity`, `feat/phase-08.5-building-visual-identity`, `feat/phase-08.6-combat-visual-feedback`, `feat/phase-08.7-regional-audio-identity`. Main contains the current faction, building, combat-feedback and audio modules with matching regression coverage.
+- Adaptive viewport: `feat/phase-10-adaptive-viewport`. Main has current responsive layout behavior and regression coverage; `feat/phase-10-adaptive-viewport-mainline` and `feat/responsive-resolution-visual-pass` are fully behind main and remain in the 43 deletion candidates.
+- Regional control roads: `feat/regional-control-roads`. Main contains the current road/bridge, territory, navigation, shipment and regional-control implementation plus `regional_control_roads` coverage. `feat/regional-control-roads-mainline` is fully behind main and remains in the 43 deletion candidates.
+
+The following branches in this batch were confirmed fully behind main with zero unique commits and are already part of the 43 deletion candidates: `feat/workplaces-and-specialist-jobs`, `feat/multi-stronghold-campaign`, `feat/rival-local-depots-road-delivery`, `feat/scout-specialist`, `feat/strategic-map-stage-hud`, and `feat/character-animation-pass`.
+
+PR #213 follow-up:
+- Latest head after the FX visibility correction: `fa617d6d2d02001e7140844cb40b47f1c2ce939c`.
+- Increased structural debris to 12 fragments per base burst, larger 3–4 px chunks, brighter contrasting materials, and longer lifetime.
+- Strengthened `shot_fx_readability.gd` to assert exactly one `structure_debris` event rather than relying only on total FX particle count.
+- Exact-head validation was running at the time of this update: 72 checks registered, 5 completed successfully, 8 in progress and 59 queued. Recheck before disposition.
