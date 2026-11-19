@@ -58,8 +58,8 @@ func _initialize() -> void:
             "A heavy structural hit should eject a bounded cluster of 18 visible debris pieces"):
         return
     for particle_size in rubble._size:
-        if not require(particle_size >= 3.0 and particle_size <= 4.0,
-                "Structure debris must read as larger material fragments rather than small sparks"):
+        if not require(particle_size >= 5.0 and particle_size <= 6.0,
+                "Structure debris must read as large outlined material fragments rather than small sparks"):
             return
     rubble.free()
 
