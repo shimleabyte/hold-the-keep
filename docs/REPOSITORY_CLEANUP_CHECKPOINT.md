@@ -141,3 +141,41 @@ work/dev-k-input-command-registry
 work/dev-l-archery-range-ranged-training
 work/dev-l-barracks-garrison
 ```
+
+
+## Work resumed — 2026-11-19
+
+**Main SHA at this update:** `d46a35807aea1218874aa5f9c110d970eaaccd23`
+
+### PR #212 — reviewed, not approved
+- Exact head: `6d0ce0f69c4775412f0c9dcbe55fc80bbc1a9d1c`.
+- Godot CI, Battlefield Combat Visual QA, Building Visual QA, Campaign Simulation QA, Builder Reachability QA, Autonomous Wave Diagnostic and Role Sprite Visual QA all passed on that exact head.
+- Downloaded and inspected the three 1280×720 combat captures.
+- Submitted COMMENT review (review ID `5969321353`). The main concern is visual legibility: melee sweep and shield cues are small at gameplay zoom, and the directional building fracture is obscured by the existing damage flash. The evidence proves the hooks execute, not that players can read them quickly.
+- Merge remains blocked pending stronger presentation evidence and normal desktop gameplay acceptance.
+
+### PR #213 — CI cancellation diagnosed and corrected
+- Previous head: `193270f9d8ba05f1c4cba1269e5bcd10c22b03c7`.
+- The previous Godot CI run was cancelled during the player-animation preview's FFmpeg installation step. Import/parse, the regression matrix, Frontier performance diagnostic and construction spike diagnostic had succeeded. The cancellation occurred during apt dependency installation, not during a Godot test.
+- Updated `.github/workflows/godot-ci.yml` on the PR branch in commit `50dfdbcdea239e16713d70d5763dff356520b3b4`: raised the playblast job timeout from 10 to 15 minutes and used `--no-install-recommends` for FFmpeg.
+- New exact-head validation was triggered on `50dfdbcdea239e16713d70d5763dff356520b3b4`; at the time of this update the Godot matrix was still running/queued. Recheck before disposition.
+- The PR remains draft and must be reconciled with #212. Shared production paths include `building.gd`, `combat_visual_feedback.gd`, `enemy_combat_lifecycle.gd`, and `siege_engine_behavior.gd`.
+
+### PR #210 — reviewed, not approved
+- Exact head: `c1c87dbb6b01dcfb9e3d7aae5c19d70db5ccd541`.
+- Godot CI, Campaign Simulation QA, Builder Reachability QA and Role Sprite Visual QA passed on that exact head.
+- Inspected the 1280×720 civilian-role gameplay capture. It holds each role at a single work-animation progress value, so it demonstrates pose differences but not a complete live work cycle.
+- Submitted COMMENT review (review ID `5969356029`) requesting a multi-frame live work-cycle capture, particularly for Hunter and Healer.
+- Keep draft until #212's `villager.gd` changes are reconciled and dynamic work-cycle evidence exists.
+
+### Diverged-branch sample audit — dispositions are provisional
+The following groups were compared against the current mainline and inspected at representative source-file level. These are **superseded candidates**, not deletion approvals:
+
+- `feat/army-command-rival-civilization` and `feat/rival-civilization-expanded-worlds`: both contain older, divergent implementations of ArmyCommand and EnemyCivilization. The old EnemyCivilization uses abstract resource income; current main has visible economic workers, bounded storage, doctrine-specific build/recruitment plans, and persistence. Current main's ArmyCommand is also more strongly typed. Treat these two branches as superseded by main unless a unique feature is found in a complete patch review.
+- `feat/title-screen-mode-select`: current main's title screen includes the campaign selector plus landscape, settings, and scroll/responsive handling. The branch is an older, narrower implementation; superseded candidate.
+- `feat/final-boss-wave-pacing`: current main has later `wave_spawner.gd` and `campaign_balance_matrix.gd` implementations. Superseded candidate pending a final unique-patch check.
+- `feat/frontier-expedition-192x192`: current main already contains 192×192 Expedition support and a newer, broader Frontier implementation. Treat as superseded candidate pending final unique-patch check.
+- `feat/low-cost-profession-sprite-art`, `feat/low-cost-profession-sprite-art-mainline`, and `feat/low-cost-profession-sprite-art-mainline-v2`: same 16-path feature family, but current main has different sprite SVG blobs and a newer animation implementation. Do not cherry-pick these branches wholesale; compare any unique art/animation value before marking superseded.
+- `feat/phase-09-balance-performance-release` and its `-rebased`, `-v2`, `-v3`, `-v4`, `-v5` variants: overlapping historical release/balance snapshots. Main now has later versions of the balance and release tests. Treat the family as consolidation candidates; identify any unique, unmerged fixes before superseding the whole group.
+
+The sample audit is not a substitute for the required disposition of all 122 branches. Continue with other branch families, especially active PR heads and any unique features not represented in main. No branch was deleted or merged during this audit pass.
