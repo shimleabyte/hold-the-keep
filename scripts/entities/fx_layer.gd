@@ -22,8 +22,8 @@ const KINDS := {
         "colors": ["#d9d2c3", "#c4bba8", "#e8e2d0", "#b3ab9a"], "alpha": 0.8},
     "debris": {"n": 6, "speed": [20.0, 65.0], "up": [25.0, 70.0], "g": 280.0, "life": [0.4, 0.7], "size": [1, 2],
         "colors": ["#8b6b43", "#6b4a2b", "#8a8f98", "#6e737b", "#b08a5a"]},
-    "structure_debris": {"n": 12, "speed": [38.0, 100.0], "up": [32.0, 84.0], "g": 340.0, "life": [0.48, 0.76], "size": [3, 4],
-        "colors": ["#d6c5a1", "#aeb3b9", "#858b91", "#b78a55", "#e6d9be", "#745334"]},
+    "structure_debris": {"n": 12, "speed": [42.0, 110.0], "up": [36.0, 88.0], "g": 340.0, "life": [0.55, 0.82], "size": [5, 6],
+        "colors": ["#e6d9be", "#c9c2b3", "#aeb3b9", "#b78a55", "#f0d8ad", "#745334"]},
     "blade_trail": {"n": 5, "speed": [28.0, 78.0], "up": [7.0, 24.0], "g": 190.0, "life": [0.10, 0.22], "size": [1, 2],
         "colors": ["#fff5dc", "#e9d4a6", "#d9e6d6"], "alpha": 0.9},
     "dash": {"n": 7, "speed": [36.0, 105.0], "up": [5.0, 26.0], "g": 170.0, "life": [0.12, 0.24], "size": [1, 2],
@@ -185,12 +185,14 @@ func _draw() -> void:
             var tail := particle_pos - _vel[i].normalized() * trail_length
             draw_line(tail, particle_pos, Color(c.r, c.g, c.b, c.a * 0.72), 1.0)
         var particle_size := maxf(1.0, _size[i] * lerpf(0.55, 1.0, life_ratio))
-        draw_rect(
-            Rect2(
-                floorf(particle_pos.x - particle_size / 2.0),
-                floorf(particle_pos.y - particle_size / 2.0),
-                particle_size,
-                particle_size
-            ),
-            c
+        var particle_rect := Rect2(
+            floorf(particle_pos.x - particle_size / 2.0),
+            floorf(particle_pos.y - particle_size / 2.0),
+            particle_size,
+            particle_size
         )
+        if particle_size >= 4.0:
+            var outline := Color("#3b3028")
+            outline.a = c.a
+            draw_rect(particle_rect.grow(1.0), outline)
+        draw_rect(particle_rect, c)
