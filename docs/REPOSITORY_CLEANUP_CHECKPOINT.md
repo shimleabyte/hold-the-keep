@@ -301,3 +301,72 @@ Latest branch head: `c336f7923e9b522898bd778f311c0382bf68d4d2`.
 
 ### Autonomous schedule
 The five previous schedules were disabled. The replacement daily `Autonomous repository cleanup` task starts 2026-11-20 at 08:00 Asia/Jakarta and continues A–D from this checkpoint. It must not start Stage E until every A–D exit criterion is verified. Once complete, it disables itself and creates the Stage E task.
+
+
+## Autonomous continuation — 2026-11-20
+
+**Live main observed before this documentation update:** `e93618fb107e4cb6a1393a25019125014a58e980`  
+**Exact-main validation:** Godot CI run [#44462637803](https://github.com/shimleabyte/hold-the-keep/actions/runs/44462637803) completed successfully on that SHA.  
+**Live branch inventory:** 170 branches including `main` (100 on page 1, 70 on page 2). This is a refreshed inventory, not a reuse of the 2026-11-19 count.  
+**Live open PR inventory:** six PRs, all still open and draft:
+- #212 `feat/battlefield-combat-readability` at `6d0ce0f69c4775412f0c9dcbe55fc80bbc1a9d1c`
+- #213 `feat/deterministic-directed-fx` at `c336f7923e9b522898bd778f311c0382bf68d4d2`
+- #210 `feat/civilian-work-action-pass` at `c1c87dbb6b01dcfb9e3d7aae5c19d70db5ccd541`
+- #214 `perf/acer-a0756-live-acceptance-probe` at `23f53abd0698e0ce482def8d9b8ce9c8e1913a8f`
+- #150 `docs/android-armv7-device-qa` at `1d2e29063881f6060f08e3ca3e98202196e55531`
+- #152 `feat/android-armv7-touch-controls-current-main` at `a405e8f92f1d9df5ebbea0b18a582ab4a073be15`
+
+### A — first live revalidation batch (8 of 43)
+
+Compared each candidate against live `main` SHA `e93618fb107e4cb6a1393a25019125014a58e980`. All eight have `ahead_by = 0`; the branch tips are fully contained in main. The branch-specific Actions queries returned no queued, in-progress, waiting, requested or pending runs. None is an open PR head.
+
+| Branch | Current tip | Behind main |
+|---|---|---:|
+| `art/faction-equipment-silhouette-pass` | `cf4d6933bb79bdafdf4a6788ddc95b8bd6ed25d1` | 26 |
+| `combat/player-skills-enemy-ai` | `ec2a41bd450c58cec2d75b7e3c00f7f02e6717e0` | 1,099 |
+| `docs/update-phase-11-integration-status` | `d5c2fe32d5604a9e5c79dccf5257c4150f6f70fe` | 176 |
+| `feat/blacksmith-forge` | `e74a90a8df059a37927251c6c3c1ae32bb4ddb18` | 496 |
+| `feat/character-animation-pass` | `4b5699018593dc61a1ebf46f8d34ae65535d04db` | 1,007 |
+| `feat/frontier-world-generation-mainline` | `ba33b833139fde02be641183755be9aa509cb63e` | 913 |
+| `feat/healer-infirmary` | `7dc6ebf32ed7a8162ddcef5e82019d151643c3db` | 513 |
+| `feat/hunter-hunting-lodge` | `5ee139f0d4e44d268b1e0667b9d43bcd9ee3f557` | 646 |
+
+The branch-specific Actions queries returned 2, 0, 0, 9, 0, 11, 8 and 26 historical runs respectively; all returned runs were completed. This confirms no active workflow for this batch, not that every historical run passed. The six current open PR heads are listed above and do not reference these eight branches.
+
+**No branch was deleted.** The connected GitHub tool inventory still has no branch-delete operation. `update_ref` only moves a ref and is not deletion; it was not used. The open-PR and active-Actions reference checks above do not constitute an exhaustive scan of every possible Git reference/deployment consumer, so this batch is not marked deletion-complete.
+
+### B — targeted performance branch disposition
+
+**Branch:** `perf/reduce-raid-simulation-scans`  
+**Tip:** `9317f225bfe3ed33312a7ec7a7375e4812845ab9`  
+**Comparison to live main:** diverged, 8 commits ahead / 26 behind; merge base `8bf589d75c38e8040275def123d118432552bf7b`.  
+**Changed files:** 
+- `scripts/behaviors/enemies/enemy_raid_behavior.gd` (+30 / -16)
+- `scripts/entities/villager.gd` (+37 / -13)
+- `scripts/systems/enemy_targeting.gd` (+6 / -5)
+- `tests/faction_raids.gd` (+3 / -0)
+
+The eight unique commits introduce cached faction-raid and retreat targets with a 0.4-second validation cadence, immediate invalid/queued-for-deletion target handling, throttled blocked-target expiry cleanup, and squared-distance comparisons in villager/enemy targeting. Current main still performs the corresponding raid target/return-target scans and blocked-target cleanup on the per-tick path, and still uses distance comparisons in those inspected methods. These changes are not already present as an equivalent patch in the inspected main files.
+
+**Disposition: retain.** This is a coherent performance candidate, not a safe wholesale integration: it changes live raid retreat/target invalidation and villager target selection on four production/test paths, and its base is 26 commits behind current main. Exact-head runs on the branch tip passed: Godot CI #42582406421, Builder Reachability QA #42582406443, Role Sprite Visual QA #42582406454 and Campaign Simulation QA #42582406481. Those runs validate the old branch head, not a rebase onto current main. Rebase/patch extraction and exact-head Godot 4.7 regression plus long-session raid/worker soak are still required. No PR was created and no code was merged.
+
+### C — refreshed PR gates
+
+All six PRs remain open and draft. #152 is currently reported non-mergeable; the other five are reported mergeable, which does not satisfy their acceptance gates.
+
+PR #213's current exact head `c336f7923e9b522898bd778f311c0382bf68d4d2` has four completed successful runs: Godot CI #44462439033, Campaign Simulation QA #44462438998, Pixel FX Readability QA #44462439056 and Building Visual QA #44462439075. The 2026-11-20 review records the required shared siege/building damage-path reconciliation with #212: preserve one damage application, derive direction once in `take_damage_from()`, feed it to directional debris, and retain both visual regression assertions. Do not merge until #212's gameplay-readability gate is accepted and the combined head is retested.
+
+#212 remains blocked on normal-speed desktop gameplay readability: the prior 1280×720 capture did not make the melee sweep, shield cue and directional fracture consistently legible. #210 remains blocked on a multi-frame live civilian work-cycle capture and reconciliation of shared `villager.gd` changes. #214 remains draft pending actual Acer Aspire One A0756 measurements; no measurements are claimed. #150 and #152 remain parked because Android is deferred.
+
+No PR was merged or closed during this pass.
+
+### D — current protection capability check
+
+The refreshed branch inventory reports `protected: false` for `main`. The rulesets endpoint returned an empty array. Reading `/branches/main/protection` returned HTTP 403, `Resource not accessible by integration`. The connected GitHub toolset exposes no branch-protection/ruleset write operation. Therefore protection is **not enabled**; do not treat repository admin metadata as proof that the integration can configure it.
+
+### Remaining work
+
+- A: revalidate the remaining 35 behind-only candidates, complete reference checks, and retain all branches until a genuine branch-delete capability exists.
+- B: continue bounded, evidence-backed dispositions for the remaining diverged branches; preserve targeted unique work until patch equivalence and current-main validation are established.
+- C: keep #212 first, #213 second, and #210 after their shared villager/combat changes are understood; retain the hardware and Android gates.
+- D: branch protection remains blocked by the integration's 403/read-write capability gap. Do not mark A–D complete.
