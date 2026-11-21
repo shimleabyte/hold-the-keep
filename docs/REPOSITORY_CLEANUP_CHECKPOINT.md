@@ -1,9 +1,9 @@
 # Repository Cleanup Checkpoint
 
-**Checkpoint date:** 2026-11-19  
+**Checkpoint date:** 2026-11-21  
 **Default branch:** `main`  
-**Verified main SHA:** `d6a54036f7d7587c6e4cbd7188a620a6f9bc9d19`  
-**Previous main commit date:** 2026-11-10 02:22:37 UTC  
+**Verified main SHA:** `5c846c91557c6e2a6a3604c67bb9679fb0559baa`  
+**Previous main commit date:** 2026-11-20 01:48:48 UTC  
 **Engine target:** Godot 4.7 only  
 **Release priority:** Desktop first; Android remains deferred.
 
@@ -370,3 +370,103 @@ The refreshed branch inventory reports `protected: false` for `main`. The rulese
 - B: continue bounded, evidence-backed dispositions for the remaining diverged branches; preserve targeted unique work until patch equivalence and current-main validation are established.
 - C: keep #212 first, #213 second, and #210 after their shared villager/combat changes are understood; retain the hardware and Android gates.
 - D: branch protection remains blocked by the integration's 403/read-write capability gap. Do not mark A–D complete.
+
+
+## Autonomous continuation — 2026-11-21
+
+**Live main SHA before this checkpoint-only update:** \`5c846c91557c6e2a6a3604c67bb9679fb0559baa\`  
+**Main Godot CI:** run [#44656319186](https://github.com/shimleabyte/hold-the-keep/actions/runs/44656319186), run number 1479, completed successfully on that exact SHA.  
+**Live branch inventory:** 170 branches (100 on page 1, 70 on page 2). A complete tip scan found exactly the two duplicate-tip groups recorded in section B below.  
+**Important count qualification:** the 43/4/122 classification table above is the 2026-11-19 comparison snapshot. The live inventory count was refreshed, but a complete 170-branch ahead/behind reclassification has not been rerun. Do not treat the old 43/4/122 split as current.
+
+### A — second revalidation batch (16 of 43 recorded candidates)
+
+The first eight candidates were re-compared against the current main SHA above, not merely carried forward from the 2026-11-20 comparison. Eight additional unique candidates were also checked. All 16 have \`ahead_by = 0\` and are fully contained in current main.
+
+| Branch | Current tip | Behind current main | Historical workflow runs | Latest exact-tip run |
+|---|---|---:|---:|---|
+| \`art/faction-equipment-silhouette-pass\` | \`cf4d6933bb79bdafdf4a6788ddc95b8bd6ed25d1\` | 27 | 2 | success |
+| \`combat/player-skills-enemy-ai\` | \`ec2a41bd450c58cec2d75b7e3c00f7f02e6717e0\` | 1,100 | 0 | none |
+| \`docs/update-phase-11-integration-status\` | \`d5c2fe32d5604a9e5c79dccf5257c4150f6f70fe\` | 177 | 0 | none |
+| \`feat/blacksmith-forge\` | \`e74a90a8df059a37927251c6c3c1ae32bb4ddb18\` | 497 | 9 | success |
+| \`feat/character-animation-pass\` | \`4b5699018593dc61a1ebf46f8d34ae65535d04db\` | 1,008 | 0 | none |
+| \`feat/frontier-world-generation-mainline\` | \`ba33b833139fde02be641183755be9aa509cb63e\` | 914 | 11 | success |
+| \`feat/healer-infirmary\` | \`7dc6ebf32ed7a8162ddcef5e82019d151643c3db\` | 514 | 8 | success |
+| \`feat/hunter-hunting-lodge\` | \`5ee139f0d4e44d268b1e0667b9d43bcd9ee3f557\` | 647 | 26 | success |
+| \`feat/multi-stronghold-campaign\` | \`aa52e91a72412a65aa99b8e75914af1cee678d45\` | 907 | 3 | success |
+| \`feat/phase-05-resource-worksites\` | \`8590955dc13b1de62a0480970df6cc4d9b13ab0d\` | 880 | 6 | success |
+| \`feat/phase-06-factions-territorial-ai-rebased\` | \`38f6d19dcad0fdb91b206924a75f746f3eccf138\` | 848 | 13 | success |
+| \`feat/phase-06-shieldbearer-brace\` | \`639996f9bfa1ae939891bc44afd5266148a9ef07\` | 795 | 2 | success |
+| \`feat/phase-06.4-faction-raids\` | \`323fe74969a6c202cf84a0117de62369e19620f9\` | 741 | 7 | success |
+| \`feat/phase-06.5-faction-warfare-stress\` | \`a1bf45b85498acb1b74b3857d7753d25fb6fc3a0\` | 729 | 3 | failure |
+| \`feat/phase-07-conquest-objectives-mainline\` | \`131e116a3330e0e01af26298ff8529157e335391\` | 845 | 1 | success |
+| \`feat/phase-09-balance-performance-release-mainline\` | \`cb7d07a31d3a78b06f46b584bfd9b5d2019683e7\` | 842 | 1 | success |
+
+For all 16, branch-specific Actions queries found no queued, in-progress, waiting, requested, or pending runs. The workflow counts above are historical totals, not active work. The current six open PR heads do not include any of these branches. Branch-qualified all-state PR searches for the eight newly checked candidates returned no PR records. None of the 16 belongs to either duplicate-tip group found in the live 170-branch scan.
+
+The latest exact-tip workflow for \`feat/phase-06.5-faction-warfare-stress\` failed (run #41384326890); this does not affect containment, but it is recorded rather than hidden. The other exact-tip runs listed as successful are historical and do not constitute current-main validation.
+
+**Deletion remains blocked.** The connected GitHub tool inventory still exposes no genuine branch-delete operation. \`update_ref\` only moves a ref and is not deletion; it was not used. The reference checks above cover PR history for the new batch, the current open-PR inventory, branch-specific Actions activity, and duplicate branch tips. They do not prove the absence of every possible external deployment or consumer reference. No branch was deleted. Twenty-seven of the 43 recorded candidates remain to be revalidated.
+
+### B — exact duplicate-tip groups and dispositions
+
+The refreshed scan of all 170 branch tips found exactly two duplicate-tip groups. Identical tip SHA means the two names point to the same commit graph and tree; the compare file sets below therefore apply identically to both names.
+
+**Reload acceptance group**
+- Shared tip: \`c8719082f95d362e62b8a04f5c3d9ca2959da2c4\`.
+- Compared with current main: 6 unique commits ahead / 718 behind.
+- Changed files: \`tests/README.md\`, \`tests/campaign_reload_hardening.gd\`.
+- Branch-qualified PR searches found no PRs for either name. Both branch workflow histories are completed only (6 runs and 1 run); no active run exists.
+- \`feat/phase-09.3-reload-acceptance\`: **retain** as canonical name because the unique changed surface is acceptance-test documentation and coverage.
+- \`feat/phase-09.3-late-act-reload-hardening\`: **delete-candidate** because its tip is exactly identical to the retained branch. Do not delete until the genuine delete capability exists and reference checks are repeated immediately before deletion.
+
+**Frontier rendered-repeatability group**
+- Shared tip: \`65f852d6d923066ad38d2eb360e7299b949f20ff\`.
+- Compared with current main: 7 unique commits ahead / 367 behind.
+- Changed files: \`.github/workflows/rendered-world-qa.yml\`, \`tests/shot_frontier_seed_compare.gd\`.
+- Branch-qualified PR searches found no PRs for either name. The non-final branch has 7 completed historical workflow runs; the final branch has none. Neither has an active run.
+- \`work/dev-h-frontier-rendered-repeatability-final\`: **retain** as canonical name.
+- \`work/dev-h-frontier-rendered-repeatability\`: **delete-candidate** because its tip is exactly identical to the retained branch. Do not delete until the genuine delete capability exists and reference checks are repeated immediately before deletion.
+
+These four branch dispositions are current and evidence-backed. They do not complete the full diverged-branch audit; the remaining historical diverged set still requires bounded review. The two duplicate groups are not grounds for merging or deleting any unrelated branches.
+
+### C — refreshed PR state and ordered gates
+
+All six PRs remain open and draft. No PR was merged or closed.
+
+| PR | Current head | Current comparison to main | Current disposition |
+|---|---|---|---|
+| [#212](https://github.com/shimleabyte/hold-the-keep/pull/212) | \`6d0ce0f69c4775412f0c9dcbe55fc80bbc1a9d1c\` | 27 ahead / 9 behind; 14 files | Review first; hold for normal-speed desktop combat readability |
+| [#213](https://github.com/shimleabyte/hold-the-keep/pull/213) | \`c336f7923e9b522898bd778f311c0382bf68d4d2\` | 57 ahead / 9 behind; 12 files | Reconcile after #212; shared building/siege damage path |
+| [#210](https://github.com/shimleabyte/hold-the-keep/pull/210) | \`c1c87dbb6b01dcfb9e3d7aae5c19d70db5ccd541\` | 5 ahead / 9 behind; 4 files | Wait until shared villager changes are understood and live work-cycle evidence exists |
+| [#214](https://github.com/shimleabyte/hold-the-keep/pull/214) | \`23f53abd0698e0ce482def8d9b8ce9c8e1913a8f\` | 3 commits; 1 file | Keep draft; no actual Acer Aspire One A0756 measurements are attached |
+| [#150](https://github.com/shimleabyte/hold-the-keep/pull/150) | \`1d2e29063881f6060f08e3ca3e98202196e55531\` | 10 commits; 1 file | Park; Android deferred |
+| [#152](https://github.com/shimleabyte/hold-the-keep/pull/152) | \`a405e8f92f1d9df5ebbea0b18a582ab4a073be15\` | 15 commits; 11 files | Park; Android deferred; latest metadata reports non-mergeable |
+
+**#212 first:** exact-head Godot CI #42742842633, Battlefield Combat Visual QA #42742842502, Building Visual QA #42742842653, Campaign Simulation QA #42742842817, Builder Reachability QA #42742842505, Autonomous Wave Diagnostic #42742842641, and Role Sprite Visual QA #42742842469 all completed successfully on its exact head. The only recorded review is COMMENTED, not approval. The prior 1280×720 captures still do not establish rapid normal-speed readability of the melee sweep, shield cue, and directional fracture mark. Do not merge.
+
+The #212 metadata reads disagreed on mergeability: \`get_pr_info\` reported true while the separate PR fetch snapshot reported false. Treat mergeability as requiring a fresh consistent read before any future merge attempt. This disagreement does not change the acceptance hold.
+
+**#213 second:** exact-head Godot CI #44462439033, Campaign Simulation QA #44462438998, Pixel FX Readability QA #44462439056, and Building Visual QA #44462439075 all completed successfully on \`c336f7923e9b522898bd778f311c0382bf68d4d2\`. The latest COMMENTED review resolves the debris-visibility concern but documents a concrete overlap with #212 in \`building.gd\`, \`siege_engine_behavior.gd\`, and \`tests/siege_engine_behavior.gd\`. Preserve one damage application, derive direction once in \`take_damage_from()\`, pass that direction into directional debris, and retain both visual assertions. Reconcile and rerun exact-head Godot 4.7 plus both rendered QA workflows after #212 is accepted.
+
+**#210 after shared changes:** exact-head Godot CI #42745235410, Campaign Simulation QA #42745235375, Builder Reachability QA #42745235349, and Role Sprite Visual QA #42745235471 all completed successfully on its exact head. Its only recorded review is COMMENTED. The current evidence remains a fixed-pose comparison rather than a multi-frame live work cycle; keep draft until Hunter/Healer work-cycle evidence exists and #212's \`villager.gd\` changes are reconciled.
+
+#214 remains gated on real hardware measurements, not CI. #150 and #152 remain parked. No merge or closure is authorized by this evidence.
+
+### D — protection and worklist baseline
+
+- The live branch inventory reports \`main.protected = false\`.
+- The rulesets endpoint returns an empty array.
+- Reading \`/branches/main/protection\` returned HTTP 403: \`Resource not accessible by integration\`.
+- The connected GitHub tool inventory exposes no branch-protection/ruleset write operation and no branch-delete operation. Protection is **not enabled**.
+- \`worklist.md\` was fetched from current main and still contains the pointer to \`docs/REPOSITORY_CLEANUP_CHECKPOINT.md\`; no worklist edit was needed.
+- The current code baseline SHA and successful Godot CI run are recorded at the top of this section. They are not the final A–D SHA because branch dispositions, PR gates, deletion capability, and branch protection remain unresolved.
+
+### Remaining work after 2026-11-21
+
+- A: revalidate the remaining 27 recorded behind-only candidates against a freshly read main; repeat PR/workflow/reference checks; retain branches until genuine deletion is available.
+- B: continue bounded, complete dispositions for the remaining diverged branches. Do not convert provisional superseded candidates into final dispositions without unique-commit and patch-equivalence evidence.
+- C: keep #212 first, #213 second, #210 third; resolve only after review, exact-head Godot 4.7 checks, rendered acceptance, and conflict reconciliation. Keep #214 and Android PRs parked.
+- D: establish actual branch protection/rulesets through a capability that has the required administration permission. Do not mark protection enabled based on repository admin metadata alone.
+
+A–D remain incomplete. Stage E has not started.
