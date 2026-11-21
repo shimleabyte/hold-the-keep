@@ -1,6 +1,15 @@
 extends SceneTree
 ## Phase 06.2 regression: Siege Engine target policy, telegraphed impact and counterplay.
 
+var _last_debris_direction := Vector2.ZERO
+var _debris_burst_count := 0
+
+
+func _on_fx_burst(kind: String, _at: Vector2, direction: Vector2, _amount: float) -> void:
+    if kind == "structure_debris":
+        _last_debris_direction = direction
+        _debris_burst_count += 1
+
 func ticks(count: int) -> void:
     for i in range(count):
         await physics_frame
@@ -72,6 +81,8 @@ func _run() -> void:
     main.village.set_process(false)
 
     var data_db = root.get_node("DataDB")
+    var events = root.get_node("Events")
+    events.fx_burst.connect(_on_fx_burst)
     main.player.global_position = Vector2(820, 820)
 
     # High-value defensive structures outrank a nearby Keep and production sites.
@@ -110,9 +121,13 @@ func _run() -> void:
         "Siege Engine must telegraph before its heavy impact")
     assert(wall.hp == wall_hp_before,
         "Siege target must not take damage during the wind-up")
+    var debris_count_before := _debris_burst_count
     siege.siege_behavior.tick(siege.siege_behavior.windup_duration + 0.02)
     assert(wall.hp == wall_hp_before - 72,
         "Siege impact must apply the configured heavy structure damage")
+    assert(_debris_burst_count == debris_count_before + 1
+        and _last_debris_direction.dot(Vector2.RIGHT) > 0.99,
+        "A siege strike from the right must emit one outward rightward debris burst from the struck structure")
     assert(siege.siege_behavior.cooldown > 0.0,
         "Successful impact must enter a recovery cooldown")
     siege.siege_behavior.tick(0.016)
