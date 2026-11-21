@@ -306,8 +306,6 @@ func _ready() -> void:
         add_to_group("faction_raiders")
     if is_garrison:
         add_to_group("enemy_garrison")
-    if archetype == "shieldbearer":
-        shield_behavior.draw_telegraph(self, _fh)
     if role == "ranged":
         add_to_group("ranged_enemies")
     anim.view = SpriteAnim.SIDE
@@ -816,6 +814,23 @@ func _draw() -> void:
     anim.draw(self, _tex, _fw, _fh)
     FactionVisual.draw_identity(self, faction_visual, archetype)
     combat_feedback.draw(self, _fh, _faction_tint)
+    if faction_raid_retreating:
+        var travel_direction := Vector2.DOWN
+        match anim.view:
+            SpriteAnim.FRONT:
+                travel_direction = Vector2.DOWN
+            SpriteAnim.BACK:
+                travel_direction = Vector2.UP
+            _:
+                travel_direction = Vector2.LEFT if anim.flip else Vector2.RIGHT
+        var rear := -travel_direction
+        var side := travel_direction.rotated(PI * 0.5)
+        var retreat_ink := Color(0.74, 0.68, 0.56, 0.82)
+        for trail_index in 2:
+            var trail_offset := rear * float(6 + trail_index * 4)
+            var tail := Vector2(0.0, -3.0) + trail_offset
+            draw_line(tail - side * 2.0, tail + rear * 2.0, retreat_ink, 1.0)
+            draw_line(tail + rear * 2.0, tail + rear * 4.0 + side * 2.0, retreat_ink, 1.0)
     if is_supply_raider or is_faction_raider:
         draw_rect(Rect2(-3, -_fh - 8, 6, 3), Color("#f2b45f"))
         draw_line(Vector2(0, -_fh - 8), Vector2(0, -_fh - 12), Color("#f2b45f"), 1.0)
@@ -826,8 +841,7 @@ func _draw() -> void:
         "scout":
             scout_behavior.draw_telegraph(self, _fh, color)
         "shieldbearer":
-            draw_rect(Rect2(-11, -14, 5, 10), color, false, 1.5)
-            draw_line(Vector2(-11, -10), Vector2(-6, -10), color, 1.0)
+            shield_behavior.draw_telegraph(self, _fh)
         "saboteur":
             draw_circle(Vector2(7, -12), 2.5, color)
             draw_line(Vector2(7, -15), Vector2(10, -18), color, 1.0)

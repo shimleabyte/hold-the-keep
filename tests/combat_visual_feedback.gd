@@ -34,6 +34,18 @@ func _initialize() -> void:
     assert(feedback.impact_remaining == 0.0,
         "Impact burst must expire without a persistent actor state")
 
+    feedback.register_swing(Vector2.LEFT, 0.28, 1.5)
+    assert(feedback.is_active()
+        and feedback.swing_direction == Vector2.LEFT
+        and is_equal_approx(feedback.swing_weight, 1.5),
+        "Melee contact sweep must preserve locked direction and heavy-strike weight")
+    feedback.advance(0.1)
+    assert(feedback.swing_remaining > 0.0 and feedback.swing_remaining < feedback.swing_total,
+        "Melee sweep must follow its own short presentation lifetime")
+    feedback.end_swing()
+    assert(feedback.swing_remaining == 0.0 and feedback.swing_total == 0.0,
+        "Interrupted melee presentation must clear without touching attack resolution")
+
     feedback.register_stagger(0.5)
     feedback.advance(0.1)
     assert(is_equal_approx(feedback.stagger_remaining, 0.4),
