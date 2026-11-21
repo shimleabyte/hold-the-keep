@@ -2,8 +2,8 @@
 
 **Checkpoint date:** 2026-11-21  
 **Default branch:** `main`  
-**Verified main SHA:** `5c846c91557c6e2a6a3604c67bb9679fb0559baa`  
-**Previous main commit date:** 2026-11-20 01:48:48 UTC  
+**Verified main SHA:** `cd84c309965a73a85795cf5fa5d83072ca2200ad`  
+**Previous main commit date:** 2026-11-21 01:29:59 UTC  
 **Engine target:** Godot 4.7 only  
 **Release priority:** Desktop first; Android remains deferred.
 
@@ -406,7 +406,7 @@ For all 16, branch-specific Actions queries found no queued, in-progress, waitin
 
 The latest exact-tip workflow for \`feat/phase-06.5-faction-warfare-stress\` failed (run #41384326890); this does not affect containment, but it is recorded rather than hidden. The other exact-tip runs listed as successful are historical and do not constitute current-main validation.
 
-**Deletion remains blocked.** The connected GitHub tool inventory still exposes no genuine branch-delete operation. \`update_ref\` only moves a ref and is not deletion; it was not used. The reference checks above cover PR history for the new batch, the current open-PR inventory, branch-specific Actions activity, and duplicate branch tips. They do not prove the absence of every possible external deployment or consumer reference. No branch was deleted. Twenty-seven of the 43 recorded candidates remain to be revalidated.
+**Deletion remains blocked.** The connected GitHub tool inventory still exposes no genuine branch-delete operation. \`update_ref\` only moves a ref and is not deletion; it was not used. The reference checks above cover PR history for the new batch, the current open-PR inventory, branch-specific Actions activity, and duplicate branch tips. They do not prove the absence of every possible external deployment or consumer reference. No branch was deleted. Nineteen of the 43 recorded candidates remain to be revalidated.
 
 ### B — exact duplicate-tip groups and dispositions
 
@@ -464,9 +464,31 @@ The #212 metadata reads disagreed on mergeability: \`get_pr_info\` reported true
 
 ### Remaining work after 2026-11-21
 
-- A: revalidate the remaining 27 recorded behind-only candidates against a freshly read main; repeat PR/workflow/reference checks; retain branches until genuine deletion is available.
+- A: revalidate the remaining 19 recorded behind-only candidates against a freshly read main; repeat PR/workflow/reference checks; retain branches until genuine deletion is available.
 - B: continue bounded, complete dispositions for the remaining diverged branches. Do not convert provisional superseded candidates into final dispositions without unique-commit and patch-equivalence evidence.
 - C: keep #212 first, #213 second, #210 third; resolve only after review, exact-head Godot 4.7 checks, rendered acceptance, and conflict reconciliation. Keep #214 and Android PRs parked.
 - D: establish actual branch protection/rulesets through a capability that has the required administration permission. Do not mark protection enabled based on repository admin metadata alone.
 
 A–D remain incomplete. Stage E has not started.
+
+
+### A — third revalidation batch (24 of 43 recorded candidates)
+
+Eight more recorded candidates were compared against live main SHA \`cd84c309965a73a85795cf5fa5d83072ca2200ad\`. All eight have \`ahead_by = 0\` and are fully contained in that mainline snapshot.
+
+| Branch | Current tip | Behind current main | Historical workflow runs | Latest exact-tip run |
+|---|---|---:|---:|---|
+| \`feat/phase-10-adaptive-viewport-mainline\` | \`c315002c01ace530a85948e86183d180cf560755\` | 840 | 1 | success |
+| \`feat/regional-control-roads-mainline\` | \`1cda66041cfd9efc81ce26efcbe2448f7d5d1b21\` | 916 | 11 | success |
+| \`feat/responsive-resolution-visual-pass\` | \`efa34eb0dd61d7b1b50647a96996ed9a4179b3bb\` | 1,020 | 0 | none |
+| \`feat/rival-local-depots-road-delivery\` | \`04c76d6c8bd4a881c8139a1de6c5c798a383ed8e\` | 41 | 0 | none |
+| \`feat/scout-specialist\` | \`6d92bb21e5ca4dcffe8db292bfe17f84020cd6ce\` | 576 | 11 | success |
+| \`feat/strategic-map-stage-hud\` | \`656b049f5cb38137e5edefd8895bfc4bb6823025\` | 1,058 | 0 | none |
+| \`feat/workplaces-and-specialist-jobs\` | \`8252ffec6289fd925819603aa98f3a2f80fce691\` | 909 | 9 | success |
+| \`fix/ci-regression-test-timeouts\` | \`bf92f2acbcd051cac5aae4bc28d1701de2c88d08\` | 960 | 3 | failure |
+
+All eight branch-specific Actions queries returned no active runs. The current six open PR heads do not reference these branches, and the refreshed duplicate-tip scan found no duplicate alias among them. The exact-tip runs for \`fix/ci-regression-test-timeouts\` failed (runs #41289742362 and #41289685804); record this as historical branch evidence, not as a passing validation claim. No branch was deleted.
+
+A now has 24 of the 43 recorded candidates revalidated against a recent live main snapshot. Nineteen remain. This does not waive the repeated reference checks required immediately before any future deletion.
+
+**Latest-main CI after the prior checkpoint update:** Godot CI run #44850521099 is queued on main SHA \`cd84c309965a73a85795cf5fa5d83072ca2200ad\`. The previously successful run #44656319186 applies to the prior main SHA \`5c846c91557c6e2a6a3604c67bb9679fb0559baa\`; do not describe the queued run as passed.
