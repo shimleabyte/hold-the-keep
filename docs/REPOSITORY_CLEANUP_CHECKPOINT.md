@@ -492,3 +492,98 @@ All eight branch-specific Actions queries returned no active runs. The current s
 A now has 24 of the 43 recorded candidates revalidated against a recent live main snapshot. Nineteen remain. This does not waive the repeated reference checks required immediately before any future deletion.
 
 **Latest-main CI after the prior checkpoint update:** Godot CI run #44850521099 is queued on main SHA \`cd84c309965a73a85795cf5fa5d83072ca2200ad\`. The previously successful run #44656319186 applies to the prior main SHA \`5c846c91557c6e2a6a3604c67bb9679fb0559baa\`; do not describe the queued run as passed.
+
+## Autonomous continuation - 2026-11-22
+
+**Live main SHA before this checkpoint-only update:** 66c7c12b5d4a4e37a31602831af2599541385bb7. Its verified parent is cd84c309965a73a85795cf5fa5d83072ca2200ad. The previous 24 candidate checks were made against that parent, so their containment remains transitive on this main head.  
+**Main Godot CI:** run [#44850630034](https://github.com/shimleabyte/hold-the-keep/actions/runs/44850630034), run number 1481, completed successfully on exact SHA 66c7c12b5d4a4e37a31602831af2599541385bb7.  
+**Live branch inventory:** 170 branches (100 on page one, 70 on page two).  
+**Live open PR inventory:** six: #212, #213, #210, #214, #150, and #152.
+
+### A - final recorded-candidate containment batch (43 of 43)
+
+The final 19 names from the recorded 43-candidate list were fetched by exact Git ref and compared against current main SHA 66c7c12b5d4a4e37a31602831af2599541385bb7. Every comparison returned ahead_by = 0 and zero unique commits. Each branch-qualified all-state PR search returned no PR records. Each branch Actions query returned no queued, in-progress, waiting, requested, or pending runs.
+
+| Branch | Exact tip | Behind current main | Historical Actions runs | Latest exact-tip evidence |
+|---|---|---:|---:|---|
+| fix/hud-discovered-type | 8620a2de038bf6db5857e7f313377eae727edff7 | 1,100 | 0 | none |
+| fix/rival-worker-cargo-conservation | a9c5319f3a4249dd27fb908960094aec530cac68 | 119 | 0 | none |
+| integrate/data-db-validation-mainline | 1c3cbde5c4ea81003953ea3e88196e910c1168f9 | 469 | 1 | success on exact tip |
+| overhaul/territory-expansion | 56cf47d0a5811c70b670d2fd68dce1f0ae01a3c0 | 1,130 | 0 | none |
+| qa/desktop-export-acceptance | 1bf731378f95748579a0fc5c119724eb06bbbd8e | 233 | 0 | none |
+| qa/headed-mode-source-export | 185888507a0197ef50711672948f118844daf122 | 36 | 1 | latest success was on older SHA aff8f602cea72c35bb3888c17a82044a81ae6ab5, not this tip |
+| work/dev-b-faction-ai-components | e8a7dfa240a634947d884489e69271cfc6b8eacb | 475 | 2 | latest success on exact tip; older run cancelled |
+| work/dev-c-autonomous-wave-diagnostic-integrated | 6bce640a5708aa342bdf43d80f4924f47fdcbc6e | 366 | 0 | none |
+| work/dev-c-campaign-simulation | cec36b62ce376c96d88f665be2295d072e696227 | 474 | 2 | latest two runs successful on exact tip |
+| work/dev-d-supply-network-decomposition | 9615e818ace3f785e902fd44200a14736848e80c | 456 | 2 | latest two runs successful on exact tip |
+| work/dev-e-save-validator-mainline | b1b8cd952c99643aa22c31ae946c0300ad5fa5e4 | 436 | 4 | latest two runs successful on exact tip |
+| work/dev-e-sequential-migration-pipeline-current-main | 0c390ee35b9929ac8d68766decbd9e31f9998e65 | 421 | 2 | latest two runs successful on exact tip |
+| work/dev-g-hud-widget-modules | b834eff1cfd579561705519a318dc1a013af6c37 | 390 | 2 | latest two runs successful on exact tip |
+| work/dev-h-world-generation | f695f940346be2146a281b8fa83772326e8d7ffc | 431 | 2 | latest two runs successful on exact tip |
+| work/dev-i-enemy-patrol-controller | 3c1f50b24775de1312feef1c7c6acfd7b2c07d13 | 464 | 2 | latest success on exact tip; one older success |
+| work/dev-j-decision-events | 84b43d311021cf2a719341189007eb82581d37ef | 459 | 15 | latest two runs successful on exact tip |
+| work/dev-k-input-command-registry | 28675b868552f158ff107350ad93b25f6e079ca0 | 444 | 2 | latest two runs successful on exact tip |
+| work/dev-l-archery-range-ranged-training | f95a89791dcffb14dd09e53fdbc47dcddc771a5a | 403 | 4 | latest two runs successful on exact tip |
+| work/dev-l-barracks-garrison | 4c9203c61854a683f8c5dd76eca0ea3bdc81f845 | 430 | 8 | latest two runs successful on exact tip |
+
+The prior 24 candidates are documented in the 2026-11-20 and 2026-11-21 sections above. Their checks covered containment, current PR-head exclusion, branch-specific Actions activity, and the duplicate-tip inventory. Because current main is a direct child of the SHA used for those comparisons, their contained tips remain contained on this current main.
+
+**A containment result:** all 43 recorded candidates are now proven to have zero unique commits relative to current main. For the final 19, branch-specific PR searches found no records and no active Actions runs. Historical workflow totals are not interpreted as current activity. No candidate was deleted.
+
+**A remains blocked, not complete.** The connected GitHub tool inventory exposes no genuine branch-delete operation. The available update_ref action only moves a ref, optionally with force; it is not deletion and was not used. The integration also exposes no supported deployment/reference enumeration action, so absence of every possible external deployment or consumer reference cannot be proven. Retain all 43 branches. Do not attempt ref updates as deletion.
+
+### B - diverged-branch audit status
+
+No new diverged-branch disposition was finalized in this run. The two exact duplicate-tip groups and their retain/delete-candidate dispositions remain as recorded in the 2026-11-21 section. The performance branch perf/reduce-raid-simulation-scans remains retain pending rebase/patch extraction and fresh Godot 4.7 validation. Other sample superseded candidates remain provisional until their unique commits and patch equivalence are reviewed. The full diverged-branch inventory still lacks a final disposition for every branch. No integration, merge, or branch deletion was performed.
+
+### C - refreshed ordered PR review
+
+**PR #212 - first review**
+
+- Current state: open, draft, mergeable = false; head 6d0ce0f69c4775412f0c9dcbe55fc80bbc1a9d1c; base SHA d6a54036f7d7587c6e4cbd7188a620a6f9bc9d19.
+- Current comparison to main: 27 commits ahead / 11 behind; 14 changed files.
+- Changed files: .github/workflows/combat-visual-qa.yml; scripts/behaviors/enemies/enemy_combat_lifecycle.gd; scripts/behaviors/shieldbearer_behavior.gd; scripts/behaviors/siege_engine_behavior.gd; scripts/entities/arrow.gd; scripts/entities/building.gd; scripts/entities/combat_visual_feedback.gd; scripts/entities/enemy.gd; scripts/entities/enemy_bolt.gd; scripts/entities/player.gd; scripts/entities/villager.gd; tests/combat_visual_feedback.gd; tests/shot_combat_engagement.gd; tests/siege_engine_behavior.gd.
+- Review state: one COMMENTED review, no approval. The review says the melee sweep and shield cue remain difficult to read at gameplay zoom and the building fracture is obscured by the hit flash. No normal-speed desktop gameplay acceptance has been attached.
+- Exact-head successful runs: [Godot CI #42742842633](https://github.com/shimleabyte/hold-the-keep/actions/runs/42742842633), [Battlefield Combat Visual QA #42742842502](https://github.com/shimleabyte/hold-the-keep/actions/runs/42742842502), [Building Visual QA #42742842653](https://github.com/shimleabyte/hold-the-keep/actions/runs/42742842653), [Campaign Simulation QA #42742842817](https://github.com/shimleabyte/hold-the-keep/actions/runs/42742842817), [Builder Reachability QA #42742842505](https://github.com/shimleabyte/hold-the-keep/actions/runs/42742842505), [Autonomous Wave Diagnostic #42742842641](https://github.com/shimleabyte/hold-the-keep/actions/runs/42742842641), and [Role Sprite Visual QA #42742842469](https://github.com/shimleabyte/hold-the-keep/actions/runs/42742842469). All are successful on the exact head.
+- Decision: do not merge. The visual/gameplay acceptance gate remains unresolved; mergeability is currently false.
+
+**PR #213 - second review and overlap reconciliation**
+
+- Current state: open, draft, mergeable = false; head c336f7923e9b522898bd778f311c0382bf68d4d2; base SHA d6a54036f7d7587c6e4cbd7188a620a6f9bc9d19.
+- Current comparison to main: 57 commits ahead / 11 behind; 12 changed files.
+- Exact-head successful runs: [Godot CI #44462439033](https://github.com/shimleabyte/hold-the-keep/actions/runs/44462439033), [Campaign Simulation QA #44462438998](https://github.com/shimleabyte/hold-the-keep/actions/runs/44462438998), [Pixel FX Readability QA #44462439056](https://github.com/shimleabyte/hold-the-keep/actions/runs/44462439056), and [Building Visual QA #44462439075](https://github.com/shimleabyte/hold-the-keep/actions/runs/44462439075).
+- Three COMMENTED reviews are recorded; no approval. The latest review identifies the exact shared patch in scripts/behaviors/siege_engine_behavior.gd, scripts/entities/building.gd, and tests/siege_engine_behavior.gd.
+- Reconciliation requirement: keep one damage application. In the combined building path, take_damage_from() must derive the source-side direction once, set the directional fracture state, and forward that same direction into the directional-debris take_damage() overload. Both normal siege and faction-assault impact paths should prefer take_damage_from() when supported, with a one-argument fallback for other target types. Keep both the directional-fracture assertion and the single structure_debris-burst assertion. Do not independently apply damage or emit duplicate debris.
+- Decision: do not merge or rebase into main yet. #212's gameplay-readability gate remains unresolved; after that gate is accepted, reconcile the shared path and rerun exact-head Godot 4.7 plus both rendered workflows on the combined head.
+
+**PR #210 - third, after shared villager changes**
+
+- Current state: open, draft, mergeable = false; head c1c87dbb6b01dcfb9e3d7aae5c19d70db5ccd541; base SHA d6a54036f7d7587c6e4cbd7188a620a6f9bc9d19.
+- Current comparison to main: 5 commits ahead / 11 behind; 4 changed files: scripts/entities/sprite_anim.gd, scripts/entities/villager.gd, tests/animation_motion.gd, tests/shot_role_sprite_gameplay.gd.
+- Review state: one COMMENTED review, no approval. It says the current capture fixes each role at manual_progress = 0.30, proving pose differences but not a live multi-frame work cycle. Hunter/Healer cycle evidence and reconciliation of shared villager.gd changes remain outstanding.
+- Exact-head successful runs: [Godot CI #42745235410](https://github.com/shimleabyte/hold-the-keep/actions/runs/42745235410), [Campaign Simulation QA #42745235375](https://github.com/shimleabyte/hold-the-keep/actions/runs/42745235375), [Builder Reachability QA #42745235349](https://github.com/shimleabyte/hold-the-keep/actions/runs/42745235349), and [Role Sprite Visual QA #42745235471](https://github.com/shimleabyte/hold-the-keep/actions/runs/42745235471).
+- Decision: keep draft. Do not integrate until #212 and the shared villager path are understood and live work-cycle evidence exists.
+
+**Other PRs**
+
+- #214 remains open and draft at 23f53abd0698e0ce482def8d9b8ce9c8e1913a8f. No actual Acer Aspire One A0756 measurements are attached; CI is not hardware acceptance.
+- #150 remains open and draft at 1d2e29063881f6060f08e3ca3e98202196e55531. Android remains deferred.
+- #152 remains open and draft at a405e8f92f1d9df5ebbea0b18a582ab4a073be15. Android remains deferred; current metadata reports mergeable = false.
+- No PR was merged or closed.
+
+### D - protection and worklist
+
+- Current main branch metadata reports protected = false.
+- The rulesets endpoint returns an empty array.
+- Reading /branches/main/protection returns HTTP 403: Resource not accessible by integration.
+- No branch-protection or ruleset write operation is exposed by the connected GitHub tools. Protection is not enabled.
+- worklist.md was fetched and still points to docs/REPOSITORY_CLEANUP_CHECKPOINT.md. No worklist edit was needed.
+- The successful main Godot CI run recorded above applies to pre-checkpoint-update SHA 66c7c12b5d4a4e37a31602831af2599541385bb7. The commit created by this checkpoint update must be checked separately; it is not the final A-D baseline.
+
+### Remaining work after 2026-11-22
+
+- A: all 43 recorded candidates are confirmed behind-only, but deletion is blocked by the missing genuine delete operation and reference enumeration is not exhaustive. Retain them. Recheck references immediately before any future deletion.
+- B: finish evidence-backed disposition for the full diverged inventory. Existing provisional superseded candidates are not final; continue bounded batches and prioritize unique patch review.
+- C: #212 remains first and blocked on normal-speed gameplay readability; #213 remains second and must use the documented one-damage shared path; #210 remains third and needs live work-cycle evidence. Keep #214 and Android PRs parked.
+- D: establish branch protection through a connection with branch-administration write capability. Keep the worklist pointer unchanged.
+- A-D remain incomplete. Stage E has not started.
