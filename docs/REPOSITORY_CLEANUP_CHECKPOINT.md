@@ -708,3 +708,17 @@ These six branches remain retained because their open PRs have explicit acceptan
 - Android remains deferred. CI does not substitute for physical ARMv7 device acceptance. No PR was merged or closed.
 
 **Mainline validation at the comparison snapshot:** Godot CI run [#45093688435](https://github.com/shimleabyte/hold-the-keep/actions/runs/45093688435) for `b730a047815085b2b35dbc49b7a0ccf341658f37` was queued at the last poll, not green. This append is documentation-only and creates a new main commit; check its exact-head workflow separately.
+
+
+### B — diverged-branch audit, documentation-only batch (2026-11-23)
+
+Comparisons used exact `main` SHA `6e2507237c1e28b9d984c19f843d3808ae64a04d`. All three branches contain only historical `worklist.md` edits; their associated PRs were merged, and current main's worklist has later baselines and architecture status. None has an active workflow or open PR reference.
+
+- **`docs/priority-1-architecture-complete` — superseded.** Tip `0791a142a99988ae9372ae863c4bc5284d7b9b72`; 1 unique commit ahead / 383 behind; only `worklist.md` changed. PR #110 merged on 2026-11-04; exact-tip Godot CI [#41833145701](https://github.com/shimleabyte/hold-the-keep/actions/runs/41833145701) passed. Its Priority 1 architecture snapshot is older than current main's worklist/checkpoint state.
+- **`docs/reconcile-live-worklist-2026-11-04` — superseded.** Tip `9075dd401446dcab5e970268db721cfd42e5f81b`; 2 unique commits ahead / 406 behind; only `worklist.md` changed. PR #90 merged on 2026-11-04; exact-tip Godot CI [#41773665989](https://github.com/shimleabyte/hold-the-keep/actions/runs/41773665989) passed. The branch's baseline/line-count snapshot is obsolete.
+- **`docs/reconcile-worklist-after-scout` — superseded.** Tip `ab27ec9f5ba27a0fe356078f560176a6ab1e35ef`; 3 unique commits ahead / 390 behind; only `worklist.md` changed. PR #104 merged on 2026-11-04; exact-tip Godot CI [#41830780277](https://github.com/shimleabyte/hold-the-keep/actions/runs/41830780277) passed. The branch's Priority 1 status and baseline are replaced by later merged worklist revisions.
+- These are not integration candidates: their PR changes already landed and the branch snapshots are superseded by later mainline documentation. No branch deletion was attempted.
+
+**Cumulative bounded B sample recorded so far:** 5 superseded, 1 delete-candidate, 6 retain, 0 integrate across 12 individually reviewed diverged branches/active PR heads. This is a sample only; the rest of the live diverged inventory still needs disposition.
+
+**Main CI note:** Godot CI [#45094026940](https://github.com/shimleabyte/hold-the-keep/actions/runs/45094026940) for comparison SHA `6e2507237c1e28b9d984c19f843d3808ae64a04d` remained queued at the last poll. Do not report it as passed. This append is documentation-only and creates a new main commit; verify its own exact-head run separately.
