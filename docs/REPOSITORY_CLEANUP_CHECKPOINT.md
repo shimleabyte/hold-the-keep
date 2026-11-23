@@ -663,3 +663,48 @@ All comparisons below used current `main` SHA `3a100374021ce3e488cf5bf3c88bd5cc2
 **Batch result:** 2 superseded, 1 delete-candidate, 0 integrate, 0 retain. No duplicate tips within this batch. The only exact duplicate-tip groups in the full 170-branch inventory remain the two pairs already listed above.
 
 **Main CI note:** before this checkpoint append, Godot CI run [#45093388907](https://github.com/shimleabyte/hold-the-keep/actions/runs/45093388907) for SHA `3a100374021ce3e488cf5bf3c88bd5cc25f9d5d5` was queued, not green. Do not treat it as a verified pass. The append itself is documentation-only and creates a new main commit; verify its own run separately.
+
+
+### B/C — live PR-head reclassification and ordered reconciliation (2026-11-23)
+
+All comparisons in this section use exact current-main snapshot `b730a047815085b2b35dbc49b7a0ccf341658f37`. The live inventory is still 170 branches, but the historical `43 behind / 4 ahead / 122 diverged` classification is stale and is not reused. The four previously ahead-only PR heads are now diverged because current main has advanced 14 commits beyond their recorded base.
+
+**Active PR branch dispositions**
+- `feat/battlefield-combat-readability` — retain; PR #212; 27 unique commits ahead / 14 behind; 14 changed files.
+- `feat/deterministic-directed-fx` — retain; PR #213; 57 unique commits ahead / 14 behind; 12 changed files.
+- `feat/civilian-work-action-pass` — retain; PR #210; 5 unique commits ahead / 14 behind; 4 changed files.
+- `perf/acer-a0756-live-acceptance-probe` — retain; PR #214; 3 unique commits ahead / 14 behind; one changed file.
+- `docs/android-armv7-device-qa` — retain; PR #150; 10 unique commits ahead / 249 behind; one changed file.
+- `feat/android-armv7-touch-controls-current-main` — retain; PR #152; 15 unique commits ahead / 248 behind; 11 changed files.
+
+These six branches remain retained because their open PRs have explicit acceptance/deferral gates. None is integrated or deleted. The remaining live diverged-branch inventory still requires bounded review; do not infer a completed disposition count from this sample.
+
+**PR #212 — first, acceptance still blocked**
+- Open/draft, exact head `6d0ce0f69c4775412f0c9dcbe55fc80bbc1a9d1c`, mergeable=true; 27 ahead / 14 behind on the exact `b730a...` comparison; 14 changed files.
+- Seven exact-head Godot 4.7/rendered/diagnostic workflows remain successful: Godot CI #42742842633, Battlefield Combat Visual QA #42742842502, Building Visual QA #42742842653, Campaign Simulation QA #42742842817, Builder Reachability QA #42742842505, Autonomous Wave Diagnostic #42742842641, and Role Sprite Visual QA #42742842469.
+- One COMMENTED review, no approval. The normal-speed desktop readability acceptance remains absent; the review's melee sweep, shield cue and building-fracture legibility findings remain unresolved.
+- Decision: retain and do not merge. Current mergeability=true does not satisfy the human visual acceptance gate.
+
+**PR #213 — second, overlap reconciled at patch level**
+- Open/draft, exact head `c336f7923e9b522898bd778f311c0382bf68d4d2`, mergeable=false; 57 ahead / 14 behind on the exact `b730a...` comparison; 12 changed files.
+- Exact-head Godot 4.7 CI #44462439033, Pixel FX Readability QA #44462439056, Building Visual QA #44462439075 and Campaign Simulation QA #44462438998 all passed.
+- Three COMMENTED reviews, no approval. The latest review identifies six shared changed paths with #212: `scripts/behaviors/enemies/enemy_combat_lifecycle.gd`, `scripts/behaviors/siege_engine_behavior.gd`, `scripts/entities/building.gd`, `scripts/entities/combat_visual_feedback.gd`, `tests/combat_visual_feedback.gd`, and `tests/siege_engine_behavior.gd`.
+- The concrete non-composable hunk is the building/siege damage path. #212 routes siege impacts through `take_damage_from(amount, actor.global_position)`; #213 currently calls `take_damage(amount, -aim.normalized())` in both normal siege and faction-assault paths. #212 adds the source-aware fracture hook; #213 adds the optional directional-debris overload.
+- Required combined implementation: one damage application only. `take_damage_from()` must derive source-side direction once, set the fracture state, and forward that direction into the directional-debris `take_damage()` overload. Both siege impact paths should prefer `take_damage_from()` when available and preserve a one-argument fallback for other target types. Keep both the directional-fracture and exactly-one-`structure_debris` regression assertions. The remaining shared-file changes are separate function/hunk edits and appear composable from the current patches.
+- The later FX review confirms the larger debris is visible in the 1280×720 frame-6 capture, resolving that specific debris-visibility concern. The PR still lacks #212 acceptance and is not mergeable.
+- Decision: retain, do not merge or rebase into main until #212's visual gate is accepted. Then make the one-path reconciliation and rerun exact-head Godot 4.7, Pixel FX Readability QA and Building Visual QA on the combined head.
+
+**PR #210 — third, shared villager path understood**
+- Open/draft, exact head `c1c87dbb6b01dcfb9e3d7aae5c19d70db5ccd541`, mergeable=false; 5 ahead / 14 behind on the exact `b730a...` comparison; four changed files: `scripts/entities/sprite_anim.gd`, `scripts/entities/villager.gd`, `tests/animation_motion.gd`, and `tests/shot_role_sprite_gameplay.gd`.
+- Exact-head Godot CI #42745235410, Campaign Simulation QA #42745235375, Builder Reachability QA #42745235349 and Role Sprite Visual QA #42745235471 all passed.
+- One COMMENTED review, no approval. The gameplay capture pins all roles at `manual_progress = 0.30`; it demonstrates pose differences, not a live multi-frame work cycle. Hunter/Healer work-cycle evidence is still required.
+- #210 and #212 both change `villager.gd`, but the reviewed hunks are separate: #210 changes `_update_anim()` work-role selection/healer visual timing; #212 changes combat-feedback lifecycle, attack events and archer string presentation. Preserve both sets of changes when eventually reconciling; do not discard either file wholesale.
+- Decision: retain and keep draft. After #212's acceptance/reconciliation, obtain a multi-frame live work-cycle capture for Hunter and Healer (Builder/Farmer as controls), then rebase/reconcile and rerun exact-head checks.
+
+**PR #214 and Android PRs**
+- #214 remains open/draft, mergeable=false, exact head `23f53abd0698e0ce482def8d9b8ce9c8e1913a8f`, 3 ahead / 14 behind, one changed file `tools/hardware_acceptance_probe.gd`. Godot CI #43168403680 passed. No review or actual Acer Aspire One A0756 measurement is attached. Keep parked; the script is a measurement tool, not measurement evidence.
+- #150 remains open/draft, mergeable=false, exact head `1d2e29063881f6060f08e3ca3e98202196e55531`; its only changed file is `docs/ANDROID_DEVICE_QA.md`. Exact-tip Godot CI #42052408684 was cancelled; no review. Keep parked.
+- #152 remains open/draft, mergeable=false, exact head `a405e8f92f1d9df5ebbea0b18a582ab4a073be15`; 11 changed files. Exact-head Godot CI #42053035559 and Campaign Simulation QA #42053035136 passed; no review. Keep parked.
+- Android remains deferred. CI does not substitute for physical ARMv7 device acceptance. No PR was merged or closed.
+
+**Mainline validation at the comparison snapshot:** Godot CI run [#45093688435](https://github.com/shimleabyte/hold-the-keep/actions/runs/45093688435) for `b730a047815085b2b35dbc49b7a0ccf341658f37` was queued at the last poll, not green. This append is documentation-only and creates a new main commit; check its exact-head workflow separately.
