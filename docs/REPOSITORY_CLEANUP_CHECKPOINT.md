@@ -635,3 +635,31 @@ Two diverged branches with active PRs were compared against current main and ret
 - Current main SHA and exact-head Godot CI are recorded above. This is not the final A–D baseline because branch dispositions, PR dispositions, and protection remain unresolved.
 
 **A–D remain incomplete. Stage E has not started.**
+
+
+### B — diverged-branch audit, bounded batch (2026-11-23)
+
+All comparisons below used current `main` SHA `3a100374021ce3e488cf5bf3c88bd5cc25f9d5d5`. The batch was limited to three branches; no integration or deletion was performed.
+
+**`animation/player-motion-timing` — superseded**
+- Exact tip: `e63c1ecf5b70ad3b9ca37054a8b7c5bdd7c3f022`; 28 unique commits ahead / 157 behind; 13 changed paths.
+- PR #181 is closed unmerged. Its closure body records a source-level reconciliation against main: `.github/workflows/godot-ci.yml`, `assets/sprites/player.svg`, `docs/ANIMATION_DIRECTION.md`, `scripts/entities/player.gd`, `tests/player_attack_sprite_pose.gd`, `tests/role_sprite_identity.gd`, and `tests/shot_animation.gd` match the PR head byte-for-byte.
+- `scripts/entities/sprite_anim.gd` differs only in documentation/comment text and the obsolete Hurt busy-state behavior. Main intentionally keeps Hurt presentation from locking the action state. The branch's `tests/animation_motion.gd` expects the old Hurt pose at frame 20 and busy state; main tests the authored Hurt range beginning at frame 42 and non-locking presentation. Phase 08 plan/context/worklist entries on the branch are stale.
+- Exact-tip workflows: Role Sprite Visual QA, Campaign Simulation QA, Autonomous Wave Diagnostic and Rendered World QA passed; Godot CI [#42348957431](https://github.com/shimleabyte/hold-the-keep/actions/runs/42348957431) failed. No active workflow run or remaining PR reference was found.
+- Disposition: superseded. PR #181 explicitly records no unique required production change; retain as historical reference only if needed. Do not integrate its obsolete Hurt behavior.
+
+**`baseline/frontier-expedition-perf-8bf589d` — delete-candidate**
+- Exact tip: `2972b816b2f5ee931a6ad896fb2411b04e0420ec`; 1 unique commit ahead / 31 behind; one changed path, `README.md`.
+- The entire unique patch is a temporary HTML comment marker used to trigger the pre-optimization Frontier performance workload. PR #209 is closed unmerged; its body says the measurement-only baseline completed, the branch was never intended for merge, and the PR was closed after baseline artifacts were collected.
+- Exact-tip Godot CI [#42589126427](https://github.com/shimleabyte/hold-the-keep/actions/runs/42589126427) passed. No active workflow or other PR reference was found.
+- Disposition: delete-candidate, not integrate. The unique marker has served its measurement purpose and carries no production code. Keep the branch until a genuine branch-delete capability and final live-reference check are available.
+
+**`docs/phase-06-mainline-acceptance` — superseded**
+- Exact tip: `728cc0a24952ffb3c2c54a32e0f3721fd048f4a0`; 1 unique commit ahead / 731 behind; four changed paths: `CONTEXT.md`, `ROADMAP_NEXT_LEVEL.md`, `docs/plans/phase-06-plan.md`, and `tests/README.md`.
+- PR #49 is closed unmerged. Its closure comment explicitly says the Phase 06 correction was reconciled into current main documentation and that merging this historical snapshot would reintroduce outdated roadmap/context content.
+- Exact-tip Godot CI [#41395857009](https://github.com/shimleabyte/hold-the-keep/actions/runs/41395857009) passed. No active workflow or other PR reference was found.
+- Disposition: superseded. No production code is present in the unique patch; do not merge the stale documentation snapshot.
+
+**Batch result:** 2 superseded, 1 delete-candidate, 0 integrate, 0 retain. No duplicate tips within this batch. The only exact duplicate-tip groups in the full 170-branch inventory remain the two pairs already listed above.
+
+**Main CI note:** before this checkpoint append, Godot CI run [#45093388907](https://github.com/shimleabyte/hold-the-keep/actions/runs/45093388907) for SHA `3a100374021ce3e488cf5bf3c88bd5cc25f9d5d5` was queued, not green. Do not treat it as a verified pass. The append itself is documentation-only and creates a new main commit; verify its own run separately.
