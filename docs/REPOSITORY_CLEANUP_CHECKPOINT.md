@@ -587,3 +587,51 @@ No new diverged-branch disposition was finalized in this run. The two exact dupl
 - C: #212 remains first and blocked on normal-speed gameplay readability; #213 remains second and must use the documented one-damage shared path; #210 remains third and needs live work-cycle evidence. Keep #214 and Android PRs parked.
 - D: establish branch protection through a connection with branch-administration write capability. Keep the worklist pointer unchanged.
 - A-D remain incomplete. Stage E has not started.
+
+
+## Work resumed — 2026-11-23
+
+**Live main:** `726d968b2189fcf455f8fe9b711c52e247daf13c`  
+**Live branch inventory:** 170 branches (100 on page one, 70 on page two).  
+**Current main Godot 4.7 CI:** [run #44970532321](https://github.com/shimleabyte/hold-the-keep/actions/runs/44970532321) — completed successfully on exact main SHA `726d968b2189fcf455f8fe9b711c52e247daf13c`.
+
+### A — containment continuity and blockers
+
+- The current main is exactly one commit ahead of the last 43-candidate verification SHA `66c7c12b5d4a4e37a31602831af2599541385bb7`; the intervening commit changes only this checkpoint document. Therefore the previously verified 43 tips remain ancestors of current main.
+- The live branch listing still contains 170 branches. The two exact duplicate-tip pairs remain the only duplicate groups found in the full live branch listing.
+- No branch was deleted. The connected GitHub tool inventory still has no genuine branch-delete operation; `update_ref` is not deletion and remains prohibited. The available integration also has no supported exhaustive deployment/external-consumer reference enumeration. Keep all 43 candidates intact.
+
+### B — active Android PR-head batch
+
+Two diverged branches with active PRs were compared against current main and retained because Android remains deferred. Their changed-file sets do not overlap, and their tips are not duplicates.
+
+**`docs/android-armv7-device-qa` — retain**
+- Exact tip: `1d2e29063881f6060f08e3ca3e98202196e55531`.
+- Current comparison: 10 unique commits ahead, 247 commits behind; one changed file, `docs/ANDROID_DEVICE_QA.md`.
+- PR history by exact head: PR #150 only; open and draft. No reviews are recorded.
+- Exact-tip workflow: [Godot CI #42052408684](https://github.com/shimleabyte/hold-the-keep/actions/runs/42052408684) — cancelled. Other branch runs belong to older tips; no active run was returned.
+- Disposition: retain with PR #150 parked. Documentation does not establish physical Android-device acceptance, and Android is deferred.
+
+**`feat/android-armv7-touch-controls-current-main` — retain**
+- Exact tip: `a405e8f92f1d9df5ebbea0b18a582ab4a073be15`.
+- Current comparison: 15 unique commits ahead, 246 commits behind; 11 changed files: `.github/workflows/godot-ci.yml`, `.gitignore`, `README.md`, `export_presets.cfg`, `project.godot`, `scripts/ui/hud.gd`, `scripts/ui/mobile_controls.gd`, `tests/README.md`, `tests/android_touch_controls.gd`, `tools/export_android_armv7.sh`, and `tools/run_tests.sh`.
+- PR history by exact head: PR #152 only; open and draft, mergeable=false. No reviews are recorded.
+- Exact-tip workflows: [Godot CI #42053035559](https://github.com/shimleabyte/hold-the-keep/actions/runs/42053035559) and [Campaign Simulation QA #42053035136](https://github.com/shimleabyte/hold-the-keep/actions/runs/42053035136) — both successful. No active run was returned.
+- Disposition: retain with PR #152 parked. Green CI does not override the explicit Android deferral or substitute for physical ARMv7 acceptance.
+
+### C — ordered PR #212 refresh
+
+- PR #212 remains open and draft at exact head `6d0ce0f69c4775412f0c9dcbe55fc80bbc1a9d1c`; current metadata reports mergeable=true.
+- Current comparison to main: 27 unique commits ahead, 12 behind; 14 changed files. The changed-file set is unchanged from the prior review.
+- Exact-head Godot 4.7 and all six associated rendered/diagnostic workflows remain successful: Godot CI #42742842633, Battlefield Combat Visual QA #42742842502, Building Visual QA #42742842653, Campaign Simulation QA #42742842817, Builder Reachability QA #42742842505, Autonomous Wave Diagnostic #42742842641, and Role Sprite Visual QA #42742842469.
+- The only review remains COMMENTED, not APPROVED. Its readability findings remain unresolved: melee sweep and shield cue are difficult to distinguish at gameplay zoom, and the building fracture is obscured by the damage flash. No normal-speed desktop gameplay acceptance evidence has been attached.
+- Decision: do not merge #212. Mergeability=true is not a substitute for the outstanding visual/gameplay acceptance gate. Continue to #213 reconciliation only after the #212 gate is resolved.
+
+### D — current baseline check
+
+- Current main is unprotected in the live branch listing.
+- Rulesets GET still returns an empty array. Branch-protection GET still returns HTTP 403 `Resource not accessible by integration`; no branch-protection/ruleset write operation is exposed. Protection is not enabled.
+- `worklist.md` was re-fetched; its first section still points to this authoritative checkpoint. No edit was needed.
+- Current main SHA and exact-head Godot CI are recorded above. This is not the final A–D baseline because branch dispositions, PR dispositions, and protection remain unresolved.
+
+**A–D remain incomplete. Stage E has not started.**
