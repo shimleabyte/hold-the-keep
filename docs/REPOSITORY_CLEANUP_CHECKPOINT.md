@@ -1,9 +1,9 @@
 # Repository Cleanup Checkpoint
 
-**Checkpoint date:** 2026-11-21  
+**Checkpoint date:** 2026-11-24  
 **Default branch:** `main`  
-**Verified main SHA:** `cd84c309965a73a85795cf5fa5d83072ca2200ad`  
-**Previous main commit date:** 2026-11-21 01:29:59 UTC  
+**Verified main SHA:** `94e52409d9fba405bf03878d6af0b6e335970707`  
+**Previous main commit date:** 2026-11-23 01:21:46 UTC  
 **Engine target:** Godot 4.7 only  
 **Release priority:** Desktop first; Android remains deferred.
 
@@ -722,3 +722,77 @@ Comparisons used exact `main` SHA `6e2507237c1e28b9d984c19f843d3808ae64a04d`. Al
 **Cumulative bounded B sample recorded so far:** 5 superseded, 1 delete-candidate, 6 retain, 0 integrate across 12 individually reviewed diverged branches/active PR heads. This is a sample only; the rest of the live diverged inventory still needs disposition.
 
 **Main CI note:** Godot CI [#45094026940](https://github.com/shimleabyte/hold-the-keep/actions/runs/45094026940) for comparison SHA `6e2507237c1e28b9d984c19f843d3808ae64a04d` remained queued at the last poll. Do not report it as passed. This append is documentation-only and creates a new main commit; verify its own exact-head run separately.
+
+
+### Live repository refresh and bounded cleanup progress (2026-11-24)
+
+**Live snapshot before this documentation append**
+- Main: 94e52409d9fba405bf03878d6af0b6e335970707 (commit date 2026-11-23 01:21:46 UTC).
+- Branch inventory: 170 refs total, including main (100 on page 1, 70 on page 2).
+- Open PR inventory: six — #214, #213, #212, #210, #152, #150. Their current head branches remain the six documented retained PR heads.
+- Exact-main Godot CI: run #45094144796 completed successfully on exact SHA 94e52409d9fba405bf03878d6af0b6e335970707.
+- The 2026-11-19 classification table is historical only. Do not treat its 43/4/122 counts as a current classification.
+
+#### A — current-main revalidation, batch 1 of 43
+
+The following eight recorded behind-only candidates were looked up in the current 170-branch inventory and compared to exact current main SHA 94e52409d9fba405bf03878d6af0b6e335970707. Each has ahead_by = 0, so its current tip is contained in main. None is a head of the six currently open PRs. Branch-scoped Actions queries found no active runs.
+
+| Candidate | Current tip | Behind | Exact-tip workflow result |
+|---|---|---:|---|
+| art/faction-equipment-silhouette-pass | cf4d6933bb79bdafdf4a6788ddc95b8bd6ed25d1 | 34 | Godot CI and Campaign Simulation QA succeeded |
+| combat/player-skills-enemy-ai | ec2a41bd450c58cec2d75b7e3c00f7f02e6717e0 | 1107 | No run found |
+| docs/update-phase-11-integration-status | d5c2fe32d5604a9e5c79dccf5257c4150f6f70fe | 184 | No run found |
+| feat/blacksmith-forge | e74a90a8df059a37927251c6c3c1ae32bb4ddb18 | 504 | Godot CI succeeded |
+| feat/character-animation-pass | 4b5699018593dc61a1ebf46f8d34ae65535d04db | 1015 | No run found |
+| feat/frontier-world-generation-mainline | ba33b833139fde02be641183755be9aa509cb63e | 921 | Godot CI succeeded |
+| feat/healer-infirmary | 7dc6ebf32ed7a8162ddcef5e82019d151643c3db | 521 | Godot CI succeeded |
+| feat/hunter-hunting-lodge | 5ee139f0d4e44d268b1e0667b9d43bcd9ee3f557 | 654 | Godot CI succeeded |
+
+These eight are revalidated as contained at this snapshot; 35 of the recorded 43 candidates still require a current-main refresh. The branch-scoped workflow checks and current open-PR inventory do not enumerate every possible external deployment or consumer reference, so this is not a deletion authorization.
+
+**Deletion blocker remains:** the connected GitHub action set exposes ref updates but no genuine branch-delete or delete-ref operation. No deletion was attempted and update_ref was not used to imitate deletion. An authenticated GitHub browser session could not be verified in this non-interactive run, so no alternate UI deletion path was established. Keep all candidates intact.
+
+#### B — diverged-branch audit, bounded profession-art batch
+
+All three branch comparisons below use exact main SHA 94e52409d9fba405bf03878d6af0b6e335970707.
+
+| Branch | Tip | Unique commits ahead | Behind | Changed paths | Disposition |
+|---|---|---:|---:|---:|---|
+| feat/low-cost-profession-sprite-art | 72661f22e6442784b0d838bfd6e4256f878fd43c | 26 | 349 | 16 | **superseded** |
+| feat/low-cost-profession-sprite-art-mainline | 6323215c15af9384ac8a9b4a346adc3e3d51daf5 | 20 | 282 | 16 | **superseded** |
+| feat/low-cost-profession-sprite-art-mainline-v2 | 7faa718d50c09491e841b0d04851683dbb35a581 | 29 | 281 | 21 | **superseded** |
+
+Changed-file sets:
+- First branch: five profession SVG sheets; scripts/entities/{iron_ore,resource_tree,rock,sprite_anim,villager,villager_builder_behavior,wildlife_node}.gd; tests/animation_motion.gd; tools/check_role_sprite_reproducibility.py; tools/gen_assets.py; worklist.md.
+- Second branch: the same 16-path set.
+- V2 branch: .github/workflows/godot-ci.yml; the same five SVG sheets and seven entity scripts; scripts/systems/village.gd; scripts/ui/hud.gd; tests/{animation_motion,perf,workplace_assignments}.gd; both reproducibility/generator tools; worklist.md.
+
+Patch-equivalence findings:
+- Whole branch tips are not patch-equivalent. Pairwise compare results: first vs second = 87 ahead / 26 behind with 39 changed paths; first vs V2 = 97 ahead / 26 behind with 45 paths; second vs V2 = 30 ahead / 20 behind with 27 paths.
+- The five profession SVG blobs and scripts/entities/sprite_anim.gd are byte-identical across all three branch tips. The second and V2 branches also have byte-identical scripts/entities/villager.gd; the first branch's villager file differs.
+- The current main tools/gen_assets.py WORK_ART block is byte-identical to V2's block. Current main scripts/entities/villager_builder_behavior.gd is byte-identical to V2's. Current main's villager implementation is later and larger (60,768 bytes vs 58,439 bytes on V2); the old branch implementation lacks current ResourceWorkBehavior and manual-movement/path-recovery behavior.
+- PR #153 for V2 was closed unmerged on 2026-11-05. Its closure comment explicitly says it was superseded by PR #158. PR #158 is merged at 535a7048bcc0971e8c70d2056b4e7c7a672c41fa; comparing that merge commit against current main gives ahead_by = 0, confirming it is an ancestor of main. PR #158's 18 changed paths include the profession SVGs, worker/animation/resource behavior, animation/performance tests, reproducibility tooling and generator. Its merged description documents the same baked contact-art and low-cost worker-feedback feature.
+- The V2 exact tip had successful Godot CI (#42006444134), Campaign Simulation QA (#42006444190), Rendered World QA (#42006444209), and Role Sprite Visual QA (#42006444322). No active workflow runs were found for any of the three branch names. Branch-scoped PR history was empty for the first two; V2's only PR was the closed/superseded #153.
+
+Disposition rationale: all three branches represent older variants of the profession-contact/low-cost-worker feature now carried by merged PR #158 and later mainline code. Do not integrate or cherry-pick them. No branch deletion was attempted. This batch adds three superseded dispositions to the previously recorded bounded sample; the rest of the live diverged inventory remains unclassified.
+
+#### C — PR #212 refreshed first
+
+Current PR metadata:
+- Open, draft, not merged; head 6d0ce0f69c4775412f0c9dcbe55fc80bbc1a9d1c; base main at the PR's recorded base SHA d6a54036f7d7587c6e4cbd7188a620a6f9bc9d19.
+- mergeable = true; 14 changed files: combat visual QA workflow; enemy combat lifecycle; shieldbearer and siege behaviors; arrow, building, combat visual feedback, enemy, enemy bolt, player and villager entities; combat visual feedback, shot engagement and siege behavior tests.
+- One submitted review, state COMMENTED; no approval.
+- Exact-head workflows all completed successfully: Godot CI #42742842633, Battlefield Combat Visual QA #42742842502, Building Visual QA #42742842653, Campaign Simulation QA #42742842817, Builder Reachability QA #42742842505, Autonomous Wave Diagnostic #42742842641 and Role Sprite Visual QA #42742842469.
+- The combined commit-status endpoint returned no legacy statuses; the exact-head Actions runs above are the relevant evidence.
+
+Decision remains **retain / do not merge**. Mergeability and green CI do not satisfy the outstanding normal-speed desktop readability acceptance. The existing review's gameplay-scale concerns about melee sweep, shield cue and directional fracture legibility remain unresolved. Continue to #213 only after #212's acceptance gate is resolved.
+
+#### D — protection and pointer rechecked
+
+- Live branch listing reports main.protected = false.
+- Rulesets GET returns an empty array.
+- Branch-protection GET returns HTTP 403: Resource not accessible by integration.
+- Repository metadata reports admin = true for the connected identity, but the installed GitHub integration cannot access the branch-protection endpoint and exposes no branch-protection/ruleset write operation. Do not claim protection is enabled.
+- worklist.md still links to this authoritative checkpoint in its first section; no edit was needed.
+
+This append is a documentation-only update. The exact-main Godot CI pass recorded above applies to pre-append SHA 94e52409d9fba405bf03878d6af0b6e335970707; the new checkpoint commit must be checked separately. A–D remain incomplete; Stage E remains locked.
