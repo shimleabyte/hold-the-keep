@@ -796,3 +796,88 @@ Decision remains **retain / do not merge**. Mergeability and green CI do not sat
 - worklist.md still links to this authoritative checkpoint in its first section; no edit was needed.
 
 This append is a documentation-only update. The exact-main Godot CI pass recorded above applies to pre-append SHA 94e52409d9fba405bf03878d6af0b6e335970707; the new checkpoint commit must be checked separately. A–D remain incomplete; Stage E remains locked.
+
+
+### Live repository refresh and bounded cleanup pass — 2026-11-25
+
+**Live snapshot and documentation pointer**
+- Main at the start of this pass: `6025fabec7be8551e8a689cc0c4b2399f6049b59`.
+- Refreshed `worklist.md` so its first line now points to this checkpoint as the current 2026-11-25 authority, without repeating a stale main SHA. That documentation-only commit is `eb31f5815b5a92989ec4f25cb47ddeb0e1ac5952`.
+- Compare confirms `6025fabec7be8551e8a689cc0c4b2399f6049b59` is an ancestor of `eb31f5815b5a92989ec4f25cb47ddeb0e1ac5952`; the only intervening path is `worklist.md`. Candidate containment checks below therefore remain valid at the latest main snapshot.
+- A fresh empty-query branch search returned 170 refs across two pages (100 + 70), including `main`. The current open PR inventory remains six: #212, #213, #210, #214, #150 and #152.
+- For `eb31f5815b5a92989ec4f25cb47ddeb0e1ac5952`, combined legacy commit statuses were empty and the connected workflow-run wrapper returned no PR-triggered runs. That wrapper filters to PR events only; this is not proof that no push/dispatch workflow exists and is not a verified mainline Godot CI pass.
+
+#### A — behind-only candidates, additional batch (12 of 43)
+
+The following 12 candidates were individually compared against exact main snapshot `6025fabec7be8551e8a689cc0c4b2399f6049b59`. Every comparison returned `ahead_by = 0`, no changed files, and no open PR head reference. The 2026-11-24 eight-branch batch was also revalidated transitively: its baseline `94e52409d9fba405bf03878d6af0b6e335970707` is an ancestor of the 6025 snapshot.
+
+| Candidate | Exact tip | Behind | PR-triggered workflow evidence |
+|---|---|---:|---|
+| `feat/multi-stronghold-campaign` | `aa52e91a72412a65aa99b8e75914af1cee678d45` | 915 | Godot CI #41295675865 passed |
+| `feat/phase-05-resource-worksites` | `8590955dc13b1de62a0480970df6cc4d9b13ab0d` | 888 | Godot CI #41298620629 passed |
+| `feat/phase-06-factions-territorial-ai-rebased` | `38f6d19dcad0fdb91b206924a75f746f3eccf138` | 856 | Godot CI #41299531170 passed |
+| `feat/phase-06-shieldbearer-brace` | `639996f9bfa1ae939891bc44afd5266148a9ef07` | 803 | Godot CI #41329202804 passed |
+| `feat/phase-06.4-faction-raids` | `323fe74969a6c202cf84a0117de62369e19620f9` | 749 | Godot CI #41381487306 passed |
+| `feat/phase-06.5-faction-warfare-stress` | `a1bf45b85498acb1b74b3857d7753d25fb6fc3a0` | 737 | Godot CI #41384326890 failed |
+| `feat/phase-07-conquest-objectives-mainline` | `131e116a3330e0e01af26298ff8529157e335391` | 853 | Godot CI #41308813676 passed |
+| `feat/phase-09-balance-performance-release-mainline` | `cb7d07a31d3a78b06f46b584bfd9b5d2019683e7` | 850 | Godot CI #41309193018 passed |
+| `feat/phase-10-adaptive-viewport-mainline` | `c315002c01ace530a85948e86183d180cf560755` | 847 | Godot CI #41309501431 passed |
+| `feat/regional-control-roads-mainline` | `1cda66041cfd9efc81ce26efcbe2448f7d5d1b21` | 923 | Godot CI #41294474651 passed |
+| `feat/responsive-resolution-visual-pass` | `efa34eb0dd61d7b1b50647a96996ed9a4179b3bb` | 1027 | No PR-triggered run returned |
+| `feat/rival-local-depots-road-delivery` | `04c76d6c8bd4a881c8139a1de6c5c798a383ed8e` | 48 | No PR-triggered run returned |
+
+The 12 branches have no open PR references in the current branch-head searches. Workflow evidence above is limited to the connector's PR-triggered, first-page run lookup; empty results do not establish absence of push/dispatch runs. The failed historical Godot CI on `feat/phase-06.5-faction-warfare-stress` is recorded, not hidden or treated as a successful validation.
+
+**A progress:** 20/43 candidates have now been revalidated as contained (the prior eight plus these 12); 23 remain. Containment is not deletion authorization: external deployment/consumer references cannot be exhaustively enumerated through the connected integration.
+
+**Deletion blocker unchanged:** the connected GitHub tool catalogue has no genuine branch-delete or delete-ref operation. It exposes ref updates, which must not be used to imitate deletion. No candidate was deleted or modified.
+
+#### B — duplicate-tip groups, fully reconciled
+
+Both known duplicate-tip pairs were refreshed against main snapshot `6025fabec7be8551e8a689cc0c4b2399f6049b59`. Pairwise compare returned `status = identical`, `ahead_by = 0`, `behind_by = 0`, and no changed files within each pair.
+
+**Reload-hardening pair**
+- `feat/phase-09.3-late-act-reload-hardening` and `feat/phase-09.3-reload-acceptance` share exact tip `c8719082f95d362e62b8a04f5c3d9ca2959da2c4`.
+- Each compares to main as 6 unique commits ahead / 726 behind, with the same two changed paths: `tests/README.md` and `tests/campaign_reload_hardening.gd`.
+- PR #56 is closed unmerged; its body explicitly says it was superseded by PR #57. PR #57 is merged, with merge commit `a1ccebed98ac73551f23162a6995e84a0b02c760`. Comparing main against that merge commit returned `ahead_by = 0`, confirming the merge commit is an ancestor of main.
+- The duplicate branch patch is therefore represented by merged PR #57; later mainline edits explain why current file blobs are not byte-identical to the old branch tip.
+- **Disposition:** both branches superseded. No integration or deletion.
+
+**Rendered Frontier repeatability pair**
+- `work/dev-h-frontier-rendered-repeatability` and `work/dev-h-frontier-rendered-repeatability-final` share exact tip `65f852d6d923066ad38d2eb360e7299b949f20ff`.
+- Each compares to main as 7 unique commits ahead / 375 behind, with the same two paths: `.github/workflows/rendered-world-qa.yml` and `tests/shot_frontier_seed_compare.gd`.
+- PRs #130 and #132 are both closed unmerged and point to that exact same head. The workflow file is byte-identical to current main (blob `016bb6315696d754ba30f9724b24aa2cbc8cd652`). The test harness in main differs only in explanatory comments/formatting, an equivalent map-size expression (`128 * 16` versus `2048`), and a local variable rename; 184 lines are common, with 10 main-only and 5 branch-only lines. PR #138 is merged; its merge commit `6f1886c6918eb7645167db91e8904b60b0accec8` is an ancestor of main, and its body states the SceneTree harness was already present on main and the PR added the workflow only.
+- The duplicate branch implementation is therefore superseded by the mainline harness plus merged #138 workflow. No active PR-triggered workflow runs were returned for the duplicate tip.
+- **Disposition:** both branches superseded. No integration or deletion.
+
+These four new dispositions extend the previously recorded bounded B sample; the remainder of the diverged inventory still needs review. No duplicate-tip branch was deleted.
+
+#### C — six open PRs refreshed in documented order
+
+All six remain open and draft. No merge or closure occurred.
+
+| PR | Current head | Ahead / behind current main | Changed files | Mergeable | Exact-head workflow evidence |
+|---|---|---:|---:|---|---|
+| #212 | `6d0ce0f69c4775412f0c9dcbe55fc80bbc1a9d1c` | 27 / 17 | 14 | false | Godot CI #42742842633 and six associated rendered/diagnostic runs passed |
+| #213 | `c336f7923e9b522898bd778f311c0382bf68d4d2` | 57 / 17 | 12 | false | Godot CI #44462439033, Pixel FX #44462439056, Building Visual #44462439075, Campaign Simulation #44462438998 passed |
+| #210 | `c1c87dbb6b01dcfb9e3d7aae5c19d70db5ccd541` | 5 / 17 | 4 | false | Godot CI #42745235410, Campaign Simulation #42745235375, Builder Reachability #42745235349, Role Sprite Visual #42745235471 passed |
+| #214 | `23f53abd0698e0ce482def8d9b8ce9c8e1913a8f` | 3 / 17 | 1 | false | Godot CI #43168403680 passed |
+| #150 | `1d2e29063881f6060f08e3ca3e98202196e55531` | 10 / 249 | 1 | false | Godot CI #42052408684 cancelled |
+| #152 | `a405e8f92f1d9df5ebbea0b18a582ab4a073be15` | 15 / 248 | 11 | false | Godot CI #42053035559 and Campaign Simulation #42053035136 passed |
+
+**#212 first:** exact changed paths are `.github/workflows/combat-visual-qa.yml`, `scripts/behaviors/enemies/enemy_combat_lifecycle.gd`, `scripts/behaviors/shieldbearer_behavior.gd`, `scripts/behaviors/siege_engine_behavior.gd`, `scripts/entities/arrow.gd`, `scripts/entities/building.gd`, `scripts/entities/combat_visual_feedback.gd`, `scripts/entities/enemy.gd`, `scripts/entities/enemy_bolt.gd`, `scripts/entities/player.gd`, `scripts/entities/villager.gd`, `tests/combat_visual_feedback.gd`, `tests/shot_combat_engagement.gd`, and `tests/siege_engine_behavior.gd`. One COMMENTED review remains; no approval. The normal-speed desktop readability gate is still absent. GitHub now reports mergeable=false and main is 17 commits ahead of the PR base. Do not merge.
+
+**#213 second:** exact changed paths are `.github/workflows/fx-readability-qa.yml`, `.github/workflows/godot-ci.yml`, `scripts/behaviors/enemies/enemy_combat_lifecycle.gd`, `scripts/behaviors/siege_engine_behavior.gd`, `scripts/entities/building.gd`, `scripts/entities/combat_visual_feedback.gd`, `scripts/entities/fx_layer.gd`, `tests/combat_visual_feedback.gd`, `tests/fx_layer.gd`, `tests/shot_fx_readability.gd`, `tests/siege_engine_behavior.gd`, and `tools/run_tests.sh`. Three COMMENTED reviews; no approval. The six shared paths with #212 remain `enemy_combat_lifecycle.gd`, `siege_engine_behavior.gd`, `building.gd`, `combat_visual_feedback.gd`, `tests/combat_visual_feedback.gd`, and `tests/siege_engine_behavior.gd`. Preserve one damage application: source-aware `take_damage_from()` must derive direction once, set fracture state and forward direction into the debris overload; both siege paths must retain the one-argument fallback for other targets. Do not reconcile/merge before #212's visual acceptance.
+
+**#210 third:** exact changed paths remain `scripts/entities/sprite_anim.gd`, `scripts/entities/villager.gd`, `tests/animation_motion.gd`, and `tests/shot_role_sprite_gameplay.gd`. One COMMENTED review; no approval. The multi-frame live Hunter/Healer work-cycle evidence is still missing. Its `villager.gd` hunks are separate from #212's combat-feedback hunks and both sets must be preserved when eventually reconciled. Do not merge.
+
+**Parked PRs:** #214 has no reviews and no Acer Aspire One A0756 measurements; keep draft. #150 and #152 have no reviews and remain parked because Android is deferred. #150's Godot CI is cancelled; #152's recorded exact-head CI and campaign simulation pass do not substitute for physical ARMv7 acceptance.
+
+#### D — baseline, pointer and capability limitations
+
+- `worklist.md` now points to this authoritative checkpoint with a 2026-11-25 date; pointer refresh commit: `eb31f5815b5a92989ec4f25cb47ddeb0e1ac5952`.
+- Main protection remains unenabled. The connected GitHub tool catalogue exposes no branch-protection or ruleset write operation. The last verified protection read returned HTTP 403 `Resource not accessible by integration`, and the rulesets read returned an empty array. Do not claim protection is enabled.
+- The connected tool catalogue also exposes no genuine branch-delete/delete-ref operation. Ref update is not deletion.
+- Current-main CI cannot be certified from this connector response: combined statuses are empty, and the workflow-run wrapper returns PR-triggered runs only. No exact-main Godot CI pass is asserted for `eb31f5815b5a92989ec4f25cb47ddeb0e1ac5952`.
+
+**A–D remain incomplete.** The remaining 23 behind-only candidates, remaining diverged-branch dispositions, six PR dispositions/acceptance gates, genuine branch deletion and main protection are unresolved. Stage E remains locked.
