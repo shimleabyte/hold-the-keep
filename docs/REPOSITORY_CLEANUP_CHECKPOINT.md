@@ -1,8 +1,8 @@
 # Repository Cleanup Checkpoint
 
-**Checkpoint date:** 2026-11-24  
+**Checkpoint date:** 2026-11-25  
 **Default branch:** `main`  
-**Verified main SHA:** `94e52409d9fba405bf03878d6af0b6e335970707`  
+**Audit comparison main SHA:** `6025fabec7be8551e8a689cc0c4b2399f6049b59` (subsequent main commits recorded in the 2026-11-25 append are documentation-only)  
 **Previous main commit date:** 2026-11-23 01:21:46 UTC  
 **Engine target:** Godot 4.7 only  
 **Release priority:** Desktop first; Android remains deferred.
