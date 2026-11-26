@@ -977,3 +977,22 @@ The earlier D note in this append said the worklist pointer needed no change. Th
 - Exact-main Godot CI run [#45738587181](https://github.com/shimleabyte/hold-the-keep/actions/runs/45738587181) was in progress when checked. Do not report it as passed until the conclusion is successful.
 - The preceding checkpoint append commit was `d7ebb8eed1bcb873082253fa1cfa432a42c4fe52`. This follow-up changes documentation only; no production code changed.
 
+
+
+### B — diverged-branch audit, documentation snapshot batch (2026-11-26)
+
+Compared three additional unclassified branches against exact main SHA `a4271279d8cc0751a4b6ebf890dcba2685a128f2`. Each has only `worklist.md` in its changed-file set. Branch-head PR-history searches returned no associated PRs.
+
+| Branch | Tip | Ahead / behind | Changed paths | Disposition |
+|---|---|---:|---:|---|
+| `docs/update-worklist-after-save-store-merge` | `8ff76c2a21889b8ce5553ac997dbfe3df0713bfc` | 1 / 412 | `worklist.md` | **superseded** |
+| `docs/update-worklist-after-shipment-ledger` | `9ee570a2c06db5a4e6a95b9a74c534685e794195` | 5 / 408 | `worklist.md` | **superseded** |
+| `docs/update-worklist-after-villager-slice` | `2cec25d9933e84684fc55f75613bbf60d1cee6d1` | 1 / 410 | `worklist.md` | **superseded** |
+
+The branch contents are older worklist snapshots, not production patches. The current main worklist has later architecture status: SaveFileStore (#89), VillagerArcherCombat (#91), shipment ledger (#94), dispatch/recovery (#96), road graph (#97), and supply pressure (#99) are all recorded as integrated. The six implementation merge commits were individually compared against current main; each returned `ahead_by = 0`, `behind_by > 0`, and no changed files, confirming all six merge commits are ancestors of main. Current main also records later villager-role slices and the up-to-date checkpoint pointer. The branch snapshots add no current source implementation or unique current status; retaining them would preserve stale worklist copies.
+
+No production code changed, no branch was deleted, and no PR was merged or closed in this batch.
+
+**B progress:** three additional diverged branches are now classified as superseded. The full diverged inventory remains incomplete; this is a bounded batch, not a completion claim.
+
+**Main/CI note:** main at the start of this batch was `a4271279d8cc0751a4b6ebf890dcba2685a128f2`. Exact-main Godot CI run #45738587181 was still in progress on prior worklist-pointer commit `700ecfa68b0ce4d886d851e434eee123aae2ab20`; no pass is claimed for `a427127` or this new checkpoint commit.
