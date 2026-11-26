@@ -881,3 +881,88 @@ All six remain open and draft. No merge or closure occurred.
 - Current-main CI cannot be certified from this connector response: combined statuses are empty, and the workflow-run wrapper returns PR-triggered runs only. No exact-main Godot CI pass is asserted for `eb31f5815b5a92989ec4f25cb47ddeb0e1ac5952`.
 
 **A–D remain incomplete.** The remaining 23 behind-only candidates, remaining diverged-branch dispositions, six PR dispositions/acceptance gates, genuine branch deletion and main protection are unresolved. Stage E remains locked.
+
+
+### Live repository refresh and bounded cleanup pass — 2026-11-26
+
+**Live snapshot before this documentation append**
+- Current `main`: `3e2e0e4cfc609df5e2c4376b868c6491578e9fbc`.
+- Remote branch inventory: 170 branches total (100 + 70), including main.
+- Comparing `6025fabec7be8551e8a689cc0c4b2399f6049b59` to current main shows three commits and only two documentation paths changed: `docs/REPOSITORY_CLEANUP_CHECKPOINT.md` and `worklist.md`. No production code changed in that interval.
+- Current open PRs: six (#214, #213, #212, #210, #152, #150). Their head branches are `perf/acer-a0756-live-acceptance-probe`, `feat/deterministic-directed-fx`, `feat/battlefield-combat-readability`, `feat/civilian-work-action-pass`, `feat/android-armv7-touch-controls-current-main`, and `docs/android-armv7-device-qa`. None is one of the 43 behind-only candidates.
+- Repository-wide Actions query for `status=in_progress` returned zero active workflow runs at this snapshot.
+- The open-PR and Actions checks do not enumerate every possible external deployment, webhook, or consumer reference.
+
+#### A — all 43 behind-only candidates revalidated against current main
+
+The previous 20 verified candidates remain contained because the only intervening changes from their comparison baseline to current main were documentation-only and that baseline is an ancestor of current main. The remaining 23 candidates were individually compared against exact main SHA `3e2e0e4cfc609df5e2c4376b868c6491578e9fbc`; every comparison returned `ahead_by = 0`, status `behind`, and no changed files.
+
+| Candidate | Current tip | Behind |
+|---|---|---:|
+| `feat/scout-specialist` | `6d92bb21e5ca4dcffe8db292bfe17f84020cd6ce` | 586 |
+| `feat/strategic-map-stage-hud` | `656b049f5cb38137e5edefd8895bfc4bb6823025` | 1068 |
+| `feat/workplaces-and-specialist-jobs` | `8252ffec6289fd925819603aa98f3a2f80fce691` | 919 |
+| `fix/ci-regression-test-timeouts` | `bf92f2acbcd051cac5aae4bc28d1701de2c88d08` | 970 |
+| `fix/hud-discovered-type` | `8620a2de038bf6db5857e7f313377eae727edff7` | 1109 |
+| `fix/rival-worker-cargo-conservation` | `a9c5319f3a4249dd27fb908960094aec530cac68` | 128 |
+| `integrate/data-db-validation-mainline` | `1c3cbde5c4ea81003953ea3e88196e910c1168f9` | 478 |
+| `overhaul/territory-expansion` | `56cf47d0a5811c70b670d2fd68dce1f0ae01a3c0` | 1139 |
+| `qa/desktop-export-acceptance` | `1bf731378f95748579a0fc5c119724eb06bbbd8e` | 242 |
+| `qa/headed-mode-source-export` | `185888507a0197ef50711672948f118844daf122` | 45 |
+| `work/dev-b-faction-ai-components` | `e8a7dfa240a634947d884489e69271cfc6b8eacb` | 484 |
+| `work/dev-c-autonomous-wave-diagnostic-integrated` | `6bce640a5708aa342bdf43d80f4924f47fdcbc6e` | 375 |
+| `work/dev-c-campaign-simulation` | `cec36b62ce376c96d88f665be2295d072e696227` | 483 |
+| `work/dev-d-supply-network-decomposition` | `9615e818ace3f785e902fd44200a14736848e80c` | 465 |
+| `work/dev-e-save-validator-mainline` | `b1b8cd952c99643aa22c31ae946c0300ad5fa5e4` | 445 |
+| `work/dev-e-sequential-migration-pipeline-current-main` | `0c390ee35b9929ac8d68766decbd9e31f9998e65` | 430 |
+| `work/dev-g-hud-widget-modules` | `b834eff1cfd579561705519a318dc1a013af6c37` | 399 |
+| `work/dev-h-world-generation` | `f695f940346be2146a281b8fa83772326e8d7ffc` | 440 |
+| `work/dev-i-enemy-patrol-controller` | `3c1f50b24775de1312feef1c7c6acfd7b2c07d13` | 473 |
+| `work/dev-j-decision-events` | `84b43d311021cf2a719341189007eb82581d37ef` | 468 |
+| `work/dev-k-input-command-registry` | `28675b868552f158ff107350ad93b25f6e079ca0` | 453 |
+| `work/dev-l-archery-range-ranged-training` | `f95a89791dcffb14dd09e53fdbc47dcddc771a5a` | 412 |
+| `work/dev-l-barracks-garrison` | `4c9203c61854a683f8c5dd76eca0ea3bdc81f845` | 439 |
+
+**A result:** all 43 recorded candidate tips are currently contained in main; none is an open PR head; no repository-wide active Actions run was returned. This is not an exhaustive external-reference audit. No branch was deleted or modified.
+
+**Deletion blocker unchanged:** the connected GitHub tool catalogue exposes no genuine branch-delete/delete-ref operation. `update_ref` only moves a ref and must not be used as a deletion substitute. Branches remain intact until a genuine delete operation and adequate reference checks are available.
+
+#### B — diverged-branch audit, bounded six-branch batch
+
+All comparisons below use exact main SHA `3e2e0e4cfc609df5e2c4376b868c6491578e9fbc`. PR-history searches across all states returned no associated PRs for these six branches. No active workflow runs were returned repository-wide. The six tips are distinct; no exact duplicate-tip group exists within this batch.
+
+| Branch | Tip | Ahead / behind | Changed paths | Disposition |
+|---|---|---:|---:|---|
+| `feat/kingdom-expansion-foundation` | `ffee0be84d425847a6f93e624a9946e540558594` | 5 / 972 | 5 | **retain** |
+| `feat/rts-command-foundation` | `e8415215eb2ce49ab5005c72d48b45a91e6c0662` | 45 / 240 | 21 | **retain** |
+| `feat/protagonist-locomotion-pass` | `1f93321f24a53164e0e74940112457c22f771b98` | 8 / 38 | 5 | **retain** |
+| `fix/p0-combat-fairness-and-wave-telegraph` | `f85bb15e1df4cb2a1275a270aef49384e6ee0544` | 5 / 383 | 5 | **retain** |
+| `fix/enemy-melee-windup-fairness` | `b41cfe23ad4f231708885ca7abcfb0d7106de57c` | 3 / 381 | 3 | **superseded** |
+| `fix/enemy-melee-windup-fairness-mainline` | `c84b4530a008612a3a723967e488308bccfbeda8` | 4 / 380 | 3 | **retain** |
+
+Evidence and next actions:
+- `feat/kingdom-expansion-foundation`: changed paths are `tests/README.md`, `tests/parse_all_scripts.gd`, `tests/responsive_layout.gd`, `tools/run_diagnostics.sh`, and `tools/run_tests.sh`. The tip commit fixes the `ProjectSettings` singleton spelling in the responsive-layout test. Preserve the unique diagnostics/test tooling; no integration until the full patch and exact-head Godot 4.7 validation are reviewed.
+- `feat/rts-command-foundation`: 21 changed paths include a new 387-line `scripts/systems/rts_command.gd` and new `tests/rts_command_foundation.gd`, plus villager, HUD, main, Frontier campaign and CI changes. The unique command subsystem is not represented by an identical path in main. Preserve; the broad overlap and 240-commit base gap make blind integration unsafe.
+- `feat/protagonist-locomotion-pass`: five changed paths include `assets/sprites/player.svg`, `scripts/entities/sprite_anim.gd`, animation direction documentation and two animation tests. The tip commit strengthens protagonist stride silhouettes. Preserve pending a full visual/source comparison against current main and Godot 4.7 validation.
+- `fix/p0-combat-fairness-and-wave-telegraph`: five changed paths include `scripts/autoload/game_clock.gd`, `scripts/entities/player.gd`, `tests/campaign_balance_matrix.gd`, and `tests/player_combat.gd`. The tip commit clarifies README cycle duration; earlier unique combat changes remain unmerged and overlap current combat work. Preserve pending exact patch review; do not integrate into the #212/#213 reconciliation without a separate comparison.
+- `fix/enemy-melee-windup-fairness` and `fix/enemy-melee-windup-fairness-mainline` are not identical tips: pairwise compare is 5 commits ahead / 3 behind. At the two tips, `scripts/entities/enemy.gd` and `tests/campaign_combat_simulation.gd` are byte-identical; the mainline variant's `enemy_combat_lifecycle.gd` extends the earlier version with raid-specific allowed reach (minimum 28 px for supply/faction raiders). Its campaign test includes the earlier branch's dodgeable-wind-up cases. The earlier branch's three-file implementation is therefore superseded by the more complete mainline variant; retain the mainline variant for targeted extraction/review. Current main already has a newer generalized locked-direction wind-up check, so neither branch is approved for direct integration without checking the depot/raider contract and running Godot 4.7 tests.
+
+No branch was integrated or deleted in this batch. The five retained branches are not merge approvals; their source-level patches and exact-head validation remain outstanding.
+
+#### C — PR #212 refreshed first
+
+- PR #212 remains open and draft. Head is `6d0ce0f69c4775412f0c9dcbe55fc80bbc1a9d1c`; base is `main` at recorded PR base `d6a54036f7d7587c6e4cbd7188a620a6f9bc9d19`. GitHub currently reports mergeable=true.
+- Exact changed paths (14): `.github/workflows/combat-visual-qa.yml`; `scripts/behaviors/enemies/enemy_combat_lifecycle.gd`; `scripts/behaviors/shieldbearer_behavior.gd`; `scripts/behaviors/siege_engine_behavior.gd`; `scripts/entities/arrow.gd`; `scripts/entities/building.gd`; `scripts/entities/combat_visual_feedback.gd`; `scripts/entities/enemy.gd`; `scripts/entities/enemy_bolt.gd`; `scripts/entities/player.gd`; `scripts/entities/villager.gd`; `tests/combat_visual_feedback.gd`; `tests/shot_combat_engagement.gd`; `tests/siege_engine_behavior.gd`.
+- Review state remains one COMMENTED review and no approval. The review's gameplay-scale acceptance remains unresolved: the melee sweep is difficult to distinguish amid actors, the shield cue is small, and directional fracture is obscured by the red damage flash.
+- Exact-head workflow runs all succeeded: Godot CI #42742842633; Battlefield Combat Visual QA #42742842502; Building Visual QA #42742842653; Campaign Simulation QA #42742842817; Builder Reachability QA #42742842505; Autonomous Wave Diagnostic #42742842641; Role Sprite Visual QA #42742842469.
+- Decision: retain/open; do not merge. Green exact-head CI and mergeable=true do not satisfy the missing normal-speed desktop readability acceptance. #213 remains second in order; #210 remains third after shared villager/combat changes are understood. #214 remains draft pending actual Acer Aspire One A0756 measurements; #150/#152 remain parked because Android is deferred. No PR was merged or closed.
+
+#### D — protection, pointer and mainline CI
+
+- Current main branch listing reports `protected=false`.
+- Rulesets GET returns an empty array. Branch-protection GET returns HTTP 403: `Resource not accessible by integration`.
+- Repository metadata reports admin=true for the connected identity, but the installed GitHub integration exposes no branch-protection/ruleset write operation. Protection is not enabled.
+- `worklist.md` continues to point to this authoritative checkpoint (current fetched blob SHA `610d44c2e6c9422e7f151073a9c04b764e3fd218`); no pointer change was needed.
+- Exact-main Godot CI run [#45524260036](https://github.com/shimleabyte/hold-the-keep/actions/runs/45524260036) completed successfully on exact SHA `3e2e0e4cfc609df5e2c4376b868c6491578e9fbc` (push event, 2026-11-25 01:14:32 UTC). This is the verified code baseline before this documentation append; it is not a CI result for the new checkpoint commit.
+
+**A–D remain incomplete.** All 43 behind-only tips are contained, but branch deletion remains unavailable and external references cannot be exhaustively enumerated. The diverged inventory is still only partially classified. PR #212 still lacks visual acceptance; #213 and #210 remain gated; #214 and Android PRs remain parked. Main protection is not enabled. Stage E remains locked.
