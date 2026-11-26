@@ -966,3 +966,14 @@ No branch was integrated or deleted in this batch. The five retained branches ar
 - Exact-main Godot CI run [#45524260036](https://github.com/shimleabyte/hold-the-keep/actions/runs/45524260036) completed successfully on exact SHA `3e2e0e4cfc609df5e2c4376b868c6491578e9fbc` (push event, 2026-11-25 01:14:32 UTC). This is the verified code baseline before this documentation append; it is not a CI result for the new checkpoint commit.
 
 **A–D remain incomplete.** All 43 behind-only tips are contained, but branch deletion remains unavailable and external references cannot be exhaustively enumerated. The diverged inventory is still only partially classified. PR #212 still lacks visual acceptance; #213 and #210 remain gated; #214 and Android PRs remain parked. Main protection is not enabled. Stage E remains locked.
+
+
+### Documentation pointer follow-up — 2026-11-26
+
+The earlier D note in this append said the worklist pointer needed no change. That statement is superseded by this follow-up:
+- Updated the first-line checkpoint date in `worklist.md` to 2026-11-26; the link still targets `docs/REPOSITORY_CLEANUP_CHECKPOINT.md`.
+- Pointer update commit: `700ecfa68b0ce4d886d851e434eee123aae2ab20`; current worklist blob SHA: `06c2fdbc40455d1793773deaa18663677edbf514`.
+- Main at the pointer-update snapshot was exactly `700ecfa68b0ce4d886d851e434eee123aae2ab20`.
+- Exact-main Godot CI run [#45738587181](https://github.com/shimleabyte/hold-the-keep/actions/runs/45738587181) was in progress when checked. Do not report it as passed until the conclusion is successful.
+- The preceding checkpoint append commit was `d7ebb8eed1bcb873082253fa1cfa432a42c4fe52`. This follow-up changes documentation only; no production code changed.
+
