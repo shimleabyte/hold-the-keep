@@ -996,3 +996,126 @@ No production code changed, no branch was deleted, and no PR was merged or close
 **B progress:** three additional diverged branches are now classified as superseded. The full diverged inventory remains incomplete; this is a bounded batch, not a completion claim.
 
 **Main/CI note:** main at the start of this batch was `a4271279d8cc0751a4b6ebf890dcba2685a128f2`. Exact-main Godot CI run #45738587181 was still in progress on prior worklist-pointer commit `700ecfa68b0ce4d886d851e434eee123aae2ab20`; no pass is claimed for `a427127` or this new checkpoint commit.
+
+
+### Autonomous cleanup pass — 2026-11-27
+
+**Live repository snapshot before this documentation update**
+- Default branch: `main`, exact SHA `2e11497aa43210cb28ffdf43b16ff6a347613e48`.
+- Remote branch inventory: 170 branches (100 on page 1, 70 on page 2), including `main`.
+- All 43 named behind-only candidates remain present in the live branch inventory.
+- `main` is unprotected. Branch listing reports `protected=false`; the rulesets endpoint returns an empty array. Branch-protection GET returns HTTP 403, `Resource not accessible by integration`.
+- Repository-wide Actions queries returned zero `in_progress` and zero `queued` runs.
+- Six open PRs remain: #214, #213, #212, #210, #152 and #150. None uses one of the 43 behind-only candidate branches as its current head.
+- External deployment, webhook, and other consumer references cannot be exhaustively enumerated through the connected integration.
+
+#### A — all 43 behind-only candidates rechecked against current main
+
+Each current branch ref was compared individually against exact current `main` SHA `2e11497aa43210cb28ffdf43b16ff6a347613e48`. All 43 returned `status=behind`, `ahead_by=0`, and zero changed files. The live refs all exist.
+
+| Candidate branch | Behind |
+|---|---:|
+| `art/faction-equipment-silhouette-pass` | 42 |
+| `combat/player-skills-enemy-ai` | 1115 |
+| `docs/update-phase-11-integration-status` | 192 |
+| `feat/blacksmith-forge` | 512 |
+| `feat/character-animation-pass` | 1023 |
+| `feat/frontier-world-generation-mainline` | 929 |
+| `feat/healer-infirmary` | 529 |
+| `feat/hunter-hunting-lodge` | 662 |
+| `feat/multi-stronghold-campaign` | 922 |
+| `feat/phase-05-resource-worksites` | 895 |
+| `feat/phase-06-factions-territorial-ai-rebased` | 863 |
+| `feat/phase-06-shieldbearer-brace` | 810 |
+| `feat/phase-06.4-faction-raids` | 756 |
+| `feat/phase-06.5-faction-warfare-stress` | 744 |
+| `feat/phase-07-conquest-objectives-mainline` | 860 |
+| `feat/phase-09-balance-performance-release-mainline` | 857 |
+| `feat/phase-10-adaptive-viewport-mainline` | 854 |
+| `feat/regional-control-roads-mainline` | 930 |
+| `feat/responsive-resolution-visual-pass` | 1034 |
+| `feat/rival-local-depots-road-delivery` | 55 |
+| `feat/scout-specialist` | 590 |
+| `feat/strategic-map-stage-hud` | 1072 |
+| `feat/workplaces-and-specialist-jobs` | 923 |
+| `fix/ci-regression-test-timeouts` | 974 |
+| `fix/hud-discovered-type` | 1113 |
+| `fix/rival-worker-cargo-conservation` | 132 |
+| `integrate/data-db-validation-mainline` | 482 |
+| `overhaul/territory-expansion` | 1143 |
+| `qa/desktop-export-acceptance` | 246 |
+| `qa/headed-mode-source-export` | 49 |
+| `work/dev-b-faction-ai-components` | 488 |
+| `work/dev-c-autonomous-wave-diagnostic-integrated` | 379 |
+| `work/dev-c-campaign-simulation` | 487 |
+| `work/dev-d-supply-network-decomposition` | 469 |
+| `work/dev-e-save-validator-mainline` | 449 |
+| `work/dev-e-sequential-migration-pipeline-current-main` | 434 |
+| `work/dev-g-hud-widget-modules` | 403 |
+| `work/dev-h-world-generation` | 444 |
+| `work/dev-i-enemy-patrol-controller` | 477 |
+| `work/dev-j-decision-events` | 472 |
+| `work/dev-k-input-command-registry` | 457 |
+| `work/dev-l-archery-range-ranged-training` | 416 |
+| `work/dev-l-barracks-garrison` | 443 |
+
+The previous audited main `3e2e0e4cfc609df5e2c4376b868c6491578e9fbc` is an ancestor of current main: compare returned `ahead_by=0`, `behind_by=4`, merge base equal to that SHA, and no changed files. The direct 43-branch comparison above independently confirms all candidate tips remain contained.
+
+**Deletion remains blocked.** The connected GitHub tool catalogue has no branch-delete or delete-ref operation. `update_ref` only moves a ref and was not used. No branch was deleted or modified. The open-PR and active-workflow checks are clean for these candidates, but external consumer references remain unenumerable; deletion is not approved.
+
+#### B — bounded audit of six previously unlisted diverged branches
+
+All six branch tips were compared against exact main SHA `2e11497aa43210cb28ffdf43b16ff6a347613e48`. Branch-qualified PR searches returned #126/#127 for the night-countdown pair and no matching PR records for the other four. The repository-wide active/queued workflow queries returned zero. All six tips are distinct.
+
+| Branch | Tip | Ahead / behind | Changed paths | Disposition |
+|---|---|---:|---:|---|
+| `feat/night-wave-countdown-hud` | `957f7d5c8ac7f6bd47334aa36d9e1aab8544e11d` | 6 / 384 | 6 | **superseded** |
+| `feat/night-wave-countdown-hud-mainline` | `5bcfc3e92501a2a7d5e89ce2b7dc22edeb96342a` | 13 / 382 | 7 | **superseded** |
+| `feat/phase-08-visual-audio-identity` | `7fe94c11debbe8113b1c42bf07fc6268cd3a6dd6` | 27 / 897 | 20 | **retain** |
+| `feat/phase-08-visual-audio-identity-mainline` | `d7322c33ccf8016ab4433e995936becfda8f741a` | 7 / 742 | 7 | **retain** |
+| `feat/phase-09-balance-performance-release-rebased` | `0d1900f8ea4e4ba9c2bc522b5fc8c8b981dab931` | 70 / 897 | 36 | **retain** |
+| `feat/phase-09-balance-performance-release-v2` | `85da49ed4f06a21e14a4c0ecf3123a34bf9e941b` | 111 / 897 | 42 | **retain** |
+
+Night-countdown evidence:
+- PR #126 is closed and unmerged; its exact head is `957f7d5c8ac7f6bd47334aa36d9e1aab8544e11d`. PR #127 is closed and unmerged; its exact head is `5bcfc3e92501a2a7d5e89ce2b7dc22edeb96342a`.
+- The two branches are not duplicate tips. Pairwise compare returned 15 commits ahead / 6 behind and 14 changed paths. Of their six common changed files, only `scripts/autoload/game_clock.gd` has the same blob on both branches; the other five blobs differ. Neither branch is an exact patch duplicate of the other or of main.
+- Current main contains the phase countdown through `GameClock.seconds_until_phase_change()`, the `ClockWidget.countdown_text()` and tooltip, the second clock row, queued-wave count, and countdown assertions in `campaign_balance_matrix.gd` and `responsive_layout.gd`. Main's current implementation is later and stronger: it avoids floating-point extra-second display and includes a pending boss in `remaining_wave_spawns()`. Main's Frontier campaign simulation also has additional live-wave safeguards compared with the branch version.
+- Current-main file blobs differ from both branch versions, so this is a functional supersession finding, not a claim of byte-for-byte patch identity. Both closed PRs are unmerged; no branch integration is needed.
+
+Phase-08 visual/audio pair:
+- Pairwise compare returned 162 commits ahead / 27 behind and 75 changed paths. There is no duplicate tip and no exact patch equivalence established.
+- The `-mainline` branch's seven changed paths were blob-compared against main; all seven blobs differ. The broader branch has 27 unique commits and 20 changed paths. These patches include Frontier visual/map, faction/enemy and documentation surfaces. Their complete unique hunks have not been reviewed against current production code.
+- Disposition is **retain** for both, not integrate or delete. Godot 4.7 exact-head validation has not been verified for either branch.
+
+Phase-09 release/balance pair:
+- Pairwise compare returned 43 commits ahead / 2 behind and 16 changed paths. No duplicate tip and no exact patch equivalence established.
+- The rebased branch has 70 unique commits and 36 changed paths; v2 has 111 unique commits and 42 changed paths. Both overlap the old balance/performance/release family and are 897 commits behind current main.
+- Disposition is **retain** for both pending complete patch comparison. No integration or Godot 4.7 validation is approved.
+
+No branch was integrated, deleted, or modified in this batch.
+
+#### C — six open PRs refreshed
+
+All six remain open and draft. No PR was merged or closed.
+
+| PR | Head SHA | Mergeable | Reviews | Exact-head workflow snapshot | Decision |
+|---|---|---|---|---|---|
+| #212 | `6d0ce0f69c4775412f0c9dcbe55fc80bbc1a9d1c` | true | 1 COMMENTED, no approval | Godot CI and all six relevant visual/diagnostic workflows succeeded | Hold for normal-speed desktop combat readability acceptance |
+| #213 | `c336f7923e9b522898bd778f311c0382bf68d4d2` | false | 3 COMMENTED, no approval | Godot CI, Campaign Simulation, Building Visual and Pixel FX Readability succeeded | Hold for shared damage-path reconciliation with #212 |
+| #210 | `c1c87dbb6b01dcfb9e3d7aae5c19d70db5ccd541` | false | 1 COMMENTED, no approval | Godot CI, Campaign Simulation, Builder Reachability and Role Sprite Visual succeeded | Hold for live multi-frame civilian work-cycle acceptance after shared villager changes are understood |
+| #214 | `23f53abd0698e0ce482def8d9b8ce9c8e1913a8f` | false | No new approval | Godot CI succeeded | Park draft until actual Acer Aspire One A0756 measurements are attached |
+| #150 | `1d2e29063881f6060f08e3ca3e98202196e55531` | false | No new approval | Godot CI cancelled | Park; Android deferred |
+| #152 | `a405e8f92f1d9df5ebbea0b18a582ab4a073be15` | false | No new approval | Godot CI and Campaign Simulation succeeded | Park; Android deferred |
+
+#212's latest metadata now reports `mergeable=true` (an earlier read reported false); this does not remove its draft state, COMMENTED-only review, or missing normal-speed desktop acceptance. #213 and #210 remain non-mergeable. No merge is authorized.
+
+#### D — main protection, pointer, and CI
+
+- Main remains unprotected (`protected=false`).
+- Rulesets GET returned `[]`.
+- Branch-protection GET returned HTTP 403, `Resource not accessible by integration`.
+- The connected GitHub tool catalogue exposes no branch-protection or ruleset write operation. Repository metadata reports admin permission, but that does not grant the integration the missing endpoint capability.
+- `worklist.md` still links to `docs/REPOSITORY_CLEANUP_CHECKPOINT.md`. Its date is advanced to 2026-11-27 in the accompanying pointer update.
+- Exact-main Godot CI run [#45738796676](https://github.com/shimleabyte/hold-the-keep/actions/runs/45738796676) completed successfully on exact SHA `2e11497aa43210cb28ffdf43b16ff6a347613e48` (2026-11-26 01:53:47 UTC). Combined commit statuses are empty; the successful Actions run is the CI evidence.
+
+**A–D remain incomplete.** All 43 behind-only candidates are contained, but no genuine branch-delete operation exists and external references cannot be exhaustively enumerated. The diverged inventory is still incomplete. #212 lacks desktop acceptance; #213 and #210 remain gated; #214 and Android PRs remain parked. Main protection is not enabled. Stage E remains locked.
