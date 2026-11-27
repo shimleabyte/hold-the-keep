@@ -1,4 +1,4 @@
-> **Current repository checkpoint (2026-11-26):** The authoritative branch/PR inventory and cleanup sequence are maintained in [docs/REPOSITORY_CLEANUP_CHECKPOINT.md](docs/REPOSITORY_CLEANUP_CHECKPOINT.md). Older branch counts and audit SHAs below are historical snapshots and must not be used as live state.
+> **Current repository checkpoint (2026-11-27):** The authoritative branch/PR inventory and cleanup sequence are maintained in [docs/REPOSITORY_CLEANUP_CHECKPOINT.md](docs/REPOSITORY_CLEANUP_CHECKPOINT.md). Older branch counts and audit SHAs below are historical snapshots and must not be used as live state.
 
 ## Rival physical workforce execution — 2026-11-08
 
