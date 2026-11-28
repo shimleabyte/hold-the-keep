@@ -216,7 +216,10 @@ func tick(delta: float) -> void:
         if windup_timer <= 0.0:
             var impact_target: Node2D = target
             var impact_damage := maxi(1, roundi(float(actor.damage) * damage_multiplier))
-            impact_target.call("take_damage", impact_damage)
+            if impact_target.has_method("take_damage_from"):
+                impact_target.call("take_damage_from", impact_damage, actor.global_position)
+            else:
+                impact_target.call("take_damage", impact_damage)
             Events.fx_burst.emit("debris", impact_target.global_position + Vector2(0, -8), -aim.normalized(), 1.5)
             Audio.play("siege_impact", 1.0, -2.0)
             Events.screen_shake.emit(1.0, 0.16)
@@ -347,10 +350,17 @@ func interrupt() -> void:
 
 
 func draw_telegraph(canvas: CanvasItem, frame_height: int) -> void:
-    if target != null and is_instance_valid(target):
-        var target_center: Vector2 = target.global_position - actor.global_position + Vector2(0, -8)
-        var target_color := Color("#e1a45d") if windup_timer > 0.0 else Color("#9a6b4c")
-        canvas.draw_line(Vector2(0, -frame_height - 5), target_center, target_color, 1.5)
-        canvas.draw_arc(target_center, 13.0, 0.0, TAU, 12, target_color, 1.5)
-    if windup_timer > 0.0:
-        canvas.draw_arc(Vector2(0, -frame_height - 8), 8.0, 0.0, TAU, 12, Color("#f1c67b"), 2.0)
+    # A persistent target ray reads as interface clutter. Show the lock only in
+    # the committed wind-up window, when a siege strike is actually imminent.
+    if windup_timer <= 0.0 or target == null or not is_instance_valid(target):
+        return
+    var target_center: Vector2 = target.global_position - actor.global_position + Vector2(0, -8)
+    var target_color := Color(0.86, 0.68, 0.43, 0.78)
+    canvas.draw_line(Vector2(0, -frame_height - 5), target_center, target_color, 1.0)
+    canvas.draw_arc(target_center, 6.5, 0.0, TAU, 8, target_color, 1.0)
+    for marker in 4:
+        var direction := Vector2.RIGHT.rotated(float(marker) * PI * 0.5 + PI * 0.25)
+        canvas.draw_line(target_center + direction * 8.0,
+            target_center + direction * 11.0, Color(0.93, 0.78, 0.55, 0.9), 1.2)
+    canvas.draw_arc(Vector2(0, -frame_height - 8), 8.0, 0.0, TAU, 12,
+        Color("#f1c67b"), 2.0)

@@ -22,6 +22,23 @@ var ability_total := 0.0
 var ability_kind := ""
 var ability_direction := Vector2.DOWN
 
+var swing_remaining := 0.0
+var swing_total := 0.0
+var swing_direction := Vector2.RIGHT
+var swing_weight := 1.0
+
+
+func register_swing(direction: Vector2, duration: float = 0.28, weight: float = 1.0) -> void:
+    swing_direction = direction.normalized() if direction.length_squared() > 0.001 else Vector2.DOWN
+    swing_total = maxf(0.08, duration)
+    swing_remaining = swing_total
+    swing_weight = clampf(weight, 0.75, 1.8)
+
+
+func end_swing() -> void:
+    swing_remaining = 0.0
+    swing_total = 0.0
+
 
 func begin_windup(direction: Vector2, duration: float, projectile: bool = false) -> void:
     windup_direction = direction.normalized() if direction.length_squared() > 0.001 else Vector2.DOWN
@@ -60,6 +77,7 @@ func advance(delta: float) -> bool:
     impact_remaining = maxf(0.0, impact_remaining - delta)
     stagger_remaining = maxf(0.0, stagger_remaining - delta)
     ability_remaining = maxf(0.0, ability_remaining - delta)
+    swing_remaining = maxf(0.0, swing_remaining - delta)
     if windup_remaining <= 0.0:
         windup_total = 0.0
         windup_projectile = false
@@ -68,11 +86,13 @@ func advance(delta: float) -> bool:
     if ability_remaining <= 0.0:
         ability_total = 0.0
         ability_kind = ""
+    if swing_remaining <= 0.0:
+        swing_total = 0.0
     return was_active or is_active()
 
 
 func is_active() -> bool:
-    return windup_remaining > 0.0 or impact_remaining > 0.0 or stagger_remaining > 0.0 or ability_remaining > 0.0
+    return windup_remaining > 0.0 or impact_remaining > 0.0 or stagger_remaining > 0.0 or ability_remaining > 0.0 or swing_remaining > 0.0
 
 
 func draw(canvas: CanvasItem, frame_height: int, faction_tint: Color = Color.WHITE) -> void:
@@ -93,6 +113,33 @@ func draw(canvas: CanvasItem, frame_height: int, faction_tint: Color = Color.WHI
             canvas.draw_line(tip + wing, tip, Color("#fff0c5"), 1.0)
         else:
             canvas.draw_line(center + direction.rotated(-0.55) * 6.0, center + direction * reach, Color("#fff0c5"), 1.0)
+
+    if swing_remaining > 0.0:
+        var progress := 1.0 - swing_remaining / maxf(0.001, swing_total)
+        var eased := smoothstep(0.0, 1.0, progress)
+        var contact_angle := swing_direction.angle() + lerpf(-0.92, 0.82, eased)
+        var arc_length := lerpf(0.68, 1.05, swing_weight / 1.8)
+        var radius := 13.0 + swing_weight * 2.5
+        var fade := 1.0 - smoothstep(0.78, 1.0, progress)
+        var shadow := Color("#30251f", fade * 0.86)
+        var slash := Color("#e6d5ad", fade * 0.98)
+        var edge := Color("#fff3d1", fade)
+        var start_angle := contact_angle - arc_length
+        # A dark outer edge keeps the sweep legible over grass, armour and sprite silhouettes.
+        canvas.draw_arc(center, radius + 1.5, start_angle, contact_angle,
+            10, shadow, 3.0)
+        canvas.draw_arc(center, radius, start_angle + 0.04, contact_angle - 0.02,
+            10, slash, 1.8 + swing_weight * 0.35)
+        var tip := center + Vector2.RIGHT.rotated(contact_angle) * (radius + 1.0)
+        var tail := center + Vector2.RIGHT.rotated(start_angle) * (radius - 1.0)
+        canvas.draw_line(tail, tip, edge, 1.6 + swing_weight * 0.4)
+        if swing_weight > 1.25:
+            var inner_start := contact_angle - arc_length * 0.78
+            canvas.draw_arc(center, radius - 3.5, inner_start, contact_angle - 0.12,
+                8, Color("#c58a4e", fade * 0.82), 1.25)
+            var inner := center + Vector2.RIGHT.rotated(inner_start) * (radius - 4.0)
+            var inner_tip := center + Vector2.RIGHT.rotated(contact_angle - 0.12) * (radius - 4.0)
+            canvas.draw_line(inner, inner_tip, Color("#fff0c5", fade * 0.9), 1.1)
 
     if impact_remaining > 0.0:
         var progress := 1.0 - impact_remaining / HIT_DURATION
