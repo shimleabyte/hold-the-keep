@@ -1119,3 +1119,67 @@ All six remain open and draft. No PR was merged or closed.
 - Exact-main Godot CI run [#45738796676](https://github.com/shimleabyte/hold-the-keep/actions/runs/45738796676) completed successfully on exact SHA `2e11497aa43210cb28ffdf43b16ff6a347613e48` (2026-11-26 01:53:47 UTC). Combined commit statuses are empty; the successful Actions run is the CI evidence.
 
 **A–D remain incomplete.** All 43 behind-only candidates are contained, but no genuine branch-delete operation exists and external references cannot be exhaustively enumerated. The diverged inventory is still incomplete. #212 lacks desktop acceptance; #213 and #210 remain gated; #214 and Android PRs remain parked. Main protection is not enabled. Stage E remains locked.
+
+
+### Autonomous cleanup pass — 2026-11-28
+
+**Live repository snapshot before this checkpoint append**
+- Default branch: `main`, exact SHA `89a2d04e3b27bd3c9082cc35a1a72ab79352715d`.
+- Live branch inventory: 170 branches (100 on page 1, 70 on page 2).
+- All 43 recorded behind-only candidates remain present.
+- The previous exact comparison of all 43 candidates against `2e11497aa43210cb28ffdf43b16ff6a347613e48` returned `ahead_by=0` and zero changed files for every candidate. A fresh comparison from that SHA to current main returned `ahead_by=2`, `behind_by=0`, with only `docs/REPOSITORY_CLEANUP_CHECKPOINT.md` and `worklist.md` changed. Therefore all 43 candidate tips remain contained in current main.
+- Six PRs remain open; none has one of the 43 candidate branches as its head.
+- Repository-wide Actions queries returned zero `in_progress` and zero `queued` runs.
+- Duplicate-tip scan found only the two previously known groups: `feat/phase-09.3-late-act-reload-hardening` / `feat/phase-09.3-reload-acceptance` at `c8719082f95d362e62b8a04f5c3d9ca2959da2c4`, and `work/dev-h-frontier-rendered-repeatability` / `work/dev-h-frontier-rendered-repeatability-final` at `65f852d6d923066ad38d2eb360e7299b949f20ff`. No new duplicate-tip group was found.
+- External deployment, webhook, and other consumer references remain outside the connected integration's exhaustive visibility.
+
+#### A — behind-only candidates
+
+All 43 tips remain fully contained by the ancestry chain above. No current open PR head or active/queued workflow references a candidate. External consumer references cannot be exhaustively enumerated. No branch was deleted or modified.
+
+**Deletion blocker remains exact:** the connected GitHub tool catalogue exposes no genuine branch-delete/delete-ref operation. `update_ref` only moves a ref and was not used to imitate deletion. All 43 branches remain intact.
+
+#### B — diverged-branch audit, bounded batch of ten previously unclassified branches
+
+All comparisons below use current main SHA `89a2d04e3b27bd3c9082cc35a1a72ab79352715d`. Branch-qualified PR-history searches returned no direct PR for these branches. The six currently open PR heads were separately enumerated. No integration or deletion was performed.
+
+| Branch | Tip | Ahead / behind | Changed paths | Disposition |
+|---|---|---:|---:|---|
+| `feat/android-armv7-touch-controls-mainline` | `84d08dee80b70fd88e4608b8c02d1b68fb12a2f7` | 1 / 375 | 10 | **superseded** |
+| `feat/phase-09-balance-performance-release-v3` | `ab05ce93d96cf6dd430e8e74f4b98cba2a74e79d` | 91 / 899 | 46 | **retain** |
+| `feat/phase-09-balance-performance-release-v4` | `4acb673da1a2b6ffca58d9982cc0130af1b1e8cc` | 100 / 899 | 49 | **retain** |
+| `feat/phase-09-balance-performance-release-v5` | `3bdd7b7e60a75cdb3bd1bfc69a22727b3831be3b` | 110 / 899 | 49 | **retain** |
+| `fix/android-touch-controls-safety` | `50c4a9fe505913d08fe24b1e1d1a955132fe7cf9` | 12 / 375 | 10 | **superseded** |
+| `fix/android-touch-controls-safety-mainline` | `30b3565ec4fd76a85dfc6fabe54cf01c36a1c2d0` | 1 / 374 | 11 | **retain** |
+| `fix/hud-partial-quota-guards` | `5ac5aaf73da4eb1bb35d0505b9b0bd22bf95df71` | 2 / 261 | 2 | **superseded** |
+| `fix/nav-grid-multi-cell-access` | `00eca2edf23ecd7daddf581264b252a07b44c176` | 54 / 291 | 19 | **retain** |
+| `fix/p0-gameplay-fairness-current-main` | `4e2ecc4d780271887bec58f6ec30bb7d72eccf11` | 6 / 387 | 6 | **retain** |
+| `work/dev-d-supply-road-graph` | `aae7859569d5f82768d5832fcd6978d0181cad89` | 2 / 409 | 2 | **superseded** |
+
+Evidence and disposition reasoning:
+
+- Phase-09 v3/v4/v5 are not duplicate tips or exact patch equivalents. Pairwise comparisons returned v3→v4 = 24 ahead / 15 behind, v4→v5 = 30 ahead / 20 behind, and v3→v5 = 34 ahead / 15 behind. They overlap the historical balance/performance/release implementation and test surface, but have distinct unique commits and different file contents. Retain all three pending complete unique-hunk review; no direct integration is approved.
+- `feat/android-armv7-touch-controls-mainline` has the same blobs for its ten Android implementation/workflow paths as the Android implementation on PR #152's separate `feat/android-armv7-touch-controls-current-main` head. The PR head has 130 unique commits relative to this branch and is one commit behind it. The older branch adds no distinct Android code beyond the parked PR head; classify this branch as superseded by the #152 head. PR #152 itself remains open/draft and parked because Android is deferred.
+- `fix/android-touch-controls-safety` and `fix/android-touch-controls-safety-mainline` have identical blobs across the ten Android implementation/workflow paths. Their pairwise history differs (12 ahead / 2 behind); the mainline variant also carries a worklist snapshot. Treat the older safety branch as superseded by the mainline variant. Retain `fix/android-touch-controls-safety-mainline` as a separate hardened Android candidate: its touch-control implementation is 394 lines and its regression test is 265 lines, covering touch lifecycle, multi-touch and safe-area geometry. Android remains deferred; no exact-head Godot 4.7 validation or merge is approved.
+- `fix/hud-partial-quota-guards` changes only `scripts/ui/hud.gd` and `tests/workplace_assignments.gd`. Current main already uses `quota.get(j, 0)` for absent role quotas and includes the same partial-quota setup/restore regression sequence. The branch's remaining difference in the test is explanatory wording; its functional patch is superseded by main.
+- `work/dev-d-supply-road-graph` changes `scripts/systems/supply_network.gd` and `scripts/systems/supply_road_graph.gd`. The latter is byte-identical to current main (blob `35e042c0c9cfcbd468c6f44a569da3c8f4d16f4f`); main's supply-network façade delegates the same rebuild, invalidation, connectivity and depot-count operations to that module. Main has since decomposed additional supply responsibilities, so this older two-commit extraction is superseded.
+- `fix/nav-grid-multi-cell-access` has 54 unique commits across 19 paths, including NavGrid, FlowField, world-map, faction assault and performance/regression tests. No PR or exact patch-equivalent branch was found. Retain pending full source review and exact-head Godot 4.7 validation; do not integrate a broad 54-commit patch without that review.
+- `fix/p0-gameplay-fairness-current-main` has six unique commits across README, GameClock, player combat, campaign and combat tests. It overlaps `fix/p0-combat-fairness-and-wave-telegraph` and `fix/p0-gameplay-ux-combined`, but pairwise comparisons show distinct histories and changed-file sets. Retain pending exact patch review; do not combine it with #212/#213 work.
+- No branch in this batch was integrated, deleted, or modified.
+
+#### C — PR #212 refreshed first
+
+- PR #212 remains open and draft. Exact head: `6d0ce0f69c4775412f0c9dcbe55fc80bbc1a9d1c`; recorded base SHA: `d6a54036f7d7587c6e4cbd7188a620a6f9bc9d19`; 14 changed files.
+- Current REST metadata reports `mergeable=null` and `mergeable_state=unknown`; do not rely on the earlier `mergeable=true` read as current.
+- Review history still contains only the COMMENTED review `5969321353`; no approval exists. No new issue comments were returned.
+- All seven exact-head runs remain successful: Godot CI #42742842633; Battlefield Combat Visual QA #42742842502; Building Visual QA #42742842653; Campaign Simulation QA #42742842817; Builder Reachability QA #42742842505; Autonomous Wave Diagnostic #42742842641; Role Sprite Visual QA #42742842469.
+- Decision remains **hold**. Normal-speed desktop combat readability acceptance is still missing. Do not merge.
+- #213 and #210 remain in the documented second/third order with their previously recorded shared-damage-path and live work-cycle gates. #214 remains parked pending actual Acer Aspire One A0756 measurements. #150 and #152 remain parked because Android is deferred. No PR was merged or closed.
+
+#### D — protection, worklist pointer and exact-main CI
+
+- Current main branch listing reports `protected=false`; rulesets GET returns `[]`. Branch-protection GET remains blocked by HTTP 403, `Resource not accessible by integration`; the connected tool catalogue exposes no protection/ruleset write operation.
+- `worklist.md` still points to this authoritative checkpoint. Its pointer date remains 2026-11-27; no pointer change was necessary because the link is correct.
+- Exact-main Godot CI run [#45924913426](https://github.com/shimleabyte/hold-the-keep/actions/runs/45924913426) completed successfully on SHA `89a2d04e3b27bd3c9082cc35a1a72ab79352715d` (push event, 2026-11-27 01:51:02 UTC). This is the verified code baseline before this documentation append; it is not a CI result for the new checkpoint commit.
+
+**A–D remain incomplete.** Branch deletion is unavailable and external references cannot be exhaustively enumerated. The full diverged inventory still needs disposition. #212 lacks visual acceptance; #213 and #210 remain gated; #214 and Android PRs remain parked. Main protection is not enabled. Stage E remains locked.
