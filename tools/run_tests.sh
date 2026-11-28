@@ -47,6 +47,7 @@ tests=(
     role_sprite_identity
     building_visual_identity
     combat_visual_feedback
+    fx_layer
     audio_identity
     frontier_campaign
     frontier_stress
