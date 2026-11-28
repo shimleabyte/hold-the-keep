@@ -1183,3 +1183,47 @@ Evidence and disposition reasoning:
 - Exact-main Godot CI run [#45924913426](https://github.com/shimleabyte/hold-the-keep/actions/runs/45924913426) completed successfully on SHA `89a2d04e3b27bd3c9082cc35a1a72ab79352715d` (push event, 2026-11-27 01:51:02 UTC). This is the verified code baseline before this documentation append; it is not a CI result for the new checkpoint commit.
 
 **A–D remain incomplete.** Branch deletion is unavailable and external references cannot be exhaustively enumerated. The full diverged inventory still needs disposition. #212 lacks visual acceptance; #213 and #210 remain gated; #214 and Android PRs remain parked. Main protection is not enabled. Stage E remains locked.
+
+
+### C — ordered PR reconciliation follow-up — 2026-11-28
+
+Current live metadata and exact-head check runs were refreshed for #212 first, #213 second, and #210 after their shared-file relationships were inspected. All three remain open and draft; no merge or closure was performed.
+
+#### #212 — first gate
+
+- Head `6d0ce0f69c4775412f0c9dcbe55fc80bbc1a9d1c`, base `d6a54036f7d7587c6e4cbd7188a620a6f9bc9d19`, 14 changed files.
+- REST mergeability is currently `null` / `mergeable_state=unknown`; review history is one COMMENTED review (`5969321353`) and no approval.
+- Exact-head check-runs endpoint returned 74 checks, all `completed/success`. The seven named PR workflow runs are also all successful.
+- No new issue comments were returned. The COMMENTED review still requires normal-speed desktop evidence showing melee sweep, shield cue and directional fracture legibility amid multiple actors and HUD.
+- Decision: **hold**. Passing CI does not satisfy visual acceptance or review approval.
+
+#### #213 — second gate, exact shared-path reconciliation
+
+- Head `c336f7923e9b522898bd778f311c0382bf68d4d2`, base `d6a54036f7d7587c6e4cbd7188a620a6f9bc9d19`, 12 changed files / 57 commits.
+- REST mergeability is currently `null` / `mergeable_state=unknown`. Three reviews are COMMENTED; no approval.
+- Exact-head check-runs endpoint returned 72 checks, all `completed/success`; the four named PR workflow runs (Godot CI, Campaign Simulation QA, Building Visual QA and Pixel FX Readability QA) all succeeded.
+- The latest reviewer note `5986231093` says the improved frame-6 building-debris capture and 14-frame sequence resolve the earlier debris-visibility concern. It explicitly keeps the PR draft pending reconciliation with #212.
+
+The live diff comparison from #212 head to #213 head reports 57 commits ahead / 27 behind and these 12 changed paths. Six paths overlap #212: `scripts/behaviors/enemies/enemy_combat_lifecycle.gd`, `scripts/behaviors/siege_engine_behavior.gd`, `scripts/entities/building.gd`, `scripts/entities/combat_visual_feedback.gd`, `tests/combat_visual_feedback.gd`, and `tests/siege_engine_behavior.gd`.
+
+The conflict is not a blind merge:
+- In `siege_engine_behavior.gd`, #212 routes supported targets through `take_damage_from(amount, actor.global_position)` with a one-argument fallback. #213 instead calls `take_damage(amount, -aim.normalized())` in both normal siege and faction-assault impact paths. The combined path must call the source-aware method once when available, retain the fallback for other target types, and apply damage exactly once.
+- In `building.gd`, #212 adds `take_damage_from()` and the directional fracture state; #213 adds an optional direction to `take_damage()` and emits `structure_debris`. The combined source-aware method must derive the structure-to-source direction once, preserve the fracture presentation, and pass that direction into the debris overload.
+- In `tests/siege_engine_behavior.gd`, preserve both the directional fracture assertion from #212 and the one-burst directional debris assertion from #213.
+- In `enemy_combat_lifecycle.gd` and `combat_visual_feedback.gd`, preserve #212's swing lifecycle and #213's source-directed impact-particle behavior without duplicating damage or resetting unrelated presentation timers. The remaining shared-file hunks appear separate by function, but must be rechecked on the actual combined patch.
+
+Decision: **hold; do not merge** until #212's normal-speed acceptance is met, the combined patch is built and reviewed, and exact-head Godot 4.7 plus both rendered visual workflows pass on that combined head.
+
+#### #210 — third gate after villager/combat overlap review
+
+- Head `c1c87dbb6b01dcfb9e3d7aae5c19d70db5ccd541`, base `d6a54036f7d7587c6e4cbd7188a620a6f9bc9d19`, four changed files / five commits.
+- REST mergeability is currently `null` / `mergeable_state=unknown`. One COMMENTED review (`5969356029`); no approval.
+- Exact-head check-runs endpoint returned 71 checks, all `completed/success`. Godot CI, Campaign Simulation QA, Builder Reachability QA and Role Sprite Visual QA all succeeded.
+- The comparison from #212 head to #210 head reports five commits ahead / 27 behind and four changed paths: `scripts/entities/sprite_anim.gd`, `scripts/entities/villager.gd`, `tests/animation_motion.gd`, and `tests/shot_role_sprite_gameplay.gd`.
+- The only shared path with #212 is `scripts/entities/villager.gd`. #212 changes combat-feedback state, wind-up/swing cleanup and drawing; #210 changes the `WORKING` role list and healer/hunter work-animation selection. These are separate functions/hunks; no direct textual hunk collision was found in the inspected patches. Keep both changes when eventually reconciling.
+- The role screenshot still fixes `manual_progress=0.30`; it does not show a live multi-frame work cycle. Hunter and Healer still need rendered work-cycle evidence (Builder/Farmer are useful controls).
+- Decision: **hold**. Reconcile the separate villager hunks after the #212/#213 shared combat path is settled, then rerun exact-head Godot 4.7 and role-sprite rendered QA.
+
+#214 remains draft pending actual Acer Aspire One A0756 measurements. #150 and #152 remain parked because Android is deferred.
+
+**Main/CI note:** main immediately before this PR-review append was `c0e0d41b7b59ac3de5e4e8a0c32b9df14004a796`. The exact-SHA Actions query returned zero runs at the time of the check; the preceding documentation-only baseline `89a2d04e3b27bd3c9082cc35a1a72ab79352715d` has successful Godot CI run #45924913426. Do not claim CI passed on `c0e0d41` or the new checkpoint commit without a matching successful run.
