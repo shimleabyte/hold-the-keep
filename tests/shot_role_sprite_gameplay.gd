@@ -57,7 +57,7 @@ func _initialize() -> void:
         "woodcutter", "miner", "farmer", "builder", "blacksmith",
         "hunter", "scout", "healer", "soldier", ""
     ]
-    var work_roles := ["woodcutter", "miner", "farmer", "builder", "blacksmith"]
+    var work_roles := ["woodcutter", "miner", "farmer", "builder", "blacksmith", "hunter", "healer"]
     var spawned := 0
     for index in roles.size():
         var column := index % 5
@@ -75,7 +75,8 @@ func _initialize() -> void:
         villager.anim.work_style = roles[index]
         if work_roles.has(roles[index]):
             villager.anim.play("work", true)
-            villager.anim.manual_progress = 0.5
+            # Capture the wind-up pose where each role's authored weight transfer is distinct.
+            villager.anim.manual_progress = 0.30
         elif roles[index] == "soldier":
             villager.anim.play("attack", true)
             villager.anim.manual_progress = 0.5
